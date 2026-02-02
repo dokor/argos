@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.dokor.argos</groupId>
+	<artifactId>api-backend</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<packaging>jar</packaging>
+
+	<name>api-backend</name>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<maven.compiler.source>21</maven.compiler.source>
+		<maven.compiler.target>21</maven.compiler.target>
+
+		<plume-dependencies.version>5.1.2</plume-dependencies.version>
+	</properties>
+
+	<build>
+        <finalName>${project.artifactId}</finalName>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.13.0</version>
+				<configuration>
+					<source>${maven.compiler.source}</source>
+					<target>${maven.compiler.target}</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>3.3.1</version>
+				<configuration>
+					<encoding>${project.build.sourceEncoding}</encoding>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>3.4.2</version>
+				<configuration>
+					<archive>
+						<manifest>
+							<mainClass>com.dokor.argos.WebApplication</mainClass>
+						</manifest>
+					</archive>
+				</configuration>
+			</plugin>
+            <!-- build a zip with all the dependencies and starting scripts -->
+            <plugin>
+                <groupId>com.google.code.play2-maven-plugin</groupId>
+                <artifactId>play2-maven-plugin</artifactId>
+                <version>1.0.0-rc5</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>dist-exploded</goal>
+                        </goals>
+                        <phase>package</phase>
+                    </execution>
+                </executions>
+                <configuration>
+                    <!-- Exclude guava build dependencies from runtime -->
+                    <distDependencyExcludes>com.google.code.findbugs:jsr305,com.google.errorprone:error_prone_annotations,com.google.j2objc:j2objc-annotations,org.checkerframework:checker-qual</distDependencyExcludes>
+                </configuration>
+            </plugin>
+		</plugins>
+	</build>
+
+	<dependencies>
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jul-to-slf4j</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.google.inject</groupId>
+			<artifactId>guice</artifactId>
+		</dependency>
+        <!-- allow using Guice dependency injection in Jersey controllers -->
+		<dependency>
+			<groupId>org.glassfish.hk2</groupId>
+			<artifactId>guice-bridge</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.coreoz</groupId>
+			<artifactId>plume-conf</artifactId>
+		</dependency>
+
+		<!-- database -->
+		<dependency>
+			<groupId>com.coreoz</groupId>
+			<artifactId>plume-db-querydsl</artifactId>
+		</dependency>
+        <!-- Querydsl code generation, using the provided scope to avoid compilation error in the IDE -->
+        <dependency>
+            <groupId>com.coreoz</groupId>
+            <artifactId>plume-db-querydsl-codegen</artifactId>
+            <scope>provided</scope>
+            <exclusions>
+                <!-- Querydsl codegen still relies on javax.inject for now -->
+                <exclusion>
+                    <artifactId>javax.inject</artifactId>
+                    <groupId>javax.inject</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+		<!-- PUT YOUR DATABASE CONNECTOR HERE -->
+        <!--<dependency>
+            <groupId>org.mariadb.jdbc</groupId>
+            <artifactId>mariadb-java-client</artifactId>
+            <version>3.5.1</version>
+        </dependency>-->
+        <!-- Uncomment to use flyway -->
+        <!-- For the mapping between Flyway modules and databases, see https://github.com/flyway/flyway/issues/3780 -->
+        <!--<dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-mysql</artifactId>
+        </dependency>-->
+
+		<!-- jersey -->
+		<dependency>
+			<groupId>com.coreoz</groupId>
+			<artifactId>plume-web-jersey</artifactId>
+		</dependency>
+        <dependency>
+            <groupId>com.coreoz</groupId>
+            <artifactId>plume-web-jersey-monitoring</artifactId>
+        </dependency>
+		<dependency>
+			<groupId>org.glassfish.jersey.containers</groupId>
+			<artifactId>jersey-container-grizzly2-http</artifactId>
+		</dependency>
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+        </dependency>
+
+		<!-- swagger -->
+		<dependency>
+			<groupId>io.swagger.core.v3</groupId>
+			<artifactId>swagger-jaxrs2-jakarta</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.webjars</groupId>
+			<artifactId>swagger-ui</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<scope>provided</scope>
+		</dependency>
+
+		<!-- unit testing -->
+		<dependency>
+			<groupId>com.coreoz</groupId>
+			<artifactId>plume-db-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+    <profiles>
+        <!-- Profile for querydsl code generation -->
+        <profile>
+            <id>querydsl-code-generation</id>
+            <dependencies>
+                <dependency>
+                    <groupId>com.coreoz</groupId>
+                    <artifactId>plume-db-querydsl-codegen</artifactId>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>com.coreoz</groupId>
+				<artifactId>plume-dependencies</artifactId>
+				<version>${plume-dependencies.version}</version>
+				<scope>import</scope>
+				<type>pom</type>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+</project>
