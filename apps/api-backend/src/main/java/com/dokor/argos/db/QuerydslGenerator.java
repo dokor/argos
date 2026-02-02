@@ -22,16 +22,18 @@ import com.querydsl.sql.types.JSR310ZonedDateTimeType;
 import com.querydsl.sql.types.Type;
 
 import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Generate Querydsl classes for the database layer.
  *
  * Run the {@link #main()} method from your IDE to regenerate Querydsl classes.
  */
-@Slf4j
 public class QuerydslGenerator {
-	private static final String TABLES_PREFIX = "plm_";
+    private static final Logger logger = LoggerFactory.getLogger(QuerydslGenerator.class);
+
+    private static final String TABLES_PREFIX = "plm_";
 
 	public static void main(String... args) {
 		Configuration configuration = new Configuration(SQLTemplates.DEFAULT);
