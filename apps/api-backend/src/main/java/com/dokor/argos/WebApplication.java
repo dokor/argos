@@ -17,13 +17,14 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The application entry point, where it all begins.
  */
-@Slf4j
 public class WebApplication {
+    private static final Logger logger = LoggerFactory.getLogger(WebApplication.class);
 	// Maximal waiting time for the last process to execute after the JVM received a kill signal
 	public static final Duration GRACEFUL_SHUTDOWN_TIMEOUT = Duration.ofSeconds(60);
 
