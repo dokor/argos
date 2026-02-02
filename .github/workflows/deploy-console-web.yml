@@ -1,0 +1,38 @@
+name: Deploy console-web (Raspberry)
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "apps/console-web/**"
+      - "infra/compose/console-web/**"
+      - ".github/workflows/deploy-console-web.yml"
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Sync console-web sources to /srv/apps
+        run: |
+          sudo mkdir -p /srv/apps/console-web/src
+          sudo rsync -a --delete ./apps/console-web/ /srv/apps/console-web/src/
+          sudo chown -R $USER:$USER /srv/apps/console-web
+
+      - name: Sync compose to /srv/apps
+        run: |
+          sudo mkdir -p /srv/apps/console-web
+          sudo rsync -a ./infra/compose/console-web/docker-compose.prod.yml /srv/apps/console-web/docker-compose.prod.yml
+          sudo chown -R $USER:$USER /srv/apps/console-web
+
+      - name: Deploy (local build)
+        run: |
+          cd /srv/apps/console-web
+          docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
+
+      - name: Cleanup old images
+        run: |
+          docker image prune -f

@@ -1,0 +1,24 @@
+services:
+  api-backend:
+    build:
+      context: /srv/apps/api-backend/src
+      dockerfile: Dockerfile
+    image: api-backend:local
+    container_name: api-backend
+    restart: unless-stopped
+    networks:
+      - proxy
+    environment:
+      - JAVA_OPTS=-Xms256m -Xmx512m
+    # env_file:
+    #   - .env
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.api-backend.rule=Host(`api.argos.tld`)
+      - traefik.http.routers.api-backend.entrypoints=websecure
+      - traefik.http.routers.api-backend.tls=true
+      - traefik.http.services.api-backend.loadbalancer.server.port=8080
+
+networks:
+  proxy:
+    external: true

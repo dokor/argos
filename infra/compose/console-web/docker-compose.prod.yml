@@ -1,0 +1,26 @@
+services:
+  console-web:
+    build:
+      context: /srv/apps/console-web/src
+      dockerfile: Dockerfile
+    image: console-web:local
+    container_name: console-web
+    restart: unless-stopped
+    networks:
+      - proxy
+    # env_file:
+    #   - .env
+    environment:
+      - NODE_ENV=production
+      # Exemple si ton front doit connaître l'URL de l'API:
+      # - NEXT_PUBLIC_API_URL=https://api.argos.tld
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.console-web.rule=Host(`console.argos.tld`)
+      - traefik.http.routers.console-web.entrypoints=websecure
+      - traefik.http.routers.console-web.tls=true
+      - traefik.http.services.console-web.loadbalancer.server.port=3000
+
+networks:
+  proxy:
+    external: true

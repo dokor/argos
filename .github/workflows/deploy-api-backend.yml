@@ -1,0 +1,38 @@
+name: Deploy api-backend (Raspberry)
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "apps/api-backend/**"
+      - "infra/compose/api-backend/**"
+      - ".github/workflows/deploy-api-backend.yml"
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Sync api-backend sources to /srv/apps
+        run: |
+          sudo mkdir -p /srv/apps/api-backend/src
+          sudo rsync -a --delete ./apps/api-backend/ /srv/apps/api-backend/src/
+          sudo chown -R $USER:$USER /srv/apps/api-backend
+
+      - name: Sync compose to /srv/apps
+        run: |
+          sudo mkdir -p /srv/apps/api-backend
+          sudo rsync -a ./infra/compose/api-backend/docker-compose.prod.yml /srv/apps/api-backend/docker-compose.prod.yml
+          sudo chown -R $USER:$USER /srv/apps/api-backend
+
+      - name: Deploy (local build)
+        run: |
+          cd /srv/apps/api-backend
+          docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
+
+      - name: Cleanup old images
+        run: |
+          docker image prune -f

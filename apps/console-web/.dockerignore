@@ -1,0 +1,9 @@
+.git
+.github
+.idea
+*.iml
+*.log
+node_modules
+.next
+out
+.DS_Store
