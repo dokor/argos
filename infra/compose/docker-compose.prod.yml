@@ -1,0 +1,30 @@
+services:
+  argos-backend:
+    build:
+      context: ../../apps/api-backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    networks:
+      - proxy
+      - default
+
+  argos-worker:
+    build:
+      context: ../../apps/worker
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    networks:
+      - default
+
+  argos-web:
+    build:
+      context: ../../apps/console-web
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    networks:
+      - proxy
+      - default
+
+networks:
+  proxy:
+    external: true
