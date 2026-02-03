@@ -2,7 +2,6 @@ package com.dokor.argos.webservices.api.audits;
 
 import com.coreoz.plume.jersey.security.permission.PublicApi;
 import com.dokor.argos.services.domain.AuditService;
-import com.dokor.argos.services.domain.enums.AuditRunStatus;
 import com.dokor.argos.webservices.api.audits.data.AuditRunStatusResponse;
 import com.dokor.argos.webservices.api.audits.data.CreateAuditRequest;
 import com.dokor.argos.webservices.api.audits.data.CreateAuditResponse;
@@ -22,13 +21,11 @@ import jakarta.ws.rs.core.MediaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.LocalDateTime;
-
 @Path("/audits")
 @Tag(name = "audits", description = "Manage audits")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-@PublicApi // passer en privée avec oAuth
+@PublicApi // todo: passer en privée avec oAuth
 @Singleton
 public class AuditsWs {
 
