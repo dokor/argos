@@ -14,6 +14,8 @@ services:
     #   - .env
     labels:
       - traefik.enable=true
+      - traefik.http.routers.console-web-http.rule=Host(`api.argos.tld`)
+      - traefik.http.routers.console-web-http.entrypoints=web
       - traefik.http.routers.api-backend.rule=Host(`api.argos.tld`)
       - traefik.http.routers.api-backend.entrypoints=websecure
       - traefik.http.routers.api-backend.tls=true
