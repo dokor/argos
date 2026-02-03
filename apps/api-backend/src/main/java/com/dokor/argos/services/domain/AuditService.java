@@ -21,6 +21,7 @@ public class AuditService {
     }
 
     public CreateAuditResponse createAuditOfUrl(@NotBlank String url) {
+        // Créer l'audit en BDD
         return new CreateAuditResponse( //todo : brancher au workflow app
             0L,
             0L,
@@ -29,6 +30,7 @@ public class AuditService {
     }
 
     public AuditRunStatusResponse getRunStatusOfId(String runId) {
+        // Récupérer le status de l'audit
         return new AuditRunStatusResponse( //todo : brancher au workflow app
             0L,
             AuditRunStatus.RUNNING,
