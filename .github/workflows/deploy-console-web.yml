@@ -18,15 +18,15 @@ jobs:
 
       - name: Sync console-web sources to /srv/apps
         run: |
-          sudo mkdir -p /srv/apps/console-web/src
-          sudo rsync -a --delete ./apps/console-web/ /srv/apps/console-web/src/
-          sudo chown -R $USER:$USER /srv/apps/console-web
+          mkdir -p /srv/apps/console-web/src
+          rsync -a --delete ./apps/console-web/ /srv/apps/console-web/src/
+          chown -R $USER:$USER /srv/apps/console-web
 
       - name: Sync compose to /srv/apps
         run: |
-          sudo mkdir -p /srv/apps/console-web
-          sudo rsync -a ./infra/compose/console-web/docker-compose.prod.yml /srv/apps/console-web/docker-compose.prod.yml
-          sudo chown -R $USER:$USER /srv/apps/console-web
+          mkdir -p /srv/apps/console-web
+          rsync -a ./infra/compose/console-web/docker-compose.prod.yml /srv/apps/console-web/docker-compose.prod.yml
+          chown -R $USER:$USER /srv/apps/console-web
 
       - name: Deploy (local build)
         run: |
