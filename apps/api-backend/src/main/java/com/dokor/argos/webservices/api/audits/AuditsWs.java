@@ -16,9 +16,9 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Slf4j
 @Path("/audits")
 @Tag(name = "audits", description = "Manage audits")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -27,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 public class AuditsWs {
 
+    private static final Logger logger = LoggerFactory.getLogger(AuditsWs.class);
     private final ConfigurationService configurationService;
 
     @Inject
