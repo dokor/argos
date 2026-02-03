@@ -16,6 +16,7 @@
 		<maven.compiler.target>21</maven.compiler.target>
 
 		<plume-dependencies.version>5.1.2</plume-dependencies.version>
+        <lombok.version>1.18.32</lombok.version>
 	</properties>
 
 	<build>
@@ -28,6 +29,13 @@
 				<configuration>
 					<source>${maven.compiler.source}</source>
 					<target>${maven.compiler.target}</target>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
 				</configuration>
 			</plugin>
 			<plugin>

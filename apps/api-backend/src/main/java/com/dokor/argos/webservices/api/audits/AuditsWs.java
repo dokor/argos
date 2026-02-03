@@ -1,7 +1,6 @@
 package com.dokor.argos.webservices.api.audits;
 
 import com.coreoz.plume.jersey.security.permission.PublicApi;
-import com.dokor.argos.WebApplication;
 import com.dokor.argos.services.configuration.ConfigurationService;
 import com.dokor.argos.webservices.api.data.Test;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,8 +17,6 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Slf4j
 @Path("/audits")
