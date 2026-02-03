@@ -1,12 +1,11 @@
 package com.dokor.argos.webservices.api.audits;
 
 import com.coreoz.plume.jersey.security.permission.PublicApi;
-import com.dokor.argos.services.configuration.ConfigurationService;
+import com.dokor.argos.services.domain.AuditService;
 import com.dokor.argos.services.domain.enums.AuditRunStatus;
 import com.dokor.argos.webservices.api.audits.data.AuditRunStatusResponse;
 import com.dokor.argos.webservices.api.audits.data.CreateAuditRequest;
 import com.dokor.argos.webservices.api.audits.data.CreateAuditResponse;
-import com.dokor.argos.webservices.api.data.Test;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
@@ -34,24 +33,20 @@ import java.time.LocalDateTime;
 public class AuditsWs {
 
     private static final Logger logger = LoggerFactory.getLogger(AuditsWs.class);
-//    private final ConfigurationService configurationService;
+    private final AuditService auditService;
 
     @Inject
     public AuditsWs(
-//        ConfigurationService configurationService
+        AuditService auditService
     ) {
-//        this.configurationService = configurationService;
+        this.auditService = auditService;
     }
 
     @POST
     @Operation(description = "creation d'un audit")
-    public CreateAuditResponse createAudit(@Parameter(required = true) @RequestBody CreateAuditRequest url) {
-        logger.debug("Demande de création de l'audit de [{}]", url);
-        return new CreateAuditResponse( //todo : brancher au workflow app
-            0L,
-            0L,
-            AuditRunStatus.QUEUED
-        );
+    public CreateAuditResponse createAudit(@Parameter(required = true) @RequestBody CreateAuditRequest createAuditRequest) {
+        logger.debug("Demande de création de l'audit de [{}]", createAuditRequest);
+        return this.auditService.createAuditOfUrl(createAuditRequest.url());
     }
 
     @GET
@@ -59,13 +54,6 @@ public class AuditsWs {
     @Operation(description = "Récupération d'un audit en cours")
     public AuditRunStatusResponse getRunStatus(@Parameter(required = true) @PathParam("runId") String runId) {
         logger.debug("Demande de récupération de l'audit [{}]", runId);
-        return new AuditRunStatusResponse( //todo : brancher au workflow app
-            0L,
-            AuditRunStatus.RUNNING,
-            LocalDateTime.now(),
-            LocalDateTime.now(),
-            LocalDateTime.now(),
-            "None"
-        );
+        return this.auditService.getRunStatusOfId(runId);
     }
 }
