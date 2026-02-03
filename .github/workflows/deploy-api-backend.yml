@@ -18,15 +18,15 @@ jobs:
 
       - name: Sync api-backend sources to /srv/apps
         run: |
-          sudo mkdir -p /srv/apps/api-backend/src
-          sudo rsync -a --delete ./apps/api-backend/ /srv/apps/api-backend/src/
-          sudo chown -R $USER:$USER /srv/apps/api-backend
+          mkdir -p /srv/apps/api-backend/src
+          rsync -a --delete ./apps/api-backend/ /srv/apps/api-backend/src/
+          chown -R $USER:$USER /srv/apps/api-backend
 
       - name: Sync compose to /srv/apps
         run: |
-          sudo mkdir -p /srv/apps/api-backend
-          sudo rsync -a ./infra/compose/api-backend/docker-compose.prod.yml /srv/apps/api-backend/docker-compose.prod.yml
-          sudo chown -R $USER:$USER /srv/apps/api-backend
+          mkdir -p /srv/apps/api-backend
+          rsync -a ./infra/compose/api-backend/docker-compose.prod.yml /srv/apps/api-backend/docker-compose.prod.yml
+          chown -R $USER:$USER /srv/apps/api-backend
 
       - name: Deploy (local build)
         run: |
