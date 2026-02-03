@@ -16,6 +16,8 @@ services:
       # - NEXT_PUBLIC_API_URL=https://api.argos.tld
     labels:
       - traefik.enable=true
+      - traefik.http.routers.console-web-http.rule=Host(`console.argos.tld`)
+      - traefik.http.routers.console-web-http.entrypoints=web
       - traefik.http.routers.console-web.rule=Host(`console.argos.tld`)
       - traefik.http.routers.console-web.entrypoints=websecure
       - traefik.http.routers.console-web.tls=true
