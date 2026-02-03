@@ -19,7 +19,7 @@ import com.coreoz.plume.jersey.grizzly.GrizzlyThreadPoolProbe;
  */
 public class GrizzlySetup {
 
-	private static final int DEFAULT_HTTP_PORT = 8080;
+	private static final int DEFAULT_HTTP_PORT = 8081;
 	private static final String DEFAULT_HTTP_HOST = "0.0.0.0";
 
 	public static HttpServer start(ResourceConfig jerseyResourceConfig, GrizzlyThreadPoolProbe grizzlyThreadPoolProbe, String httpPort, String httpHost, Integer httpGrizzlyWorkerThreadsPoolSize)

@@ -21,7 +21,7 @@ COPY --from=build /app/target/*.jar /app/app.jar
 # Copie les deps runtime
 COPY --from=build /app/target/dependency /app/lib
 
-EXPOSE 8080
+EXPOSE 8081
 
 # Lance avec le classpath complet
 ENTRYPOINT ["sh","-c","java ${JAVA_OPTS:-} -cp '/app/app.jar:/app/lib/*' com.dokor.argos.WebApplication"]

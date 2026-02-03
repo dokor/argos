@@ -12,7 +12,7 @@ Install [Lombok](https://projectlombok.org/): http://jnb.ociweb.com/jnb/jnbJan20
 
 Launching the server
 --------------------
-Just run the `com.dokor.argos.WebApplication` class, you can then open your browser to <http://localhost:8080>.
+Just run the `com.dokor.argos.WebApplication` class, you can then open your browser to <http://localhost:8081>.
 
 Configuration
 -------------
@@ -49,7 +49,7 @@ This documentation is protected by Basic access authentication. This is configur
 in the `internal-api.auth-username` and `internal-api.auth-password` keys.
 
 To access this documentation, start the project
-and go to <http://localhost:8080/webjars/swagger-ui/4.1.2/index.html?url=/api/swagger>.
+and go to <http://localhost:8081/webjars/swagger-ui/4.1.2/index.html?url=/api/swagger>.
 
 Deploying to production
 -----------------------
@@ -67,7 +67,7 @@ Monitoring is available through these endpoints:
 - `/monitoring/health`: provides information about application health
 - `/monitoring/metrics`: provides JVM and custom metrics info. This can be customized in the `MonitoringWs` class where the monitoring endpoints are configured
 
-So by default, when running on localhost, metrics are available on: <http://localhost:8080/api/monitoring/metrics>
+So by default, when running on localhost, metrics are available on: <http://localhost:8081/api/monitoring/metrics>
 
 These endpoints are protected by Basic access authentication. This is configured in the `application.conf` file
 in the `internal-api.auth-username` and `internal-api.auth-password` keys.
