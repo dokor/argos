@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS ARG_AUDIT_RUN (
     started_at DATETIME(3) NULL,
     finished_at DATETIME(3) NULL,
     last_error TEXT NULL,
-    result_json JSON NULL,                    -- ou LONGTEXT si tu préfères
+    result_json LONGTEXT NULL,
     claim_token VARCHAR(64) NULL,             -- pour claim atomique multi-worker
     PRIMARY KEY (id),
     KEY idx_run_status_created (status, created_at),
