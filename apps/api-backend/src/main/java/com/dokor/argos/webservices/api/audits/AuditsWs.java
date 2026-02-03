@@ -36,7 +36,6 @@ public class AuditsWs {
     }
 
     @POST
-    @Path("/")
     @Operation(description = "creation d'un audit")
     public Test createAudit(@Parameter(required = true) @RequestBody String url) {
         logger.debug("Demande de création de l'audit de [{}]", url);
@@ -44,7 +43,7 @@ public class AuditsWs {
     }
 
     @GET
-    @Path("/run/{runId}")
+    @Path("/runs/{runId}")
     @Operation(description = "Récupération d'un audit en cours")
     public Test getRunStatus(@Parameter(required = true) @PathParam("runId") String runId) {
         logger.debug("Demande de récupération de l'audit [{}]", runId);
