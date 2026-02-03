@@ -8,17 +8,22 @@ services:
     restart: unless-stopped
     networks:
       - proxy
+      - data
     environment:
       - JAVA_OPTS=-Xms256m -Xmx512m
+      - NODE_ENV=production
     # env_file:
     #   - .env
     labels:
-    - traefik.enable=true
-    - traefik.http.routers.argos-api.rule=Host(`console.argos.tld`) && PathPrefix(`/api`)
-    - traefik.http.routers.argos-api.entrypoints=websecure
-    - traefik.http.routers.argos-api.tls=true
-    - traefik.http.services.argos-api.loadbalancer.server.port=8081
+      - traefik.enable=true
+      - traefik.http.routers.argos-api.rule=Host(`console.argos.tld`) && PathPrefix(`/api`)
+      - traefik.http.routers.argos-api.entrypoints=websecure
+      - traefik.http.routers.argos-api.tls=true
+      - traefik.http.services.argos-api.loadbalancer.server.port=8081
 
 networks:
   proxy:
     external: true
+  data:
+    external: true
+    name: argos-data
