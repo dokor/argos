@@ -7,7 +7,7 @@ services:
     container_name: api-backend
     restart: unless-stopped
     volumes:
-      - prod-test.conf:prod-test.conf:ro
+      - /srv/apps/api-backend/prod-test.conf:prod-test.conf:ro
     networks:
       - proxy
       - data
