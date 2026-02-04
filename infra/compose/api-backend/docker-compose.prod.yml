@@ -6,12 +6,15 @@ services:
     image: api-backend:local
     container_name: api-backend
     restart: unless-stopped
+    volumes:
+      - /main/resources/prod.conf:/config/prod.conf:ro
     networks:
       - proxy
       - data
     environment:
       - JAVA_OPTS=-Xms256m -Xmx512m
       - NODE_ENV=production
+      - JAVA_TOOL_OPTIONS= -Dconfig.file=/config/prod.conf
     # env_file:
     #   - .env
     labels:
