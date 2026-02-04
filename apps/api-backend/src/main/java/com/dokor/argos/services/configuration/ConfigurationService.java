@@ -14,10 +14,6 @@ public class ConfigurationService {
 		this.config = config;
 	}
 
-	public String hello() {
-		return config.getString("hello");
-	}
-
 	public String internalApiAuthUsername() {
 		return config.getString("internal-api.auth-username");
 	}
