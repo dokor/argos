@@ -123,21 +123,21 @@
             </exclusions>
         </dependency>
 		<!-- PUT YOUR DATABASE CONNECTOR HERE -->
-        <!--<dependency>
+        <dependency>
             <groupId>org.mariadb.jdbc</groupId>
             <artifactId>mariadb-java-client</artifactId>
             <version>3.5.1</version>
-        </dependency>-->
+        </dependency>
         <!-- Uncomment to use flyway -->
         <!-- For the mapping between Flyway modules and databases, see https://github.com/flyway/flyway/issues/3780 -->
-        <!--<dependency>
+        <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-mysql</artifactId>
-        </dependency>-->
+        </dependency>
 
 		<!-- jersey -->
 		<dependency>
