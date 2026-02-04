@@ -2,6 +2,8 @@ package com.dokor.argos.db;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
+import org.flywaydb.core.Flyway;
+
 import javax.sql.DataSource;
 
 /**
@@ -10,23 +12,22 @@ import javax.sql.DataSource;
 @Singleton
 public class DatabaseInitializer {
 
-	private final DataSource dataSource;
+    private final DataSource dataSource;
 
-	@Inject
-	public DatabaseInitializer(DataSource dataSource) {
-		this.dataSource = dataSource;
-	}
+    @Inject
+    public DatabaseInitializer(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
 
-	public void setup() {
-        /*
-		Flyway
-			.configure()
-			.dataSource(dataSource)
-			.outOfOrder(true)
-			.load()
+    public void setup() {
+        Flyway
+            .configure()
+            .dataSource(dataSource)
+            .outOfOrder(true)
+            .load()
             // use repair() when working locally on a migration file
             // => this enables Flyway to accept the changes made in the migration file
-			.migrate();
-         */
-	}
+            .migrate();
+
+    }
 }
