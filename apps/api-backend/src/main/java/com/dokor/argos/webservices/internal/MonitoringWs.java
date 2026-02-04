@@ -2,6 +2,7 @@ package com.dokor.argos.webservices.internal;
 
 import java.util.Map;
 
+import com.coreoz.plume.db.transaction.TransactionManager;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
@@ -41,8 +42,8 @@ public class MonitoringWs {
     @Inject
     public MonitoringWs(
         ApplicationInfoProvider applicationInfoProvider,
-        // TransactionManager transactionManager,
-        // HikariDataSource hikariDataSource,
+        TransactionManager transactionManager,
+//        HikariDataSource hikariDataSource,
         GrizzlyThreadPoolProbe grizzlyThreadPoolProbe,
         InternalApiAuthenticator apiAuthenticator,
         JerseyMonitoringObjectMapperProvider metricsObjectMapperProvider
@@ -50,14 +51,14 @@ public class MonitoringWs {
         this.applicationInfo = applicationInfoProvider.get();
         // Registering health checks
         this.healthStatus = new HealthCheckBuilder()
-            // .registerDatabaseHealthCheck(transactionManager)
+            .registerDatabaseHealthCheck(transactionManager)
             .build();
 
         // Registering metrics to monitor
         this.metrics = new MetricsCheckBuilder()
             .registerJvmMetrics()
             .registerGrizzlyMetrics(grizzlyThreadPoolProbe)
-            // .registerHikariMetrics(hikariDataSource)
+//            .registerHikariMetrics(hikariDataSource)
             .build();
 
         // Require authentication to access monitoring endpoints
