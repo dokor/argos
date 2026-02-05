@@ -47,7 +47,7 @@ public class QuerydslGenerator {
 
 		MetaDataExporter exporter = new MetaDataExporter();
 		exporter.setPackageName("com.dokor.argos.db.generated");
-		exporter.setTargetFolder(new File("src/main/java"));
+		exporter.setTargetFolder(new File("apps/api-backend/src/main/java"));
 		exporter.setTableNamePattern(TABLES_PREFIX + "%");
 		exporter.setNamingStrategy(new DefaultNamingStrategy() {
 			@Override
