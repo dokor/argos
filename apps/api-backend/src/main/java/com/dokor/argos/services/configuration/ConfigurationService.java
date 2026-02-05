@@ -20,9 +20,9 @@ public class ConfigurationService {
         this.config1 = ConfigFactory.parseResources("/config/prod.conf");
         this.config = ConfigFactory.load(System.getProperty("config.file")).resolve();
         logger.info("config.file sysprop=" + System.getProperty("config.file"));
-        logger.info("configParam Has db.url? " + this.config.hasPath("db.url"));
-        logger.info("Config Has db.url? " + this.config.hasPath("db.url"));
-        logger.info("Config1 Has db.url? " + this.config1.hasPath("db.url"));
+        logger.info("configParam Has db.hikari? " + this.config.hasPath("db.hikari"));
+        logger.info("Config Has db.hikari? " + this.config.hasPath("db.hikari"));
+        logger.info("Config1 Has db.hikari? " + this.config1.hasPath("db.hikari"));
     }
 
 
