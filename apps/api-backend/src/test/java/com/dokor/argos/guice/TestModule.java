@@ -1,5 +1,6 @@
 package com.dokor.argos.guice;
 
+import com.coreoz.plume.db.guice.GuiceDbTestModule;
 import com.coreoz.plume.mocks.MockedClock;
 import com.google.inject.AbstractModule;
 import com.google.inject.util.Modules;
@@ -21,6 +22,6 @@ public class TestModule extends AbstractModule {
 			}
 		}));
         // To run database Flyway scripts before running tests
-        // install(new GuiceDbTestModule());
+         install(new GuiceDbTestModule());
 	}
 }

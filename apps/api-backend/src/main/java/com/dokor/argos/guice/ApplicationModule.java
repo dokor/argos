@@ -14,15 +14,15 @@ import com.google.inject.AbstractModule;
  */
 public class ApplicationModule extends AbstractModule {
 
-	@Override
-	protected void configure() {
-		install(new GuiceConfModule());
-		install(new GuiceJacksonModule());
-		// Database & Querydsl installation
-		 install(new GuiceQuerydslModule());
+    @Override
+    protected void configure() {
+        install(new GuiceConfModule());
+        install(new GuiceJacksonModule());
+        // Database & Querydsl installation
+        install(new GuiceQuerydslModule());
 
-		// Prepare Jersey configuration
-		bind(ResourceConfig.class).toProvider(JerseyConfigProvider.class);
-	}
+        // Prepare Jersey configuration
+        bind(ResourceConfig.class).toProvider(JerseyConfigProvider.class);
+    }
 
 }
