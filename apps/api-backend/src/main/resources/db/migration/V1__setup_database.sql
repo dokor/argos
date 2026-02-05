@@ -21,5 +21,5 @@ CREATE TABLE IF NOT EXISTS ARG_AUDIT_RUN (
     PRIMARY KEY (id),
     KEY idx_run_status_created (status, created_at),
     KEY idx_run_claim_token (claim_token),
-    CONSTRAINT fk_run_audit FOREIGN KEY (audit_id) REFERENCES audit(id) ON DELETE CASCADE
+    CONSTRAINT fk_run_audit FOREIGN KEY (audit_id) REFERENCES ARG_AUDIT(id) ON DELETE CASCADE
     ) ENGINE=InnoDB;
