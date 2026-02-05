@@ -3,6 +3,7 @@ package com.dokor.argos;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
+import com.coreoz.wisp.Scheduler;
 import com.dokor.argos.db.DatabaseInitializer;
 import org.glassfish.grizzly.GrizzlyFuture;
 import org.glassfish.grizzly.http.server.HttpServer;
@@ -54,11 +55,7 @@ public class WebApplication {
                 injector.getInstance(ConfigurationService.class).httpGrizzlyWorkerThreadsPoolSize()
             );
 
-            // Add a shutdown hook to execute some code when the JVM receive a kill signal before it stops
-            addShutDownListener(httpServer);
-            // If Plume Scheduler / Wisp is used, uncomment next line
-            // addShutDownListener(httpServer, injector.getInstance(Scheduler.class));
-
+            addShutDownListener(httpServer, injector.getInstance(Scheduler.class));
 
             logger.info("Server started in {} ms", System.currentTimeMillis() - startTimestamp);
         } catch (Throwable e) {
@@ -70,7 +67,7 @@ public class WebApplication {
         }
     }
 
-    private static void addShutDownListener(HttpServer httpServer) { // If scheduler is used, add arg: Scheduler scheduler
+    private static void addShutDownListener(HttpServer httpServer, Scheduler scheduler) {
         Runtime.getRuntime().addShutdownHook(new Thread(
             () -> {
                 logger.info("Stopping signal received, shutting down server and scheduler...");
@@ -78,7 +75,7 @@ public class WebApplication {
                 try {
                     logger.info("Waiting for server to shut down... Shutdown timeout is {} seconds", GRACEFUL_SHUTDOWN_TIMEOUT.toSeconds());
                     // If scheduler is used, uncomment next line
-                    // scheduler.gracefullyShutdown(GRACEFUL_SHUTDOWN_TIMEOUT);
+                    scheduler.gracefullyShutdown(GRACEFUL_SHUTDOWN_TIMEOUT);
                     grizzlyServerShutdownFuture.get();
                     logger.info("Server and scheduler stopped.");
                 } catch (Exception e) {

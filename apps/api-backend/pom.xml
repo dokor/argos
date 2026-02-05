@@ -183,6 +183,12 @@
 			<artifactId>plume-db-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+
+        <!-- scheduler -->
+        <dependency>
+            <groupId>com.coreoz</groupId>
+            <artifactId>plume-scheduler</artifactId>
+        </dependency>
 	</dependencies>
 
     <profiles>
