@@ -57,6 +57,7 @@ public class WebApplication {
             // If Plume Scheduler / Wisp is used, uncomment next line
             // addShutDownListener(httpServer, injector.getInstance(Scheduler.class));
 
+
             logger.info("Server started in {} ms", System.currentTimeMillis() - startTimestamp);
         } catch (Throwable e) {
             logger.error("Failed to start server", e);
