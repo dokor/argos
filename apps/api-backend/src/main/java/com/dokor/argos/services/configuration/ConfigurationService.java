@@ -15,9 +15,8 @@ public class ConfigurationService {
 
     @Inject
     public ConfigurationService(Config config) {
-        logger.warn("ConfigurationService has been initialized");
         this.config = config;
-        logger.warn("Configuration loaded ? [{}] ", this.config.getString("db.hikari.\"dataSource.url\""));
+        logger.debug("ConfigurationService has been initialized");
     }
 
     public String internalApiAuthUsername() {
