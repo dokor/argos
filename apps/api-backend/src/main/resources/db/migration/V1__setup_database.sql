@@ -11,13 +11,13 @@ CREATE TABLE IF NOT EXISTS ARG_AUDIT (
 CREATE TABLE IF NOT EXISTS ARG_AUDIT_RUN (
     id BIGINT NOT NULL AUTO_INCREMENT,
     audit_id BIGINT NOT NULL,
-    status VARCHAR(16) NOT NULL,              -- QUEUED|RUNNING|FAILED|COMPLETED
+    status VARCHAR(16) NOT NULL,
     created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     started_at DATETIME(3) NULL,
     finished_at DATETIME(3) NULL,
     last_error TEXT NULL,
     result_json LONGTEXT NULL,
-    claim_token VARCHAR(64) NULL,             -- pour claim atomique multi-worker
+    claim_token VARCHAR(64) NULL,
     PRIMARY KEY (id),
     KEY idx_run_status_created (status, created_at),
     KEY idx_run_claim_token (claim_token),
