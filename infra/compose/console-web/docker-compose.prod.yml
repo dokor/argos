@@ -13,7 +13,7 @@ services:
     environment:
       - NODE_ENV=production
       - NEXT_PUBLIC_API_URL=https://console.argos.tld
-      - NEXT_PUBLIC_ARGOS_API_BASE=https://console.argos.tld:8081/api
+      - NEXT_PUBLIC_ARGOS_API_BASE=:/api
     labels:
       - traefik.enable=true
       - traefik.http.routers.console-web.rule=Host(`console.argos.tld`)
