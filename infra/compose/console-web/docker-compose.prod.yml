@@ -20,6 +20,7 @@ services:
       - traefik.http.routers.console-web.entrypoints=websecure
       - traefik.http.routers.console-web.tls=true
       - traefik.http.services.console-web.loadbalancer.server.port=3000
+      - traefik.http.routers.console-web.priority=10
 
 networks:
   proxy:
