@@ -34,32 +34,64 @@ public class AuditService {
      * - crée un AuditRun en QUEUED
      */
     public AuditRun createRunForUrl(String inputUrl) {
+        logger.info("Creating audit run for inputUrl={}", inputUrl);
+
         String normalizedUrl = urlNormalizer.normalize(inputUrl);
         String hostname = urlNormalizer.extractHostname(normalizedUrl);
         Instant now = Instant.now();
 
-        Audit audit = auditDao.findByNormalizedUrl(normalizedUrl)
-            .orElseGet(() -> insertAudit(inputUrl, normalizedUrl, hostname, now));
+        logger.debug("Normalized URL={}, hostname={}", normalizedUrl, hostname);
 
-        return insertRun(audit.getId(), now);
+        Audit audit = auditDao.findByNormalizedUrl(normalizedUrl)
+            .orElseGet(() -> {
+                logger.info("No existing audit found, creating new audit for normalizedUrl={}", normalizedUrl);
+                return createAudit(inputUrl, normalizedUrl, hostname, now);
+            });
+
+        AuditRun run = createRun(audit.getId(), now);
+
+        logger.info(
+            "Audit run created: auditId={}, runId={}, status={}",
+            audit.getId(),
+            run.getId(),
+            run.getStatus()
+        );
+
+        return run;
     }
 
-    private Audit insertAudit(String inputUrl, String normalizedUrl, String hostname, Instant now) {
+    private Audit createAudit(String inputUrl, String normalizedUrl, String hostname, Instant now) {
         Audit audit = new Audit();
         audit.setInputUrl(inputUrl);
         audit.setNormalizedUrl(normalizedUrl);
         audit.setHostname(hostname);
         audit.setCreatedAt(now);
 
-        return auditDao.save(audit);
+        Audit savedAudit = auditDao.save(audit);
+
+        logger.info(
+            "Audit created: id={}, normalizedUrl={}",
+            savedAudit.getId(),
+            savedAudit.getNormalizedUrl()
+        );
+
+        return savedAudit;
     }
 
-    private AuditRun insertRun(long auditId, Instant now) {
+    private AuditRun createRun(long auditId, Instant now) {
         AuditRun run = new AuditRun();
         run.setAuditId(auditId);
         run.setStatus(AuditRunStatus.QUEUED.name());
         run.setCreatedAt(now);
 
-        return auditRunDao.save(run);
+        AuditRun savedRun = auditRunDao.save(run);
+
+        logger.debug(
+            "AuditRun persisted: runId={}, auditId={}",
+            savedRun.getId(),
+            savedRun.getAuditId()
+        );
+
+        return savedRun;
     }
 }
