@@ -4,6 +4,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
 
+import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import com.coreoz.plume.jersey.errors.WsJacksonJsonProvider;
@@ -20,45 +21,45 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Singleton
 public class JerseyConfigProvider implements Provider<ResourceConfig> {
 
-	private final ResourceConfig config;
+    private final ResourceConfig config;
 
-	@Inject
-	public JerseyConfigProvider(ObjectMapper objectMapper) {
-		config = new ResourceConfig();
+    @Inject
+    public JerseyConfigProvider(ObjectMapper objectMapper) {
+        config = new ResourceConfig();
 
-		// this package will be scanned by Jersey to discover web-service classes
-		config.packages("com.dokor.argos.webservices");
+        // this package will be scanned by Jersey to discover web-service classes
+        config.packages("com.dokor.argos.webservices");
 
-		// filters configuration
-		// handle errors and exceptions
-		config.register(WsResultExceptionMapper.class);
+        // filters configuration
+        // handle errors and exceptions
+        config.register(WsResultExceptionMapper.class);
         // Limit request body size to 500kb
         config.register(ContentSizeLimitFeature.class);
-		// require explicit access control on API
-		config.register(RequireExplicitAccessControlFeature.accessControlAnnotations(PublicApi.class));
-		// to debug web-service requests
-		// register(LoggingFeature.class);
+        // require explicit access control on API
+        config.register(RequireExplicitAccessControlFeature.accessControlAnnotations(PublicApi.class));
+        // to debug web-service requests
+        config.register(LoggingFeature.class);
 
-		// java 8
-		config.register(TimeParamProvider.class);
+        // java 8
+        config.register(TimeParamProvider.class);
 
-		// WADL is like swagger for jersey
-		// by default it should be disabled to prevent leaking API documentation
-		config.property("jersey.config.server.wadl.disableWadl", true);
+        // WADL is like swagger for jersey
+        // by default it should be disabled to prevent leaking API documentation
+        config.property("jersey.config.server.wadl.disableWadl", true);
 
-		// Disable automatique relative location URI resolution
-		// By default it transform a relative location to an absolute location
-		config.property("jersey.config.server.headers.location.relative.resolution.disabled", true);
+        // Disable automatique relative location URI resolution
+        // By default it transform a relative location to an absolute location
+        config.property("jersey.config.server.headers.location.relative.resolution.disabled", true);
 
-		// jackson mapper configuration
-		WsJacksonJsonProvider jacksonProvider = new WsJacksonJsonProvider();
-		jacksonProvider.setMapper(objectMapper);
-		config.register(jacksonProvider);
-	}
+        // jackson mapper configuration
+        WsJacksonJsonProvider jacksonProvider = new WsJacksonJsonProvider();
+        jacksonProvider.setMapper(objectMapper);
+        config.register(jacksonProvider);
+    }
 
-	@Override
-	public ResourceConfig get() {
-		return config;
-	}
+    @Override
+    public ResourceConfig get() {
+        return config;
+    }
 
 }

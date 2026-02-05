@@ -1,6 +1,5 @@
 package com.dokor.argos.services.configuration;
 
-import com.typesafe.config.ConfigFactory;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
@@ -11,20 +10,15 @@ import org.slf4j.LoggerFactory;
 @Singleton
 public class ConfigurationService {
     private static final Logger logger = LoggerFactory.getLogger(ConfigurationService.class);
-    private final Config config;
-    private final Config config1;
 
+    private final Config config;
 
     @Inject
     public ConfigurationService(Config config) {
-        this.config1 = ConfigFactory.parseResources("/config/prod.conf");
-        this.config = ConfigFactory.load(System.getProperty("config.file")).resolve();
-        logger.info("config.file sysprop=" + System.getProperty("config.file"));
-        logger.info("configParam Has db.hikari? " + this.config.hasPath("db.hikari"));
-        logger.info("Config Has db.hikari? " + this.config.hasPath("db.hikari"));
-        logger.info("Config1 Has db.hikari? " + this.config1.hasPath("db.hikari"));
+        logger.warn("ConfigurationService has been initialized");
+        this.config = config;
+        logger.warn("Configuration loaded ? [{}] ", this.config.getString("db.hikari.\"dataSource.url\""));
     }
-
 
     public String internalApiAuthUsername() {
         return config.getString("internal-api.auth-username");

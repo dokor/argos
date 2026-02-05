@@ -1,5 +1,6 @@
 package com.dokor.argos.guice;
 
+import com.coreoz.plume.db.querydsl.guice.GuiceQuerydslModule;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import com.dokor.argos.jersey.JerseyConfigProvider;
@@ -18,7 +19,7 @@ public class ApplicationModule extends AbstractModule {
 		install(new GuiceConfModule());
 		install(new GuiceJacksonModule());
 		// Database & Querydsl installation
-		// install(new GuiceQuerydslModule());
+		 install(new GuiceQuerydslModule());
 
 		// Prepare Jersey configuration
 		bind(ResourceConfig.class).toProvider(JerseyConfigProvider.class);
