@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 public class QuerydslGenerator {
     private static final Logger logger = LoggerFactory.getLogger(QuerydslGenerator.class);
 
-    private static final String TABLES_PREFIX = "plm_";
+    private static final String TABLES_PREFIX = "ARG_";
 
 	public static void main(String... args) {
 		Configuration configuration = new Configuration(SQLTemplates.DEFAULT);

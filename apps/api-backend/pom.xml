@@ -113,7 +113,6 @@
         <dependency>
             <groupId>com.coreoz</groupId>
             <artifactId>plume-db-querydsl-codegen</artifactId>
-            <scope>provided</scope>
             <exclusions>
                 <!-- Querydsl codegen still relies on javax.inject for now -->
                 <exclusion>
@@ -121,6 +120,11 @@
                     <groupId>javax.inject</groupId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
+            <version>1</version>
         </dependency>
 		<!-- PUT YOUR DATABASE CONNECTOR HERE -->
         <dependency>
