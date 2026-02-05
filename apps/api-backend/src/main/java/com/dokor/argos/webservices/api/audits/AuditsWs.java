@@ -1,8 +1,6 @@
 package com.dokor.argos.webservices.api.audits;
 
 import com.coreoz.plume.jersey.security.permission.PublicApi;
-import com.dokor.argos.services.domain.audit.AuditService;
-import com.dokor.argos.webservices.api.audits.data.AuditRunStatusResponse;
 import com.dokor.argos.webservices.api.audits.data.CreateAuditRequest;
 import com.dokor.argos.webservices.api.audits.data.CreateAuditResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,6 +19,8 @@ import jakarta.ws.rs.core.MediaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Instant;
+
 @Path("/audits")
 @Tag(name = "audits", description = "Manage audits")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -31,11 +31,13 @@ public class AuditsWs {
 
     private static final Logger logger = LoggerFactory.getLogger(AuditsWs.class);
 
-    private final AuditService auditService;
+//    private final AuditService auditService;
 
     @Inject
-    public AuditsWs(AuditService auditService) {
-        this.auditService = auditService;
+    public AuditsWs(
+//        AuditService auditService
+    ) {
+//        this.auditService = auditService;
     }
 
     @POST
@@ -44,16 +46,17 @@ public class AuditsWs {
         @Parameter(required = true) @RequestBody(required = true) CreateAuditRequest request
     ) {
         logger.info("Create audit requested: url={}", request.url());
-        return auditService.createAudit(request);
+//        return auditService.createAudit(request);
+        return new CreateAuditResponse(1L, 1L, "", Instant.now());
     }
 
-    @GET
-    @Path("/runs/{runId}")
-    @Operation(description = "Récupère le statut d'un run.")
-    public AuditRunStatusResponse getRunStatus(
-        @Parameter(required = true) @PathParam("runId") long runId
-    ) {
-        logger.debug("Get run status requested: runId={}", runId);
-        return auditService.getRunStatus(runId);
-    }
+//    @GET
+//    @Path("/runs/{runId}")
+//    @Operation(description = "Récupère le statut d'un run.")
+//    public AuditRunStatusResponse getRunStatus(
+//        @Parameter(required = true) @PathParam("runId") long runId
+//    ) {
+//        logger.debug("Get run status requested: runId={}", runId);
+//        return auditService.getRunStatus(runId);
+//    }
 }
