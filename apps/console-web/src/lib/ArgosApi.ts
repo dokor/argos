@@ -15,7 +15,7 @@ export type RunStatusResponse = {
 };
 
 // todo : fix conf
-const API_BASE: string | undefined = process.env.NEXT_PUBLIC_ARGOS_API_BASE ?? "https://console.argos.tld/api";
+const API_BASE: string | undefined = process.env.NEXT_PUBLIC_ARGOS_API_BASE ?? ":8081/api";
 
 if (!API_BASE) {
   // fail fast en dev
