@@ -14,7 +14,7 @@ services:
     environment:
       - JAVA_OPTS=-Xms256m -Xmx512m
       - NODE_ENV=production
-      - JAVA_TOOL_OPTIONS= -Dconfig.file=/config/prod.conf
+      - JAVA_TOOL_OPTIONS=-Dconfig.file=/config/prod.conf
     # env_file:
     #   - .env
     labels:
