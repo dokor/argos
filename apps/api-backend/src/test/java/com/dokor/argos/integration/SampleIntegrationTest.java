@@ -1,7 +1,7 @@
 package com.dokor.argos.integration;
 
 import com.dokor.argos.guice.TestModule;
-import com.dokor.argos.services.domain.enums.AuditRunStatus;
+import com.dokor.argos.services.domain.audit.enums.AuditRunStatus;
 
 import com.coreoz.test.GuiceTest;
 import com.dokor.argos.webservices.api.audits.AuditsWs;

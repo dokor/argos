@@ -1,9 +1,9 @@
-package com.dokor.argos.services.domain;
+package com.dokor.argos.services.domain.audit;
 
 import com.dokor.argos.db.dao.AuditDao;
 import com.dokor.argos.db.generated.Audit;
 import com.dokor.argos.db.generated.AuditRun;
-import com.dokor.argos.services.domain.errors.NotFoundException;
+import com.dokor.argos.services.domain.audit.errors.NotFoundException;
 import com.dokor.argos.webservices.api.audits.data.AuditRunStatusResponse;
 import com.dokor.argos.webservices.api.audits.data.CreateAuditRequest;
 import com.dokor.argos.webservices.api.audits.data.CreateAuditResponse;

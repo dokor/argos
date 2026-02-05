@@ -1,4 +1,4 @@
-package com.dokor.argos.services.domain.enums;
+package com.dokor.argos.services.domain.audit.enums;
 
 public enum AuditRunStatus {
     QUEUED,

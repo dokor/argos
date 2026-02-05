@@ -1,9 +1,9 @@
-package com.dokor.argos.services.domain;
+package com.dokor.argos.services.domain.audit;
 
 import com.dokor.argos.db.dao.AuditRunDao;
 
 import com.dokor.argos.db.generated.AuditRun;
-import com.dokor.argos.services.domain.enums.AuditRunStatus;
+import com.dokor.argos.services.domain.audit.enums.AuditRunStatus;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.slf4j.Logger;

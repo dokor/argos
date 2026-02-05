@@ -1,4 +1,4 @@
-package com.dokor.argos.services.domain;
+package com.dokor.argos.services.domain.audit;
 
 
 import jakarta.inject.Singleton;
