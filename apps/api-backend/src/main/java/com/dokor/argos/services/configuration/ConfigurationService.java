@@ -7,6 +7,8 @@ import com.typesafe.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
+
 @Singleton
 public class ConfigurationService {
     private static final Logger logger = LoggerFactory.getLogger(ConfigurationService.class);
@@ -32,5 +34,9 @@ public class ConfigurationService {
             return null;
         }
         return config.getInt("http-grizzly.worker-threads-pool-size");
+    }
+
+    public Duration auditSchedulerInterval() {
+        return config.getDuration("audit.scheduler.interval");
     }
 }
