@@ -38,6 +38,8 @@ public class WebApplication {
 
             ResourceConfig jerseyResourceConfig = injector.getInstance(ResourceConfig.class);
 
+            injector.getInstance(ConfigurationService.class);
+
             // Initialize database
             injector.getInstance(DatabaseInitializer.class).setup();
 
