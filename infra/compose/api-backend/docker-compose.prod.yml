@@ -7,14 +7,14 @@ services:
     container_name: api-backend
     restart: unless-stopped
     volumes:
-      - /srv/apps/api-backend/prod-test.conf:/config/prod-test.conf:ro
+      - /srv/configs/api-backend/prod.conf:/config/prod.conf:ro
     networks:
       - proxy
       - data
     environment:
       - JAVA_OPTS=-Xms256m -Xmx512m
       - NODE_ENV=production
-      - JAVA_TOOL_OPTIONS= -Dconfig.file=/config/prod-test.conf
+      - JAVA_TOOL_OPTIONS= -Dconfig.file=/config/prod.conf
     # env_file:
     #   - .env
     labels:
