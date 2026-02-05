@@ -30,27 +30,30 @@ import org.slf4j.LoggerFactory;
 public class AuditsWs {
 
     private static final Logger logger = LoggerFactory.getLogger(AuditsWs.class);
+
     private final AuditService auditService;
 
     @Inject
-    public AuditsWs(
-        AuditService auditService
-    ) {
+    public AuditsWs(AuditService auditService) {
         this.auditService = auditService;
     }
 
     @POST
-    @Operation(description = "creation d'un audit")
-    public CreateAuditResponse createAudit(@Parameter(required = true) @RequestBody CreateAuditRequest createAuditRequest) {
-        logger.debug("Demande de création de l'audit de [{}]", createAuditRequest);
-        return this.auditService.createAuditOfUrl(createAuditRequest.url());
+    @Operation(description = "Crée un audit (idempotent sur normalizedUrl) et crée un run en status QUEUED.")
+    public CreateAuditResponse createAudit(
+        @Parameter(required = true) @RequestBody(required = true) CreateAuditRequest request
+    ) {
+        logger.info("Create audit requested: url={}", request.url());
+        return auditService.createAudit(request);
     }
 
     @GET
     @Path("/runs/{runId}")
-    @Operation(description = "Récupération d'un audit en cours")
-    public AuditRunStatusResponse getRunStatus(@Parameter(required = true) @PathParam("runId") String runId) {
-        logger.debug("Demande de récupération de l'audit [{}]", runId);
-        return this.auditService.getRunStatusOfId(runId);
+    @Operation(description = "Récupère le statut d'un run.")
+    public AuditRunStatusResponse getRunStatus(
+        @Parameter(required = true) @PathParam("runId") long runId
+    ) {
+        logger.debug("Get run status requested: runId={}", runId);
+        return auditService.getRunStatus(runId);
     }
 }

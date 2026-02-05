@@ -1,10 +1,12 @@
 package com.dokor.argos.services.domain;
 
 import com.dokor.argos.db.dao.AuditDao;
-import com.dokor.argos.db.dao.AuditRunDao;
 import com.dokor.argos.db.generated.Audit;
 import com.dokor.argos.db.generated.AuditRun;
-import com.dokor.argos.services.domain.enums.AuditRunStatus;
+import com.dokor.argos.services.domain.errors.NotFoundException;
+import com.dokor.argos.webservices.api.audits.data.AuditRunStatusResponse;
+import com.dokor.argos.webservices.api.audits.data.CreateAuditRequest;
+import com.dokor.argos.webservices.api.audits.data.CreateAuditResponse;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.slf4j.Logger;
@@ -17,13 +19,13 @@ public class AuditService {
     private static final Logger logger = LoggerFactory.getLogger(AuditService.class);
 
     private final AuditDao auditDao;
-    private final AuditRunDao auditRunDao;
+    private final AuditRunService auditRunService;
     private final UrlNormalizer urlNormalizer;
 
     @Inject
-    public AuditService(AuditDao auditDao, AuditRunDao auditRunDao, UrlNormalizer urlNormalizer) {
+    public AuditService(AuditDao auditDao, AuditRunService auditRunService, UrlNormalizer urlNormalizer) {
         this.auditDao = auditDao;
-        this.auditRunDao = auditRunDao;
+        this.auditRunService = auditRunService;
         this.urlNormalizer = urlNormalizer;
     }
 
@@ -33,65 +35,52 @@ public class AuditService {
      * - récupère ou crée l’Audit (idempotent)
      * - crée un AuditRun en QUEUED
      */
-    public AuditRun createRunForUrl(String inputUrl) {
-        logger.info("Creating audit run for inputUrl={}", inputUrl);
+    public CreateAuditResponse createAudit(CreateAuditRequest request) {
+        String inputUrl = request.url();
+        logger.info("AuditService.createAudit inputUrl={}", inputUrl);
 
         String normalizedUrl = urlNormalizer.normalize(inputUrl);
         String hostname = urlNormalizer.extractHostname(normalizedUrl);
         Instant now = Instant.now();
 
-        logger.debug("Normalized URL={}, hostname={}", normalizedUrl, hostname);
-
         Audit audit = auditDao.findByNormalizedUrl(normalizedUrl)
             .orElseGet(() -> {
-                logger.info("No existing audit found, creating new audit for normalizedUrl={}", normalizedUrl);
-                return createAudit(inputUrl, normalizedUrl, hostname, now);
+                logger.info("Creating new Audit for normalizedUrl={}", normalizedUrl);
+                Audit a = new Audit();
+                a.setInputUrl(inputUrl);
+                a.setNormalizedUrl(normalizedUrl);
+                a.setHostname(hostname);
+                a.setCreatedAt(now);
+                return auditDao.save(a);
             });
 
-        AuditRun run = createRun(audit.getId(), now);
+        AuditRun run = auditRunService.createQueuedRun(audit.getId(), now);
 
-        logger.info(
-            "Audit run created: auditId={}, runId={}, status={}",
-            audit.getId(),
+        logger.info("Run created: auditId={}, runId={}, status={}", audit.getId(), run.getId(), run.getStatus());
+
+        return new CreateAuditResponse(
             run.getId(),
-            run.getStatus()
+            run.getAuditId(),
+            run.getStatus(),
+            run.getCreatedAt()
         );
-
-        return run;
     }
 
-    private Audit createAudit(String inputUrl, String normalizedUrl, String hostname, Instant now) {
-        Audit audit = new Audit();
-        audit.setInputUrl(inputUrl);
-        audit.setNormalizedUrl(normalizedUrl);
-        audit.setHostname(hostname);
-        audit.setCreatedAt(now);
+    public AuditRunStatusResponse getRunStatus(long runId) {
+        logger.debug("AuditService.getRunStatus runId={}", runId);
 
-        Audit savedAudit = auditDao.save(audit);
+        AuditRun run = auditRunService.getRun(runId)
+            .orElseThrow(() -> new NotFoundException("AuditRun not found: " + runId));
 
-        logger.info(
-            "Audit created: id={}, normalizedUrl={}",
-            savedAudit.getId(),
-            savedAudit.getNormalizedUrl()
+        return new AuditRunStatusResponse(
+            run.getId(),
+            run.getAuditId(),
+            run.getStatus(),
+            run.getCreatedAt(),
+            run.getStartedAt(),
+            run.getFinishedAt(),
+            run.getLastError(),
+            run.getResultJson()
         );
-
-        return savedAudit;
-    }
-
-    private AuditRun createRun(long auditId, Instant now) {
-        AuditRun run = new AuditRun();
-        run.setAuditId(auditId);
-        run.setStatus(AuditRunStatus.QUEUED.name());
-        run.setCreatedAt(now);
-
-        AuditRun savedRun = auditRunDao.save(run);
-
-        logger.debug(
-            "AuditRun persisted: runId={}, auditId={}",
-            savedRun.getId(),
-            savedRun.getAuditId()
-        );
-
-        return savedRun;
     }
 }

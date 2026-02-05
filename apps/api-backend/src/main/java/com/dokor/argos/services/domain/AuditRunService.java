@@ -2,6 +2,8 @@ package com.dokor.argos.services.domain;
 
 import com.dokor.argos.db.dao.AuditRunDao;
 
+import com.dokor.argos.db.generated.AuditRun;
+import com.dokor.argos.services.domain.enums.AuditRunStatus;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.slf4j.Logger;
@@ -20,6 +22,23 @@ public class AuditRunService {
     @Inject
     public AuditRunService(AuditRunDao auditRunDao) {
         this.auditRunDao = auditRunDao;
+    }
+
+    public AuditRun createQueuedRun(long auditId, Instant now) {
+        logger.info("Creating QUEUED run for auditId={}", auditId);
+
+        AuditRun run = new AuditRun();
+        run.setAuditId(auditId);
+        run.setStatus(AuditRunStatus.QUEUED.name());
+        run.setCreatedAt(now);
+
+        AuditRun saved = auditRunDao.save(run);
+        logger.debug("Run persisted: runId={}", saved.getId());
+        return saved;
+    }
+
+    public Optional<AuditRun> getRun(long runId) {
+        return Optional.ofNullable(auditRunDao.findById(runId));
     }
 
     /**
