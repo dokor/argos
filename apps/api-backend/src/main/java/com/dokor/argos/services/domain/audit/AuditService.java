@@ -3,6 +3,7 @@ package com.dokor.argos.services.domain.audit;
 import com.dokor.argos.db.dao.AuditDao;
 import com.dokor.argos.db.generated.Audit;
 import com.dokor.argos.db.generated.AuditRun;
+import com.dokor.argos.services.analysis.AuditProcessorService;
 import com.dokor.argos.services.domain.audit.errors.NotFoundException;
 import com.dokor.argos.webservices.api.audits.data.AuditRunStatusResponse;
 import com.dokor.argos.webservices.api.audits.data.CreateAuditRequest;
@@ -20,13 +21,39 @@ public class AuditService {
 
     private final AuditDao auditDao;
     private final AuditRunService auditRunService;
+    private final AuditProcessorService auditProcessorService;
     private final UrlNormalizer urlNormalizer;
 
     @Inject
-    public AuditService(AuditDao auditDao, AuditRunService auditRunService, UrlNormalizer urlNormalizer) {
+    public AuditService(
+        AuditDao auditDao,
+        AuditRunService auditRunService,
+        AuditProcessorService auditProcessorService,
+        UrlNormalizer urlNormalizer
+    ) {
         this.auditDao = auditDao;
         this.auditRunService = auditRunService;
+        this.auditProcessorService = auditProcessorService;
         this.urlNormalizer = urlNormalizer;
+    }
+
+    /**
+     * Méthode appelée par le scheduler.
+     * Elle :
+     * - tente de récupérer un run QUEUED
+     * - le claim
+     * - lance le traitement
+     */
+    public boolean processNextQueuedRun() {
+        logger.debug("Scheduler tick: looking for queued audit run");
+
+        return auditRunService.claimNextQueuedRun()
+            .map(run -> {
+                logger.info("Processing queued runId={}", run.getId());
+                auditProcessorService.process(run.getId());
+                return true;
+            })
+            .orElse(false);
     }
 
     /**

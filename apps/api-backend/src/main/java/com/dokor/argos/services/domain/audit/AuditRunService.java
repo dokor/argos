@@ -24,6 +24,25 @@ public class AuditRunService {
         this.auditRunDao = auditRunDao;
     }
 
+    /**
+     * Récupère le prochain run en QUEUED et le claim de façon atomique.
+     */
+    public Optional<AuditRun> claimNextQueuedRun() {
+        return auditRunDao.findNextQueuedRun()
+            .flatMap(run -> {
+                String token = UUID.randomUUID().toString().replace("-", "");
+                boolean claimed = auditRunDao.claimRun(run.getId(), token, Instant.now());
+
+                if (!claimed) {
+                    logger.debug("Run already claimed by another worker runId={}", run.getId());
+                    return Optional.empty();
+                }
+
+                logger.info("Run claimed runId={}", run.getId());
+                return Optional.of(run);
+            });
+    }
+
     public AuditRun createQueuedRun(long auditId, Instant now) {
         logger.info("Creating QUEUED run for auditId={}", auditId);
 

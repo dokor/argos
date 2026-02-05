@@ -26,6 +26,22 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
         super(transactionManager, QAuditRun.auditRun);
     }
 
+    public Optional<AuditRun> findNextQueuedRun() {
+        return Optional.ofNullable(
+            transactionManager.selectQuery()
+                .select(RUN)
+                .from(RUN)
+                .where(
+                    RUN.status.eq("QUEUED"),
+                    RUN.claimToken.isNull()
+                )
+                .orderBy(RUN.createdAt.asc())
+                .limit(1)
+                .fetchOne()
+        );
+    }
+
+
     /**
      * Recherche un AuditRun à partir de son claimToken.
      * <p>
