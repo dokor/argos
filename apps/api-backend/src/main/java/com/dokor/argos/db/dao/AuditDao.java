@@ -52,7 +52,7 @@ public class AuditDao extends CrudDaoQuerydsl<Audit> {
      * @return Optional contenant l’audit s’il existe
      */
     public Optional<Audit> findByNormalizedUrl(String normalizedUrl) {
-        return Optional.of(transactionManager.selectQuery()
+        return Optional.ofNullable(transactionManager.selectQuery()
             .select(AUDIT)
             .from(AUDIT)
             .where(AUDIT.normalizedUrl.eq(normalizedUrl))
