@@ -43,7 +43,7 @@ public class WebApplication {
 
             // Initialize database
             injector.getInstance(DatabaseInitializer.class).setup();
-
+            injector.getInstance(com.dokor.argos.webservices.api.audits.AuditsWs.class);
             // Starts the server
             HttpServer httpServer = GrizzlySetup.start(
                 jerseyResourceConfig,
