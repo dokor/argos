@@ -1,16 +1,21 @@
 package com.dokor.argos.services.analysis;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Singleton
 final class HtmlExtractor {
 
     private static final Pattern TITLE = Pattern.compile("(?is)<title>(.*?)</title>");
     private static final Pattern META_DESC = Pattern.compile("(?is)<meta\\s+name=[\"']description[\"']\\s+content=[\"'](.*?)[\"'][^>]*>");
     private static final Pattern H1 = Pattern.compile("(?is)<h1[^>]*>(.*?)</h1>");
 
+    @Inject
     private HtmlExtractor() {}
 
     static UrlAuditResult.HtmlInfo extract(String html) {
