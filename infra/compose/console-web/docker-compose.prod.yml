@@ -16,6 +16,7 @@ services:
       - NEXT_PUBLIC_ARGOS_API_BASE=:/api
     labels:
       - traefik.enable=true
+      - traefik.docker.network=proxy
       - traefik.http.routers.console-web.rule=Host(`console.argos.tld`)
       - traefik.http.routers.console-web.entrypoints=websecure
       - traefik.http.routers.console-web.tls=true

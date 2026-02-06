@@ -19,6 +19,7 @@ services:
     #   - .env
     labels:
       - traefik.enable=true
+      - traefik.docker.network=proxy
       - traefik.http.routers.api-backend.rule=Host(`console.argos.tld`) && PathPrefix(`/api`)
       - traefik.http.routers.api-backend.entrypoints=websecure
       - traefik.http.routers.api-backend.tls=true
