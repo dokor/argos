@@ -39,11 +39,11 @@ public class WebApplication {
 
             ResourceConfig jerseyResourceConfig = injector.getInstance(ResourceConfig.class);
 
+            jerseyResourceConfig.register(new JerseyGuiceFeature(injector));
+
             // Initialize database
             injector.getInstance(DatabaseInitializer.class).setup();
 
-            // Enable Jersey to create objects through Guice Injector instance
-            jerseyResourceConfig.register(new JerseyGuiceFeature(injector));
             // Starts the server
             HttpServer httpServer = GrizzlySetup.start(
                 jerseyResourceConfig,

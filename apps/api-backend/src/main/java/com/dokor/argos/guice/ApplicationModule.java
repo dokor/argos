@@ -1,6 +1,8 @@
 package com.dokor.argos.guice;
 
 import com.coreoz.plume.db.querydsl.guice.GuiceQuerydslModule;
+import com.dokor.argos.services.analysis.JavaHttpUrlAuditAnalyzer;
+import com.dokor.argos.services.analysis.UrlAuditAnalyzer;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import com.dokor.argos.jersey.JerseyConfigProvider;
