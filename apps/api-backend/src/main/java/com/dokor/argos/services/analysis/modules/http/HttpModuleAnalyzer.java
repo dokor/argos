@@ -18,11 +18,11 @@ import java.util.*;
 
 /**
  * Analyse "HTTP" d'une URL.
- *
+ * <p>
  * Objectif :
  * - produire un module standardisé (AuditModuleResult) composé de checks (AuditCheckResult)
  * - exploitable facilement pour le PDF et le scoring (via key/status/severity)
- *
+ * <p>
  * Notes :
  * - On ne suit pas automatiquement les redirections : on reconstruit la chaîne pour l'exposer dans le report.
  * - On se limite à MAX_REDIRECTS pour éviter les boucles.
