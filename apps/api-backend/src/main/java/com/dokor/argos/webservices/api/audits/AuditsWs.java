@@ -53,7 +53,7 @@ public class AuditsWs {
     @Path("/runs/{runId}")
     @Operation(description = "Récupère le statut d'un run.")
     public AuditRunStatusResponse getRunStatus(
-        @Parameter(required = true) @PathParam("runId") long runId
+        @Parameter(required = true) @PathParam("runId") Long runId
     ) {
         logger.debug("Get run status requested: runId={}", runId);
         return auditService.getRunStatus(runId);
