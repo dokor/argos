@@ -1,13 +1,13 @@
 export type CreateAuditRequest = { url: string };
 
 export type CreateAuditResponse = {
-  auditId: number;
-  runId: number;
+  auditId: string;
+  runId: string;
   status: "QUEUED" | "RUNNING" | "FAILED" | "COMPLETED";
 };
 
 export type RunStatusResponse = {
-  runId: number;
+  runId: string;
   status: "QUEUED" | "RUNNING" | "FAILED" | "COMPLETED";
   startedAt?: string | null;
   finishedAt?: string | null;
@@ -45,7 +45,7 @@ export const argosApi = {
       body: JSON.stringify(body),
     }),
 
-  getRunStatus: (runId: number | undefined) =>
+  getRunStatus: (runId: string | undefined) =>
     http<RunStatusResponse>(`/audits/runs/${runId}`, { method: "GET" }),
 };
 
