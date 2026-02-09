@@ -1,6 +1,7 @@
 package com.dokor.argos.services.analysis.modules.http;
 
 import com.dokor.argos.services.analysis.model.AuditCheckResult;
+import com.dokor.argos.services.analysis.model.AuditContext;
 import com.dokor.argos.services.analysis.model.AuditModuleAnalyzer;
 import com.dokor.argos.services.analysis.model.AuditModuleResult;
 import com.dokor.argos.services.analysis.model.enums.AuditSeverity;
@@ -43,9 +44,11 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
     }
 
     @Override
-    public AuditModuleResult analyze(String inputUrl, String normalizedUrl, Logger logger) {
+    public AuditModuleResult analyze(AuditContext context, Logger logger) {
         long start = System.currentTimeMillis();
 
+        String inputUrl = context.inputUrl();
+        String normalizedUrl = context.normalizedUrl();
         String currentUrl = normalizedUrl != null ? normalizedUrl : inputUrl;
         List<String> redirectChain = new ArrayList<>();
         Map<String, String> lastHeaders = Map.of();

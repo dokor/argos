@@ -27,9 +27,8 @@ public interface AuditModuleAnalyzer {
     /**
      * Analyse l'URL et retourne le résultat du module.
      *
-     * @param inputUrl URL d'entrée (telle que demandée)
-     * @param normalizedUrl URL normalisée (celle utilisée côté domaine)
+     * @param context ContextHtml
      * @param logger logger fourni par l'orchestrateur (permet d'identifier facilement le run)
      */
-    AuditModuleResult analyze(String inputUrl, String normalizedUrl, Logger logger);
+    AuditModuleResult analyze(AuditContext context, Logger logger);
 }

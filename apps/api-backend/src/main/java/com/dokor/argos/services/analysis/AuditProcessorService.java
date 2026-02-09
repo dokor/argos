@@ -2,10 +2,12 @@ package com.dokor.argos.services.analysis;
 
 import com.dokor.argos.db.dao.AuditDao;
 import com.dokor.argos.db.generated.Audit;
+import com.dokor.argos.services.analysis.model.AuditContext;
 import com.dokor.argos.services.analysis.model.AuditModuleResult;
 import com.dokor.argos.services.analysis.model.AuditReport;
 import com.dokor.argos.services.analysis.modules.html.HtmlModuleAnalyzer;
 import com.dokor.argos.services.analysis.modules.http.HttpModuleAnalyzer;
+import com.dokor.argos.services.analysis.modules.tech.TechModuleAnalyzer;
 import com.dokor.argos.services.domain.audit.AuditRunService;
 import com.dokor.argos.services.domain.audit.UrlNormalizer;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,25 +22,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * Orchestrateur d'analyse (MVP).
- *
- * Responsabilités :
- * - charger l'Audit + l'AuditRun
- * - exécuter les modules d'analyse (HTTP puis HTML, etc.)
- * - assembler un AuditReport canonique (PDF/score friendly)
- * - sérialiser en JSON et persister dans AuditRun.resultJson via AuditRunService
- *
- * Remarques :
- * - Ici on reste simple : process(runId) est appelé par un worker/scheduler.
- * - Plus tard : claimNextQueued() et exécution multi-worker.
- */
 @Singleton
 public class AuditProcessorService {
 
     private static final Logger logger = LoggerFactory.getLogger(AuditProcessorService.class);
-
-    // Version de schéma du JSON produit (utile pour migrations/scoring dans le futur)
     private static final int REPORT_SCHEMA_VERSION = 1;
 
     private final AuditRunService auditRunService;
@@ -47,6 +34,7 @@ public class AuditProcessorService {
 
     private final HttpModuleAnalyzer httpModuleAnalyzer;
     private final HtmlModuleAnalyzer htmlModuleAnalyzer;
+    private final TechModuleAnalyzer techModuleAnalyzer;
 
     private final ObjectMapper objectMapper;
 
@@ -57,6 +45,7 @@ public class AuditProcessorService {
         UrlNormalizer urlNormalizer,
         HttpModuleAnalyzer httpModuleAnalyzer,
         HtmlModuleAnalyzer htmlModuleAnalyzer,
+        TechModuleAnalyzer techModuleAnalyzer,
         ObjectMapper objectMapper
     ) {
         this.auditRunService = auditRunService;
@@ -64,14 +53,12 @@ public class AuditProcessorService {
         this.urlNormalizer = urlNormalizer;
         this.httpModuleAnalyzer = httpModuleAnalyzer;
         this.htmlModuleAnalyzer = htmlModuleAnalyzer;
+        this.techModuleAnalyzer = techModuleAnalyzer;
         this.objectMapper = objectMapper;
     }
 
     public void process(long runId) {
         logger.info("Processing runId={}", runId);
-
-        // (MVP) on suppose qu’un worker appelle ce process(runId)
-        // Plus tard: claimNextQueued() / multi-worker
 
         var runOpt = auditRunService.getRun(runId);
         if (runOpt.isEmpty()) {
@@ -81,14 +68,12 @@ public class AuditProcessorService {
 
         var run = runOpt.get();
 
-        // Récupère l’audit pour avoir l’URL à analyser
         Audit audit = Optional.ofNullable(auditDao.findById(run.getAuditId()))
             .orElseThrow(() -> new IllegalStateException("Audit not found: " + run.getAuditId()));
 
         String inputUrl = audit.getInputUrl();
         String normalizedUrl = audit.getNormalizedUrl();
 
-        // Sécurité : si jamais normalizedUrl n'existe pas (ou si tu changes la logique plus tard)
         if (normalizedUrl == null || normalizedUrl.isBlank()) {
             try {
                 normalizedUrl = urlNormalizer.normalize(inputUrl);
@@ -101,34 +86,36 @@ public class AuditProcessorService {
         }
 
         try {
-            // ---- 1) HTTP module ----
+            AuditContext context = new AuditContext(inputUrl, normalizedUrl);
+
+            // ---- HTTP ----
             logger.info("Running module={} runId={} url={}", httpModuleAnalyzer.moduleId(), runId, normalizedUrl);
-            AuditModuleResult httpModule = httpModuleAnalyzer.analyze(inputUrl, normalizedUrl, logger);
+            AuditModuleResult httpModule = httpModuleAnalyzer.analyze(context, logger);
 
-            String finalUrl = (String) httpModule.data().get("finalUrl");
-            String htmlBody = extractHtmlBodyOrNull(httpModule);
-
-            // ---- 2) HTML module ----
-            logger.info("Running module={} runId={} finalUrl={}", htmlModuleAnalyzer.moduleId(), runId, finalUrl);
-            AuditModuleResult htmlModule = htmlModuleAnalyzer.analyzeHtml(
-                inputUrl,
-                normalizedUrl,
-                finalUrl,
-                htmlBody,
-                logger
+            // Enrichir le context à partir du module HTTP (source of truth : context partagé)
+            context = context.withHttpResult(
+                (String) httpModule.data().get("finalUrl"),
+                toInt(httpModule.data().get("statusCode")),
+                toLong(httpModule.data().get("durationMs")),
+                safeStringList(httpModule.data().get("redirectChain")),
+                safeStringMap(httpModule.data().get("headers")),
+                (String) httpModule.data().get("body")
             );
 
-            // ---- 3) Build canonical report ----
+            // ---- HTML ----
+            logger.info("Running module={} runId={} finalUrl={}", htmlModuleAnalyzer.moduleId(), runId, context.finalUrl());
+            AuditModuleResult htmlModule = htmlModuleAnalyzer.analyze(context, logger);
+
+            // ---- TECH ----
+            logger.info("Running module={} runId={} finalUrl={}", techModuleAnalyzer.moduleId(), runId, context.finalUrl());
+            AuditModuleResult techModule = techModuleAnalyzer.analyze(context, logger);
+
+            // ---- Report ----
             Map<String, String> meta = new LinkedHashMap<>();
             meta.put("generator", "argos-api-backend");
             meta.put("schemaVersion", String.valueOf(REPORT_SCHEMA_VERSION));
             meta.put("runId", String.valueOf(runId));
-
-            // On peut aussi y mettre des infos du module HTTP (utile pour debug)
-            Object statusCode = httpModule.data().get("statusCode");
-            if (statusCode != null) {
-                meta.put("httpStatusCode", String.valueOf(statusCode));
-            }
+            meta.put("httpStatusCode", String.valueOf(context.httpStatusCode()));
 
             AuditReport report = new AuditReport(
                 REPORT_SCHEMA_VERSION,
@@ -136,7 +123,7 @@ public class AuditProcessorService {
                 normalizedUrl,
                 Instant.now(),
                 meta,
-                List.of(httpModule, htmlModule)
+                List.of(httpModule, htmlModule, techModule)
             );
 
             String json = objectMapper.writeValueAsString(report);
@@ -154,21 +141,35 @@ public class AuditProcessorService {
         }
     }
 
-    /**
-     * Extrait le body HTML depuis le module HTTP si présent.
-     *
-     * MVP :
-     * - Notre HttpModuleAnalyzer stocke dans data: "body" = String (la réponse finale non-3xx)
-     * - Si absent, le HtmlModuleAnalyzer renverra un module warning "HTML not provided".
-     */
-    private static String extractHtmlBodyOrNull(AuditModuleResult httpModule) {
-        if (httpModule == null || httpModule.data() == null) {
-            return null;
+    private static int toInt(Object o) {
+        if (o instanceof Integer i) return i;
+        if (o instanceof Number n) return n.intValue();
+        if (o instanceof String s) return Integer.parseInt(s);
+        return 0;
+    }
+
+    private static long toLong(Object o) {
+        if (o instanceof Long l) return l;
+        if (o instanceof Number n) return n.longValue();
+        if (o instanceof String s) return Long.parseLong(s);
+        return 0L;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<String> safeStringList(Object o) {
+        if (o instanceof List<?> list) {
+            return list.stream().map(String::valueOf).toList();
         }
-        Object body = httpModule.data().get("body");
-        if (body instanceof String s && !s.isBlank()) {
-            return s;
+        return List.of();
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, String> safeStringMap(Object o) {
+        if (o instanceof Map<?, ?> map) {
+            Map<String, String> out = new LinkedHashMap<>();
+            map.forEach((k, v) -> out.put(String.valueOf(k), v != null ? String.valueOf(v) : null));
+            return out;
         }
-        return null;
+        return Map.of();
     }
 }

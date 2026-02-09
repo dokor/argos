@@ -1,6 +1,7 @@
 package com.dokor.argos.services.analysis.modules.html;
 
 import com.dokor.argos.services.analysis.model.AuditCheckResult;
+import com.dokor.argos.services.analysis.model.AuditContext;
 import com.dokor.argos.services.analysis.model.AuditModuleAnalyzer;
 import com.dokor.argos.services.analysis.model.AuditModuleResult;
 import com.dokor.argos.services.analysis.model.enums.AuditSeverity;
@@ -216,9 +217,9 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
      * 👉 On corrigera ça dans l'orchestrator (en introduisant un AuditContext).
      */
     @Override
-    public AuditModuleResult analyze(String inputUrl, String normalizedUrl, Logger logger) {
+    public AuditModuleResult analyze(AuditContext context, Logger logger) {
         logger.warn("HTML module called without HTML context (MVP). Returning empty HTML module.");
-        return emptyHtmlModule(inputUrl, normalizedUrl, null, "HTML context not provided by orchestrator yet");
+        return emptyHtmlModule(context.inputUrl(), context.normalizedUrl(), null, "HTML context not provided by orchestrator yet");
     }
 
     // -------------------------
