@@ -22,6 +22,6 @@ public class TestModule extends AbstractModule {
 			}
 		}));
         // To run database Flyway scripts before running tests
-         install(new GuiceDbTestModule());
+//         install(new GuiceDbTestModule()); //todo: a decommenter
 	}
 }
