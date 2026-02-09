@@ -1,6 +1,8 @@
 package com.dokor.argos.services.analysis;
 
 import jakarta.inject.Singleton;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -12,6 +14,8 @@ import java.util.*;
 @Singleton
 public class JavaHttpUrlAuditAnalyzer implements UrlAuditAnalyzer {
 
+    private static final Logger logger = LoggerFactory.getLogger(JavaHttpUrlAuditAnalyzer.class);
+
     private final HttpClient client = HttpClient.newBuilder()
         .followRedirects(HttpClient.Redirect.NEVER) // on gère nous-même la chaîne
         .connectTimeout(Duration.ofSeconds(10))
@@ -19,6 +23,7 @@ public class JavaHttpUrlAuditAnalyzer implements UrlAuditAnalyzer {
 
     @Override
     public UrlAuditResult analyze(String url) {
+        logger.info("Beginning to analyze url {}", url);
         long start = System.currentTimeMillis();
 
         List<String> chain = new ArrayList<>();
@@ -55,7 +60,7 @@ public class JavaHttpUrlAuditAnalyzer implements UrlAuditAnalyzer {
             }
 
             UrlAuditResult.HtmlInfo html = HtmlExtractor.extract(body);
-
+            logger.info("End of analyze url {}", url);
             return new UrlAuditResult(
                 url,
                 current,
@@ -67,6 +72,7 @@ public class JavaHttpUrlAuditAnalyzer implements UrlAuditAnalyzer {
                 List.of()
             );
         } catch (Exception e) {
+            logger.error("Error in analyze url {} : {}", url, e.getMessage());
             return new UrlAuditResult(
                 url,
                 current,
