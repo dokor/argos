@@ -51,6 +51,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
         Map<String, String> lastHeaders = Map.of();
         int lastStatus = 0;
         String httpVersion = null;
+        String body = null;
 
         List<String> errors = new ArrayList<>();
 
@@ -70,6 +71,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
 
                 HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
+                body = response.body();
                 lastStatus = response.statusCode();
                 lastHeaders = flattenHeaders(response.headers());
                 httpVersion = response.version() != null ? response.version().name() : null;
@@ -169,6 +171,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
         data.put("headers", lastHeaders);
         data.put("httpVersion", httpVersion);
         data.put("errors", errors);
+        data.put("body", body);
 
         logger.info("HTTP module done: status={} redirects={} durationMs={} finalUrl={}",
             lastStatus, Math.max(0, redirectChain.size() - 1), durationMs, currentUrl
