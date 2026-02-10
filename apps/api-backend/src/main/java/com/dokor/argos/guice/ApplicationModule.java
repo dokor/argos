@@ -7,6 +7,7 @@ import com.dokor.argos.services.analysis.model.AuditModuleAnalyzer;
 import com.dokor.argos.services.analysis.modules.html.HtmlModuleAnalyzer;
 import com.dokor.argos.services.analysis.modules.http.HttpModuleAnalyzer;
 import com.dokor.argos.services.analysis.modules.tech.TechModuleAnalyzer;
+import com.google.inject.multibindings.Multibinder;
 import jakarta.inject.Singleton;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -35,17 +36,10 @@ public class ApplicationModule extends AbstractModule {
             .to(JavaHttpUrlAuditAnalyzer.class)
             .in(Singleton.class);
 
-        // TODO : utiliser Multibinder<AuditModuleAnalyzer> plutot
-
-        bind(AuditModuleAnalyzer.class)
-            .to(HttpModuleAnalyzer.class)
-            .in(Singleton.class);
-        bind(AuditModuleAnalyzer.class)
-            .to(HtmlModuleAnalyzer.class)
-            .in(Singleton.class);
-        bind(AuditModuleAnalyzer.class)
-            .to(TechModuleAnalyzer.class)
-            .in(Singleton.class);
+        Multibinder<AuditModuleAnalyzer> multibinder
+            = Multibinder.newSetBinder(binder(), AuditModuleAnalyzer.class);
+        multibinder.addBinding().to(HtmlModuleAnalyzer.class);
+        multibinder.addBinding().to(TechModuleAnalyzer.class);
+        multibinder.addBinding().to(HttpModuleAnalyzer.class);
     }
-
 }
