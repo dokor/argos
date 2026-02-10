@@ -2,6 +2,7 @@ package com.dokor.argos.webservices.api.audits;
 
 import com.coreoz.plume.jersey.security.permission.PublicApi;
 import com.dokor.argos.services.domain.audit.AuditService;
+import com.dokor.argos.webservices.api.audits.data.AuditListItemResponse;
 import com.dokor.argos.webservices.api.audits.data.AuditRunStatusResponse;
 import com.dokor.argos.webservices.api.audits.data.CreateAuditRequest;
 import com.dokor.argos.webservices.api.audits.data.CreateAuditResponse;
@@ -12,14 +13,18 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 @Path("/audits")
 @Tag(name = "audits", description = "Manage audits")
@@ -57,5 +62,15 @@ public class AuditsWs {
     ) {
         logger.debug("Get run status requested: runId={}", runId);
         return auditService.getRunStatus(runId);
+    }
+
+    @GET
+    @Operation(description = "Liste des audits et dernier run associé (MVP)")
+    public List<AuditListItemResponse> listAudits(
+        @QueryParam("limit") @DefaultValue("50") int limit
+    ) {
+        int safeLimit = Math.max(1, Math.min(limit, 200));
+        logger.info("List audits limit={}", safeLimit);
+        return auditService.listAudits(safeLimit);
     }
 }

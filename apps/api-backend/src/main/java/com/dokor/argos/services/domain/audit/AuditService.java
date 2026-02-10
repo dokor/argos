@@ -5,15 +5,18 @@ import com.dokor.argos.db.generated.Audit;
 import com.dokor.argos.db.generated.AuditRun;
 import com.dokor.argos.services.analysis.AuditProcessorService;
 import com.dokor.argos.services.domain.audit.errors.NotFoundException;
+import com.dokor.argos.webservices.api.audits.data.AuditListItemResponse;
 import com.dokor.argos.webservices.api.audits.data.AuditRunStatusResponse;
 import com.dokor.argos.webservices.api.audits.data.CreateAuditRequest;
 import com.dokor.argos.webservices.api.audits.data.CreateAuditResponse;
+import com.querydsl.core.Tuple;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
+import java.util.List;
 
 @Singleton
 public class AuditService {
@@ -35,6 +38,46 @@ public class AuditService {
         this.auditRunService = auditRunService;
         this.auditProcessorService = auditProcessorService;
         this.urlNormalizer = urlNormalizer;
+    }
+
+    /**
+     * Liste (MVP) des audits avec dernier run associé.
+     * @param limit nb max d'items (ex: 50)
+     */
+    public List<AuditListItemResponse> listAudits(int limit) {
+        logger.info("Listing audits limit={}", limit);
+
+        List<Tuple> rows = auditDao.listAuditsWithLatestRun(limit);
+
+        return rows.stream().map(row -> {
+            Audit audit = row.get(0, Audit.class);
+            AuditRun run = row.get(1, AuditRun.class);
+
+            if (run == null) {
+                // Cas rare : audit créé sans run
+                return new AuditListItemResponse(
+                    audit.getId(),
+                    audit.getInputUrl(),
+                    audit.getNormalizedUrl(),
+                    0L,
+                    "NO_RUN",
+                    audit.getCreatedAt(),
+                    null,
+                    null
+                );
+            }
+
+            return new AuditListItemResponse(
+                audit.getId(),
+                audit.getInputUrl(),
+                audit.getNormalizedUrl(),
+                run.getId(),
+                run.getStatus(),
+                run.getCreatedAt(),
+                run.getFinishedAt(),
+                run.getResultJson()
+            );
+        }).toList();
     }
 
     /**
