@@ -384,7 +384,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
             status,
             severity,
             ct,
-            Map.of("content-type", ct),
+            present ? Map.of("content-type", ct) : Map.of(),
             present ? "Content-Type is present." : "Content-Type header is missing.",
             present ? null : "Return an appropriate Content-Type header (e.g. text/html; charset=utf-8)."
         );
