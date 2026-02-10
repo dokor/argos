@@ -1,3 +1,4 @@
+// apps/console-web/src/components/AuditList.tsx
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
@@ -12,12 +13,30 @@ function isFinal(status: AuditListItem["status"]) {
   return status === "COMPLETED" || status === "FAILED";
 }
 
+type ScoreAggregate = {
+  id: string;
+  score: number;
+  maxScore: number;
+  ratio: number; // 0..1
+};
+
+type AuditScoreReport = {
+  scoringVersion: number;
+  global: ScoreAggregate;
+  byModule: ScoreAggregate[];
+  byTag: ScoreAggregate[];
+};
+
+type AuditReportV2 = {
+  schemaVersion: number;
+  score?: AuditScoreReport;
+};
+
 export default function AuditList({ items, setItems }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copiedRunId, setCopiedRunId] = useState<number | null>(null);
 
-  // Initial load
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -27,7 +46,6 @@ export default function AuditList({ items, setItems }: Props) {
 
         const list = await http<AuditListItem[]>("/api/audits", { method: "GET" });
         if (!mounted) return;
-
         setItems(list);
       } catch (e: any) {
         console.error(e);
@@ -48,16 +66,18 @@ export default function AuditList({ items, setItems }: Props) {
     [items]
   );
 
-  // Poll runs that are not final (to update status + json)
   useEffect(() => {
     if (pendingRuns.length === 0) return;
 
     const interval = setInterval(async () => {
       try {
+
         const updates = await Promise.all(
           pendingRuns.map((runId) =>
             http<AuditRunStatusResponse>(`/api/audits/runs/${runId}`, { method: "GET" })
+              // @ts-ignore
               .then((r) => ({ ok: true as const, runId, r }))
+              // @ts-ignore
               .catch((e) => ({ ok: false as const, runId, e }))
           )
         );
@@ -109,47 +129,109 @@ export default function AuditList({ items, setItems }: Props) {
           <div style={styles.muted}>Aucun audit pour le moment.</div>
         </div>
       ) : (
-        items.map((it) => (
-          <div key={it.runId} style={styles.card}>
-            <div style={styles.cardHeader}>
-              <div style={{ display: "grid", gap: 4, minWidth: 0 }}>
-                <div style={styles.url}>{it.normalizedUrl}</div>
-                <div style={styles.meta}>auditId={it.auditId} · runId={it.runId}</div>
+        items.map((it) => {
+          const report = parseReport(it.resultJson);
+          const score = report?.score;
+
+          return (
+            <div key={it.runId} style={styles.card}>
+              <div style={styles.cardHeader}>
+                <div style={{ display: "grid", gap: 6, minWidth: 0 }}>
+                  <div style={styles.url}>{it.normalizedUrl}</div>
+                  <div style={styles.meta}>auditId={it.auditId} · runId={it.runId}</div>
+                </div>
+
+                <div style={{ display: "grid", justifyItems: "end", gap: 8 }}>
+                  <StatusBadge status={it.status} />
+                  {score?.global ? (
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <ScoreBubbles ratio={score.global.ratio} />
+                      <div style={styles.scoreText}>
+                        {formatPct(score.global.ratio)} ({round1(score.global.score)}/{round1(score.global.maxScore)})
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={styles.mutedSmall}>
+                      {isFinal(it.status) ? "Score indisponible" : "Score en attente…"}
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <StatusBadge status={it.status} />
-            </div>
-
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              {!it.resultJson ? (
-                <div style={styles.muted}>
-                  {isFinal(it.status) ? "Pas de JSON disponible." : "En attente du résultat…"}
+              {/* Modules */}
+              {score?.byModule?.length ? (
+                <div style={styles.row}>
+                  <div style={styles.rowLabel}>Modules</div>
+                  <div style={styles.chips}>
+                    {score.byModule
+                      .slice()
+                      .sort((a, b) => (b.ratio ?? 0) - (a.ratio ?? 0))
+                      .map((m) => (
+                        <ScoreChip
+                          key={`m-${m.id}`}
+                          label={m.id}
+                          ratio={m.ratio}
+                          title={`${m.id}: ${formatPct(m.ratio)} (${round1(m.score)}/${round1(m.maxScore)})`}
+                        />
+                      ))}
+                  </div>
                 </div>
-              ) : (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => copyJson(it.runId, it.resultJson!)}
-                    style={styles.button}
-                    title="Copier le JSON dans le presse-papier"
-                  >
-                    {copiedRunId === it.runId ? "✅ Copié" : "📋 Copier le JSON"}
-                  </button>
-                </>
-              )}
-            </div>
+              ) : null}
 
-            {it.resultJson && (
-              <details style={{ marginTop: 6 }}>
-                <summary style={styles.summary}>Voir le JSON</summary>
-                <pre style={styles.pre}>{prettyJson(it.resultJson)}</pre>
-              </details>
-            )}
-          </div>
-        ))
+              {/* Tags */}
+              {score?.byTag?.length ? (
+                <div style={styles.row}>
+                  <div style={styles.rowLabel}>Tags</div>
+                  <div style={styles.chips}>
+                    {score.byTag
+                      .slice()
+                      .sort((a, b) => (b.maxScore ?? 0) - (a.maxScore ?? 0)) // plus "impactant" d'abord
+                      .map((t) => (
+                        <ScoreChip
+                          key={`t-${t.id}`}
+                          label={t.id}
+                          ratio={t.ratio}
+                          title={`${t.id}: ${formatPct(t.ratio)} (${round1(t.score)}/${round1(t.maxScore)})`}
+                        />
+                      ))}
+                  </div>
+                </div>
+              ) : null}
+
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                {!it.resultJson ? (
+                  <div style={styles.muted}>
+                    {isFinal(it.status) ? "Pas de JSON disponible." : "En attente du résultat…"}
+                  </div>
+                ) : (
+                  <>
+                    <button type="button" onClick={() => copyJson(it.runId, it.resultJson!)} style={styles.button}>
+                      {copiedRunId === it.runId ? "✅ Copié" : "📋 Copier le JSON"}
+                    </button>
+
+                    <details>
+                      <summary style={styles.summary}>Voir le JSON</summary>
+                      <pre style={styles.pre}>{prettyJson(it.resultJson!)}</pre>
+                    </details>
+                  </>
+                )}
+              </div>
+            </div>
+          );
+        })
       )}
     </div>
   );
+}
+
+function parseReport(resultJson: string | null | undefined): AuditReportV2 | null {
+  if (!resultJson) return null;
+  try {
+    const parsed = JSON.parse(resultJson) as AuditReportV2;
+    return parsed && typeof parsed === "object" ? parsed : null;
+  } catch {
+    return null;
+  }
 }
 
 function prettyJson(input: string) {
@@ -158,6 +240,71 @@ function prettyJson(input: string) {
   } catch {
     return input;
   }
+}
+
+function formatPct(ratio: number) {
+  const pct = Math.round((ratio ?? 0) * 100);
+  return `${pct}%`;
+}
+
+function round1(v: number) {
+  return Math.round((v ?? 0) * 10) / 10;
+}
+
+/**
+ * Affiche un score sous forme de bulles : 0..5
+ * - 0% => ○○○○○
+ * - 100% => ●●●●●
+ */
+function ScoreBubbles({ ratio }: { ratio: number }) {
+  const r = Math.max(0, Math.min(1, ratio ?? 0));
+  const filled = Math.round(r * 5); // 0..5
+  const dots = Array.from({ length: 5 }, (_, i) => i < filled);
+
+  return (
+    <div style={{ display: "flex", gap: 4 }}>
+      {dots.map((on, idx) => (
+        <span
+          key={idx}
+          style={{
+            width: 10,
+            height: 10,
+            borderRadius: 999,
+            display: "inline-block",
+            background: on ? "#0f172a" : "#cbd5e1",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function ScoreChip({ label, ratio, title }: { label: string; ratio: number; title?: string }) {
+  const r = Math.max(0, Math.min(1, ratio ?? 0));
+  const bg = r >= 0.8 ? "#dcfce7" : r >= 0.6 ? "#e0f2fe" : r >= 0.4 ? "#fef9c3" : "#fee2e2";
+  const fg = r >= 0.8 ? "#14532d" : r >= 0.6 ? "#075985" : r >= 0.4 ? "#713f12" : "#7f1d1d";
+  const border = r >= 0.8 ? "#86efac" : r >= 0.6 ? "#bae6fd" : r >= 0.4 ? "#fde68a" : "#fecaca";
+
+  return (
+    <div
+      title={title}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 8,
+        padding: "6px 10px",
+        borderRadius: 999,
+        border: `1px solid ${border}`,
+        background: bg,
+        color: fg,
+        fontWeight: 800,
+        fontSize: 12,
+      }}
+    >
+      <span>{label}</span>
+      <span style={{ fontWeight: 900, opacity: 0.9 }}>{formatPct(r)}</span>
+    </div>
+  );
 }
 
 function StatusBadge({ status }: { status: AuditListItem["status"] }) {
@@ -177,16 +324,8 @@ function StatusBadge({ status }: { status: AuditListItem["status"] }) {
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  sectionTitle: {
-    fontWeight: 800,
-    fontSize: 16,
-    color: "#0f172a",
-    marginTop: 6,
-  },
-  helper: {
-    padding: 16,
-    color: "#0f172a",
-  },
+  sectionTitle: { fontWeight: 800, fontSize: 16, color: "#0f172a", marginTop: 6 },
+  helper: { padding: 16, color: "#0f172a" },
   error: {
     padding: 16,
     borderRadius: 12,
@@ -202,43 +341,32 @@ const styles: Record<string, React.CSSProperties> = {
     background: "#ffffff",
     boxShadow: "0 1px 0 rgba(15, 23, 42, 0.04)",
     display: "grid",
-    gap: 10,
-  },
-  cardHeader: {
-    display: "flex",
-    justifyContent: "space-between",
     gap: 12,
-    flexWrap: "wrap",
-    alignItems: "flex-start",
   },
+  cardHeader: { display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", alignItems: "flex-start" },
   url: {
-    fontWeight: 800,
+    fontWeight: 900,
     color: "#0f172a",
     overflow: "hidden",
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
     maxWidth: 700,
   },
-  meta: {
-    fontSize: 12,
-    color: "#475569",
-  },
-  muted: {
-    fontSize: 13,
-    color: "#475569",
-  },
-  summary: {
-    cursor: "pointer",
-    fontWeight: 700,
-    color: "#0f172a",
-  },
+  meta: { fontSize: 12, color: "#475569" },
+  muted: { fontSize: 13, color: "#475569" },
+  mutedSmall: { fontSize: 12, color: "#64748b" },
+  scoreText: { fontSize: 12, color: "#0f172a", fontWeight: 800 },
+  row: { display: "grid", gap: 8 },
+  rowLabel: { fontSize: 12, fontWeight: 900, color: "#0f172a" },
+  chips: { display: "flex", gap: 8, flexWrap: "wrap" },
+  summary: { cursor: "pointer", fontWeight: 800, color: "#0f172a" },
   pre: {
     marginTop: 8,
     whiteSpace: "pre-wrap",
     wordBreak: "break-word",
     padding: 12,
     borderRadius: 12,
-    background: "#0b1220", // fond sombre -> lisible
+    background: "#0b1220",
     color: "#e2e8f0",
     border: "1px solid #1f2a44",
     fontSize: 12,
@@ -250,7 +378,7 @@ const styles: Record<string, React.CSSProperties> = {
     border: "1px solid #0f172a",
     background: "#0f172a",
     color: "#ffffff",
-    fontWeight: 800,
+    fontWeight: 900,
     cursor: "pointer",
   },
   badgeSuccess: {
