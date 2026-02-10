@@ -15,6 +15,7 @@ function isFinal(status: AuditListItem["status"]) {
 export default function AuditList({ items, setItems }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [copiedRunId, setCopiedRunId] = useState<number | null>(null);
 
   // Initial load
   useEffect(() => {
@@ -24,11 +25,9 @@ export default function AuditList({ items, setItems }: Props) {
         setLoading(true);
         setError(null);
 
-        // Endpoint à prévoir côté backend : GET /api/audits
         const list = await http<AuditListItem[]>("/api/audits", { method: "GET" });
-
         if (!mounted) return;
-        // tri récent -> ancien si createdAt dispo
+
         setItems(list);
       } catch (e: any) {
         console.error(e);
@@ -55,7 +54,6 @@ export default function AuditList({ items, setItems }: Props) {
 
     const interval = setInterval(async () => {
       try {
-        // On met à jour run par run (simple & robuste MVP)
         const updates = await Promise.all(
           pendingRuns.map((runId) =>
             http<AuditRunStatusResponse>(`/api/audits/runs/${runId}`, { method: "GET" })
@@ -88,40 +86,64 @@ export default function AuditList({ items, setItems }: Props) {
     return () => clearInterval(interval);
   }, [pendingRuns, setItems]);
 
-  if (loading) return <div style={{ padding: 16 }}>Chargement…</div>;
-  if (error) return <div style={{ padding: 16 }}>❌ {error}</div>;
+  async function copyJson(runId: number, json: string) {
+    try {
+      await navigator.clipboard.writeText(prettyJson(json));
+      setCopiedRunId(runId);
+      window.setTimeout(() => setCopiedRunId((x) => (x === runId ? null : x)), 1200);
+    } catch (e) {
+      console.error(e);
+      alert("Impossible de copier dans le presse-papier (permission navigateur).");
+    }
+  }
+
+  if (loading) return <div style={styles.helper}>Chargement…</div>;
+  if (error) return <div style={styles.error}>❌ {error}</div>;
 
   return (
     <div style={{ display: "grid", gap: 12 }}>
-      <div style={{ fontWeight: 700, fontSize: 16 }}>Audits</div>
+      <div style={styles.sectionTitle}>Audits</div>
 
       {items.length === 0 ? (
-        <div style={{ padding: 16, border: "1px solid #ddd", borderRadius: 12 }}>
-          Aucun audit pour le moment.
+        <div style={styles.card}>
+          <div style={styles.muted}>Aucun audit pour le moment.</div>
         </div>
       ) : (
         items.map((it) => (
-          <div key={it.runId} style={{ padding: 16, border: "1px solid #ddd", borderRadius: 12, display: "grid", gap: 8 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-              <div style={{ display: "grid", gap: 4 }}>
-                <div style={{ fontWeight: 700 }}>{it.normalizedUrl}</div>
-                <div style={{ fontSize: 12, opacity: 0.8 }}>auditId={it.auditId} · runId={it.runId}</div>
+          <div key={it.runId} style={styles.card}>
+            <div style={styles.cardHeader}>
+              <div style={{ display: "grid", gap: 4, minWidth: 0 }}>
+                <div style={styles.url}>{it.normalizedUrl}</div>
+                <div style={styles.meta}>auditId={it.auditId} · runId={it.runId}</div>
               </div>
 
               <StatusBadge status={it.status} />
             </div>
 
-            {it.resultJson ? (
-              <details>
-                <summary style={{ cursor: "pointer", fontWeight: 600 }}>JSON résultat</summary>
-                <pre style={{ marginTop: 8, whiteSpace: "pre-wrap", wordBreak: "break-word", padding: 12, borderRadius: 10, background: "#f6f6f6" }}>
-                  {prettyJson(it.resultJson)}
-                </pre>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              {!it.resultJson ? (
+                <div style={styles.muted}>
+                  {isFinal(it.status) ? "Pas de JSON disponible." : "En attente du résultat…"}
+                </div>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => copyJson(it.runId, it.resultJson!)}
+                    style={styles.button}
+                    title="Copier le JSON dans le presse-papier"
+                  >
+                    {copiedRunId === it.runId ? "✅ Copié" : "📋 Copier le JSON"}
+                  </button>
+                </>
+              )}
+            </div>
+
+            {it.resultJson && (
+              <details style={{ marginTop: 6 }}>
+                <summary style={styles.summary}>Voir le JSON</summary>
+                <pre style={styles.pre}>{prettyJson(it.resultJson)}</pre>
               </details>
-            ) : (
-              <div style={{ fontSize: 12, opacity: 0.8 }}>
-                {isFinal(it.status) ? "Pas de JSON disponible." : "En attente du résultat…"}
-              </div>
             )}
           </div>
         ))
@@ -134,7 +156,7 @@ function prettyJson(input: string) {
   try {
     return JSON.stringify(JSON.parse(input), null, 2);
   } catch {
-    return input; // si déjà pas du JSON valide / ou string brute
+    return input;
   }
 }
 
@@ -145,19 +167,126 @@ function StatusBadge({ status }: { status: AuditListItem["status"] }) {
         : status === "COMPLETED" ? "Terminé"
           : "Échec";
 
-  const border =
-    status === "COMPLETED" ? "1px solid #2f9e44"
-      : status === "FAILED" ? "1px solid #e03131"
-        : "1px solid #999";
+  const style =
+    status === "COMPLETED" ? styles.badgeSuccess
+      : status === "FAILED" ? styles.badgeError
+        : status === "RUNNING" ? styles.badgeInfo
+          : styles.badgeMuted;
 
-  const bg =
-    status === "COMPLETED" ? "#ebfbee"
-      : status === "FAILED" ? "#fff5f5"
-        : "#f8f9fa";
-
-  return (
-    <div style={{ padding: "6px 10px", borderRadius: 999, border, background: bg, fontWeight: 700, fontSize: 12 }}>
-      {label}
-    </div>
-  );
+  return <div style={style}>{label}</div>;
 }
+
+const styles: Record<string, React.CSSProperties> = {
+  sectionTitle: {
+    fontWeight: 800,
+    fontSize: 16,
+    color: "#0f172a",
+    marginTop: 6,
+  },
+  helper: {
+    padding: 16,
+    color: "#0f172a",
+  },
+  error: {
+    padding: 16,
+    borderRadius: 12,
+    border: "1px solid #fecaca",
+    background: "#fff1f2",
+    color: "#7f1d1d",
+    fontWeight: 600,
+  },
+  card: {
+    padding: 16,
+    border: "1px solid #e2e8f0",
+    borderRadius: 14,
+    background: "#ffffff",
+    boxShadow: "0 1px 0 rgba(15, 23, 42, 0.04)",
+    display: "grid",
+    gap: 10,
+  },
+  cardHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    gap: 12,
+    flexWrap: "wrap",
+    alignItems: "flex-start",
+  },
+  url: {
+    fontWeight: 800,
+    color: "#0f172a",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+    maxWidth: 700,
+  },
+  meta: {
+    fontSize: 12,
+    color: "#475569",
+  },
+  muted: {
+    fontSize: 13,
+    color: "#475569",
+  },
+  summary: {
+    cursor: "pointer",
+    fontWeight: 700,
+    color: "#0f172a",
+  },
+  pre: {
+    marginTop: 8,
+    whiteSpace: "pre-wrap",
+    wordBreak: "break-word",
+    padding: 12,
+    borderRadius: 12,
+    background: "#0b1220", // fond sombre -> lisible
+    color: "#e2e8f0",
+    border: "1px solid #1f2a44",
+    fontSize: 12,
+    lineHeight: 1.5,
+  },
+  button: {
+    padding: "8px 12px",
+    borderRadius: 10,
+    border: "1px solid #0f172a",
+    background: "#0f172a",
+    color: "#ffffff",
+    fontWeight: 800,
+    cursor: "pointer",
+  },
+  badgeSuccess: {
+    padding: "6px 10px",
+    borderRadius: 999,
+    border: "1px solid #86efac",
+    background: "#dcfce7",
+    color: "#14532d",
+    fontWeight: 900,
+    fontSize: 12,
+  },
+  badgeError: {
+    padding: "6px 10px",
+    borderRadius: 999,
+    border: "1px solid #fecaca",
+    background: "#fff1f2",
+    color: "#7f1d1d",
+    fontWeight: 900,
+    fontSize: 12,
+  },
+  badgeInfo: {
+    padding: "6px 10px",
+    borderRadius: 999,
+    border: "1px solid #bae6fd",
+    background: "#e0f2fe",
+    color: "#075985",
+    fontWeight: 900,
+    fontSize: 12,
+  },
+  badgeMuted: {
+    padding: "6px 10px",
+    borderRadius: 999,
+    border: "1px solid #e2e8f0",
+    background: "#f8fafc",
+    color: "#334155",
+    fontWeight: 900,
+    fontSize: 12,
+  },
+};
