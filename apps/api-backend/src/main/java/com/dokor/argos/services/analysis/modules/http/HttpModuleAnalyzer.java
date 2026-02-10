@@ -469,8 +469,9 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
     private static AuditCheckResult checkCaching(Map<String, String> headers) {
         String cacheControl = headers.get("cache-control");
         String expires = headers.get("expires");
-
-        boolean hasCachingInfo = (cacheControl != null && !cacheControl.isBlank()) || (expires != null && !expires.isBlank());
+        boolean hasCacheControl = (cacheControl != null && !cacheControl.isBlank());
+        boolean hasExpires = (expires != null && !expires.isBlank());
+        boolean hasCachingInfo = hasCacheControl || hasExpires;
 
         AuditStatus status = hasCachingInfo ? AuditStatus.INFO : AuditStatus.WARN;
         AuditSeverity severity = AuditSeverity.LOW;
@@ -480,8 +481,8 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
             "Caching headers (Cache-Control / Expires)",
             status,
             severity,
-            hasCachingInfo ? Map.of("cache-control", cacheControl, "expires", expires) : Map.of(),
-            hasCachingInfo ? Map.of("cache-control", cacheControl, "expires", expires) : Map.of(),
+            (hasCacheControl && hasExpires) ? Map.of("cache-control", cacheControl, "expires", expires) : Map.of(),
+            (hasCacheControl && hasExpires) ? Map.of("cache-control", cacheControl, "expires", expires) : Map.of(),
             hasCachingInfo ? "Caching headers detected." : "No caching headers detected.",
             hasCachingInfo ? null : "Consider adding Cache-Control for static assets and appropriate caching strategies."
         );
