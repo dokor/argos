@@ -18,5 +18,6 @@ public record AuditReport(
     String normalizedUrl,
     Instant generatedAt,
     Map<String, String> meta,       // infos transverses (ex: userAgent, analyzerVersion, etc.)
-    List<AuditModuleResult> modules // modules d'analyse (http/html/tech/...)
+    List<AuditModuleResult> modules, // modules d'analyse (http/html/tech/...)
+    AuditScoreReport score
 ) {}
