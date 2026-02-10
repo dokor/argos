@@ -14,16 +14,16 @@ import java.util.regex.Pattern;
 
 /**
  * Analyse "TECH" d'une URL.
- *
+ * <p>
  * MVP :
  * - détection heuristique (sans JS, sans headless browser)
  * - se base sur signaux HTML + headers HTTP disponibles (si l'orchestrateur les fournit)
- *
+ * <p>
  * ⚠️ Comme pour HtmlModuleAnalyzer, l'interface AuditModuleAnalyzer ne fournit pas encore
  * de "context" (headers/html). Donc :
  * - la méthode analyze(...) retourne un module "warning" par défaut
  * - l'orchestrateur doit appeler analyzeTech(...) en lui passant headers+html
- *
+ * <p>
  * Plus tard :
  * - intégrer Playwright (JS rendu) pour une détection plus fiable (Next/React/Angular etc.)
  * - enrichir la détection via signatures (Wappalyzer-like) ou empreintes (hash, bundles, meta generator...)
@@ -68,11 +68,11 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
     /**
      * Analyse TECH à partir des informations collectées par les autres modules.
      *
-     * @param inputUrl url d'entrée
+     * @param inputUrl      url d'entrée
      * @param normalizedUrl url normalisée
-     * @param finalUrl url finale après redirects
-     * @param headers headers HTTP "flatten" (lowercase keys) - typiquement httpModule.data().get("headers")
-     * @param html html de la réponse finale (si dispo)
+     * @param finalUrl      url finale après redirects
+     * @param headers       headers HTTP "flatten" (lowercase keys) - typiquement httpModule.data().get("headers")
+     * @param html          html de la réponse finale (si dispo)
      */
     public AuditModuleResult analyzeTech(
         String inputUrl,
@@ -106,7 +106,7 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
         List<AuditCheckResult> checks = new ArrayList<>();
 
         Map<String, Object> mapCms = new HashMap<>(Map.of("confidence", cms.confidence));
-        if(cms.name != null){
+        if (cms.name != null) {
             mapCms.put("name", cms.name);
         }
 
@@ -130,7 +130,7 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
             AuditSeverity.LOW,
             Map.of("name", frontend.name, "confidence", frontend.confidence),
             Map.of("signals", frontend.signals),
-            frontend.name != null ? ("Detected frontend framework: " + frontend.name) : "No frontend framework detected (heuristic).",
+            (frontend.name != null && !frontend.name.equals("unknown")) ? ("Detected frontend framework: " + frontend.name) : "No frontend framework detected (heuristic).",
             null
         ));
 
