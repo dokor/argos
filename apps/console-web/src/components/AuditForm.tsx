@@ -55,21 +55,21 @@ export default function AuditForm({ onCreated }: Props) {
   return (
     <form onSubmit={submit} style={{ display: "grid", gap: 12, padding: 16, border: "1px solid #ddd", borderRadius: 12 }}>
       <div style={{ display: "grid", gap: 6 }}>
-        <label htmlFor="url" style={{ fontWeight: 600 }}>URL à analyser</label>
+        <label htmlFor="url" style={{ fontWeight: 600, color: "#0f172a" }}>URL à analyser</label>
         <input
           id="url"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           placeholder="https://example.com"
           disabled={submitting}
-          style={{ padding: 10, borderRadius: 10, border: "1px solid #ccc" }}
+          style={{ padding: 10, borderRadius: 10, border: "1px solid #ccc", color: "#0f172a" }}
         />
       </div>
 
       <button
         type="submit"
         disabled={submitting}
-        style={{ padding: 10, borderRadius: 10, border: "1px solid #111", fontWeight: 600 }}
+        style={{ padding: 10, borderRadius: 10, border: "1px solid #111", fontWeight: 600, color: "#0f172a" }}
       >
         {submitting ? "Envoi..." : "Lancer l'audit"}
       </button>
