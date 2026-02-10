@@ -495,7 +495,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
             AuditStatus.INFO,
             AuditSeverity.LOW,
             server,
-            Map.of("server", server),
+            server != null ? Map.of("server", server) : Map.of(),
             server != null ? "Server header is present." : "Server header is not present.",
             null
         );
