@@ -109,8 +109,8 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
         checks.add(new AuditCheckResult(
             "tech.cms",
             "CMS detection",
-            cms.confidence >= 0.7 ? AuditStatus.PASS : (cms.name != null ? AuditStatus.INFO : AuditStatus.INFO),
-            cms.confidence >= 0.7 ? AuditSeverity.LOW : AuditSeverity.LOW,
+            cms.confidence >= 0.7 ? AuditStatus.PASS : AuditStatus.INFO,
+            AuditSeverity.LOW,
             Map.of("name", cms.name, "confidence", cms.confidence),
             Map.of("signals", cms.signals),
             cms.name != null ? ("Detected CMS: " + cms.name) : "No CMS detected (heuristic).",
@@ -121,8 +121,8 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
         checks.add(new AuditCheckResult(
             "tech.frontend.framework",
             "Frontend framework detection",
-            frontend.confidence >= 0.7 ? AuditStatus.PASS : (frontend.name != null ? AuditStatus.INFO : AuditStatus.INFO),
-            frontend.confidence >= 0.7 ? AuditSeverity.LOW : AuditSeverity.LOW,
+            frontend.confidence >= 0.7 ? AuditStatus.PASS : AuditStatus.INFO,
+            AuditSeverity.LOW,
             Map.of("name", frontend.name, "confidence", frontend.confidence),
             Map.of("signals", frontend.signals),
             frontend.name != null ? ("Detected frontend framework: " + frontend.name) : "No frontend framework detected (heuristic).",
@@ -149,7 +149,7 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
         checks.add(new AuditCheckResult(
             "tech.cdn.cloudflare",
             "Cloudflare detected",
-            cloudflare ? AuditStatus.INFO : AuditStatus.INFO,
+            AuditStatus.INFO,
             AuditSeverity.LOW,
             cloudflare,
             Map.of("signals", cloudflare ? List.of("cf-ray/cf-cache-status/server=cloudflare") : List.of()),

@@ -17,7 +17,6 @@ import java.util.Optional;
 @Singleton
 public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
 
-    private static final Logger logger = LoggerFactory.getLogger(AuditRunDao.class);
     private static final QAuditRun RUN = QAuditRun.auditRun;
 
 

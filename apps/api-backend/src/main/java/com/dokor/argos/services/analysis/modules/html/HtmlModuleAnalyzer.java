@@ -115,7 +115,7 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
         checks.add(new AuditCheckResult(
             "html.meta.robots.present",
             "Meta robots present",
-            hasRobots ? AuditStatus.INFO : AuditStatus.INFO,
+            AuditStatus.INFO,
             AuditSeverity.LOW,
             hasRobots,
             Map.of("present", hasRobots),
@@ -300,20 +300,24 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
         String message;
         String recommendation = null;
 
-        if (h1Count == 0) {
-            status = AuditStatus.WARN;
-            severity = AuditSeverity.MEDIUM;
-            message = "No <h1> found.";
-            recommendation = "Add one H1 to describe the main topic of the page.";
-        } else if (h1Count == 1) {
-            status = AuditStatus.PASS;
-            severity = AuditSeverity.LOW;
-            message = "Exactly one <h1> found.";
-        } else {
-            status = AuditStatus.WARN;
-            severity = AuditSeverity.LOW;
-            message = "Multiple <h1> found (" + h1Count + ").";
-            recommendation = "Prefer a single H1 for clarity (unless your page structure requires otherwise).";
+        switch (h1Count) {
+            case 0 -> {
+                status = AuditStatus.WARN;
+                severity = AuditSeverity.MEDIUM;
+                message = "No <h1> found.";
+                recommendation = "Add one H1 to describe the main topic of the page.";
+            }
+            case 1 -> {
+                status = AuditStatus.PASS;
+                severity = AuditSeverity.LOW;
+                message = "Exactly one <h1> found.";
+            }
+            default -> {
+                status = AuditStatus.WARN;
+                severity = AuditSeverity.LOW;
+                message = "Multiple <h1> found (" + h1Count + ").";
+                recommendation = "Prefer a single H1 for clarity (unless your page structure requires otherwise).";
+            }
         }
 
         return new AuditCheckResult(
@@ -335,9 +339,9 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
             "html.lang",
             "HTML lang attribute",
             present ? AuditStatus.PASS : AuditStatus.WARN,
-            present ? AuditSeverity.LOW : AuditSeverity.LOW,
+            AuditSeverity.LOW,
             lang,
-            Map.of("lang", lang),
+            present ? Map.of("lang", lang) : Map.of(),
             present ? "HTML lang is set (" + lang + ")." : "Missing lang attribute on <html>.",
             present ? null : "Set <html lang=\"...\"> for accessibility and SEO."
         );
