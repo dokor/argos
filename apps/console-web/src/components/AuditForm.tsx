@@ -1,125 +1,90 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { argosApi, CreateAuditResponse, RunStatusResponse } from "@/lib/ArgosApi";
+import React, { useState } from "react";
+import { AuditListItem, CreateAuditRequest, CreateAuditResponse, http } from "@/lib/ArgosApi";
 
-function isValidUrlLike(input: string): boolean {
-  const v = input.trim();
-  if (!v) return false;
-  // accepte "example.com" ou "https://example.com"
-  return /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(v) || /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/.test(v);
-}
+type Props = {
+  onCreated: (item: AuditListItem) => void;
+};
 
-export default function AuditForm() {
+export default function AuditForm({ onCreated }: Props) {
   const [url, setUrl] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [createResp, setCreateResp] = useState<CreateAuditResponse | undefined>(undefined);
-  const [runStatus, setRunStatus] = useState<RunStatusResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const canSubmit = useMemo(() => isValidUrlLike(url) && !submitting, [url, submitting]);
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setSuccessMsg(null);
+    setErrorMsg(null);
 
-  const pollTimer = useRef<number | null>(null);
-
-  async function submit() {
-    setError(null);
-    setCreateResp(undefined);
-    setRunStatus(null);
+    const trimmed = url.trim();
+    if (!trimmed) {
+      setErrorMsg("URL manquante");
+      return;
+    }
 
     setSubmitting(true);
     try {
-      const resp = await argosApi.createAudit({ url });
-      setCreateResp(resp);
+      const payload: CreateAuditRequest = { url: trimmed };
+      const res = await http<CreateAuditResponse>("/api/audits", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
 
-      // première lecture statut
-      const status = await argosApi.getRunStatus(resp.runId);
-      setRunStatus(status);
-    } catch (e: any) {
-      setError(e?.message ?? "Erreur inconnue");
+      // On pousse immédiatement un item en liste (optimistic)
+      onCreated({
+        auditId: res.auditId,
+        inputUrl: trimmed,
+        normalizedUrl: res.normalizedUrl,
+        runId: res.runId,
+        status: res.status,
+        resultJson: null,
+      });
+
+      setSuccessMsg(`Audit créé (runId=${res.runId})`);
+      setUrl("");
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg(err?.message ?? "Erreur inconnue");
     } finally {
       setSubmitting(false);
     }
   }
 
-  // polling tant que QUEUED/RUNNING
-  useEffect(() => {
-    if (!createResp?.runId) return;
-
-    async function tick() {
-      if (!createResp) return; // vérifier
-      try {
-        const s = await argosApi.getRunStatus(createResp.runId);
-        setRunStatus(s);
-
-        if (s.status === "COMPLETED" || s.status === "FAILED") {
-          if (pollTimer.current) window.clearInterval(pollTimer.current);
-          pollTimer.current = null;
-        }
-      } catch (e: any) {
-        // on n’arrête pas forcément, mais on affiche
-        setError(e?.message ?? "Erreur polling");
-      }
-    }
-
-    // start
-    pollTimer.current = window.setInterval(tick, 1500);
-    return () => {
-      if (pollTimer.current) window.clearInterval(pollTimer.current);
-      pollTimer.current = null;
-    };
-  }, [createResp?.runId]);
-
   return (
-    <div style={{ display: "grid", gap: 12 }}>
-      <label style={{ display: "grid", gap: 6 }}>
-        <span>URL à auditer</span>
+    <form onSubmit={submit} style={{ display: "grid", gap: 12, padding: 16, border: "1px solid #ddd", borderRadius: 12 }}>
+      <div style={{ display: "grid", gap: 6 }}>
+        <label htmlFor="url" style={{ fontWeight: 600 }}>URL à analyser</label>
         <input
+          id="url"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           placeholder="https://example.com"
-          style={{ padding: 10, border: "1px solid #ddd", borderRadius: 8 }}
+          disabled={submitting}
+          style={{ padding: 10, borderRadius: 10, border: "1px solid #ccc" }}
         />
-      </label>
+      </div>
 
       <button
-        onClick={submit}
-        disabled={!canSubmit}
-        style={{
-          padding: "10px 14px",
-          borderRadius: 10,
-          border: "1px solid #ddd",
-          cursor: canSubmit ? "pointer" : "not-allowed",
-        }}
+        type="submit"
+        disabled={submitting}
+        style={{ padding: 10, borderRadius: 10, border: "1px solid #111", fontWeight: 600 }}
       >
-        {submitting ? "Envoi..." : "Lancer l’audit"}
+        {submitting ? "Envoi..." : "Lancer l'audit"}
       </button>
 
-      {!isValidUrlLike(url) && url.trim().length > 0 && (
-        <p style={{ color: "crimson" }}>URL invalide (ex: example.com ou https://example.com)</p>
-      )}
-
-      {error && <p style={{ color: "crimson" }}>{error}</p>}
-
-      {createResp && (
-        <div style={{ padding: 12, border: "1px solid #eee", borderRadius: 10 }}>
-          <div><b>Audit</b> #{createResp.auditId}</div>
-          <div><b>Run</b> #{createResp.runId}</div>
-          <div><b>Créé</b> : {createResp.status}</div>
+      {successMsg && (
+        <div style={{ padding: 10, borderRadius: 10, background: "#eefaf0", border: "1px solid #b7e4c7" }}>
+          ✅ {successMsg}
         </div>
       )}
 
-      {runStatus && (
-        <div style={{ padding: 12, border: "1px solid #eee", borderRadius: 10 }}>
-          <div><b>Statut</b> : {runStatus.status}</div>
-          {runStatus.startedAt && <div>Start : {runStatus.startedAt}</div>}
-          {runStatus.finishedAt && <div>End : {runStatus.finishedAt}</div>}
-          {runStatus.lastError && (
-            <pre style={{ whiteSpace: "pre-wrap", background: "#fafafa", padding: 10, borderRadius: 8 }}>
-              {runStatus.lastError}
-            </pre>
-          )}
+      {errorMsg && (
+        <div style={{ padding: 10, borderRadius: 10, background: "#fff0f0", border: "1px solid #f2b8b5" }}>
+          ❌ {errorMsg}
         </div>
       )}
-    </div>
+    </form>
   );
 }

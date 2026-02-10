@@ -1,13 +1,27 @@
-import AuditForm from "@/components/AuditForm";
+"use client";
 
-export default function Page() {
+import React, { useState } from "react";
+import AuditForm from "@/components/AuditForm";
+import AuditList from "@/components/AuditList";
+import { AuditListItem } from "@/lib/ArgosApi";
+
+export default function HomePage() {
+  const [items, setItems] = useState<AuditListItem[]>([]);
+
+  function onCreated(newItem: AuditListItem) {
+    setItems((prev: AuditListItem[]) => {
+      const filtered: AuditListItem[] = prev.filter((x: AuditListItem) => x.runId !== newItem.runId);
+      return [newItem, ...filtered];
+    });
+  }
+
   return (
-    <main style={{ maxWidth: 720, margin: "40px auto", padding: 24 }}>
-      <h1 style={{ marginBottom: 12 }}>Argos</h1>
-      <p style={{ marginBottom: 24, color: "#555" }}>
-        Lance un audit en fournissant une URL. Le backend prendra le job en charge automatiquement.
-      </p>
-      <AuditForm />
+    <main style={{ maxWidth: 980, margin: "0 auto", padding: 24, display: "grid", gap: 18 }}>
+      <h1 style={{ fontSize: 22, margin: 0 }}>Argos – Console</h1>
+
+      <AuditForm onCreated={onCreated} />
+
+      <AuditList items={items} setItems={setItems} />
     </main>
   );
 }
