@@ -222,7 +222,7 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
         data.put("inputUrl", inputUrl);
         data.put("normalizedUrl", normalizedUrl);
         data.put("finalUrl", finalUrl);
-        data.put("cms", Map.of("name", cms.name, "confidence", cms.confidence, "signals", cms.signals));
+        data.put("cms", cmsMap);
         data.put("frontendFramework", Map.of("name", frontend.name, "confidence", frontend.confidence, "signals", frontend.signals));
         data.put("backendHints", backendHints);
         data.put("cloudflare", cloudflare);
