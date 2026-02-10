@@ -27,12 +27,12 @@ import org.junit.jupiter.api.Test;
  */
 @Slf4j
 @GuiceTest(TestModule.class)
-public class SampleIntegrationTest {
+public class AnalysisTest {
     @Inject
     JavaHttpUrlAuditAnalyzer javaHttpUrlAuditAnalyzer;
 
     @Test
-    public void integration_test_scenario_description() {
+    public void analysis_url_test() {
         String url = "https://lelouet.fr/";
         UrlAuditResult result = javaHttpUrlAuditAnalyzer.analyze(url);
         logger.info("Résultat de l'analyse de [{}] : {}", url, result);
