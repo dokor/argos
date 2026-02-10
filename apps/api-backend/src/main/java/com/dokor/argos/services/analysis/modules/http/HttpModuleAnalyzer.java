@@ -460,7 +460,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
             AuditStatus.INFO,
             AuditSeverity.LOW,
             enc,
-            Map.of("content-encoding", enc),
+            enabled ? Map.of("content-encoding", enc) : Map.of(),
             enabled ? "Compression is enabled (" + enc + ")." : "No Content-Encoding detected.",
             null
         );
@@ -473,15 +473,15 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
         boolean hasCachingInfo = (cacheControl != null && !cacheControl.isBlank()) || (expires != null && !expires.isBlank());
 
         AuditStatus status = hasCachingInfo ? AuditStatus.INFO : AuditStatus.WARN;
-        AuditSeverity severity = hasCachingInfo ? AuditSeverity.LOW : AuditSeverity.LOW;
+        AuditSeverity severity = AuditSeverity.LOW;
 
         return new AuditCheckResult(
             "http.headers.caching",
             "Caching headers (Cache-Control / Expires)",
             status,
             severity,
-            Map.of("cache-control", cacheControl, "expires", expires),
-            Map.of("cache-control", cacheControl, "expires", expires),
+            hasCachingInfo ? Map.of("cache-control", cacheControl, "expires", expires) : Map.of(),
+            hasCachingInfo ? Map.of("cache-control", cacheControl, "expires", expires) : Map.of(),
             hasCachingInfo ? "Caching headers detected." : "No caching headers detected.",
             hasCachingInfo ? null : "Consider adding Cache-Control for static assets and appropriate caching strategies."
         );
