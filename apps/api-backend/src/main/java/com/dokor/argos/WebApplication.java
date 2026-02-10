@@ -5,6 +5,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.coreoz.wisp.Scheduler;
 import com.dokor.argos.db.DatabaseInitializer;
+import com.dokor.argos.services.scheduler.SchedulerJobs;
 import org.glassfish.grizzly.GrizzlyFuture;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -52,6 +53,8 @@ public class WebApplication {
                 System.getProperty("http.address"),
                 injector.getInstance(ConfigurationService.class).httpGrizzlyWorkerThreadsPoolSize()
             );
+
+            injector.getInstance(SchedulerJobs.class).scheduleJobs();
 
             addShutDownListener(httpServer, injector.getInstance(Scheduler.class));
 
