@@ -116,6 +116,9 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
             "CMS detection",
             cms.confidence >= 0.7 ? AuditStatus.PASS : AuditStatus.INFO,
             AuditSeverity.LOW,
+            false,          // scorable filled later
+            0.0,            // weight filled later
+            List.of(),      // tags filled later
             mapCms,
             Map.of("signals", cms.signals),
             cms.name != null ? ("Detected CMS: " + cms.name) : "No CMS detected (heuristic).",
@@ -128,6 +131,9 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
             "Frontend framework detection",
             frontend.confidence >= 0.7 ? AuditStatus.PASS : AuditStatus.INFO,
             AuditSeverity.LOW,
+            false,          // scorable filled later
+            0.0,            // weight filled later
+            List.of(),      // tags filled later
             Map.of("name", frontend.name, "confidence", frontend.confidence),
             Map.of("signals", frontend.signals),
             (frontend.name != null && !frontend.name.equals("unknown")) ? ("Detected frontend framework: " + frontend.name) : "No frontend framework detected (heuristic).",
@@ -151,6 +157,9 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
             "Backend hints (headers/cookies)",
             AuditStatus.INFO,
             AuditSeverity.LOW,
+            false,          // scorable filled later
+            0.0,            // weight filled later
+            List.of(),      // tags filled later
             backendHints,
             objectMap,
             backendHints.isEmpty() ? "No strong backend hint detected." : "Backend hints detected: " + String.join(", ", backendHints),
@@ -163,6 +172,9 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
             "Cloudflare detected",
             AuditStatus.INFO,
             AuditSeverity.LOW,
+            false,          // scorable filled later
+            0.0,            // weight filled later
+            List.of(),      // tags filled later
             cloudflare,
             Map.of("signals", cloudflare ? List.of("cf-ray/cf-cache-status/server=cloudflare") : List.of()),
             cloudflare ? "Cloudflare appears to be in front of the site." : "No Cloudflare signal detected.",
@@ -175,6 +187,9 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
             "Server header (raw)",
             AuditStatus.INFO,
             AuditSeverity.LOW,
+            false,          // scorable filled later
+            0.0,            // weight filled later
+            List.of(),      // tags filled later
             serverHeader,
             serverHeader != null ? Map.of("server", serverHeader) : Map.of(),
             serverHeader != null ? "Server header is present." : "Server header not present.",
@@ -188,6 +203,9 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
                 "HTML available for tech detection",
                 AuditStatus.WARN,
                 AuditSeverity.MEDIUM,
+                false,          // scorable filled later
+                0.0,            // weight filled later
+                List.of(),      // tags filled later
                 false,
                 Map.of("reason", "html not provided"),
                 "HTML not provided: tech detection is limited to HTTP headers.",
@@ -201,6 +219,9 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
             "Tech analysis duration",
             AuditStatus.INFO,
             AuditSeverity.LOW,
+            false,          // scorable filled later
+            0.0,            // weight filled later
+            List.of(),      // tags filled later
             durationMs,
             Map.of("durationMs", durationMs),
             "Tech analysis completed in " + durationMs + " ms.",

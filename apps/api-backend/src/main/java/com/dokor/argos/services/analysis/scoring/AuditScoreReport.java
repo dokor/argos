@@ -1,7 +1,12 @@
-package com.dokor.argos.services.analysis.model;
+package com.dokor.argos.services.analysis.scoring;
 
 import java.util.List;
 
+/**
+ * Score calculé à partir des checks enrichis (weight/scorable/tags).
+ * <p>
+ * scoringVersion : version des règles/poids (indépendante du schema du report).
+ */
 public record AuditScoreReport(
     int scoringVersion,
 
@@ -10,5 +15,6 @@ public record AuditScoreReport(
     List<ScoreAggregate> byTag,       // id=tag
 
     List<ScoredCheck> checks          // traçabilité check par check
-) {}
+) {
+}
 

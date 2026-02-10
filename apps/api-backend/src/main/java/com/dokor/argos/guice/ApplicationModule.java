@@ -7,6 +7,10 @@ import com.dokor.argos.services.analysis.model.AuditModuleAnalyzer;
 import com.dokor.argos.services.analysis.modules.html.HtmlModuleAnalyzer;
 import com.dokor.argos.services.analysis.modules.http.HttpModuleAnalyzer;
 import com.dokor.argos.services.analysis.modules.tech.TechModuleAnalyzer;
+import com.dokor.argos.services.analysis.scoring.ScoreEnricherService;
+import com.dokor.argos.services.analysis.scoring.ScorePolicy;
+import com.dokor.argos.services.analysis.scoring.ScorePolicyV1;
+import com.dokor.argos.services.analysis.scoring.ScoreService;
 import com.google.inject.multibindings.Multibinder;
 import jakarta.inject.Singleton;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -41,5 +45,10 @@ public class ApplicationModule extends AbstractModule {
         multibinder.addBinding().to(HtmlModuleAnalyzer.class);
         multibinder.addBinding().to(TechModuleAnalyzer.class);
         multibinder.addBinding().to(HttpModuleAnalyzer.class);
+
+
+        bind(ScorePolicy.class)
+            .to(ScorePolicyV1.class)
+            .in(Singleton.class);
     }
 }

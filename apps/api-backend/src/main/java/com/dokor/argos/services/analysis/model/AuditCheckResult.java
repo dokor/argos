@@ -21,15 +21,19 @@ import java.util.Map;
  */
 public record AuditCheckResult(
     String key,
-    String label,
+    String title,
+
     AuditStatus status,
     AuditSeverity severity,
+
     boolean scorable,     // INFO => false
     double weight,        // 0 si non scorable
+    List<String> tags,
+
     Object value,
-    Map<String, Object> evidence,
+    Map<String, Object> details,
+
     String message,
-    String recommendation,
-    List<String> tags
+    String recommendation
 ) {
 }

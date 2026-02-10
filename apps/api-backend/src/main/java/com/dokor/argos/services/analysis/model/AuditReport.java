@@ -1,5 +1,7 @@
 package com.dokor.argos.services.analysis.model;
 
+import com.dokor.argos.services.analysis.scoring.AuditScoreReport;
+
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
