@@ -105,13 +105,18 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
 
         List<AuditCheckResult> checks = new ArrayList<>();
 
+        Map<String, Object> mapCms = new HashMap<>(Map.of("confidence", cms.confidence));
+        if(cms.name != null){
+            mapCms.put("name", cms.name);
+        }
+
         // 1) CMS
         checks.add(new AuditCheckResult(
             "tech.cms",
             "CMS detection",
             cms.confidence >= 0.7 ? AuditStatus.PASS : AuditStatus.INFO,
             AuditSeverity.LOW,
-            Map.of("name", cms.name, "confidence", cms.confidence),
+            mapCms,
             Map.of("signals", cms.signals),
             cms.name != null ? ("Detected CMS: " + cms.name) : "No CMS detected (heuristic).",
             null
