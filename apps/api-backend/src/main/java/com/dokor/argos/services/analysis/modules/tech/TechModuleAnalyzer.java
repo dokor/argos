@@ -213,6 +213,12 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
             + " durationMs=" + durationMs;
 
         Map<String, Object> data = new LinkedHashMap<>();
+        Map<String, Object> cmsMap = new LinkedHashMap<>();
+        if (cms.name != null) {
+            cmsMap.put("name", cms.name);
+            cmsMap.put("confidence", cms.confidence);
+            cmsMap.put("signals", cms.signals);
+        }
         data.put("inputUrl", inputUrl);
         data.put("normalizedUrl", normalizedUrl);
         data.put("finalUrl", finalUrl);
