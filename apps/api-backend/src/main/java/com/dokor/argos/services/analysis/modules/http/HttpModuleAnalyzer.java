@@ -153,6 +153,9 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
             "HTTP protocol version",
             AuditStatus.INFO,
             AuditSeverity.LOW,
+            false,          // scorable filled later
+            0.0,            // weight filled later
+            List.of(),      // tags filled later
             httpVersion,
             httpVersion != null ? Map.of("httpVersion", httpVersion) : Map.of(),
             httpVersion != null ? "Server responded using " + httpVersion : "HTTP version not available",
@@ -166,6 +169,9 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
                 "HTTP errors",
                 AuditStatus.WARN,
                 AuditSeverity.MEDIUM,
+                false,          // scorable filled later
+                0.0,            // weight filled later
+                List.of(),      // tags filled later
                 errors,
                 Map.of("errors", errors),
                 "Some errors occurred during HTTP analysis",
@@ -236,6 +242,9 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
             "HTTP status code",
             status,
             severity,
+            false,          // scorable filled later
+            0.0,            // weight filled later
+            List.of(),      // tags filled later
             statusCode,
             Map.of("statusCode", statusCode),
             message,
@@ -276,6 +285,9 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
             "Redirect count",
             status,
             severity,
+            false,          // scorable filled later
+            0.0,            // weight filled later
+            List.of(),      // tags filled later
             redirects,
             Map.of("redirectChain", chain),
             message,
@@ -294,6 +306,9 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
             "Final URL uses HTTPS",
             status,
             severity,
+            false,          // scorable filled later
+            0.0,            // weight filled later
+            List.of(),      // tags filled later
             isHttps,
             Map.of("finalUrl", finalUrl),
             isHttps ? "Final URL uses HTTPS." : "Final URL is not HTTPS.",
@@ -330,6 +345,9 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
             "Redirect HTTP to HTTPS",
             status,
             severity,
+            false,          // scorable filled later
+            0.0,            // weight filled later
+            List.of(),      // tags filled later
             Map.of("inputIsHttp", inputIsHttp, "finalIsHttps", finalIsHttps),
             Map.of("inputUrl", inputUrl, "finalUrl", finalUrl, "redirectChain", chain),
             message,
@@ -364,6 +382,9 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
             "Response time",
             status,
             severity,
+            false,          // scorable filled later
+            0.0,            // weight filled later
+            List.of(),      // tags filled later
             durationMs,
             Map.of("durationMs", durationMs),
             message,
@@ -383,6 +404,9 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
             "Content-Type header",
             status,
             severity,
+            false,          // scorable filled later
+            0.0,            // weight filled later
+            List.of(),      // tags filled later
             ct,
             present ? Map.of("content-type", ct) : Map.of(),
             present ? "Content-Type is present." : "Content-Type header is missing.",
@@ -459,6 +483,9 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
             "Compression (Content-Encoding)",
             AuditStatus.INFO,
             AuditSeverity.LOW,
+            false,          // scorable filled later
+            0.0,            // weight filled later
+            List.of(),      // tags filled later
             enc,
             enabled ? Map.of("content-encoding", enc) : Map.of(),
             enabled ? "Compression is enabled (" + enc + ")." : "No Content-Encoding detected.",
@@ -481,6 +508,9 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
             "Caching headers (Cache-Control / Expires)",
             status,
             severity,
+            false,          // scorable filled later
+            0.0,            // weight filled later
+            List.of(),      // tags filled later
             (hasCacheControl && hasExpires) ? Map.of("cache-control", cacheControl, "expires", expires) : Map.of(),
             (hasCacheControl && hasExpires) ? Map.of("cache-control", cacheControl, "expires", expires) : Map.of(),
             hasCachingInfo ? "Caching headers detected." : "No caching headers detected.",
@@ -495,6 +525,9 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
             "Server header",
             AuditStatus.INFO,
             AuditSeverity.LOW,
+            false,          // scorable filled later
+            0.0,            // weight filled later
+            List.of(),      // tags filled later
             server,
             server != null ? Map.of("server", server) : Map.of(),
             server != null ? "Server header is present." : "Server header is not present.",
@@ -520,6 +553,9 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
             label,
             status,
             severity,
+            false,          // scorable filled later
+            0.0,            // weight filled later
+            List.of(),      // tags filled later
             value,
             present ? Map.of(headerKeyLowerCase, value) : Map.of(),
             present ? (label + " is present.") : (label + " is missing."),

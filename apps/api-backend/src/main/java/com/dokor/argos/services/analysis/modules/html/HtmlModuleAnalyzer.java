@@ -117,6 +117,9 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
             "Meta robots present",
             AuditStatus.INFO,
             AuditSeverity.LOW,
+            false,          // scorable filled later
+            0.0,            // weight filled later
+            List.of(),      // tags filled later
             hasRobots,
             Map.of("present", hasRobots),
             hasRobots ? "Meta robots tag detected." : "No meta robots tag detected.",
@@ -138,6 +141,9 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
             "Script tags count",
             AuditStatus.INFO,
             AuditSeverity.LOW,
+            false,          // scorable filled later
+            0.0,            // weight filled later
+            List.of(),      // tags filled later
             scriptCount,
             Map.of("scriptCount", scriptCount),
             "Found " + scriptCount + " <script> tags.",
@@ -150,6 +156,9 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
             "HTML size (bytes)",
             AuditStatus.INFO,
             AuditSeverity.LOW,
+            false,          // scorable filled later
+            0.0,            // weight filled later
+            List.of(),      // tags filled later
             html.length(),
             Map.of("bytes", html.length()),
             "HTML size is " + html.length() + " bytes.",
@@ -162,6 +171,9 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
             "HTML analysis duration",
             AuditStatus.INFO,
             AuditSeverity.LOW,
+            false,          // scorable filled later
+            0.0,            // weight filled later
+            List.of(),      // tags filled later
             durationMs,
             Map.of("durationMs", durationMs),
             "HTML analysis completed in " + durationMs + " ms.",
@@ -261,6 +273,9 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
             "Page title",
             status,
             severity,
+            false,          // scorable filled later
+            0.0,            // weight filled later
+            List.of(),      // tags filled later
             title,
             Map.of("length", len),
             message,
@@ -274,6 +289,9 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
             "Meta description present",
             present ? AuditStatus.PASS : AuditStatus.WARN,
             present ? AuditSeverity.LOW : AuditSeverity.MEDIUM,
+            false,          // scorable filled later
+            0.0,            // weight filled later
+            List.of(),      // tags filled later
             present,
             Map.of("present", present),
             present ? "Meta description is present." : "Meta description is missing.",
@@ -287,6 +305,9 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
             "Canonical link present",
             present ? AuditStatus.PASS : AuditStatus.WARN,
             present ? AuditSeverity.LOW : AuditSeverity.MEDIUM,
+            false,          // scorable filled later
+            0.0,            // weight filled later
+            List.of(),      // tags filled later
             present,
             Map.of("present", present),
             present ? "Canonical link is present." : "Canonical link is missing.",
@@ -325,6 +346,9 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
             "H1 heading count",
             status,
             severity,
+            false,          // scorable filled later
+            0.0,            // weight filled later
+            List.of(),      // tags filled later
             Map.of("count", h1Count, "firstH1", firstH1),
             Map.of("h1Count", h1Count),
             message,
@@ -340,6 +364,9 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
             "HTML lang attribute",
             present ? AuditStatus.PASS : AuditStatus.WARN,
             AuditSeverity.LOW,
+            false,          // scorable filled later
+            0.0,            // weight filled later
+            List.of(),      // tags filled later
             lang,
             present ? Map.of("lang", lang) : Map.of(),
             present ? "HTML lang is set (" + lang + ")." : "Missing lang attribute on <html>.",
@@ -353,6 +380,9 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
             "Viewport meta present",
             present ? AuditStatus.PASS : AuditStatus.WARN,
             present ? AuditSeverity.LOW : AuditSeverity.MEDIUM,
+            false,          // scorable filled later
+            0.0,            // weight filled later
+            List.of(),      // tags filled later
             present,
             Map.of("present", present),
             present ? "Viewport meta is present." : "Viewport meta is missing.",
@@ -393,6 +423,9 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
             "Social meta tags (OpenGraph/Twitter)",
             status,
             severity,
+            false,          // scorable filled later
+            0.0,            // weight filled later
+            List.of(),      // tags filled later
             Map.of(
                 "ogTitle", ogTitle,
                 "ogDescription", ogDesc,
@@ -417,6 +450,9 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
                 "Image alt coverage",
                 AuditStatus.INFO,
                 AuditSeverity.LOW,
+                false,          // scorable filled later
+                0.0,            // weight filled later
+                List.of(),      // tags filled later
                 Map.of("imgCount", 0, "missingAltCount", 0),
                 Map.of("imgCount", 0),
                 "No images detected.",
@@ -453,6 +489,9 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
             "Image alt coverage",
             status,
             severity,
+            false,          // scorable filled later
+            0.0,            // weight filled later
+            List.of(),      // tags filled later
             Map.of("imgCount", imgCount, "missingAltCount", imgAltMissingCount, "missingPct", missingPct),
             Map.of("imgCount", imgCount, "imgAltMissingCount", imgAltMissingCount),
             message,
@@ -467,6 +506,9 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
                 "Anchor href coverage",
                 AuditStatus.INFO,
                 AuditSeverity.LOW,
+                false,          // scorable filled later
+                0.0,            // weight filled later
+                List.of(),      // tags filled later
                 Map.of("anchorCount", 0, "noHrefCount", 0),
                 Map.of("anchorCount", 0),
                 "No anchors detected.",
@@ -503,6 +545,9 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
             "Anchor href coverage",
             status,
             severity,
+            false,          // scorable filled later
+            0.0,            // weight filled later
+            List.of(),      // tags filled later
             Map.of("anchorCount", anchorCount, "noHrefCount", noHrefCount, "missingPct", missingPct),
             Map.of("anchorCount", anchorCount, "noHrefCount", noHrefCount),
             message,
@@ -531,6 +576,9 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
                     "HTML available",
                     AuditStatus.WARN,
                     AuditSeverity.MEDIUM,
+                    false,          // scorable filled later
+                    0.0,            // weight filled later
+                    List.of(),      // tags filled later
                     false,
                     Map.of("reason", reason),
                     "HTML analysis could not run.",
