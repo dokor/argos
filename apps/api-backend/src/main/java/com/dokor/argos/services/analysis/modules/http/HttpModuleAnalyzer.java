@@ -154,7 +154,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
             AuditStatus.INFO,
             AuditSeverity.LOW,
             httpVersion,
-            Map.of("httpVersion", httpVersion),
+            httpVersion != null ? Map.of("httpVersion", httpVersion) : Map.of(),
             httpVersion != null ? "Server responded using " + httpVersion : "HTTP version not available",
             null
         ));
