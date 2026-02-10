@@ -315,7 +315,7 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
             return new DetectedTech("Svelte", 0.65, List.of("svelte signals"));
         }
 
-        return new DetectedTech(null, 0.0, List.of());
+        return new DetectedTech("unknown", 0.0, List.of());
     }
 
     private static List<String> detectBackendHints(
