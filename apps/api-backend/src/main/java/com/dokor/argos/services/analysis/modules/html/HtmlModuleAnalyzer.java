@@ -522,7 +522,7 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
             new LinkedHashMap<>(Map.of(
                 "inputUrl", inputUrl,
                 "normalizedUrl", normalizedUrl,
-                "finalUrl", finalUrl,
+                "finalUrl", finalUrl != null ? finalUrl : "unknown",
                 "reason", reason
             )),
             List.of(
