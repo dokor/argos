@@ -520,7 +520,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
             status,
             severity,
             value,
-            Map.of(headerKeyLowerCase, value),
+            present ? Map.of(headerKeyLowerCase, value) : Map.of(),
             present ? (label + " is present.") : (label + " is missing."),
             present ? null : recommendationIfMissing
         );
