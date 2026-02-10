@@ -519,12 +519,12 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
             "html",
             "HTML",
             "HTML analysis not available: " + reason,
-            new LinkedHashMap<>(Map.of(
+            Map.of(
                 "inputUrl", inputUrl,
                 "normalizedUrl", normalizedUrl,
                 "finalUrl", finalUrl != null ? finalUrl : "unknown",
                 "reason", reason
-            )),
+            ),
             List.of(
                 new AuditCheckResult(
                     "html.available",
