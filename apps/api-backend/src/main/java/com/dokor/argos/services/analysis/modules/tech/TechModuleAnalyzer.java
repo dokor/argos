@@ -134,6 +134,17 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
             null
         ));
 
+        Map<String, Object> objectMap = new HashMap<>(Map.of());
+        if (serverHeader != null) {
+            objectMap.put("server", serverHeader);
+        }
+        if (poweredBy != null) {
+            objectMap.put("x-powered-by", poweredBy);
+        }
+        if (setCookie != null) {
+            objectMap.put("set-cookie", setCookie);
+        }
+
         // 3) Backend hints (info)
         checks.add(new AuditCheckResult(
             "tech.backend.hints",
@@ -141,11 +152,7 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
             AuditStatus.INFO,
             AuditSeverity.LOW,
             backendHints,
-            Map.of(
-                "server", serverHeader,
-                "x-powered-by", poweredBy,
-                "set-cookie", setCookie
-            ),
+            objectMap,
             backendHints.isEmpty() ? "No strong backend hint detected." : "Backend hints detected: " + String.join(", ", backendHints),
             null
         ));
