@@ -33,7 +33,7 @@ export type AuditListItem = {
 };
 
 // todo : fix conf
-const API_BASE: string | undefined = process.env.NEXT_PUBLIC_ARGOS_API_BASE ?? "/api";
+const API_BASE: string | undefined = process.env.NEXT_PUBLIC_ARGOS_API_BASE ?? "";
 
 if (!API_BASE) {
   // fail fast en dev
