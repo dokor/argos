@@ -176,7 +176,7 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
             AuditStatus.INFO,
             AuditSeverity.LOW,
             serverHeader,
-            Map.of("server", serverHeader),
+            serverHeader != null ? Map.of("server", serverHeader) : Map.of(),
             serverHeader != null ? "Server header is present." : "Server header not present.",
             null
         ));
