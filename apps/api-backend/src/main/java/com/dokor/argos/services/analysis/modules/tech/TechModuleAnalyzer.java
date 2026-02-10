@@ -250,7 +250,7 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
      */
     @Override
     public AuditModuleResult analyze(AuditContext auditContext, Logger logger) {
-        logger.warn("TECH module called without HTTP/HTML context (MVP). Returning limited tech module.");
+        logger.debug("TECH module called.");
         return analyzeTech(auditContext.inputUrl(), auditContext.normalizedUrl(), auditContext.finalUrl(), auditContext.headers(), auditContext.body(), logger);
     }
 

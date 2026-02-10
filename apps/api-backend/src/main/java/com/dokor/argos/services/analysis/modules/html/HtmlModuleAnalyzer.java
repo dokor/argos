@@ -218,7 +218,7 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
      */
     @Override
     public AuditModuleResult analyze(AuditContext context, Logger logger) {
-        logger.warn("HTML module called without HTML context (MVP). Returning empty HTML module.");
+        logger.debug("HTML module called");
         return analyzeHtml(context.inputUrl(), context.normalizedUrl(), context.finalUrl(), context.body(), logger);
     }
 
