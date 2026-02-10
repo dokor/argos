@@ -6,6 +6,7 @@ import com.dokor.argos.services.analysis.model.AuditModuleAnalyzer;
 import com.dokor.argos.services.analysis.model.AuditModuleResult;
 import com.dokor.argos.services.analysis.model.enums.AuditSeverity;
 import com.dokor.argos.services.analysis.model.enums.AuditStatus;
+import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 
@@ -33,10 +34,20 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
 
     private static final int MAX_REDIRECTS = 10;
 
-    private final HttpClient client = HttpClient.newBuilder()
-        .followRedirects(HttpClient.Redirect.NEVER)
-        .connectTimeout(Duration.ofSeconds(10))
-        .build();
+    private final HttpClient client;
+
+    @Inject
+    public HttpModuleAnalyzer() {
+        this(HttpClient.newBuilder()
+            .followRedirects(HttpClient.Redirect.NEVER)
+            .connectTimeout(Duration.ofSeconds(10))
+            .build());
+    }
+
+    // package-private pour tests
+    HttpModuleAnalyzer(HttpClient client) {
+        this.client = client;
+    }
 
     @Override
     public String moduleId() {
