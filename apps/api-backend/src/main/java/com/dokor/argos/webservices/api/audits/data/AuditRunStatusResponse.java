@@ -1,5 +1,7 @@
 package com.dokor.argos.webservices.api.audits.data;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.Instant;
@@ -8,9 +10,11 @@ import java.time.Instant;
 public record AuditRunStatusResponse(
 
     @Schema(description = "Identifier of the audit run", example = "42")
+    @JsonSerialize(using = ToStringSerializer.class)
     long runId,
 
     @Schema(description = "Identifier of the related audit", example = "12")
+    @JsonSerialize(using = ToStringSerializer.class)
     long auditId,
 
     @Schema(description = "Current status of the audit run", example = "RUNNING")
