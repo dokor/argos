@@ -7,10 +7,13 @@ import com.dokor.argos.services.analysis.model.AuditModuleResult;
 import com.dokor.argos.services.analysis.modules.html.HtmlModuleAnalyzer;
 import com.dokor.argos.services.analysis.modules.http.HttpModuleAnalyzer;
 import com.dokor.argos.services.analysis.modules.tech.TechModuleAnalyzer;
+import com.dokor.argos.services.analysis.scoring.ScoreEnricherService;
+import com.dokor.argos.services.analysis.scoring.ScoreService;
 import com.dokor.argos.services.domain.audit.AuditRunService;
 import com.dokor.argos.services.domain.audit.UrlNormalizer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import java.util.List;
 import java.util.Map;
@@ -32,6 +35,8 @@ class AuditProcessorServiceTest {
             mock(HttpModuleAnalyzer.class),
             mock(HtmlModuleAnalyzer.class),
             mock(TechModuleAnalyzer.class),
+            mock(ScoreEnricherService.class),
+            mock(ScoreService.class),
             new ObjectMapper()
         );
 
@@ -61,6 +66,8 @@ class AuditProcessorServiceTest {
             mock(HttpModuleAnalyzer.class),
             mock(HtmlModuleAnalyzer.class),
             mock(TechModuleAnalyzer.class),
+            mock(ScoreEnricherService.class),
+            mock(ScoreService.class),
             new ObjectMapper()
         );
 
@@ -91,6 +98,8 @@ class AuditProcessorServiceTest {
         HttpModuleAnalyzer http = mock(HttpModuleAnalyzer.class);
         HtmlModuleAnalyzer html = mock(HtmlModuleAnalyzer.class);
         TechModuleAnalyzer tech = mock(TechModuleAnalyzer.class);
+        ScoreEnricherService scoreEnricherService = mock(ScoreEnricherService.class);
+        ScoreService scoreService = mock(ScoreService.class);
 
         AuditModuleResult httpModule = new AuditModuleResult(
             "http", "HTTP", "ok",
@@ -116,6 +125,8 @@ class AuditProcessorServiceTest {
             http,
             html,
             tech,
+            scoreEnricherService,
+            scoreService,
             new ObjectMapper()
         );
 
@@ -153,6 +164,8 @@ class AuditProcessorServiceTest {
             http,
             mock(HtmlModuleAnalyzer.class),
             mock(TechModuleAnalyzer.class),
+            mock(ScoreEnricherService.class),
+            mock(ScoreService.class),
             new ObjectMapper()
         );
 
