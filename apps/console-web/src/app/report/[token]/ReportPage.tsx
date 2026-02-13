@@ -14,7 +14,7 @@ type Params = {
   }
 }
 
-export default async function ReportPage({ params }: Readonly<Params>) {
+export default function ReportPage({ params }: Readonly<Params>) {
   const { report } = params;
   return (
     <div className="min-h-screen bg-background text-foreground" id={'top'}>
