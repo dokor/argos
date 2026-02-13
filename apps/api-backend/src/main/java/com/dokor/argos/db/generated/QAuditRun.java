@@ -46,6 +46,8 @@ public class QAuditRun extends com.querydsl.sql.RelationalPathBase<AuditRun> {
 
     public final com.querydsl.sql.ForeignKey<Audit> runAuditFk = createForeignKey(auditId, "id");
 
+    public final com.querydsl.sql.ForeignKey<AuditReport> _reportRunFk = createInvForeignKey(id, "run_id");
+
     public QAuditRun(String variable) {
         super(AuditRun.class, forVariable(variable), "null", "ARG_AUDIT_RUN");
         addMetadata();

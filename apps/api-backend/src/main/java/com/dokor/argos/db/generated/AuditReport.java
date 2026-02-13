@@ -1,5 +1,6 @@
 package com.dokor.argos.db.generated;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import javax.annotation.processing.Generated;
 import com.querydsl.sql.Column;
 
@@ -8,6 +9,10 @@ import com.querydsl.sql.Column;
  */
 @Generated("com.coreoz.plume.db.querydsl.generation.IdBeanSerializer")
 public class AuditReport extends com.coreoz.plume.db.querydsl.crud.CrudEntityQuerydsl {
+
+    @JsonSerialize(using=com.fasterxml.jackson.databind.ser.std.ToStringSerializer.class)
+    @Column("audit_id")
+    private Long auditId;
 
     @Column("created_at")
     private java.time.Instant createdAt;
@@ -18,6 +23,7 @@ public class AuditReport extends com.coreoz.plume.db.querydsl.crud.CrudEntityQue
     @Column("expires_at")
     private java.time.Instant expiresAt;
 
+    @JsonSerialize(using=com.fasterxml.jackson.databind.ser.std.ToStringSerializer.class)
     @Column("id")
     private Long id;
 
@@ -27,6 +33,10 @@ public class AuditReport extends com.coreoz.plume.db.querydsl.crud.CrudEntityQue
     @Column("report_json")
     private String reportJson;
 
+    @JsonSerialize(using=com.fasterxml.jackson.databind.ser.std.ToStringSerializer.class)
+    @Column("run_id")
+    private Long runId;
+
     @Column("site_title")
     private String siteTitle;
 
@@ -35,6 +45,14 @@ public class AuditReport extends com.coreoz.plume.db.querydsl.crud.CrudEntityQue
 
     @Column("token_hash")
     private byte[] tokenHash;
+
+    public Long getAuditId() {
+        return auditId;
+    }
+
+    public void setAuditId(Long auditId) {
+        this.auditId = auditId;
+    }
 
     public java.time.Instant getCreatedAt() {
         return createdAt;
@@ -82,6 +100,14 @@ public class AuditReport extends com.coreoz.plume.db.querydsl.crud.CrudEntityQue
 
     public void setReportJson(String reportJson) {
         this.reportJson = reportJson;
+    }
+
+    public Long getRunId() {
+        return runId;
+    }
+
+    public void setRunId(Long runId) {
+        this.runId = runId;
     }
 
     public String getSiteTitle() {

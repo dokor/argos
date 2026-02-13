@@ -36,6 +36,8 @@ public class QAudit extends com.querydsl.sql.RelationalPathBase<Audit> {
 
     public final com.querydsl.sql.PrimaryKey<Audit> primary = createPrimaryKey(id);
 
+    public final com.querydsl.sql.ForeignKey<AuditReport> _reportAuditFk = createInvForeignKey(id, "audit_id");
+
     public final com.querydsl.sql.ForeignKey<AuditRun> _runAuditFk = createInvForeignKey(id, "audit_id");
 
     public QAudit(String variable) {
