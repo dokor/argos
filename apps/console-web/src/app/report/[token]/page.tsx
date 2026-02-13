@@ -15,10 +15,8 @@ export const metadata: Metadata = {
 
 async function fetchReport(token: string): Promise<Report | null> {
   // todo : déplacer ca dans le fichier d'api
-  const base = process.env.NEXT_PUBLIC_BACKEND_URL; // ex: https://api.argos.tld
-  if (!base) throw new Error("NEXT_PUBLIC_BACKEND_URL manquant");
 
-  const res = await fetch(`${base}/api/reports/${encodeURIComponent(token)}`, {
+  const res = await fetch(`/api/reports/${encodeURIComponent(token)}`, {
     // important pour éviter de cacher trop agressivement
     cache: "no-store",
   });
