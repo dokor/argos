@@ -28,7 +28,7 @@ async function fetchReport(token: string): Promise<Report | null> {
 }
 
 export default async function ReportPage({ params }: { params: { token: string } }) {
-  const report = await fetchReport(params.token);
+  const report: Report | null = await fetchReport(params.token);
   if (!report) notFound();
 
   return (

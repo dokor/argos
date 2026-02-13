@@ -4,6 +4,7 @@ import com.coreoz.plume.db.querydsl.crud.CrudDaoQuerydsl;
 import com.coreoz.plume.db.querydsl.transaction.TransactionManagerQuerydsl;
 import com.dokor.argos.db.generated.Audit;
 import com.dokor.argos.db.generated.QAudit;
+import com.dokor.argos.db.generated.QAuditReport;
 import com.dokor.argos.db.generated.QAuditRun;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.NumberExpression;
@@ -37,6 +38,7 @@ public class AuditDao extends CrudDaoQuerydsl<Audit> {
     private static final Logger logger = LoggerFactory.getLogger(AuditDao.class);
     private static final QAudit AUDIT = QAudit.audit;
     private static final QAuditRun RUN = QAuditRun.auditRun;
+    private static final QAuditReport AUDIT_REPORT = QAuditReport.auditReport;
 
     @Inject
     public AuditDao(TransactionManagerQuerydsl transactionManager) {
@@ -96,6 +98,7 @@ public class AuditDao extends CrudDaoQuerydsl<Audit> {
             .select(AUDIT, RUN)
             .from(AUDIT)
             .leftJoin(RUN).on(RUN.auditId.eq(AUDIT.id))
+            .leftJoin(AUDIT_REPORT).on(AUDIT_REPORT.auditId.eq(AUDIT.id))
             .orderBy(AUDIT.createdAt.desc())
             .limit(limit)
             .fetch();

@@ -2,6 +2,7 @@ package com.dokor.argos.services.domain.audit;
 
 import com.dokor.argos.db.dao.AuditDao;
 import com.dokor.argos.db.generated.Audit;
+import com.dokor.argos.db.generated.AuditReport;
 import com.dokor.argos.db.generated.AuditRun;
 import com.dokor.argos.services.analysis.AuditProcessorService;
 import com.dokor.argos.services.domain.audit.errors.NotFoundException;
@@ -52,8 +53,9 @@ public class AuditService {
         return rows.stream().map(row -> {
             Audit audit = row.get(0, Audit.class);
             AuditRun run = row.get(1, AuditRun.class);
+            AuditReport report = row.get(1, AuditReport.class);
 
-            if (run == null) {
+            if (run == null || report == null) {
                 // Cas rare : audit créé sans run
                 return new AuditListItemResponse(
                     audit.getId(),
@@ -77,8 +79,8 @@ public class AuditService {
                 run.getStatus(),
                 run.getCreatedAt(),
                 run.getFinishedAt(),
-                null,
-                null,
+                report.getPublicToken(),
+                report.getPublicToken(),
                 run.getResultJson()
             );
         }).toList();
