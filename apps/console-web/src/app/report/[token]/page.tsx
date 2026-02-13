@@ -14,6 +14,6 @@ export default async function ReportPageHome() {
   if (!report) notFound();
 
   return (
-    <ReportPage report={report} />
+    <ReportPage params={{ report }} />
   );
 }
