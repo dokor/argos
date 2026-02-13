@@ -46,7 +46,7 @@ if (!API_BASE) {
 }
 
 export async function http<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
+  const res = await fetch(`${path}`, {
     ...init,
     headers: {
       "Content-Type": "application/json",
