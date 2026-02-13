@@ -45,7 +45,7 @@ export default function AuditList({ items, setItems }: Props) {
         setLoading(true);
         setError(null);
 
-        const list = await http<AuditListItem[]>("/api/audits", { method: "GET" });
+        const list: AuditListItem[] = await http<AuditListItem[]>("/api/audits", { method: "GET" });
         if (!mounted) return;
         setItems(list);
       } catch (e: any) {

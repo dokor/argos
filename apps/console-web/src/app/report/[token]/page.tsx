@@ -7,6 +7,7 @@ import ScoreGrid from "@/components/report/ScoreGrid";
 import PriorityCards from "@/components/report/PriorityCards";
 import IssuesByCategory from "@/components/report/IssuesByCategory";
 import ReportFooterCta from "@/components/report/ReportFooterCta";
+import { http } from "@/lib/ArgosApi";
 
 export const metadata: Metadata = {
   title: "Rapport Argos",
@@ -14,17 +15,7 @@ export const metadata: Metadata = {
 };
 
 async function fetchReport(token: string): Promise<Report | null> {
-  // todo : déplacer ca dans le fichier d'api
-
-  const res = await fetch(`/api/reports/${encodeURIComponent(token)}`, {
-    // important pour éviter de cacher trop agressivement
-    cache: "no-store",
-  });
-
-  if (res.status === 404) return null;
-  if (!res.ok) throw new Error("Erreur fetch report");
-
-  return res.json();
+  return await http<Report>(`/api/reports/${token}`, { method: "GET" });
 }
 
 export default async function ReportPage({ params }: { params: { token: string } }) {
