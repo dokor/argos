@@ -33,7 +33,10 @@ public record AuditRunStatusResponse(
     String lastError,
 
     @Schema(description = "Result payload if the run completed successfully", nullable = true)
-    String resultJson
+    String resultJson,
+
+    @Schema(description = "Result payload if the run completed successfully", nullable = true)
+    String reportToken
 
 ) {
 }

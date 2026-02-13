@@ -63,6 +63,8 @@ public class AuditService {
                     "NO_RUN",
                     audit.getCreatedAt(),
                     null,
+                    null,
+                    null,
                     null
                 );
             }
@@ -75,6 +77,8 @@ public class AuditService {
                 run.getStatus(),
                 run.getCreatedAt(),
                 run.getFinishedAt(),
+                null,
+                null,
                 run.getResultJson()
             );
         }).toList();
@@ -150,7 +154,8 @@ public class AuditService {
             run.getStartedAt(),
             run.getFinishedAt(),
             run.getLastError(),
-            run.getResultJson()
+            run.getResultJson(),
+            null
         );
     }
 }

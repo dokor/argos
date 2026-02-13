@@ -18,6 +18,7 @@ export type AuditRunStatusResponse = {
   createdAt?: string;
   startedAt?: string | null;
   finishedAt?: string | null;
+  reportToken?: string | null
 };
 
 
