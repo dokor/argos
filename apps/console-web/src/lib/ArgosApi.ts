@@ -29,6 +29,8 @@ export type AuditListItem = {
   status: "QUEUED" | "RUNNING" | "FAILED" | "COMPLETED";
   createdAt?: string;
   finishedAt?: string | null;
+  reportToken?: string | null;
+  reportUrl?: string | null;
   resultJson?: string | null;
 };
 

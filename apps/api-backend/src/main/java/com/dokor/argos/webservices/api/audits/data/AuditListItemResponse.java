@@ -11,16 +11,24 @@ public record AuditListItemResponse(
     @JsonSerialize(using = ToStringSerializer.class)
     @Schema(example = "10")
     long auditId,
-    @Schema(example = "https://example.com") String inputUrl,
-    @Schema(example = "https://example.com/") String normalizedUrl,
+    @Schema(example = "https://example.com")
+    String inputUrl,
+    @Schema(example = "https://example.com/")
+    String normalizedUrl,
 
     @Schema(example = "42")
     @JsonSerialize(using = ToStringSerializer.class)
     long runId,
-    @Schema(example = "QUEUED") String status,
+    @Schema(example = "QUEUED")
+    String status,
 
     Instant createdAt,
     Instant finishedAt,
+
+    @Schema(example = "https://example.com/")
+    String reportToken,
+    @Schema(example = "https://example.com/")
+    String reportUrl,
 
     /**
      * JSON complet du report si dispo.
