@@ -38,7 +38,7 @@ export type AuditListItem = {
 };
 
 // todo : fix conf
-const API_BASE: string | undefined = process.env.NEXT_PUBLIC_ARGOS_API_BASE ?? "";
+const API_BASE: string | undefined = "https://console.argos.tld";
 
 if (!API_BASE) {
   // fail fast en dev
@@ -46,7 +46,13 @@ if (!API_BASE) {
 }
 
 export async function http<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${path}`, {
+
+  const url: string =
+    typeof window === "undefined"
+      ? `${API_BASE}${path}` // SSR => URL absolue
+      : path;               // Client => relative OK
+
+  const res = await fetch(url, {
     ...init,
     headers: {
       "Content-Type": "application/json",
