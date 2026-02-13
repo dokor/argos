@@ -6,39 +6,50 @@ public record ReportDto(
     String generatedAt,
     String domain,
     String url,
-    SiteDto site,
-    ScoresDto scores,
-    SummaryDto summary,
-    List<IssueDto> issues
+    Site site,
+    Scores scores,
+    Summary summary,
+    List<Issue> issues
 ) {
-    public record SiteDto(String title, String logoUrl) {}
-    public record ScoresDto(
-        int global,
-        List<CategoryScoreDto> byCategory
-    ) {}
-    public record CategoryScoreDto(String key, String label, int score, int issues) {}
+    public record Site(String title, String logoUrl) {}
 
-    public record SummaryDto(
-        String oneLiner,
-        List<PriorityDto> priorities
+    public record Scores(
+        int global, // 0..100
+        List<CategoryScore> byCategory
     ) {}
-    public record PriorityDto(
-        String severity, // critical|important|opportunity
+
+    public record CategoryScore(
+        String key,
+        String label,
+        int score,
+        int issues
+    ) {}
+
+    public record Summary(
+        String oneLiner,
+        List<Priority> priorities
+    ) {}
+
+    public record Priority(
+        Severity severity, // critical|important|opportunity
         String title,
         String impact,
-        String effort // XS|S|M|L
+        Effort effort
     ) {}
 
-    public record IssueDto(
+    public record Issue(
         String id,
         String categoryKey,
         String module,
-        String severity, // critical|important|info
+        IssueSeverity severity, // critical|important|info
         String title,
         String impact,
         String evidence,
         String recommendation,
-        String effort
+        Effort effort
     ) {}
-}
 
+    public enum Severity { critical, important, opportunity }
+    public enum IssueSeverity { critical, important, info }
+    public enum Effort { XS, S, M, L }
+}

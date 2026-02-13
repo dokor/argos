@@ -33,7 +33,7 @@ public class ReportsWs {
 
     @GET
     @Path("/{token}")
-    public Response getReport(@PathParam("token") String token) throws NoSuchAlgorithmException {
+    public Response getReport(@PathParam("token") String token) {
         logger.info("Get report token={}", safeToken(token));
         var reportOpt = reportReadService.getByToken(token);
         if (reportOpt.isEmpty()) {

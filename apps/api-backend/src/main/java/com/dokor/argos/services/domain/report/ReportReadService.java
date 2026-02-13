@@ -33,7 +33,7 @@ public class ReportReadService {
         this.objectMapper = objectMapper;
     }
 
-    public Optional<ReportDto> getByToken(String token) throws NoSuchAlgorithmException {
+    public Optional<ReportDto> getByToken(String token) {
         if (token == null || token.isBlank()) return Optional.empty();
 
         byte[] hash = tokenService.sha256(token);

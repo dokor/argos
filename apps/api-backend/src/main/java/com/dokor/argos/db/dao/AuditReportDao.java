@@ -27,4 +27,14 @@ public class AuditReportDao extends CrudDaoQuerydsl<AuditReport> {
                 .fetchOne()
         );
     }
+
+    public Optional<AuditReport> findByRunId(long runId) {
+        return Optional.ofNullable(
+            transactionManager.selectQuery()
+                .select(REPORT)
+                .from(REPORT)
+                .where(REPORT.runId.eq(runId))
+                .fetchOne()
+        );
+    }
 }

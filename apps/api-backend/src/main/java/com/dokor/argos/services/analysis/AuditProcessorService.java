@@ -4,7 +4,7 @@ import com.dokor.argos.db.dao.AuditDao;
 import com.dokor.argos.db.generated.Audit;
 import com.dokor.argos.services.analysis.model.AuditContext;
 import com.dokor.argos.services.analysis.model.AuditModuleResult;
-import com.dokor.argos.services.analysis.model.AuditReport;
+import com.dokor.argos.services.analysis.model.AuditReportJson;
 import com.dokor.argos.services.analysis.modules.html.HtmlModuleAnalyzer;
 import com.dokor.argos.services.analysis.modules.http.HttpModuleAnalyzer;
 import com.dokor.argos.services.analysis.modules.tech.TechModuleAnalyzer;
@@ -13,6 +13,7 @@ import com.dokor.argos.services.analysis.scoring.ScoreEnricherService;
 import com.dokor.argos.services.analysis.scoring.ScoreService;
 import com.dokor.argos.services.domain.audit.AuditRunService;
 import com.dokor.argos.services.domain.audit.UrlNormalizer;
+import com.dokor.argos.services.domain.report.ReportPublishService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -42,6 +43,8 @@ public class AuditProcessorService {
 
     private final ObjectMapper objectMapper;
 
+    private final ReportPublishService reportPublishService;
+
     @Inject
     public AuditProcessorService(
         AuditRunService auditRunService,
@@ -52,7 +55,8 @@ public class AuditProcessorService {
         TechModuleAnalyzer techModuleAnalyzer,
         ScoreEnricherService scoreEnricherService,
         ScoreService scoreService,
-        ObjectMapper objectMapper
+        ObjectMapper objectMapper,
+        ReportPublishService reportPublishService
     ) {
         this.auditRunService = auditRunService;
         this.auditDao = auditDao;
@@ -63,6 +67,7 @@ public class AuditProcessorService {
         this.scoreEnricherService = scoreEnricherService;
         this.scoreService = scoreService;
         this.objectMapper = objectMapper;
+        this.reportPublishService = reportPublishService;
     }
 
     public void process(long runId) {
@@ -131,7 +136,7 @@ public class AuditProcessorService {
             meta.put("runId", String.valueOf(runId));
             meta.put("httpStatusCode", String.valueOf(context.httpStatusCode()));
 
-            AuditReport report = new AuditReport(
+            AuditReportJson report = new AuditReportJson(
                 REPORT_SCHEMA_VERSION,
                 inputUrl,
                 normalizedUrl,
@@ -144,6 +149,12 @@ public class AuditProcessorService {
             String json = objectMapper.writeValueAsString(report);
 
             auditRunService.complete(runId, json);
+            // Publish public report (tokenized) for /report/[token]
+            reportPublishService.publishIfAbsent(runId, audit, report)
+                .ifPresentOrElse(
+                    token -> logger.info("Public report ready runId={} token={}", runId, token),
+                    () -> logger.warn("Public report not published runId={}", runId)
+                );
             logger.info(
                 "Run completed runId={} globalScoreRatio={}",
                 runId,

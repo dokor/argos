@@ -14,7 +14,7 @@ import java.util.Map;
  * - exploitable facilement pour calculer un score (pondération par clé de check)
  * - versionnable (schemaVersion)
  */
-public record AuditReport(
+public record AuditReportJson(
     int schemaVersion,
     String inputUrl,
     String normalizedUrl,

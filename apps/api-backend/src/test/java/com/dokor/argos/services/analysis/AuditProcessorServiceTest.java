@@ -11,6 +11,7 @@ import com.dokor.argos.services.analysis.scoring.ScoreEnricherService;
 import com.dokor.argos.services.analysis.scoring.ScoreService;
 import com.dokor.argos.services.domain.audit.AuditRunService;
 import com.dokor.argos.services.domain.audit.UrlNormalizer;
+import com.dokor.argos.services.domain.report.ReportPublishService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -37,7 +38,8 @@ class AuditProcessorServiceTest {
             mock(TechModuleAnalyzer.class),
             mock(ScoreEnricherService.class),
             mock(ScoreService.class),
-            new ObjectMapper()
+            new ObjectMapper(),
+            mock(ReportPublishService.class)
         );
 
         svc.process(1L);
@@ -68,7 +70,8 @@ class AuditProcessorServiceTest {
             mock(TechModuleAnalyzer.class),
             mock(ScoreEnricherService.class),
             mock(ScoreService.class),
-            new ObjectMapper()
+            new ObjectMapper(),
+            mock(ReportPublishService.class)
         );
 
         svc.process(1L);
@@ -127,7 +130,8 @@ class AuditProcessorServiceTest {
             tech,
             scoreEnricherService,
             scoreService,
-            new ObjectMapper()
+            new ObjectMapper(),
+            mock(ReportPublishService.class)
         );
 
         svc.process(1L);
@@ -166,7 +170,8 @@ class AuditProcessorServiceTest {
             mock(TechModuleAnalyzer.class),
             mock(ScoreEnricherService.class),
             mock(ScoreService.class),
-            new ObjectMapper()
+            new ObjectMapper(),
+            mock(ReportPublishService.class)
         );
 
         svc.process(1L);
