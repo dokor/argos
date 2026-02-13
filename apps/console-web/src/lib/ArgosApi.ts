@@ -38,7 +38,7 @@ export type AuditListItem = {
 };
 
 // todo : fix conf
-const API_BASE: string | undefined = "https://console.argos.tld";
+const API_BASE: string | undefined = "http://api-backend:8081";
 
 if (!API_BASE) {
   // fail fast en dev
