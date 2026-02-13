@@ -18,8 +18,8 @@ async function fetchReport(token: string): Promise<Report | null> {
   return await http<Report>(`/reports/${token}`, { method: "GET" });
 }
 
-export default async function ReportPage({ params }: Readonly<{ params: { token: string } }>) {
-  const token: string = params.token
+export default async function ReportPage({ params }: any) {
+  const { token } = await params.token;
   console.log("ReportPage params", { token });
   const report: Report | null = await fetchReport(token);
   if (!report) notFound();
