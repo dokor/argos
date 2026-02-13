@@ -9,8 +9,13 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function ReportPageHome({ params }: { params: { token: string } }) {
-  const report: Report = await argosApi.getReport(params.token ?? 'BYkE3pWUbWL1ADUB5Y7Qlc3KTeA9GBjb_OD8bncpO38');
+type Props = {
+  params: Promise<{ token: string; }>;
+};
+
+export default async function ReportPageHome({ params }: Readonly<Props>) {
+  const { token } = await params;
+  const report: Report = await argosApi.getReport(token);
   if (!report) notFound();
 
   return (

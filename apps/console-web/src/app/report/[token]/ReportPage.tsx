@@ -17,7 +17,7 @@ type Params = {
 export default function ReportPage({ params }: Readonly<Params>) {
   const { report } = params;
   return (
-    <div className="min-h-screen bg-background text-foreground" id={'top'}>
+    <div className="theme-light min-h-screen bg-background text-foreground" id={'top'}>
       <ReportHeader domain={report.domain} />
       <div className="mx-auto w-full max-w-6xl px-4 pb-16 pt-6">
         <ReportHero report={report} />
