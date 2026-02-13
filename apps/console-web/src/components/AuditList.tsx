@@ -1,4 +1,3 @@
-// apps/console-web/src/components/AuditList.tsx
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
