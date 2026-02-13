@@ -19,10 +19,9 @@ async function fetchReport(token: string): Promise<Report | null> {
 }
 
 export default async function ReportPage({ params }: Readonly<{ params: { token: string } }>) {
-  // const sp = useSearchParams();
-  console.log("ReportPage params", { params });
-  // console.log("ReportPage sp", { sp });
-  const report: Report | null = await fetchReport(params.token);
+  const token: string = params.token
+  console.log("ReportPage params", { token });
+  const report: Report | null = await fetchReport(token);
   if (!report) notFound();
 
   return (
