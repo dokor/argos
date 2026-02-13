@@ -54,7 +54,7 @@ export async function http<T>(path: string, init?: RequestInit): Promise<T> {
   });
 
   if (!res.ok) {
-    const text = await res.text().catch(() => "");
+    const text: string = await res.text().catch(() => "");
     throw new Error(`HTTP ${res.status} ${res.statusText} - ${text}`);
   }
 
@@ -63,7 +63,7 @@ export async function http<T>(path: string, init?: RequestInit): Promise<T> {
 
   return (await res.json()) as T;
 }
-//
+
 // export const argosApi = {
 //   createAudit: (body: CreateAuditRequest) =>
 //     http<CreateAuditResponse>("/audits", {
