@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { AuditListItem, CreateAuditRequest, CreateAuditResponse, http } from "@/lib/ArgosApi";
+import { argosApi, AuditListItem, CreateAuditRequest, CreateAuditResponse } from "@/lib/ArgosApi";
 
 type Props = {
   onCreated: (item: AuditListItem) => void;
@@ -27,10 +27,7 @@ export default function AuditForm({ onCreated }: Props) {
     setSubmitting(true);
     try {
       const payload: CreateAuditRequest = { url: trimmed };
-      const res = await http<CreateAuditResponse>("/api/audits", {
-        method: "POST",
-        body: JSON.stringify(payload),
-      });
+      const res: CreateAuditResponse = await argosApi.createAudit(payload)
 
       // On pousse immédiatement un item en liste (optimistic)
       onCreated({

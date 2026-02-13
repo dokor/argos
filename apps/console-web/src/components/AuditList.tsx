@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { AuditListItem, AuditRunStatusResponse, http } from "@/lib/ArgosApi";
+import { argosApi, AuditListItem } from "@/lib/ArgosApi";
 import Link from "next/link";
 
 type Props = {
@@ -45,7 +45,7 @@ export default function AuditList({ items, setItems }: Props) {
         setLoading(true);
         setError(null);
 
-        const list: AuditListItem[] = await http<AuditListItem[]>("/api/audits", { method: "GET" });
+        const list: AuditListItem[] = await argosApi.getList();
         if (!mounted) return;
         setItems(list);
       } catch (e: any) {
@@ -75,7 +75,7 @@ export default function AuditList({ items, setItems }: Props) {
 
         const updates = await Promise.all(
           pendingRuns.map((runId) =>
-            http<AuditRunStatusResponse>(`/api/audits/runs/${runId}`, { method: "GET" })
+            argosApi.getRunsByRunId(runId)
               // @ts-ignore
               .then((r) => ({ ok: true as const, runId, r }))
               // @ts-ignore

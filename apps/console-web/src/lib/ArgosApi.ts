@@ -67,14 +67,20 @@ export async function http<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const argosApi = {
-  createAudit: (body: CreateAuditRequest) =>
-    http<CreateAuditResponse>("/audits", {
+  createAudit: (body: CreateAuditRequest): Promise<CreateAuditResponse> =>
+    http<CreateAuditResponse>("/api/audits", {
       method: "POST",
       body: JSON.stringify(body),
     }),
 
-  getReport: (token: string): Promise<Report | null> =>
-    http<Report>(`/reports/${token}`, { method: "GET" })
+  getList: (): Promise<AuditListItem[]> =>
+    http<AuditListItem[]>("/api/audits", { method: "GET" }),
+
+  getReport: (token: string): Promise<Report> =>
+    http<Report>(`/api/reports/${token}`, { method: "GET" }),
+
+  getRunsByRunId: (runId: number): Promise<AuditRunStatusResponse> =>
+    http<AuditRunStatusResponse>(`/api/audits/runs/${runId}`, { method: "GET" })
 };
 
 
