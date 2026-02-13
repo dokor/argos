@@ -7,21 +7,15 @@ import ScoreGrid from "@/components/report/ScoreGrid";
 import PriorityCards from "@/components/report/PriorityCards";
 import IssuesByCategory from "@/components/report/IssuesByCategory";
 import ReportFooterCta from "@/components/report/ReportFooterCta";
-import { http } from "@/lib/ArgosApi";
+import { argosApi } from "@/lib/ArgosApi";
 
 export const metadata: Metadata = {
   title: "Rapport Argos",
   robots: { index: false, follow: false },
 };
 
-async function fetchReport(token: string): Promise<Report | null> {
-  return await http<Report>(`/reports/${token}`, { method: "GET" });
-}
-
-export default async function ReportPage({ params }: any) {
-  // const { token } = await params.token;
-  // console.log("ReportPage params", { token });
-  const report: Report | null = await fetchReport("nIjDfQeMR9tcQuC_R7MsjhZ6blKezECXfLI5erUKOMM");
+export default async function ReportPage() {
+  const report: Report | null = await argosApi.getReport("nIjDfQeMR9tcQuC_R7MsjhZ6blKezECXfLI5erUKOMM");
   if (!report) notFound();
 
   return (

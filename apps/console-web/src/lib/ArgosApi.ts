@@ -1,3 +1,5 @@
+import { Report } from "@/components/report/types";
+
 export type CreateAuditRequest = {
   url: string;
 };
@@ -64,15 +66,15 @@ export async function http<T>(path: string, init?: RequestInit): Promise<T> {
   return (await res.json()) as T;
 }
 
-// export const argosApi = {
-//   createAudit: (body: CreateAuditRequest) =>
-//     http<CreateAuditResponse>("/audits", {
-//       method: "POST",
-//       body: JSON.stringify(body),
-//     }),
-//
-//   getRunStatus: (runId: string | undefined) =>
-//     http<RunStatusResponse>(`/audits/runs/${runId}`, { method: "GET" }),
-// };
+export const argosApi = {
+  createAudit: (body: CreateAuditRequest) =>
+    http<CreateAuditResponse>("/audits", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  getReport: (token: string): Promise<Report | null> =>
+    http<Report>(`/reports/${token}`, { method: "GET" })
+};
 
 
