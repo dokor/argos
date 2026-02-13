@@ -3,6 +3,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { AuditListItem, AuditRunStatusResponse, http } from "@/lib/ArgosApi";
+import Link from "next/link";
 
 type Props = {
   items: AuditListItem[];
@@ -94,6 +95,7 @@ export default function AuditList({ items, setItems }: Props) {
               status: u.r.status,
               resultJson: u.r.resultJson ?? existing.resultJson ?? null,
               finishedAt: u.r.finishedAt ?? existing.finishedAt ?? null,
+              reportToken: u.r.reportToken ?? existing.reportToken ?? null,
             });
           }
           return Array.from(byRun.values());
@@ -130,9 +132,9 @@ export default function AuditList({ items, setItems }: Props) {
         </div>
       ) : (
         items.map((it) => {
-          const report = parseReport(it.resultJson);
-          const score = report?.score;
-
+          const report: AuditReportV2 | null = parseReport(it.resultJson);
+          const score: AuditScoreReport | undefined = report?.score;
+          const reportHref: string | null = it.reportToken ? `/report/${it.reportToken}` : null;
           return (
             <div key={it.runId} style={styles.card}>
               <div style={styles.cardHeader}>
@@ -143,6 +145,13 @@ export default function AuditList({ items, setItems }: Props) {
 
                 <div style={{ display: "grid", justifyItems: "end", gap: 8 }}>
                   <StatusBadge status={it.status} />
+                  {reportHref ? (
+                    <Link href={reportHref} style={styles.linkButton}>
+                      🔎 Voir le rapport
+                    </Link>
+                  ) : (
+                    <span style={styles.linkButtonDisabled}>Rapport en attente…</span>
+                  )}
                   {score?.global ? (
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                       <ScoreBubbles ratio={score.global.ratio} />
