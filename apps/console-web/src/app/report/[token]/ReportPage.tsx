@@ -19,7 +19,7 @@ export default async function ReportPage({ params }: Readonly<Params>) {
   return (
     <div className="min-h-screen bg-background text-foreground" id={'top'}>
       <ReportHeader domain={report.domain} />
-      <main className="mx-auto w-full max-w-6xl px-4 pb-16 pt-6">
+      <div className="mx-auto w-full max-w-6xl px-4 pb-16 pt-6">
         <ReportHero report={report} />
         <div className="mt-6 grid gap-6">
           <PriorityCards priorities={report.summary.priorities} />
@@ -27,7 +27,7 @@ export default async function ReportPage({ params }: Readonly<Params>) {
           <IssuesByCategory report={report} />
         </div>
         <ReportFooterCta />
-      </main>
+      </div>
     </div>
   );
 }
