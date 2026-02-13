@@ -37,8 +37,11 @@ public class ReportReadService {
         if (token == null || token.isBlank()) return Optional.empty();
 
         byte[] hash = tokenService.sha256(token);
-
-        return auditReportDao.findByTokenHash(hash)
+//        todo: passer par le hash pour ajouter de la sécu
+//        return auditReportDao.findByTokenHash(hash)
+//            .filter(this::notExpired)
+//            .flatMap(this::deserialize);
+        return auditReportDao.findByToken(token)
             .filter(this::notExpired)
             .flatMap(this::deserialize);
     }

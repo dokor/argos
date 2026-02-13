@@ -1,5 +1,6 @@
 package com.dokor.argos.db.dao;
 
+import com.codahale.metrics.ConsoleReporter;
 import com.coreoz.plume.db.querydsl.crud.CrudDaoQuerydsl;
 import com.coreoz.plume.db.querydsl.transaction.TransactionManagerQuerydsl;
 import com.dokor.argos.db.generated.AuditReport;
@@ -34,6 +35,16 @@ public class AuditReportDao extends CrudDaoQuerydsl<AuditReport> {
                 .select(REPORT)
                 .from(REPORT)
                 .where(REPORT.runId.eq(runId))
+                .fetchOne()
+        );
+    }
+
+    public Optional<AuditReport> findByToken(String token) {
+        return Optional.ofNullable(
+            transactionManager.selectQuery()
+                .select(REPORT)
+                .from(REPORT)
+                .where(REPORT.publicToken.eq(token))
                 .fetchOne()
         );
     }

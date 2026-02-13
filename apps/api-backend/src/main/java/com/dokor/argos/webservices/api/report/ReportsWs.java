@@ -34,7 +34,8 @@ public class ReportsWs {
     @GET
     @Path("/{token}")
     public Response getReport(@PathParam("token") String token) {
-        logger.info("Get report token={}", safeToken(token));
+        logger.debug("Get report token={}", token);
+//        logger.info("Get report token={}", safeToken(token));
         var reportOpt = reportReadService.getByToken(token);
         if (reportOpt.isEmpty()) {
             return Response.status(Response.Status.NOT_FOUND).build();
