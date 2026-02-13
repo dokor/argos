@@ -24,6 +24,7 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
 .theme-light {
   --background: 0 0% 100%;
   --foreground: 222.2 84% 4.9%;
