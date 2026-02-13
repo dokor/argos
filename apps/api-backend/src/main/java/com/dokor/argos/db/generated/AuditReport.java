@@ -10,8 +10,8 @@ import com.querydsl.sql.Column;
 @Generated("com.coreoz.plume.db.querydsl.generation.IdBeanSerializer")
 public class AuditReport extends com.coreoz.plume.db.querydsl.crud.CrudEntityQuerydsl {
 
-    @JsonSerialize(using=com.fasterxml.jackson.databind.ser.std.ToStringSerializer.class)
     @Column("audit_id")
+    @JsonSerialize(using=com.fasterxml.jackson.databind.ser.std.ToStringSerializer.class)
     private Long auditId;
 
     @Column("created_at")
@@ -23,18 +23,21 @@ public class AuditReport extends com.coreoz.plume.db.querydsl.crud.CrudEntityQue
     @Column("expires_at")
     private java.time.Instant expiresAt;
 
-    @JsonSerialize(using=com.fasterxml.jackson.databind.ser.std.ToStringSerializer.class)
     @Column("id")
+    @JsonSerialize(using=com.fasterxml.jackson.databind.ser.std.ToStringSerializer.class)
     private Long id;
 
     @Column("logo_url")
     private String logoUrl;
 
+    @Column("public_token")
+    private String publicToken;
+
     @Column("report_json")
     private String reportJson;
 
-    @JsonSerialize(using=com.fasterxml.jackson.databind.ser.std.ToStringSerializer.class)
     @Column("run_id")
+    @JsonSerialize(using=com.fasterxml.jackson.databind.ser.std.ToStringSerializer.class)
     private Long runId;
 
     @Column("site_title")
@@ -92,6 +95,14 @@ public class AuditReport extends com.coreoz.plume.db.querydsl.crud.CrudEntityQue
 
     public void setLogoUrl(String logoUrl) {
         this.logoUrl = logoUrl;
+    }
+
+    public String getPublicToken() {
+        return publicToken;
+    }
+
+    public void setPublicToken(String publicToken) {
+        this.publicToken = publicToken;
     }
 
     public String getReportJson() {

@@ -10,8 +10,8 @@ import com.querydsl.sql.Column;
 @Generated("com.coreoz.plume.db.querydsl.generation.IdBeanSerializer")
 public class AuditRun extends com.coreoz.plume.db.querydsl.crud.CrudEntityQuerydsl {
 
-    @JsonSerialize(using=com.fasterxml.jackson.databind.ser.std.ToStringSerializer.class)
     @Column("audit_id")
+    @JsonSerialize(using=com.fasterxml.jackson.databind.ser.std.ToStringSerializer.class)
     private Long auditId;
 
     @Column("claim_token")
@@ -23,8 +23,8 @@ public class AuditRun extends com.coreoz.plume.db.querydsl.crud.CrudEntityQueryd
     @Column("finished_at")
     private java.time.Instant finishedAt;
 
-    @JsonSerialize(using=com.fasterxml.jackson.databind.ser.std.ToStringSerializer.class)
     @Column("id")
+    @JsonSerialize(using=com.fasterxml.jackson.databind.ser.std.ToStringSerializer.class)
     private Long id;
 
     @Column("last_error")

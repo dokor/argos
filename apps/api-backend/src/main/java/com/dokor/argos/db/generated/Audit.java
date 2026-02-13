@@ -16,8 +16,8 @@ public class Audit extends com.coreoz.plume.db.querydsl.crud.CrudEntityQuerydsl 
     @Column("hostname")
     private String hostname;
 
-    @JsonSerialize(using=com.fasterxml.jackson.databind.ser.std.ToStringSerializer.class)
     @Column("id")
+    @JsonSerialize(using=com.fasterxml.jackson.databind.ser.std.ToStringSerializer.class)
     private Long id;
 
     @Column("input_url")
