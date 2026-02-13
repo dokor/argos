@@ -53,7 +53,7 @@ public class AuditService {
         return rows.stream().map(row -> {
             Audit audit = row.get(0, Audit.class);
             AuditRun run = row.get(1, AuditRun.class);
-            AuditReport report = row.get(1, AuditReport.class);
+            AuditReport report = row.get(2, AuditReport.class);
 
             if (run == null || report == null) {
                 // Cas rare : audit créé sans run
