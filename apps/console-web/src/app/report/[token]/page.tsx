@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { notFound, useSearchParams } from "next/navigation";
+import { notFound } from "next/navigation";
 import { Report } from "@/components/report/types";
 import ReportHeader from "@/components/report/ReportHeader";
 import ReportHero from "@/components/report/ReportHero";
@@ -19,9 +19,9 @@ async function fetchReport(token: string): Promise<Report | null> {
 }
 
 export default async function ReportPage({ params }: Readonly<{ params: { token: string } }>) {
-  const sp = useSearchParams();
+  // const sp = useSearchParams();
   console.log("ReportPage params", { params });
-  console.log("ReportPage sp", { sp });
+  // console.log("ReportPage sp", { sp });
   const report: Report | null = await fetchReport(params.token);
   if (!report) notFound();
 
