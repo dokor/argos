@@ -7,7 +7,6 @@ import com.dokor.argos.db.generated.QAudit;
 import com.dokor.argos.db.generated.QAuditReport;
 import com.dokor.argos.db.generated.QAuditRun;
 import com.querydsl.core.Tuple;
-import com.querydsl.core.types.dsl.NumberExpression;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.slf4j.Logger;
@@ -16,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Optional;
 
-import static com.querydsl.core.types.dsl.Expressions.numberTemplate;
 
 /**
  * DAO responsable de la table ARG_AUDIT.
@@ -95,7 +93,7 @@ public class AuditDao extends CrudDaoQuerydsl<Audit> {
         logger.debug("Listing audits with latest run limit={}", limit);
 
         return transactionManager.selectQuery()
-            .select(AUDIT, RUN)
+            .select(AUDIT, RUN, AUDIT_REPORT)
             .from(AUDIT)
             .leftJoin(RUN).on(RUN.auditId.eq(AUDIT.id))
             .leftJoin(AUDIT_REPORT).on(AUDIT_REPORT.auditId.eq(AUDIT.id))
