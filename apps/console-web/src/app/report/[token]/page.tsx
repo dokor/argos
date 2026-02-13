@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default async function ReportPageHome({ params }: { params: { token: string } }) {
-  const report: Report = await argosApi.getReport(params.token);
+  const report: Report = await argosApi.getReport(params.token ?? 'BYkE3pWUbWL1ADUB5Y7Qlc3KTeA9GBjb_OD8bncpO38');
   if (!report) notFound();
 
   return (
