@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import ReportHeader from "@/components/report/ReportHeader";
 import ReportHero from "@/components/report/ReportHero";
@@ -11,11 +11,12 @@ import { Report } from "@/components/report/types";
 type Params = {
   params: {
     report: Report;
-  }
-}
+  };
+};
 
 export default function ReportPage({ params }: Readonly<Params>) {
   const { report } = params;
+
   return (
     <div className="theme-light min-h-screen bg-slate-50 text-slate-900" id="top">
       <ReportHeader domain={report.domain} />
