@@ -47,7 +47,8 @@ export default function ReportHero({ report }: { report: Report }) {
                 className="h-16 w-16 rounded-xl border bg-background object-contain"
               />
             ) : (
-              <div className="flex h-16 w-16 items-center justify-center rounded-xl border bg-muted text-xl font-semibold">
+              <div
+                className="flex h-16 w-16 items-center justify-center rounded-xl border bg-muted text-xl font-semibold">
                 {getInitial(report.domain)}
               </div>
             )}

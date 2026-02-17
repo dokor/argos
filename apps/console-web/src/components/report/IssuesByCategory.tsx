@@ -24,7 +24,7 @@ function severityUi(sev: Issue["severity"]) {
   }
 }
 
-export default function IssuesByCategory({ report }: { report: Report }) {
+export default function IssuesByCategory({ report }: Readonly<{ report: Report }>) {
   const byCat = groupBy(report.issues || [], "categoryKey");
   const categories = report.scores.byCategory || [];
 
@@ -33,7 +33,8 @@ export default function IssuesByCategory({ report }: { report: Report }) {
       <CardHeader>
         <CardTitle>Détail par catégorie</CardTitle>
         <CardDescription>
-          Chaque point contient l’impact et une recommandation. Les détails sont repliés pour garder une lecture agréable.
+          Chaque point contient l’impact et une recommandation. Les détails sont repliés pour garder une lecture
+          agréable.
         </CardDescription>
       </CardHeader>
 
@@ -55,7 +56,8 @@ export default function IssuesByCategory({ report }: { report: Report }) {
                     </div>
                   </div>
 
-                  <a href="#top" className="text-sm font-medium text-muted-foreground hover:text-foreground md:text-right">
+                  <a href="#top"
+                     className="text-sm font-medium text-muted-foreground hover:text-foreground md:text-right">
                     Retour en haut ↑
                   </a>
                 </div>
@@ -72,7 +74,8 @@ export default function IssuesByCategory({ report }: { report: Report }) {
                         return (
                           <AccordionItem key={issue.id} value={issue.id} className="rounded-xl border bg-white px-4">
                             <AccordionTrigger className="py-4">
-                              <div className="flex w-full flex-col gap-2 pr-3 text-left md:flex-row md:items-center md:justify-between">
+                              <div
+                                className="flex w-full flex-col gap-2 pr-3 text-left md:flex-row md:items-center md:justify-between">
                                 <div className="min-w-0">
                                   <div className="flex flex-wrap items-center gap-2">
                                     <Badge variant={ui.variant}>{ui.label}</Badge>

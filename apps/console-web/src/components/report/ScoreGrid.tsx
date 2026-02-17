@@ -10,10 +10,10 @@ function clamp(n: number) {
 export default function ScoreGrid({
                                     categories,
                                     globalScore,
-                                  }: {
+                                  }: Readonly<{
   categories: CategoryScore[];
   globalScore: number;
-}) {
+}>) {
   const cats = [...(categories || [])].sort((a, b) => b.score - a.score);
 
   return (
