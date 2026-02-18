@@ -31,7 +31,7 @@ export default function ReportHero({ report }: { report: Report }) {
   const scoreUi = scoreLabel(global)
 
   return (
-    <Card className="rounded-2xl shadow-sm">
+    <Card className="rounded-2xl shadow-sm hover:shadow-md transition-shadow bg-white/80 backdrop-blur">
       <CardContent className="p-6 space-y-6">
 
         {/* Top Section */}
@@ -117,7 +117,7 @@ export default function ReportHero({ report }: { report: Report }) {
             </div>
           </Card>
 
-          <Card className="p-4">
+        <Card className="p-4">
             <div className="text-xs text-muted-foreground">
               Points au total
             </div>

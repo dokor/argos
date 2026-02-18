@@ -1,4 +1,4 @@
-import { Report, Issue } from "./types";
+import { Report, Issue, CategoryScore } from "./types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -29,7 +29,7 @@ export default function IssuesByCategory({ report }: Readonly<{ report: Report }
   const categories = report.scores.byCategory || [];
 
   return (
-    <Card>
+    <Card className="rounded-2xl shadow-sm hover:shadow-md transition-shadow bg-white/80 backdrop-blur">
       <CardHeader>
         <CardTitle>Détail par catégorie</CardTitle>
         <CardDescription>
@@ -40,8 +40,8 @@ export default function IssuesByCategory({ report }: Readonly<{ report: Report }
 
       <CardContent>
         <div className="grid gap-6">
-          {categories.map((cat) => {
-            const issues = (byCat.get(cat.key) || []).slice().sort((a, b) => {
+          {categories.map((cat: CategoryScore) => {
+            const issues: Issue[] = (byCat.get(cat.key) || []).slice().sort((a, b) => {
               const w = (s: Issue["severity"]) => (s === "critical" ? 0 : s === "important" ? 1 : 2);
               return w(a.severity) - w(b.severity);
             });
@@ -52,7 +52,7 @@ export default function IssuesByCategory({ report }: Readonly<{ report: Report }
                   <div className="min-w-0">
                     <div className="text-base font-semibold">{cat.label}</div>
                     <div className="mt-1 text-sm text-muted-foreground">
-                      {issues.length} point(s) • Score {Math.max(0, Math.min(100, cat.score))}/100
+                      {issues.length} points d'attention • Score {Math.max(0, Math.min(100, cat.score))}/100
                     </div>
                   </div>
 
@@ -69,7 +69,7 @@ export default function IssuesByCategory({ report }: Readonly<{ report: Report }
                     </div>
                   ) : (
                     <Accordion type="multiple" className="space-y-3">
-                      {issues.map((issue) => {
+                      {issues.map((issue: Issue) => {
                         const ui = severityUi(issue.severity);
                         return (
                           <AccordionItem key={issue.id} value={issue.id} className="rounded-xl border bg-white px-4">

@@ -18,7 +18,7 @@ export default function ReportPage({ params }: Readonly<Params>) {
   const { report } = params;
 
   return (
-    <div className="theme-light min-h-screen bg-slate-50 text-slate-900" id="top">
+    <div className="theme-light min-h-screen bg-linear-to-b from-slate-50 to-white text-slate-900" id="top">
       <ReportHeader domain={report.domain} />
       <div className="mx-auto w-full max-w-6xl px-4 pb-16 pt-6">
         <ReportHero report={report} />

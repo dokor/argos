@@ -8,7 +8,7 @@ export default function ReportFooterCta() {
   const enabled = Boolean(calendly);
 
   return (
-    <Card className="mt-10 bg-white">
+    <Card className="rounded-2xl shadow-sm hover:shadow-md transition-shadow bg-white/80 backdrop-blur">
       <CardContent className="p-6">
         <h2 className="text-lg font-semibold">Prendre rdv pour en discuter</h2>
         <p className="mt-2 text-sm text-muted-foreground">
