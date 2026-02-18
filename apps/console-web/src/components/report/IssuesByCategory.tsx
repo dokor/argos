@@ -1,4 +1,4 @@
-import { Report, Issue } from "./types";
+import { Report, Issue, CategoryScore } from "./types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -24,23 +24,24 @@ function severityUi(sev: Issue["severity"]) {
   }
 }
 
-export default function IssuesByCategory({ report }: { report: Report }) {
+export default function IssuesByCategory({ report }: Readonly<{ report: Report }>) {
   const byCat = groupBy(report.issues || [], "categoryKey");
   const categories = report.scores.byCategory || [];
 
   return (
-    <Card>
+    <Card className="rounded-2xl shadow-sm hover:shadow-md transition-shadow bg-white/80 backdrop-blur">
       <CardHeader>
         <CardTitle>Détail par catégorie</CardTitle>
         <CardDescription>
-          Chaque point contient l’impact et une recommandation. Les détails sont repliés pour garder une lecture agréable.
+          Chaque point contient l’impact et une recommandation. Les détails sont repliés pour garder une lecture
+          agréable.
         </CardDescription>
       </CardHeader>
 
       <CardContent>
         <div className="grid gap-6">
-          {categories.map((cat) => {
-            const issues = (byCat.get(cat.key) || []).slice().sort((a, b) => {
+          {categories.map((cat: CategoryScore) => {
+            const issues: Issue[] = (byCat.get(cat.key) || []).slice().sort((a, b) => {
               const w = (s: Issue["severity"]) => (s === "critical" ? 0 : s === "important" ? 1 : 2);
               return w(a.severity) - w(b.severity);
             });
@@ -51,11 +52,12 @@ export default function IssuesByCategory({ report }: { report: Report }) {
                   <div className="min-w-0">
                     <div className="text-base font-semibold">{cat.label}</div>
                     <div className="mt-1 text-sm text-muted-foreground">
-                      {issues.length} point(s) • Score {Math.max(0, Math.min(100, cat.score))}/100
+                      {issues.length} points d'attention • Score {Math.max(0, Math.min(100, cat.score))}/100
                     </div>
                   </div>
 
-                  <a href="#top" className="text-sm font-medium text-muted-foreground hover:text-foreground md:text-right">
+                  <a href="#top"
+                     className="text-sm font-medium text-muted-foreground hover:text-foreground md:text-right">
                     Retour en haut ↑
                   </a>
                 </div>
@@ -67,12 +69,13 @@ export default function IssuesByCategory({ report }: { report: Report }) {
                     </div>
                   ) : (
                     <Accordion type="multiple" className="space-y-3">
-                      {issues.map((issue) => {
+                      {issues.map((issue: Issue) => {
                         const ui = severityUi(issue.severity);
                         return (
                           <AccordionItem key={issue.id} value={issue.id} className="rounded-xl border bg-white px-4">
                             <AccordionTrigger className="py-4">
-                              <div className="flex w-full flex-col gap-2 pr-3 text-left md:flex-row md:items-center md:justify-between">
+                              <div
+                                className="flex w-full flex-col gap-2 pr-3 text-left md:flex-row md:items-center md:justify-between">
                                 <div className="min-w-0">
                                   <div className="flex flex-wrap items-center gap-2">
                                     <Badge variant={ui.variant}>{ui.label}</Badge>

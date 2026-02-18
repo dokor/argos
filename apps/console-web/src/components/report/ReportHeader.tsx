@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 
-export default function ReportHeader({ domain }: { domain: string }) {
+export default function ReportHeader({ domain }: Readonly<{ domain: string }>) {
   const calendly = process.env.NEXT_PUBLIC_CALENDLY_URL || "";
   const enabled = Boolean(calendly);
 

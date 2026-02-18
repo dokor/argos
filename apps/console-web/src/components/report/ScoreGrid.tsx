@@ -10,14 +10,14 @@ function clamp(n: number) {
 export default function ScoreGrid({
                                     categories,
                                     globalScore,
-                                  }: {
+                                  }: Readonly<{
   categories: CategoryScore[];
   globalScore: number;
-}) {
+}>) {
   const cats = [...(categories || [])].sort((a, b) => b.score - a.score);
 
   return (
-    <Card>
+    <Card className="rounded-2xl shadow-sm hover:shadow-md transition-shadow bg-white/80 backdrop-blur">
       <CardHeader>
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
