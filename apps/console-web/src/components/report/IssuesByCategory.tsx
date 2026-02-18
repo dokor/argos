@@ -1,6 +1,6 @@
 "use client";
 
-import { Report, Issue } from "./types";
+import { Report, Issue, CategoryScore } from "./types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -48,13 +48,13 @@ type Filter = "all" | "critical" | "important" | "info";
 export default function IssuesByCategory({ report }: { report: Report }) {
   const [filter, setFilter] = React.useState<Filter>("all");
 
-  const categories = report.scores.byCategory || [];
-  const allIssues = report.issues || [];
+  const categories: CategoryScore[] = report.scores.byCategory || [];
+  const allIssues: Issue[] = report.issues || [];
 
-  const filteredIssues =
-    filter === "all" ? allIssues : allIssues.filter((i) => i.severity === filter);
+  const filteredIssues: Issue[] =
+    filter === "all" ? allIssues : allIssues.filter((i: Issue) => i.severity === filter);
 
-  const byCat = groupBy(filteredIssues, "categoryKey");
+  const byCat: Map<string, Issue[]> = groupBy(filteredIssues, "categoryKey");
 
   return (
     <Card className="rounded-2xl shadow-sm hover:shadow-md transition-shadow bg-white/80 backdrop-blur">
@@ -67,7 +67,7 @@ export default function IssuesByCategory({ report }: { report: Report }) {
             </CardDescription>
           </div>
 
-          <Tabs value={filter} onValueChange={(v) => setFilter(v as Filter)}>
+          <Tabs value={filter} onValueChange={(v: string) => setFilter(v as Filter)}>
             <TabsList>
               <TabsTrigger value="all">Tous</TabsTrigger>
               <TabsTrigger value="critical">Critiques</TabsTrigger>
@@ -79,8 +79,8 @@ export default function IssuesByCategory({ report }: { report: Report }) {
       </CardHeader>
 
       <CardContent className="space-y-6">
-        {categories.map((cat) => {
-          const issues = (byCat.get(cat.key) || []).slice().sort((a, b) => {
+        {categories.map((cat: CategoryScore) => {
+          const issues: Issue[] = (byCat.get(cat.key) || []).slice().sort((a: Issue, b: Issue) => {
             const w = severityWeight;
             return w(a.severity) - w(b.severity);
           });
