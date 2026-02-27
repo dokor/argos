@@ -21,6 +21,7 @@ public class PublicReportComposer {
 
     private static final Logger logger = LoggerFactory.getLogger(PublicReportComposer.class);
 
+    @SuppressWarnings("unchecked")
     public ReportDto compose(AuditReportJson internalReport) {
         logger.info("Composing public report from schemaVersion={}", internalReport.schemaVersion());
 
@@ -30,21 +31,18 @@ public class PublicReportComposer {
         AuditScoreReport score = internalReport.score();
         int global100 = score != null ? toScore100(score.global().ratio()) : 0;
 
-        // Categories = tags (hors tags "module")
         List<ReportDto.CategoryScore> byCategory = (score == null ? List.<ScoreAggregate>of() : score.byTag()).stream()
             .filter(agg -> isBusinessTag(agg.id()))
             .map(agg -> new ReportDto.CategoryScore(
                 agg.id(),
                 labelize(agg.id()),
                 toScore100(agg.ratio()),
-                0 // on mettra le nb d'issues après
+                0
             ))
             .toList();
 
-        // Issues = checks FAIL/WARN scorables
         List<ReportDto.Issue> issues = buildIssues(internalReport);
 
-        // recalcul issues count by category
         Map<String, Long> issuesByCat = issues.stream()
             .collect(Collectors.groupingBy(ReportDto.Issue::categoryKey, Collectors.counting()));
 
@@ -58,10 +56,8 @@ public class PublicReportComposer {
             .sorted(Comparator.comparingInt(ReportDto.CategoryScore::issues).reversed())
             .toList();
 
-        // One-liner MVP (tu pourras rendre ça plus marketing ensuite)
         String oneLiner = buildOneLiner(global100, byCategoryWithCounts);
 
-        // Priorités MVP : top 6 issues les plus sévères
         List<ReportDto.Priority> priorities = issues.stream()
             .sorted(Comparator.comparingInt(i -> severityRank(i.severity())))
             .limit(6)
@@ -74,14 +70,24 @@ public class PublicReportComposer {
             ))
             .toList();
 
+        ReportDto.Tech tech = internalReport.modules().stream()
+            .filter(m -> "tech".equals(m.id()))
+            .findFirst()
+            .map(AuditModuleResult::data)
+            .filter(d -> d instanceof Map<?, ?>)
+            .map(d -> (Map<String, Object>) d)
+            .map(TechReportMapper::fromTechModuleData)
+            .orElse(null);
+
         return new ReportDto(
             Instant.now().toString(),
             domain,
             url,
-            new ReportDto.Site(null, null), // title/logo seront remplis quand tu les extrais (Playwright/favicons)
+            new ReportDto.Site(null, null),
             new ReportDto.Scores(global100, byCategoryWithCounts),
             new ReportDto.Summary(oneLiner, priorities),
-            issues
+            issues,
+            tech
         );
     }
 
