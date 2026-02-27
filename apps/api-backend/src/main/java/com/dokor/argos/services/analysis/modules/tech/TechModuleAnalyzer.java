@@ -65,6 +65,12 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
         return "tech";
     }
 
+    private final NextJsDetectorService nextDetector;
+
+    public TechModuleAnalyzer(NextJsDetectorService nextDetector) {
+        this.nextDetector = nextDetector;
+    }
+
     /**
      * Analyse TECH à partir des informations collectées par les autres modules.
      *
@@ -94,6 +100,9 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
 
         // Détections "framework front"
         DetectedTech frontend = detectFrontendFramework(headers, html);
+
+        // Détections spécifique a Next
+        var next = nextDetector.detect(headers, html);
 
         // Détections "backend / runtime"
         List<String> backendHints = detectBackendHints(headers, poweredBy, setCookie, serverHeader, html);
@@ -138,6 +147,39 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
             Map.of("signals", frontend.signals),
             !frontend.name.equals("unknown") ? "Detected frontend framework: " + frontend.name : "No frontend framework detected (heuristic).",
             null
+        ));
+
+        Map<String, Object> nextData = new LinkedHashMap<>();
+        nextData.put("isNext", next.isNext());
+        nextData.put("confidence", next.confidence());
+        nextData.put("router", next.router());
+        if (next.buildId() != null) nextData.put("buildId", next.buildId());
+
+        Map<String, Object> nextVersion = new LinkedHashMap<>();
+        nextVersion.put("exact", next.version().exact());
+        nextVersion.put("min", next.version().min());
+        nextVersion.put("max", next.version().max());
+        nextVersion.put("guess", next.version().guess());
+        nextVersion.put("guessConfidence", next.version().guessConfidence());
+        nextVersion.put("method", next.version().method());
+        nextData.put("version", nextVersion);
+
+        checks.add(new AuditCheckResult(
+            "tech.frontend.nextjs",
+            "Next.js detection & version (best-effort)",
+            next.isNext() ? AuditStatus.PASS : AuditStatus.INFO,
+            AuditSeverity.LOW,
+            false,
+            0.0,
+            List.of(),
+            nextData,
+            Map.of("evidence", next.evidence()),
+            next.isNext()
+                ? ("Next.js detected (router=" + next.router() + "). Version guess: " + safe(next.version().guess()))
+                : "Next.js not detected.",
+            next.isNext() && next.version().exact() == null
+                ? "Exact Next.js version is rarely exposed in production. This is a best-effort guess based on public signals."
+                : null
         ));
 
         Map<String, Object> objectMap = new HashMap<>(Map.of());
@@ -244,6 +286,7 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
         data.put("normalizedUrl", normalizedUrl);
         data.put("finalUrl", finalUrl);
         data.put("cms", cmsMap);
+        data.put("nextJs", nextData);
         data.put("frontendFramework", Map.of("name", frontend.name, "confidence", frontend.confidence, "signals", frontend.signals));
         data.put("backendHints", backendHints);
         data.put("cloudflare", cloudflare);

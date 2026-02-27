@@ -11,10 +11,13 @@ import java.util.Map;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
 
 class TechModuleAnalyzerTest {
 
-    private final TechModuleAnalyzer analyzer = new TechModuleAnalyzer();
+    private final TechModuleAnalyzer analyzer = new TechModuleAnalyzer(
+        mock(NextJsDetectorService.class)
+    );
 
     @Test
     void shouldDetectWordpress() {
