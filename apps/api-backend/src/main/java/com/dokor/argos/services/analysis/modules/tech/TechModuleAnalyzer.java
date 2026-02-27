@@ -165,6 +165,7 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
         nextVersion.put("guessConfidence", next.version().guessConfidence());
         nextVersion.put("method", next.version().method());
         nextData.put("version", nextVersion);
+        nextData.put("evidence", next.evidence());
 
         checks.add(new AuditCheckResult(
             "tech.frontend.nextjs",
