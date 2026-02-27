@@ -33,7 +33,6 @@ public class ReportsWs {
     @Path("/{token}")
     public Response getReport(@PathParam("token") String token) {
         logger.debug("Get report token={}", token);
-//        logger.info("Get report token={}", safeToken(token));
         var reportOpt = reportReadService.getByToken(token);
         if (reportOpt.isEmpty()) {
             return Response.status(Response.Status.NOT_FOUND).build();
@@ -43,10 +42,5 @@ public class ReportsWs {
             .header("X-Robots-Tag", "noindex, nofollow")
             .header("Cache-Control", "private, no-store")
             .build();
-    }
-
-    private static String safeToken(String token) {
-        if (token == null) return "null";
-        return token.length() <= 8 ? "****" : token.substring(0, 4) + "…" + token.substring(token.length() - 4);
     }
 }

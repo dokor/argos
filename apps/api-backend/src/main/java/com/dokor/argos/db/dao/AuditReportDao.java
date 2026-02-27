@@ -1,6 +1,5 @@
 package com.dokor.argos.db.dao;
 
-import com.codahale.metrics.ConsoleReporter;
 import com.coreoz.plume.db.querydsl.crud.CrudDaoQuerydsl;
 import com.coreoz.plume.db.querydsl.transaction.TransactionManagerQuerydsl;
 import com.dokor.argos.db.generated.AuditReport;
