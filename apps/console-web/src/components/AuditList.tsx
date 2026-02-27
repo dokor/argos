@@ -130,7 +130,7 @@ export default function AuditList({ items, setItems }: Props) {
           <div style={styles.muted}>Aucun audit pour le moment.</div>
         </div>
       ) : (
-        items.map((it) => {
+        items.map((it: AuditListItem) => {
           const report: AuditReportV2 | null = parseReport(it.resultJson);
           const score: AuditScoreReport | undefined = report?.score;
           const reportHref: string | null = it.reportToken ? `/report/${it.reportToken}` : null;

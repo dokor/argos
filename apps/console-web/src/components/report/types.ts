@@ -15,6 +15,33 @@ export type Report = {
     priorities: PriorityItem[];
   };
   issues: Issue[];
+  tech?: TechSummary;
+};
+
+export type TechSummary = {
+  cms?: {
+    name?: string;
+    confidence?: number;
+  };
+  frontendFramework?: {
+    name?: string;
+    confidence?: number;
+  };
+  nextJs?: {
+    isNext?: boolean;
+    confidence?: number;
+    router?: "app" | "pages" | "unknown";
+    buildId?: string | null;
+    version?: {
+      exact?: string | null;
+      min?: string | null;
+      max?: string | null;
+      guess?: string | null;
+      guessConfidence?: number | null;
+      method?: string | null;
+    };
+    evidence?: string[];
+  };
 };
 
 export type Effort = "XS" | "S" | "M" | "L";

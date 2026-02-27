@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { TechBadges } from "@/components/report/TechBadges";
 
 function scoreLabel(score: number) {
   if (score >= 85) return { label: "Excellent", variant: "default" as const };
@@ -83,6 +84,7 @@ export default function ReportHero({ report }: { report: Report }) {
                   <Badge variant="outline">Analysé {formatDate(report.generatedAt)}</Badge>
                   <Badge variant="outline">{prioritiesCount} priorité(s)</Badge>
                   <Badge variant="outline">{issuesCount} point(s)</Badge>
+                  <TechBadges tech={report.tech} />
                 </div>
 
                 <p className="text-sm text-muted-foreground max-w-2xl">
