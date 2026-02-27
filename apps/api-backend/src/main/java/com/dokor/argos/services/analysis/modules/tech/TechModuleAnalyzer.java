@@ -136,7 +136,7 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
             List.of(),      // tags filled later
             Map.of("name", frontend.name, "confidence", frontend.confidence),
             Map.of("signals", frontend.signals),
-            (frontend.name != null && !frontend.name.equals("unknown")) ? ("Detected frontend framework: " + frontend.name) : "No frontend framework detected (heuristic).",
+            !frontend.name.equals("unknown") ? "Detected frontend framework: " + frontend.name : "No frontend framework detected (heuristic).",
             null
         ));
 
