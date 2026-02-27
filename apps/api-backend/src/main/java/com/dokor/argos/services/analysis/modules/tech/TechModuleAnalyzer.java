@@ -6,6 +6,7 @@ import com.dokor.argos.services.analysis.model.AuditModuleAnalyzer;
 import com.dokor.argos.services.analysis.model.AuditModuleResult;
 import com.dokor.argos.services.analysis.model.enums.AuditSeverity;
 import com.dokor.argos.services.analysis.model.enums.AuditStatus;
+import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 
@@ -67,6 +68,7 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
 
     private final NextJsDetectorService nextDetector;
 
+    @Inject
     public TechModuleAnalyzer(NextJsDetectorService nextDetector) {
         this.nextDetector = nextDetector;
     }
