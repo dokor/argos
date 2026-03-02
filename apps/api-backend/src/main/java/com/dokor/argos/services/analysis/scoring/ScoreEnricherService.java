@@ -86,6 +86,7 @@ public class ScoreEnricherService {
         );
     }
 
+    @SafeVarargs
     private static List<String> mergeTags(List<String>... lists) {
         return Arrays.stream(lists)
             .filter(Objects::nonNull)
