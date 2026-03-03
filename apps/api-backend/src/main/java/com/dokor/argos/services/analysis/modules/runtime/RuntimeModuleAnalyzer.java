@@ -77,7 +77,7 @@ public class RuntimeModuleAnalyzer implements AuditModuleAnalyzer {
             consoleErrors == 0 ? AuditSeverity.LOW : AuditSeverity.MEDIUM,
             false, 0.0, List.of("runtime"),
             consoleErrors,
-            Map.of("samples", sampleConsole(r, "error")),
+            sampleConsole(r, "error") != null ? Map.of("samples", sampleConsole(r, "error")) : Map.of(),
             consoleErrors == 0 ? "Aucune erreur console détectée." : (consoleErrors + " erreur(s) console détectée(s)."),
             consoleErrors == 0 ? null : "Corriger les erreurs JS (impact sur UX, tracking, conversion)."
         ));
@@ -90,7 +90,7 @@ public class RuntimeModuleAnalyzer implements AuditModuleAnalyzer {
             jsErrors == 0 ? AuditSeverity.LOW : AuditSeverity.MEDIUM,
             false, 0.0, List.of("runtime"),
             jsErrors,
-            Map.of("samples", sampleJsErrors(r)),
+            sampleJsErrors(r) != null ? Map.of("samples", sampleJsErrors(r)) : Map.of(),
             jsErrors == 0 ? "Aucune erreur JS non catch détectée." : (jsErrors + " erreur(s) JS non catch détectée(s)."),
             jsErrors == 0 ? null : "Identifier la source et corriger (souvent des scripts tiers ou erreurs de build)."
         ));
@@ -103,7 +103,7 @@ public class RuntimeModuleAnalyzer implements AuditModuleAnalyzer {
             s5xx == 0 ? AuditSeverity.LOW : AuditSeverity.HIGH,
             false, 0.0, List.of("runtime"),
             s5xx,
-            Map.of("topLargest", safeList(r.network() != null ? r.network().topLargest() : null)),
+            safeList(r.network() != null ? r.network().topLargest() : null) != null ? Map.of("topLargest", safeList(r.network() != null ? r.network().topLargest() : null)) : Map.of(),
             s5xx == 0 ? "Aucune réponse 5xx observée." : (s5xx + " réponse(s) 5xx observée(s)."),
             s5xx == 0 ? null : "Analyser les endpoints en erreur (logs serveur, timeouts, config CDN)."
         ));
