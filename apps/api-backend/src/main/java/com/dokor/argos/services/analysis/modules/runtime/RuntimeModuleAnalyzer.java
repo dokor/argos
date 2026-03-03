@@ -4,6 +4,7 @@ import com.dokor.argos.services.analysis.model.*;
 import com.dokor.argos.services.analysis.model.enums.AuditSeverity;
 import com.dokor.argos.services.analysis.model.enums.AuditStatus;
 import com.dokor.argos.services.analysis.playwright.PlaywrightRuntimeClient;
+import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 
@@ -14,6 +15,7 @@ public class RuntimeModuleAnalyzer implements AuditModuleAnalyzer {
 
     private final PlaywrightRuntimeClient client;
 
+    @Inject
     public RuntimeModuleAnalyzer(PlaywrightRuntimeClient client) {
         this.client = client;
     }
