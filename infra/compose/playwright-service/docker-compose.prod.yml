@@ -1,6 +1,8 @@
 services:
   playwright-service:
-    image: ghcr.io/dokor/playwright-service:latest
+    build:
+      context: /srv/apps/playwright-service/src
+      dockerfile: Dockerfile
     container_name: playwright-service
     restart: unless-stopped
     environment:
