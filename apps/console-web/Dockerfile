@@ -1,18 +1,25 @@
-# Image officielle Playwright avec Chromium + deps système
-FROM mcr.microsoft.com/playwright:v1.49.0-jammy
-
-WORKDIR /app
-
 # ---- deps ----
+FROM node:20-alpine AS deps
+WORKDIR /app
 COPY package.json package-lock.json* ./
-RUN npm ci --omit=dev
+RUN npm ci
 
-# ---- app ----
-COPY server.mjs ./
+# ---- build ----
+FROM node:20-alpine AS build
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN npm run build
 
+# ---- run ----
+FROM node:20-alpine AS run
+WORKDIR /app
 ENV NODE_ENV=production
-ENV PORT=3016
 
-EXPOSE 3016
+COPY --from=build /app/package.json ./package.json
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/.next ./.next
+COPY --from=build /app/public ./public
 
-CMD ["node", "server.mjs"]
+EXPOSE 3000
+CMD ["npm", "run", "start", "--", "-H", "0.0.0.0", "-p", "3000"]
