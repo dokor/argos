@@ -1,0 +1,42 @@
+name: Deploy playwright-service (Raspberry)
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "apps/playwright-service/**"
+      - "infra/compose/playwright-service/**"
+      - ".github/workflows/deploy-playwright-service.yml"
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Sync playwright-service sources to /srv/apps
+        run: |
+          mkdir -p /srv/apps/playwright-service/src
+          rsync -a --delete ./apps/playwright-service/ /srv/apps/playwright-service/src/
+          chown -R $USER:$USER /srv/apps/playwright-service
+
+      - name: Sync compose to /srv/apps
+        run: |
+          mkdir -p /srv/apps/playwright-service
+          rsync -a ./infra/compose/playwright-service/docker-compose.prod.yml /srv/apps/playwright-service/docker-compose.prod.yml
+          chown -R $USER:$USER /srv/apps/playwright-service
+
+      - name: Ensure network exists (argos_internal)
+        run: |
+          docker network inspect argos_internal >/dev/null 2>&1 || docker network create argos_internal
+
+      - name: Deploy (local build)
+        run: |
+          cd /srv/apps/playwright-service
+          docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
+
+      - name: Cleanup old images
+        run: |
+          docker image prune -f

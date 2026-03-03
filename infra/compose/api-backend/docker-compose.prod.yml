@@ -11,10 +11,12 @@ services:
     networks:
       - proxy
       - data
+      - argos_internal
     environment:
       - JAVA_OPTS=-Xms256m -Xmx512m
       - NODE_ENV=production
       - JAVA_TOOL_OPTIONS=-Dconfig.file=/config/prod.conf
+      - PLAYWRIGHT_SERVICE_URL=http://playwright-service:3016
     # env_file:
     #   - .env
     labels:
@@ -33,3 +35,5 @@ networks:
   data:
     external: true
     name: argos-data
+  argos_internal:
+    external: true

@@ -1,0 +1,17 @@
+services:
+  playwright-service:
+    image: ghcr.io/dokor/playwright-service:latest
+    container_name: playwright-service
+    restart: unless-stopped
+    environment:
+      - PORT=3016
+      - NODE_ENV=production
+      # optionnel : limites / timeouts
+      - MAX_CONCURRENCY=2
+      - NAV_TIMEOUT_MS=45000
+    networks:
+      - argos_internal
+
+networks:
+  argos_internal:
+    external: true

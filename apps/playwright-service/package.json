@@ -1,0 +1,12 @@
+{
+  "name": "playwright-service",
+  "private": true,
+  "type": "module",
+  "scripts": {
+	"start": "node server.mjs"
+  },
+  "dependencies": {
+	"express": "^4.19.2",
+	"playwright": "^1.49.0"
+  }
+}

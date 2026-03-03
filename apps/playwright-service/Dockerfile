@@ -1,18 +1,15 @@
-# Image officielle Playwright avec Chromium + deps système
 FROM mcr.microsoft.com/playwright:v1.49.0-jammy
 
 WORKDIR /app
 
-# ---- deps ----
+# install deps
 COPY package.json package-lock.json* ./
 RUN npm ci --omit=dev
 
-# ---- app ----
 COPY server.mjs ./
 
 ENV NODE_ENV=production
-ENV PORT=3016
+ENV PORT=3000
+EXPOSE 3000
 
-EXPOSE 3016
-
-CMD ["node", "server.mjs"]
+CMD ["npm", "run", "start"]
