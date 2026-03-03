@@ -93,7 +93,7 @@ app.post('/analyze/runtime', async (req, res) => {
   let loadMs = null;
 
   try {
-    const resp = await page.goto(url, { waitUntil: 'load', timeout: 45000 });
+    const response = await page.goto(url, { waitUntil: 'load', timeout: 45000 });
     finalUrl = page.url();
 
     // timings best effort
@@ -124,7 +124,9 @@ app.post('/analyze/runtime', async (req, res) => {
     },
     jsErrors: { count: jsErrorSamples.length, samples: jsErrorSamples },
     network: {
-      requests: Array.from(byType.values()).reduce((a, b) => a + b, 0),
+      requests: Object.values(byType).length
+        ? Object.values(byType).reduce((a, b) => a + b, 0)
+        : 0,
       failedRequests,
       status4xx,
       status5xx,
