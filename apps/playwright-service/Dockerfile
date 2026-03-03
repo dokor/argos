@@ -4,7 +4,7 @@ WORKDIR /app
 
 # install deps
 COPY package.json package-lock.json* ./
-RUN if [ -f package-lock.json ]; then npm ci --omit=dev; else npm install --omit=dev; fi
+RUN npm ci --omit=dev
 
 COPY server.mjs ./
 
@@ -12,4 +12,4 @@ ENV NODE_ENV=production
 ENV PORT=3016
 
 EXPOSE 3016
-CMD ["node", "server.mjs"]
+CMD ["npm", "run", "start"]
