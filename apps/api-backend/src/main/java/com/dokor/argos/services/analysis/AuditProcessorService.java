@@ -28,6 +28,7 @@ public class AuditProcessorService {
 
     private static final Logger logger = LoggerFactory.getLogger(AuditProcessorService.class);
 
+    // Version du schema du rapport
     private static final int REPORT_SCHEMA_VERSION = 2;
 
     private final AuditRunService auditRunService;
