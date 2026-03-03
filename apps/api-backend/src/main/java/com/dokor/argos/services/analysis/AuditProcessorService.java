@@ -7,6 +7,7 @@ import com.dokor.argos.services.analysis.model.AuditModuleResult;
 import com.dokor.argos.services.analysis.model.AuditReportJson;
 import com.dokor.argos.services.analysis.modules.html.HtmlModuleAnalyzer;
 import com.dokor.argos.services.analysis.modules.http.HttpModuleAnalyzer;
+import com.dokor.argos.services.analysis.modules.runtime.RuntimeModuleAnalyzer;
 import com.dokor.argos.services.analysis.modules.tech.TechModuleAnalyzer;
 import com.dokor.argos.services.analysis.scoring.AuditScoreReport;
 import com.dokor.argos.services.analysis.scoring.ScoreEnricherService;
@@ -29,7 +30,7 @@ public class AuditProcessorService {
     private static final Logger logger = LoggerFactory.getLogger(AuditProcessorService.class);
 
     // Version du schema du rapport
-    private static final int REPORT_SCHEMA_VERSION = 2;
+    private static final int REPORT_SCHEMA_VERSION = 3;
 
     private final AuditRunService auditRunService;
     private final AuditDao auditDao;
@@ -38,6 +39,7 @@ public class AuditProcessorService {
     private final HttpModuleAnalyzer httpModuleAnalyzer;
     private final HtmlModuleAnalyzer htmlModuleAnalyzer;
     private final TechModuleAnalyzer techModuleAnalyzer;
+    private final RuntimeModuleAnalyzer runtimeModuleAnalyzer;
 
     private final ScoreEnricherService scoreEnricherService;
     private final ScoreService scoreService;
@@ -54,6 +56,7 @@ public class AuditProcessorService {
         HttpModuleAnalyzer httpModuleAnalyzer,
         HtmlModuleAnalyzer htmlModuleAnalyzer,
         TechModuleAnalyzer techModuleAnalyzer,
+        RuntimeModuleAnalyzer runtimeModuleAnalyzer,
         ScoreEnricherService scoreEnricherService,
         ScoreService scoreService,
         ObjectMapper objectMapper,
@@ -65,6 +68,7 @@ public class AuditProcessorService {
         this.httpModuleAnalyzer = httpModuleAnalyzer;
         this.htmlModuleAnalyzer = htmlModuleAnalyzer;
         this.techModuleAnalyzer = techModuleAnalyzer;
+        this.runtimeModuleAnalyzer = runtimeModuleAnalyzer;
         this.scoreEnricherService = scoreEnricherService;
         this.scoreService = scoreService;
         this.objectMapper = objectMapper;
@@ -116,14 +120,17 @@ public class AuditProcessorService {
                 (String) httpModule.data().get("body")
             );
 
-            // HTML + TECH
+            // HTML + TECH + Runtime
             logger.info("Running module={} runId={} finalUrl={}", htmlModuleAnalyzer.moduleId(), runId, context.finalUrl());
             AuditModuleResult htmlModule = htmlModuleAnalyzer.analyze(context, logger);
 
             logger.info("Running module={} runId={} finalUrl={}", techModuleAnalyzer.moduleId(), runId, context.finalUrl());
             AuditModuleResult techModule = techModuleAnalyzer.analyze(context, logger);
 
-            List<AuditModuleResult> modules = List.of(httpModule, htmlModule, techModule);
+            logger.info("Running module={} runId={} finalUrl={}", runtimeModuleAnalyzer.moduleId(), runId, context.finalUrl());
+            AuditModuleResult runtimeModule = runtimeModuleAnalyzer.analyze(context, logger);
+
+            List<AuditModuleResult> modules = List.of(httpModule, htmlModule, techModule, runtimeModule);
 
             // Enrich checks (tags/scorable/weight) + compute score
             List<AuditModuleResult> enrichedModules = scoreEnricherService.enrich(modules);

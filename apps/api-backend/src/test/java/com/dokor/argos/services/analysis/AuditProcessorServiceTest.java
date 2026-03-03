@@ -6,6 +6,7 @@ import com.dokor.argos.services.analysis.model.AuditContext;
 import com.dokor.argos.services.analysis.model.AuditModuleResult;
 import com.dokor.argos.services.analysis.modules.html.HtmlModuleAnalyzer;
 import com.dokor.argos.services.analysis.modules.http.HttpModuleAnalyzer;
+import com.dokor.argos.services.analysis.modules.runtime.RuntimeModuleAnalyzer;
 import com.dokor.argos.services.analysis.modules.tech.TechModuleAnalyzer;
 import com.dokor.argos.services.analysis.scoring.ScoreEnricherService;
 import com.dokor.argos.services.analysis.scoring.ScoreService;
@@ -36,6 +37,7 @@ class AuditProcessorServiceTest {
             mock(HttpModuleAnalyzer.class),
             mock(HtmlModuleAnalyzer.class),
             mock(TechModuleAnalyzer.class),
+            mock(RuntimeModuleAnalyzer.class),
             mock(ScoreEnricherService.class),
             mock(ScoreService.class),
             new ObjectMapper(),
@@ -68,6 +70,7 @@ class AuditProcessorServiceTest {
             mock(HttpModuleAnalyzer.class),
             mock(HtmlModuleAnalyzer.class),
             mock(TechModuleAnalyzer.class),
+            mock(RuntimeModuleAnalyzer.class),
             mock(ScoreEnricherService.class),
             mock(ScoreService.class),
             new ObjectMapper(),
@@ -128,6 +131,7 @@ class AuditProcessorServiceTest {
             http,
             html,
             tech,
+            mock(RuntimeModuleAnalyzer.class),
             scoreEnricherService,
             scoreService,
             new ObjectMapper(),
@@ -168,6 +172,7 @@ class AuditProcessorServiceTest {
             http,
             mock(HtmlModuleAnalyzer.class),
             mock(TechModuleAnalyzer.class),
+            mock(RuntimeModuleAnalyzer.class),
             mock(ScoreEnricherService.class),
             mock(ScoreService.class),
             new ObjectMapper(),
