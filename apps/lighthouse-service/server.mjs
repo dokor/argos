@@ -1,7 +1,6 @@
 import http from "node:http";
 import { parse } from "node:url";
 import { once } from "node:events";
-import { readFile } from "node:fs/promises";
 import lighthouse from "lighthouse";
 import { launch } from "chrome-launcher";
 
