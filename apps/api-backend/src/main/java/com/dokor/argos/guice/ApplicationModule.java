@@ -3,6 +3,7 @@ package com.dokor.argos.guice;
 import com.coreoz.plume.db.querydsl.guice.GuiceQuerydslModule;
 import com.dokor.argos.services.analysis.JavaHttpUrlAuditAnalyzer;
 import com.dokor.argos.services.analysis.UrlAuditAnalyzer;
+import com.dokor.argos.services.analysis.lighthouse.LighthouseModuleAnalyzer;
 import com.dokor.argos.services.analysis.model.AuditModuleAnalyzer;
 import com.dokor.argos.services.analysis.modules.html.HtmlModuleAnalyzer;
 import com.dokor.argos.services.analysis.modules.http.HttpModuleAnalyzer;
@@ -45,6 +46,7 @@ public class ApplicationModule extends AbstractModule {
         multibinder.addBinding().to(TechModuleAnalyzer.class);
         multibinder.addBinding().to(HttpModuleAnalyzer.class);
         multibinder.addBinding().to(RuntimeModuleAnalyzer.class);
+        multibinder.addBinding().to(LighthouseModuleAnalyzer.class);
 
 
         bind(ScorePolicy.class)

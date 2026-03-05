@@ -17,6 +17,7 @@ services:
       - NODE_ENV=production
       - JAVA_TOOL_OPTIONS=-Dconfig.file=/config/prod.conf
       - PLAYWRIGHT_SERVICE_URL=http://playwright-service:3016
+      - LIGHTHOUSE_SERVICE_URL=http://lighthouse-service:3017
     # env_file:
     #   - .env
     labels:

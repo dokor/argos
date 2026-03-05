@@ -2,6 +2,7 @@ package com.dokor.argos.services.analysis;
 
 import com.dokor.argos.db.dao.AuditDao;
 import com.dokor.argos.db.generated.Audit;
+import com.dokor.argos.services.analysis.lighthouse.LighthouseModuleAnalyzer;
 import com.dokor.argos.services.analysis.model.AuditContext;
 import com.dokor.argos.services.analysis.model.AuditModuleResult;
 import com.dokor.argos.services.analysis.model.AuditReportJson;
@@ -40,6 +41,7 @@ public class AuditProcessorService {
     private final HtmlModuleAnalyzer htmlModuleAnalyzer;
     private final TechModuleAnalyzer techModuleAnalyzer;
     private final RuntimeModuleAnalyzer runtimeModuleAnalyzer;
+    private final LighthouseModuleAnalyzer lighthouseModuleAnalyzer;
 
     private final ScoreEnricherService scoreEnricherService;
     private final ScoreService scoreService;
@@ -57,6 +59,7 @@ public class AuditProcessorService {
         HtmlModuleAnalyzer htmlModuleAnalyzer,
         TechModuleAnalyzer techModuleAnalyzer,
         RuntimeModuleAnalyzer runtimeModuleAnalyzer,
+        LighthouseModuleAnalyzer lighthouseModuleAnalyzer,
         ScoreEnricherService scoreEnricherService,
         ScoreService scoreService,
         ObjectMapper objectMapper,
@@ -69,6 +72,7 @@ public class AuditProcessorService {
         this.htmlModuleAnalyzer = htmlModuleAnalyzer;
         this.techModuleAnalyzer = techModuleAnalyzer;
         this.runtimeModuleAnalyzer = runtimeModuleAnalyzer;
+        this.lighthouseModuleAnalyzer = lighthouseModuleAnalyzer;
         this.scoreEnricherService = scoreEnricherService;
         this.scoreService = scoreService;
         this.objectMapper = objectMapper;
@@ -130,7 +134,10 @@ public class AuditProcessorService {
             logger.info("Running module={} runId={} finalUrl={}", runtimeModuleAnalyzer.moduleId(), runId, context.finalUrl());
             AuditModuleResult runtimeModule = runtimeModuleAnalyzer.analyze(context, logger);
 
-            List<AuditModuleResult> modules = List.of(httpModule, htmlModule, techModule, runtimeModule);
+            logger.info("Running module={} runId={} finalUrl={}", lighthouseModuleAnalyzer.moduleId(), runId, context.finalUrl());
+            AuditModuleResult lighthouseModule = lighthouseModuleAnalyzer.analyze(context, logger);
+
+            List<AuditModuleResult> modules = List.of(httpModule, htmlModule, techModule, runtimeModule, lighthouseModule);
 
             // Enrich checks (tags/scorable/weight) + compute score
             List<AuditModuleResult> enrichedModules = scoreEnricherService.enrich(modules);
