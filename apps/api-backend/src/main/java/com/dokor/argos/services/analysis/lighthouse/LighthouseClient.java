@@ -15,6 +15,8 @@ import java.util.Map;
 @Singleton
 public class LighthouseClient {
 
+    private static final Integer TIMEOUT_LIGHTHOUSE_REQUEST = 240;
+
     private final HttpClient http;
     private final ObjectMapper objectMapper;
     private final String baseUrl;
@@ -35,7 +37,7 @@ public class LighthouseClient {
         String payload = objectMapper.writeValueAsString(Map.of("url", url));
 
         HttpRequest req = HttpRequest.newBuilder(endpoint)
-            .timeout(Duration.ofSeconds(120)) // Lighthouse peut être plus long
+            .timeout(Duration.ofSeconds(TIMEOUT_LIGHTHOUSE_REQUEST))
             .header("content-type", "application/json")
             .POST(HttpRequest.BodyPublishers.ofString(payload))
             .build();
