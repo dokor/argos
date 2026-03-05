@@ -349,7 +349,7 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
             false,          // scorable filled later
             0.0,            // weight filled later
             List.of(),      // tags filled later
-            Map.of("count", h1Count, "firstH1", firstH1),
+            firstH1 != null ? Map.of("count", h1Count, "firstH1", firstH1) : Map.of(),
             Map.of("h1Count", h1Count),
             message,
             recommendation
