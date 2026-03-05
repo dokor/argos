@@ -16,6 +16,7 @@ import java.util.Map;
 public class LighthouseClient {
 
     private static final Integer TIMEOUT_LIGHTHOUSE_REQUEST = 240;
+    private static final String DEFAULT_URL_LIGHTHOUSE_SERVICE = "http://lighthouse-service:3017";
 
     private final HttpClient http;
     private final ObjectMapper objectMapper;
@@ -29,7 +30,7 @@ public class LighthouseClient {
             .build();
 
         // ex: http://lighthouse-service:3017
-        this.baseUrl = System.getenv().getOrDefault("LIGHTHOUSE_SERVICE_URL", "http://lighthouse-service:3017");
+        this.baseUrl = System.getenv().getOrDefault("LIGHTHOUSE_SERVICE_URL", DEFAULT_URL_LIGHTHOUSE_SERVICE);
     }
 
     public JsonNode analyze(String url) throws Exception {
