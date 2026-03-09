@@ -72,6 +72,8 @@ export async function http<T>(path: string, init?: RequestInit): Promise<T> {
   return (await res.json()) as T;
 }
 
+const limit = 100;
+
 export const argosApi = {
   createAudit: (body: CreateAuditRequest): Promise<CreateAuditResponse> =>
     http<CreateAuditResponse>("/api/audits", {
@@ -80,7 +82,7 @@ export const argosApi = {
     }),
 
   getList: (): Promise<AuditListItem[]> =>
-    http<AuditListItem[]>("/api/audits", { method: "GET" }),
+    http<AuditListItem[]>(`/api/audits?limit=${limit}`, { method: "GET" }),
 
   getReport: (token: string): Promise<Report> =>
     http<Report>(`/api/reports/${token}`, { method: "GET" }),
