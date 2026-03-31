@@ -29,7 +29,6 @@ services:
       - traefik.http.routers.api-backend.priority=100
       - traefik.http.services.api-backend.loadbalancer.server.port=8081
 
-
 networks:
   proxy:
     external: true
