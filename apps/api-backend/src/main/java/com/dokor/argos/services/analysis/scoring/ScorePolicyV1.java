@@ -56,10 +56,10 @@ public class ScorePolicyV1 implements ScorePolicy {
         map.put("lighthouse.collect",              rule(false, 0, "lighthouse"));
 
         // ----- Runtime (Playwright) -----
-        map.put("runtime.console_errors",        rule(true, 5, "performance", "runtime"));
-        map.put("runtime.js_errors",             rule(true, 6, "performance", "runtime"));
-        map.put("runtime.failed_requests",       rule(true, 4, "performance", "runtime"));
-        map.put("runtime.http5xx_on_load",       rule(true, 8, "performance", "runtime"));
+        map.put("runtime.console_errors",        rule(true, 5, "runtime"));
+        map.put("runtime.js_errors",             rule(true, 6, "runtime"));
+        map.put("runtime.failed_requests",       rule(true, 4, "runtime"));
+        map.put("runtime.http5xx_on_load",       rule(true, 8, "runtime"));
 
         // ----- Tech (informatif) -----
         map.put("tech.cms", rule(false, 0, "tech"));
@@ -107,7 +107,7 @@ public class ScorePolicyV1 implements ScorePolicy {
         }
 
         if (checkKey.startsWith("runtime.")) {
-            return rule(true, 4, "performance", "runtime");
+            return rule(true, 4, "runtime");
         }
 
         if (checkKey.startsWith("tech.")) {
