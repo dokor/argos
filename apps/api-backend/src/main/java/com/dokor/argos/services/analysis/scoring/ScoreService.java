@@ -9,6 +9,19 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
+/**
+ * Calcule le score global d'un audit à partir des résultats enrichis des modules.
+ * <p>
+ * Pour chaque check scorable ({@link AuditCheckResult#scorable()} = true), le score
+ * est calculé comme {@code weight × ratio(status)} où le ratio vaut :
+ * 1.0 pour PASS, 0.5 pour WARN, 0.0 pour FAIL, 0.0 pour INFO.
+ * <p>
+ * Les checks doivent avoir été préalablement enrichis par {@link ScoreEnricherService}.
+ * Les résultats sont agrégés par module et par tag pour une vue granulaire.
+ *
+ * @see AuditScoreReport
+ * @see ScoreEnricherService
+ */
 @Singleton
 public class ScoreService {
 
