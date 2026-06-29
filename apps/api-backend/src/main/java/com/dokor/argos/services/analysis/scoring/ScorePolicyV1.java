@@ -46,7 +46,20 @@ public class ScorePolicyV1 implements ScorePolicy {
         map.put("html.anchors.href_coverage", rule(true, 2, "a11y", "html"));
         map.put("html.lang", rule(true, 2, "a11y", "html"));
 
-        // ----- Tech (souvent informatif) -----
+        // ----- Lighthouse -----
+        // Scores Lighthouse contribuent à la catégorie "performance" et "a11y"
+        map.put("lighthouse.score.performance",    rule(true, 15, "performance", "lighthouse"));
+        map.put("lighthouse.score.accessibility",  rule(true, 10, "a11y",        "lighthouse"));
+        map.put("lighthouse.score.best_practices", rule(true, 6,  "security",    "lighthouse"));
+        map.put("lighthouse.score.seo",            rule(true, 8,  "seo",         "lighthouse"));
+
+        // ----- Runtime (Playwright) -----
+        map.put("runtime.console_errors",        rule(true, 5, "performance", "runtime"));
+        map.put("runtime.js_errors",             rule(true, 6, "performance", "runtime"));
+        map.put("runtime.failed_requests",       rule(true, 4, "performance", "runtime"));
+        map.put("runtime.http5xx_on_load",       rule(true, 8, "performance", "runtime"));
+
+        // ----- Tech (informatif) -----
         map.put("tech.cms", rule(false, 0, "tech"));
         map.put("tech.frontend.framework", rule(false, 0, "tech"));
         map.put("tech.backend.hints", rule(false, 0, "tech"));
@@ -84,6 +97,14 @@ public class ScorePolicyV1 implements ScorePolicy {
         }
         if (checkKey.startsWith("html.")) {
             return rule(true, 1, "html");
+        }
+
+        if (checkKey.startsWith("lighthouse.")) {
+            return rule(true, 8, "performance", "lighthouse");
+        }
+
+        if (checkKey.startsWith("runtime.")) {
+            return rule(true, 4, "performance", "runtime");
         }
 
         if (checkKey.startsWith("tech.")) {

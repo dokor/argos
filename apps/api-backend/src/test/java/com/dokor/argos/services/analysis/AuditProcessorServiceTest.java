@@ -8,7 +8,6 @@ import com.dokor.argos.services.analysis.model.AuditModuleResult;
 import com.dokor.argos.services.analysis.modules.html.HtmlModuleAnalyzer;
 import com.dokor.argos.services.analysis.modules.http.HttpModuleAnalyzer;
 import com.dokor.argos.services.analysis.modules.runtime.RuntimeModuleAnalyzer;
-import com.dokor.argos.services.analysis.modules.tech.TechModuleAnalyzer;
 import com.dokor.argos.services.analysis.scoring.ScoreEnricherService;
 import com.dokor.argos.services.analysis.scoring.ScoreService;
 import com.dokor.argos.services.domain.audit.AuditRunService;
@@ -16,7 +15,6 @@ import com.dokor.argos.services.domain.audit.UrlNormalizer;
 import com.dokor.argos.services.domain.report.ReportPublishService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import java.util.List;
 import java.util.Map;
@@ -37,9 +35,9 @@ class AuditProcessorServiceTest {
             mock(UrlNormalizer.class),
             mock(HttpModuleAnalyzer.class),
             mock(HtmlModuleAnalyzer.class),
-            mock(TechModuleAnalyzer.class),
             mock(RuntimeModuleAnalyzer.class),
             mock(LighthouseModuleAnalyzer.class),
+            mock(DomainAnalysisService.class),
             mock(ScoreEnricherService.class),
             mock(ScoreService.class),
             new ObjectMapper(),
@@ -57,7 +55,6 @@ class AuditProcessorServiceTest {
         AuditRunService runService = mock(AuditRunService.class);
         AuditDao auditDao = mock(AuditDao.class);
 
-        // run exists with auditId=10
         var run = new com.dokor.argos.db.generated.AuditRun();
         run.setId(1L);
         run.setAuditId(10L);
@@ -71,9 +68,9 @@ class AuditProcessorServiceTest {
             mock(UrlNormalizer.class),
             mock(HttpModuleAnalyzer.class),
             mock(HtmlModuleAnalyzer.class),
-            mock(TechModuleAnalyzer.class),
             mock(RuntimeModuleAnalyzer.class),
             mock(LighthouseModuleAnalyzer.class),
+            mock(DomainAnalysisService.class),
             mock(ScoreEnricherService.class),
             mock(ScoreService.class),
             new ObjectMapper(),
@@ -106,7 +103,7 @@ class AuditProcessorServiceTest {
 
         HttpModuleAnalyzer http = mock(HttpModuleAnalyzer.class);
         HtmlModuleAnalyzer html = mock(HtmlModuleAnalyzer.class);
-        TechModuleAnalyzer tech = mock(TechModuleAnalyzer.class);
+        RuntimeModuleAnalyzer runtime = mock(RuntimeModuleAnalyzer.class);
         ScoreEnricherService scoreEnricherService = mock(ScoreEnricherService.class);
         ScoreService scoreService = mock(ScoreService.class);
 
@@ -125,7 +122,7 @@ class AuditProcessorServiceTest {
 
         when(http.analyze(any(AuditContext.class), any())).thenReturn(httpModule);
         when(html.analyze(any(AuditContext.class), any())).thenReturn(new AuditModuleResult("html", "HTML", "ok", Map.of(), List.of()));
-        when(tech.analyze(any(AuditContext.class), any())).thenReturn(new AuditModuleResult("tech", "TECH", "ok", Map.of(), List.of()));
+        when(runtime.analyze(any(AuditContext.class), any())).thenReturn(new AuditModuleResult("runtime", "RUNTIME", "ok", Map.of(), List.of()));
 
         AuditProcessorService svc = new AuditProcessorService(
             runService,
@@ -133,9 +130,9 @@ class AuditProcessorServiceTest {
             normalizer,
             http,
             html,
-            tech,
-            mock(RuntimeModuleAnalyzer.class),
+            runtime,
             mock(LighthouseModuleAnalyzer.class),
+            mock(DomainAnalysisService.class),
             scoreEnricherService,
             scoreService,
             new ObjectMapper(),
@@ -175,9 +172,9 @@ class AuditProcessorServiceTest {
             mock(UrlNormalizer.class),
             http,
             mock(HtmlModuleAnalyzer.class),
-            mock(TechModuleAnalyzer.class),
             mock(RuntimeModuleAnalyzer.class),
             mock(LighthouseModuleAnalyzer.class),
+            mock(DomainAnalysisService.class),
             mock(ScoreEnricherService.class),
             mock(ScoreService.class),
             new ObjectMapper(),

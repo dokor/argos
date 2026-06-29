@@ -12,7 +12,7 @@ class AuditContextTest {
 
     @Test
     void shouldCreateDefaultContext() {
-        AuditContext ctx = new AuditContext("http://example.com", "https://example.com");
+        AuditContext ctx = new AuditContext("http://example.com", "https://example.com", 0L);
 
         assertEquals("http://example.com", ctx.inputUrl());
         assertEquals("https://example.com", ctx.normalizedUrl());
@@ -30,7 +30,7 @@ class AuditContextTest {
 
     @Test
     void shouldEnrichHttpResult() {
-        AuditContext ctx = new AuditContext("http://example.com", "http://example.com")
+        AuditContext ctx = new AuditContext("http://example.com", "http://example.com", 0L)
             .withHttpResult(
                 "https://example.com",
                 200,

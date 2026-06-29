@@ -79,11 +79,19 @@ public class PublicReportComposer {
             .map(TechReportMapper::fromTechModuleData)
             .orElse(null);
 
+        // Extract page title from HTML module data
+        String siteTitle = internalReport.modules().stream()
+            .filter(m -> "html".equals(m.id()))
+            .findFirst()
+            .map(m -> m.data() != null ? String.valueOf(m.data().getOrDefault("title", "")) : "")
+            .filter(t -> !t.isBlank() && !t.equals("null"))
+            .orElse(null);
+
         return new ReportDto(
             Instant.now().toString(),
             domain,
             url,
-            new ReportDto.Site(null, null),
+            new ReportDto.Site(siteTitle, null),
             new ReportDto.Scores(global100, byCategoryWithCounts),
             new ReportDto.Summary(oneLiner, priorities),
             issues,
