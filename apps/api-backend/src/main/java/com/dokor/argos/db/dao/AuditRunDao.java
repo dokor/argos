@@ -5,10 +5,9 @@ import com.coreoz.plume.db.querydsl.crud.CrudDaoQuerydsl;
 import com.coreoz.plume.db.querydsl.transaction.TransactionManagerQuerydsl;
 import com.dokor.argos.db.generated.AuditRun;
 import com.dokor.argos.db.generated.QAuditRun;
+import com.dokor.argos.services.domain.audit.enums.AuditRunStatus;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -31,7 +30,7 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
                 .select(RUN)
                 .from(RUN)
                 .where(
-                    RUN.status.eq("QUEUED"),
+                    RUN.status.eq(AuditRunStatus.QUEUED.name()),
                     RUN.claimToken.isNull()
                 )
                 .orderBy(RUN.createdAt.asc())
@@ -82,11 +81,11 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
     public boolean claimRun(long runId, String claimToken, Instant now) {
         long updated = transactionManager.update(RUN)
             .set(RUN.claimToken, claimToken)
-            .set(RUN.status, "RUNNING")
+            .set(RUN.status, AuditRunStatus.RUNNING.name())
             .set(RUN.startedAt, now)
             .where(
                 RUN.id.eq(runId),
-                RUN.status.eq("QUEUED"),
+                RUN.status.eq(AuditRunStatus.QUEUED.name()),
                 RUN.claimToken.isNull()
             )
             .execute();
@@ -107,7 +106,7 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
      */
     public void markCompleted(long runId, Instant finishedAt, String resultJson) {
         transactionManager.update(RUN)
-            .set(RUN.status, "COMPLETED")
+            .set(RUN.status, AuditRunStatus.COMPLETED.name())
             .set(RUN.finishedAt, finishedAt)
             .set(RUN.resultJson, resultJson)
             .where(RUN.id.eq(runId))
@@ -126,7 +125,7 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
      */
     public void markFailed(long runId, Instant finishedAt, String lastError) {
         transactionManager.update(RUN)
-            .set(RUN.status, "FAILED")
+            .set(RUN.status, AuditRunStatus.FAILED.name())
             .set(RUN.finishedAt, finishedAt)
             .set(RUN.lastError, lastError)
             .where(RUN.id.eq(runId))
