@@ -7,6 +7,7 @@ import com.dokor.argos.db.generated.QAudit;
 import com.dokor.argos.db.generated.QAuditReport;
 import com.dokor.argos.db.generated.QAuditRun;
 import com.querydsl.core.Tuple;
+import com.querydsl.sql.SQLExpressions;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.slf4j.Logger;
@@ -36,6 +37,8 @@ public class AuditDao extends CrudDaoQuerydsl<Audit> {
     private static final Logger logger = LoggerFactory.getLogger(AuditDao.class);
     private static final QAudit AUDIT = QAudit.audit;
     private static final QAuditRun RUN = QAuditRun.auditRun;
+    /** Alias séparé pour la sous-requête MAX(id) — évite l'ambiguïté de colonnes. */
+    private static final QAuditRun SUB_RUN = new QAuditRun("subRun");
     private static final QAuditReport AUDIT_REPORT = QAuditReport.auditReport;
 
     @Inject
@@ -95,8 +98,15 @@ public class AuditDao extends CrudDaoQuerydsl<Audit> {
         return transactionManager.selectQuery()
             .select(AUDIT, RUN, AUDIT_REPORT)
             .from(AUDIT)
-            .leftJoin(RUN).on(RUN.auditId.eq(AUDIT.id))
-            .leftJoin(AUDIT_REPORT).on(AUDIT_REPORT.auditId.eq(AUDIT.id))
+            .leftJoin(RUN).on(
+                RUN.auditId.eq(AUDIT.id),
+                RUN.id.eq(
+                    SQLExpressions.select(SUB_RUN.id.max())
+                        .from(SUB_RUN)
+                        .where(SUB_RUN.auditId.eq(AUDIT.id))
+                )
+            )
+            .leftJoin(AUDIT_REPORT).on(AUDIT_REPORT.runId.eq(RUN.id))
             .orderBy(AUDIT.createdAt.desc())
             .limit(limit)
             .fetch();
