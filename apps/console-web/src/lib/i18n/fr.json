@@ -3,23 +3,21 @@
     "title": "Argos – Analyseur de site web",
     "description": "Argos analyse vos headers HTTP, HTML, stack technique et performances. Rapport scoré, privé, sans login."
   },
-
   "nav": {
     "logo": "Argos",
     "openConsole": "Accéder à la console →"
   },
-
   "landing": {
     "hero": {
       "badge": "Audit de site web · Open source · Gratuit",
       "headline": "Votre site sous le microscope.\nHTTP, SEO, stack et performances — en quelques secondes.",
-      "sub": "Argos analyse vos headers HTTP, votre HTML, votre stack technique et vos performances Lighthouse. Résultat : un rapport scoré, privé et non indexable.",
+      "sub": "Argos analyse vos headers HTTP, votre HTML, votre stack technique et vos performances Lighthouse. Résultat : un rapport scoré, privé et non indexable.",
       "inputPlaceholder": "votre@email.com",
       "cta": "Être notifié au lancement",
       "ctaLoading": "Envoi…",
       "hint": "Pas de spam. Juste les updates qui comptent.",
       "successTitle": "Vous êtes inscrit ✓",
-      "successMsg": "On vous prévient dès que c'est prêt.",
+      "successMsg": "On vous prévient dès que c’est prêt.",
       "alreadyMsg": "Cet email est déjà inscrit.",
       "errorMsg": "Une erreur est survenue, réessayez."
     },
@@ -36,12 +34,12 @@
         "titlePresent": "Title présent",
         "h1Found": "H1 détecté",
         "nextjsDetected": "Next.js détecté",
-        "lcpScore": "LCP · 1,8 s",
+        "lcpScore": "LCP · 1,8 s",
         "performanceScore": "Perf. Lighthouse 71"
       }
     },
     "modules": {
-      "title": "Ce qu'Argos analyse",
+      "title": "Ce qu’Argos analyse",
       "sub": "Cinq modules indépendants, une vision complète.",
       "items": [
         {
@@ -62,7 +60,7 @@
         {
           "icon": "⚡",
           "label": "Runtime Playwright",
-          "desc": "Métriques collectées sur page rendue : console errors, LCP, FCP, TTI, ressources bloquantes."
+          "desc": "Métriques collectées sur page rendue : console errors, LCP, FCP, TTI, ressources bloquantes."
         },
         {
           "icon": "📊",
@@ -77,12 +75,12 @@
         {
           "n": "01",
           "label": "Soumettez une URL",
-          "desc": "N'importe quel site public. Argos normalise l'URL et crée un audit idempotent."
+          "desc": "N’importe quel site public. Argos normalise l’URL et crée un audit idempotent."
         },
         {
           "n": "02",
           "label": "On analyse tout",
-          "desc": "Les cinq modules tournent en séquence : HTTP → HTML → Tech → Runtime → Lighthouse."
+          "desc": "Les cinq modules tournent en séquence : HTTP → HTML → Tech → Runtime → Lighthouse."
         },
         {
           "n": "03",
@@ -92,12 +90,12 @@
       ]
     },
     "why": {
-      "title": "Pourquoi Argos ?",
+      "title": "Pourquoi Argos ?",
       "items": [
         {
           "icon": "🔗",
           "label": "Privé par défaut",
-          "desc": "Chaque rapport est accessible via un token unique. Pas d'index, pas de SEO."
+          "desc": "Chaque rapport est accessible via un token unique. Pas d’index, pas de SEO."
         },
         {
           "icon": "🚫",
@@ -112,7 +110,7 @@
         {
           "icon": "📈",
           "label": "Scoring actionnable",
-          "desc": "Chaque point détecté est pondéré, priorisé et accompagné d'une recommandation concrète — pas juste un chiffre."
+          "desc": "Chaque point détecté est pondéré, priorisé et accompagné d’une recommandation concrète — pas juste un chiffre."
         }
       ]
     },
@@ -120,7 +118,7 @@
       "title": "Soyez parmi les premiers.",
       "sub": "Argos est en cours de construction. Inscrivez-vous pour être notifié à chaque release majeure.",
       "inputPlaceholder": "votre@email.com",
-      "cta": "S'inscrire",
+      "cta": "S’inscrire",
       "ctaLoading": "Envoi…",
       "hint": "Pas de spam. Désabonnement en un clic."
     },
@@ -129,11 +127,20 @@
       "copy": "© 2026 Argos. MIT License."
     }
   },
-
   "dashboard": {
-    "title": "Argos – Console"
+    "title": "Argos – Console",
+    "newAudit": "Nouvel audit",
+    "stats": {
+      "analyzed": "Analysés",
+      "analyzedDesc": "Projets avec analyse terminée",
+      "inProgress": "En cours",
+      "inProgressDesc": "En file d’attente ou en analyse",
+      "errors": "Erreurs",
+      "errorsDesc": "Analyses ayant échoué",
+      "avgScore": "Score moyen",
+      "avgScoreDesc": "Score global moyen (projets terminés)"
+    }
   },
-
   "report": {
     "metadata": {
       "title": "Rapport Argos"
@@ -145,13 +152,13 @@
     "page": {
       "private": "Rapport privé • Non indexable",
       "tabs": {
-        "overview": "Vue d'ensemble",
+        "overview": "Vue d’ensemble",
         "details": "Détails",
         "data": "Données"
       },
       "dataTab": {
         "title": "JSON du rapport",
-        "desc": "Utile pour debug et pour l'export PDF plus tard."
+        "desc": "Utile pour debug et pour l’export PDF plus tard."
       }
     },
     "header": {
@@ -168,7 +175,7 @@
       },
       "scoreGlobal": "Score global",
       "scoreTooltip": "Score agrégé (0–100) basé sur les points détectés.",
-      "scoreObjectivePrefix": "Objectif :",
+      "scoreObjectivePrefix": "Objectif :",
       "scoreMaintain": "maintenir",
       "scoreQuickwins": "prioriser les quick wins",
       "analyzedAt": "Analysé",
@@ -182,7 +189,7 @@
     },
     "footerCta": {
       "title": "Planifier un échange",
-      "desc": "15 minutes pour prioriser les optimisations, estimer l'effort, et identifier les quick wins.",
+      "desc": "15 minutes pour prioriser les optimisations, estimer l’effort, et identifier les quick wins.",
       "cta": "Prendre RDV",
       "copyLink": "Copier le lien",
       "calendlyComingSoon": "Lien Calendly à venir.",
@@ -231,17 +238,15 @@
       "detailsLabel": "Détails"
     }
   },
-
   "auditForm": {
     "urlLabel": "URL à analyser",
     "urlPlaceholder": "https://example.com",
-    "submit": "Lancer l'audit",
+    "submit": "Lancer l’audit",
     "submitting": "Envoi…",
     "successPrefix": "Audit créé",
     "errorUrlMissing": "URL manquante",
     "errorUnknown": "Erreur inconnue"
   },
-
   "auditList": {
     "title": "Audits",
     "loading": "Chargement…",
@@ -262,9 +267,22 @@
       "RUNNING": "En cours",
       "COMPLETED": "Terminé",
       "FAILED": "Échec"
+    },
+    "filters": {
+      "statusLabel": "Statut",
+      "all": "Tous",
+      "sortLabel": "Trier",
+      "sortDateDesc": "Plus récent",
+      "sortDateAsc": "Plus ancien",
+      "sortScoreDesc": "Score ↓",
+      "sortScoreAsc": "Score ↑",
+      "moduleLabel": "Module",
+      "tagLabel": "Tag",
+      "techLabel": "Techno",
+      "clearFilters": "Réinitialiser",
+      "noResults": "Aucun résultat pour ces filtres."
     }
   },
-
   "langToggle": {
     "label": "🇬🇧 EN",
     "targetLang": "en"

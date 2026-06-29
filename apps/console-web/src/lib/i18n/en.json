@@ -3,12 +3,10 @@
     "title": "Argos – Website auditor",
     "description": "Argos scans HTTP headers, HTML quality, tech stack and Lighthouse performance. Scored, private report — no login required."
   },
-
   "nav": {
     "logo": "Argos",
     "openConsole": "Open console →"
   },
-
   "landing": {
     "hero": {
       "badge": "Website auditor · Open source · Free",
@@ -18,8 +16,8 @@
       "cta": "Get notified at launch",
       "ctaLoading": "Sending…",
       "hint": "No spam. Only the updates that matter.",
-      "successTitle": "You're in ✓",
-      "successMsg": "We'll let you know when it's ready.",
+      "successTitle": "You’re in ✓",
+      "successMsg": "We’ll let you know when it’s ready.",
       "alreadyMsg": "This email is already registered.",
       "errorMsg": "Something went wrong, please try again."
     },
@@ -129,11 +127,20 @@
       "copy": "© 2026 Argos. MIT License."
     }
   },
-
   "dashboard": {
-    "title": "Argos – Console"
+    "title": "Argos – Console",
+    "newAudit": "New audit",
+    "stats": {
+      "analyzed": "Analyzed",
+      "analyzedDesc": "Projects with completed analysis",
+      "inProgress": "In progress",
+      "inProgressDesc": "Queued or currently running",
+      "errors": "Errors",
+      "errorsDesc": "Analyses that failed",
+      "avgScore": "Avg. score",
+      "avgScoreDesc": "Average global score (completed projects)"
+    }
   },
-
   "report": {
     "metadata": {
       "title": "Argos Report"
@@ -231,7 +238,6 @@
       "detailsLabel": "Details"
     }
   },
-
   "auditForm": {
     "urlLabel": "URL to analyze",
     "urlPlaceholder": "https://example.com",
@@ -241,7 +247,6 @@
     "errorUrlMissing": "URL is missing",
     "errorUnknown": "Unknown error"
   },
-
   "auditList": {
     "title": "Audits",
     "loading": "Loading…",
@@ -262,9 +267,22 @@
       "RUNNING": "Running",
       "COMPLETED": "Completed",
       "FAILED": "Failed"
+    },
+    "filters": {
+      "statusLabel": "Status",
+      "all": "All",
+      "sortLabel": "Sort",
+      "sortDateDesc": "Newest",
+      "sortDateAsc": "Oldest",
+      "sortScoreDesc": "Score ↓",
+      "sortScoreAsc": "Score ↑",
+      "moduleLabel": "Module",
+      "tagLabel": "Tag",
+      "techLabel": "Tech",
+      "clearFilters": "Clear filters",
+      "noResults": "No results for these filters."
     }
   },
-
   "langToggle": {
     "label": "🇫🇷 FR",
     "targetLang": "fr"
