@@ -89,6 +89,22 @@
   margin-left: t.$space-2;
 }
 
+.ciNote {
+  margin-top: t.$space-3;
+  text-align: center;
+  font-size: t.$text-sm;
+  color: t.$color-slate-500;
+  width: 100%;
+}
+
+.ciLink {
+  color: t.$color-slate-400;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+
+  &:hover { color: t.$color-slate-200; }
+}
+
 @media (max-width: 640px) {
   .inner {
     flex-direction: column;

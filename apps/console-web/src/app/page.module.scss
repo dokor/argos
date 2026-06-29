@@ -34,7 +34,8 @@
 }
 
 .logoIcon {
-  font-size: 22px;
+  display: block;
+  flex-shrink: 0;
 }
 
 .navCta {
@@ -265,6 +266,9 @@
   padding: 16px t.$space-6;
   background: t.$color-slate-50;
   border-bottom: 1px solid t.$color-slate-100;
+  /* Positioned inside heroSection just before the fade — sits on top of the absolute fade gradient */
+  position: relative;
+  z-index: 2;
 }
 
 .socialProofItem {

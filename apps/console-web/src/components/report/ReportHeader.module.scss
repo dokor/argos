@@ -29,7 +29,8 @@
 }
 
 .brandIcon {
-  font-size: 18px;
+  display: block;
+  flex-shrink: 0;
 }
 
 .brandName {

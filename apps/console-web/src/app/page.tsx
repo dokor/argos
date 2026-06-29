@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { argosApi } from "@/lib/ArgosApi";
 import { useLang } from "@/lib/i18n/LangContext";
+import { useIsAdmin } from "@/lib/useIsAdmin";
+import ArgosIcon from "@/components/ArgosIcon";
 import LangToggle from "@/components/LangToggle";
 import s from "./page.module.scss";
 
@@ -278,6 +280,7 @@ function MockReport({
 export default function LandingPage() {
   const { t } = useLang();
   const tl = t.landing;
+  const isAdmin = useIsAdmin();
 
   const formT: AuditFormT = {
     inputPlaceholder: tl.hero.inputPlaceholder,
@@ -299,16 +302,18 @@ export default function LandingPage() {
       <nav className={s.nav}>
         <div className={s.navInner}>
           <div className={s.logo}>
-            <span className={s.logoIcon}>👁</span>
+            <ArgosIcon size={22} className={s.logoIcon} />
             <span style={{ fontWeight: 700, fontSize: 18, letterSpacing: "-0.02em" }}>
               {t.nav.logo}
             </span>
           </div>
           <div className={s.navRight}>
             <LangToggle />
-            <a href="/dashboard" className={s.navCta}>
-              {t.nav.openConsole}
-            </a>
+            {isAdmin && (
+              <a href="/dashboard" className={s.navCta}>
+                {t.nav.openConsole}
+              </a>
+            )}
           </div>
         </div>
       </nav>
@@ -337,11 +342,9 @@ export default function LandingPage() {
             <MockReport tMock={tl.mockReport} />
           </div>
         </div>
+        <SocialProofBar items={tl.socialProof.items} />
         <div className={s.heroFade} />
       </section>
-
-      {/* SOCIAL PROOF */}
-      <SocialProofBar items={tl.socialProof.items} />
 
       {/* MODULES */}
       <section className={s.section}>

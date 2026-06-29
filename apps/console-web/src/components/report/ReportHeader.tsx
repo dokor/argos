@@ -2,22 +2,20 @@
 
 import Link from "next/link";
 import LangToggle from "@/components/LangToggle";
+import ArgosIcon from "@/components/ArgosIcon";
 import s from "./ReportHeader.module.scss";
 import { useLang } from "@/lib/i18n/LangContext";
 
-export default function ReportHeader({ domain }: Readonly<{ domain: string }>) {
+export default function ReportHeader() {
   const { t } = useLang();
 
   return (
     <header className={s.header}>
       <div className={s.inner}>
         <Link href="/" className={s.brand}>
-          <span className={s.brandIcon}>👁</span>
+          <ArgosIcon size={20} className={s.brandIcon} />
           <span className={s.brandName}>{t.nav.logo}</span>
         </Link>
-
-        <span className={s.sep} aria-hidden>·</span>
-        <span className={s.domain}>{domain}</span>
 
         <div className={s.right}>
           <span className={s.privateBadge}>{t.report.page.private}</span>

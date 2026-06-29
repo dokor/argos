@@ -36,6 +36,13 @@ export default function ReportFooterCta() {
         </div>
 
         <p className={s.note}>{tf.footerNote}</p>
+
+        <p className={s.ciNote}>
+          Vous voulez intégrer cette analyse dans votre CI ?{" "}
+          <a href="mailto:a.lelouet.freelance@gmail.com" className={s.ciLink}>
+            Contactez-moi
+          </a>
+        </p>
       </div>
     </footer>
   );
