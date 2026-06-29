@@ -82,7 +82,8 @@ public class ScoreEnricherService {
             base.value(),
             base.details(),
             base.message(),
-            base.recommendation()
+            base.recommendation(),
+            base.sources()
         );
     }
 
