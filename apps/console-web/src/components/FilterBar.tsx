@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import styles from "./FilterBar.module.css";
+import styles from "./FilterBar.module.scss";
 import { AuditListItem } from "@/lib/ArgosApi";
 import { SortKey } from "@/lib/auditTypes";
 

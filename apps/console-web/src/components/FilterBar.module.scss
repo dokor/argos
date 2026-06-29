@@ -1,0 +1,84 @@
+@use '../styles/tokens' as t;
+
+.bar {
+  background: t.$color-white;
+  border: 1px solid t.$color-slate-200;
+  border-radius: t.$radius-xl;
+  padding: 14px t.$space-4;
+  display: grid;
+  gap: t.$space-3;
+  box-shadow: t.$shadow-sm;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.groupLabel {
+  font-size: t.$text-xs;
+  font-weight: 700;
+  color: t.$color-slate-400;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-right: 2px;
+}
+
+.chip {
+  padding: 5px 10px;
+  border-radius: t.$radius-pill;
+  font-size: t.$text-sm;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.chipCount {
+  font-size: 10px;
+  opacity: 0.7;
+  font-weight: 700;
+}
+
+.selectBox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: t.$color-slate-50;
+  border: 1px solid t.$color-slate-200;
+  border-radius: t.$radius-sm;
+  padding: t.$space-1 10px;
+}
+
+.selectLabel {
+  font-size: t.$text-xs;
+  font-weight: 700;
+  color: t.$color-slate-400;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.select {
+  border: none;
+  background: transparent;
+  font-size: t.$text-sm;
+  font-weight: 700;
+  color: t.$color-navy;
+  cursor: pointer;
+  outline: none;
+  padding: 2px 0;
+}
+
+.clearBtn {
+  padding: 5px 10px;
+  border-radius: t.$radius-sm;
+  border: 1px solid t.$color-red-border;
+  background: t.$color-red-light;
+  color: t.$color-red;
+  font-size: t.$text-sm;
+  font-weight: 700;
+  cursor: pointer;
+}
