@@ -28,8 +28,12 @@ function LoginForm() {
     if (res.ok) {
       router.push(from);
     } else {
-      const data = await res.json();
-      setError(data.error || "Erreur");
+      try {
+        const data = await res.json();
+        setError(data.error || "Erreur");
+      } catch {
+        setError(`Erreur ${res.status}`);
+      }
       setLoading(false);
     }
   }
