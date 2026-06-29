@@ -1,0 +1,101 @@
+@use '../../styles/tokens' as t;
+
+.section {
+  background: t.$color-white;
+  border: 1px solid t.$color-slate-200;
+  border-radius: t.$radius-2xl;
+  padding: t.$space-6;
+  box-shadow: t.$shadow-sm;
+}
+
+.sectionHead {
+  margin-bottom: t.$space-5;
+}
+
+.sectionTitle {
+  font-size: t.$text-2xl;
+  font-weight: 700;
+  margin: 0 0 t.$space-1;
+  color: t.$color-navy;
+}
+
+.sectionDesc {
+  font-size: t.$text-base;
+  color: t.$color-slate-500;
+  margin: 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: t.$space-4;
+}
+
+.card {
+  border: 1px solid t.$color-slate-200;
+  border-radius: t.$radius-xl;
+  padding: t.$space-5;
+  display: flex;
+  flex-direction: column;
+  gap: t.$space-3;
+  position: relative;
+  overflow: hidden;
+  background: t.$color-white;
+
+  // Left accent border (color set via inline style)
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    border-radius: 3px 0 0 3px;
+  }
+}
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: t.$space-2;
+}
+
+.severityBadge {
+  font-size: t.$text-xs;
+  font-weight: 700;
+  border-radius: t.$radius-pill;
+  padding: 3px 10px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.effortBadge {
+  font-size: t.$text-xs;
+  font-weight: 600;
+  border: 1px solid t.$color-slate-200;
+  border-radius: t.$radius-pill;
+  padding: 2px 9px;
+  color: t.$color-slate-500;
+}
+
+.cardTitle {
+  font-size: t.$text-lg;
+  font-weight: 600;
+  color: t.$color-navy;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.cardImpact {
+  font-size: t.$text-base;
+  color: t.$color-slate-500;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.empty {
+  font-size: t.$text-base;
+  color: t.$color-slate-400;
+  padding: t.$space-4 0;
+}

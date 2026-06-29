@@ -1,0 +1,271 @@
+@use '../../styles/tokens' as t;
+
+.section {
+  background: t.$color-white;
+  border: 1px solid t.$color-slate-200;
+  border-radius: t.$radius-2xl;
+  overflow: hidden;
+  box-shadow: t.$shadow-sm;
+}
+
+// ─── Filter bar ───────────────────────────────────────────────────────────────
+.filterBar {
+  position: sticky;
+  top: 52px; // below ReportHeader
+  z-index: 10;
+  background: t.$color-white;
+  border-bottom: 1px solid t.$color-slate-100;
+  padding: t.$space-4 t.$space-6;
+  display: flex;
+  align-items: center;
+  gap: t.$space-2;
+  flex-wrap: wrap;
+}
+
+.filterLabel {
+  font-size: t.$text-xs;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: t.$color-slate-400;
+  margin-right: t.$space-1;
+}
+
+.filterBtn {
+  border: 1px solid t.$color-slate-200;
+  background: t.$color-slate-50;
+  color: t.$color-slate-600;
+  border-radius: t.$radius-pill;
+  padding: 4px 14px;
+  font-size: t.$text-base;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+
+  &:hover {
+    background: t.$color-slate-100;
+    border-color: t.$color-slate-300;
+  }
+
+  &.active {
+    background: t.$color-navy;
+    color: t.$color-white;
+    border-color: t.$color-navy;
+  }
+}
+
+.sectionHead {
+  padding: t.$space-6 t.$space-6 0;
+}
+
+.sectionTitle {
+  font-size: t.$text-2xl;
+  font-weight: 700;
+  margin: 0 0 t.$space-1;
+  color: t.$color-navy;
+}
+
+.sectionDesc {
+  font-size: t.$text-base;
+  color: t.$color-slate-500;
+  margin: 0 0 t.$space-5;
+}
+
+// ─── Category block ───────────────────────────────────────────────────────────
+.catBlock {
+  border-bottom: 1px solid t.$color-slate-100;
+  padding: t.$space-5 t.$space-6;
+  scroll-margin-top: 110px;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.catHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: t.$space-4;
+  margin-bottom: t.$space-4;
+  flex-wrap: wrap;
+}
+
+.catMeta {}
+
+.catLabel {
+  font-size: t.$text-xl;
+  font-weight: 700;
+  color: t.$color-navy;
+  margin: 0 0 2px;
+}
+
+.catInfo {
+  font-size: t.$text-base;
+  color: t.$color-slate-400;
+}
+
+.catScoreChip {
+  font-size: t.$text-sm;
+  font-weight: 700;
+  border-radius: t.$radius-pill;
+  padding: 3px 12px;
+  white-space: nowrap;
+}
+
+.backTop {
+  font-size: t.$text-sm;
+  color: t.$color-slate-400;
+  text-decoration: none;
+  font-weight: 500;
+  white-space: nowrap;
+
+  &:hover {
+    color: t.$color-navy;
+  }
+}
+
+// ─── Issue rows ───────────────────────────────────────────────────────────────
+.issueList {
+  display: grid;
+  gap: 8px;
+}
+
+.issueRow {
+  border: 1px solid t.$color-slate-100;
+  border-radius: t.$radius-xl;
+  overflow: hidden;
+  background: t.$color-white;
+  transition: border-color 0.12s;
+
+  &[open],
+  &:hover {
+    border-color: t.$color-slate-200;
+  }
+}
+
+.issueSummary {
+  cursor: pointer;
+  list-style: none;
+  padding: t.$space-4 t.$space-5;
+  display: flex;
+  align-items: center;
+  gap: t.$space-3;
+  flex-wrap: wrap;
+  user-select: none;
+
+  &::-webkit-details-marker { display: none; }
+}
+
+.sevDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.issueTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: t.$space-2;
+  flex-shrink: 0;
+}
+
+.sevTag {
+  font-size: t.$text-xs;
+  font-weight: 700;
+  border-radius: t.$radius-pill;
+  padding: 2px 9px;
+  letter-spacing: 0.02em;
+}
+
+.effortTag {
+  font-size: t.$text-xs;
+  font-weight: 600;
+  border: 1px solid t.$color-slate-200;
+  border-radius: t.$radius-pill;
+  padding: 2px 8px;
+  color: t.$color-slate-500;
+}
+
+.issueTitle {
+  font-size: t.$text-base;
+  font-weight: 600;
+  color: t.$color-navy;
+  flex: 1;
+  min-width: 0;
+}
+
+.issueImpact {
+  font-size: t.$text-sm;
+  color: t.$color-slate-500;
+  flex: 2;
+  min-width: 0;
+}
+
+.chevron {
+  margin-left: auto;
+  font-size: t.$text-base;
+  color: t.$color-slate-400;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+
+  details[open] & {
+    transform: rotate(180deg);
+  }
+}
+
+.issueDetail {
+  padding: t.$space-4 t.$space-5 t.$space-5;
+  border-top: 1px solid t.$color-slate-100;
+  display: grid;
+  gap: t.$space-3;
+}
+
+.detailBlock {
+  background: t.$color-slate-50;
+  border-radius: t.$radius-lg;
+  padding: t.$space-3 t.$space-4;
+}
+
+.detailBlockLabel {
+  font-size: t.$text-xs;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: t.$color-slate-400;
+  margin-bottom: t.$space-1;
+}
+
+.detailBlockText {
+  font-size: t.$text-base;
+  color: t.$color-navy;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  margin: 0;
+}
+
+.noIssues {
+  font-size: t.$text-base;
+  color: t.$color-slate-400;
+  padding: t.$space-3 0;
+}
+
+@media (max-width: 640px) {
+  .filterBar {
+    padding: t.$space-3 t.$space-4;
+    top: 52px;
+  }
+
+  .catBlock {
+    padding: t.$space-4 t.$space-4;
+  }
+
+  .issueSummary {
+    padding: t.$space-3 t.$space-4;
+  }
+
+  .issueImpact {
+    display: none;
+  }
+}

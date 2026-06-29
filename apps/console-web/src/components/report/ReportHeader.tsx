@@ -1,38 +1,28 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { useLang } from "@/lib/i18n/LangContext";
+import Link from "next/link";
 import LangToggle from "@/components/LangToggle";
+import s from "./ReportHeader.module.scss";
+import { useLang } from "@/lib/i18n/LangContext";
 
 export default function ReportHeader({ domain }: Readonly<{ domain: string }>) {
   const { t } = useLang();
-  const th = t.report.header;
-  const calendly = process.env.NEXT_PUBLIC_CALENDLY_URL || "";
-  const enabled = Boolean(calendly);
 
   return (
-    <header className="sticky top-0 z-50 border-b bg-white/70 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-        <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-xl bg-slate-100" />
-          <div className="leading-tight">
-            <div className="text-sm font-semibold text-slate-900">{th.title}</div>
-            <div className="text-xs text-slate-600">{domain}</div>
-          </div>
+    <header className={s.header}>
+      <div className={s.inner}>
+        <Link href="/" className={s.brand}>
+          <span className={s.brandIcon}>👁</span>
+          <span className={s.brandName}>{t.nav.logo}</span>
+        </Link>
+
+        <span className={s.sep} aria-hidden>·</span>
+        <span className={s.domain}>{domain}</span>
+
+        <div className={s.right}>
+          <span className={s.privateBadge}>{t.report.page.private}</span>
+          <LangToggle />
         </div>
-
-        <LangToggle />
-
-        <Button asChild disabled={!enabled}>
-          <a
-            href={enabled ? calendly : "#"}
-            onClick={(e) => {
-              if (!enabled) e.preventDefault();
-            }}
-          >
-            {th.cta}
-          </a>
-        </Button>
       </div>
     </header>
   );

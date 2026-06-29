@@ -1,0 +1,119 @@
+@use '../../styles/tokens' as t;
+
+.section {
+  background: t.$color-white;
+  border: 1px solid t.$color-slate-200;
+  border-radius: t.$radius-2xl;
+  padding: t.$space-6;
+  box-shadow: t.$shadow-sm;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: t.$space-4;
+  flex-wrap: wrap;
+  margin-bottom: t.$space-5;
+}
+
+.titleBlock {}
+.sectionTitle {
+  font-size: t.$text-2xl;
+  font-weight: 700;
+  margin: 0 0 t.$space-1;
+  color: t.$color-navy;
+}
+.sectionDesc {
+  font-size: t.$text-base;
+  color: t.$color-slate-500;
+  margin: 0;
+}
+
+.globalChip {
+  display: flex;
+  align-items: center;
+  gap: t.$space-2;
+  border: 1px solid t.$color-slate-200;
+  border-radius: t.$radius-pill;
+  padding: 6px 14px;
+  font-size: t.$text-base;
+  color: t.$color-slate-600;
+  font-weight: 600;
+  white-space: nowrap;
+
+  .globalValue {
+    font-weight: 800;
+    font-size: t.$text-xl;
+  }
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: t.$space-4;
+}
+
+.card {
+  border: 1px solid t.$color-slate-100;
+  border-radius: t.$radius-xl;
+  padding: t.$space-5;
+  background: t.$color-slate-50;
+  text-decoration: none;
+  display: block;
+  transition: box-shadow 0.15s, border-color 0.15s;
+
+  &:hover {
+    box-shadow: t.$shadow-md;
+    border-color: t.$color-slate-200;
+  }
+}
+
+.cardTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: t.$space-2;
+  margin-bottom: t.$space-4;
+}
+
+.catLabel {
+  font-size: t.$text-lg;
+  font-weight: 600;
+  color: t.$color-navy;
+  margin: 0;
+}
+
+.catIssues {
+  font-size: t.$text-xs;
+  color: t.$color-slate-400;
+  margin-top: 2px;
+}
+
+.scoreValue {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.track {
+  height: 6px;
+  background: t.$color-slate-200;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: t.$space-3;
+}
+
+.fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.detailLink {
+  font-size: t.$text-sm;
+  color: t.$color-slate-400;
+  font-weight: 500;
+}

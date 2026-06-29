@@ -1,251 +1,187 @@
 "use client";
 
-import { Report, PriorityItem, CategoryScore } from "./types";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { TechBadges } from "@/components/report/TechBadges";
+import { Report, PriorityItem, TechSummary } from "./types";
 import { useLang } from "@/lib/i18n/LangContext";
+import s from "./ReportHero.module.scss";
 
-function scoreLabel(score: number, labels: { excellent: string; good: string; improve: string; priority: string }) {
-  if (score >= 85) return { label: labels.excellent, variant: "default" as const };
-  if (score >= 70) return { label: labels.good, variant: "secondary" as const };
-  if (score >= 55) return { label: labels.improve, variant: "outline" as const };
-  return { label: labels.priority, variant: "destructive" as const };
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function scoreColor(score: number): string {
+  if (score >= 85) return "#10b981";
+  if (score >= 70) return "#3b82f6";
+  if (score >= 55) return "#f59e0b";
+  return "#ef4444";
 }
 
-function formatDate(iso: string, locale: string) {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleString(locale, { dateStyle: "long", timeStyle: "short" });
+function scoreBg(score: number): string {
+  if (score >= 85) return "rgba(16,185,129,0.15)";
+  if (score >= 70) return "rgba(59,130,246,0.15)";
+  if (score >= 55) return "rgba(245,158,11,0.15)";
+  return "rgba(239,68,68,0.15)";
 }
 
-function getInitial(domain: string) {
-  const clean = (domain || "").replace(/^www\./, "");
-  return clean ? clean[0].toUpperCase() : "?";
+function scoreGradient(score: number): string {
+  const c = scoreColor(score);
+  return `linear-gradient(90deg, ${c} 0%, ${c}88 100%)`;
 }
 
-function ScoreRing({ value }: { value: number }) {
-  const v = Math.max(0, Math.min(100, value));
+function getInitial(domain: string): string {
+  return (domain || "?").replace(/^www\./, "")[0]?.toUpperCase() ?? "?";
+}
+
+function formatDate(iso: string, locale: string): string {
+  try {
+    return new Date(iso).toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" });
+  } catch {
+    return iso;
+  }
+}
+
+function techLabels(tech?: TechSummary): string[] {
+  if (!tech) return [];
+  const labels: string[] = [];
+  if (tech.cms?.name) labels.push(tech.cms.name);
+  if (tech.nextJs?.isNext) {
+    const router = tech.nextJs.router === "app" ? "App Router" : tech.nextJs.router === "pages" ? "Pages Router" : "";
+    labels.push(router ? `Next.js · ${router}` : "Next.js");
+  } else if (tech.frontendFramework?.name && tech.frontendFramework.name !== "unknown") {
+    labels.push(tech.frontendFramework.name);
+  }
+  return labels;
+}
+
+// ─── Score ring SVG ───────────────────────────────────────────────────────────
+
+function ScoreRing({ score }: { score: number }) {
+  const size = 140;
+  const strokeW = 10;
+  const r = (size - strokeW) / 2;
+  const cx = size / 2;
+  const cy = size / 2;
+  const circ = 2 * Math.PI * r;
+  const dash = Math.max(0, Math.min(1, score / 100)) * circ;
+  const color = scoreColor(score);
+
   return (
-    <div
-      className="relative grid h-20 w-20 place-items-center rounded-2xl border bg-white shadow-sm"
-      style={{
-        background: `conic-gradient(hsl(222.2 84% 4.9%) ${v}%, hsl(210 40% 96.1%) 0)`,
-      }}
-    >
-      <div className="grid h-[72px] w-[72px] place-items-center rounded-2xl bg-white">
-        <div className="text-lg font-semibold">{v}</div>
-        <div className="text-[10px] text-muted-foreground -mt-1">/100</div>
-      </div>
-    </div>
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-label={`Score ${score}/100`}>
+      {/* Track */}
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={strokeW} />
+      {/* Arc */}
+      <circle
+        cx={cx} cy={cy} r={r} fill="none"
+        stroke={color} strokeWidth={strokeW}
+        strokeDasharray={`${dash} ${circ}`}
+        strokeDashoffset={circ / 4}
+        strokeLinecap="round"
+        style={{ transition: "stroke-dasharray 0.6s ease" }}
+      />
+      {/* Score text */}
+      <text x={cx} y={cy - 6} textAnchor="middle" fontSize={38} fontWeight={800} fill="#f8fafc" fontFamily="Inter,system-ui,sans-serif">
+        {score}
+      </text>
+      <text x={cx} y={cy + 16} textAnchor="middle" fontSize={13} fill="#94a3b8" fontFamily="Inter,system-ui,sans-serif">
+        /100
+      </text>
+    </svg>
   );
 }
 
-const SEVERITY_CONFIG = [
-  {
-    key: "critical" as const,
-    dot: "bg-red-500",
-    text: "text-red-700",
-    bg: "bg-red-50",
-    border: "border-red-100",
-  },
-  {
-    key: "important" as const,
-    dot: "bg-amber-500",
-    text: "text-amber-700",
-    bg: "bg-amber-50",
-    border: "border-amber-100",
-  },
-  {
-    key: "opportunity" as const,
-    dot: "bg-emerald-500",
-    text: "text-emerald-700",
-    bg: "bg-emerald-50",
-    border: "border-emerald-100",
-  },
-];
+// ─── Severity counts ──────────────────────────────────────────────────────────
 
-function categoryBarColor(score: number) {
-  if (score >= 80) return "#10b981";
-  if (score >= 60) return "#f59e0b";
-  return "#ef4444";
-}
+const SEV_CONFIG = [
+  { key: "critical",    color: "#ef4444" },
+  { key: "important",   color: "#f59e0b" },
+  { key: "opportunity", color: "#10b981" },
+] as const;
+
+// ─── Main component ───────────────────────────────────────────────────────────
 
 export default function ReportHero({ report }: { report: Report }) {
   const { t } = useLang();
   const th = t.report.hero;
-  const title = report.site?.title || report.domain;
-  const global = Math.max(0, Math.min(100, report.scores.global));
-  const scoreUi = scoreLabel(global, th.scoreLabels);
 
+  const score = Math.max(0, Math.min(100, report.scores.global));
+  const color = scoreColor(score);
   const priorities: PriorityItem[] = report.summary?.priorities ?? [];
-  const prioritiesCount = priorities.length;
   const issuesCount = report.issues?.length ?? 0;
 
-  const priorityBySeverity = {
-    critical: priorities.filter((p) => p.severity === "critical").length,
-    important: priorities.filter((p) => p.severity === "important").length,
+  const counts = {
+    critical:    priorities.filter((p) => p.severity === "critical").length,
+    important:   priorities.filter((p) => p.severity === "important").length,
     opportunity: priorities.filter((p) => p.severity === "opportunity").length,
   };
 
-  const topCategories: CategoryScore[] = [...(report.scores.byCategory ?? [])]
-    .sort((a, b) => a.score - b.score)
-    .slice(0, 4);
+  const techs = techLabels(report.tech);
+  const scoreUiLabel =
+    score >= 85 ? th.scoreLabels.excellent :
+    score >= 70 ? th.scoreLabels.good :
+    score >= 55 ? th.scoreLabels.improve :
+    th.scoreLabels.priority;
 
   return (
-    <TooltipProvider>
-      <Card className="rounded-2xl shadow-sm hover:shadow-md transition-shadow bg-white/80 backdrop-blur">
-        <CardContent className="p-6 space-y-6">
-          {/* Accent bar */}
-          <div className="h-1 w-full rounded-full bg-gradient-to-r from-sky-400 via-violet-400 to-emerald-400" />
+    <section className={s.hero}>
+      {/* Dynamic accent bar */}
+      <div className={s.accentBar} style={{ background: scoreGradient(score) }} />
 
-          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-            {/* Identity */}
-            <div className="flex items-center gap-4">
+      <div className={s.heroInner}>
+        <div className={s.topRow}>
+          {/* Identity */}
+          <div className={s.identity}>
+            <div className={s.avatar}>
               {report.site?.logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={report.site.logoUrl}
-                  alt={`Logo ${report.domain}`}
-                  className="h-16 w-16 rounded-xl border bg-white object-contain"
-                />
+                <img src={report.site.logoUrl} alt="" />
               ) : (
-                <div
-                  className="flex h-16 w-16 items-center justify-center rounded-xl border bg-slate-50 text-xl font-semibold">
-                  {getInitial(report.domain)}
-                </div>
+                getInitial(report.domain)
               )}
-
-              <div className="min-w-0 space-y-2">
-                <div className="truncate text-2xl font-semibold">{title}</div>
-
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="secondary">{report.domain}</Badge>
-                  <Badge variant="outline">{th.analyzedAt} {formatDate(report.generatedAt, th.locale)}</Badge>
-                  <Badge variant="outline">{prioritiesCount} {th.priorities}</Badge>
-                  <Badge variant="outline">{issuesCount} {th.issues}</Badge>
-                  <TechBadges tech={report.tech} />
-                </div>
-
-                <p className="text-sm text-muted-foreground max-w-2xl">
-                  {report.summary?.oneLiner}
-                </p>
-              </div>
             </div>
 
-            {/* Score */}
-            <div className="flex items-center gap-4 md:justify-end">
-              <div className="text-right space-y-2">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="cursor-help">
-                      <div className="text-sm text-muted-foreground">{th.scoreGlobal}</div>
-                      <Badge variant={scoreUi.variant}>{scoreUi.label}</Badge>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    {th.scoreTooltip}
-                  </TooltipContent>
-                </Tooltip>
+            <h1 className={s.siteName}>{report.site?.title || report.domain}</h1>
 
-                <div className="w-52 space-y-2">
-                  <Progress value={global} />
-                  <div className="text-xs text-muted-foreground">
-                    {th.scoreObjectivePrefix} {global >= 85 ? th.scoreMaintain : th.scoreQuickwins}
-                  </div>
-                </div>
-              </div>
-
-              <ScoreRing value={global} />
+            <div className={s.meta}>
+              <span className={s.metaText}>{report.domain}</span>
+              <span className={s.metaText}>·</span>
+              <span className={s.metaText}>{th.analyzedAt} {formatDate(report.generatedAt, th.locale)}</span>
+              {techs.map((tl) => (
+                <span key={tl} className={s.techPill}>{tl}</span>
+              ))}
             </div>
+
+            {report.summary?.oneLiner && (
+              <p className={s.oneLiner}>{report.summary.oneLiner}</p>
+            )}
           </div>
 
-          <Separator />
-
-          {/* Quick actions / context */}
-          <div className="grid gap-4 md:grid-cols-3">
-            <Button variant="outline" asChild className="h-auto justify-start py-4 bg-white">
-              <a href={report.url} target="_blank" rel="noreferrer">
-                <div className="text-left">
-                  <div className="text-xs text-muted-foreground">{th.urlAnalyzed}</div>
-                  <div className="mt-1 truncate font-medium">{report.url}</div>
-                </div>
-              </a>
-            </Button>
-
-            {/* Priorities by severity */}
-            <Card className="rounded-xl border bg-white shadow-sm">
-              <CardContent className="p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="text-xs font-medium text-muted-foreground">{th.severityBreakdown}</div>
-                  <span className="text-xs font-semibold tabular-nums">{prioritiesCount}</span>
-                </div>
-                {prioritiesCount === 0 ? (
-                  <div className="text-xs text-muted-foreground">{th.prioritiesFirst}</div>
-                ) : (
-                  <div className="space-y-1.5">
-                    {SEVERITY_CONFIG.filter((s) => priorityBySeverity[s.key] > 0).map((s) => (
-                      <div
-                        key={s.key}
-                        className={`flex items-center justify-between rounded-lg border px-2.5 py-1.5 ${s.bg} ${s.border}`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className={`h-2 w-2 rounded-full ${s.dot}`} />
-                          <span className={`text-xs font-medium ${s.text}`}>
-                            {th.severity[s.key]}
-                          </span>
-                        </div>
-                        <span className={`text-sm font-bold tabular-nums ${s.text}`}>
-                          {priorityBySeverity[s.key]}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Categories mini-scorecard */}
-            <Card className="rounded-xl border bg-white shadow-sm">
-              <CardContent className="p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="text-xs font-medium text-muted-foreground">{th.byCategoryTitle}</div>
-                  <span className="text-xs font-semibold tabular-nums">{issuesCount} {th.issues}</span>
-                </div>
-                {topCategories.length === 0 ? (
-                  <div className="text-xs text-muted-foreground">{th.issuesDesc}</div>
-                ) : (
-                  <div className="space-y-2">
-                    {topCategories.map((cat) => (
-                      <div key={cat.key} className="space-y-1">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="truncate text-xs font-medium">{cat.label}</span>
-                          <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
-                            {cat.score}
-                          </span>
-                        </div>
-                        <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
-                          <div
-                            className="h-full rounded-full transition-all"
-                            style={{
-                              width: `${Math.max(0, Math.min(100, cat.score))}%`,
-                              backgroundColor: categoryBarColor(cat.score),
-                            }}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+          {/* Score ring */}
+          <div className={s.scoreBlock}>
+            <ScoreRing score={score} />
+            <span
+              className={s.scoreLabel}
+              style={{ color, background: scoreBg(score) }}
+            >
+              {scoreUiLabel}
+            </span>
           </div>
-        </CardContent>
-      </Card>
-    </TooltipProvider>
+        </div>
+
+        {/* Stats bar */}
+        <div className={s.statsRow}>
+          {SEV_CONFIG.map(({ key, color: c }) => (
+            <div key={key} className={s.stat}>
+              <div className={s.statValue} style={{ color: c }}>
+                {counts[key]}
+              </div>
+              <div className={s.statLabel}>{th.severity[key]}</div>
+            </div>
+          ))}
+          <div className={s.stat}>
+            <div className={s.statValue} style={{ color: "#94a3b8" }}>
+              {issuesCount}
+            </div>
+            <div className={s.statLabel}>{th.issues}</div>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }

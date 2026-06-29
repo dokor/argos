@@ -1,0 +1,72 @@
+@use '../../../styles/tokens' as t;
+
+.page {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: t.$color-slate-50;
+  min-height: 100vh;
+  color: t.$color-navy;
+}
+
+.main {
+  max-width: t.$container-width;
+  margin: 0 auto;
+  padding: 40px t.$space-6 64px;
+  display: grid;
+  gap: 28px;
+}
+
+// ─── Raw data panel ───────────────────────────────────────────────────────────
+.dataPanel {
+  background: t.$color-white;
+  border: 1px solid t.$color-slate-200;
+  border-radius: t.$radius-2xl;
+  padding: t.$space-6;
+
+  &[open] .dataChevron { transform: rotate(180deg); }
+}
+
+.dataSummary {
+  display: flex;
+  align-items: center;
+  gap: t.$space-2;
+  cursor: pointer;
+  list-style: none;
+  font-size: t.$text-base;
+  font-weight: 600;
+  color: t.$color-slate-500;
+  user-select: none;
+
+  &::-webkit-details-marker { display: none; }
+}
+
+.dataChevron {
+  margin-left: auto;
+  transition: transform 0.2s;
+  opacity: 0.5;
+}
+
+.dataDesc {
+  font-size: t.$text-sm;
+  color: t.$color-slate-400;
+  margin: t.$space-2 0 0;
+}
+
+.dataPre {
+  margin-top: t.$space-4;
+  background: t.$color-navy;
+  color: t.$color-slate-200;
+  border-radius: t.$radius-lg;
+  padding: t.$space-5;
+  font-size: 11px;
+  font-family: 'Fira Code', 'Cascadia Code', monospace;
+  max-height: 500px;
+  overflow: auto;
+  line-height: 1.6;
+}
+
+@media (max-width: 640px) {
+  .main {
+    padding: t.$space-5 t.$space-4 48px;
+    gap: 20px;
+  }
+}

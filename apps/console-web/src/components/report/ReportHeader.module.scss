@@ -1,0 +1,79 @@
+@use '../../styles/tokens' as t;
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: t.$z-sticky;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid t.$color-slate-100;
+}
+
+.inner {
+  max-width: t.$container-width;
+  margin: 0 auto;
+  padding: 0 t.$space-6;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  gap: t.$space-4;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: t.$space-2;
+  text-decoration: none;
+  color: t.$color-navy;
+  flex-shrink: 0;
+}
+
+.brandIcon {
+  font-size: 18px;
+}
+
+.brandName {
+  font-size: t.$text-xl;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.sep {
+  color: t.$color-slate-300;
+  font-size: t.$text-xl;
+  flex-shrink: 0;
+}
+
+.domain {
+  font-size: t.$text-base;
+  color: t.$color-slate-500;
+  font-weight: 500;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: t.$space-4;
+  flex-shrink: 0;
+}
+
+.privateBadge {
+  font-size: t.$text-xs;
+  color: t.$color-slate-400;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .inner {
+    padding: 0 t.$space-4;
+  }
+  .privateBadge {
+    display: none;
+  }
+}
