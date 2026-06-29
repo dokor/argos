@@ -22,6 +22,12 @@ services:
       - traefik.http.routers.console-web.tls=true
       - traefik.http.services.console-web.loadbalancer.server.port=3000
       - traefik.http.routers.console-web.priority=10
+      - traefik.http.routers.console-web.tls.certresolver=le
+
+      - traefik.http.routers.console-web-http.rule=Host(`argos.lelouet.fr`)
+      - traefik.http.routers.console-web-http.entrypoints=web
+      - traefik.http.routers.console-web-http.middlewares=redirect-to-https
+      - traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https
 
 networks:
   proxy:
