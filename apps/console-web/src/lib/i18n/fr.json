@@ -1,0 +1,267 @@
+{
+  "layout": {
+    "title": "Argos – Analyseur de site web",
+    "description": "Argos analyse vos headers HTTP, HTML, stack technique et performances. Rapport scoré, privé, sans login."
+  },
+
+  "nav": {
+    "logo": "Argos",
+    "openConsole": "Accéder à la console →"
+  },
+
+  "landing": {
+    "hero": {
+      "badge": "Audit de site web · Open source · Gratuit",
+      "headline": "Scannez n'importe quel site.\nObtenez un rapport en secondes.",
+      "sub": "Argos analyse vos headers HTTP, votre HTML, votre stack technique et vos performances Lighthouse. Résultat : un rapport scoré, privé et non indexable.",
+      "inputPlaceholder": "votre@email.com",
+      "cta": "Être notifié au lancement",
+      "ctaLoading": "Envoi…",
+      "hint": "Pas de spam. Juste les updates qui comptent.",
+      "successTitle": "Vous êtes inscrit ✓",
+      "successMsg": "On vous prévient dès que c'est prêt.",
+      "alreadyMsg": "Cet email est déjà inscrit.",
+      "errorMsg": "Une erreur est survenue, réessayez."
+    },
+    "mockReport": {
+      "url": "example.com",
+      "urlDetail": "https://example.com · Rapport privé",
+      "score": "Score 74 / 100",
+      "checks": {
+        "httpsEnforced": "HTTPS enforced",
+        "hstsPresent": "HSTS present",
+        "cspMissing": "CSP missing",
+        "redirects": "2 redirects",
+        "metaDescMissing": "Missing meta description"
+      }
+    },
+    "modules": {
+      "title": "Ce qu'Argos analyse",
+      "sub": "Cinq modules indépendants, une vision complète.",
+      "items": [
+        {
+          "icon": "🔒",
+          "label": "HTTP & Sécurité",
+          "desc": "Status code, redirections, HTTPS, HSTS, CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy…"
+        },
+        {
+          "icon": "🏷️",
+          "label": "HTML & SEO",
+          "desc": "Title, meta description, canonical, H1, lang, viewport, OpenGraph, Twitter Card, alt images…"
+        },
+        {
+          "icon": "🧩",
+          "label": "Détection de stack",
+          "desc": "CMS (WordPress, Shopify, Wix…), frameworks (Next.js, Nuxt, React, Vue…), backend hints, CDN Cloudflare."
+        },
+        {
+          "icon": "⚡",
+          "label": "Runtime Playwright",
+          "desc": "Métriques collectées sur page rendue : console errors, LCP, FCP, TTI, ressources bloquantes."
+        },
+        {
+          "icon": "📊",
+          "label": "Lighthouse",
+          "desc": "Score de performance, accessibilité, bonnes pratiques et SEO via Lighthouse headless."
+        }
+      ]
+    },
+    "how": {
+      "title": "Comment ça marche",
+      "steps": [
+        {
+          "n": "01",
+          "label": "Soumettez une URL",
+          "desc": "N'importe quel site public. Argos normalise l'URL et crée un audit idempotent."
+        },
+        {
+          "n": "02",
+          "label": "On analyse tout",
+          "desc": "Les cinq modules tournent en séquence : HTTP → HTML → Tech → Runtime → Lighthouse."
+        },
+        {
+          "n": "03",
+          "label": "Rapport scoré",
+          "desc": "Un rapport privé (non indexable) avec un score global et des recommandations actionnables."
+        }
+      ]
+    },
+    "why": {
+      "title": "Pourquoi Argos ?",
+      "items": [
+        {
+          "icon": "🔗",
+          "label": "Privé par défaut",
+          "desc": "Chaque rapport est accessible via un token unique. Pas d'index, pas de SEO."
+        },
+        {
+          "icon": "🚫",
+          "label": "Sans login",
+          "desc": "Pas de compte, pas de tracking. Soumettez une URL, récupérez votre rapport."
+        },
+        {
+          "icon": "🏗️",
+          "label": "Architecture modulaire",
+          "desc": "Chaque analyse est un module indépendant. Facile à étendre, facile à déboguer."
+        },
+        {
+          "icon": "☁️",
+          "label": "Self-hostable",
+          "desc": "Docker Compose inclus. Déployez Argos sur votre infra en quelques minutes."
+        }
+      ]
+    },
+    "newsletter": {
+      "title": "Soyez parmi les premiers.",
+      "sub": "Argos est en cours de construction. Inscrivez-vous pour être notifié à chaque release majeure.",
+      "inputPlaceholder": "votre@email.com",
+      "cta": "S'inscrire",
+      "ctaLoading": "Envoi…",
+      "hint": "Pas de spam. Désabonnement en un clic."
+    },
+    "footer": {
+      "built": "Construit avec ☕ et trop de JIRA.",
+      "copy": "© 2024 Argos. MIT License."
+    }
+  },
+
+  "dashboard": {
+    "title": "Argos – Console"
+  },
+
+  "report": {
+    "metadata": {
+      "title": "Rapport Argos"
+    },
+    "error": {
+      "title": "Impossible de charger le rapport",
+      "back": "Retour"
+    },
+    "page": {
+      "private": "Rapport privé • Non indexable",
+      "tabs": {
+        "overview": "Vue d'ensemble",
+        "details": "Détails",
+        "data": "Données"
+      },
+      "dataTab": {
+        "title": "JSON du rapport",
+        "desc": "Utile pour debug et pour l'export PDF plus tard."
+      }
+    },
+    "header": {
+      "title": "Rapport Argos",
+      "cta": "Prendre rdv pour en discuter"
+    },
+    "hero": {
+      "locale": "fr-FR",
+      "scoreLabels": {
+        "excellent": "Excellent",
+        "good": "Bon",
+        "improve": "À améliorer",
+        "priority": "Prioritaire"
+      },
+      "scoreGlobal": "Score global",
+      "scoreTooltip": "Score agrégé (0–100) basé sur les points détectés.",
+      "scoreObjectivePrefix": "Objectif :",
+      "scoreMaintain": "maintenir",
+      "scoreQuickwins": "prioriser les quick wins",
+      "analyzedAt": "Analysé",
+      "priorities": "priorité(s)",
+      "issues": "point(s)",
+      "urlAnalyzed": "URL analysée",
+      "prioritiesDetected": "Priorités détectées",
+      "prioritiesFirst": "À traiter en premier",
+      "issuesTotal": "Points au total",
+      "issuesDesc": "Inclut info / important / critique"
+    },
+    "footerCta": {
+      "title": "Planifier un échange",
+      "desc": "15 minutes pour prioriser les optimisations, estimer l'effort, et identifier les quick wins.",
+      "cta": "Prendre RDV",
+      "copyLink": "Copier le lien",
+      "calendlyComingSoon": "Lien Calendly à venir.",
+      "footerNote": "Rapport privé • non indexable • généré automatiquement"
+    },
+    "priorityCards": {
+      "title": "Priorités recommandées",
+      "desc": "Les quick wins à fort impact (performance / sécurité / qualité) avec un effort raisonnable.",
+      "empty": "Aucune priorité détectée.",
+      "effortLabel": "Effort",
+      "effortTooltip": "Estimation indicative (XS → L). À affiner en fonction du contexte projet.",
+      "severity": {
+        "critical": "Critique",
+        "important": "Important",
+        "opportunity": "Opportunité"
+      }
+    },
+    "scoreGrid": {
+      "title": "Scores par catégorie",
+      "desc": "Vue synthétique pour prioriser. Clique sur une catégorie pour aller au détail.",
+      "globalLabel": "Global",
+      "globalTooltip": "Score global agrégé (0–100) basé sur les points détectés.",
+      "issueCount": "point(s)",
+      "seeDetail": "Voir le détail →"
+    },
+    "issuesByCategory": {
+      "title": "Détail par catégorie",
+      "desc": "Filtre par sévérité, puis explore les points par catégorie (tri critique → info).",
+      "filterAll": "Tous",
+      "filterCritical": "Critiques",
+      "filterImportant": "Importants",
+      "filterInfo": "Info",
+      "severity": {
+        "critical": "Critique",
+        "important": "Important",
+        "info": "Info"
+      },
+      "effortLabel": "Effort",
+      "issueCount": "point(s)",
+      "scoreLabel": "Score",
+      "scoreSuffix": "/100",
+      "backToTop": "Retour en haut ↑",
+      "noIssues": "Aucun point pour ce filtre dans cette catégorie.",
+      "evidenceLabel": "Preuve / Contexte",
+      "recommendationLabel": "Recommandation",
+      "detailsLabel": "Détails"
+    }
+  },
+
+  "auditForm": {
+    "urlLabel": "URL à analyser",
+    "urlPlaceholder": "https://example.com",
+    "submit": "Lancer l'audit",
+    "submitting": "Envoi…",
+    "successPrefix": "Audit créé",
+    "errorUrlMissing": "URL manquante",
+    "errorUnknown": "Erreur inconnue"
+  },
+
+  "auditList": {
+    "title": "Audits",
+    "loading": "Chargement…",
+    "empty": "Aucun audit pour le moment.",
+    "copyJson": "📋 Copier le JSON",
+    "copied": "✅ Copié",
+    "showJson": "Voir le JSON",
+    "viewReport": "🔎 Voir le rapport",
+    "reportPending": "Rapport en attente…",
+    "scorePending": "Score en attente…",
+    "scoreUnavailable": "Score indisponible",
+    "noJson": "Pas de JSON disponible.",
+    "resultPending": "En attente du résultat…",
+    "modulesLabel": "Modules",
+    "tagsLabel": "Tags",
+    "status": {
+      "QUEUED": "En file",
+      "RUNNING": "En cours",
+      "COMPLETED": "Terminé",
+      "FAILED": "Échec"
+    }
+  },
+
+  "langToggle": {
+    "label": "🇬🇧 EN",
+    "targetLang": "en"
+  }
+}

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useLang } from "@/lib/i18n/LangContext";
 
 function clamp(n: number) {
   return Math.max(0, Math.min(100, n ?? 0));
@@ -25,6 +26,8 @@ export default function ScoreGrid({
   categories: CategoryScore[];
   globalScore: number;
 }) {
+  const { t } = useLang();
+  const ts_ = t.report.scoreGrid;
   const cats = [...(categories || [])].sort((a, b) => b.score - a.score);
   const global = clamp(globalScore);
 
@@ -34,21 +37,21 @@ export default function ScoreGrid({
         <CardHeader className="space-y-1">
           <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div>
-              <CardTitle className="text-lg">Scores par catégorie</CardTitle>
+              <CardTitle className="text-lg">{ts_.title}</CardTitle>
               <CardDescription>
-                Vue synthétique pour prioriser. Clique sur une catégorie pour aller au détail.
+                {ts_.desc}
               </CardDescription>
             </div>
 
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="cursor-help flex items-center gap-2">
-                  <div className="text-sm text-muted-foreground">Global</div>
+                  <div className="text-sm text-muted-foreground">{ts_.globalLabel}</div>
                   <Badge variant={scoreVariant(global)}>{global}/100</Badge>
                 </div>
               </TooltipTrigger>
               <TooltipContent>
-                Score global agrégé (0–100) basé sur les points détectés.
+                {ts_.globalTooltip}
               </TooltipContent>
             </Tooltip>
           </div>
@@ -70,7 +73,7 @@ export default function ScoreGrid({
                         <div className="min-w-0">
                           <div className="truncate text-sm font-semibold">{c.label}</div>
                           <div className="mt-1 text-xs text-muted-foreground">
-                            {c.issues} point(s)
+                            {`${c.issues} ${ts_.issueCount}`}
                           </div>
                         </div>
 
@@ -81,7 +84,7 @@ export default function ScoreGrid({
                             </div>
                           </TooltipTrigger>
                           <TooltipContent>
-                            Score {c.label} : {s}/100 • {c.issues} point(s)
+                            {`${c.label}: ${s}/100 • ${c.issues} ${ts_.issueCount}`}
                           </TooltipContent>
                         </Tooltip>
                       </div>
@@ -89,7 +92,7 @@ export default function ScoreGrid({
                       <Progress value={s} />
 
                       <div className="text-xs text-muted-foreground group-hover:text-slate-900 transition-colors">
-                        Voir le détail →
+                        {ts_.seeDetail}
                       </div>
                     </CardContent>
                   </Card>

@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS ARG_NEWSLETTER_SUBSCRIBER (
+    id         BIGINT       NOT NULL AUTO_INCREMENT,
+    email      VARCHAR(255) NOT NULL,
+    created_at DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    ip_hint    VARCHAR(64)  NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_newsletter_email (email)
+) ENGINE = InnoDB;
