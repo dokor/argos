@@ -584,4 +584,62 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
             + ", durationMs=" + durationMs
             + ", finalUrl=" + finalUrl;
     }
+
+    // -------------------------
+    // Context enrichment
+    // -------------------------
+
+    /**
+     * Enrichit un {@link AuditContext} avec les données produites par ce module HTTP.
+     * <p>
+     * Centralise l'extraction des clés de la map {@code data} dans la classe qui les produit,
+     * évitant la duplication de noms de clés dans l'orchestrateur.
+     *
+     * @param context    contexte courant (avant enrichissement HTTP)
+     * @param httpResult résultat brut retourné par {@link #analyze}
+     * @return nouveau contexte enrichi avec les données HTTP
+     */
+    public static AuditContext enrichContext(AuditContext context, AuditModuleResult httpResult) {
+        Map<String, Object> data = httpResult.data();
+        return context.withHttpResult(
+            (String) data.get("finalUrl"),
+            toInt(data.get("statusCode")),
+            toLong(data.get("durationMs")),
+            safeStringList(data.get("redirectChain")),
+            safeStringMap(data.get("headers")),
+            (String) data.get("body")
+        );
+    }
+
+    private static int toInt(Object o) {
+        if (o instanceof Integer i) return i;
+        if (o instanceof Number n) return n.intValue();
+        if (o instanceof String s) return Integer.parseInt(s);
+        return 0;
+    }
+
+    private static long toLong(Object o) {
+        if (o instanceof Long l) return l;
+        if (o instanceof Number n) return n.longValue();
+        if (o instanceof String s) return Long.parseLong(s);
+        return 0L;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<String> safeStringList(Object o) {
+        if (o instanceof List<?> list) {
+            return list.stream().map(String::valueOf).toList();
+        }
+        return List.of();
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, String> safeStringMap(Object o) {
+        if (o instanceof Map<?, ?> map) {
+            Map<String, String> out = new LinkedHashMap<>();
+            map.forEach((k, v) -> out.put(String.valueOf(k), v != null ? String.valueOf(v) : null));
+            return out;
+        }
+        return Map.of();
+    }
 }

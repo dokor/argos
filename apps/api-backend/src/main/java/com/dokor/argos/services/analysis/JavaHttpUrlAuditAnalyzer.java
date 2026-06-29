@@ -11,6 +11,12 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.*;
 
+/**
+ * @deprecated Remplacée par {@link com.dokor.argos.services.analysis.modules.http.HttpModuleAnalyzer}
+ * qui produit un {@code AuditModuleResult} standardisé exploitable pour le scoring et les rapports.
+ * Cette classe n'est plus appelée par l'orchestrateur ; elle sera supprimée dans une prochaine version.
+ */
+@Deprecated(since = "0.0.1", forRemoval = true)
 @Singleton
 public class JavaHttpUrlAuditAnalyzer implements UrlAuditAnalyzer {
 
