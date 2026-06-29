@@ -100,6 +100,7 @@ export default function AuditCard({
           <div className={styles.sectionLabel}>{tl.modulesLabel}</div>
           <div className={styles.chips}>
             {score.byModule
+              .filter((m) => (m.maxScore ?? 0) > 0)
               .slice()
               .sort((a, b) => (b.ratio ?? 0) - (a.ratio ?? 0))
               .map((m) => (
@@ -122,6 +123,7 @@ export default function AuditCard({
           <div className={styles.sectionLabel}>{tl.tagsLabel}</div>
           <div className={styles.chips}>
             {score.byTag
+              .filter((tag) => (tag.maxScore ?? 0) > 0)
               .slice()
               .sort((a, b) => (b.maxScore ?? 0) - (a.maxScore ?? 0))
               .map((tag) => (
