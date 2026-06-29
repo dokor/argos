@@ -1,0 +1,30 @@
+.badge {
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 11px;
+}
+
+.success {
+  border: 1px solid #86efac;
+  background: #dcfce7;
+  color: #14532d;
+}
+
+.error {
+  border: 1px solid #fecaca;
+  background: #fff1f2;
+  color: #7f1d1d;
+}
+
+.info {
+  border: 1px solid #bae6fd;
+  background: #e0f2fe;
+  color: #075985;
+}
+
+.muted {
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #475569;
+}
