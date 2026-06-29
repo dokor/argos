@@ -1,21 +1,30 @@
 package com.dokor.argos.services.analysis;
 
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@Singleton
+/**
+ * Utilitaire statique d'extraction de métadonnées HTML basiques.
+ * <p>
+ * Utilisé par {@link JavaHttpUrlAuditAnalyzer} (dépréciée).
+ * Pour les analyses récentes, préférer {@link com.dokor.argos.services.analysis.modules.html.HtmlModuleAnalyzer}
+ * qui produit un résultat standardisé exploitable pour le scoring.
+ * <p>
+ * Note : toutes les méthodes sont statiques — cette classe n'a pas d'état
+ * et ne doit pas être instanciée ni injectée.
+ *
+ * @deprecated À supprimer avec {@link JavaHttpUrlAuditAnalyzer}.
+ */
+@Deprecated(since = "0.0.1", forRemoval = true)
 final class HtmlExtractor {
 
-    private static final Pattern TITLE = Pattern.compile("(?is)<title>(.*?)</title>");
+    private static final Pattern TITLE    = Pattern.compile("(?is)<title>(.*?)</title>");
     private static final Pattern META_DESC = Pattern.compile("(?is)<meta\\s+name=[\"']description[\"']\\s+content=[\"'](.*?)[\"'][^>]*>");
-    private static final Pattern H1 = Pattern.compile("(?is)<h1[^>]*>(.*?)</h1>");
+    private static final Pattern H1       = Pattern.compile("(?is)<h1[^>]*>(.*?)</h1>");
 
-    @Inject
+    /** Classe utilitaire — pas d'instanciation. */
     private HtmlExtractor() {}
 
     static UrlAuditResult.HtmlInfo extract(String html) {
