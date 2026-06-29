@@ -1,0 +1,52 @@
+@use '../styles/tokens' as t;
+
+.root {
+  display: grid;
+  gap: 14px;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: t.$space-2;
+}
+
+.sectionLabel {
+  font-size: t.$text-xs;
+  font-weight: 800;
+  color: t.$color-slate-400;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.count {
+  font-size: t.$text-sm;
+  color: t.$color-slate-400;
+  font-weight: 600;
+}
+
+.helper {
+  padding: t.$space-4;
+  color: t.$color-slate-500;
+}
+
+.errorBox {
+  padding: t.$space-4;
+  border-radius: t.$radius-lg;
+  border: 1px solid t.$color-red-border;
+  background: t.$color-red-light;
+  color: t.$color-red-dark;
+  font-weight: 600;
+}
+
+.emptyCard {
+  padding: t.$space-6;
+  border: 1px solid t.$color-slate-200;
+  border-radius: t.$radius-xl;
+  background: t.$color-white;
+  text-align: center;
+  font-size: t.$text-base;
+  color: t.$color-slate-400;
+}

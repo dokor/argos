@@ -9,7 +9,7 @@ import {
 } from "@/lib/auditTypes";
 import FilterBar from "./FilterBar";
 import AuditCard from "./AuditCard";
-import styles from "./AuditList.module.css";
+import styles from "./AuditList.module.scss";
 
 type Props = {
   items: AuditListItem[];
