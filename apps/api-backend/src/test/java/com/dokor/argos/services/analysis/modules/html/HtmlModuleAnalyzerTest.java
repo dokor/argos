@@ -15,7 +15,7 @@ class HtmlModuleAnalyzerTest {
 
     @Test
     void shouldReturnWarningWhenHtmlIsMissing() {
-        AuditContext ctx = new AuditContext("http://x", "http://x")
+        AuditContext ctx = new AuditContext("http://x", "http://x", 0L)
             .withHttpResult("http://x", 200, 10, java.util.List.of("http://x"), java.util.Map.of(), null);
 
         AuditModuleResult result = analyzer.analyze(ctx, LoggerFactory.getLogger("test"));
@@ -41,7 +41,7 @@ class HtmlModuleAnalyzerTest {
             </html>
             """;
 
-        AuditContext ctx = new AuditContext("http://example.com", "http://example.com")
+        AuditContext ctx = new AuditContext("http://example.com", "http://example.com", 0L)
             .withHttpResult("https://example.com", 200, 50, java.util.List.of("http://example.com", "https://example.com"),
                 java.util.Map.of("content-type", "text/html"), html);
 
@@ -60,7 +60,7 @@ class HtmlModuleAnalyzerTest {
     void shouldWarnWhenMultipleH1() {
         String html = "<html><head><title>T</title></head><body><h1>A</h1><h1>B</h1></body></html>";
 
-        AuditContext ctx = new AuditContext("http://x", "http://x")
+        AuditContext ctx = new AuditContext("http://x", "http://x", 0L)
             .withHttpResult("http://x", 200, 10, java.util.List.of("http://x"), java.util.Map.of(), html);
 
         AuditModuleResult result = analyzer.analyze(ctx, LoggerFactory.getLogger("test"));
@@ -72,7 +72,7 @@ class HtmlModuleAnalyzerTest {
     void shouldWarnOnMissingAltAttributes() {
         String html = "<html><head><title>T</title></head><body><img src='a.png'><img src='b.png' alt='b'></body></html>";
 
-        AuditContext ctx = new AuditContext("http://x", "http://x")
+        AuditContext ctx = new AuditContext("http://x", "http://x", 0L)
             .withHttpResult("http://x", 200, 10, java.util.List.of("http://x"), java.util.Map.of(), html);
 
         AuditModuleResult result = analyzer.analyze(ctx, LoggerFactory.getLogger("test"));
@@ -84,7 +84,7 @@ class HtmlModuleAnalyzerTest {
     void shouldWarnOnAnchorsWithoutHref() {
         String html = "<html><head><title>T</title></head><body><a>click</a><a href='/ok'>ok</a></body></html>";
 
-        AuditContext ctx = new AuditContext("http://x", "http://x")
+        AuditContext ctx = new AuditContext("http://x", "http://x", 0L)
             .withHttpResult("http://x", 200, 10, java.util.List.of("http://x"), java.util.Map.of(), html);
 
         AuditModuleResult result = analyzer.analyze(ctx, LoggerFactory.getLogger("test"));

@@ -32,7 +32,7 @@ class HttpModuleAnalyzerTest {
 
     @Test
     void enrichContext_shouldPopulateHttpFields() {
-        AuditContext initial = new AuditContext("http://example.com", "https://example.com");
+        AuditContext initial = new AuditContext("http://example.com", "https://example.com", 0L);
 
         Map<String, Object> data = Map.of(
             "finalUrl", "https://example.com",
@@ -56,7 +56,7 @@ class HttpModuleAnalyzerTest {
 
     @Test
     void enrichContext_shouldHandleNullBody() {
-        AuditContext initial = new AuditContext("https://example.com", "https://example.com");
+        AuditContext initial = new AuditContext("https://example.com", "https://example.com", 0L);
 
         Map<String, Object> data = Map.of(
             "finalUrl", "https://example.com",
@@ -75,7 +75,7 @@ class HttpModuleAnalyzerTest {
 
     @Test
     void enrichContext_shouldHandleNullRedirectChainAndHeaders() {
-        AuditContext initial = new AuditContext("https://example.com", "https://example.com");
+        AuditContext initial = new AuditContext("https://example.com", "https://example.com", 0L);
 
         // Simule un résultat avec redirectChain/headers absents de la map
         Map<String, Object> data = Map.of(
@@ -98,7 +98,7 @@ class HttpModuleAnalyzerTest {
     @Test
     void analyze_shouldHandleConnectionRefused() {
         // Port 1 est systématiquement fermé
-        AuditContext ctx = new AuditContext("http://localhost:1", "http://localhost:1");
+        AuditContext ctx = new AuditContext("http://localhost:1", "http://localhost:1", 0L);
 
         AuditModuleResult result = analyzer.analyze(ctx, LoggerFactory.getLogger("test"));
 
@@ -117,7 +117,7 @@ class HttpModuleAnalyzerTest {
 
     @Test
     void analyze_shouldHaveExpectedCheckKeys() {
-        AuditContext ctx = new AuditContext("http://localhost:1", "http://localhost:1");
+        AuditContext ctx = new AuditContext("http://localhost:1", "http://localhost:1", 0L);
 
         AuditModuleResult result = analyzer.analyze(ctx, LoggerFactory.getLogger("test"));
 

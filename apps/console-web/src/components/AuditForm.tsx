@@ -35,10 +35,10 @@ export default function AuditForm({ onCreated }: Props) {
       const res: CreateAuditResponse = await argosApi.createAudit(payload);
 
       onCreated({
-        auditId: res.auditId,
+        auditId: Number(res.auditId),
         inputUrl: trimmed,
-        normalizedUrl: res.normalizedUrl,
-        runId: res.runId,
+        normalizedUrl: res.normalizedUrl ?? "",
+        runId: Number(res.runId),
         status: res.status,
         resultJson: null,
       });

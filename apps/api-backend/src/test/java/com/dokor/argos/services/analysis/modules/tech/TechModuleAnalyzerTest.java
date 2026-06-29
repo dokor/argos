@@ -23,7 +23,7 @@ class TechModuleAnalyzerTest {
     void shouldDetectWordpress() {
         String html = "<html><body><img src='/wp-content/uploads/x.png'></body></html>";
 
-        AuditContext ctx = new AuditContext("http://x", "http://x")
+        AuditContext ctx = new AuditContext("http://x", "http://x", 0L)
             .withHttpResult("http://x", 200, 10, List.of("http://x"), Map.of(), html);
 
         AuditModuleResult result = analyzer.analyze(ctx, LoggerFactory.getLogger("test"));
@@ -41,7 +41,7 @@ class TechModuleAnalyzerTest {
     void shouldDetectNextJs() {
         String html = "<html><head></head><body><script id='__NEXT_DATA__'>{}</script></body></html>";
 
-        AuditContext ctx = new AuditContext("http://x", "http://x")
+        AuditContext ctx = new AuditContext("http://x", "http://x", 0L)
             .withHttpResult("http://x", 200, 10, List.of("http://x"), Map.of(), html);
 
         AuditModuleResult result = analyzer.analyze(ctx, LoggerFactory.getLogger("test"));
@@ -63,7 +63,7 @@ class TechModuleAnalyzerTest {
             "x-powered-by", "PHP"
         );
 
-        AuditContext ctx = new AuditContext("http://x", "http://x")
+        AuditContext ctx = new AuditContext("http://x", "http://x", 0L)
             .withHttpResult("http://x", 200, 10, List.of("http://x"), headers, "<html/>");
 
         AuditModuleResult result = analyzer.analyze(ctx, LoggerFactory.getLogger("test"));
@@ -74,7 +74,7 @@ class TechModuleAnalyzerTest {
 
     @Test
     void shouldWarnWhenHtmlMissing() {
-        AuditContext ctx = new AuditContext("http://x", "http://x")
+        AuditContext ctx = new AuditContext("http://x", "http://x", 0L)
             .withHttpResult("http://x", 200, 10, List.of("http://x"), Map.of(), null);
 
         AuditModuleResult result = analyzer.analyze(ctx, LoggerFactory.getLogger("test"));
