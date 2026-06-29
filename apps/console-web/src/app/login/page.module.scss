@@ -14,9 +14,17 @@
   padding: t.$space-10 t.$space-8;
   box-shadow: t.$shadow-md;
   width: t.$login-form-width;
+  max-width: calc(100vw - 2 * t.$space-5);
   display: flex;
   flex-direction: column;
   gap: t.$space-4;
+}
+
+@media (max-width: 400px) {
+  .form {
+    padding: t.$space-7 t.$space-5;
+    border-radius: t.$radius-md;
+  }
 }
 
 .title {

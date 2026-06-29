@@ -536,8 +536,40 @@
 .whyLabel { font-size: t.$text-lg; font-weight: 600; margin: 0; }
 .whyDesc  { font-size: t.$text-base; color: t.$color-slate-500; line-height: 1.6; margin: 0; }
 
-// ─── Responsive steps ──────────────────────────────────────────────────────────
+// ─── Responsive ───────────────────────────────────────────────────────────────
 @media (max-width: 640px) {
+  // Hero
+  .heroSection {
+    padding: 48px t.$space-4 64px;
+  }
+
+  .heroInner {
+    gap: 32px;
+    padding-bottom: 48px;
+  }
+
+  // Sections
+  .section,
+  .sectionAlt,
+  .sectionDark {
+    padding: 44px t.$space-4;
+  }
+
+  .sectionHeader {
+    margin-bottom: 32px;
+  }
+
+  // Social proof — hide dividers, tighten gap
+  .socialProofBar {
+    gap: t.$space-2 t.$space-4;
+    padding: 12px t.$space-4;
+  }
+
+  .socialProofDivider {
+    display: none;
+  }
+
+  // Steps
   .stepsGrid {
     flex-direction: column;
     gap: t.$space-6;
@@ -550,6 +582,11 @@
   .stepCard {
     padding: 0 t.$space-4;
     border-left: 3px solid t.$color-indigo;
+  }
+
+  // Nav
+  .navInner {
+    padding: 0 t.$space-4;
   }
 }
 
