@@ -148,7 +148,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
         checks.add(checkServerHeader(lastHeaders));
 
         // 11) HTTP version (info)
-        checks.add(new AuditCheckResult(
+        checks.add(AuditCheckResult.of(
             "http.protocol.version",
             "HTTP protocol version",
             AuditStatus.INFO,
@@ -164,7 +164,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
 
         // 12) Errors (info)
         if (!errors.isEmpty()) {
-            checks.add(new AuditCheckResult(
+            checks.add(AuditCheckResult.of(
                 "http.errors",
                 "HTTP errors",
                 AuditStatus.WARN,
@@ -237,7 +237,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
             recommendation = "Check DNS, connectivity, TLS, and server availability.";
         }
 
-        return new AuditCheckResult(
+        return AuditCheckResult.of(
             "http.status_code",
             "HTTP status code",
             status,
@@ -280,7 +280,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
             recommendation = "Fix redirect chain to avoid loops and reduce latency.";
         }
 
-        return new AuditCheckResult(
+        return AuditCheckResult.of(
             "http.redirect.count",
             "Redirect count",
             status,
@@ -301,7 +301,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
         AuditStatus status = isHttps ? AuditStatus.PASS : AuditStatus.WARN;
         AuditSeverity severity = isHttps ? AuditSeverity.LOW : AuditSeverity.MEDIUM;
 
-        return new AuditCheckResult(
+        return AuditCheckResult.of(
             "http.final_url.https",
             "Final URL uses HTTPS",
             status,
@@ -340,7 +340,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
             recommendation = "Redirect HTTP to HTTPS to improve security.";
         }
 
-        return new AuditCheckResult(
+        return AuditCheckResult.of(
             "http.redirect.to_https",
             "Redirect HTTP to HTTPS",
             status,
@@ -377,7 +377,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
             recommendation = "Investigate server performance, network latency, and heavy redirects.";
         }
 
-        return new AuditCheckResult(
+        return AuditCheckResult.of(
             "http.response_time_ms",
             "Response time",
             status,
@@ -399,7 +399,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
         AuditStatus status = present ? AuditStatus.PASS : AuditStatus.WARN;
         AuditSeverity severity = present ? AuditSeverity.LOW : AuditSeverity.MEDIUM;
 
-        return new AuditCheckResult(
+        return AuditCheckResult.of(
             "http.headers.content_type",
             "Content-Type header",
             status,
@@ -478,7 +478,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
         String enc = headers.get("content-encoding");
         boolean enabled = enc != null && !enc.isBlank();
 
-        return new AuditCheckResult(
+        return AuditCheckResult.of(
             "http.headers.compression",
             "Compression (Content-Encoding)",
             AuditStatus.INFO,
@@ -503,7 +503,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
         AuditStatus status = hasCachingInfo ? AuditStatus.INFO : AuditStatus.WARN;
         AuditSeverity severity = AuditSeverity.LOW;
 
-        return new AuditCheckResult(
+        return AuditCheckResult.of(
             "http.headers.caching",
             "Caching headers (Cache-Control / Expires)",
             status,
@@ -520,7 +520,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
 
     private static AuditCheckResult checkServerHeader(Map<String, String> headers) {
         String server = headers.get("server");
-        return new AuditCheckResult(
+        return AuditCheckResult.of(
             "http.headers.server",
             "Server header",
             AuditStatus.INFO,
@@ -548,7 +548,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
 
         AuditStatus status = present ? AuditStatus.PASS : AuditStatus.WARN;
 
-        return new AuditCheckResult(
+        return AuditCheckResult.of(
             checkKey,
             label,
             status,

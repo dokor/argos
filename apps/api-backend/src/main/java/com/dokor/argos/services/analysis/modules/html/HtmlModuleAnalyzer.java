@@ -109,7 +109,7 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
         checks.add(checkViewport(hasViewport));
 
         // 7) Robots meta (info)
-        checks.add(new AuditCheckResult(
+        checks.add(AuditCheckResult.of(
             "html.meta.robots.present",
             "Meta robots present",
             AuditStatus.INFO,
@@ -133,7 +133,7 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
         checks.add(checkAnchorsHref(aCount, aNoHrefCount));
 
         // 11) Script count (info)
-        checks.add(new AuditCheckResult(
+        checks.add(AuditCheckResult.of(
             "html.scripts.count",
             "Script tags count",
             AuditStatus.INFO,
@@ -148,7 +148,7 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
         ));
 
         // 12) HTML size (info)
-        checks.add(new AuditCheckResult(
+        checks.add(AuditCheckResult.of(
             "html.size.bytes",
             "HTML size (bytes)",
             AuditStatus.INFO,
@@ -163,7 +163,7 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
         ));
 
         // 13) Analysis duration (info)
-        checks.add(new AuditCheckResult(
+        checks.add(AuditCheckResult.of(
             "html.analysis.duration_ms",
             "HTML analysis duration",
             AuditStatus.INFO,
@@ -265,7 +265,7 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
             message = "Title is present (" + len + " chars).";
         }
 
-        return new AuditCheckResult(
+        return AuditCheckResult.of(
             "html.title",
             "Page title",
             status,
@@ -281,7 +281,7 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
     }
 
     private static AuditCheckResult checkMetaDescription(boolean present) {
-        return new AuditCheckResult(
+        return AuditCheckResult.of(
             "html.meta.description.present",
             "Meta description present",
             present ? AuditStatus.PASS : AuditStatus.WARN,
@@ -297,7 +297,7 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
     }
 
     private static AuditCheckResult checkCanonical(boolean present) {
-        return new AuditCheckResult(
+        return AuditCheckResult.of(
             "html.link.canonical.present",
             "Canonical link present",
             present ? AuditStatus.PASS : AuditStatus.WARN,
@@ -338,7 +338,7 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
             }
         }
 
-        return new AuditCheckResult(
+        return AuditCheckResult.of(
             "html.h1.count",
             "H1 heading count",
             status,
@@ -356,7 +356,7 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
     private static AuditCheckResult checkHtmlLang(String lang) {
         boolean present = lang != null && !lang.isBlank();
 
-        return new AuditCheckResult(
+        return AuditCheckResult.of(
             "html.lang",
             "HTML lang attribute",
             present ? AuditStatus.PASS : AuditStatus.WARN,
@@ -372,7 +372,7 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
     }
 
     private static AuditCheckResult checkViewport(boolean present) {
-        return new AuditCheckResult(
+        return AuditCheckResult.of(
             "html.meta.viewport.present",
             "Viewport meta present",
             present ? AuditStatus.PASS : AuditStatus.WARN,
@@ -415,7 +415,7 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
             recommendation = "Add OpenGraph/Twitter tags to improve link previews on social platforms.";
         }
 
-        return new AuditCheckResult(
+        return AuditCheckResult.of(
             "html.social.meta",
             "Social meta tags (OpenGraph/Twitter)",
             status,
@@ -442,7 +442,7 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
 
     private static AuditCheckResult checkImagesAlt(int imgCount, int imgAltMissingCount) {
         if (imgCount == 0) {
-            return new AuditCheckResult(
+            return AuditCheckResult.of(
                 "html.images.alt_coverage",
                 "Image alt coverage",
                 AuditStatus.INFO,
@@ -481,7 +481,7 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
             recommendation = "Add meaningful alt attributes to improve accessibility.";
         }
 
-        return new AuditCheckResult(
+        return AuditCheckResult.of(
             "html.images.alt_coverage",
             "Image alt coverage",
             status,
@@ -498,7 +498,7 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
 
     private static AuditCheckResult checkAnchorsHref(int anchorCount, int noHrefCount) {
         if (anchorCount == 0) {
-            return new AuditCheckResult(
+            return AuditCheckResult.of(
                 "html.anchors.href_coverage",
                 "Anchor href coverage",
                 AuditStatus.INFO,
@@ -537,7 +537,7 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
             recommendation = "Replace non-link anchors with <button> or add proper href attributes.";
         }
 
-        return new AuditCheckResult(
+        return AuditCheckResult.of(
             "html.anchors.href_coverage",
             "Anchor href coverage",
             status,
@@ -568,7 +568,7 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
                 "reason", reason
             ),
             List.of(
-                new AuditCheckResult(
+                AuditCheckResult.of(
                     "html.available",
                     "HTML available",
                     AuditStatus.WARN,
