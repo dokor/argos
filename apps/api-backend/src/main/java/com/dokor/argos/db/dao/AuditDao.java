@@ -3,6 +3,7 @@ package com.dokor.argos.db.dao;
 import com.coreoz.plume.db.querydsl.crud.CrudDaoQuerydsl;
 import com.coreoz.plume.db.querydsl.transaction.TransactionManagerQuerydsl;
 import com.dokor.argos.db.generated.Audit;
+import com.dokor.argos.db.generated.AuditReport;
 import com.dokor.argos.db.generated.QAudit;
 import com.dokor.argos.db.generated.QAuditReport;
 import com.dokor.argos.db.generated.QAuditRun;
@@ -112,6 +113,22 @@ public class AuditDao extends CrudDaoQuerydsl<Audit> {
             .orderBy(AUDIT.createdAt.desc())
             .limit(limit)
             .fetch();
+    }
+
+
+    /**
+     * Recherche le rapport public associé à un run.
+     *
+     * @param runId identifiant du run
+     * @return Optional contenant l'AuditReport s'il existe
+     */
+    public Optional<AuditReport> findReportByRunId(long runId) {
+        return Optional.ofNullable(transactionManager.selectQuery()
+            .select(AUDIT_REPORT)
+            .from(AUDIT_REPORT)
+            .where(AUDIT_REPORT.runId.eq(runId))
+            .fetchOne()
+        );
     }
 
 }

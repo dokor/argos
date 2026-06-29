@@ -42,7 +42,7 @@ function HeroAuditForm({
   const [phase, setPhase] = useState<AuditPhase>("idle");
   const [errMsg, setErrMsg] = useState("");
   const [stepIdx, setStepIdx] = useState(0);
-  const runIdRef = useRef<number | null>(null);
+  const runIdRef = useRef<string | number | null>(null);
   const pollCountRef = useRef(0);
   const router = useRouter();
   const isHero = variant === "hero";

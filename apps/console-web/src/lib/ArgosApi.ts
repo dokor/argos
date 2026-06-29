@@ -5,15 +5,15 @@ export type CreateAuditRequest = {
 };
 
 export type CreateAuditResponse = {
-  auditId: number;
-  runId: number;
+  auditId: string | number;
+  runId: string | number;
   status: "QUEUED" | "RUNNING" | "FAILED" | "COMPLETED";
-  normalizedUrl: string;
+  normalizedUrl?: string;
 };
 
 export type AuditRunStatusResponse = {
-  runId: number;
-  auditId: number;
+  runId: string | number;
+  auditId: string | number;
   status: "QUEUED" | "RUNNING" | "FAILED" | "COMPLETED";
   lastError?: string | null;
   resultJson?: string | null;
@@ -81,6 +81,6 @@ export const argosApi = {
   getReport: (token: string): Promise<Report> =>
     http<Report>(`/api/reports/${token}`, { method: "GET" }),
 
-  getRunsByRunId: (runId: number): Promise<AuditRunStatusResponse> =>
+  getRunsByRunId: (runId: string | number): Promise<AuditRunStatusResponse> =>
     http<AuditRunStatusResponse>(`/api/audits/runs/${runId}`, { method: "GET" }),
 };

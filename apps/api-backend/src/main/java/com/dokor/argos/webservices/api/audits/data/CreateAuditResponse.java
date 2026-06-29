@@ -11,11 +11,11 @@ public record CreateAuditResponse(
 
     @Schema(description = "Identifier of the created audit run", example = "42")
     @JsonSerialize(using = ToStringSerializer.class)
-    Long idRun,
+    Long runId,
 
     @Schema(description = "Identifier of the related audit", example = "12")
     @JsonSerialize(using = ToStringSerializer.class)
-    Long idAudit,
+    Long auditId,
 
     @Schema(description = "Initial status of the audit run", example = "QUEUED")
     String status,
