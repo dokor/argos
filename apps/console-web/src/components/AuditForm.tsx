@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { argosApi, AuditListItem, CreateAuditRequest, CreateAuditResponse } from "@/lib/ArgosApi";
 import { useLang } from "@/lib/i18n/LangContext";
+import s from "./AuditForm.module.scss";
 
 type Props = {
   onCreated: (item: AuditListItem) => void;
@@ -53,37 +54,29 @@ export default function AuditForm({ onCreated }: Props) {
   }
 
   return (
-    <form onSubmit={submit} style={{ display: "grid", gap: 12, padding: 16, border: "1px solid #ddd", borderRadius: 12 }}>
-      <div style={{ display: "grid", gap: 6 }}>
-        <label htmlFor="url" style={{ fontWeight: 600, color: "#0f172a" }}>{tf.urlLabel}</label>
+    <form onSubmit={submit} className={s.form}>
+      <div className={s.fieldGroup}>
+        <label htmlFor="url" className={s.label}>{tf.urlLabel}</label>
         <input
           id="url"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           placeholder={tf.urlPlaceholder}
           disabled={submitting}
-          style={{ padding: 10, borderRadius: 10, border: "1px solid #ccc", color: "#0f172a" }}
+          className={s.input}
         />
       </div>
 
-      <button
-        type="submit"
-        disabled={submitting}
-        style={{ padding: 10, borderRadius: 10, border: "1px solid #111", fontWeight: 600, color: "#0f172a" }}
-      >
+      <button type="submit" disabled={submitting} className={s.submitBtn}>
         {submitting ? tf.submitting : tf.submit}
       </button>
 
       {successMsg && (
-        <div style={{ padding: 10, borderRadius: 10, background: "#eefaf0", border: "1px solid #b7e4c7" }}>
-          ✅ {successMsg}
-        </div>
+        <div className={s.successMsg}>✅ {successMsg}</div>
       )}
 
       {errorMsg && (
-        <div style={{ padding: 10, borderRadius: 10, background: "#fff0f0", border: "1px solid #f2b8b5" }}>
-          ❌ {errorMsg}
-        </div>
+        <div className={s.errorMsg}>❌ {errorMsg}</div>
       )}
     </form>
   );

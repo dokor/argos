@@ -1,0 +1,72 @@
+@use '../styles/tokens' as t;
+
+.form {
+  display: grid;
+  gap: t.$space-3;
+  padding: t.$space-4;
+  border: 1px solid t.$color-slate-200;
+  border-radius: t.$radius-lg;
+  background: t.$color-white;
+}
+
+.fieldGroup {
+  display: grid;
+  gap: 6px;
+}
+
+.label {
+  font-weight: 600;
+  color: t.$color-navy;
+  font-size: t.$text-md;
+}
+
+.input {
+  padding: 10px;
+  border-radius: t.$radius-md;
+  border: 1px solid t.$color-slate-300;
+  color: t.$color-navy;
+  font-size: t.$text-lg;
+  outline: none;
+
+  &:focus {
+    border-color: t.$color-indigo;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+  }
+}
+
+.submitBtn {
+  padding: 10px;
+  border-radius: t.$radius-md;
+  border: 1px solid t.$color-navy;
+  background: t.$color-navy;
+  color: t.$color-white;
+  font-weight: 600;
+  font-size: t.$text-lg;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.successMsg {
+  padding: 10px;
+  border-radius: t.$radius-md;
+  background: #eefaf0;
+  border: 1px solid #b7e4c7;
+  font-size: t.$text-md;
+  color: t.$color-navy;
+}
+
+.errorMsg {
+  padding: 10px;
+  border-radius: t.$radius-md;
+  background: #fff0f0;
+  border: 1px solid #f2b8b5;
+  font-size: t.$text-md;
+  color: t.$color-red;
+}
