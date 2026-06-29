@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://argos.dokor.fr";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://argos.lelouet.fr";
 const TITLE = "Argos – Analyseur de site web";
 const DESCRIPTION =
   "Argos analyse vos headers HTTP, HTML, stack technique et performances. Rapport scoré, privé, sans login.";
@@ -80,6 +80,26 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "Argos",
+  url: SITE_URL,
+  description: DESCRIPTION,
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Any",
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "EUR",
+  },
+  author: {
+    "@type": "Person",
+    name: "Antoine LE LOUËT",
+    url: "https://www.linkedin.com/in/antoinelelouet/",
+  },
+};
+
 export default function RootLayout({
                                      children,
                                    }: Readonly<{
@@ -87,6 +107,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <LangProvider>{children}</LangProvider>
       </body>

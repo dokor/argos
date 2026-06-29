@@ -29,14 +29,17 @@ export default function AuditForm({ onCreated }: Props) {
       return;
     }
 
+    // Ajoute https:// si aucun protocole n'est fourni (ex: "argos.lelouet.fr")
+    const normalized = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+
     setSubmitting(true);
     try {
-      const payload: CreateAuditRequest = { url: trimmed };
+      const payload: CreateAuditRequest = { url: normalized };
       const res: CreateAuditResponse = await argosApi.createAudit(payload);
 
       onCreated({
         auditId: Number(res.auditId),
-        inputUrl: trimmed,
+        inputUrl: normalized,
         normalizedUrl: res.normalizedUrl ?? "",
         runId: Number(res.runId),
         status: res.status,
