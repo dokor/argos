@@ -153,9 +153,18 @@ public class PublicReportComposer {
     }
 
     private static ReportDto.IssueSeverity toIssueSeverity(AuditStatus status, AuditSeverity severity) {
-        // MVP : FAIL => critical, WARN => important
-        if (status == AuditStatus.FAIL) return ReportDto.IssueSeverity.critical;
-        if (status == AuditStatus.WARN) return ReportDto.IssueSeverity.important;
+        // Cross status × severity to produce meaningful gradation
+        if (status == AuditStatus.FAIL) {
+            // FAIL is always at least important; HIGH severity => critical
+            return severity == AuditSeverity.HIGH ? ReportDto.IssueSeverity.critical : ReportDto.IssueSeverity.important;
+        }
+        if (status == AuditStatus.WARN) {
+            return switch (severity) {
+                case HIGH   -> ReportDto.IssueSeverity.critical;
+                case MEDIUM -> ReportDto.IssueSeverity.important;
+                case LOW    -> ReportDto.IssueSeverity.info;
+            };
+        }
         return ReportDto.IssueSeverity.info;
     }
 
@@ -180,13 +189,20 @@ public class PublicReportComposer {
             && !tag.equals("tech");
     }
 
+    // Semantic business categories take priority over technical/module tags
+    private static final Set<String> PRIORITY_CATEGORIES = Set.of("performance", "security", "seo", "a11y");
+
     private static String pickCategoryKey(String moduleId, List<String> tags) {
         if (tags != null) {
+            // First pass: prefer semantic business categories (performance, security, seo, a11y)
+            for (String t : tags) {
+                if (PRIORITY_CATEGORIES.contains(t)) return t;
+            }
+            // Second pass: any other business tag (excludes http/html/tech module tags)
             for (String t : tags) {
                 if (isBusinessTag(t)) return t;
             }
         }
-        // fallback : module
         return moduleId;
     }
 

@@ -50,8 +50,10 @@ public class ScorePolicyV1 implements ScorePolicy {
         // Scores Lighthouse contribuent à la catégorie "performance" et "a11y"
         map.put("lighthouse.score.performance",    rule(true, 15, "performance", "lighthouse"));
         map.put("lighthouse.score.accessibility",  rule(true, 10, "a11y",        "lighthouse"));
-        map.put("lighthouse.score.best_practices", rule(true, 6,  "security",    "lighthouse"));
+        map.put("lighthouse.score.best-practices", rule(true, 6,  "security",    "lighthouse"));
         map.put("lighthouse.score.seo",            rule(true, 8,  "seo",         "lighthouse"));
+        // lighthouse.collect = check de disponibilité du service, pas un score de site
+        map.put("lighthouse.collect",              rule(false, 0, "lighthouse"));
 
         // ----- Runtime (Playwright) -----
         map.put("runtime.console_errors",        rule(true, 5, "performance", "runtime"));
@@ -100,7 +102,8 @@ public class ScorePolicyV1 implements ScorePolicy {
         }
 
         if (checkKey.startsWith("lighthouse.")) {
-            return rule(true, 8, "performance", "lighthouse");
+            // checks lighthouse inconnus = informatifs, ne polluent pas le score
+            return rule(false, 0, "lighthouse");
         }
 
         if (checkKey.startsWith("runtime.")) {
