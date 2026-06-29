@@ -14,10 +14,12 @@ import java.util.Map;
 @Singleton
 public class PlaywrightRuntimeClient {
 
+    /** URL par défaut du service Playwright. Surchargeable via la variable d'environnement PLAYWRIGHT_SERVICE_URL. */
+    private static final String DEFAULT_PLAYWRIGHT_SERVICE_URL = "http://playwright-service:3016";
+
     private final HttpClient http;
     private final ObjectMapper objectMapper;
     private final String baseUrl;
-    private final String PLAYWRIGHT_SERVICE_URL = "http://playwright-service:3016";
 
     @Inject
     public PlaywrightRuntimeClient(ObjectMapper objectMapper) {
@@ -27,7 +29,7 @@ public class PlaywrightRuntimeClient {
             .build();
 
         // ex: http://playwright-service:3016
-        this.baseUrl = System.getenv().getOrDefault("PLAYWRIGHT_SERVICE_URL", PLAYWRIGHT_SERVICE_URL);
+        this.baseUrl = System.getenv().getOrDefault("PLAYWRIGHT_SERVICE_URL", DEFAULT_PLAYWRIGHT_SERVICE_URL);
     }
 
     public RuntimeAnalyzeResponse analyzeRuntime(String url) throws Exception {
