@@ -342,9 +342,11 @@ export default function LandingPage() {
             <MockReport tMock={tl.mockReport} />
           </div>
         </div>
-        <SocialProofBar items={tl.socialProof.items} />
         <div className={s.heroFade} />
       </section>
+
+      {/* SOCIAL PROOF */}
+      <SocialProofBar items={tl.socialProof.items} />
 
       {/* MODULES */}
       <section className={s.section}>
