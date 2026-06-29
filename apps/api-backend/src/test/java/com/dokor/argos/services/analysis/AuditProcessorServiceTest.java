@@ -20,6 +20,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import com.dokor.argos.services.analysis.CheckMergerService;
+import com.dokor.argos.services.analysis.modules.observatory.ObservatoryModuleAnalyzer;
+import com.dokor.argos.services.analysis.modules.ssl.SslLabsModuleAnalyzer;
+import com.dokor.argos.services.analysis.modules.zap.ZapModuleAnalyzer;
 import static org.mockito.Mockito.*;
 
 class AuditProcessorServiceTest {
@@ -37,7 +41,11 @@ class AuditProcessorServiceTest {
             mock(HtmlModuleAnalyzer.class),
             mock(RuntimeModuleAnalyzer.class),
             mock(LighthouseModuleAnalyzer.class),
+            mock(ObservatoryModuleAnalyzer.class),
+            mock(SslLabsModuleAnalyzer.class),
+            mock(ZapModuleAnalyzer.class),
             mock(DomainAnalysisService.class),
+            mock(CheckMergerService.class),
             mock(ScoreEnricherService.class),
             mock(ScoreService.class),
             new ObjectMapper(),
@@ -70,7 +78,11 @@ class AuditProcessorServiceTest {
             mock(HtmlModuleAnalyzer.class),
             mock(RuntimeModuleAnalyzer.class),
             mock(LighthouseModuleAnalyzer.class),
+            mock(ObservatoryModuleAnalyzer.class),
+            mock(SslLabsModuleAnalyzer.class),
+            mock(ZapModuleAnalyzer.class),
             mock(DomainAnalysisService.class),
+            mock(CheckMergerService.class),
             mock(ScoreEnricherService.class),
             mock(ScoreService.class),
             new ObjectMapper(),
@@ -132,7 +144,11 @@ class AuditProcessorServiceTest {
             html,
             runtime,
             mock(LighthouseModuleAnalyzer.class),
+            mock(ObservatoryModuleAnalyzer.class),
+            mock(SslLabsModuleAnalyzer.class),
+            mock(ZapModuleAnalyzer.class),
             mock(DomainAnalysisService.class),
+            mock(CheckMergerService.class),
             scoreEnricherService,
             scoreService,
             new ObjectMapper(),
@@ -174,7 +190,11 @@ class AuditProcessorServiceTest {
             mock(HtmlModuleAnalyzer.class),
             mock(RuntimeModuleAnalyzer.class),
             mock(LighthouseModuleAnalyzer.class),
+            mock(ObservatoryModuleAnalyzer.class),
+            mock(SslLabsModuleAnalyzer.class),
+            mock(ZapModuleAnalyzer.class),
             mock(DomainAnalysisService.class),
+            mock(CheckMergerService.class),
             mock(ScoreEnricherService.class),
             mock(ScoreService.class),
             new ObjectMapper(),

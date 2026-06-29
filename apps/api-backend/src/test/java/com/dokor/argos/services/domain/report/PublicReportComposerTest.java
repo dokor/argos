@@ -22,7 +22,7 @@ class PublicReportComposerTest {
     // ------------------------------------------------------------------ helpers
 
     private static AuditCheckResult check(String key, AuditStatus status) {
-        return new AuditCheckResult(
+        return AuditCheckResult.of(
             key, "Title for " + key,
             status, AuditSeverity.MEDIUM,
             true, 5.0, List.of("performance"),

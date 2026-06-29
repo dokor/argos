@@ -26,7 +26,7 @@ class ScoreServiceTest {
     // -------------------------
 
     private static AuditCheckResult check(String key, AuditStatus status, boolean scorable, double weight, String... tags) {
-        return new AuditCheckResult(
+        return AuditCheckResult.of(
             key, key, status, AuditSeverity.LOW,
             scorable, weight, List.of(tags),
             null, Map.of(), "msg", null
