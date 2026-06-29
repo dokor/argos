@@ -82,8 +82,8 @@ class ScorePolicyV1Test {
 
     @Test
     void techKeysShouldNotBeScored() {
-        ScorePolicy.ScoreRule cms  = policy.ruleFor("tech", "tech.cms");
-        ScorePolicy.ScoreRule ff   = policy.ruleFor("tech", "tech.frontend.framework");
+        ScorePolicy.ScoreRule cms = policy.ruleFor("tech", "tech.cms");
+        ScorePolicy.ScoreRule ff  = policy.ruleFor("tech", "tech.frontend.framework");
         assertFalse(cms.scorable());
         assertFalse(ff.scorable());
         assertEquals(0.0, cms.weight());

@@ -195,7 +195,7 @@ public class PublicReportComposer {
     }
 
     private static String buildOneLiner(int globalScore, List<ReportDto.CategoryScore> cats) {
-        if (globalScore >= 85) return "Site solide : quelques optimisations peuvent encore améliorer l’impact.";
+        if (globalScore >= 85) return "Site solide : quelques optimisations peuvent encore améliorer l'impact.";
         if (globalScore >= 65) return "Bon potentiel : quelques actions ciblées peuvent améliorer performance et conversion.";
         if (globalScore >= 40) return "Plusieurs points bloquants : une petite roadmap peut rapidement faire monter le score.";
         return "De grosses opportunités : corriger les points critiques pour améliorer confiance et conversion.";

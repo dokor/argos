@@ -15,11 +15,11 @@ public final class TechReportMapper {
         Map<String, Object> ffMap = asMap(techData.get("frontendFramework"));
         Map<String, Object> nextMap = asMap(techData.get("nextJs"));
 
-        // Cms: empty map (no CMS detected) → name is null → treat as absent
+        // Cms: empty map (no CMS detected) => name is null => treat as absent
         String cmsName = cmsMap == null ? null : asString(cmsMap.get("name"));
         ReportDto.Cms cms = (cmsName != null) ? new ReportDto.Cms(cmsName, asDouble(cmsMap.get("confidence"))) : null;
 
-        // FrontendFramework: "unknown" means no framework detected → treat as absent
+        // FrontendFramework: "unknown" means no framework detected => treat as absent
         String ffName = ffMap == null ? null : asString(ffMap.get("name"));
         ReportDto.FrontendFramework ff = (ffName != null && !ffName.equals("unknown"))
             ? new ReportDto.FrontendFramework(ffName, asDouble(ffMap.get("confidence")))
@@ -38,7 +38,7 @@ public final class TechReportMapper {
                 asString(versionMap.get("method"))
             );
 
-            // evidence peut être dans nextJs.evidence (si tu l’y mets)
+            // evidence peut être dans nextJs.evidence (si tu l'y mets)
             List<String> evidence = asStringList(nextMap.get("evidence"));
 
             next = new ReportDto.NextJs(
