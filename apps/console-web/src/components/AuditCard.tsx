@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import styles from "./AuditCard.module.css";
+import styles from "./AuditCard.module.scss";
 import { AuditListItem } from "@/lib/ArgosApi";
 import { AuditReportV2, AuditScoreReport, extractTechs, formatPct, prettyJson } from "@/lib/auditTypes";
 import { ScoreChip, ScoreBubbles } from "./ScoreChip";

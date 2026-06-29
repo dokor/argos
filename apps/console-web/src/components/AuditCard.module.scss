@@ -1,0 +1,167 @@
+@use '../styles/tokens' as t;
+
+.card {
+  padding: 18px t.$space-5;
+  border: 1px solid t.$color-slate-200;
+  border-radius: t.$radius-xl;
+  background: t.$color-white;
+  box-shadow: t.$shadow-sm;
+  display: grid;
+  gap: 14px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  gap: t.$space-4;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.headerLeft {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  flex: 1;
+}
+
+.url {
+  font-weight: 900;
+  color: t.$color-navy;
+  font-size: t.$text-md;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 700px;
+}
+
+.meta {
+  display: flex;
+  gap: t.$space-2;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.metaText {
+  font-size: t.$text-xs;
+  color: t.$color-slate-400;
+}
+
+.techBadge {
+  font-size: 10px;
+  font-weight: 700;
+  color: t.$color-purple;
+  background: t.$color-purple-bg;
+  border: 1px solid t.$color-purple-border;
+  padding: 2px 7px;
+  border-radius: t.$radius-pill;
+}
+
+.headerRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: t.$space-2;
+  flex-shrink: 0;
+}
+
+.scoreRow {
+  display: flex;
+  align-items: center;
+  gap: t.$space-2;
+}
+
+.scoreText {
+  font-size: t.$text-base;
+  font-weight: 900;
+  color: t.$color-navy;
+}
+
+.mutedSmall {
+  font-size: t.$text-xs;
+  color: t.$color-slate-400;
+}
+
+.linkBtn {
+  font-size: t.$text-sm;
+  font-weight: 800;
+  color: t.$color-blue;
+  text-decoration: none;
+  padding: 5px 10px;
+  border-radius: t.$radius-sm;
+  border: 1px solid t.$color-blue-border;
+  background: t.$color-blue-light;
+}
+
+.linkBtnDisabled {
+  font-size: t.$text-sm;
+  font-weight: 600;
+  color: t.$color-slate-400;
+  padding: 5px 10px;
+  border-radius: t.$radius-sm;
+  border: 1px solid t.$color-slate-200;
+}
+
+.scoreSection {
+  display: grid;
+  gap: 7px;
+}
+
+.sectionLabel {
+  font-size: t.$text-xs;
+  font-weight: 800;
+  color: t.$color-slate-500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  padding-top: t.$space-1;
+  border-top: 1px solid t.$color-slate-100;
+}
+
+.muted {
+  font-size: t.$text-base;
+  color: t.$color-slate-400;
+}
+
+.copyBtn {
+  padding: 7px t.$space-3;
+  border-radius: t.$radius-sm;
+  border: 1px solid t.$color-navy;
+  background: t.$color-navy;
+  color: t.$color-white;
+  font-weight: 800;
+  font-size: t.$text-sm;
+  cursor: pointer;
+}
+
+.summary {
+  cursor: pointer;
+  font-weight: 700;
+  font-size: t.$text-base;
+  color: t.$color-slate-600;
+}
+
+.pre {
+  margin-top: t.$space-2;
+  white-space: pre-wrap;
+  word-break: break-word;
+  padding: t.$space-3;
+  border-radius: t.$radius-md;
+  background: #0b1220;
+  color: t.$color-slate-200;
+  border: 1px solid #1f2a44;
+  font-size: t.$text-xs;
+  line-height: 1.5;
+}
