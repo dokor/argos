@@ -2,6 +2,7 @@ package com.dokor.argos.webservices.api.audits;
 
 import com.coreoz.plume.jersey.security.permission.PublicApi;
 import com.dokor.argos.services.domain.audit.AuditService;
+import com.dokor.argos.services.domain.audit.UrlNormalizer;
 import com.dokor.argos.webservices.api.audits.data.AuditListItemResponse;
 import com.dokor.argos.webservices.api.audits.data.AuditRunStatusResponse;
 import com.dokor.argos.webservices.api.audits.data.CreateAuditRequest;
@@ -11,6 +12,7 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
+import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
@@ -61,7 +63,7 @@ public class AuditsWs {
     @POST
     @Operation(description = "Crée un audit (idempotent sur normalizedUrl) et crée un run en status QUEUED.")
     public Response createAudit(
-        @Parameter(required = true) @RequestBody(required = true) CreateAuditRequest request
+        @Parameter(required = true) @RequestBody(required = true) @Valid CreateAuditRequest request
     ) {
         if (request == null || request.url() == null || request.url().isBlank()) {
             return Response.status(Response.Status.BAD_REQUEST)
@@ -69,16 +71,22 @@ public class AuditsWs {
                 .build();
         }
 
-        logger.info("Create audit requested: url={}", request.url());
+        // Sanitize URL before logging to prevent log injection (CRLF, JNDI lookup strings, etc.)
+        logger.info("Create audit requested: url={}", sanitizeForLog(request.url()));
 
         try {
             return Response.ok(auditService.createAudit(request)).build();
         } catch (IllegalArgumentException e) {
-            logger.warn("Invalid URL submitted url={} error={}", request.url(), e.getMessage());
+            logger.warn("Invalid URL submitted url={} error={}", sanitizeForLog(request.url()), e.getMessage());
             return Response.status(Response.Status.BAD_REQUEST)
                 .entity(Map.of("error", e.getMessage()))
                 .build();
         }
+    }
+
+    /** Délègue à {@link UrlNormalizer#sanitizeForLog} pour éviter la duplication. */
+    private static String sanitizeForLog(String url) {
+        return UrlNormalizer.sanitizeForLog(url);
     }
 
     /**
