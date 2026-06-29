@@ -25,7 +25,8 @@ public class ScorePolicyV1 implements ScorePolicy {
     private final Map<String, ScoreRule> overrides;
 
     public ScorePolicyV1() {
-        Map<String, ScoreRule> map = new HashMap<>();
+        // LinkedHashMap pour garantir un ordre d'itération stable (logs, tests reproductibles)
+        Map<String, ScoreRule> map = new LinkedHashMap<>();
 
         // ----- HTTP Security (exemples) -----
         map.put("http.security.hsts", rule(true, 8, "security", "http"));
