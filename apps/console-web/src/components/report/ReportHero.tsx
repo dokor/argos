@@ -103,12 +103,15 @@ export default function ReportHero({ report }: { report: Report }) {
   const score = Math.max(0, Math.min(100, report.scores.global));
   const color = scoreColor(score);
   const priorities: PriorityItem[] = report.summary?.priorities ?? [];
-  const issuesCount = report.issues?.length ?? 0;
+  const allIssues = report.issues ?? [];
+  const issuesCount = allIssues.length;
 
+  // Les compteurs de sévérité reflètent l'ensemble des issues détectées.
+  // "info" côté backend est affiché comme "opportunity" dans l'UI.
   const counts = {
-    critical:    priorities.filter((p) => p.severity === "critical").length,
-    important:   priorities.filter((p) => p.severity === "important").length,
-    opportunity: priorities.filter((p) => p.severity === "opportunity").length,
+    critical:    allIssues.filter((i) => i.severity === "critical").length,
+    important:   allIssues.filter((i) => i.severity === "important").length,
+    opportunity: allIssues.filter((i) => i.severity === "info").length,
   };
 
   const techs = techLabels(report.tech);
