@@ -148,7 +148,9 @@ export default function ReportHero({ report }: { report: Report }) {
             </div>
 
             {report.summary?.oneLiner && (
-              <p className={s.oneLiner}>{report.summary.oneLiner}</p>
+              <p className={s.oneLiner}>
+                {(th.oneLiner as Record<string, string>)[report.summary.oneLiner] ?? report.summary.oneLiner}
+              </p>
             )}
           </div>
 

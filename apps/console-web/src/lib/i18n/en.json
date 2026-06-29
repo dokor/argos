@@ -202,6 +202,12 @@
       "scoreObjectivePrefix": "Goal:",
       "scoreMaintain": "maintain",
       "scoreQuickwins": "focus on quick wins",
+      "oneLiner": {
+        "high": "Solid site: a few optimizations could further improve impact.",
+        "good": "Good potential: targeted actions can improve performance and conversion.",
+        "fair": "Several blockers: a small roadmap can quickly raise the score.",
+        "low": "Big opportunities: fixing critical issues will improve trust and conversion."
+      },
       "analyzedAt": "Analyzed",
       "priorities": "priority(ies)",
       "issues": "issue(s)",
