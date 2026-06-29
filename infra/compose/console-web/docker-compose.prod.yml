@@ -8,6 +8,8 @@ services:
     restart: unless-stopped
     networks:
       - proxy
+    volumes:
+      - /srv/configs/console-web/.env.prod:/.env:ro
     env_file:
       - .env
     environment:
