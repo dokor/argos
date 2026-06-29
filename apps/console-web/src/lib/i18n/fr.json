@@ -26,7 +26,7 @@
         "Lighthouse"
       ],
       "redirecting": "Rapport prêt · Redirection…",
-      "errorMsg": "Erreur : vérifiez l'URL et réessayez.",
+      "errorMsg": "Erreur : vérifiez l'URL et réessayez.",
       "errorFailed": "L'analyse a échoué. Essayez avec une URL publique.",
       "retry": "Réessayer"
     },
@@ -88,7 +88,7 @@
         {
           "icon": "⚡",
           "label": "Runtime Playwright",
-          "desc": "Métriques collectées sur page rendue : console errors, LCP, FCP, TTI, ressources bloquantes."
+          "desc": "Métriques collectées sur page rendue : console errors, LCP, FCP, TTI, ressources bloquantes."
         },
         {
           "icon": "📊",
@@ -108,7 +108,7 @@
         {
           "n": "02",
           "label": "On analyse tout",
-          "desc": "Les cinq modules tournent en séquence : HTTP → HTML → Tech → Runtime → Lighthouse."
+          "desc": "Les cinq modules tournent en séquence : HTTP → HTML → Tech → Runtime → Lighthouse."
         },
         {
           "n": "03",
@@ -118,7 +118,7 @@
       ]
     },
     "why": {
-      "title": "Pourquoi Argos ?",
+      "title": "Pourquoi Argos ?",
       "items": [
         {
           "icon": "🔗",
@@ -143,7 +143,7 @@
       ]
     },
     "cta": {
-      "title": "Prêt à voir ce que cache votre site ?",
+      "title": "Prêt à voir ce que cache votre site ?",
       "sub": "Gratuit · Sans compte · Rapport privé · Open source"
     },
     "footer": {
@@ -199,7 +199,7 @@
       },
       "scoreGlobal": "Score global",
       "scoreTooltip": "Score agrégé (0–100) basé sur les points détectés.",
-      "scoreObjectivePrefix": "Objectif :",
+      "scoreObjectivePrefix": "Objectif :",
       "scoreMaintain": "maintenir",
       "scoreQuickwins": "prioriser les quick wins",
       "analyzedAt": "Analysé",
@@ -263,7 +263,7 @@
       "scoreLabel": "Score",
       "scoreSuffix": "/100",
       "backToTop": "Retour en haut ↑",
-      "noIssues": "Aucun point pour ce filtre dans cette catégorie.",
+      "noIssues": "Aucun point pour cette catégorie.",
       "evidenceLabel": "Preuve / Contexte",
       "recommendationLabel": "Recommandation",
       "detailsLabel": "Détails"
