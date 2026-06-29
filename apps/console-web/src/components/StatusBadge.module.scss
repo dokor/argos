@@ -1,0 +1,32 @@
+@use '../styles/tokens' as t;
+
+.badge {
+  padding: 5px 10px;
+  border-radius: t.$radius-pill;
+  font-weight: 800;
+  font-size: t.$text-xs;
+}
+
+.success {
+  border: 1px solid t.$color-green-border;
+  background: t.$color-green-bg;
+  color: t.$color-green-dark;
+}
+
+.error {
+  border: 1px solid t.$color-red-border;
+  background: t.$color-red-light;
+  color: t.$color-red-dark;
+}
+
+.info {
+  border: 1px solid t.$color-blue-border;
+  background: t.$color-blue-bg;
+  color: t.$color-blue-dark;
+}
+
+.muted {
+  border: 1px solid t.$color-slate-200;
+  background: t.$color-slate-50;
+  color: t.$color-slate-600;
+}

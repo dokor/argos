@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import styles from "./StatusBadge.module.css";
+import styles from "./StatusBadge.module.scss";
 import { AuditListItem } from "@/lib/ArgosApi";
 
 type Props = {
