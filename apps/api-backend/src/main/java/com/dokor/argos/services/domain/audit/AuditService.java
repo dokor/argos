@@ -4,8 +4,10 @@ import com.dokor.argos.db.dao.AuditDao;
 import com.dokor.argos.db.generated.Audit;
 import com.dokor.argos.db.generated.AuditReport;
 import com.dokor.argos.db.generated.AuditRun;
+import com.dokor.argos.db.generated.Domain;
 import com.dokor.argos.services.analysis.AuditProcessorService;
 import com.dokor.argos.services.domain.audit.errors.NotFoundException;
+import com.dokor.argos.services.domain.domain.DomainService;
 import com.dokor.argos.webservices.api.audits.data.AuditListItemResponse;
 import com.dokor.argos.webservices.api.audits.data.AuditRunStatusResponse;
 import com.dokor.argos.webservices.api.audits.data.CreateAuditRequest;
@@ -28,18 +30,21 @@ public class AuditService {
     private final AuditRunService auditRunService;
     private final AuditProcessorService auditProcessorService;
     private final UrlNormalizer urlNormalizer;
+    private final DomainService domainService;
 
     @Inject
     public AuditService(
         AuditDao auditDao,
         AuditRunService auditRunService,
         AuditProcessorService auditProcessorService,
-        UrlNormalizer urlNormalizer
+        UrlNormalizer urlNormalizer,
+        DomainService domainService
     ) {
         this.auditDao = auditDao;
         this.auditRunService = auditRunService;
         this.auditProcessorService = auditProcessorService;
         this.urlNormalizer = urlNormalizer;
+        this.domainService = domainService;
     }
 
     /**
@@ -52,14 +57,18 @@ public class AuditService {
         List<Tuple> rows = auditDao.listAuditsWithLatestRun(limit);
 
         return rows.stream().map(row -> {
-            Audit audit = row.get(0, Audit.class);
-            AuditRun run = row.get(1, AuditRun.class);
-            AuditReport report = row.get(2, AuditReport.class);
+            Audit audit    = row.get(0, Audit.class);
+            Domain domain  = row.get(1, Domain.class);
+            AuditRun run   = row.get(2, AuditRun.class);
+            AuditReport report = row.get(3, AuditReport.class);
+
+            String hostname = domain != null ? domain.getHostname() : null;
 
             if (run == null) {
                 // Cas rare : audit créé sans run
                 return new AuditListItemResponse(
                     audit.getId(),
+                    hostname,
                     audit.getInputUrl(),
                     audit.getNormalizedUrl(),
                     0L,
@@ -77,6 +86,7 @@ public class AuditService {
 
             return new AuditListItemResponse(
                 audit.getId(),
+                hostname,
                 audit.getInputUrl(),
                 audit.getNormalizedUrl(),
                 run.getId(),
@@ -123,13 +133,16 @@ public class AuditService {
         String hostname = urlNormalizer.extractHostname(normalizedUrl);
         Instant now = Instant.now();
 
+        // Trouver ou créer le domaine (one per hostname)
+        Domain domain = domainService.findOrCreate(hostname);
+
         Audit audit = auditDao.findByNormalizedUrl(normalizedUrl)
             .orElseGet(() -> {
-                logger.info("Creating new Audit for normalizedUrl={}", normalizedUrl);
+                logger.info("Creating new Audit for normalizedUrl={} domainId={}", normalizedUrl, domain.getId());
                 Audit a = new Audit();
+                a.setDomainId(domain.getId());
                 a.setInputUrl(inputUrl);
                 a.setNormalizedUrl(normalizedUrl);
-                a.setHostname(hostname);
                 a.setCreatedAt(now);
                 return auditDao.save(a);
             });

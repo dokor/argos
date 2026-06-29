@@ -9,7 +9,6 @@ import com.dokor.argos.services.analysis.model.AuditReportJson;
 import com.dokor.argos.services.analysis.modules.html.HtmlModuleAnalyzer;
 import com.dokor.argos.services.analysis.modules.http.HttpModuleAnalyzer;
 import com.dokor.argos.services.analysis.modules.runtime.RuntimeModuleAnalyzer;
-import com.dokor.argos.services.analysis.modules.tech.TechModuleAnalyzer;
 import com.dokor.argos.services.analysis.scoring.AuditScoreReport;
 import com.dokor.argos.services.analysis.scoring.ScoreEnricherService;
 import com.dokor.argos.services.analysis.scoring.ScoreService;
@@ -39,9 +38,9 @@ public class AuditProcessorService {
 
     private final HttpModuleAnalyzer httpModuleAnalyzer;
     private final HtmlModuleAnalyzer htmlModuleAnalyzer;
-    private final TechModuleAnalyzer techModuleAnalyzer;
     private final RuntimeModuleAnalyzer runtimeModuleAnalyzer;
     private final LighthouseModuleAnalyzer lighthouseModuleAnalyzer;
+    private final DomainAnalysisService domainAnalysisService;
 
     private final ScoreEnricherService scoreEnricherService;
     private final ScoreService scoreService;
@@ -57,9 +56,9 @@ public class AuditProcessorService {
         UrlNormalizer urlNormalizer,
         HttpModuleAnalyzer httpModuleAnalyzer,
         HtmlModuleAnalyzer htmlModuleAnalyzer,
-        TechModuleAnalyzer techModuleAnalyzer,
         RuntimeModuleAnalyzer runtimeModuleAnalyzer,
         LighthouseModuleAnalyzer lighthouseModuleAnalyzer,
+        DomainAnalysisService domainAnalysisService,
         ScoreEnricherService scoreEnricherService,
         ScoreService scoreService,
         ObjectMapper objectMapper,
@@ -70,9 +69,9 @@ public class AuditProcessorService {
         this.urlNormalizer = urlNormalizer;
         this.httpModuleAnalyzer = httpModuleAnalyzer;
         this.htmlModuleAnalyzer = htmlModuleAnalyzer;
-        this.techModuleAnalyzer = techModuleAnalyzer;
         this.runtimeModuleAnalyzer = runtimeModuleAnalyzer;
         this.lighthouseModuleAnalyzer = lighthouseModuleAnalyzer;
+        this.domainAnalysisService = domainAnalysisService;
         this.scoreEnricherService = scoreEnricherService;
         this.scoreService = scoreService;
         this.objectMapper = objectMapper;
@@ -108,27 +107,30 @@ public class AuditProcessorService {
         }
 
         try {
-            AuditContext context = new AuditContext(inputUrl, normalizedUrl);
+            long domainId = audit.getDomainId();
+            AuditContext context = new AuditContext(inputUrl, normalizedUrl, domainId);
 
-            // HTTP
+            // --- Modules PAGE ---
+
+            // HTTP (page-level : status, redirects, headers, body)
             logger.info("Running module={} runId={} url={}", httpModuleAnalyzer.moduleId(), runId, normalizedUrl);
             AuditModuleResult httpModule = httpModuleAnalyzer.analyze(context, logger);
 
-            // Enrich context with HTTP output
+            // Enrichir le contexte avec les données HTTP (finalUrl, headers, body…)
             context = HttpModuleAnalyzer.enrichContext(context, httpModule);
 
-            // HTML + TECH + Runtime
             logger.info("Running module={} runId={} finalUrl={}", htmlModuleAnalyzer.moduleId(), runId, context.finalUrl());
             AuditModuleResult htmlModule = htmlModuleAnalyzer.analyze(context, logger);
-
-            logger.info("Running module={} runId={} finalUrl={}", techModuleAnalyzer.moduleId(), runId, context.finalUrl());
-            AuditModuleResult techModule = techModuleAnalyzer.analyze(context, logger);
 
             logger.info("Running module={} runId={} finalUrl={}", runtimeModuleAnalyzer.moduleId(), runId, context.finalUrl());
             AuditModuleResult runtimeModule = runtimeModuleAnalyzer.analyze(context, logger);
 
             logger.info("Running module={} runId={} finalUrl={}", lighthouseModuleAnalyzer.moduleId(), runId, context.finalUrl());
             AuditModuleResult lighthouseModule = lighthouseModuleAnalyzer.analyze(context, logger);
+
+            // --- Module DOMAIN (tech) — cache 24h partagé entre toutes les pages du domaine ---
+            logger.info("Resolving domain tech analysis domainId={} runId={}", domainId, runId);
+            AuditModuleResult techModule = domainAnalysisService.getOrRunTechAnalysis(context, logger);
 
             List<AuditModuleResult> modules = List.of(httpModule, htmlModule, techModule, runtimeModule, lighthouseModule);
 

@@ -55,7 +55,15 @@ export default function AuditCard({
       {/* Header */}
       <div className={styles.header}>
         <div className={styles.headerLeft}>
-          <div className={styles.url}>{item.normalizedUrl}</div>
+          <div className={styles.url}>
+            {item.hostname ?? item.normalizedUrl}
+          </div>
+          {item.hostname && (() => {
+            const path = item.normalizedUrl.replace(/^https?:\/\/[^/]+/, "") || "/";
+            return path !== "/" ? (
+              <div className={styles.urlPath}>{path}</div>
+            ) : null;
+          })()}
           <div className={styles.meta}>
             <span className={styles.metaText}>auditId={item.auditId} runId={item.runId}</span>
             {techs.map((tech) => (

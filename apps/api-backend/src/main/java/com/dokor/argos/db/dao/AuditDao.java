@@ -6,6 +6,7 @@ import com.dokor.argos.db.generated.Audit;
 import com.dokor.argos.db.generated.QAudit;
 import com.dokor.argos.db.generated.QAuditReport;
 import com.dokor.argos.db.generated.QAuditRun;
+import com.dokor.argos.db.generated.QDomain;
 import com.querydsl.core.Tuple;
 import com.querydsl.sql.SQLExpressions;
 import jakarta.inject.Inject;
@@ -20,22 +21,19 @@ import java.util.Optional;
 /**
  * DAO responsable de la table ARG_AUDIT.
  * <p>
- * Cette table représente un audit logique d’URL :
- * - une URL brute fournie par l’utilisateur
- * - une URL normalisée (clé fonctionnelle)
- * - un hostname
+ * Un audit représente l’analyse d’une URL précise. Il est rattaché à un {@code ARG_DOMAIN}
+ * (hostname) qui regroupe toutes les pages du même site.
  * <p>
  * Convention du projet :
  * - une URL normalisée ne doit exister qu’une seule fois en base
- * - cette règle est garantie à la fois :
- * - par un index unique en base
- * - par les méthodes de ce DAO
+ * - cette règle est garantie à la fois par un index unique en base et par les méthodes de ce DAO
  */
 @Singleton
 public class AuditDao extends CrudDaoQuerydsl<Audit> {
 
     private static final Logger logger = LoggerFactory.getLogger(AuditDao.class);
     private static final QAudit AUDIT = QAudit.audit;
+    private static final QDomain DOMAIN = QDomain.domain;
     private static final QAuditRun RUN = QAuditRun.auditRun;
     /** Alias séparé pour la sous-requête MAX(id) — évite l'ambiguïté de colonnes. */
     private static final QAuditRun SUB_RUN = new QAuditRun("subRun");
@@ -88,7 +86,10 @@ public class AuditDao extends CrudDaoQuerydsl<Audit> {
     }
 
     /**
-     * Liste des audits avec leur dernier run (par id max, simple MVP).
+     * Liste des audits avec leur domaine, leur dernier run et leur rapport public.
+     * <p>
+     * Le Tuple retourné contient dans l'ordre : Audit (0), Domain (1), AuditRun (2), AuditReport (3).
+     * Le run est sélectionné par MAX(id) pour garantir qu'une seule ligne est retournée par audit.
      *
      * @param limit nombre max de lignes
      */
@@ -96,8 +97,9 @@ public class AuditDao extends CrudDaoQuerydsl<Audit> {
         logger.debug("Listing audits with latest run limit={}", limit);
 
         return transactionManager.selectQuery()
-            .select(AUDIT, RUN, AUDIT_REPORT)
+            .select(AUDIT, DOMAIN, RUN, AUDIT_REPORT)
             .from(AUDIT)
+            .innerJoin(DOMAIN).on(DOMAIN.id.eq(AUDIT.domainId))
             .leftJoin(RUN).on(
                 RUN.auditId.eq(AUDIT.id),
                 RUN.id.eq(

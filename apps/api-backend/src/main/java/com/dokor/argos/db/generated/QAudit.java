@@ -26,7 +26,7 @@ public class QAudit extends com.querydsl.sql.RelationalPathBase<Audit> {
 
     public final DateTimePath<java.time.Instant> createdAt = createDateTime("createdAt", java.time.Instant.class);
 
-    public final StringPath hostname = createString("hostname");
+    public final NumberPath<Long> domainId = createNumber("domainId", Long.class);
 
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
@@ -35,6 +35,8 @@ public class QAudit extends com.querydsl.sql.RelationalPathBase<Audit> {
     public final StringPath normalizedUrl = createString("normalizedUrl");
 
     public final com.querydsl.sql.PrimaryKey<Audit> primary = createPrimaryKey(id);
+
+    public final com.querydsl.sql.ForeignKey<Domain> auditDomainFk = createForeignKey(domainId, "id");
 
     public final com.querydsl.sql.ForeignKey<AuditReport> _reportAuditFk = createInvForeignKey(id, "audit_id");
 
@@ -66,10 +68,10 @@ public class QAudit extends com.querydsl.sql.RelationalPathBase<Audit> {
     }
 
     public void addMetadata() {
-        addMetadata(createdAt, ColumnMetadata.named("created_at").withIndex(5).ofType(Types.TIMESTAMP).withSize(23).notNull());
-        addMetadata(hostname, ColumnMetadata.named("hostname").withIndex(4).ofType(Types.VARCHAR).withSize(255).notNull());
-        addMetadata(id, ColumnMetadata.named("id").withIndex(1).ofType(Types.BIGINT).withSize(19).notNull());
-        addMetadata(inputUrl, ColumnMetadata.named("input_url").withIndex(2).ofType(Types.LONGVARCHAR).withSize(65535).notNull());
+        addMetadata(createdAt,     ColumnMetadata.named("created_at").withIndex(5).ofType(Types.TIMESTAMP).withSize(23).notNull());
+        addMetadata(domainId,      ColumnMetadata.named("domain_id").withIndex(4).ofType(Types.BIGINT).withSize(19).notNull());
+        addMetadata(id,            ColumnMetadata.named("id").withIndex(1).ofType(Types.BIGINT).withSize(19).notNull());
+        addMetadata(inputUrl,      ColumnMetadata.named("input_url").withIndex(2).ofType(Types.LONGVARCHAR).withSize(65535).notNull());
         addMetadata(normalizedUrl, ColumnMetadata.named("normalized_url").withIndex(3).ofType(Types.LONGVARCHAR).withSize(65535).notNull());
     }
 

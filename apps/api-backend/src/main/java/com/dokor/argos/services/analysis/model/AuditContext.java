@@ -18,6 +18,7 @@ import java.util.Map;
 public record AuditContext(
     String inputUrl,
     String normalizedUrl,
+    long domainId,
     Instant startedAt,
 
     // Résultat "HTTP-level" (rempli après HttpModuleAnalyzer)
@@ -28,10 +29,18 @@ public record AuditContext(
     Map<String, String> headers,
     String body
 ) {
-    public AuditContext(String inputUrl, String normalizedUrl) {
+    /**
+     * Constructeur initial : crée le contexte avant toute analyse.
+     *
+     * @param inputUrl      URL brute soumise par l'utilisateur
+     * @param normalizedUrl URL normalisée (clé fonctionnelle)
+     * @param domainId      identifiant du domaine en base (ARG_DOMAIN.id)
+     */
+    public AuditContext(String inputUrl, String normalizedUrl, long domainId) {
         this(
             inputUrl,
             normalizedUrl,
+            domainId,
             Instant.now(),
             null,
             0,
@@ -53,6 +62,7 @@ public record AuditContext(
         return new AuditContext(
             inputUrl,
             normalizedUrl,
+            domainId,
             startedAt,
             finalUrl,
             httpStatusCode,

@@ -13,8 +13,9 @@ public class Audit extends com.coreoz.plume.db.querydsl.crud.CrudEntityQuerydsl 
     @Column("created_at")
     private java.time.Instant createdAt;
 
-    @Column("hostname")
-    private String hostname;
+    @Column("domain_id")
+    @JsonSerialize(using=com.fasterxml.jackson.databind.ser.std.ToStringSerializer.class)
+    private Long domainId;
 
     @Column("id")
     @JsonSerialize(using=com.fasterxml.jackson.databind.ser.std.ToStringSerializer.class)
@@ -34,12 +35,12 @@ public class Audit extends com.coreoz.plume.db.querydsl.crud.CrudEntityQuerydsl 
         this.createdAt = createdAt;
     }
 
-    public String getHostname() {
-        return hostname;
+    public Long getDomainId() {
+        return domainId;
     }
 
-    public void setHostname(String hostname) {
-        this.hostname = hostname;
+    public void setDomainId(Long domainId) {
+        this.domainId = domainId;
     }
 
     public Long getId() {

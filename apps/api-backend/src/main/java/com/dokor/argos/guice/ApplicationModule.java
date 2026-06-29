@@ -1,6 +1,7 @@
 package com.dokor.argos.guice;
 
 import com.coreoz.plume.db.querydsl.guice.GuiceQuerydslModule;
+import com.dokor.argos.services.analysis.DomainAnalysisService;
 import com.dokor.argos.services.analysis.lighthouse.LighthouseModuleAnalyzer;
 import com.dokor.argos.services.analysis.model.AuditModuleAnalyzer;
 import com.dokor.argos.services.analysis.modules.html.HtmlModuleAnalyzer;
@@ -9,6 +10,7 @@ import com.dokor.argos.services.analysis.modules.runtime.RuntimeModuleAnalyzer;
 import com.dokor.argos.services.analysis.modules.tech.TechModuleAnalyzer;
 import com.dokor.argos.services.analysis.scoring.ScorePolicy;
 import com.dokor.argos.services.analysis.scoring.ScorePolicyV1;
+import com.dokor.argos.services.domain.domain.DomainService;
 import com.google.inject.multibindings.Multibinder;
 import jakarta.inject.Singleton;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -46,5 +48,9 @@ public class ApplicationModule extends AbstractModule {
         bind(ScorePolicy.class)
             .to(ScorePolicyV1.class)
             .in(Singleton.class);
+
+        // Domain-level services
+        bind(DomainService.class).in(Singleton.class);
+        bind(DomainAnalysisService.class).in(Singleton.class);
     }
 }

@@ -11,6 +11,8 @@ public record AuditListItemResponse(
     @JsonSerialize(using = ToStringSerializer.class)
     @Schema(example = "10")
     long auditId,
+    @Schema(example = "example.com")
+    String hostname,
     @Schema(example = "https://example.com")
     String inputUrl,
     @Schema(example = "https://example.com/")

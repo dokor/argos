@@ -26,6 +26,7 @@ export type AuditRunStatusResponse = {
 
 export type AuditListItem = {
   auditId: number;
+  hostname?: string;
   inputUrl: string;
   normalizedUrl: string;
   runId: number;

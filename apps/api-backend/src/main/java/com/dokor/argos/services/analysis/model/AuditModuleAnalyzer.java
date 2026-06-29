@@ -25,10 +25,22 @@ public interface AuditModuleAnalyzer {
     String moduleId();
 
     /**
+     * Portée du module : PAGE (par défaut) ou DOMAIN.
+     * <p>
+     * Les modules DOMAIN sont exécutés une seule fois par domaine et leur résultat
+     * est mis en cache. Les modules PAGE sont exécutés à chaque analyse d'URL.
+     *
+     * @return portée du module
+     */
+    default ModuleScope scope() {
+        return ModuleScope.PAGE;
+    }
+
+    /**
      * Analyse l'URL et retourne le résultat du module.
      *
-     * @param context ContextHtml
-     * @param logger logger fourni par l'orchestrateur (permet d'identifier facilement le run)
+     * @param context contexte partagé entre modules (URL, headers HTTP, body HTML, domainId…)
+     * @param logger  logger fourni par l'orchestrateur (pour identifier facilement le run)
      */
     AuditModuleResult analyze(AuditContext context, Logger logger);
 }

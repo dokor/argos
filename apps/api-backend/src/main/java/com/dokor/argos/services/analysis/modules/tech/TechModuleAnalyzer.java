@@ -66,6 +66,15 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
         return "tech";
     }
 
+    /**
+     * Ce module est de portée DOMAIN : son résultat est identique pour toutes les pages
+     * d'un même hostname et est donc mis en cache 24h dans ARG_DOMAIN_ANALYSIS.
+     */
+    @Override
+    public com.dokor.argos.services.analysis.model.ModuleScope scope() {
+        return com.dokor.argos.services.analysis.model.ModuleScope.DOMAIN;
+    }
+
     private final NextJsDetectorService nextDetector;
 
     @Inject
