@@ -1,19 +1,64 @@
 @use '../styles/tokens' as t;
 
-.btn {
-  background: none;
-  border: 1px solid t.$color-slate-200;
-  border-radius: t.$radius-sm;
-  padding: 5px 10px;
-  font-size: t.$text-sm;
-  cursor: pointer;
-  color: t.$color-slate-500;
-  font-weight: 500;
-  line-height: 1;
-  transition: border-color 0.15s, color 0.15s;
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  border-radius: t.$radius-pill;
+  padding: 3px;
+  gap: 2px;
+}
 
-  &:hover {
-    border-color: t.$color-slate-300;
-    color: t.$color-navy;
+.light {
+  background: t.$color-slate-100;
+  border: 1px solid t.$color-slate-200;
+
+  .option {
+    color: t.$color-slate-500;
+    &:hover:not(.active) { color: t.$color-navy; }
   }
+
+  .sep { background: t.$color-slate-300; }
+}
+
+.dark {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+
+  .option {
+    color: rgba(255, 255, 255, 0.45);
+    &:hover:not(.active) { color: rgba(255, 255, 255, 0.8); }
+  }
+
+  .sep { background: rgba(255, 255, 255, 0.15); }
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 26px;
+  border-radius: t.$radius-pill;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: t.$text-sm;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: 1;
+  transition: color 0.15s, background 0.15s, box-shadow 0.15s;
+
+  &.active {
+    background: t.$color-indigo;
+    color: t.$color-white;
+    box-shadow: 0 1px 4px rgba(99, 102, 241, 0.35);
+  }
+}
+
+.sep {
+  width: 1px;
+  height: 14px;
+  border-radius: 1px;
+  flex-shrink: 0;
+  margin: 0 1px;
 }
