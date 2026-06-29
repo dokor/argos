@@ -119,11 +119,15 @@ function ScoreRing({ value, label, color }: { value: number; label: string; colo
 
 function MockReport({ tMock }: { tMock: { url: string; urlDetail: string; score: string; checks: Record<string, string> } }) {
   const checkItems = [
-    { key: "httpsEnforced", status: "pass" },
-    { key: "hstsPresent",   status: "pass" },
-    { key: "cspMissing",    status: "warn" },
-    { key: "redirects",     status: "warn" },
-    { key: "metaDescMissing", status: "fail" },
+    { key: "httpsEnforced",    status: "pass" }, // HTTP
+    { key: "hstsPresent",      status: "pass" }, // HTTP
+    { key: "cspMissing",       status: "warn" }, // HTTP
+    { key: "metaDescMissing",  status: "fail" }, // HTML
+    { key: "titlePresent",     status: "pass" }, // HTML
+    { key: "h1Found",          status: "pass" }, // HTML
+    { key: "nextjsDetected",   status: "info" }, // Tech
+    { key: "lcpScore",         status: "warn" }, // Runtime
+    { key: "performanceScore", status: "warn" }, // Lighthouse
   ] as const;
 
   return (
@@ -151,7 +155,7 @@ function MockReport({ tMock }: { tMock: { url: string; urlDetail: string; score:
           <div key={item.key} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
             <span style={{
               width: 8, height: 8, borderRadius: "50%", flexShrink: 0,
-              background: item.status === "pass" ? "#22c55e" : item.status === "warn" ? "#f59e0b" : "#ef4444",
+              background: item.status === "pass" ? "#22c55e" : item.status === "warn" ? "#f59e0b" : item.status === "info" ? "#94a3b8" : "#ef4444",
             }} />
             <span style={{ color: "#374151" }}>{tMock.checks[item.key]}</span>
           </div>
@@ -306,7 +310,7 @@ const styles = {
   logo: { display: "flex", alignItems: "center", gap: 8 },
   logoIcon: { fontSize: 22 },
   navCta: { background: "#0f172a", color: "#fff", textDecoration: "none", padding: "8px 16px", borderRadius: 8, fontSize: 13, fontWeight: 500 },
-  heroSection: { position: "relative" as const, background: "linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #0f172a 100%)", overflow: "hidden", padding: "80px 24px 0" },
+  heroSection: { position: "relative" as const, background: "linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #0f172a 100%)", overflow: "hidden", padding: "80px 24px 100px" },
   heroInner: { maxWidth: 1100, margin: "0 auto", display: "flex", alignItems: "flex-start", gap: 48, flexWrap: "wrap" as const, paddingBottom: 80 },
   heroLeft: { flex: "1 1 380px", display: "flex", flexDirection: "column" as const, gap: 20 },
   heroRight: { flex: "1 1 340px", minWidth: 280 },
