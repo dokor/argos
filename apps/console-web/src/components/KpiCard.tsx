@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import styles from "./KpiCard.module.css";
+import styles from "./KpiCard.module.scss";
 
 type Props = {
   label: string;
