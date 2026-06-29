@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// Reports are public — access is controlled by the opaque token in the URL.
+// Reports are public - access is controlled by the opaque token in the URL.
 // Only the admin dashboard requires authentication.
 const PROTECTED_PATHS = ["/dashboard"];
 const COOKIE_NAME = "argos_admin";

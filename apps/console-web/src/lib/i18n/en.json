@@ -1,7 +1,7 @@
 {
   "layout": {
     "title": "Argos – Website auditor",
-    "description": "Argos scans HTTP headers, HTML quality, tech stack and Lighthouse performance. Scored, private report — no login required."
+    "description": "Argos scans HTTP headers, HTML quality, tech stack and Lighthouse performance. Scored, private report - no login required."
   },
   "nav": {
     "logo": "Argos",
@@ -11,7 +11,7 @@
     "hero": {
       "badge": "Website auditor · Free · No account",
       "headline": "Find what's hurting your site.\nFree, no account, in 30 seconds.",
-      "sub": "HTTP, SEO, performance, stack — Argos analyzes everything and gives you a prioritized report with the concrete actions to take first.",
+      "sub": "HTTP, SEO, performance, stack - Argos analyzes everything and gives you a prioritized report with the concrete actions to take first.",
       "audience": "For developers, growth teams, and agencies.",
       "inputPlaceholder": "https://yoursite.com",
       "cta": "Analyze now →",
@@ -133,12 +133,12 @@
         {
           "icon": "🎯",
           "label": "Actionable report",
-          "desc": "Every detected issue is prioritized by real impact. You know exactly what to fix first — without reading everything."
+          "desc": "Every detected issue is prioritized by real impact. You know exactly what to fix first - without reading everything."
         },
         {
           "icon": "📈",
           "label": "Actionable scoring",
-          "desc": "Every detected issue is weighted, prioritized and paired with a concrete recommendation — not just a number."
+          "desc": "Every detected issue is weighted, prioritized and paired with a concrete recommendation - not just a number."
         }
       ]
     },

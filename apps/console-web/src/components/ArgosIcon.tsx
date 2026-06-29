@@ -1,7 +1,7 @@
 import React from "react";
 
 /**
- * Argos logo icon — stylized eye with scan arc.
+ * Argos logo icon - stylized eye with scan arc.
  * Uses currentColor so it inherits the parent's text color.
  */
 export default function ArgosIcon({

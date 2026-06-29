@@ -199,7 +199,7 @@
   color: t.$color-red;
 }
 
-// ─── Audit form — analyzing state ──────────────────────────────────────────────
+// ─── Audit form - analyzing state ──────────────────────────────────────────────
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
@@ -560,7 +560,7 @@
     margin-bottom: 32px;
   }
 
-  // Social proof — hide dividers, tighten gap
+  // Social proof - hide dividers, tighten gap
   .socialProofBar {
     gap: t.$space-2 t.$space-4;
     padding: 12px t.$space-4;

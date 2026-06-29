@@ -157,11 +157,4 @@ export default function AuditCard({
             </button>
             <details>
               <summary className={styles.summary}>{tl.showJson}</summary>
-              <pre className={styles.pre}>{prettyJson(item.resultJson!)}</pre>
-            </details>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
+              <pre className={styles.pre}>{prettyJ

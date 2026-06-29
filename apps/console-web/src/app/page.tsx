@@ -108,7 +108,7 @@ function HeroAuditForm({
         <span className={s.analyzingText}>
           {phase === "redirecting"
             ? t.redirecting
-            : `${t.analyzing} — ${t.analyzeSteps[stepIdx]}...`}
+            : `${t.analyzing} - ${t.analyzeSteps[stepIdx]}...`}
         </span>
       </div>
     );

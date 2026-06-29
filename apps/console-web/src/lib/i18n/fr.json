@@ -11,7 +11,7 @@
     "hero": {
       "badge": "Audit de site web · Gratuit · Sans compte",
       "headline": "Trouvez ce qui plombe votre site.\nGratuit, sans compte, en 30 secondes.",
-      "sub": "HTTP, SEO, performance, stack — Argos analyse tout et vous rend un rapport priorisé avec les actions concrètes à mener en premier.",
+      "sub": "HTTP, SEO, performance, stack - Argos analyse tout et vous rend un rapport priorisé avec les actions concrètes à mener en premier.",
       "audience": "Pour les devs, les équipes growth et les agences.",
       "inputPlaceholder": "https://monsite.com",
       "cta": "Analyser maintenant →",
@@ -133,12 +133,12 @@
         {
           "icon": "🎯",
           "label": "Rapport actionnable",
-          "desc": "Chaque point détecté est priorisé par impact réel. Vous savez exactement quoi corriger en premier — sans tout lire."
+          "desc": "Chaque point détecté est priorisé par impact réel. Vous savez exactement quoi corriger en premier - sans tout lire."
         },
         {
           "icon": "📈",
           "label": "Scoring actionnable",
-          "desc": "Chaque point détecté est pondéré, priorisé et accompagné d'une recommandation concrète — pas juste un chiffre."
+          "desc": "Chaque point détecté est pondéré, priorisé et accompagné d'une recommandation concrète - pas juste un chiffre."
         }
       ]
     },

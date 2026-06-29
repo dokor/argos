@@ -29,7 +29,7 @@ export default function ReportPage({ params }: Readonly<Params>) {
         <ScoreGrid categories={report.scores.byCategory} globalScore={report.scores.global} />
         <IssuesByCategory report={report} />
 
-        {/* Raw JSON — admin only */}
+        {/* Raw JSON - admin only */}
         {isAdmin && (
           <details className={s.dataPanel}>
             <summary className={s.dataSummary}>

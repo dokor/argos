@@ -67,7 +67,7 @@ export default function DashboardPage() {
           <KpiCard label={td.stats.analyzed}   value={stats.analyzed}   icon="✓" accent="#16a34a" bg="#dcfce7" description={td.stats.analyzedDesc} />
           <KpiCard label={td.stats.inProgress} value={stats.inProgress} icon="↻" accent="#0284c7" bg="#e0f2fe" description={td.stats.inProgressDesc} highlight={stats.inProgress > 0} />
           <KpiCard label={td.stats.errors}     value={stats.errors}     icon="✗" accent="#dc2626" bg="#fee2e2" description={td.stats.errorsDesc}     highlight={stats.errors > 0} />
-          <KpiCard label={td.stats.avgScore}   value={stats.avgScore !== null ? stats.avgScore + "%" : "—"} icon="◎" accent={scoreAccent} bg={scoreBg} description={td.stats.avgScoreDesc} />
+          <KpiCard label={td.stats.avgScore}   value={stats.avgScore !== null ? stats.avgScore + "%" : "-"} icon="◎" accent={scoreAccent} bg={scoreBg} description={td.stats.avgScoreDesc} />
         </div>
 
         <div className={styles.formSection}>
