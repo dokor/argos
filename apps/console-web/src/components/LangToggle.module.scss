@@ -1,0 +1,19 @@
+@use '../styles/tokens' as t;
+
+.btn {
+  background: none;
+  border: 1px solid t.$color-slate-200;
+  border-radius: t.$radius-sm;
+  padding: 5px 10px;
+  font-size: t.$text-sm;
+  cursor: pointer;
+  color: t.$color-slate-500;
+  font-weight: 500;
+  line-height: 1;
+  transition: border-color 0.15s, color 0.15s;
+
+  &:hover {
+    border-color: t.$color-slate-300;
+    color: t.$color-navy;
+  }
+}

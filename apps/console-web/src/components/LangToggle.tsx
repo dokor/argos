@@ -1,6 +1,7 @@
 "use client";
 
 import { useLang, Lang } from "@/lib/i18n/LangContext";
+import s from "./LangToggle.module.scss";
 
 type Props = {
   className?: string;
@@ -22,18 +23,7 @@ export default function LangToggle({ className }: Props) {
     <button
       onClick={toggle}
       title={`Switch to ${lang === "fr" ? "English" : "Français"}`}
-      className={className}
-      style={{
-        background: "none",
-        border: "1px solid #e2e8f0",
-        borderRadius: 8,
-        padding: "5px 10px",
-        fontSize: 12,
-        cursor: "pointer",
-        color: "#64748b",
-        fontWeight: 500,
-        lineHeight: 1,
-      }}
+      className={`${s.btn}${className ? " " + className : ""}`}
     >
       {t.langToggle.label}
     </button>
