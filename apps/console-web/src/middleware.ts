@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const PROTECTED_PATHS = ["/dashboard", "/report"];
+// Reports are public — access is controlled by the opaque token in the URL.
+// Only the admin dashboard requires authentication.
+const PROTECTED_PATHS = ["/dashboard"];
 const COOKIE_NAME = "argos_admin";
 
 export function middleware(request: NextRequest) {
@@ -22,5 +24,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/report/:path*"],
+  matcher: ["/dashboard/:path*"],
 };
