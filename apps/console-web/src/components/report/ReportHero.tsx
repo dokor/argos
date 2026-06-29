@@ -1,6 +1,6 @@
 "use client";
 
-import { Report } from "./types";
+import { Report, PriorityItem, CategoryScore } from "./types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -45,6 +45,36 @@ function ScoreRing({ value }: { value: number }) {
   );
 }
 
+const SEVERITY_CONFIG = [
+  {
+    key: "critical" as const,
+    dot: "bg-red-500",
+    text: "text-red-700",
+    bg: "bg-red-50",
+    border: "border-red-100",
+  },
+  {
+    key: "important" as const,
+    dot: "bg-amber-500",
+    text: "text-amber-700",
+    bg: "bg-amber-50",
+    border: "border-amber-100",
+  },
+  {
+    key: "opportunity" as const,
+    dot: "bg-emerald-500",
+    text: "text-emerald-700",
+    bg: "bg-emerald-50",
+    border: "border-emerald-100",
+  },
+];
+
+function categoryBarColor(score: number) {
+  if (score >= 80) return "#10b981";
+  if (score >= 60) return "#f59e0b";
+  return "#ef4444";
+}
+
 export default function ReportHero({ report }: { report: Report }) {
   const { t } = useLang();
   const th = t.report.hero;
@@ -52,8 +82,19 @@ export default function ReportHero({ report }: { report: Report }) {
   const global = Math.max(0, Math.min(100, report.scores.global));
   const scoreUi = scoreLabel(global, th.scoreLabels);
 
-  const prioritiesCount = report.summary?.priorities?.length ?? 0;
+  const priorities: PriorityItem[] = report.summary?.priorities ?? [];
+  const prioritiesCount = priorities.length;
   const issuesCount = report.issues?.length ?? 0;
+
+  const priorityBySeverity = {
+    critical: priorities.filter((p) => p.severity === "critical").length,
+    important: priorities.filter((p) => p.severity === "important").length,
+    opportunity: priorities.filter((p) => p.severity === "opportunity").length,
+  };
+
+  const topCategories: CategoryScore[] = [...(report.scores.byCategory ?? [])]
+    .sort((a, b) => a.score - b.score)
+    .slice(0, 4);
 
   return (
     <TooltipProvider>
@@ -136,19 +177,70 @@ export default function ReportHero({ report }: { report: Report }) {
               </a>
             </Button>
 
+            {/* Priorities by severity */}
             <Card className="rounded-xl border bg-white shadow-sm">
-              <CardContent className="p-4">
-                <div className="text-xs text-muted-foreground">{th.prioritiesDetected}</div>
-                <div className="mt-1 text-lg font-semibold">{prioritiesCount}</div>
-                <div className="mt-1 text-xs text-muted-foreground">{th.prioritiesFirst}</div>
+              <CardContent className="p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="text-xs font-medium text-muted-foreground">{th.severityBreakdown}</div>
+                  <span className="text-xs font-semibold tabular-nums">{prioritiesCount}</span>
+                </div>
+                {prioritiesCount === 0 ? (
+                  <div className="text-xs text-muted-foreground">{th.prioritiesFirst}</div>
+                ) : (
+                  <div className="space-y-1.5">
+                    {SEVERITY_CONFIG.filter((s) => priorityBySeverity[s.key] > 0).map((s) => (
+                      <div
+                        key={s.key}
+                        className={`flex items-center justify-between rounded-lg border px-2.5 py-1.5 ${s.bg} ${s.border}`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className={`h-2 w-2 rounded-full ${s.dot}`} />
+                          <span className={`text-xs font-medium ${s.text}`}>
+                            {th.severity[s.key]}
+                          </span>
+                        </div>
+                        <span className={`text-sm font-bold tabular-nums ${s.text}`}>
+                          {priorityBySeverity[s.key]}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
+            {/* Categories mini-scorecard */}
             <Card className="rounded-xl border bg-white shadow-sm">
-              <CardContent className="p-4">
-                <div className="text-xs text-muted-foreground">{th.issuesTotal}</div>
-                <div className="mt-1 text-lg font-semibold">{issuesCount}</div>
-                <div className="mt-1 text-xs text-muted-foreground">{th.issuesDesc}</div>
+              <CardContent className="p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="text-xs font-medium text-muted-foreground">{th.byCategoryTitle}</div>
+                  <span className="text-xs font-semibold tabular-nums">{issuesCount} {th.issues}</span>
+                </div>
+                {topCategories.length === 0 ? (
+                  <div className="text-xs text-muted-foreground">{th.issuesDesc}</div>
+                ) : (
+                  <div className="space-y-2">
+                    {topCategories.map((cat) => (
+                      <div key={cat.key} className="space-y-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="truncate text-xs font-medium">{cat.label}</span>
+                          <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+                            {cat.score}
+                          </span>
+                        </div>
+                        <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
+                          <div
+                            className="h-full rounded-full transition-all"
+                            style={{
+                              width: `${Math.max(0, Math.min(100, cat.score))}%`,
+                              backgroundColor: categoryBarColor(cat.score),
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>

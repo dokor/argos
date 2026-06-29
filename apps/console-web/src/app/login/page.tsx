@@ -28,12 +28,8 @@ function LoginForm() {
     if (res.ok) {
       router.push(from);
     } else {
-      try {
-        const data = await res.json();
-        setError(data.error || "Erreur");
-      } catch {
-        setError(`Erreur ${res.status}`);
-      }
+      const data = await res.json();
+      setError(data.error || "Erreur");
       setLoading(false);
     }
   }
@@ -41,7 +37,7 @@ function LoginForm() {
   return (
     <main className={s.root}>
       <form onSubmit={handleSubmit} className={s.form}>
-        <h1 className={s.title}>🔐 Accès restreint</h1>
+        <h1 className={s.title}>Acces restreint</h1>
 
         <input
           type="password"
