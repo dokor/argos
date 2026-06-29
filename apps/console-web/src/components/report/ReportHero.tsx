@@ -8,18 +8,19 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { TechBadges } from "@/components/report/TechBadges";
+import { useLang } from "@/lib/i18n/LangContext";
 
-function scoreLabel(score: number) {
-  if (score >= 85) return { label: "Excellent", variant: "default" as const };
-  if (score >= 70) return { label: "Bon", variant: "secondary" as const };
-  if (score >= 55) return { label: "À améliorer", variant: "outline" as const };
-  return { label: "Prioritaire", variant: "destructive" as const };
+function scoreLabel(score: number, labels: { excellent: string; good: string; improve: string; priority: string }) {
+  if (score >= 85) return { label: labels.excellent, variant: "default" as const };
+  if (score >= 70) return { label: labels.good, variant: "secondary" as const };
+  if (score >= 55) return { label: labels.improve, variant: "outline" as const };
+  return { label: labels.priority, variant: "destructive" as const };
 }
 
-function formatDate(iso: string) {
+function formatDate(iso: string, locale: string) {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleString("fr-FR", { dateStyle: "long", timeStyle: "short" });
+  return d.toLocaleString(locale, { dateStyle: "long", timeStyle: "short" });
 }
 
 function getInitial(domain: string) {
@@ -45,9 +46,11 @@ function ScoreRing({ value }: { value: number }) {
 }
 
 export default function ReportHero({ report }: { report: Report }) {
+  const { t } = useLang();
+  const th = t.report.hero;
   const title = report.site?.title || report.domain;
   const global = Math.max(0, Math.min(100, report.scores.global));
-  const scoreUi = scoreLabel(global);
+  const scoreUi = scoreLabel(global, th.scoreLabels);
 
   const prioritiesCount = report.summary?.priorities?.length ?? 0;
   const issuesCount = report.issues?.length ?? 0;
@@ -81,9 +84,9 @@ export default function ReportHero({ report }: { report: Report }) {
 
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant="secondary">{report.domain}</Badge>
-                  <Badge variant="outline">Analysé {formatDate(report.generatedAt)}</Badge>
-                  <Badge variant="outline">{prioritiesCount} priorité(s)</Badge>
-                  <Badge variant="outline">{issuesCount} point(s)</Badge>
+                  <Badge variant="outline">{th.analyzedAt} {formatDate(report.generatedAt, th.locale)}</Badge>
+                  <Badge variant="outline">{prioritiesCount} {th.priorities}</Badge>
+                  <Badge variant="outline">{issuesCount} {th.issues}</Badge>
                   <TechBadges tech={report.tech} />
                 </div>
 
@@ -99,19 +102,19 @@ export default function ReportHero({ report }: { report: Report }) {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <div className="cursor-help">
-                      <div className="text-sm text-muted-foreground">Score global</div>
+                      <div className="text-sm text-muted-foreground">{th.scoreGlobal}</div>
                       <Badge variant={scoreUi.variant}>{scoreUi.label}</Badge>
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
-                    Score agrégé (0–100) basé sur les points détectés.
+                    {th.scoreTooltip}
                   </TooltipContent>
                 </Tooltip>
 
                 <div className="w-52 space-y-2">
                   <Progress value={global} />
                   <div className="text-xs text-muted-foreground">
-                    Objectif : {global >= 85 ? "maintenir" : "prioriser les quick wins"}
+                    {th.scoreObjectivePrefix} {global >= 85 ? th.scoreMaintain : th.scoreQuickwins}
                   </div>
                 </div>
               </div>
@@ -127,7 +130,7 @@ export default function ReportHero({ report }: { report: Report }) {
             <Button variant="outline" asChild className="h-auto justify-start py-4 bg-white">
               <a href={report.url} target="_blank" rel="noreferrer">
                 <div className="text-left">
-                  <div className="text-xs text-muted-foreground">URL analysée</div>
+                  <div className="text-xs text-muted-foreground">{th.urlAnalyzed}</div>
                   <div className="mt-1 truncate font-medium">{report.url}</div>
                 </div>
               </a>
@@ -135,17 +138,17 @@ export default function ReportHero({ report }: { report: Report }) {
 
             <Card className="rounded-xl border bg-white shadow-sm">
               <CardContent className="p-4">
-                <div className="text-xs text-muted-foreground">Priorités détectées</div>
+                <div className="text-xs text-muted-foreground">{th.prioritiesDetected}</div>
                 <div className="mt-1 text-lg font-semibold">{prioritiesCount}</div>
-                <div className="mt-1 text-xs text-muted-foreground">À traiter en premier</div>
+                <div className="mt-1 text-xs text-muted-foreground">{th.prioritiesFirst}</div>
               </CardContent>
             </Card>
 
             <Card className="rounded-xl border bg-white shadow-sm">
               <CardContent className="p-4">
-                <div className="text-xs text-muted-foreground">Points au total</div>
+                <div className="text-xs text-muted-foreground">{th.issuesTotal}</div>
                 <div className="mt-1 text-lg font-semibold">{issuesCount}</div>
-                <div className="mt-1 text-xs text-muted-foreground">Inclut info / important / critique</div>
+                <div className="mt-1 text-xs text-muted-foreground">{th.issuesDesc}</div>
               </CardContent>
             </Card>
           </div>

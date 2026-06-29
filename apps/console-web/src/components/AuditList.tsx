@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { argosApi, AuditListItem } from "@/lib/ArgosApi";
 import Link from "next/link";
+import { useLang } from "@/lib/i18n/LangContext";
 
 type Props = {
   items: AuditListItem[];
@@ -33,6 +34,8 @@ type AuditReportV2 = {
 };
 
 export default function AuditList({ items, setItems }: Props) {
+  const { t } = useLang();
+  const tl = t.auditList;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copiedRunId, setCopiedRunId] = useState<number | null>(null);
@@ -55,7 +58,6 @@ export default function AuditList({ items, setItems }: Props) {
         if (mounted) setLoading(false);
       }
     })();
-
     return () => {
       mounted = false;
     };
@@ -65,7 +67,6 @@ export default function AuditList({ items, setItems }: Props) {
     () => items.filter((it) => !isFinal(it.status)).map((it) => it.runId),
     [items]
   );
-
   useEffect(() => {
     if (pendingRuns.length === 0) return;
 
@@ -118,16 +119,16 @@ export default function AuditList({ items, setItems }: Props) {
     }
   }
 
-  if (loading) return <div style={styles.helper}>Chargement…</div>;
+  if (loading) return <div style={styles.helper}>{tl.loading}</div>;
   if (error) return <div style={styles.error}>❌ {error}</div>;
 
   return (
     <div style={{ display: "grid", gap: 12 }}>
-      <div style={styles.sectionTitle}>Audits</div>
+      <div style={styles.sectionTitle}>{tl.title}</div>
 
       {items.length === 0 ? (
         <div style={styles.card}>
-          <div style={styles.muted}>Aucun audit pour le moment.</div>
+          <div style={styles.muted}>{tl.empty}</div>
         </div>
       ) : (
         items.map((it: AuditListItem) => {
@@ -143,13 +144,13 @@ export default function AuditList({ items, setItems }: Props) {
                 </div>
 
                 <div style={{ display: "grid", justifyItems: "end", gap: 8 }}>
-                  <StatusBadge status={it.status} />
+                  <StatusBadge status={it.status} labels={tl.status} />
                   {reportHref ? (
                     <Link href={reportHref} style={styles.linkButton}>
-                      🔎 Voir le rapport
+                      {tl.viewReport}
                     </Link>
                   ) : (
-                    <span style={styles.linkButtonDisabled}>Rapport en attente…</span>
+                    <span style={styles.linkButtonDisabled}>{tl.reportPending}</span>
                   )}
                   {score?.global ? (
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -160,7 +161,7 @@ export default function AuditList({ items, setItems }: Props) {
                     </div>
                   ) : (
                     <div style={styles.mutedSmall}>
-                      {isFinal(it.status) ? "Score indisponible" : "Score en attente…"}
+                      {isFinal(it.status) ? tl.scoreUnavailable : tl.scorePending}
                     </div>
                   )}
                 </div>
@@ -169,7 +170,7 @@ export default function AuditList({ items, setItems }: Props) {
               {/* Modules */}
               {score?.byModule?.length ? (
                 <div style={styles.row}>
-                  <div style={styles.rowLabel}>Modules</div>
+                  <div style={styles.rowLabel}>{tl.modulesLabel}</div>
                   <div style={styles.chips}>
                     {score.byModule
                       .slice()
@@ -189,17 +190,17 @@ export default function AuditList({ items, setItems }: Props) {
               {/* Tags */}
               {score?.byTag?.length ? (
                 <div style={styles.row}>
-                  <div style={styles.rowLabel}>Tags</div>
+                  <div style={styles.rowLabel}>{tl.tagsLabel}</div>
                   <div style={styles.chips}>
                     {score.byTag
                       .slice()
                       .sort((a, b) => (b.maxScore ?? 0) - (a.maxScore ?? 0)) // plus "impactant" d'abord
-                      .map((t) => (
+                      .map((tag) => (
                         <ScoreChip
-                          key={`t-${t.id}`}
-                          label={t.id}
-                          ratio={t.ratio}
-                          title={`${t.id}: ${formatPct(t.ratio)} (${round1(t.score)}/${round1(t.maxScore)})`}
+                          key={`t-${tag.id}`}
+                          label={tag.id}
+                          ratio={tag.ratio}
+                          title={`${tag.id}: ${formatPct(tag.ratio)} (${round1(tag.score)}/${round1(tag.maxScore)})`}
                         />
                       ))}
                   </div>
@@ -209,16 +210,16 @@ export default function AuditList({ items, setItems }: Props) {
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
                 {!it.resultJson ? (
                   <div style={styles.muted}>
-                    {isFinal(it.status) ? "Pas de JSON disponible." : "En attente du résultat…"}
+                    {isFinal(it.status) ? tl.noJson : tl.resultPending}
                   </div>
                 ) : (
                   <>
                     <button type="button" onClick={() => copyJson(it.runId, it.resultJson!)} style={styles.button}>
-                      {copiedRunId === it.runId ? "✅ Copié" : "📋 Copier le JSON"}
+                      {copiedRunId === it.runId ? tl.copied : tl.copyJson}
                     </button>
 
                     <details>
-                      <summary style={styles.summary}>Voir le JSON</summary>
+                      <summary style={styles.summary}>{tl.showJson}</summary>
                       <pre style={styles.pre}>{prettyJson(it.resultJson!)}</pre>
                     </details>
                   </>
@@ -315,13 +316,8 @@ function ScoreChip({ label, ratio, title }: { label: string; ratio: number; titl
   );
 }
 
-function StatusBadge({ status }: { status: AuditListItem["status"] }) {
-  const label =
-    status === "QUEUED" ? "En file"
-      : status === "RUNNING" ? "En cours"
-        : status === "COMPLETED" ? "Terminé"
-          : "Échec";
-
+function StatusBadge({ status, labels }: { status: AuditListItem["status"]; labels: Record<string, string> }) {
+  const label = labels[status] ?? status;
   const style =
     status === "COMPLETED" ? styles.badgeSuccess
       : status === "FAILED" ? styles.badgeError

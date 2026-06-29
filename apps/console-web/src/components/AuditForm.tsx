@@ -2,12 +2,16 @@
 
 import React, { useState } from "react";
 import { argosApi, AuditListItem, CreateAuditRequest, CreateAuditResponse } from "@/lib/ArgosApi";
+import { useLang } from "@/lib/i18n/LangContext";
 
 type Props = {
   onCreated: (item: AuditListItem) => void;
 };
 
 export default function AuditForm({ onCreated }: Props) {
+  const { t } = useLang();
+  const tf = t.auditForm;
+
   const [url, setUrl] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -20,16 +24,15 @@ export default function AuditForm({ onCreated }: Props) {
 
     const trimmed = url.trim();
     if (!trimmed) {
-      setErrorMsg("URL manquante");
+      setErrorMsg(tf.errorUrlMissing);
       return;
     }
 
     setSubmitting(true);
     try {
       const payload: CreateAuditRequest = { url: trimmed };
-      const res: CreateAuditResponse = await argosApi.createAudit(payload)
+      const res: CreateAuditResponse = await argosApi.createAudit(payload);
 
-      // On pousse immédiatement un item en liste (optimistic)
       onCreated({
         auditId: res.auditId,
         inputUrl: trimmed,
@@ -39,11 +42,11 @@ export default function AuditForm({ onCreated }: Props) {
         resultJson: null,
       });
 
-      setSuccessMsg(`Audit créé (runId=${res.runId})`);
+      setSuccessMsg(`${tf.successPrefix} (runId=${res.runId})`);
       setUrl("");
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      setErrorMsg(err?.message ?? "Erreur inconnue");
+      setErrorMsg(err instanceof Error ? err.message : tf.errorUnknown);
     } finally {
       setSubmitting(false);
     }
@@ -52,12 +55,12 @@ export default function AuditForm({ onCreated }: Props) {
   return (
     <form onSubmit={submit} style={{ display: "grid", gap: 12, padding: 16, border: "1px solid #ddd", borderRadius: 12 }}>
       <div style={{ display: "grid", gap: 6 }}>
-        <label htmlFor="url" style={{ fontWeight: 600, color: "#0f172a" }}>URL à analyser</label>
+        <label htmlFor="url" style={{ fontWeight: 600, color: "#0f172a" }}>{tf.urlLabel}</label>
         <input
           id="url"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          placeholder="https://example.com"
+          placeholder={tf.urlPlaceholder}
           disabled={submitting}
           style={{ padding: 10, borderRadius: 10, border: "1px solid #ccc", color: "#0f172a" }}
         />
@@ -68,7 +71,7 @@ export default function AuditForm({ onCreated }: Props) {
         disabled={submitting}
         style={{ padding: 10, borderRadius: 10, border: "1px solid #111", fontWeight: 600, color: "#0f172a" }}
       >
-        {submitting ? "Envoi..." : "Lancer l'audit"}
+        {submitting ? tf.submitting : tf.submit}
       </button>
 
       {successMsg && (

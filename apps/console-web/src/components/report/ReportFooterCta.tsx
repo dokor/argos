@@ -2,8 +2,11 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useLang } from "@/lib/i18n/LangContext";
 
 export default function ReportFooterCta() {
+  const { t } = useLang();
+  const tf = t.report.footerCta;
   const calendly = process.env.NEXT_PUBLIC_CALENDLY_URL || "";
   const enabled = Boolean(calendly);
 
@@ -14,9 +17,9 @@ export default function ReportFooterCta() {
           <CardContent className="p-6 md:p-8">
             <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
               <div>
-                <h2 className="text-xl font-semibold">Planifier un échange</h2>
+                <h2 className="text-xl font-semibold">{tf.title}</h2>
                 <p className="mt-2 text-sm text-muted-foreground max-w-xl">
-                  15 minutes pour prioriser les optimisations, estimer l’effort, et identifier les quick wins.
+                  {tf.desc}
                 </p>
               </div>
 
@@ -28,7 +31,7 @@ export default function ReportFooterCta() {
                       if (!enabled) e.preventDefault();
                     }}
                   >
-                    Prendre RDV
+                    {tf.cta}
                   </a>
                 </Button>
 
@@ -42,12 +45,12 @@ export default function ReportFooterCta() {
                     }
                   }}
                 >
-                  Copier le lien
+                  {tf.copyLink}
                 </Button>
 
                 {!enabled && (
                   <div className="text-xs text-muted-foreground">
-                    Lien Calendly à venir.
+                    {tf.calendlyComingSoon}
                   </div>
                 )}
               </div>
@@ -56,7 +59,7 @@ export default function ReportFooterCta() {
         </Card>
 
         <div className="mt-6 text-center text-xs text-muted-foreground">
-          Rapport privé • non indexable • généré automatiquement
+          {tf.footerNote}
         </div>
       </div>
     </section>

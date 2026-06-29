@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import React from "react";
+import { useLang } from "@/lib/i18n/LangContext";
 
 function groupBy<T extends Record<string, any>>(items: T[], key: keyof T) {
   const map = new Map<string, T[]>();
@@ -28,14 +29,14 @@ function severityBadge(sev: Issue["severity"]) {
   }
 }
 
-function severityLabel(sev: Issue["severity"]) {
+function severityLabel(sev: Issue["severity"], labels: { critical: string; important: string; info: string }) {
   switch (sev) {
     case "critical":
-      return "Critique";
+      return labels.critical;
     case "important":
-      return "Important";
+      return labels.important;
     case "info":
-      return "Info";
+      return labels.info;
   }
 }
 
@@ -46,6 +47,8 @@ function severityWeight(sev: Issue["severity"]) {
 type Filter = "all" | "critical" | "important" | "info";
 
 export default function IssuesByCategory({ report }: { report: Report }) {
+  const { t } = useLang();
+  const ti = t.report.issuesByCategory;
   const [filter, setFilter] = React.useState<Filter>("all");
 
   const categories: CategoryScore[] = report.scores.byCategory || [];
@@ -61,18 +64,18 @@ export default function IssuesByCategory({ report }: { report: Report }) {
       <CardHeader className="space-y-3">
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
-            <CardTitle className="text-lg">Détail par catégorie</CardTitle>
+            <CardTitle className="text-lg">{ti.title}</CardTitle>
             <CardDescription>
-              Filtre par sévérité, puis explore les points par catégorie (tri critique → info).
+              {ti.desc}
             </CardDescription>
           </div>
 
           <Tabs value={filter} onValueChange={(v: string) => setFilter(v as Filter)}>
             <TabsList>
-              <TabsTrigger value="all">Tous</TabsTrigger>
-              <TabsTrigger value="critical">Critiques</TabsTrigger>
-              <TabsTrigger value="important">Importants</TabsTrigger>
-              <TabsTrigger value="info">Info</TabsTrigger>
+              <TabsTrigger value="all">{ti.filterAll}</TabsTrigger>
+              <TabsTrigger value="critical">{ti.filterCritical}</TabsTrigger>
+              <TabsTrigger value="important">{ti.filterImportant}</TabsTrigger>
+              <TabsTrigger value="info">{ti.filterInfo}</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
@@ -91,7 +94,7 @@ export default function IssuesByCategory({ report }: { report: Report }) {
                 <div className="min-w-0">
                   <div className="text-base font-semibold">{cat.label}</div>
                   <div className="mt-1 text-sm text-muted-foreground">
-                    {issues.length} point(s) • Score {Math.max(0, Math.min(100, cat.score))}/100
+                    {issues.length} {ti.issueCount} • {ti.scoreLabel} {Math.max(0, Math.min(100, cat.score))}{ti.scoreSuffix}
                   </div>
                 </div>
 
@@ -99,7 +102,7 @@ export default function IssuesByCategory({ report }: { report: Report }) {
                   href="#top"
                   className="text-sm font-medium text-muted-foreground hover:text-slate-900"
                 >
-                  Retour en haut ↑
+                  {ti.backToTop}
                 </a>
               </div>
 
@@ -108,7 +111,7 @@ export default function IssuesByCategory({ report }: { report: Report }) {
               <div className="grid gap-3">
                 {issues.length === 0 ? (
                   <div className="rounded-xl border bg-white p-4 text-sm text-muted-foreground">
-                    Aucun point pour ce filtre dans cette catégorie.
+                    {ti.noIssues}
                   </div>
                 ) : (
                   issues.map((issue) => (
@@ -121,10 +124,10 @@ export default function IssuesByCategory({ report }: { report: Report }) {
                           <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-2">
                               <Badge variant={severityBadge(issue.severity)}>
-                                {severityLabel(issue.severity)}
+                                {severityLabel(issue.severity, ti.severity)}
                               </Badge>
 
-                              {issue.effort && <Badge variant="outline">Effort {issue.effort}</Badge>}
+                              {issue.effort && <Badge variant="outline">{ti.effortLabel} {issue.effort}</Badge>}
                               {issue.module && <Badge variant="outline">{issue.module}</Badge>}
                             </div>
 
@@ -133,7 +136,7 @@ export default function IssuesByCategory({ report }: { report: Report }) {
                           </div>
 
                           <div className="text-sm text-muted-foreground group-open:text-slate-900">
-                            Détails
+                            {ti.detailsLabel}
                             <span className="ml-1 inline-block transition-transform group-open:rotate-180">▾</span>
                           </div>
                         </div>
@@ -143,7 +146,7 @@ export default function IssuesByCategory({ report }: { report: Report }) {
                         {issue.evidence && (
                           <div className="rounded-xl border bg-slate-50 p-3">
                             <div className="text-xs font-semibold text-muted-foreground">
-                              Preuve / Contexte
+                              {ti.evidenceLabel}
                             </div>
                             <div className="mt-1 whitespace-pre-wrap">{issue.evidence}</div>
                           </div>
@@ -151,7 +154,7 @@ export default function IssuesByCategory({ report }: { report: Report }) {
 
                         <div className="rounded-xl border bg-slate-50 p-3">
                           <div className="text-xs font-semibold text-muted-foreground">
-                            Recommandation
+                            {ti.recommendationLabel}
                           </div>
                           <div className="mt-1 whitespace-pre-wrap">{issue.recommendation}</div>
                         </div>
