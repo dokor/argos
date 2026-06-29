@@ -115,14 +115,7 @@ public class AuditProcessorService {
             AuditModuleResult httpModule = httpModuleAnalyzer.analyze(context, logger);
 
             // Enrich context with HTTP output
-            context = context.withHttpResult(
-                (String) httpModule.data().get("finalUrl"),
-                toInt(httpModule.data().get("statusCode")),
-                toLong(httpModule.data().get("durationMs")),
-                safeStringList(httpModule.data().get("redirectChain")),
-                safeStringMap(httpModule.data().get("headers")),
-                (String) httpModule.data().get("body")
-            );
+            context = HttpModuleAnalyzer.enrichContext(context, httpModule);
 
             // HTML + TECH + Runtime
             logger.info("Running module={} runId={} finalUrl={}", htmlModuleAnalyzer.moduleId(), runId, context.finalUrl());
@@ -150,6 +143,7 @@ public class AuditProcessorService {
             meta.put("scoringVersion", String.valueOf(scoringVersion));
             meta.put("runId", String.valueOf(runId));
             meta.put("httpStatusCode", String.valueOf(context.httpStatusCode()));
+            meta.put("auditDurationMs", String.valueOf(Instant.now().toEpochMilli() - context.startedAt().toEpochMilli()));
 
             AuditReportJson report = new AuditReportJson(
                 REPORT_SCHEMA_VERSION,
@@ -181,35 +175,4 @@ public class AuditProcessorService {
         }
     }
 
-    private static int toInt(Object o) {
-        if (o instanceof Integer i) return i;
-        if (o instanceof Number n) return n.intValue();
-        if (o instanceof String s) return Integer.parseInt(s);
-        return 0;
-    }
-
-    private static long toLong(Object o) {
-        if (o instanceof Long l) return l;
-        if (o instanceof Number n) return n.longValue();
-        if (o instanceof String s) return Long.parseLong(s);
-        return 0L;
-    }
-
-    @SuppressWarnings("unchecked")
-    private static List<String> safeStringList(Object o) {
-        if (o instanceof List<?> list) {
-            return list.stream().map(String::valueOf).toList();
-        }
-        return List.of();
-    }
-
-    @SuppressWarnings("unchecked")
-    private static Map<String, String> safeStringMap(Object o) {
-        if (o instanceof Map<?, ?> map) {
-            Map<String, String> out = new LinkedHashMap<>();
-            map.forEach((k, v) -> out.put(String.valueOf(k), v != null ? String.valueOf(v) : null));
-            return out;
-        }
-        return Map.of();
-    }
 }
