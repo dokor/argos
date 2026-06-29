@@ -8,7 +8,7 @@ import KpiCard from "@/components/KpiCard";
 import { useLang } from "@/lib/i18n/LangContext";
 import { AuditListItem } from "@/lib/ArgosApi";
 import { getGlobalScore } from "@/lib/auditTypes";
-import styles from "./page.module.css";
+import styles from "./page.module.scss";
 
 function scoreColors(score: number | null): { accent: string; bg: string } {
   if (score === null) return { accent: "#64748b", bg: "#f1f5f9" };

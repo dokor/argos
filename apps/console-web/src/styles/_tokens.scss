@@ -1,0 +1,97 @@
+// ─── Argos Design Tokens ──────────────────────────────────────────────────────
+// Import with: @use '../../styles/tokens' as t;
+// Usage: color: t.$color-navy;
+
+// ── Colors: neutrals ─────────────────────────────────────────────────────────
+$color-navy:       #0f172a;
+$color-slate-800:  #1e293b;
+$color-slate-700:  #334155;
+$color-slate-600:  #475569;
+$color-slate-500:  #64748b;
+$color-slate-400:  #94a3b8;
+$color-slate-300:  #cbd5e1;
+$color-slate-200:  #e2e8f0;
+$color-slate-100:  #f1f5f9;
+$color-slate-50:   #f8fafc;
+$color-white:      #ffffff;
+
+// ── Colors: brand ─────────────────────────────────────────────────────────────
+$color-indigo:     #6366f1;
+$color-indigo-dim: rgba(99, 102, 241, 0.15);
+$color-indigo-muted: #a5b4fc;
+
+// ── Colors: semantic ──────────────────────────────────────────────────────────
+$color-green:      #16a34a;
+$color-green-bg:   #dcfce7;
+$color-green-border: #86efac;
+$color-green-dark: #14532d;
+$color-green-mid:  #15803d;
+$color-green-light: #f0fdf4;
+$color-green-border-light: #bbf7d0;
+
+$color-blue:       #0284c7;
+$color-blue-bg:    #e0f2fe;
+$color-blue-border: #bae6fd;
+$color-blue-light: #f0f9ff;
+$color-blue-dark:  #075985;
+
+$color-red:        #dc2626;
+$color-red-bg:     #fee2e2;
+$color-red-border: #fecaca;
+$color-red-dark:   #7f1d1d;
+$color-red-light:  #fff1f2;
+
+$color-amber:      #d97706;
+$color-amber-bg:   #fef9c3;
+
+$color-purple:     #6d28d9;
+$color-purple-bg:  #f5f3ff;
+$color-purple-border: #ddd6fe;
+
+$color-sky:        #0ea5e9;
+$color-emerald:    #10b981;
+$color-yellow:     #f59e0b;
+$color-gray-text:  #374151;
+$color-success-check: #22c55e;
+
+// ── Border radius ─────────────────────────────────────────────────────────────
+$radius-sm:   8px;
+$radius-md:   10px;
+$radius-lg:   12px;
+$radius-xl:   14px;
+$radius-2xl:  16px;
+$radius-pill: 999px;
+
+// ── Spacing ───────────────────────────────────────────────────────────────────
+$space-1:  4px;
+$space-2:  8px;
+$space-3:  12px;
+$space-4:  16px;
+$space-5:  20px;
+$space-6:  24px;
+$space-7:  28px;
+$space-8:  32px;
+$space-10: 40px;
+
+// ── Shadows ───────────────────────────────────────────────────────────────────
+$shadow-sm:   0 1px 3px rgba(15, 23, 42, 0.04);
+$shadow-md:   0 2px 16px rgba(0, 0, 0, 0.08);
+$shadow-hero: 0 20px 60px rgba(0, 0, 0, 0.25);
+
+// ── Font sizes ────────────────────────────────────────────────────────────────
+$text-xs:  11px;
+$text-sm:  12px;
+$text-base: 13px;
+$text-md:  14px;
+$text-lg:  15px;
+$text-xl:  16px;
+$text-2xl: 18px;
+$text-3xl: 20px;
+
+// ── Layout widths ─────────────────────────────────────────────────────────────
+$container-width:   1100px;
+$dashboard-width:   1140px;
+$login-form-width:  320px;
+
+// ── Z-index ───────────────────────────────────────────────────────────────────
+$z-sticky: 50;

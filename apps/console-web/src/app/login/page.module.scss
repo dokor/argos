@@ -1,0 +1,65 @@
+@use '../../styles/tokens' as t;
+
+.root {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: t.$color-slate-100;
+}
+
+.form {
+  background: t.$color-white;
+  border-radius: t.$radius-lg;
+  padding: t.$space-10 t.$space-8;
+  box-shadow: t.$shadow-md;
+  width: t.$login-form-width;
+  display: flex;
+  flex-direction: column;
+  gap: t.$space-4;
+}
+
+.title {
+  margin: 0;
+  font-size: t.$text-3xl;
+  color: t.$color-navy;
+  text-align: center;
+}
+
+.input {
+  padding: 10px 14px;
+  border-radius: t.$radius-sm;
+  border: 1px solid t.$color-slate-300;
+  font-size: t.$text-lg;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+
+  &:focus {
+    border-color: t.$color-indigo;
+  }
+}
+
+.error {
+  margin: 0;
+  color: t.$color-red;
+  font-size: t.$text-base;
+  text-align: center;
+}
+
+.btn {
+  padding: 10px;
+  border-radius: t.$radius-sm;
+  background: t.$color-navy;
+  color: t.$color-white;
+  border: none;
+  font-size: t.$text-lg;
+  cursor: pointer;
+  font-weight: 600;
+  transition: opacity 0.15s;
+
+  &:disabled {
+    background: t.$color-slate-400;
+    cursor: not-allowed;
+  }
+}

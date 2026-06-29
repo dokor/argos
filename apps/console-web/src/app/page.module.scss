@@ -1,0 +1,464 @@
+@use '../styles/tokens' as t;
+
+// ─── Root ─────────────────────────────────────────────────────────────────────
+.page {
+  font-family: 'Inter', system-ui, sans-serif;
+  color: t.$color-navy;
+  background: t.$color-white;
+}
+
+// ─── Nav ──────────────────────────────────────────────────────────────────────
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: t.$z-sticky;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid t.$color-slate-100;
+}
+
+.navInner {
+  max-width: t.$container-width;
+  margin: 0 auto;
+  padding: 0 t.$space-6;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: t.$space-2;
+}
+
+.logoIcon {
+  font-size: 22px;
+}
+
+.navCta {
+  background: t.$color-navy;
+  color: t.$color-white;
+  text-decoration: none;
+  padding: t.$space-2 t.$space-4;
+  border-radius: t.$radius-sm;
+  font-size: t.$text-base;
+  font-weight: 500;
+}
+
+.navRight {
+  display: flex;
+  align-items: center;
+  gap: t.$space-3;
+}
+
+// ─── Hero ─────────────────────────────────────────────────────────────────────
+.heroSection {
+  position: relative;
+  background: linear-gradient(135deg, t.$color-navy 0%, t.$color-slate-800 60%, t.$color-navy 100%);
+  overflow: hidden;
+  padding: 80px t.$space-6 100px;
+}
+
+.heroInner {
+  max-width: t.$container-width;
+  margin: 0 auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 48px;
+  flex-wrap: wrap;
+  padding-bottom: 80px;
+}
+
+.heroLeft {
+  flex: 1 1 380px;
+  display: flex;
+  flex-direction: column;
+  gap: t.$space-5;
+}
+
+.heroRight {
+  flex: 1 1 340px;
+  min-width: 280px;
+}
+
+.heroFade {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 80px;
+  background: linear-gradient(to bottom, transparent, t.$color-white);
+}
+
+.badge {
+  display: inline-block;
+  background: t.$color-indigo-dim;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  color: t.$color-indigo-muted;
+  border-radius: t.$radius-pill;
+  padding: t.$space-1 14px;
+  font-size: t.$text-sm;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.headline {
+  font-size: clamp(28px, 5vw, 48px);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  color: t.$color-slate-50;
+  margin: 0;
+}
+
+.sub {
+  font-size: t.$text-xl;
+  color: t.$color-slate-400;
+  line-height: 1.7;
+  margin: 0;
+  max-width: 500px;
+}
+
+.heroFormWrap {
+  max-width: 480px;
+  width: 100%;
+}
+
+// ─── Newsletter form ──────────────────────────────────────────────────────────
+.formRow {
+  display: flex;
+  gap: t.$space-2;
+  flex-wrap: wrap;
+}
+
+.input {
+  border: 1px solid t.$color-slate-700;
+  background: t.$color-slate-800;
+  color: t.$color-slate-50;
+  border-radius: t.$radius-md;
+  padding: 0 t.$space-4;
+  outline: none;
+  font-size: t.$text-lg;
+  flex: 1 1 220px;
+  min-width: 0;
+
+  &::placeholder {
+    color: t.$color-slate-500;
+  }
+}
+
+.btn {
+  background: t.$color-indigo;
+  color: t.$color-white;
+  border: none;
+  border-radius: t.$radius-md;
+  padding: 0 22px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  &:disabled {
+    opacity: 0.7;
+  }
+}
+
+.hint {
+  margin: 10px 0 0;
+  font-size: t.$text-base;
+  color: t.$color-slate-400;
+}
+
+.formError {
+  margin: t.$space-2 0 0;
+  font-size: t.$text-base;
+}
+
+.formErrorAlready {
+  color: t.$color-blue;
+}
+
+.formErrorMsg {
+  color: t.$color-red;
+}
+
+.successBox {
+  display: flex;
+  align-items: center;
+  gap: t.$space-3;
+  background: t.$color-green-light;
+  border: 1px solid t.$color-green-border-light;
+  border-radius: t.$radius-md;
+  padding: 14px 18px;
+}
+
+.successTitle {
+  font-weight: 600;
+  color: t.$color-navy;
+}
+
+.successMsg {
+  color: t.$color-slate-600;
+  font-size: t.$text-md;
+  margin-top: 2px;
+}
+
+// ─── Mock report ──────────────────────────────────────────────────────────────
+.mockCard {
+  background: t.$color-white;
+  border: 1px solid t.$color-slate-200;
+  border-radius: t.$radius-2xl;
+  padding: t.$space-5;
+  box-shadow: t.$shadow-hero;
+  width: 100%;
+  max-width: 400px;
+}
+
+.mockHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: t.$space-4;
+}
+
+.mockFavicon {
+  width: 32px;
+  height: 32px;
+  background: t.$color-slate-100;
+  border-radius: t.$radius-sm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: t.$text-xl;
+}
+
+.mockUrl {
+  font-size: t.$text-base;
+  font-weight: 600;
+  color: t.$color-navy;
+}
+
+.mockUrlDetail {
+  font-size: t.$text-xs;
+  color: t.$color-slate-400;
+}
+
+.mockScore {
+  margin-left: auto;
+  background: t.$color-green-light;
+  border: 1px solid t.$color-green-border-light;
+  border-radius: t.$radius-pill;
+  padding: t.$space-1 t.$space-3;
+  font-size: t.$text-sm;
+  font-weight: 700;
+  color: t.$color-green-mid;
+}
+
+.mockRings {
+  display: flex;
+  gap: t.$space-3;
+  justify-content: space-around;
+  padding: t.$space-4 0;
+  border-top: 1px solid t.$color-slate-100;
+  border-bottom: 1px solid t.$color-slate-100;
+}
+
+.mockChecks {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mockCheckItem {
+  display: flex;
+  align-items: center;
+  gap: t.$space-2;
+  font-size: t.$text-sm;
+}
+
+.mockDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.mockDotPass  { background: t.$color-success-check; }
+.mockDotWarn  { background: t.$color-yellow; }
+.mockDotFail  { background: #ef4444; }
+.mockDotInfo  { background: t.$color-slate-400; }
+
+.mockCheckText {
+  color: t.$color-gray-text;
+}
+
+// ─── ScoreRing ────────────────────────────────────────────────────────────────
+.ringWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: t.$space-1;
+}
+
+.ringLabel {
+  font-size: t.$text-xs;
+  color: t.$color-slate-500;
+  font-weight: 500;
+}
+
+// ─── Sections ─────────────────────────────────────────────────────────────────
+.section {
+  padding: 72px t.$space-6;
+}
+
+.sectionAlt {
+  padding: 72px t.$space-6;
+  background: t.$color-slate-50;
+}
+
+.sectionDark {
+  padding: 72px t.$space-6;
+  background: t.$color-navy;
+}
+
+.container {
+  max-width: t.$container-width;
+  margin: 0 auto;
+}
+
+.containerNarrow {
+  max-width: 640px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.sectionHeader {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.sectionTitle {
+  font-size: clamp(22px, 3vw, 32px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 t.$space-3;
+}
+
+.sectionTitleLight {
+  font-size: clamp(22px, 3vw, 32px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 t.$space-3;
+  color: t.$color-slate-50;
+}
+
+.sectionSub {
+  color: t.$color-slate-500;
+  font-size: t.$text-xl;
+  margin: 0;
+}
+
+.sectionSubDark {
+  color: t.$color-slate-400;
+  margin-bottom: 28px;
+  line-height: 1.6;
+}
+
+// ─── Module cards ─────────────────────────────────────────────────────────────
+.grid5 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: t.$space-4;
+}
+
+.moduleCard {
+  background: t.$color-slate-50;
+  border: 1px solid t.$color-slate-200;
+  border-radius: 14px;
+  padding: 22px t.$space-5;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.moduleIcon  { font-size: 26px; }
+.moduleLabel { font-size: t.$text-lg; font-weight: 600; margin: 0; }
+.moduleDesc  { font-size: t.$text-base; color: t.$color-slate-500; line-height: 1.6; margin: 0; }
+
+// ─── Steps ────────────────────────────────────────────────────────────────────
+.stepsGrid {
+  display: flex;
+  gap: 0;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  position: relative;
+}
+
+.stepCard {
+  flex: 1 1 200px;
+  padding: 0 t.$space-8;
+  position: relative;
+}
+
+.stepNumber {
+  font-size: 36px;
+  font-weight: 800;
+  color: t.$color-slate-200;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  margin-bottom: t.$space-3;
+}
+
+.stepArrow {
+  position: absolute;
+  right: -12px;
+  top: 8px;
+  font-size: t.$text-3xl;
+  color: t.$color-slate-300;
+}
+
+.stepLabel { font-size: 17px; font-weight: 600; margin: 0 0 t.$space-2; }
+.stepDesc  { font-size: t.$text-md; color: t.$color-slate-500; line-height: 1.6; margin: 0; }
+
+// ─── Why cards ────────────────────────────────────────────────────────────────
+.grid4 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: t.$space-5;
+}
+
+.whyCard {
+  padding: t.$space-6;
+  border: 1px solid t.$color-slate-100;
+  border-radius: 14px;
+  background: t.$color-white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.whyIcon  { font-size: 24px; }
+.whyLabel { font-size: t.$text-lg; font-weight: 600; margin: 0; }
+.whyDesc  { font-size: t.$text-base; color: t.$color-slate-500; line-height: 1.6; margin: 0; }
+
+// ─── Footer ───────────────────────────────────────────────────────────────────
+.footer {
+  background: t.$color-navy;
+  padding: t.$space-6;
+  border-top: 1px solid t.$color-slate-800;
+}
+
+.footerInner {
+  max-width: t.$container-width;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: t.$space-2;
+  font-size: t.$text-base;
+  color: t.$color-slate-600;
+}
