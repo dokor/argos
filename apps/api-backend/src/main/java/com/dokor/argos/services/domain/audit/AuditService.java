@@ -22,6 +22,7 @@ import java.util.List;
 @Singleton
 public class AuditService {
     private static final Logger logger = LoggerFactory.getLogger(AuditService.class);
+    private static final String REPORTS_BASE_PATH = "/reports/";
 
     private final AuditDao auditDao;
     private final AuditRunService auditRunService;
@@ -55,7 +56,7 @@ public class AuditService {
             AuditRun run = row.get(1, AuditRun.class);
             AuditReport report = row.get(2, AuditReport.class);
 
-            if (run == null || report == null) {
+            if (run == null) {
                 // Cas rare : audit créé sans run
                 return new AuditListItemResponse(
                     audit.getId(),
@@ -71,6 +72,9 @@ public class AuditService {
                 );
             }
 
+            String token = report != null ? report.getPublicToken() : null;
+            String reportUrl = token != null ? REPORTS_BASE_PATH + token : null;
+
             return new AuditListItemResponse(
                 audit.getId(),
                 audit.getInputUrl(),
@@ -79,8 +83,8 @@ public class AuditService {
                 run.getStatus(),
                 run.getCreatedAt(),
                 run.getFinishedAt(),
-                report.getPublicToken(),
-                report.getPublicToken(),
+                token,
+                reportUrl,
                 run.getResultJson()
             );
         }).toList();
