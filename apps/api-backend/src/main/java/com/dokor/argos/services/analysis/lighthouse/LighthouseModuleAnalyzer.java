@@ -35,7 +35,7 @@ public class LighthouseModuleAnalyzer implements AuditModuleAnalyzer {
         try {
             lhr = client.analyze(url);
         } catch (Exception e) {
-            List<AuditCheckResult> checks = List.of(new AuditCheckResult(
+            List<AuditCheckResult> checks = List.of(AuditCheckResult.of(
                 "lighthouse.collect",
                 "Lighthouse collection",
                 AuditStatus.WARN,
@@ -116,7 +116,7 @@ public class LighthouseModuleAnalyzer implements AuditModuleAnalyzer {
                 status == AuditStatus.WARN ? AuditSeverity.MEDIUM :
                     AuditSeverity.LOW;
 
-        return new AuditCheckResult(
+        return AuditCheckResult.of(
             "lighthouse.score." + key,
             "Lighthouse " + title,
             status,
