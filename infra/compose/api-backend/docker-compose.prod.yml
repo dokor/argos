@@ -23,7 +23,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.docker.network=proxy
-      - traefik.http.routers.api-backend.rule=Host(`console.argos.tld`) && PathPrefix(`/api`)
+      - traefik.http.routers.api-backend.rule=Host(`argos.lelouet.fr`) && PathPrefix(`/api`)
       - traefik.http.routers.api-backend.entrypoints=websecure
       - traefik.http.routers.api-backend.tls=true
       - traefik.http.routers.api-backend.priority=100

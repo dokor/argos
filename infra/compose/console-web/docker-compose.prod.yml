@@ -12,12 +12,12 @@ services:
       - .env
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=https://console.argos.tld
+      - NEXT_PUBLIC_API_URL=https://argos.lelouet.fr
       - NEXT_PUBLIC_ARGOS_API_BASE=/api
     labels:
       - traefik.enable=true
       - traefik.docker.network=proxy
-      - traefik.http.routers.console-web.rule=Host(`console.argos.tld`)
+      - traefik.http.routers.console-web.rule=Host(`argos.lelouet.fr`)
       - traefik.http.routers.console-web.entrypoints=websecure
       - traefik.http.routers.console-web.tls=true
       - traefik.http.services.console-web.loadbalancer.server.port=3000
