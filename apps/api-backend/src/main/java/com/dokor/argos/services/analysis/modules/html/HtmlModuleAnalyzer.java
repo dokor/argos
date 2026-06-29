@@ -16,12 +16,9 @@ import java.util.regex.Pattern;
 /**
  * Analyse "HTML" d'une URL.
  * <p>
- * Ce module se base sur le HTML déjà récupéré côté HTTP (dans l'état actuel de ton code, tu as un HtmlExtractor).
- * Ici, on reste MVP : on ne refait pas un fetch HTTP, on analyse juste un contenu HTML.
- * <p>
- * ⚠️ Pour l'instant, l'interface AuditModuleAnalyzer ne fournit pas le body HTML.
- * Donc ce HtmlModuleAnalyzer est conçu pour être appelé par l'orchestrateur avec une "source" HTML
- * (ex: via un wrapper ou en passant un "context" plus tard).
+ * Ce module analyse le contenu HTML récupéré par {@link com.dokor.argos.services.analysis.modules.http.HttpModuleAnalyzer}
+ * et transmis via l'{@link com.dokor.argos.services.analysis.model.AuditContext}.
+ * Il ne refait pas de fetch HTTP — il exploite uniquement le body déjà disponible dans le contexte.
  * <p>
  * 👉 Dans l'immédiat, on expose une méthode analyzeHtml(...) utilisée par l'orchestrateur.
  * Et la méthode analyze(...) retourne un module "vide" + warning si l'orchestrateur n'a pas fourni le HTML.
