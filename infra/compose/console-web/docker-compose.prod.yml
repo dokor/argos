@@ -22,6 +22,11 @@ services:
       - traefik.http.routers.console-web.tls=true
       - traefik.http.services.console-web.loadbalancer.server.port=3000
       - traefik.http.routers.console-web.priority=10
+      - traefik.http.routers.console-web-api.rule=Host(`argos.lelouet.fr`) && PathPrefix(`/api`)
+      - traefik.http.routers.console-web-api.entrypoints=websecure
+      - traefik.http.routers.console-web-api.tls=true
+      - traefik.http.routers.console-web-api.service=console-web
+      - traefik.http.routers.console-web-api.priority=200
       - traefik.http.routers.console-web.tls.certresolver=le
 
       - traefik.http.routers.console-web-http.rule=Host(`argos.lelouet.fr`)
