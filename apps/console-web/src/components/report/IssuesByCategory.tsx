@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import React from "react";
+import { ChevronDown } from "lucide-react";
 import { useLang } from "@/lib/i18n/LangContext";
 
 function groupBy<T extends Record<string, any>>(items: T[], key: keyof T) {
@@ -135,9 +136,9 @@ export default function IssuesByCategory({ report }: { report: Report }) {
                             <div className="mt-1 text-sm text-muted-foreground">{issue.impact}</div>
                           </div>
 
-                          <div className="text-sm text-muted-foreground group-open:text-slate-900">
+                          <div className="flex items-center gap-1 text-sm text-muted-foreground group-open:text-slate-900">
                             {ti.detailsLabel}
-                            <span className="ml-1 inline-block transition-transform group-open:rotate-180">▾</span>
+                            <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" />
                           </div>
                         </div>
                       </summary>
