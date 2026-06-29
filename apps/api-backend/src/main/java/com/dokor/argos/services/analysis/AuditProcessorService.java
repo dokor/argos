@@ -3,12 +3,16 @@ package com.dokor.argos.services.analysis;
 import com.dokor.argos.db.dao.AuditDao;
 import com.dokor.argos.db.generated.Audit;
 import com.dokor.argos.services.analysis.lighthouse.LighthouseModuleAnalyzer;
+import com.dokor.argos.services.analysis.model.AuditCheckResult;
 import com.dokor.argos.services.analysis.model.AuditContext;
 import com.dokor.argos.services.analysis.model.AuditModuleResult;
 import com.dokor.argos.services.analysis.model.AuditReportJson;
 import com.dokor.argos.services.analysis.modules.html.HtmlModuleAnalyzer;
 import com.dokor.argos.services.analysis.modules.http.HttpModuleAnalyzer;
+import com.dokor.argos.services.analysis.modules.observatory.ObservatoryModuleAnalyzer;
 import com.dokor.argos.services.analysis.modules.runtime.RuntimeModuleAnalyzer;
+import com.dokor.argos.services.analysis.modules.ssl.SslLabsModuleAnalyzer;
+import com.dokor.argos.services.analysis.modules.zap.ZapModuleAnalyzer;
 import com.dokor.argos.services.analysis.scoring.AuditScoreReport;
 import com.dokor.argos.services.analysis.scoring.ScoreEnricherService;
 import com.dokor.argos.services.analysis.scoring.ScoreService;
@@ -30,7 +34,7 @@ public class AuditProcessorService {
     private static final Logger logger = LoggerFactory.getLogger(AuditProcessorService.class);
 
     // Version du schema du rapport
-    private static final int REPORT_SCHEMA_VERSION = 4;
+    private static final int REPORT_SCHEMA_VERSION = 5;
 
     private final AuditRunService auditRunService;
     private final AuditDao auditDao;
@@ -40,8 +44,12 @@ public class AuditProcessorService {
     private final HtmlModuleAnalyzer htmlModuleAnalyzer;
     private final RuntimeModuleAnalyzer runtimeModuleAnalyzer;
     private final LighthouseModuleAnalyzer lighthouseModuleAnalyzer;
+    private final ObservatoryModuleAnalyzer observatoryModuleAnalyzer;
+    private final SslLabsModuleAnalyzer sslLabsModuleAnalyzer;
+    private final ZapModuleAnalyzer zapModuleAnalyzer;
     private final DomainAnalysisService domainAnalysisService;
 
+    private final CheckMergerService checkMergerService;
     private final ScoreEnricherService scoreEnricherService;
     private final ScoreService scoreService;
 
@@ -58,7 +66,11 @@ public class AuditProcessorService {
         HtmlModuleAnalyzer htmlModuleAnalyzer,
         RuntimeModuleAnalyzer runtimeModuleAnalyzer,
         LighthouseModuleAnalyzer lighthouseModuleAnalyzer,
+        ObservatoryModuleAnalyzer observatoryModuleAnalyzer,
+        SslLabsModuleAnalyzer sslLabsModuleAnalyzer,
+        ZapModuleAnalyzer zapModuleAnalyzer,
         DomainAnalysisService domainAnalysisService,
+        CheckMergerService checkMergerService,
         ScoreEnricherService scoreEnricherService,
         ScoreService scoreService,
         ObjectMapper objectMapper,
@@ -71,7 +83,11 @@ public class AuditProcessorService {
         this.htmlModuleAnalyzer = htmlModuleAnalyzer;
         this.runtimeModuleAnalyzer = runtimeModuleAnalyzer;
         this.lighthouseModuleAnalyzer = lighthouseModuleAnalyzer;
+        this.observatoryModuleAnalyzer = observatoryModuleAnalyzer;
+        this.sslLabsModuleAnalyzer = sslLabsModuleAnalyzer;
+        this.zapModuleAnalyzer = zapModuleAnalyzer;
         this.domainAnalysisService = domainAnalysisService;
+        this.checkMergerService = checkMergerService;
         this.scoreEnricherService = scoreEnricherService;
         this.scoreService = scoreService;
         this.objectMapper = objectMapper;
@@ -114,28 +130,45 @@ public class AuditProcessorService {
 
             // HTTP (page-level : status, redirects, headers, body)
             logger.info("Running module={} runId={} url={}", httpModuleAnalyzer.moduleId(), runId, normalizedUrl);
-            AuditModuleResult httpModule = httpModuleAnalyzer.analyze(context, logger);
+            AuditModuleResult httpModule = annotateWithSource(httpModuleAnalyzer.analyze(context, logger));
 
             // Enrichir le contexte avec les données HTTP (finalUrl, headers, body…)
             context = HttpModuleAnalyzer.enrichContext(context, httpModule);
 
             logger.info("Running module={} runId={} finalUrl={}", htmlModuleAnalyzer.moduleId(), runId, context.finalUrl());
-            AuditModuleResult htmlModule = htmlModuleAnalyzer.analyze(context, logger);
+            AuditModuleResult htmlModule = annotateWithSource(htmlModuleAnalyzer.analyze(context, logger));
 
             logger.info("Running module={} runId={} finalUrl={}", runtimeModuleAnalyzer.moduleId(), runId, context.finalUrl());
-            AuditModuleResult runtimeModule = runtimeModuleAnalyzer.analyze(context, logger);
+            AuditModuleResult runtimeModule = annotateWithSource(runtimeModuleAnalyzer.analyze(context, logger));
 
             logger.info("Running module={} runId={} finalUrl={}", lighthouseModuleAnalyzer.moduleId(), runId, context.finalUrl());
-            AuditModuleResult lighthouseModule = lighthouseModuleAnalyzer.analyze(context, logger);
+            AuditModuleResult lighthouseModule = annotateWithSource(lighthouseModuleAnalyzer.analyze(context, logger));
+
+            // --- Modules DOMAIN ---
+
+            logger.info("Running module={} runId={} finalUrl={}", observatoryModuleAnalyzer.moduleId(), runId, context.finalUrl());
+            AuditModuleResult observatoryModule = annotateWithSource(observatoryModuleAnalyzer.analyze(context, logger));
+
+            logger.info("Running module={} runId={} finalUrl={}", sslLabsModuleAnalyzer.moduleId(), runId, context.finalUrl());
+            AuditModuleResult sslModule = annotateWithSource(sslLabsModuleAnalyzer.analyze(context, logger));
+
+            logger.info("Running module={} runId={} finalUrl={}", zapModuleAnalyzer.moduleId(), runId, context.finalUrl());
+            AuditModuleResult zapModule = annotateWithSource(zapModuleAnalyzer.analyze(context, logger));
 
             // --- Module DOMAIN (tech) — cache 24h partagé entre toutes les pages du domaine ---
             logger.info("Resolving domain tech analysis domainId={} runId={}", domainId, runId);
-            AuditModuleResult techModule = domainAnalysisService.getOrRunTechAnalysis(context, logger);
+            AuditModuleResult techModule = annotateWithSource(domainAnalysisService.getOrRunTechAnalysis(context, logger));
 
-            List<AuditModuleResult> modules = List.of(httpModule, htmlModule, techModule, runtimeModule, lighthouseModule);
+            List<AuditModuleResult> allModules = List.of(
+                httpModule, htmlModule, runtimeModule, lighthouseModule,
+                observatoryModule, sslModule, zapModule, techModule
+            );
+
+            // Merge cross-module duplicate checks
+            List<AuditModuleResult> mergedModules = checkMergerService.merge(allModules);
 
             // Enrich checks (tags/scorable/weight) + compute score
-            List<AuditModuleResult> enrichedModules = scoreEnricherService.enrich(modules);
+            List<AuditModuleResult> enrichedModules = scoreEnricherService.enrich(mergedModules);
             int scoringVersion = scoreEnricherService.scoringVersion();
             AuditScoreReport score = scoreService.compute(scoringVersion, enrichedModules);
 
@@ -177,4 +210,14 @@ public class AuditProcessorService {
         }
     }
 
+    /**
+     * Annotates each check in the module with the module's own id as source,
+     * unless the check already has sources set (e.g. from a merge).
+     */
+    private AuditModuleResult annotateWithSource(AuditModuleResult module) {
+        List<AuditCheckResult> annotated = module.checks().stream()
+            .map(c -> c.sources().isEmpty() ? c.withSources(List.of(module.id())) : c)
+            .toList();
+        return new AuditModuleResult(module.id(), module.title(), module.summary(), module.data(), annotated);
+    }
 }
