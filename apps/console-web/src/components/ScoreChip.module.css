@@ -1,0 +1,31 @@
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 12px;
+  user-select: none;
+}
+
+.chip--clickable {
+  cursor: pointer;
+}
+
+.pct {
+  font-weight: 900;
+  opacity: 0.85;
+}
+
+.bubbles {
+  display: flex;
+  gap: 3px;
+}
+
+.bubble {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  display: inline-block;
+}
