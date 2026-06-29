@@ -16,13 +16,12 @@ export type AuditRunStatusResponse = {
   auditId: number;
   status: "QUEUED" | "RUNNING" | "FAILED" | "COMPLETED";
   lastError?: string | null;
-  resultJson?: string | null; // string JSON brut (comme en BDD)
+  resultJson?: string | null;
   createdAt?: string;
   startedAt?: string | null;
   finishedAt?: string | null;
-  reportToken?: string | null
+  reportToken?: string | null;
 };
-
 
 export type AuditListItem = {
   auditId: number;
@@ -38,20 +37,14 @@ export type AuditListItem = {
   resultJson?: string | null;
 };
 
-// todo : fix conf
-const API_BASE: string | undefined = "http://api-backend:8081";
-
-if (!API_BASE) {
-  // fail fast en dev
-  console.warn("NEXT_PUBLIC_ARGOS_API_BASE is not set");
-}
+// API_BASE is only used server-side (SSR); client calls use relative paths proxied by next.config.ts
+const API_BASE: string = process.env.API_BASE ?? "http://api-backend:8081";
 
 export async function http<T>(path: string, init?: RequestInit): Promise<T> {
-
   const url: string =
     typeof window === "undefined"
-      ? `${API_BASE}${path}` // SSR => URL absolue
-      : path;               // Client => relative OK
+      ? `${API_BASE}${path}` // SSR => absolute URL
+      : path;               // Client => relative, proxied via next.config.ts rewrites
 
   const res = await fetch(url, {
     ...init,
@@ -67,7 +60,7 @@ export async function http<T>(path: string, init?: RequestInit): Promise<T> {
     throw new Error(`HTTP ${res.status} ${res.statusText} - ${text}`);
   }
 
-  // Certains endpoints peuvent répondre 204
+  // Some endpoints may respond 204 No Content
   if (res.status === 204) return undefined as T;
 
   return (await res.json()) as T;
@@ -89,7 +82,5 @@ export const argosApi = {
     http<Report>(`/api/reports/${token}`, { method: "GET" }),
 
   getRunsByRunId: (runId: number): Promise<AuditRunStatusResponse> =>
-    http<AuditRunStatusResponse>(`/api/audits/runs/${runId}`, { method: "GET" })
+    http<AuditRunStatusResponse>(`/api/audits/runs/${runId}`, { method: "GET" }),
 };
-
-
