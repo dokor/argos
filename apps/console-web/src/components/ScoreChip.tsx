@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import styles from "./ScoreChip.module.css";
+import styles from "./ScoreChip.module.scss";
 import { formatPct } from "@/lib/auditTypes";
 
 function scoreTheme(ratio: number) {
