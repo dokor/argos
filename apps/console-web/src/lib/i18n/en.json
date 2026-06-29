@@ -12,7 +12,7 @@
   "landing": {
     "hero": {
       "badge": "Website auditor · Open source · Free",
-      "headline": "Audit any website.\nGet a report in seconds.",
+      "headline": "Your site under the microscope.\nHTTP, SEO, stack and performance — in seconds.",
       "sub": "Argos scans HTTP headers, HTML quality, tech stack and Lighthouse performance. Result: a private, scored report — not indexed, not tracked.",
       "inputPlaceholder": "you@email.com",
       "cta": "Get notified at launch",
@@ -32,7 +32,12 @@
         "hstsPresent": "HSTS present",
         "cspMissing": "CSP missing",
         "redirects": "2 redirects",
-        "metaDescMissing": "Missing meta description"
+        "metaDescMissing": "Missing meta description",
+        "titlePresent": "Title present",
+        "h1Found": "H1 detected",
+        "nextjsDetected": "Next.js detected",
+        "lcpScore": "LCP · 1.8 s",
+        "performanceScore": "Lighthouse perf. 71"
       }
     },
     "modules": {
@@ -105,9 +110,9 @@
           "desc": "Each analysis is an independent module. Easy to extend, easy to debug."
         },
         {
-          "icon": "☁️",
-          "label": "Self-hostable",
-          "desc": "Docker Compose included. Deploy Argos on your infra in minutes."
+          "icon": "📈",
+          "label": "Actionable scoring",
+          "desc": "Every detected issue is weighted, prioritized and paired with a concrete recommendation — not just a number."
         }
       ]
     },
@@ -120,8 +125,8 @@
       "hint": "No spam. Unsubscribe anytime."
     },
     "footer": {
-      "built": "Built with ☕ and too many tickets.",
-      "copy": "© 2024 Argos. MIT License."
+      "built": "Made by Antoine LE LOUËT with ☕.",
+      "copy": "© 2026 Argos. MIT License."
     }
   },
 

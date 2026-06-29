@@ -12,7 +12,7 @@
   "landing": {
     "hero": {
       "badge": "Audit de site web · Open source · Gratuit",
-      "headline": "Scannez n'importe quel site.\nObtenez un rapport en secondes.",
+      "headline": "Votre site sous le microscope.\nHTTP, SEO, stack et performances — en quelques secondes.",
       "sub": "Argos analyse vos headers HTTP, votre HTML, votre stack technique et vos performances Lighthouse. Résultat : un rapport scoré, privé et non indexable.",
       "inputPlaceholder": "votre@email.com",
       "cta": "Être notifié au lancement",
@@ -32,7 +32,12 @@
         "hstsPresent": "HSTS present",
         "cspMissing": "CSP missing",
         "redirects": "2 redirects",
-        "metaDescMissing": "Missing meta description"
+        "metaDescMissing": "Meta description absente",
+        "titlePresent": "Title présent",
+        "h1Found": "H1 détecté",
+        "nextjsDetected": "Next.js détecté",
+        "lcpScore": "LCP · 1,8 s",
+        "performanceScore": "Perf. Lighthouse 71"
       }
     },
     "modules": {
@@ -105,9 +110,9 @@
           "desc": "Chaque analyse est un module indépendant. Facile à étendre, facile à déboguer."
         },
         {
-          "icon": "☁️",
-          "label": "Self-hostable",
-          "desc": "Docker Compose inclus. Déployez Argos sur votre infra en quelques minutes."
+          "icon": "📈",
+          "label": "Scoring actionnable",
+          "desc": "Chaque point détecté est pondéré, priorisé et accompagné d'une recommandation concrète — pas juste un chiffre."
         }
       ]
     },
@@ -120,8 +125,8 @@
       "hint": "Pas de spam. Désabonnement en un clic."
     },
     "footer": {
-      "built": "Construit avec ☕ et trop de JIRA.",
-      "copy": "© 2024 Argos. MIT License."
+      "built": "Fait par Antoine LE LOUËT avec ☕.",
+      "copy": "© 2026 Argos. MIT License."
     }
   },
 
