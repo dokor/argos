@@ -107,6 +107,11 @@ public class PublicReportComposer {
                 if (check.status() == AuditStatus.PASS || check.status() == AuditStatus.INFO) {
                     continue;
                 }
+                // Non-scorable checks (e.g. lighthouse.collect when unavailable) are service-level
+                // informational signals, not site issues the owner can fix exclude from issue list.
+                if (!check.scorable()) {
+                    continue;
+                }
 
                 String categoryKey = pickCategoryKey(module.id(), check.tags());
                 ReportDto.IssueSeverity sev = toIssueSeverity(check.status(), check.severity());
