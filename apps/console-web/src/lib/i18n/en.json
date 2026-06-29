@@ -183,9 +183,16 @@
       "issues": "issue(s)",
       "urlAnalyzed": "Analyzed URL",
       "prioritiesDetected": "Detected priorities",
-      "prioritiesFirst": "To address first",
+      "prioritiesFirst": "No priorities detected",
       "issuesTotal": "Total issues",
-      "issuesDesc": "Includes info / important / critical"
+      "issuesDesc": "Includes info / important / critical",
+      "severityBreakdown": "Priorities by level",
+      "byCategoryTitle": "Scores by category",
+      "severity": {
+        "critical": "Critical",
+        "important": "Important",
+        "opportunity": "Opportunity"
+      }
     },
     "footerCta": {
       "title": "Schedule a call",

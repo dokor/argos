@@ -183,9 +183,16 @@
       "issues": "point(s)",
       "urlAnalyzed": "URL analysée",
       "prioritiesDetected": "Priorités détectées",
-      "prioritiesFirst": "À traiter en premier",
+      "prioritiesFirst": "Aucune priorité détectée",
       "issuesTotal": "Points au total",
-      "issuesDesc": "Inclut info / important / critique"
+      "issuesDesc": "Inclut info / important / critique",
+      "severityBreakdown": "Priorités par niveau",
+      "byCategoryTitle": "Scores par catégorie",
+      "severity": {
+        "critical": "Critique",
+        "important": "Important",
+        "opportunity": "Opportunité"
+      }
     },
     "footerCta": {
       "title": "Planifier un échange",
