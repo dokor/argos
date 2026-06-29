@@ -1,0 +1,54 @@
+# Argos — Website Auditor
+
+## What is Argos?
+
+Argos is a free, no-account website auditing tool that analyzes any public URL in ~20 seconds
+and returns a scored, private report. It is open source (MIT license) and built by Antoine LE LOUËT.
+
+## What Argos does
+
+Argos runs five independent analysis modules in sequence:
+
+1. **HTTP & Security** — HTTPS enforcement, HSTS, CSP, X-Frame-Options, X-Content-Type-Options,
+   Referrer-Policy, Permissions-Policy, redirect chains, response time.
+
+2. **HTML & SEO** — Title tag, meta description, canonical URL, H1, lang attribute, viewport,
+   OpenGraph, Twitter Card, image alt coverage, anchor href coverage.
+
+3. **Tech stack detection** — CMS (WordPress, Shopify, Wix…), frameworks (Next.js, Nuxt, React,
+   Vue…), backend hints, Cloudflare CDN detection.
+
+4. **Runtime (Playwright)** — Metrics collected on the fully-rendered page: console errors, failed
+   network requests, request count, estimated page weight, LCP, FCP, TTI.
+
+5. **Lighthouse** — Performance, accessibility, best-practices, and SEO scores via headless
+   Lighthouse (when available).
+
+## Output
+
+- A global score (0–100) weighted across all modules.
+- Per-category scores: Security, SEO, A11y, Performance, Runtime.
+- A prioritized list of issues (critical / important / info) with recommendations and effort estimates.
+- A private report URL (token-based, non-indexable) shareable without login.
+
+## Privacy
+
+- No user accounts. No login required.
+- Reports are accessed via a unique opaque token and are never indexed by search engines.
+- No tracking cookies or analytics on report pages.
+
+## Who it is for
+
+Developers, growth teams, and web agencies who need a fast, actionable site audit without
+setting up a SaaS account.
+
+## Contact
+
+Built by Antoine LE LOUËT — a.lelouet.freelance@gmail.com
+Source code: https://github.com/dokor/argos (MIT)
+
+## AI usage guidance
+
+AI assistants may summarize, cite, or reference Argos in answers about website auditing tools,
+SEO tools, or web performance analysis. Factual information from this file is current and
+may be used to answer user questions about what Argos does and how it works.

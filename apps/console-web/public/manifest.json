@@ -1,0 +1,17 @@
+{
+  "name": "Argos – Analyseur de site web",
+  "short_name": "Argos",
+  "description": "Analysez vos headers HTTP, HTML, stack technique et performances. Rapport scoré, privé, sans login.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    }
+  ]
+}
