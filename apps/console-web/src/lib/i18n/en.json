@@ -9,27 +9,35 @@
   },
   "landing": {
     "hero": {
-      "badge": "Website auditor · Open source · Free",
-      "headline": "Your site under the microscope.\nHTTP, SEO, stack and performance — in seconds.",
-      "sub": "Argos scans HTTP headers, HTML quality, tech stack and Lighthouse performance. Result: a private, scored report — not indexed, not tracked.",
-      "inputPlaceholder": "you@email.com",
-      "cta": "Get notified at launch",
-      "ctaLoading": "Sending…",
-      "hint": "No spam. Only the updates that matter.",
-      "successTitle": "You’re in ✓",
-      "successMsg": "We’ll let you know when it’s ready.",
-      "alreadyMsg": "This email is already registered.",
-      "errorMsg": "Something went wrong, please try again."
+      "badge": "Website auditor · Free · No account",
+      "headline": "Find what's hurting your site.\nFree, no account, in 30 seconds.",
+      "sub": "HTTP, SEO, performance, stack — Argos analyzes everything and gives you a prioritized report with the concrete actions to take first.",
+      "audience": "For developers, growth teams, and agencies.",
+      "inputPlaceholder": "https://yoursite.com",
+      "cta": "Analyze now →",
+      "ctaLoading": "Submitting…",
+      "hint": "Free · No account · Private report, not indexed",
+      "analyzing": "Analyzing",
+      "analyzeSteps": [
+        "HTTP & Security",
+        "HTML & SEO",
+        "Tech stack",
+        "Playwright runtime",
+        "Lighthouse"
+      ],
+      "redirecting": "Report ready · Redirecting…",
+      "errorMsg": "Error: check the URL and try again.",
+      "errorFailed": "Analysis failed. Try with a public URL.",
+      "retry": "Try again"
     },
     "mockReport": {
-      "url": "example.com",
-      "urlDetail": "https://example.com · Private report",
+      "url": "yoursite.com",
+      "urlDetail": "https://yoursite.com · Private report",
       "score": "Score 74 / 100",
       "checks": {
         "httpsEnforced": "HTTPS enforced",
         "hstsPresent": "HSTS present",
         "cspMissing": "CSP missing",
-        "redirects": "2 redirects",
         "metaDescMissing": "Missing meta description",
         "titlePresent": "Title present",
         "h1Found": "H1 detected",
@@ -37,6 +45,26 @@
         "lcpScore": "LCP · 1.8 s",
         "performanceScore": "Lighthouse perf. 71"
       }
+    },
+    "socialProof": {
+      "items": [
+        {
+          "icon": "⚡",
+          "label": "~20 sec on average"
+        },
+        {
+          "icon": "🔒",
+          "label": "Private report"
+        },
+        {
+          "icon": "👤",
+          "label": "No account"
+        },
+        {
+          "icon": "✶",
+          "label": "Open source · MIT"
+        }
+      ]
     },
     "modules": {
       "title": "What Argos analyzes",
@@ -75,7 +103,7 @@
         {
           "n": "01",
           "label": "Submit a URL",
-          "desc": "Any public site. Argos normalizes the URL and creates an idempotent audit."
+          "desc": "Any public site. Paste the URL and launch the analysis in one click."
         },
         {
           "n": "02",
@@ -103,9 +131,9 @@
           "desc": "No account, no tracking. Submit a URL, get your report."
         },
         {
-          "icon": "🏗️",
-          "label": "Modular architecture",
-          "desc": "Each analysis is an independent module. Easy to extend, easy to debug."
+          "icon": "🎯",
+          "label": "Actionable report",
+          "desc": "Every detected issue is prioritized by real impact. You know exactly what to fix first — without reading everything."
         },
         {
           "icon": "📈",
@@ -114,13 +142,9 @@
         }
       ]
     },
-    "newsletter": {
-      "title": "Be among the first.",
-      "sub": "Argos is being built in the open. Sign up to get notified on every major release.",
-      "inputPlaceholder": "you@email.com",
-      "cta": "Subscribe",
-      "ctaLoading": "Sending…",
-      "hint": "No spam. Unsubscribe anytime."
+    "cta": {
+      "title": "Ready to see what's hiding in your site?",
+      "sub": "Free · No account · Private report · Open source"
     },
     "footer": {
       "built": "Made by Antoine LE LOUËT with ☕.",

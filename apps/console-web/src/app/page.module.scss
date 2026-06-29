@@ -61,6 +61,15 @@
   padding: 80px t.$space-6 100px;
 }
 
+.dotPattern {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+  background-size: 28px 28px;
+  pointer-events: none;
+  z-index: 0;
+}
+
 .heroInner {
   max-width: t.$container-width;
   margin: 0 auto;
@@ -69,6 +78,8 @@
   gap: 48px;
   flex-wrap: wrap;
   padding-bottom: 80px;
+  position: relative;
+  z-index: 1;
 }
 
 .heroLeft {
@@ -81,6 +92,10 @@
 .heroRight {
   flex: 1 1 340px;
   min-width: 280px;
+
+  .mockCard {
+    animation: slideInRight 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+  }
 }
 
 .heroFade {
@@ -121,12 +136,20 @@
   max-width: 500px;
 }
 
+.audience {
+  font-size: t.$text-md;
+  color: t.$color-slate-500;
+  margin: 0;
+  font-style: italic;
+  letter-spacing: 0.01em;
+}
+
 .heroFormWrap {
   max-width: 480px;
   width: 100%;
 }
 
-// ─── Newsletter form ──────────────────────────────────────────────────────────
+// ─── Audit form ────────────────────────────────────────────────────────────────
 .formRow {
   display: flex;
   gap: t.$space-2;
@@ -171,41 +194,95 @@
   color: t.$color-slate-400;
 }
 
-.formError {
-  margin: t.$space-2 0 0;
-  font-size: t.$text-base;
-}
-
-.formErrorAlready {
-  color: t.$color-blue;
-}
-
 .formErrorMsg {
   color: t.$color-red;
 }
 
-.successBox {
+// ─── Audit form — analyzing state ──────────────────────────────────────────────
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.analyzingBox {
   display: flex;
   align-items: center;
   gap: t.$space-3;
-  background: t.$color-green-light;
-  border: 1px solid t.$color-green-border-light;
-  border-radius: t.$radius-md;
   padding: 14px 18px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: t.$radius-md;
+  min-height: 52px;
 }
 
-.successTitle {
-  font-weight: 600;
-  color: t.$color-navy;
+.analyzingSpinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-top-color: t.$color-indigo-muted;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
 }
 
-.successMsg {
-  color: t.$color-slate-600;
+.analyzingText {
   font-size: t.$text-md;
-  margin-top: 2px;
+  color: t.$color-slate-300;
+  font-weight: 500;
 }
 
-// ─── Mock report ──────────────────────────────────────────────────────────────
+// ─── Form error with retry ─────────────────────────────────────────────────────
+.formErrorRow {
+  display: flex;
+  align-items: center;
+  gap: t.$space-3;
+  margin-top: t.$space-2;
+}
+
+.retryBtn {
+  background: none;
+  border: 1px solid t.$color-slate-600;
+  color: t.$color-slate-400;
+  border-radius: t.$radius-sm;
+  padding: 3px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.15s, color 0.15s;
+
+  &:hover {
+    border-color: t.$color-slate-400;
+    color: t.$color-slate-200;
+  }
+}
+
+// ─── Social proof bar ──────────────────────────────────────────────────────────
+.socialProofBar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: t.$space-2 t.$space-6;
+  padding: 16px t.$space-6;
+  background: t.$color-slate-50;
+  border-bottom: 1px solid t.$color-slate-100;
+}
+
+.socialProofItem {
+  display: flex;
+  align-items: center;
+  gap: t.$space-2;
+  font-size: t.$text-base;
+  color: t.$color-slate-500;
+  font-weight: 500;
+}
+
+.socialProofDivider {
+  color: t.$color-slate-300;
+  font-size: t.$text-md;
+  user-select: none;
+}
+
+// ─── Mock report ───────────────────────────────────────────────────────────────
 .mockCard {
   background: t.$color-white;
   border: 1px solid t.$color-slate-200;
@@ -367,11 +444,25 @@
   line-height: 1.6;
 }
 
+// ─── Slide-in animation ───────────────────────────────────────────────────────
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(32px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
 // ─── Module cards ─────────────────────────────────────────────────────────────
 .grid5 {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: t.$space-4;
+
+  .moduleCard {
+    &:nth-child(1) { border-top: 3px solid #6366f1; }
+    &:nth-child(2) { border-top: 3px solid #0ea5e9; }
+    &:nth-child(3) { border-top: 3px solid #10b981; }
+    &:nth-child(4) { border-top: 3px solid #f59e0b; }
+    &:nth-child(5) { border-top: 3px solid #8b5cf6; }
+  }
 }
 
 .moduleCard {
@@ -444,6 +535,23 @@
 .whyIcon  { font-size: 24px; }
 .whyLabel { font-size: t.$text-lg; font-weight: 600; margin: 0; }
 .whyDesc  { font-size: t.$text-base; color: t.$color-slate-500; line-height: 1.6; margin: 0; }
+
+// ─── Responsive steps ──────────────────────────────────────────────────────────
+@media (max-width: 640px) {
+  .stepsGrid {
+    flex-direction: column;
+    gap: t.$space-6;
+  }
+
+  .stepArrow {
+    display: none;
+  }
+
+  .stepCard {
+    padding: 0 t.$space-4;
+    border-left: 3px solid t.$color-indigo;
+  }
+}
 
 // ─── Footer ───────────────────────────────────────────────────────────────────
 .footer {
