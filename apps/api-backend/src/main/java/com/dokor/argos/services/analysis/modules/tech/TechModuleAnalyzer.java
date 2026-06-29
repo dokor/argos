@@ -131,7 +131,7 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
         }
 
         // 1) CMS
-        checks.add(new AuditCheckResult(
+        checks.add(AuditCheckResult.of(
             "tech.cms",
             "CMS detection",
             cms.confidence >= 0.7 ? AuditStatus.PASS : AuditStatus.INFO,
@@ -146,7 +146,7 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
         ));
 
         // 2) Frontend framework
-        checks.add(new AuditCheckResult(
+        checks.add(AuditCheckResult.of(
             "tech.frontend.framework",
             "Frontend framework detection",
             frontend.confidence >= 0.7 ? AuditStatus.PASS : AuditStatus.INFO,
@@ -176,7 +176,7 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
         nextData.put("version", nextVersion);
         nextData.put("evidence", next.evidence());
 
-        checks.add(new AuditCheckResult(
+        checks.add(AuditCheckResult.of(
             "tech.frontend.nextjs",
             "Next.js detection & version (best-effort)",
             next.isNext() ? AuditStatus.PASS : AuditStatus.INFO,
@@ -206,7 +206,7 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
         }
 
         // 3) Backend hints (info)
-        checks.add(new AuditCheckResult(
+        checks.add(AuditCheckResult.of(
             "tech.backend.hints",
             "Backend hints (headers/cookies)",
             AuditStatus.INFO,
@@ -221,7 +221,7 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
         ));
 
         // 4) CDN/Proxy
-        checks.add(new AuditCheckResult(
+        checks.add(AuditCheckResult.of(
             "tech.cdn.cloudflare",
             "Cloudflare detected",
             AuditStatus.INFO,
@@ -236,7 +236,7 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
         ));
 
         // 5) Server header (info)
-        checks.add(new AuditCheckResult(
+        checks.add(AuditCheckResult.of(
             "tech.http.server_header",
             "Server header (raw)",
             AuditStatus.INFO,
@@ -252,7 +252,7 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
 
         // 6) Orchestrator coverage (warn if missing html)
         if (html == null || html.isBlank()) {
-            checks.add(new AuditCheckResult(
+            checks.add(AuditCheckResult.of(
                 "tech.html.available",
                 "HTML available for tech detection",
                 AuditStatus.WARN,
@@ -268,7 +268,7 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
         }
 
         // 7) Duration (info)
-        checks.add(new AuditCheckResult(
+        checks.add(AuditCheckResult.of(
             "tech.analysis.duration_ms",
             "Tech analysis duration",
             AuditStatus.INFO,
