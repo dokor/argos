@@ -36,7 +36,7 @@ public class RuntimeModuleAnalyzer implements AuditModuleAnalyzer {
             r = client.analyzeRuntime(url);
         } catch (Exception e) {
             // module "soft fail" : on ne casse pas tout l’audit
-            List<AuditCheckResult> checks = List.of(new AuditCheckResult(
+            List<AuditCheckResult> checks = List.of(AuditCheckResult.of(
                 "runtime.collect",
                 "Runtime collection (Playwright)",
                 AuditStatus.WARN,
@@ -70,7 +70,7 @@ public class RuntimeModuleAnalyzer implements AuditModuleAnalyzer {
         List<AuditCheckResult> checks = new ArrayList<>();
 
         // 1) Console errors
-        checks.add(new AuditCheckResult(
+        checks.add(AuditCheckResult.of(
             "runtime.console.errors",
             "Console errors",
             consoleErrors == 0 ? AuditStatus.PASS : (consoleErrors <= 2 ? AuditStatus.WARN : AuditStatus.FAIL),
@@ -83,7 +83,7 @@ public class RuntimeModuleAnalyzer implements AuditModuleAnalyzer {
         ));
 
         // 2) JS page errors
-        checks.add(new AuditCheckResult(
+        checks.add(AuditCheckResult.of(
             "runtime.js.errors",
             "Uncaught JS errors (pageerror)",
             jsErrors == 0 ? AuditStatus.PASS : AuditStatus.WARN,
@@ -96,7 +96,7 @@ public class RuntimeModuleAnalyzer implements AuditModuleAnalyzer {
         ));
 
         // 3) HTTP 5xx
-        checks.add(new AuditCheckResult(
+        checks.add(AuditCheckResult.of(
             "runtime.network.5xx",
             "HTTP 5xx responses",
             s5xx == 0 ? AuditStatus.PASS : AuditStatus.FAIL,
@@ -109,7 +109,7 @@ public class RuntimeModuleAnalyzer implements AuditModuleAnalyzer {
         ));
 
         // 4) Request failures
-        checks.add(new AuditCheckResult(
+        checks.add(AuditCheckResult.of(
             "runtime.network.failed_requests",
             "Failed network requests",
             failedReq == 0 ? AuditStatus.PASS : AuditStatus.WARN,
@@ -122,7 +122,7 @@ public class RuntimeModuleAnalyzer implements AuditModuleAnalyzer {
         ));
 
         // 5) Request count
-        checks.add(new AuditCheckResult(
+        checks.add(AuditCheckResult.of(
             "runtime.network.request_count",
             "Network request count",
             reqCount <= 120 ? AuditStatus.INFO : AuditStatus.WARN,
@@ -135,7 +135,7 @@ public class RuntimeModuleAnalyzer implements AuditModuleAnalyzer {
         ));
 
         // 6) Total bytes
-        checks.add(new AuditCheckResult(
+        checks.add(AuditCheckResult.of(
             "runtime.network.bytes_estimated",
             "Transferred bytes (estimated)",
             bytes <= 3_000_000 ? AuditStatus.INFO : AuditStatus.WARN,
@@ -148,7 +148,7 @@ public class RuntimeModuleAnalyzer implements AuditModuleAnalyzer {
         ));
 
         // 7) Duration
-        checks.add(new AuditCheckResult(
+        checks.add(AuditCheckResult.of(
             "runtime.analysis.duration_ms",
             "Runtime analysis duration",
             AuditStatus.INFO,
