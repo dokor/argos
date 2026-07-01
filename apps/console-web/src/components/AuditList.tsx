@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { argosApi, AuditListItem } from "@/lib/ArgosApi";
 import { useLang } from "@/lib/i18n/LangContext";
+import { createLogger, safeError } from "@/lib/logger";
 import {
   parseReport, extractTechs, prettyJson,
   AuditReportV2, SortKey,
@@ -23,6 +24,8 @@ function isFinal(status: AuditListItem["status"]) {
 export default function AuditList({ items, setItems }: Props) {
   const { t } = useLang();
   const tl = t.auditList;
+  const loggerRef = useRef(createLogger("dashboard", { route: "/dashboard" }));
+  const previousStatusesRef = useRef<Map<number, AuditListItem["status"]>>(new Map());
 
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState<string | null>(null);
@@ -42,9 +45,23 @@ export default function AuditList({ items, setItems }: Props) {
         setLoading(true);
         setError(null);
         const list = await argosApi.getList();
-        if (mounted) setItems(list);
-      } catch (e: any) {
-        if (mounted) setError(e?.message ?? "Erreur lors du chargement");
+        if (mounted) {
+          loggerRef.current.info("dashboard_audit_list_loaded", {
+            action: "load_audits",
+            details: {
+              count: list.length,
+            },
+          });
+          setItems(list);
+        }
+      } catch (e: unknown) {
+        loggerRef.current.error("dashboard_audit_list_load_failed", {
+          action: "load_audits",
+          details: {
+            error: safeError(e),
+          },
+        });
+        if (mounted) setError(e instanceof Error ? e.message : "Erreur lors du chargement");
       } finally {
         if (mounted) setLoading(false);
       }
@@ -60,15 +77,34 @@ export default function AuditList({ items, setItems }: Props) {
 
   useEffect(() => {
     if (pendingRuns.length === 0) return;
+    const logger = loggerRef.current;
+
+    logger.info("dashboard_audit_polling_started", {
+      action: "poll_run_status",
+      details: {
+        pendingRuns,
+      },
+    });
+
     const interval = setInterval(async () => {
       try {
+        type RunUpdate =
+          | {
+              ok: true;
+              r: Awaited<ReturnType<typeof argosApi.getRunsByRunId>>;
+              runId: number;
+            }
+          | {
+              e: unknown;
+              ok: false;
+              runId: number;
+            };
+
         const updates = await Promise.all(
           pendingRuns.map((runId) =>
             argosApi.getRunsByRunId(runId)
-              // @ts-ignore
-              .then((r) => ({ ok: true as const, runId, r }))
-              // @ts-ignore
-              .catch((e) => ({ ok: false as const, runId, e }))
+              .then<RunUpdate>((r) => ({ ok: true, runId, r }))
+              .catch<RunUpdate>((e: unknown) => ({ ok: false, runId, e }))
           )
         );
         setItems((prev) => {
@@ -88,11 +124,52 @@ export default function AuditList({ items, setItems }: Props) {
           return Array.from(byRun.values());
         });
       } catch (e) {
-        console.warn("poll error", e);
+        logger.warn("dashboard_audit_polling_failed", {
+          action: "poll_run_status",
+          details: {
+            error: safeError(e),
+            pendingRuns,
+          },
+        });
       }
     }, 3000);
-    return () => clearInterval(interval);
+
+    return () => {
+      clearInterval(interval);
+      logger.info("dashboard_audit_polling_stopped", {
+        action: "poll_run_status",
+        details: {
+          pendingRuns,
+        },
+      });
+    };
   }, [pendingRuns, setItems]);
+
+  useEffect(() => {
+    const nextStatuses = new Map<number, AuditListItem["status"]>();
+
+    items.forEach((item) => {
+      const previousStatus = previousStatusesRef.current.get(item.runId);
+      if (
+        previousStatus &&
+        previousStatus !== item.status &&
+        (item.status === "COMPLETED" || item.status === "FAILED")
+      ) {
+        loggerRef.current.info("dashboard_audit_status_transition", {
+          action: "observe_run_status",
+          details: {
+            nextStatus: item.status,
+            previousStatus,
+            runId: item.runId,
+          },
+        });
+      }
+
+      nextStatuses.set(item.runId, item.status);
+    });
+
+    previousStatusesRef.current = nextStatuses;
+  }, [items]);
 
   // Derive filter options from data
   const allModules = useMemo(() => {
@@ -145,8 +222,21 @@ export default function AuditList({ items, setItems }: Props) {
     try {
       await navigator.clipboard.writeText(prettyJson(json));
       setCopiedRunId(runId);
+      loggerRef.current.info("dashboard_audit_json_copied", {
+        action: "copy_result_json",
+        details: {
+          runId,
+        },
+      });
       window.setTimeout(() => setCopiedRunId((x) => (x === runId ? null : x)), 1200);
     } catch (e) {
+      loggerRef.current.warn("dashboard_audit_json_copy_failed", {
+        action: "copy_result_json",
+        details: {
+          error: safeError(e),
+          runId,
+        },
+      });
       alert("Impossible de copier dans le presse-papier.");
     }
   }
