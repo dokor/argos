@@ -44,7 +44,7 @@ public class ReportPublishService {
      *
      * @return token public (base64url)
      */
-    public Optional<String> publishIfAbsent(long runId, Audit audit, AuditReportJson internalReport) {
+    public Optional<String> publishIfAbsent(long runId, Audit audit, AuditReportJson internalReport, String preGeneratedToken) {
         // 1) déjà publié ?
         var existing = auditReportDao.findByRunId(runId);
         if (existing.isPresent()) {
@@ -61,7 +61,11 @@ public class ReportPublishService {
 
             String reportJson = objectMapper.writeValueAsString(dto);
 
-            String token = tokenService.generateToken();
+            // Utilise le token pré-généré à la création du run pour que l'URL
+            // du rapport soit connue avant la fin de l'analyse.
+            String token = (preGeneratedToken != null && !preGeneratedToken.isBlank())
+                ? preGeneratedToken
+                : tokenService.generateToken();
             byte[] hash = tokenService.sha256(token);
 
             String url = audit.getNormalizedUrl();
