@@ -1,6 +1,6 @@
 # Argos — Instructions pour Claude Code
 
-> Pour la documentation technique complète du projet (stack, routes, DB, conventions),
+> Pour la documentation technique complète (stack, routes, DB, conventions),
 > lire **AGENTS.md** en priorité. Ce fichier couvre uniquement les workflows IA.
 
 ---
@@ -8,21 +8,16 @@
 ## AI Delivery Engine (ADE)
 
 ADE est installé comme devDependency (`@alelouet/ai-delivery-engine`).
-Il transforme le brief Argos en backlog structuré et génère des prompts spécialistes.
 
 ```bash
-# Depuis la racine du monorepo
-npx ade backlog:run brief.md               # génère un backlog depuis brief.md
-npx ade prompt:po brief.md                 # génère le prompt PO/PM
-npx ade import:po outputs/<fichier>.json   # importe une réponse PO/PM
-npx ade backlog:export                     # exporte les items en Markdown
-npx ade prompt:specialists                 # génère tous les prompts spécialistes
-npx ade prompt:specialist <role> <item.md> # génère un prompt pour un item précis
-npx ade specialist:check <response.md>     # valide une réponse spécialiste
-npx ade project:status                     # état du projet local
+npx ade backlog:run brief.md
+npx ade prompt:po brief.md
+npx ade prompt:specialist <role> <item.md>
+npx ade prompt:specialists
+npx ade project:status
 ```
 
-Rôles disponibles : `ux-ui`, `frontend`, `backend`, `qa`, `tech-lead`,
+Rôles : `ux-ui`, `frontend`, `backend`, `qa`, `tech-lead`,
 `legal-compliance`, `security`, `devops`, `data-analytics`, `customer-success`
 
 ---
@@ -30,8 +25,6 @@ Rôles disponibles : `ux-ui`, `frontend`, `backend`, `qa`, `tech-lead`,
 ## Workflow 1 — Enrichissement des issues GitHub
 
 **Déclencheur :** "Parcours les issues et améliore leurs descriptions"
-
-### Étapes
 
 **1. Lister les issues non traitées**
 ```bash
@@ -42,67 +35,101 @@ gh issue list --repo dokor/argos --state open --json number,title,body,labels,ur
 
 **3. Pour chaque issue à enrichir :**
 
-a. Analyser le contenu (titre + description existante) et le contexte Argos (AGENTS.md)
+a. Analyser le contenu dans le contexte Argos (consulter AGENTS.md)
 
-b. Identifier le profil le plus pertinent :
-   - Backend → Java, API REST, DB, modules d'analyse, scheduler
-   - Frontend → Next.js, composants rapport, BFF, i18n
-   - Security → SSRF, tokens, headers, ZAP, sanitization
-   - DevOps → Docker, Traefik, déploiement, infra/compose/
-   - QA → tests Java (mvn test), tests frontend, régressions rapport
+b. Identifier le rôle ADE dominant selon les mots-clés du titre/corps :
+   - `backend`  → Java, API, base de données, scheduler, module d'analyse
+   - `frontend` → Next.js, composant, UI, rapport, BFF, i18n
+   - `security` → SSRF, token, vulnérabilité, authentification, headers
+   - `devops`   → Docker, Traefik, déploiement, CI/CD, infra
+   - `qa`       → tests, régressions, couverture, acceptance
+   - `ux-ui`    → expérience utilisateur, design, accessibilité, formulaire
+   - `legal-compliance` → RGPD, consentement, mentions légales
+   - `tech-lead` → architecture, performance, dette technique
 
-c. Générer une description améliorée :
+c. Générer une description améliorée en adoptant la perspective du rôle identifié :
    - Objectif clair (user story ou énoncé technique)
-   - Critères d'acceptation (≥3 checkboxes `- [ ]`)
-   - Contexte technique (packages concernés, fichiers, contraintes)
-   - Labels suggérés
+   - Critères d'acceptation (≥ 3 checkboxes `- [ ]`)
+   - Contexte technique (packages, fichiers, contraintes Argos)
+   - Labels suggérés (le rôle identifié + domaine)
 
-d. Si l'issue couvre plus de 3 jours de travail, la découper :
+d. Si l'issue couvre plus de 3 jours, la découper :
    ```bash
    gh issue create --repo dokor/argos --title "<titre>" --body "<description>"
    ```
 
 e. Mettre à jour l'issue :
    ```bash
-   gh issue edit <NUMBER> --repo dokor/argos --body "<IMPROVED_BODY>"
-   gh issue edit <NUMBER> --repo dokor/argos --add-label "backlog-refined"
+   gh issue edit <N> --repo dokor/argos --body "<IMPROVED_BODY>"
+   gh issue edit <N> --repo dokor/argos --add-label "backlog-refined"
    ```
 
-**4. Résumer** : issues traitées, labels ajoutés, sous-issues créées.
+**4. Résumer** les issues traitées.
 
 ---
 
 ## Workflow 2 — Développement d'une issue
 
-**Déclencheur :** "Prends l'issue <N> et développe-la"
+**Déclencheur :** "Travaille sur l'issue <N>" ou "Développe l'issue <N>"
 
-### Étapes
+### ⚠️ Gate PO/PM obligatoire — à exécuter AVANT tout développement
 
 **1. Lire l'issue**
 ```bash
 gh issue view <N> --repo dokor/argos --json number,title,body,labels,url
 ```
 
-**2. Marquer comme in-progress**
+**2. Vérifier les labels**
+
+- Si l'issue a le label `backlog-refined` ou `ready-for-dev` → continuer au développement.
+- Si l'issue N'a PAS ces labels → **STOP. Enrichir d'abord.**
+
+**Procédure d'enrichissement obligatoire (si pas backlog-refined) :**
+
+a. Analyser l'issue dans le contexte Argos (AGENTS.md).
+
+b. Identifier le rôle ADE dominant (backend / frontend / security / devops / qa / ux-ui / tech-lead)
+   selon les mots-clés du titre/corps (voir Workflow 1 step 3b).
+
+c. Rédiger une version enrichie en adoptant la perspective du rôle identifié :
+   - Objectif clair (une phrase)
+   - Critères d'acceptation (≥ 3 checkboxes `- [ ]`)
+   - Contexte technique (fichiers concernés, dépendances, migration Flyway si besoin)
+   - Risques identifiés (sécurité, régressions, i18n)
+
+d. Mettre à jour l'issue et la labelliser :
+   ```bash
+   gh issue edit <N> --repo dokor/argos --body "<ENRICHED_BODY>"
+   gh issue edit <N> --repo dokor/argos --add-label "backlog-refined"
+   ```
+
+e. Une fois l'issue mise à jour sur GitHub, **continuer automatiquement au développement**
+   sans attendre de validation manuelle.
+
+---
+
+### Développement
+
+**3. Marquer comme in-progress**
 ```bash
 gh issue edit <N> --repo dokor/argos --add-label "in-progress"
 ```
 
-**3. Créer une branche**
+**4. Créer une branche**
 ```bash
 git checkout -b feat/issue-<N>-<slug-du-titre>
 ```
 
-**4. Planifier** (lire AGENTS.md pour le contexte technique Argos)
+**5. Planifier** (lire AGENTS.md pour le contexte technique Argos)
 - Identifier les packages/fichiers à modifier
-- Backend : vérifier les migrations Flyway si changement DB
+- Backend : vérifier si une migration Flyway est nécessaire
 - Frontend : vérifier les impacts i18n (fr.json / en.json)
 
-**5. Implémenter**
+**6. Implémenter**
 
 Backend Java :
 ```bash
-cd apps/api-backend && mvn test    # valider après chaque changement
+cd apps/api-backend && mvn test
 ```
 
 Frontend Next.js :
@@ -110,9 +137,10 @@ Frontend Next.js :
 cd apps/console-web && npm run lint && npm run test
 ```
 
-**6. Générer les reviews spécialistes**
+**7. Générer les reviews spécialistes**
+
+Créer un fichier décrivant l'implémentation :
 ```bash
-# Décrire les changements dans un fichier
 cat > /tmp/issue-<N>-impl.md << 'EOF'
 # Issue #<N>: <Titre>
 ## Ce qui a été implémenté
@@ -120,22 +148,37 @@ cat > /tmp/issue-<N>-impl.md << 'EOF'
 ## Fichiers modifiés
 <liste>
 EOF
-
-# Générer les prompts de review
-npx ade prompt:specialist security /tmp/issue-<N>-impl.md outputs/
-npx ade prompt:specialist qa /tmp/issue-<N>-impl.md outputs/
-npx ade prompt:specialist tech-lead /tmp/issue-<N>-impl.md outputs/
 ```
 
-Lire les prompts, jouer les rôles, corriger si des points sont soulevés.
+Sélectionner les rôles selon le domaine de l'issue :
+- **Toujours** : `tech-lead` + `qa`
+- Issue `backend`  → ajouter `backend` + `security`
+- Issue `frontend` → ajouter `frontend` + `ux-ui`
+- Issue `security` → ajouter `security` (prioritaire)
+- Issue `devops`   → ajouter `devops` + `security`
+- Issue `legal-compliance` → ajouter `legal-compliance`
 
-**7. Vérification finale**
+```bash
+# Exemple pour une issue backend :
+npx ade prompt:specialist tech-lead /tmp/issue-<N>-impl.md outputs/
+npx ade prompt:specialist qa /tmp/issue-<N>-impl.md outputs/
+npx ade prompt:specialist backend /tmp/issue-<N>-impl.md outputs/
+npx ade prompt:specialist security /tmp/issue-<N>-impl.md outputs/
+```
+
+Lire les prompts générés, jouer les rôles, corriger si des points sont soulevés.
+
+**8. Vérification finale**
 ```bash
 cd apps/api-backend && mvn test
 cd apps/console-web && npm run lint && npm run test
 ```
 
-**8. Créer la PR**
+**9. Pousser la branche et créer la PR**
+```bash
+git push -u origin $(git branch --show-current)
+```
+
 ```bash
 gh pr create --repo dokor/argos \
   --title "feat: <titre court>" \
@@ -165,18 +208,62 @@ PREOF
 )"
 ```
 
-**9. Notifier**
+**10. Review post-PR — Tech Lead + QA sur le diff réel**
+
 ```bash
 PR_NUMBER=$(gh pr list --repo dokor/argos --head "feat/issue-<N>-<slug>" --json number --jq '.[0].number')
-gh issue comment <N> --repo dokor/argos --body "PR prête pour review : #${PR_NUMBER} — cc @alelouet"
+
+# Récupérer le diff complet de la PR
+gh pr diff ${PR_NUMBER} --repo dokor/argos > /tmp/pr-${PR_NUMBER}-diff.md
+
+# Créer le fichier de contexte pour les reviews
+cat > /tmp/pr-${PR_NUMBER}-review.md << EOF
+# PR #${PR_NUMBER} — Review post-implémentation
+Issue : #<N> — <Titre>
+
+## Diff complet
+$(cat /tmp/pr-${PR_NUMBER}-diff.md)
+EOF
+```
+
+Générer les reviews sur le diff réel — mêmes rôles que l'étape 7 (toujours tech-lead + qa, plus les rôles domaine) :
+```bash
+npx ade prompt:specialist tech-lead /tmp/pr-${PR_NUMBER}-review.md outputs/
+npx ade prompt:specialist qa /tmp/pr-${PR_NUMBER}-review.md outputs/
+# Ajouter les rôles domaine selon le type de l'issue (backend+security, frontend+ux-ui, devops+security…)
+```
+
+Jouer les rôles sur le diff. Deux cas possibles :
+
+**Cas A — Aucun point bloquant** : passer à l'étape 11.
+
+**Cas B — Des corrections sont nécessaires** :
+- Corriger le code sur la même branche
+- Relancer les tests :
+  ```bash
+  cd apps/api-backend && mvn test
+  cd apps/console-web && npm run lint && npm run test
+  ```
+- Pousser les corrections :
+  ```bash
+  git add . && git commit -m "fix: <description de la correction>"
+  git push
+  ```
+- Retourner à l'étape 10 (re-review du nouveau diff)
+- La PR reste `in-progress` pendant toute cette phase
+
+**11. Notifier — uniquement quand toutes les reviews passent**
+```bash
+gh issue comment <N> --repo dokor/argos --body "PR #${PR_NUMBER} prête pour review : cc @alelouet"
 gh issue edit <N> --repo dokor/argos --remove-label "in-progress" --add-label "pr-ready"
+gh pr edit ${PR_NUMBER} --repo dokor/argos --add-assignee "alelouet"
 ```
 
 ---
 
 ## Workflow 3 — Review et merge (manuel)
 
-@alelouet reçoit la notification, fait la review finale et merge.
+@alelouet reçoit la notification GitHub (assignation + commentaire), fait la review finale et merge.
 **Claude Code ne merge jamais sans validation humaine explicite.**
 
 ---
@@ -185,10 +272,10 @@ gh issue edit <N> --repo dokor/argos --remove-label "in-progress" --add-label "p
 
 | Label | Signification |
 |---|---|
-| `backlog-refined` | Issue enrichie, prête pour estimation |
-| `ready-for-dev` | Prête à développer |
+| `backlog-refined` | Issue enrichie automatiquement par Claude Code |
+| `ready-for-dev` | Prête à développer (estimée, critères clairs) |
 | `in-progress` | Développement en cours |
-| `pr-ready` | PR créée, en attente de review |
+| `pr-ready` | PR créée, reviews passées, en attente de merge |
 | `needs-info` | Informations manquantes |
 | `backend` / `frontend` / `security` / `devops` / `qa` | Domaine |
 
@@ -196,8 +283,8 @@ gh issue edit <N> --repo dokor/argos --remove-label "in-progress" --add-label "p
 
 ## Règles importantes
 
-- **Ne jamais merger sans validation humaine.**
-- **Toujours lancer les tests** avant de créer une PR (mvn test + npm test).
+- **L'issue doit avoir le label `backlog-refined` avant tout développement** (ajouté automatiquement après enrichissement).
+- **Ne jamais merger sans validation humaine.** Même si tous les tests passent.
+- **Toujours lancer les tests** avant de créer une PR.
 - Pour toute migration DB : créer une migration Flyway V(N+1) ET mettre à jour l'entité + classe Q* manuellement.
-- Les tokens de rapport sont pré-générés à la création du run — ne pas modifier ce mécanisme.
 - Consulter AGENTS.md pour toute question sur la stack, les routes, ou les conventions.
