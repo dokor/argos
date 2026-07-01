@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { argosApi } from "@/lib/ArgosApi";
 import { useLang } from "@/lib/i18n/LangContext";
 import { createLogger, safeError, sanitizeUrl } from "@/lib/logger";
+import { normalizeInputUrl } from "@/lib/url";
 import { useIsAdmin } from "@/lib/useIsAdmin";
 import ArgosIcon from "@/components/ArgosIcon";
 import LangToggle from "@/components/LangToggle";
@@ -130,18 +131,22 @@ function HeroAuditForm({
     const trimmed = url.trim();
     if (!trimmed || phase !== "idle") return;
 
+    // Prepend https:// when the scheme is omitted so scheme-less input
+    // (e.g. "example.com") is accepted, matching the BFF/backend behavior.
+    const normalized = normalizeInputUrl(trimmed);
+
     loggerRef.current.info("landing_audit_submit", {
       action: "create_audit",
       details: {
         hasScheme: /^https?:\/\//i.test(trimmed),
-        url: sanitizeUrl(trimmed),
+        url: sanitizeUrl(normalized),
       },
     });
 
     setPhase("submitting");
     setErrMsg("");
     try {
-      const res = await argosApi.createAudit({ url: trimmed });
+      const res = await argosApi.createAudit({ url: normalized });
       runIdRef.current = res.runId;
       pollCountRef.current = 0;
       pollErrorCountRef.current = 0;
@@ -161,7 +166,7 @@ function HeroAuditForm({
         action: "create_audit",
         details: {
           error: safeError(error),
-          url: sanitizeUrl(trimmed),
+          url: sanitizeUrl(normalized),
         },
       });
     }
@@ -184,7 +189,11 @@ function HeroAuditForm({
     <form onSubmit={handleSubmit} style={{ width: "100%" }}>
       <div className={s.formRow}>
         <input
-          type="url"
+          type="text"
+          inputMode="url"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
           required
           value={url}
           onChange={(e) => setUrl(e.target.value)}
