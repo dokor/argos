@@ -37,11 +37,21 @@ gh issue list --repo dokor/argos --state open --json number,title,body,labels,ur
 
 a. Analyser le contenu dans le contexte Argos (consulter AGENTS.md)
 
-b. Générer une description améliorée :
+b. Identifier le rôle ADE dominant selon les mots-clés du titre/corps :
+   - `backend`  → Java, API, base de données, scheduler, module d'analyse
+   - `frontend` → Next.js, composant, UI, rapport, BFF, i18n
+   - `security` → SSRF, token, vulnérabilité, authentification, headers
+   - `devops`   → Docker, Traefik, déploiement, CI/CD, infra
+   - `qa`       → tests, régressions, couverture, acceptance
+   - `ux-ui`    → expérience utilisateur, design, accessibilité, formulaire
+   - `legal-compliance` → RGPD, consentement, mentions légales
+   - `tech-lead` → architecture, performance, dette technique
+
+c. Générer une description améliorée en adoptant la perspective du rôle identifié :
    - Objectif clair (user story ou énoncé technique)
    - Critères d'acceptation (≥ 3 checkboxes `- [ ]`)
    - Contexte technique (packages, fichiers, contraintes Argos)
-   - Labels suggérés
+   - Labels suggérés (le rôle identifié + domaine)
 
 c. Si l'issue couvre plus de 3 jours, la découper :
    ```bash
@@ -125,6 +135,8 @@ cd apps/console-web && npm run lint && npm run test
 ```
 
 **7. Générer les reviews spécialistes**
+
+Créer un fichier décrivant l'implémentation :
 ```bash
 cat > /tmp/issue-<N>-impl.md << 'EOF'
 # Issue #<N>: <Titre>
@@ -133,13 +145,25 @@ cat > /tmp/issue-<N>-impl.md << 'EOF'
 ## Fichiers modifiés
 <liste>
 EOF
-
-npx ade prompt:specialist security /tmp/issue-<N>-impl.md outputs/
-npx ade prompt:specialist qa /tmp/issue-<N>-impl.md outputs/
-npx ade prompt:specialist tech-lead /tmp/issue-<N>-impl.md outputs/
 ```
 
-Lire les prompts, jouer les rôles, corriger si des points sont soulevés.
+Sélectionner les rôles selon le domaine de l'issue :
+- **Toujours** : `tech-lead` + `qa`
+- Issue `backend`  → ajouter `backend` + `security`
+- Issue `frontend` → ajouter `frontend` + `ux-ui`
+- Issue `security` → ajouter `security` (prioritaire)
+- Issue `devops`   → ajouter `devops` + `security`
+- Issue `legal-compliance` → ajouter `legal-compliance`
+
+```bash
+# Exemple pour une issue backend :
+npx ade prompt:specialist tech-lead /tmp/issue-<N>-impl.md outputs/
+npx ade prompt:specialist qa /tmp/issue-<N>-impl.md outputs/
+npx ade prompt:specialist backend /tmp/issue-<N>-impl.md outputs/
+npx ade prompt:specialist security /tmp/issue-<N>-impl.md outputs/
+```
+
+Lire les prompts générés, jouer les rôles, corriger si des points sont soulevés.
 
 **8. Vérification finale**
 ```bash
