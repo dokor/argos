@@ -14,7 +14,7 @@
       "headline": "Find what's hurting your site.\nFree, no account, in 30 seconds.",
       "sub": "HTTP, SEO, performance, stack - Argos analyzes everything and gives you a prioritized report with the concrete actions to take first.",
       "audience": "For developers, growth teams, and agencies.",
-      "inputPlaceholder": "https://yoursite.com",
+      "inputPlaceholder": "yoursite.com (https:// optional)",
       "cta": "Analyze now →",
       "ctaLoading": "Submitting…",
       "hint": "Free · No account · Private report, not indexed",

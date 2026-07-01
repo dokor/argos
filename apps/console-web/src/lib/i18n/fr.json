@@ -14,7 +14,7 @@
       "headline": "Trouvez ce qui plombe votre site.\nGratuit, sans compte, en 30 secondes.",
       "sub": "HTTP, SEO, performance, stack - Argos analyse tout et vous rend un rapport priorisé avec les actions concrètes à mener en premier.",
       "audience": "Pour les devs, les équipes growth et les agences.",
-      "inputPlaceholder": "https://monsite.com",
+      "inputPlaceholder": "monsite.com (https:// optionnel)",
       "cta": "Analyser maintenant →",
       "ctaLoading": "Soumission…",
       "hint": "Gratuit · Sans compte · Rapport privé, non indexé",
