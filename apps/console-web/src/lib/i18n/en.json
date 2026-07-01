@@ -268,6 +268,13 @@
       "cta": "Analyze my site →"
     }
   },
+  "error": {
+    "title": "Oops, something went wrong",
+    "description": "An unexpected error occurred on our side. You can try again or go back home.",
+    "retry": "Try again",
+    "backHome": "Back to home",
+    "reference": "Reference"
+  },
   "dashboard": {
     "title": "Argos – Console",
     "newAudit": "New audit",
