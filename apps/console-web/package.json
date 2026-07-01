@@ -23,7 +23,6 @@
     "tailwind-merge": "^3.4.1"
   },
   "devDependencies": {
-    "@alelouet/ai-delivery-engine": "0.1.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

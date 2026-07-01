@@ -1,0 +1,16 @@
+{
+  "name": "argos",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "ade:backlog": "ade backlog:run brief.md",
+    "ade:prompt-po": "ade prompt:po brief.md",
+    "ade:specialists": "ade prompt:specialists",
+    "ade:status": "ade project:status",
+    "ade:issues": "gh issue list --repo dokor/argos --state open --json number,title,labels --limit 50"
+  },
+  "devDependencies": {
+    "@alelouet/ai-delivery-engine": "^0.1.0"
+  }
+}
