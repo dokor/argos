@@ -53,18 +53,18 @@ c. Générer une description améliorée en adoptant la perspective du rôle ide
    - Contexte technique (packages, fichiers, contraintes Argos)
    - Labels suggérés (le rôle identifié + domaine)
 
-c. Si l'issue couvre plus de 3 jours, la découper :
+d. Si l'issue couvre plus de 3 jours, la découper :
    ```bash
    gh issue create --repo dokor/argos --title "<titre>" --body "<description>"
    ```
 
-d. Mettre à jour l'issue :
+e. Mettre à jour l'issue :
    ```bash
    gh issue edit <N> --repo dokor/argos --body "<IMPROVED_BODY>"
    gh issue edit <N> --repo dokor/argos --add-label "backlog-refined"
    ```
 
-**4. Résumer** les issues traitées et attendre validation humaine avant tout développement.
+**4. Résumer** les issues traitées.
 
 ---
 
@@ -88,19 +88,22 @@ gh issue view <N> --repo dokor/argos --json number,title,body,labels,url
 
 a. Analyser l'issue dans le contexte Argos (AGENTS.md).
 
-b. Rédiger une version enrichie avec :
+b. Identifier le rôle ADE dominant (backend / frontend / security / devops / qa / ux-ui / tech-lead)
+   selon les mots-clés du titre/corps (voir Workflow 1 step 3b).
+
+c. Rédiger une version enrichie en adoptant la perspective du rôle identifié :
    - Objectif clair (une phrase)
    - Critères d'acceptation (≥ 3 checkboxes `- [ ]`)
    - Contexte technique (fichiers concernés, dépendances, migration Flyway si besoin)
    - Risques identifiés (sécurité, régressions, i18n)
 
-c. Mettre à jour l'issue et la labelliser :
+d. Mettre à jour l'issue et la labelliser :
    ```bash
    gh issue edit <N> --repo dokor/argos --body "<ENRICHED_BODY>"
    gh issue edit <N> --repo dokor/argos --add-label "backlog-refined"
    ```
 
-d. Une fois l'issue mise à jour sur GitHub, **continuer automatiquement au développement**
+e. Une fois l'issue mise à jour sur GitHub, **continuer automatiquement au développement**
    sans attendre de validation manuelle.
 
 ---
@@ -171,7 +174,11 @@ cd apps/api-backend && mvn test
 cd apps/console-web && npm run lint && npm run test
 ```
 
-**9. Créer la PR**
+**9. Pousser la branche et créer la PR**
+```bash
+git push -u origin $(git branch --show-current)
+```
+
 ```bash
 gh pr create --repo dokor/argos \
   --title "feat: <titre court>" \
@@ -219,13 +226,14 @@ $(cat /tmp/pr-${PR_NUMBER}-diff.md)
 EOF
 ```
 
-Générer les reviews sur le diff réel (toujours tech-lead + qa) :
+Générer les reviews sur le diff réel — mêmes rôles que l'étape 7 (toujours tech-lead + qa, plus les rôles domaine) :
 ```bash
 npx ade prompt:specialist tech-lead /tmp/pr-${PR_NUMBER}-review.md outputs/
 npx ade prompt:specialist qa /tmp/pr-${PR_NUMBER}-review.md outputs/
+# Ajouter les rôles domaine selon le type de l'issue (backend+security, frontend+ux-ui, devops+security…)
 ```
 
-Jouer les rôles Tech Lead et QA sur le diff. Deux cas possibles :
+Jouer les rôles sur le diff. Deux cas possibles :
 
 **Cas A — Aucun point bloquant** : passer à l'étape 11.
 
@@ -264,10 +272,10 @@ gh pr edit ${PR_NUMBER} --repo dokor/argos --add-assignee "alelouet"
 
 | Label | Signification |
 |---|---|
-| `backlog-refined` | Issue enrichie et validée par @alelouet |
+| `backlog-refined` | Issue enrichie automatiquement par Claude Code |
 | `ready-for-dev` | Prête à développer (estimée, critères clairs) |
 | `in-progress` | Développement en cours |
-| `pr-ready` | PR créée, en attente de review |
+| `pr-ready` | PR créée, reviews passées, en attente de merge |
 | `needs-info` | Informations manquantes |
 | `backend` / `frontend` / `security` / `devops` / `qa` | Domaine |
 
@@ -275,8 +283,8 @@ gh pr edit ${PR_NUMBER} --repo dokor/argos --add-assignee "alelouet"
 
 ## Règles importantes
 
-- **Ne jamais commencer le développement sans validation humaine de l'issue enrichie.**
-- **Ne jamais merger sans validation humaine de la PR.**
+- **L'issue doit avoir le label `backlog-refined` avant tout développement** (ajouté automatiquement après enrichissement).
+- **Ne jamais merger sans validation humaine.** Même si tous les tests passent.
 - **Toujours lancer les tests** avant de créer une PR.
 - Pour toute migration DB : créer une migration Flyway V(N+1) ET mettre à jour l'entité + classe Q* manuellement.
 - Consulter AGENTS.md pour toute question sur la stack, les routes, ou les conventions.
