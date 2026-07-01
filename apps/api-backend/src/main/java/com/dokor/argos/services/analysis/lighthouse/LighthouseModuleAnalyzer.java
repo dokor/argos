@@ -8,6 +8,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 
+import java.net.http.HttpTimeoutException;
 import java.util.*;
 
 @Singleton
@@ -35,6 +36,13 @@ public class LighthouseModuleAnalyzer implements AuditModuleAnalyzer {
         try {
             lhr = client.analyze(url);
         } catch (Exception e) {
+            // module "soft fail" : on ne casse pas tout l'audit
+            boolean timeout = e instanceof HttpTimeoutException;
+            String reason = timeout ? "TIMEOUT" : "FAILED";
+            String errorMsg = String.valueOf(e.getMessage());
+            String message = timeout
+                ? "Lighthouse indisponible : délai d'attente dépassé (timeout)."
+                : "Impossible d'exécuter Lighthouse (service indisponible).";
             List<AuditCheckResult> checks = List.of(AuditCheckResult.of(
                 "lighthouse.collect",
                 "Lighthouse collection",
@@ -42,16 +50,16 @@ public class LighthouseModuleAnalyzer implements AuditModuleAnalyzer {
                 AuditSeverity.MEDIUM,
                 false, 0.0, List.of("lighthouse"),
                 false,
-                Map.of("error", e.getMessage()),
-                "Impossible d'exécuter Lighthouse (service indisponible ou timeout).",
+                Map.of("error", errorMsg, "reason", reason),
+                message,
                 "Vérifier que lighthouse-service est up et joignable depuis api-backend."
             ));
 
             return new AuditModuleResult(
                 moduleId(),
                 "Lighthouse",
-                "lighthouse=unavailable",
-                Map.of("available", false, "error", e.getMessage()),
+                "lighthouse=unavailable(" + reason.toLowerCase(Locale.ROOT) + ")",
+                Map.of("available", false, "error", errorMsg, "reason", reason),
                 checks
             );
         }
