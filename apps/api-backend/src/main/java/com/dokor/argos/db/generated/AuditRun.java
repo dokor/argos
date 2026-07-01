@@ -17,6 +17,12 @@ public class AuditRun extends com.coreoz.plume.db.querydsl.crud.CrudEntityQueryd
     @Column("claim_token")
     private String claimToken;
 
+    @Column("report_token")
+    private String reportToken;
+
+    @Column("module_statuses")
+    private String moduleStatuses;
+
     @Column("created_at")
     private java.time.Instant createdAt;
 
@@ -53,6 +59,22 @@ public class AuditRun extends com.coreoz.plume.db.querydsl.crud.CrudEntityQueryd
 
     public void setClaimToken(String claimToken) {
         this.claimToken = claimToken;
+    }
+
+    public String getReportToken() {
+        return reportToken;
+    }
+
+    public void setReportToken(String reportToken) {
+        this.reportToken = reportToken;
+    }
+
+    public String getModuleStatuses() {
+        return moduleStatuses;
+    }
+
+    public void setModuleStatuses(String moduleStatuses) {
+        this.moduleStatuses = moduleStatuses;
     }
 
     public java.time.Instant getCreatedAt() {
