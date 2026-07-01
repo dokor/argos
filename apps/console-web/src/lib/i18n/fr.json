@@ -5,7 +5,8 @@
   },
   "nav": {
     "logo": "Argos",
-    "openConsole": "Accéder à la console →"
+    "openConsole": "Accéder à la console →",
+    "faq": "FAQ"
   },
   "landing": {
     "hero": {
@@ -149,6 +150,122 @@
     "footer": {
       "built": "Fait par Antoine LE LOUËT.",
       "copy": "© 2026 Argos. MIT License."
+    }
+  },
+  "faq": {
+    "meta": {
+      "title": "FAQ – Questions fréquentes",
+      "description": "Réponses aux questions fréquentes sur Argos : fonctionnement, rapports, limites d'analyse, confidentialité et évolutions à venir."
+    },
+    "hero": {
+      "badge": "Centre d'aide",
+      "title": "Questions fréquentes",
+      "sub": "Tout ce qu'il faut savoir sur Argos, les rapports, les limites d'analyse et la confidentialité de vos données."
+    },
+    "backHome": "← Retour à l'accueil",
+    "categories": [
+      {
+        "title": "À propos d'Argos",
+        "items": [
+          {
+            "q": "Qu'est-ce qu'Argos ?",
+            "a": "Argos est un outil d'audit de site web : vous soumettez une URL, cinq modules d'analyse tournent en séquence (HTTP, HTML, performance, Lighthouse, sécurité) et vous obtenez un rapport scoré et priorisé avec les actions concrètes à mener."
+          },
+          {
+            "q": "Argos est-il vraiment gratuit ?",
+            "a": "Oui. L'analyse est entièrement gratuite, sans création de compte et sans carte bancaire."
+          },
+          {
+            "q": "Combien de temps prend une analyse ?",
+            "a": "Une analyse complète prend environ 20 à 30 secondes. La page de rapport se met à jour automatiquement une fois l'audit terminé."
+          },
+          {
+            "q": "Quels sites puis-je analyser ?",
+            "a": "N'importe quel site public accessible en HTTP ou HTTPS. Pour des raisons de sécurité, les adresses locales ou privées (localhost, réseaux internes) sont bloquées."
+          }
+        ]
+      },
+      {
+        "title": "Les rapports",
+        "items": [
+          {
+            "q": "Que contient un rapport ?",
+            "a": "Un score global, des scores détaillés par catégorie (performance, sécurité, SEO, accessibilité) et une liste d'issues priorisées, classées par criticité, avec les actions recommandées."
+          },
+          {
+            "q": "Mon rapport est-il public ?",
+            "a": "Non. Chaque rapport est accessible via une URL contenant un token unique. Il n'est pas indexé par les moteurs de recherche et reste privé tant que vous ne partagez pas le lien."
+          },
+          {
+            "q": "Puis-je partager mon rapport ?",
+            "a": "Oui. Il suffit de transmettre le lien du rapport : toute personne disposant du lien peut le consulter. Ne le partagez donc qu'avec des personnes de confiance."
+          },
+          {
+            "q": "Pendant combien de temps un rapport reste-t-il accessible ?",
+            "a": "Les rapports ont une date d'expiration. Passé ce délai, le lien n'est plus valide et il faut relancer une analyse pour obtenir un rapport à jour."
+          }
+        ]
+      },
+      {
+        "title": "Limites d'analyse",
+        "items": [
+          {
+            "q": "Quels aspects Argos analyse-t-il ?",
+            "a": "Cinq modules : en-têtes HTTP, structure HTML et SEO, métriques d'exécution (performance perçue), scores Lighthouse (perf, accessibilité, bonnes pratiques, SEO) et sécurité (SSL, en-têtes de sécurité, scan de vulnérabilités basique)."
+          },
+          {
+            "q": "Argos remplace-t-il un audit manuel ?",
+            "a": "Non. Argos fournit un premier diagnostic automatisé, rapide et priorisé. Il ne remplace pas l'expertise d'un audit approfondi mené par un spécialiste."
+          },
+          {
+            "q": "Pourquoi mon analyse a-t-elle échoué ?",
+            "a": "Le plus souvent parce que le site est injoignable, trop lent à répondre, ou bloque les robots. Vérifiez que l'URL est correcte et accessible publiquement, puis réessayez."
+          },
+          {
+            "q": "Y a-t-il une limite au nombre d'analyses ?",
+            "a": "Il n'y a pas de quota strict pour un usage normal. Un usage raisonnable est attendu afin de préserver la qualité du service pour tout le monde."
+          }
+        ]
+      },
+      {
+        "title": "Confidentialité",
+        "items": [
+          {
+            "q": "Quelles données Argos conserve-t-il ?",
+            "a": "Argos conserve l'URL analysée et le rapport généré, le temps nécessaire à son affichage. Aucune donnée personnelle n'est requise pour lancer une analyse."
+          },
+          {
+            "q": "Qui peut consulter mes rapports ?",
+            "a": "Uniquement les personnes disposant du lien contenant le token du rapport. Les rapports ne sont ni listés publiquement ni indexés."
+          },
+          {
+            "q": "Mes rapports apparaissent-ils dans Google ?",
+            "a": "Non. Les pages de rapport sont marquées comme non indexables et protégées par un token, elles n'apparaissent donc pas dans les résultats de recherche."
+          }
+        ]
+      },
+      {
+        "title": "Offres futures",
+        "items": [
+          {
+            "q": "Argos restera-t-il gratuit ?",
+            "a": "L'analyse de base a vocation à rester gratuite. Des fonctionnalités avancées pourraient être proposées ultérieurement dans une offre dédiée."
+          },
+          {
+            "q": "Quelles fonctionnalités sont prévues ?",
+            "a": "Parmi les pistes envisagées : le suivi de l'évolution des scores dans le temps, la comparaison entre analyses, l'export de rapports et un accès API. Rien n'est encore figé."
+          },
+          {
+            "q": "Comment être informé des nouveautés ?",
+            "a": "Vous pouvez vous inscrire à la newsletter depuis la page d'accueil pour être prévenu des évolutions et des nouvelles fonctionnalités."
+          }
+        ]
+      }
+    ],
+    "stillQuestions": {
+      "title": "Vous avez une autre question ?",
+      "sub": "Le plus simple est souvent d'essayer. Lancez une analyse gratuite de votre site.",
+      "cta": "Analyser mon site →"
     }
   },
   "dashboard": {

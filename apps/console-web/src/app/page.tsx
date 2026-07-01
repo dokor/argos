@@ -374,6 +374,9 @@ export default function LandingPage() {
             </span>
           </div>
           <div className={s.navRight}>
+            <a href="/faq" className={s.navLink}>
+              {t.nav.faq}
+            </a>
             <LangToggle />
             {isAdmin && (
               <a href="/dashboard" className={s.navCta}>
