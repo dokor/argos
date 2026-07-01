@@ -48,6 +48,18 @@
   font-weight: 500;
 }
 
+.navLink {
+  color: t.$color-slate-600;
+  text-decoration: none;
+  font-size: t.$text-base;
+  font-weight: 500;
+  padding: t.$space-2;
+
+  &:hover {
+    color: t.$color-navy;
+  }
+}
+
 .navRight {
   display: flex;
   align-items: center;

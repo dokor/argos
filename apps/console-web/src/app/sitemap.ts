@@ -17,5 +17,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
         },
       },
     },
+    {
+      url: `${SITE_URL}/faq`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.7,
+      alternates: {
+        languages: {
+          fr: `${SITE_URL}/faq`,
+          en: `${SITE_URL}/faq`, // same URL, language switch is client-side
+        },
+      },
+    },
   ];
 }

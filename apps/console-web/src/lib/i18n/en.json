@@ -5,7 +5,8 @@
   },
   "nav": {
     "logo": "Argos",
-    "openConsole": "Open console →"
+    "openConsole": "Open console →",
+    "faq": "FAQ"
   },
   "landing": {
     "hero": {
@@ -149,6 +150,122 @@
     "footer": {
       "built": "Made by Antoine LE LOUËT.",
       "copy": "© 2026 Argos. MIT License."
+    }
+  },
+  "faq": {
+    "meta": {
+      "title": "FAQ – Frequently asked questions",
+      "description": "Answers to common questions about Argos: how it works, reports, analysis limits, privacy and what's coming next."
+    },
+    "hero": {
+      "badge": "Help center",
+      "title": "Frequently asked questions",
+      "sub": "Everything you need to know about Argos, reports, analysis limits and how your data is handled."
+    },
+    "backHome": "← Back to home",
+    "categories": [
+      {
+        "title": "About Argos",
+        "items": [
+          {
+            "q": "What is Argos?",
+            "a": "Argos is a website audit tool: you submit a URL, five analysis modules run in sequence (HTTP, HTML, performance, Lighthouse, security) and you get a scored, prioritized report with concrete actions to take."
+          },
+          {
+            "q": "Is Argos really free?",
+            "a": "Yes. Analysis is completely free, with no account to create and no credit card required."
+          },
+          {
+            "q": "How long does an analysis take?",
+            "a": "A full analysis takes about 20 to 30 seconds. The report page updates automatically once the audit is complete."
+          },
+          {
+            "q": "Which sites can I analyze?",
+            "a": "Any public site reachable over HTTP or HTTPS. For security reasons, local or private addresses (localhost, internal networks) are blocked."
+          }
+        ]
+      },
+      {
+        "title": "Reports",
+        "items": [
+          {
+            "q": "What does a report contain?",
+            "a": "An overall score, detailed scores per category (performance, security, SEO, accessibility) and a list of prioritized issues, sorted by severity, with recommended actions."
+          },
+          {
+            "q": "Is my report public?",
+            "a": "No. Each report is accessible through a URL containing a unique token. It is not indexed by search engines and stays private unless you share the link."
+          },
+          {
+            "q": "Can I share my report?",
+            "a": "Yes. Just send the report link: anyone with the link can view it. Only share it with people you trust."
+          },
+          {
+            "q": "How long does a report stay available?",
+            "a": "Reports have an expiration date. After that, the link is no longer valid and you need to run a new analysis to get an up-to-date report."
+          }
+        ]
+      },
+      {
+        "title": "Analysis limits",
+        "items": [
+          {
+            "q": "What does Argos analyze?",
+            "a": "Five modules: HTTP headers, HTML structure and SEO, runtime metrics (perceived performance), Lighthouse scores (performance, accessibility, best practices, SEO) and security (SSL, security headers, basic vulnerability scan)."
+          },
+          {
+            "q": "Does Argos replace a manual audit?",
+            "a": "No. Argos gives a fast, prioritized automated diagnosis. It does not replace the expertise of an in-depth audit performed by a specialist."
+          },
+          {
+            "q": "Why did my analysis fail?",
+            "a": "Most often because the site is unreachable, too slow to respond, or blocks bots. Check that the URL is correct and publicly accessible, then try again."
+          },
+          {
+            "q": "Is there a limit on the number of analyses?",
+            "a": "There is no strict quota for normal use. Reasonable usage is expected to keep the service fast and reliable for everyone."
+          }
+        ]
+      },
+      {
+        "title": "Privacy",
+        "items": [
+          {
+            "q": "What data does Argos keep?",
+            "a": "Argos keeps the analyzed URL and the generated report for as long as needed to display it. No personal data is required to run an analysis."
+          },
+          {
+            "q": "Who can view my reports?",
+            "a": "Only people who have the link containing the report token. Reports are neither listed publicly nor indexed."
+          },
+          {
+            "q": "Do my reports show up in Google?",
+            "a": "No. Report pages are marked as non-indexable and protected by a token, so they don't appear in search results."
+          }
+        ]
+      },
+      {
+        "title": "What's next",
+        "items": [
+          {
+            "q": "Will Argos stay free?",
+            "a": "Basic analysis is meant to stay free. Advanced features may be offered later as part of a dedicated plan."
+          },
+          {
+            "q": "What features are planned?",
+            "a": "Ideas under consideration include tracking score changes over time, comparing analyses, exporting reports and API access. Nothing is set in stone yet."
+          },
+          {
+            "q": "How can I stay informed about new features?",
+            "a": "You can subscribe to the newsletter from the home page to be notified about updates and new features."
+          }
+        ]
+      }
+    ],
+    "stillQuestions": {
+      "title": "Still have a question?",
+      "sub": "The easiest way is often to try it. Run a free analysis of your site.",
+      "cta": "Analyze my site →"
     }
   },
   "dashboard": {
