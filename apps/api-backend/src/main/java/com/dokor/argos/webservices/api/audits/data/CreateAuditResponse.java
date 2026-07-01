@@ -21,6 +21,10 @@ public record CreateAuditResponse(
     String status,
 
     @Schema(description = "Creation timestamp of the audit run")
-    Instant createdAt
+    Instant createdAt,
+
+    @Schema(description = "Pre-generated public report token. The report page /report/{token} is accessible immediately and shows analysis progress until the report is ready.")
+    String reportToken
+
 ) {
 }
