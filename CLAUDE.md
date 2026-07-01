@@ -201,18 +201,61 @@ PREOF
 )"
 ```
 
-**10. Notifier**
+**10. Review post-PR — Tech Lead + QA sur le diff réel**
+
 ```bash
 PR_NUMBER=$(gh pr list --repo dokor/argos --head "feat/issue-<N>-<slug>" --json number --jq '.[0].number')
-gh issue comment <N> --repo dokor/argos --body "PR prête pour review : #${PR_NUMBER} — cc @alelouet"
+
+# Récupérer le diff complet de la PR
+gh pr diff ${PR_NUMBER} --repo dokor/argos > /tmp/pr-${PR_NUMBER}-diff.md
+
+# Créer le fichier de contexte pour les reviews
+cat > /tmp/pr-${PR_NUMBER}-review.md << EOF
+# PR #${PR_NUMBER} — Review post-implémentation
+Issue : #<N> — <Titre>
+
+## Diff complet
+$(cat /tmp/pr-${PR_NUMBER}-diff.md)
+EOF
+```
+
+Générer les reviews sur le diff réel (toujours tech-lead + qa) :
+```bash
+npx ade prompt:specialist tech-lead /tmp/pr-${PR_NUMBER}-review.md outputs/
+npx ade prompt:specialist qa /tmp/pr-${PR_NUMBER}-review.md outputs/
+```
+
+Jouer les rôles Tech Lead et QA sur le diff. Deux cas possibles :
+
+**Cas A — Aucun point bloquant** : passer à l'étape 11.
+
+**Cas B — Des corrections sont nécessaires** :
+- Corriger le code sur la même branche
+- Relancer les tests :
+  ```bash
+  cd apps/api-backend && mvn test
+  cd apps/console-web && npm run lint && npm run test
+  ```
+- Pousser les corrections :
+  ```bash
+  git add . && git commit -m "fix: <description de la correction>"
+  git push
+  ```
+- Retourner à l'étape 10 (re-review du nouveau diff)
+- La PR reste `in-progress` pendant toute cette phase
+
+**11. Notifier — uniquement quand toutes les reviews passent**
+```bash
+gh issue comment <N> --repo dokor/argos --body "PR #${PR_NUMBER} prête pour review : cc @alelouet"
 gh issue edit <N> --repo dokor/argos --remove-label "in-progress" --add-label "pr-ready"
+gh pr edit ${PR_NUMBER} --repo dokor/argos --add-assignee "alelouet"
 ```
 
 ---
 
 ## Workflow 3 — Review et merge (manuel)
 
-@alelouet reçoit la notification, fait la review finale et merge.
+@alelouet reçoit la notification GitHub (assignation + commentaire), fait la review finale et merge.
 **Claude Code ne merge jamais sans validation humaine explicite.**
 
 ---
