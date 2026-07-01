@@ -30,7 +30,8 @@ export function LangProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored === "en" || stored === "fr") {
-      setLangState(stored);
+      const timerId = window.setTimeout(() => setLangState(stored), 0);
+      return () => window.clearTimeout(timerId);
     }
   }, []);
 
