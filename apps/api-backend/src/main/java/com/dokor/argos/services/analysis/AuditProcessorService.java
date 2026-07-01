@@ -104,6 +104,8 @@ public class AuditProcessorService {
         }
 
         var run = runOpt.get();
+        // Keep run reference accessible for reportPublishService (reportToken) and module status updates
+        final long resolvedRunId = runId;
 
         Audit audit = Optional.ofNullable(auditDao.findById(run.getAuditId()))
             .orElseThrow(() -> new IllegalStateException("Audit not found: " + run.getAuditId()));
@@ -130,34 +132,50 @@ public class AuditProcessorService {
 
             // HTTP (page-level : status, redirects, headers, body)
             logger.info("Running module={} runId={} url={}", httpModuleAnalyzer.moduleId(), runId, normalizedUrl);
+            auditRunService.updateModuleStatus(runId, "http", "RUNNING");
             AuditModuleResult httpModule = annotateWithSource(httpModuleAnalyzer.analyze(context, logger));
+            auditRunService.updateModuleStatus(runId, "http", "COMPLETED");
 
             // Enrichir le contexte avec les données HTTP (finalUrl, headers, body…)
             context = HttpModuleAnalyzer.enrichContext(context, httpModule);
 
             logger.info("Running module={} runId={} finalUrl={}", htmlModuleAnalyzer.moduleId(), runId, context.finalUrl());
+            auditRunService.updateModuleStatus(runId, "html", "RUNNING");
             AuditModuleResult htmlModule = annotateWithSource(htmlModuleAnalyzer.analyze(context, logger));
+            auditRunService.updateModuleStatus(runId, "html", "COMPLETED");
 
             logger.info("Running module={} runId={} finalUrl={}", runtimeModuleAnalyzer.moduleId(), runId, context.finalUrl());
+            auditRunService.updateModuleStatus(runId, "runtime", "RUNNING");
             AuditModuleResult runtimeModule = annotateWithSource(runtimeModuleAnalyzer.analyze(context, logger));
+            auditRunService.updateModuleStatus(runId, "runtime", "COMPLETED");
 
             logger.info("Running module={} runId={} finalUrl={}", lighthouseModuleAnalyzer.moduleId(), runId, context.finalUrl());
+            auditRunService.updateModuleStatus(runId, "lighthouse", "RUNNING");
             AuditModuleResult lighthouseModule = annotateWithSource(lighthouseModuleAnalyzer.analyze(context, logger));
+            auditRunService.updateModuleStatus(runId, "lighthouse", "COMPLETED");
 
             // --- Modules DOMAIN ---
 
             logger.info("Running module={} runId={} finalUrl={}", observatoryModuleAnalyzer.moduleId(), runId, context.finalUrl());
+            auditRunService.updateModuleStatus(runId, "observatory", "RUNNING");
             AuditModuleResult observatoryModule = annotateWithSource(observatoryModuleAnalyzer.analyze(context, logger));
+            auditRunService.updateModuleStatus(runId, "observatory", "COMPLETED");
 
             logger.info("Running module={} runId={} finalUrl={}", sslLabsModuleAnalyzer.moduleId(), runId, context.finalUrl());
+            auditRunService.updateModuleStatus(runId, "ssl", "RUNNING");
             AuditModuleResult sslModule = annotateWithSource(sslLabsModuleAnalyzer.analyze(context, logger));
+            auditRunService.updateModuleStatus(runId, "ssl", "COMPLETED");
 
             logger.info("Running module={} runId={} finalUrl={}", zapModuleAnalyzer.moduleId(), runId, context.finalUrl());
+            auditRunService.updateModuleStatus(runId, "zap", "RUNNING");
             AuditModuleResult zapModule = annotateWithSource(zapModuleAnalyzer.analyze(context, logger));
+            auditRunService.updateModuleStatus(runId, "zap", "COMPLETED");
 
             // --- Module DOMAIN (tech) — cache 24h partagé entre toutes les pages du domaine ---
             logger.info("Resolving domain tech analysis domainId={} runId={}", domainId, runId);
+            auditRunService.updateModuleStatus(runId, "tech", "RUNNING");
             AuditModuleResult techModule = annotateWithSource(domainAnalysisService.getOrRunTechAnalysis(context, logger));
+            auditRunService.updateModuleStatus(runId, "tech", "COMPLETED");
 
             List<AuditModuleResult> allModules = List.of(
                 httpModule, htmlModule, runtimeModule, lighthouseModule,
@@ -194,7 +212,7 @@ public class AuditProcessorService {
 
             auditRunService.complete(runId, json);
             // Publish public report (tokenized) for /report/[token]
-            reportPublishService.publishIfAbsent(runId, audit, report)
+            reportPublishService.publishIfAbsent(runId, audit, report, run.getReportToken())
                 .ifPresentOrElse(
                     token -> logger.info("Public report ready runId={} token={}", runId, token),
                     () -> logger.warn("Public report not published runId={}", runId)

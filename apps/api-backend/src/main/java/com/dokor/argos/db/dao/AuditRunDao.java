@@ -131,4 +131,32 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
             .where(RUN.id.eq(runId))
             .execute();
     }
+
+    /**
+     * Recherche un AuditRun par son reportToken pré-généré.
+     * Utilisé pour résoudre le statut d'un run depuis la page rapport,
+     * avant même que le rapport public soit publié.
+     */
+    public Optional<AuditRun> findByReportToken(String reportToken) {
+        return Optional.ofNullable(
+            transactionManager.selectQuery()
+                .select(RUN)
+                .from(RUN)
+                .where(RUN.reportToken.eq(reportToken))
+                .fetchOne()
+        );
+    }
+
+    /**
+     * Met à jour le JSON des statuts de modules pour un run donné.
+     *
+     * @param runId        identifiant du run
+     * @param statusesJson JSON array des {@code ModuleStatus}
+     */
+    public void updateModuleStatuses(long runId, String statusesJson) {
+        transactionManager.update(RUN)
+            .set(RUN.moduleStatuses, statusesJson)
+            .where(RUN.id.eq(runId))
+            .execute();
+    }
 }
