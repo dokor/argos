@@ -401,6 +401,7 @@ export default function LandingPage() {
                 </React.Fragment>
               ))}
             </h1>
+            <p className={s.slogan}>{tl.hero.slogan}</p>
             <p className={s.sub}>{tl.hero.sub}</p>
             <p className={s.audience}>{tl.hero.audience}</p>
             <div className={s.heroFormWrap}>

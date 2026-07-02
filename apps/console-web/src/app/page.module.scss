@@ -141,6 +141,14 @@
   margin: 0;
 }
 
+.slogan {
+  font-size: t.$text-lg;
+  font-weight: 600;
+  color: t.$color-indigo-muted;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
 .sub {
   font-size: t.$text-xl;
   color: t.$color-slate-400;
