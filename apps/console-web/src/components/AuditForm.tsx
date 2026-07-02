@@ -69,6 +69,10 @@ export default function AuditForm({ onCreated }: Props) {
           },
         });
         router.push(`/report/${res.reportToken}`);
+      } else {
+        // Pas de token → pas de redirection : on réactive le formulaire
+        // pour ne pas laisser le bouton bloqué en "submitting".
+        setSubmitting(false);
       }
     } catch (err: unknown) {
       loggerRef.current.error("dashboard_audit_create_failed", {

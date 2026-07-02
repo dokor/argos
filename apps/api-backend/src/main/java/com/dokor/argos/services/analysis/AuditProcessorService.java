@@ -104,8 +104,6 @@ public class AuditProcessorService {
         }
 
         var run = runOpt.get();
-        // Keep run reference accessible for reportPublishService (reportToken) and module status updates
-        final long resolvedRunId = runId;
 
         Audit audit = Optional.ofNullable(auditDao.findById(run.getAuditId()))
             .orElseThrow(() -> new IllegalStateException("Audit not found: " + run.getAuditId()));
@@ -214,7 +212,7 @@ public class AuditProcessorService {
             // Publish public report (tokenized) for /report/[token]
             reportPublishService.publishIfAbsent(runId, audit, report, run.getReportToken())
                 .ifPresentOrElse(
-                    token -> logger.info("Public report ready runId={} token={}", runId, token),
+                    token -> logger.info("Public report ready runId={}", runId),
                     () -> logger.warn("Public report not published runId={}", runId)
                 );
             logger.info(
@@ -223,6 +221,9 @@ public class AuditProcessorService {
                 score.global().ratio()
             );
         } catch (Exception e) {
+            // Marque le(s) module(s) resté(s) en RUNNING comme FAILED pour que la
+            // vue de progression n'affiche pas un spinner infini sur ce module.
+            auditRunService.failRunningModules(runId);
             auditRunService.fail(runId, e.getMessage());
             logger.warn("Run failed runId={} error={}", runId, e.getMessage(), e);
         }

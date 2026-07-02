@@ -273,6 +273,30 @@
       "evidenceLabel": "Evidence / Context",
       "recommendationLabel": "Recommendation",
       "detailsLabel": "Details"
+    },
+    "progress": {
+      "titleQueued": "Analysis queued…",
+      "titleRunning": "Analysis in progress…",
+      "titleFailed": "Analysis failed",
+      "subtitle": "Argos is analysing your site. The report will appear automatically.",
+      "genericError": "The analysis failed.",
+      "connectionError": "Connection error. Retrying…",
+      "timeoutError": "The analysis is taking longer than expected. Please try again later.",
+      "modulesLabel": "Modules progress",
+      "status": {
+        "PENDING": "Pending",
+        "RUNNING": "Running…",
+        "COMPLETED": "Done",
+        "FAILED": "Error",
+        "SKIPPED": "Skipped"
+      },
+      "icon": {
+        "ok": "OK",
+        "failed": "Error",
+        "skipped": "Skipped",
+        "running": "Running",
+        "pending": "Pending"
+      }
     }
   },
   "auditForm": {

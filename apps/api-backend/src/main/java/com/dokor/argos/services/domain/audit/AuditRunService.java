@@ -121,6 +121,27 @@ public class AuditRunService {
     }
 
     /**
+     * Passe à FAILED tout module encore en RUNNING (ou PENDING) pour un run qui
+     * a échoué. Évite qu'un module reste bloqué en RUNNING (spinner infini) dans
+     * la vue de progression après un échec du traitement.
+     */
+    public void failRunningModules(long runId) {
+        AuditRun run = auditRunDao.findById(runId);
+        if (run == null) {
+            logger.warn("Cannot fail running modules: run not found runId={}", runId);
+            return;
+        }
+
+        List<ModuleStatus> statuses = deserializeModuleStatuses(run.getModuleStatuses());
+        List<ModuleStatus> updated = statuses.stream()
+            .map(m -> ModuleStatus.RUNNING.equals(m.status()) ? m.withStatus(ModuleStatus.FAILED) : m)
+            .toList();
+
+        auditRunDao.updateModuleStatuses(runId, serializeModuleStatuses(updated));
+        logger.debug("Running modules marked FAILED runId={}", runId);
+    }
+
+    /**
      * Tente de claim un run pour traitement.
      */
     public Optional<String> claim(long runId) {
