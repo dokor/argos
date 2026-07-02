@@ -11,6 +11,6 @@
     "ade:issues": "gh issue list --repo dokor/argos --state open --json number,title,labels --limit 50"
   },
   "devDependencies": {
-    "@alelouet/ai-delivery-engine": "^0.1.0"
+    "@alelouet/ai-delivery-engine": "^0.3.0"
   }
 }
