@@ -601,6 +601,18 @@
   .navInner {
     padding: 0 t.$space-4;
   }
+
+  // Footer - stack vertically and center on small screens
+  .footer {
+    padding: t.$space-5 t.$space-4;
+  }
+
+  .footerInner {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: t.$space-3;
+  }
 }
 
 // ─── Footer ───────────────────────────────────────────────────────────────────
@@ -618,5 +630,5 @@
   flex-wrap: wrap;
   gap: t.$space-2;
   font-size: t.$text-base;
-  color: t.$color-slate-600;
+  color: t.$color-slate-400;
 }
