@@ -69,7 +69,7 @@ export default function IssuesByCategory({ report }: { report: Report }) {
 
       {/* Sticky filter bar */}
       <div className={s.filterBar}>
-        <span className={s.filterLabel}>{ti.filterAll} :</span>
+        <span className={s.filterLabel}>{ti.filterLabel} :</span>
         {FILTERS.map(({ key, label }) => (
           <button
             key={key}

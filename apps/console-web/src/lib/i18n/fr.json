@@ -372,6 +372,7 @@
     "issuesByCategory": {
       "title": "Détail par catégorie",
       "desc": "Filtre par sévérité, puis explore les points par catégorie (tri critique → info).",
+      "filterLabel": "Sévérité",
       "filterAll": "Tous",
       "filterCritical": "Critiques",
       "filterImportant": "Importants",

@@ -372,6 +372,7 @@
     "issuesByCategory": {
       "title": "Details by category",
       "desc": "Filter by severity, then explore issues by category (sorted critical → info).",
+      "filterLabel": "Severity",
       "filterAll": "All",
       "filterCritical": "Critical",
       "filterImportant": "Important",
