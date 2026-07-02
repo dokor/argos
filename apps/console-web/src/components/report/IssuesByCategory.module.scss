@@ -257,6 +257,11 @@
     top: 52px;
   }
 
+  // Hide the header label on mobile to keep the filter chips compact
+  .filterLabel {
+    display: none;
+  }
+
   .catBlock {
     padding: t.$space-4 t.$space-4;
   }
