@@ -11,6 +11,7 @@
   "landing": {
     "hero": {
       "badge": "Audit de site web · Gratuit · Sans compte",
+      "slogan": "Votre site, passé au crible.",
       "headline": "Trouvez ce qui plombe votre site.\nGratuit, sans compte, en 30 secondes.",
       "sub": "HTTP, SEO, performance, stack - Argos analyse tout et vous rend un rapport priorisé avec les actions concrètes à mener en premier.",
       "audience": "Pour les devs, les équipes growth et les agences.",
