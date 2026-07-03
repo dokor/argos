@@ -22,9 +22,13 @@ class PublicReportComposerTest {
     // ------------------------------------------------------------------ helpers
 
     private static AuditCheckResult check(String key, AuditStatus status) {
+        return check(key, status, AuditSeverity.MEDIUM);
+    }
+
+    private static AuditCheckResult check(String key, AuditStatus status, AuditSeverity severity) {
         return AuditCheckResult.of(
             key, "Title for " + key,
-            status, AuditSeverity.MEDIUM,
+            status, severity,
             true, 5.0, List.of("performance"),
             null, Map.of(),
             "Impact message", "Fix this"
@@ -142,7 +146,9 @@ class PublicReportComposerTest {
 
     @Test
     void shouldConvertFailCheckToCriticalIssue() {
-        AuditModuleResult httpModule = module("http", Map.of(), check("http.security.hsts", AuditStatus.FAIL));
+        // Un check FAIL de sévérité HIGH devient un point "critical" (cf. toIssueSeverity).
+        AuditModuleResult httpModule = module("http", Map.of(),
+            check("http.security.hsts", AuditStatus.FAIL, AuditSeverity.HIGH));
         AuditReportJson input = report(List.of(httpModule), scoreOf(0.5));
 
         ReportDto dto = composer.compose(input);
@@ -175,9 +181,10 @@ class PublicReportComposerTest {
 
     @Test
     void shouldSortIssuesCriticalFirst() {
+        // FAIL+HIGH ⇒ critical, WARN+MEDIUM ⇒ important : le critical doit être trié en premier.
         AuditModuleResult module = module("http", Map.of(),
             check("http.warn",  AuditStatus.WARN),
-            check("http.fail",  AuditStatus.FAIL)
+            check("http.fail",  AuditStatus.FAIL, AuditSeverity.HIGH)
         );
         AuditReportJson input = report(List.of(module), scoreOf(0.3));
 

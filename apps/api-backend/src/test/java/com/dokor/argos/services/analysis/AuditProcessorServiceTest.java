@@ -31,6 +31,15 @@ import static org.mockito.Mockito.*;
 
 class AuditProcessorServiceTest {
 
+    /**
+     * ObjectMapper équivalent à celui injecté en prod : les modules Jackson (dont
+     * JSR-310 pour {@link java.time.Instant}) sont enregistrés, sinon la sérialisation
+     * de {@code AuditReportJson.generatedAt} échoue et le run bascule en erreur.
+     */
+    private static ObjectMapper objectMapper() {
+        return new ObjectMapper().findAndRegisterModules();
+    }
+
     /** Minimal non-null score so the completion path (score.global().ratio()) doesn't NPE. */
     private static AuditScoreReport emptyScore() {
         return new AuditScoreReport(1, ScoreAggregate.of("global", 0.0, 0.0), List.of(), List.of(), List.of());
@@ -63,7 +72,7 @@ class AuditProcessorServiceTest {
             mock(CheckMergerService.class),
             mock(ScoreEnricherService.class),
             mock(ScoreService.class),
-            new ObjectMapper(),
+            objectMapper(),
             mock(ReportPublishService.class)
         );
 
@@ -100,7 +109,7 @@ class AuditProcessorServiceTest {
             mock(CheckMergerService.class),
             mock(ScoreEnricherService.class),
             mock(ScoreService.class),
-            new ObjectMapper(),
+            objectMapper(),
             mock(ReportPublishService.class)
         );
 
@@ -121,6 +130,7 @@ class AuditProcessorServiceTest {
 
         Audit audit = new Audit();
         audit.setId(10L);
+        audit.setDomainId(1L); // toujours défini en prod (AuditService.createAudit)
         audit.setInputUrl("http://example.com");
         audit.setNormalizedUrl(null);
 
@@ -171,7 +181,7 @@ class AuditProcessorServiceTest {
             merger,
             enricher,
             scorer,
-            new ObjectMapper(),
+            objectMapper(),
             mock(ReportPublishService.class)
         );
 
@@ -198,6 +208,7 @@ class AuditProcessorServiceTest {
 
         Audit audit = new Audit();
         audit.setId(10L);
+        audit.setDomainId(1L); // toujours défini en prod (AuditService.createAudit)
         audit.setInputUrl("http://example.com");
         audit.setNormalizedUrl("http://example.com");
 
@@ -228,7 +239,7 @@ class AuditProcessorServiceTest {
             merger,
             enricher,
             scorer,
-            new ObjectMapper(),
+            objectMapper(),
             mock(ReportPublishService.class)
         );
 
