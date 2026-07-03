@@ -11,12 +11,14 @@ import java.util.Map;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
 
 class TechModuleAnalyzerTest {
 
+    // NextJsDetectorService est un détecteur pur (déterministe, sans dépendance) :
+    // on utilise une vraie instance plutôt qu'un mock, qui renverrait null sur detect()
+    // et ferait échouer analyzeTech (NPE sur next.isNext()).
     private final TechModuleAnalyzer analyzer = new TechModuleAnalyzer(
-        mock(NextJsDetectorService.class)
+        new NextJsDetectorService()
     );
 
     @Test
