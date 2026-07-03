@@ -8,10 +8,13 @@ import com.dokor.argos.db.generated.Domain;
 import com.dokor.argos.services.analysis.AuditProcessorService;
 import com.dokor.argos.services.domain.audit.errors.NotFoundException;
 import com.dokor.argos.services.domain.domain.DomainService;
+import com.dokor.argos.webservices.api.audits.data.AuditHistoryItemResponse;
 import com.dokor.argos.webservices.api.audits.data.AuditListItemResponse;
 import com.dokor.argos.webservices.api.audits.data.AuditRunStatusResponse;
 import com.dokor.argos.webservices.api.audits.data.CreateAuditRequest;
 import com.dokor.argos.webservices.api.audits.data.CreateAuditResponse;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.querydsl.core.Tuple;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -31,6 +34,7 @@ public class AuditService {
     private final AuditProcessorService auditProcessorService;
     private final UrlNormalizer urlNormalizer;
     private final DomainService domainService;
+    private final ObjectMapper objectMapper;
 
     @Inject
     public AuditService(
@@ -38,13 +42,15 @@ public class AuditService {
         AuditRunService auditRunService,
         AuditProcessorService auditProcessorService,
         UrlNormalizer urlNormalizer,
-        DomainService domainService
+        DomainService domainService,
+        ObjectMapper objectMapper
     ) {
         this.auditDao = auditDao;
         this.auditRunService = auditRunService;
         this.auditProcessorService = auditProcessorService;
         this.urlNormalizer = urlNormalizer;
         this.domainService = domainService;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -98,6 +104,57 @@ public class AuditService {
                 run.getResultJson()
             );
         }).toList();
+    }
+
+    /**
+     * Historique des analyses d'un audit (une URL) : liste des runs passés,
+     * du plus récent au plus ancien, avec lien de rapport et score global.
+     *
+     * @param auditId identifiant de l'audit
+     * @param limit   nombre max de runs
+     */
+    public List<AuditHistoryItemResponse> getAuditHistory(long auditId, int limit) {
+        logger.info("Listing audit history auditId={} limit={}", auditId, limit);
+
+        List<Tuple> rows = auditDao.listRunsWithReportByAuditId(auditId, limit);
+
+        return rows.stream().map(row -> {
+            AuditRun run = row.get(0, AuditRun.class);
+            AuditReport report = row.get(1, AuditReport.class);
+
+            // Token depuis le rapport publié si présent, sinon le token pré-généré du run.
+            String token = report != null ? report.getPublicToken() : run.getReportToken();
+            String reportUrl = token != null ? REPORTS_BASE_PATH + token : null;
+            Integer globalScore = report != null
+                ? extractGlobalScore(objectMapper, report.getReportJson())
+                : null;
+
+            return new AuditHistoryItemResponse(
+                run.getId(),
+                run.getStatus(),
+                run.getCreatedAt(),
+                run.getFinishedAt(),
+                token,
+                reportUrl,
+                globalScore
+            );
+        }).toList();
+    }
+
+    /**
+     * Extrait le score global (0..100) du JSON d'un rapport publié (champ {@code scores.global}).
+     * Robuste : retourne {@code null} si le JSON est absent, vide ou illisible.
+     */
+    static Integer extractGlobalScore(ObjectMapper objectMapper, String reportJson) {
+        if (reportJson == null || reportJson.isBlank()) {
+            return null;
+        }
+        try {
+            JsonNode node = objectMapper.readTree(reportJson).path("scores").path("global");
+            return node.isMissingNode() || node.isNull() ? null : node.asInt();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     /**

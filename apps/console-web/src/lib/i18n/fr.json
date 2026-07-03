@@ -488,6 +488,15 @@
       "techLabel": "Techno",
       "clearFilters": "Réinitialiser",
       "noResults": "Aucun résultat pour ces filtres."
+    },
+    "history": {
+      "toggle": "Historique des analyses",
+      "loading": "Chargement de l'historique…",
+      "empty": "Aucune analyse précédente pour cette URL.",
+      "error": "Impossible de charger l'historique.",
+      "current": "actuel",
+      "view": "Voir",
+      "scoreNa": "—"
     }
   },
   "langToggle": {

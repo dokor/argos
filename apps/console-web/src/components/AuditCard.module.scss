@@ -175,3 +175,58 @@
   font-size: t.$text-xs;
   line-height: 1.5;
 }
+
+.historySection {
+  padding-top: t.$space-1;
+  border-top: 1px solid t.$color-slate-100;
+}
+
+.historyList {
+  list-style: none;
+  margin: t.$space-2 0 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.historyRow {
+  display: flex;
+  align-items: center;
+  gap: t.$space-3;
+  flex-wrap: wrap;
+  padding: 6px 8px;
+  border-radius: t.$radius-sm;
+  background: t.$color-slate-50;
+}
+
+.historyDate {
+  font-size: t.$text-sm;
+  color: t.$color-slate-600;
+  min-width: 150px;
+}
+
+.historyScore {
+  font-size: t.$text-base;
+  font-weight: 900;
+}
+
+.historyScoreNa {
+  font-size: t.$text-base;
+  color: t.$color-slate-400;
+}
+
+.historyCurrent {
+  font-size: t.$text-xs;
+  font-weight: 800;
+  color: t.$color-slate-500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.historyLink {
+  margin-left: auto;
+  font-size: t.$text-sm;
+  font-weight: 800;
+  color: t.$color-blue;
+  text-decoration: none;
+}
