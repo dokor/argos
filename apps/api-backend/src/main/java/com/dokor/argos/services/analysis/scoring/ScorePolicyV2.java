@@ -75,6 +75,10 @@ public class ScorePolicyV2 implements ScorePolicy {
         map.put("html.link.canonical.present",   rule(true, 2, "seo", "html"));
         map.put("html.h1.count",                 rule(true, 3, "seo", "html"));
 
+        // ----- SEO (ressources : robots.txt / sitemap.xml, émises par le module HTTP) -----
+        map.put("http.seo.robots_txt", rule(true, 2, "seo", "http"));
+        map.put("http.seo.sitemap",    rule(true, 3, "seo", "http"));
+
         // ----- Accessibility (HTML) -----
         map.put("html.images.alt_coverage",   rule(true, 4, "a11y", "html"));
         map.put("html.anchors.href_coverage", rule(true, 2, "a11y", "html"));
