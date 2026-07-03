@@ -276,6 +276,13 @@
     "homeCta": "Analyze a site →",
     "faqCta": "Read the FAQ"
   },
+  "error": {
+    "title": "Oops, something went wrong",
+    "description": "An unexpected error occurred on our side. You can try again or go back home.",
+    "retry": "Try again",
+    "backHome": "Back to home",
+    "reference": "Reference"
+  },
   "dashboard": {
     "title": "Argos – Console",
     "newAudit": "New audit",
@@ -380,6 +387,7 @@
     "issuesByCategory": {
       "title": "Details by category",
       "desc": "Filter by severity, then explore issues by category (sorted critical → info).",
+      "filterLabel": "Severity",
       "filterAll": "All",
       "filterCritical": "Critical",
       "filterImportant": "Important",

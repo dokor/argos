@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { argosApi, AuditListItem, CreateAuditRequest, CreateAuditResponse } from "@/lib/ArgosApi";
 import { useLang } from "@/lib/i18n/LangContext";
+import { normalizeInputUrl } from "@/lib/url";
 import s from "./AuditForm.module.scss";
 
 type Props = {
@@ -30,7 +31,7 @@ export default function AuditForm({ onCreated }: Props) {
     }
 
     // Ajoute https:// si aucun protocole n'est fourni (ex: "argos.lelouet.fr")
-    const normalized = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+    const normalized = normalizeInputUrl(trimmed);
 
     setSubmitting(true);
     try {

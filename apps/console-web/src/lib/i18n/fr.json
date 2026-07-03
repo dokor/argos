@@ -276,6 +276,13 @@
     "homeCta": "Analyser un site →",
     "faqCta": "Consulter la FAQ"
   },
+  "error": {
+    "title": "Oups, une erreur est survenue",
+    "description": "Une erreur inattendue s'est produite de notre côté. Vous pouvez réessayer ou revenir à l'accueil.",
+    "retry": "Réessayer",
+    "backHome": "Retour à l'accueil",
+    "reference": "Référence"
+  },
   "dashboard": {
     "title": "Argos – Console",
     "newAudit": "Nouvel audit",
@@ -380,6 +387,7 @@
     "issuesByCategory": {
       "title": "Détail par catégorie",
       "desc": "Filtre par sévérité, puis explore les points par catégorie (tri critique → info).",
+      "filterLabel": "Sévérité",
       "filterAll": "Tous",
       "filterCritical": "Critiques",
       "filterImportant": "Importants",
