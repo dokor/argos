@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import LangToggle from "@/components/LangToggle";
+import ThemeToggle from "@/components/ThemeToggle";
 import ArgosIcon from "@/components/ArgosIcon";
 import s from "./ReportHeader.module.scss";
 import { useLang } from "@/lib/i18n/LangContext";
@@ -19,7 +20,8 @@ export default function ReportHeader() {
 
         <div className={s.right}>
           <span className={s.privateBadge}>{t.report.page.private}</span>
-          <LangToggle />
+          <ThemeToggle />
+            <LangToggle />
         </div>
       </div>
     </header>

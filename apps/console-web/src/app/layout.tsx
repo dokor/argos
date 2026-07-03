@@ -1,8 +1,13 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { LangProvider } from "@/lib/i18n/LangContext";
+import { ThemeProvider } from "@/lib/theme/ThemeContext";
 import ClientErrorLogger from "@/components/ClientErrorLogger";
 import "./globals.css";
+
+// Applique le thème avant le premier paint pour éviter un flash (FOUC) :
+// choix persistant sinon préférence système. Exécuté inline dans <head>.
+const themeInitScript = `(function(){try{var t=localStorage.getItem('argos-theme');if(t!=='dark'&&t!=='light'){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();`;
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -109,6 +114,7 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -116,7 +122,9 @@ export default function RootLayout({
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ClientErrorLogger />
-        <LangProvider>{children}</LangProvider>
+        <ThemeProvider>
+          <LangProvider>{children}</LangProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

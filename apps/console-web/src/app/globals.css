@@ -138,3 +138,41 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* ─── Argos theme tokens (issue #81) ────────────────────────────────────────
+   Contrat de tokens sémantiques théma-aware. En clair par défaut ; passe en
+   sombre selon prefers-color-scheme (sauf choix explicite) ou via data-theme.
+   La migration des surfaces des composants vers ces tokens est suivie en #121. */
+:root {
+  --argos-bg: #ffffff;
+  --argos-surface: #ffffff;
+  --argos-surface-2: #f8fafc;
+  --argos-text: #0f172a;
+  --argos-text-muted: #64748b;
+  --argos-border: #e2e8f0;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --argos-bg: #0b1220;
+    --argos-surface: #0f172a;
+    --argos-surface-2: #1e293b;
+    --argos-text: #e2e8f0;
+    --argos-text-muted: #94a3b8;
+    --argos-border: #334155;
+  }
+}
+
+:root[data-theme="dark"] {
+  --argos-bg: #0b1220;
+  --argos-surface: #0f172a;
+  --argos-surface-2: #1e293b;
+  --argos-text: #e2e8f0;
+  --argos-text-muted: #94a3b8;
+  --argos-border: #334155;
+}
+
+body {
+  background: var(--argos-bg);
+  color: var(--argos-text);
+}
