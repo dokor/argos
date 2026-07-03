@@ -1,9 +1,12 @@
 package com.dokor.argos.services.analysis.modules.ssl;
 
+import com.dokor.argos.logging.ExternalServiceCall;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -13,6 +16,8 @@ import java.time.Duration;
 
 @Singleton
 public class SslLabsClient {
+
+    private static final Logger logger = LoggerFactory.getLogger(SslLabsClient.class);
 
     private static final String API_BASE = "https://api.ssllabs.com/api/v3";
     private static final int MAX_POLLS = 10;
@@ -34,20 +39,22 @@ public class SslLabsClient {
      * Throws if the API is unavailable or times out.
      */
     public JsonNode analyze(String host) throws Exception {
-        // Start the analysis
-        JsonNode result = get(API_BASE + "/analyze?host=" + host + "&startNew=on&all=done");
+        return ExternalServiceCall.timed(logger, "ssllabs", host, () -> {
+            // Start the analysis
+            JsonNode result = get(API_BASE + "/analyze?host=" + host + "&startNew=on&all=done");
 
-        for (int i = 0; i < MAX_POLLS; i++) {
-            String status = result.path("status").asText("");
-            if ("READY".equals(status) || "ERROR".equals(status)) {
-                return result;
+            for (int i = 0; i < MAX_POLLS; i++) {
+                String status = result.path("status").asText("");
+                if ("READY".equals(status) || "ERROR".equals(status)) {
+                    return result;
+                }
+                Thread.sleep(POLL_INTERVAL_MS);
+                result = get(API_BASE + "/analyze?host=" + host + "&all=done");
             }
-            Thread.sleep(POLL_INTERVAL_MS);
-            result = get(API_BASE + "/analyze?host=" + host + "&all=done");
-        }
 
-        // Return whatever we have after timeout (may be partial)
-        return result;
+            // Return whatever we have after timeout (may be partial)
+            return result;
+        });
     }
 
     private JsonNode get(String url) throws Exception {

@@ -26,6 +26,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import java.net.http.HttpTimeoutException;
 import java.time.Instant;
@@ -98,8 +99,20 @@ public class AuditProcessorService {
     }
 
     public void process(long runId) {
-        logger.info("Processing runId={}", runId);
+        // Corrélation : toutes les lignes de log de ce run portent runId (MDC).
+        MDC.put("runId", String.valueOf(runId));
+        long auditStart = System.currentTimeMillis();
+        logger.info("audit_start runId={}", runId);
+        try {
+            processInternal(runId);
+        } finally {
+            logger.info("audit_end runId={} durationMs={}", runId, System.currentTimeMillis() - auditStart);
+            MDC.remove("runId");
+            MDC.remove("module");
+        }
+    }
 
+    private void processInternal(long runId) {
         var runOpt = auditRunService.getRun(runId);
         if (runOpt.isEmpty()) {
             logger.warn("Run not found runId={}", runId);
@@ -270,7 +283,9 @@ public class AuditProcessorService {
      */
     private AuditModuleResult runModule(long runId, String moduleId, String title,
                                         Map<String, String> statuses, ModuleCall call) {
-        logger.info("Running module={} runId={}", moduleId, runId);
+        MDC.put("module", moduleId);
+        long start = System.currentTimeMillis();
+        logger.info("module_start module={} runId={}", moduleId, runId);
         // Statut live (frontend polling) : le module démarre.
         auditRunService.updateModuleStatus(runId, moduleId, "RUNNING");
         try {
@@ -278,30 +293,38 @@ public class AuditProcessorService {
             if (raw == null) {
                 statuses.put(moduleId, "FAILED");
                 auditRunService.updateModuleStatus(runId, moduleId, "FAILED");
-                logger.warn("Module {} returned null -> mode dégradé", moduleId);
+                logger.warn("module_failed module={} status=FAILED durationMs={} reason=null_result",
+                    moduleId, System.currentTimeMillis() - start);
                 return annotateWithSource(fallbackModule(moduleId, title, false,
                     new IllegalStateException("module returned null")));
             }
             AuditModuleResult res = annotateWithSource(raw);
             Map<String, Object> data = res.data();
+            String status;
             if (data != null && Boolean.FALSE.equals(data.get("available"))) {
                 Object reason = data.get("reason");
-                statuses.put(moduleId, reason != null ? reason.toString() : "UNAVAILABLE");
+                status = reason != null ? reason.toString() : "UNAVAILABLE";
+                statuses.put(moduleId, status);
                 // Module indisponible (dégradé) : marqué FAILED côté live (le détail
                 // fin — UNAVAILABLE/TIMEOUT — reste dans meta.moduleStatuses du rapport).
                 auditRunService.updateModuleStatus(runId, moduleId, "FAILED");
             } else {
-                statuses.put(moduleId, "COMPLETED");
+                status = "COMPLETED";
+                statuses.put(moduleId, status);
                 auditRunService.updateModuleStatus(runId, moduleId, "COMPLETED");
             }
+            logger.info("module_completed module={} status={} durationMs={}",
+                moduleId, status, System.currentTimeMillis() - start);
             return res;
         } catch (Exception e) {
             boolean timeout = isTimeout(e);
             statuses.put(moduleId, timeout ? "TIMEOUT" : "FAILED");
             auditRunService.updateModuleStatus(runId, moduleId, "FAILED");
-            logger.warn("Module {} unavailable ({}) error={}", moduleId,
-                timeout ? "timeout" : "failed", e.getMessage(), e);
+            logger.warn("module_failed module={} status={} durationMs={} error={}", moduleId,
+                timeout ? "TIMEOUT" : "FAILED", System.currentTimeMillis() - start, e.getMessage(), e);
             return annotateWithSource(fallbackModule(moduleId, title, timeout, e));
+        } finally {
+            MDC.remove("module");
         }
     }
 
