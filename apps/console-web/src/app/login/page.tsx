@@ -1,14 +1,16 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useRef, useState, FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import { createLogger, safeError } from "@/lib/logger";
 import s from "./page.module.scss";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const from = searchParams.get("from") || "/dashboard";
+  const loggerRef = useRef(createLogger("login", { route: "/login" }));
 
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -19,17 +21,48 @@ function LoginForm() {
     setLoading(true);
     setError("");
 
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password }),
+    loggerRef.current.info("admin_login_submit", {
+      action: "authenticate_admin",
+      details: {
+        redirectTo: from,
+      },
     });
 
-    if (res.ok) {
-      router.push(from);
-    } else {
-      const data = await res.json();
-      setError(data.error || "Erreur");
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+
+      if (res.ok) {
+        loggerRef.current.info("admin_login_succeeded", {
+          action: "redirect_dashboard",
+          details: {
+            redirectTo: from,
+          },
+        });
+        router.push(from);
+      } else {
+        const data = await res.json();
+        loggerRef.current.warn("admin_login_rejected", {
+          action: "authenticate_admin",
+          details: {
+            reason: data.error || "Erreur",
+            statusCode: res.status,
+          },
+        });
+        setError(data.error || "Erreur");
+        setLoading(false);
+      }
+    } catch (fetchError) {
+      loggerRef.current.error("admin_login_request_failed", {
+        action: "authenticate_admin",
+        details: {
+          error: safeError(fetchError),
+        },
+      });
+      setError("Erreur");
       setLoading(false);
     }
   }

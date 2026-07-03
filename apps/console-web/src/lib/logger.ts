@@ -1,111 +1,94 @@
-/**
- * Logger applicatif structuré (client + serveur).
- *
- * Émet des logs JSON sur la console, activables via variables d'environnement :
- * - client  : NEXT_PUBLIC_APP_LOGS_ENABLED
- * - serveur : APP_LOGS_ENABLED
- *
- * Les helpers `maskToken` / `sanitizeUrl` / `safeError` garantissent qu'aucun
- * secret brut ni URL non assainie ne se retrouve dans les logs
- * (cf. AGENTS.md § Sécurité).
- */
+import {
+  redactDetails,
+  sanitizeText,
+  sanitizeUrl,
+  maskToken,
+  maskEmail,
+  safeError,
+} from "@/lib/log-sanitize";
 
-type LogLevel = "info" | "warn" | "error";
+// Re-export sanitisers so existing callers don't need to change their import path.
+export { sanitizeText, sanitizeUrl, maskToken, maskEmail, safeError };
 
-/** Contexte de base attaché à toutes les entrées d'un logger. */
-export type LoggerContext = {
-  route?: string;
-  details?: Record<string, unknown>;
-};
+// ─── Types ─────────────────────────────────────────────────────────────────
 
-/** Charge d'une entrée de log ponctuelle. */
-export type LogPayload = {
+export type LoggerSurface =
+  | "landing"
+  | "dashboard"
+  | "login"
+  | "report"
+  | "api"
+  | "app";
+
+export type LogLevel = "info" | "warn" | "error";
+
+type LogDetails = Record<string, unknown>;
+
+type LogContext = {
   action?: string;
+  details?: LogDetails;
   route?: string;
-  details?: Record<string, unknown>;
 };
 
-export type AppLogger = {
-  info: (event: string, payload?: LogPayload) => void;
-  warn: (event: string, payload?: LogPayload) => void;
-  error: (event: string, payload?: LogPayload) => void;
+type Logger = {
+  error: (event: string, context?: LogContext) => void;
+  info:  (event: string, context?: LogContext) => void;
+  warn:  (event: string, context?: LogContext) => void;
 };
 
-function loggingEnabled(): boolean {
-  // typeof window === "undefined" => contexte serveur (SSR / route handlers)
-  if (typeof window === "undefined") {
-    return process.env.APP_LOGS_ENABLED === "true";
-  }
-  return process.env.NEXT_PUBLIC_APP_LOGS_ENABLED === "true";
+// ─── Infrastructure ────────────────────────────────────────────────────────
+
+function isLoggingEnabled(): boolean {
+  const override =
+    typeof window === "undefined"
+      ? process.env.APP_LOGS_ENABLED ?? process.env.NEXT_PUBLIC_APP_LOGS_ENABLED
+      : process.env.NEXT_PUBLIC_APP_LOGS_ENABLED;
+
+  if (override === "true")  return true;
+  if (override === "false") return false;
+
+  return process.env.NODE_ENV !== "test";
 }
 
-function emit(level: LogLevel, scope: string, base: LoggerContext, event: string, payload?: LogPayload): void {
-  if (!loggingEnabled()) return;
-
-  const entry = {
-    level,
-    scope,
-    event,
-    route: payload?.route ?? base.route,
-    action: payload?.action,
-    details: { ...base.details, ...payload?.details },
-    ts: new Date().toISOString(),
-  };
-
-  const line = JSON.stringify(entry);
-  if (level === "error") {
-    console.error(line);
-  } else if (level === "warn") {
-    console.warn(line);
-  } else {
-    console.info(line);
-  }
-}
-
-/**
- * Crée un logger scoping toutes ses entrées avec `scope` et un contexte de base.
- */
-export function createLogger(scope: string, base: LoggerContext = {}): AppLogger {
+function mergeContexts(base?: LogContext, ctx?: LogContext): LogContext | undefined {
+  if (!base && !ctx) return undefined;
   return {
-    info: (event, payload) => emit("info", scope, base, event, payload),
-    warn: (event, payload) => emit("warn", scope, base, event, payload),
-    error: (event, payload) => emit("error", scope, base, event, payload),
+    action:  ctx?.action  ?? base?.action,
+    details: { ...(base?.details ?? {}), ...(ctx?.details ?? {}) },
+    route:   ctx?.route   ?? base?.route,
   };
 }
 
-/**
- * Masque un token/secret pour l'affichage en log : ne conserve que les 4
- * premiers caractères. Ne jamais logger un token brut.
- */
-export function maskToken(token: string | null | undefined): string {
-  if (!token) return "null";
-  if (token.length <= 8) return "****";
-  return `${token.slice(0, 4)}…`;
+function writeLog(
+  level: LogLevel,
+  surface: LoggerSurface,
+  event: string,
+  context?: LogContext,
+): void {
+  if (!isLoggingEnabled()) return;
+
+  const payload = {
+    action:  context?.action,
+    details: redactDetails(context?.details ?? {}),
+    event,
+    level,
+    path:    typeof window !== "undefined" ? window.location.pathname : undefined,
+    route:   context?.route,
+    surface,
+    ts:      new Date().toISOString(),
+  };
+
+  const method =
+    level === "error" ? console.error :
+    level === "warn"  ? console.warn  :
+                        console.info;
+  method("[argos-app]", payload);
 }
 
-/**
- * Assainit une URL pour le log : retire query string et fragment (qui peuvent
- * contenir des données sensibles), strip les CRLF (log injection) et tronque.
- */
-export function sanitizeUrl(url: string | null | undefined): string {
-  if (!url) return "";
-  const stripped = url.replace(/[\r\n]/g, "").slice(0, 200);
-  try {
-    const u = new URL(stripped);
-    return `${u.origin}${u.pathname}`;
-  } catch {
-    // URL invalide : renvoie la version nettoyée sans query/hash
-    return stripped.split(/[?#]/)[0];
-  }
-}
-
-/**
- * Transforme une erreur inconnue en objet sérialisable et sûr (sans stack trace)
- * pour l'inclure dans les logs.
- */
-export function safeError(err: unknown): { name: string; message: string } {
-  if (err instanceof Error) {
-    return { name: err.name, message: err.message };
-  }
-  return { name: "UnknownError", message: String(err) };
+export function createLogger(surface: LoggerSurface, baseContext?: LogContext): Logger {
+  return {
+    error: (event, ctx) => writeLog("error", surface, event, mergeContexts(baseContext, ctx)),
+    info:  (event, ctx) => writeLog("info",  surface, event, mergeContexts(baseContext, ctx)),
+    warn:  (event, ctx) => writeLog("warn",  surface, event, mergeContexts(baseContext, ctx)),
+  };
 }

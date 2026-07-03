@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { argosApi, AuditListItem, CreateAuditRequest, CreateAuditResponse } from "@/lib/ArgosApi";
 import { useLang } from "@/lib/i18n/LangContext";
 import { createLogger, safeError, sanitizeUrl } from "@/lib/logger";
+import { normalizeInputUrl } from "@/lib/url";
 import s from "./AuditForm.module.scss";
 
 type Props = {
@@ -32,7 +33,7 @@ export default function AuditForm({ onCreated }: Props) {
     }
 
     // Ajoute https:// si aucun protocole n'est fourni (ex: "argos.lelouet.fr")
-    const normalized = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+    const normalized = normalizeInputUrl(trimmed);
     loggerRef.current.info("dashboard_audit_submit", {
       action: "create_audit",
       details: {

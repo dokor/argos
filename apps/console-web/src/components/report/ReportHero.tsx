@@ -1,6 +1,6 @@
 "use client";
 
-import { Report, PriorityItem, TechSummary } from "./types";
+import { Report, TechSummary } from "./types";
 import { useLang } from "@/lib/i18n/LangContext";
 import s from "./ReportHero.module.scss";
 
@@ -102,7 +102,6 @@ export default function ReportHero({ report }: { report: Report }) {
 
   const score = Math.max(0, Math.min(100, report.scores.global));
   const color = scoreColor(score);
-  const priorities: PriorityItem[] = report.summary?.priorities ?? [];
   const allIssues = report.issues ?? [];
   const issuesCount = allIssues.length;
 

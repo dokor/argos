@@ -1,0 +1,205 @@
+@use '../styles/tokens' as t;
+
+// ─── Root ─────────────────────────────────────────────────────────────────────
+.page {
+  font-family: 'Inter', system-ui, sans-serif;
+  color: t.$color-navy;
+  background: t.$color-white;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+// ─── Nav ──────────────────────────────────────────────────────────────────────
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: t.$z-sticky;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid t.$color-slate-100;
+}
+
+.navInner {
+  max-width: t.$container-width;
+  margin: 0 auto;
+  padding: 0 t.$space-6;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: t.$space-2;
+  color: t.$color-navy;
+  text-decoration: none;
+}
+
+.logoIcon {
+  display: block;
+  flex-shrink: 0;
+}
+
+.logoText {
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+}
+
+.navRight {
+  display: flex;
+  align-items: center;
+  gap: t.$space-3;
+}
+
+.navLink {
+  color: t.$color-slate-600;
+  text-decoration: none;
+  font-size: t.$text-xl;
+  font-weight: 500;
+
+  &:hover {
+    color: t.$color-navy;
+  }
+}
+
+.navCta {
+  background: t.$color-navy;
+  color: t.$color-white;
+  text-decoration: none;
+  padding: t.$space-2 t.$space-4;
+  border-radius: t.$radius-sm;
+  font-size: t.$text-base;
+  font-weight: 500;
+}
+
+// ─── Content ──────────────────────────────────────────────────────────────────
+.content {
+  flex: 1;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 96px t.$space-6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.badge {
+  display: inline-block;
+  background: t.$color-indigo-dim;
+  color: t.$color-indigo;
+  font-size: t.$text-base;
+  font-weight: 600;
+  padding: t.$space-1 t.$space-3;
+  border-radius: t.$radius-pill;
+  margin-bottom: t.$space-6;
+}
+
+.code {
+  font-size: clamp(72px, 18vw, 140px);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  background: linear-gradient(135deg, t.$color-navy 0%, t.$color-indigo 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: t.$space-4;
+}
+
+.title {
+  font-size: clamp(24px, 4vw, 34px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 t.$space-3;
+}
+
+.sub {
+  color: t.$color-slate-500;
+  font-size: t.$text-2xl;
+  line-height: 1.6;
+  margin: 0 0 t.$space-8;
+  max-width: 480px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: t.$space-3;
+}
+
+.primaryCta {
+  display: inline-block;
+  background: t.$color-navy;
+  color: t.$color-white;
+  text-decoration: none;
+  padding: t.$space-3 t.$space-6;
+  border-radius: t.$radius-sm;
+  font-size: t.$text-xl;
+  font-weight: 600;
+  transition: opacity 0.15s ease;
+
+  &:hover {
+    opacity: 0.9;
+  }
+
+  &:focus-visible {
+    outline: 2px solid t.$color-indigo;
+    outline-offset: 2px;
+  }
+}
+
+.secondaryCta {
+  display: inline-block;
+  background: t.$color-white;
+  color: t.$color-navy;
+  text-decoration: none;
+  padding: t.$space-3 t.$space-6;
+  border: 1px solid t.$color-slate-200;
+  border-radius: t.$radius-sm;
+  font-size: t.$text-xl;
+  font-weight: 600;
+  transition: border-color 0.15s ease;
+
+  &:hover {
+    border-color: t.$color-slate-300;
+  }
+
+  &:focus-visible {
+    outline: 2px solid t.$color-indigo;
+    outline-offset: 2px;
+  }
+}
+
+// ─── Footer ───────────────────────────────────────────────────────────────────
+.footer {
+  border-top: 1px solid t.$color-slate-100;
+  background: t.$color-white;
+}
+
+.footerInner {
+  max-width: t.$container-width;
+  margin: 0 auto;
+  padding: t.$space-6;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: t.$space-3;
+  flex-wrap: wrap;
+  color: t.$color-slate-500;
+  font-size: t.$text-base;
+}
+
+@media (max-width: 560px) {
+  .footerInner {
+    flex-direction: column;
+    text-align: center;
+  }
+}

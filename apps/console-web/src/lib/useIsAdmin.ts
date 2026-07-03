@@ -13,7 +13,8 @@ export function useIsAdmin(): boolean | null {
     const has = document.cookie
       .split(";")
       .some((c) => c.trim().startsWith("argos_admin="));
-    setIsAdmin(has);
+    const timerId = window.setTimeout(() => setIsAdmin(has), 0);
+    return () => window.clearTimeout(timerId);
   }, []);
 
   return isAdmin;

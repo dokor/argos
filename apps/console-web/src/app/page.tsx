@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { argosApi } from "@/lib/ArgosApi";
 import { useLang } from "@/lib/i18n/LangContext";
+import { createLogger, safeError, sanitizeUrl } from "@/lib/logger";
+import { normalizeInputUrl } from "@/lib/url";
 import { useIsAdmin } from "@/lib/useIsAdmin";
 import ArgosIcon from "@/components/ArgosIcon";
 import LangToggle from "@/components/LangToggle";
@@ -44,6 +46,13 @@ function HeroAuditForm({
   const [stepIdx, setStepIdx] = useState(0);
   const runIdRef = useRef<string | number | null>(null);
   const pollCountRef = useRef(0);
+  const pollErrorCountRef = useRef(0);
+  const loggerRef = useRef(
+    createLogger("landing", {
+      route: "/",
+      details: { origin: variant },
+    })
+  );
   const router = useRouter();
   const isHero = variant === "hero";
   const h = isHero ? 52 : 46;
@@ -60,23 +69,57 @@ function HeroAuditForm({
         clearInterval(id);
         setPhase("error");
         setErrMsg(t.errorMsg);
+        loggerRef.current.warn("landing_audit_poll_timeout", {
+          action: "poll_run_status",
+          details: {
+            polls: pollCountRef.current,
+            runId: runIdRef.current,
+          },
+        });
         return;
       }
 
       if (runIdRef.current === null) return;
       try {
         const run = await argosApi.getRunsByRunId(runIdRef.current);
+        pollErrorCountRef.current = 0;
+
         if (run.status === "COMPLETED" && run.reportToken) {
           clearInterval(id);
           setPhase("redirecting");
+          loggerRef.current.info("landing_audit_completed", {
+            action: "redirect_to_report",
+            details: {
+              polls: pollCountRef.current,
+              reportToken: run.reportToken,
+              runId: run.runId,
+            },
+          });
           router.push(`/report/${run.reportToken}`);
         } else if (run.status === "FAILED") {
           clearInterval(id);
           setPhase("error");
           setErrMsg(t.errorFailed);
+          loggerRef.current.warn("landing_audit_failed", {
+            action: "poll_run_status",
+            details: {
+              lastError: run.lastError,
+              runId: run.runId,
+            },
+          });
         }
-      } catch {
-        // Ignore transient errors, keep polling
+      } catch (error) {
+        pollErrorCountRef.current += 1;
+        if (pollErrorCountRef.current === 1 || pollErrorCountRef.current % 5 === 0) {
+          loggerRef.current.warn("landing_audit_poll_transient_error", {
+            action: "poll_run_status",
+            details: {
+              error: safeError(error),
+              occurrence: pollErrorCountRef.current,
+              runId: runIdRef.current,
+            },
+          });
+        }
       }
     }, POLL_INTERVAL_MS);
 
@@ -87,17 +130,45 @@ function HeroAuditForm({
     e.preventDefault();
     const trimmed = url.trim();
     if (!trimmed || phase !== "idle") return;
+
+    // Prepend https:// when the scheme is omitted so scheme-less input
+    // (e.g. "example.com") is accepted, matching the BFF/backend behavior.
+    const normalized = normalizeInputUrl(trimmed);
+
+    loggerRef.current.info("landing_audit_submit", {
+      action: "create_audit",
+      details: {
+        hasScheme: /^https?:\/\//i.test(trimmed),
+        url: sanitizeUrl(normalized),
+      },
+    });
+
     setPhase("submitting");
     setErrMsg("");
     try {
-      const res = await argosApi.createAudit({ url: trimmed });
+      const res = await argosApi.createAudit({ url: normalized });
       runIdRef.current = res.runId;
       pollCountRef.current = 0;
+      pollErrorCountRef.current = 0;
       setStepIdx(0);
       setPhase("polling");
-    } catch {
+      loggerRef.current.info("landing_audit_created", {
+        action: "poll_run_status",
+        details: {
+          runId: res.runId,
+          status: res.status,
+        },
+      });
+    } catch (error) {
       setPhase("error");
       setErrMsg(t.errorMsg);
+      loggerRef.current.error("landing_audit_create_failed", {
+        action: "create_audit",
+        details: {
+          error: safeError(error),
+          url: sanitizeUrl(normalized),
+        },
+      });
     }
   }
 
@@ -118,7 +189,11 @@ function HeroAuditForm({
     <form onSubmit={handleSubmit} style={{ width: "100%" }}>
       <div className={s.formRow}>
         <input
-          type="url"
+          type="text"
+          inputMode="url"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
           required
           value={url}
           onChange={(e) => setUrl(e.target.value)}
@@ -308,6 +383,9 @@ export default function LandingPage() {
             </span>
           </div>
           <div className={s.navRight}>
+            <a href="/faq" className={s.navLink}>
+              {t.nav.faq}
+            </a>
             <LangToggle />
             {isAdmin && (
               <a href="/dashboard" className={s.navCta}>
@@ -332,6 +410,7 @@ export default function LandingPage() {
                 </React.Fragment>
               ))}
             </h1>
+            <p className={s.slogan}>{tl.hero.slogan}</p>
             <p className={s.sub}>{tl.hero.sub}</p>
             <p className={s.audience}>{tl.hero.audience}</p>
             <div className={s.heroFormWrap}>

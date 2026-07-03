@@ -9,8 +9,10 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { createLogger, safeError, sanitizeText, sanitizeUrl } from "@/lib/logger";
 
 const API_BASE = process.env.API_BASE ?? "http://api-backend:8081";
+const logger = createLogger("api", { route: "/api/audits" });
 
 const MAX_URL_LENGTH = 2048;
 
@@ -43,9 +45,9 @@ function ssrfError(raw: string): string | null {
     return "Invalid URL format";
   }
 
-  const scheme = parsed.protocol.replace(/:$/, ""); // "https:" → "https"
+  const scheme = parsed.protocol.replace(/:$/, "");
   if (!ALLOWED_SCHEMES.test(parsed.href)) {
-    return `Scheme '${scheme}' is not allowed — only http and https are accepted`;
+    return `Scheme '${scheme}' is not allowed - only http and https are accepted`;
   }
 
   const host = parsed.hostname.toLowerCase();
@@ -69,49 +71,78 @@ function ssrfError(raw: string): string | null {
 
 /** Sanitizes a string for safe logging (prevents CRLF injection). */
 function sanitize(s: string): string {
-  return s.replace(/[\r\n]/g, " ").slice(0, 200);
+  return sanitizeText(s) ?? "";
 }
 
-// ─── POST /api/audits ──────────────────────────────────────────────────────────
-
 export async function POST(request: NextRequest): Promise<NextResponse> {
-  // 1. Parse body
+  const startedAt = Date.now();
+  logger.info("audit_bff_request_received", {
+    action: "create_audit",
+  });
+
   let body: unknown;
   try {
     body = await request.json();
   } catch {
+    logger.warn("audit_bff_invalid_json", {
+      action: "create_audit",
+      details: {
+        durationMs: Date.now() - startedAt,
+      },
+    });
     return NextResponse.json({ error: "Request body must be valid JSON" }, { status: 400 });
   }
 
   if (typeof body !== "object" || body === null) {
+    logger.warn("audit_bff_invalid_payload_type", {
+      action: "create_audit",
+      details: {
+        durationMs: Date.now() - startedAt,
+      },
+    });
     return NextResponse.json({ error: "Request body must be a JSON object" }, { status: 400 });
   }
 
   const { url } = body as Record<string, unknown>;
-
-  // 2. Presence check
   if (typeof url !== "string" || url.trim() === "") {
+    logger.warn("audit_bff_missing_url", {
+      action: "create_audit",
+      details: {
+        durationMs: Date.now() - startedAt,
+      },
+    });
     return NextResponse.json({ error: "Field 'url' is required" }, { status: 400 });
   }
 
   const trimmed = url.trim();
-
-  // 3. Length check
   if (trimmed.length > MAX_URL_LENGTH) {
+    logger.warn("audit_bff_url_too_long", {
+      action: "create_audit",
+      details: {
+        durationMs: Date.now() - startedAt,
+        url: sanitizeUrl(trimmed),
+      },
+    });
     return NextResponse.json(
       { error: `URL must not exceed ${MAX_URL_LENGTH} characters` },
       { status: 400 }
     );
   }
 
-  // 4. SSRF / scheme validation
   const err = ssrfError(trimmed);
   if (err) {
-    console.warn("[BFF] Blocked audit request:", sanitize(trimmed), "—", err);
+    console.warn("[BFF] Blocked audit request:", sanitize(trimmed), "-", err);
+    logger.warn("audit_bff_request_blocked", {
+      action: "validate_url",
+      details: {
+        durationMs: Date.now() - startedAt,
+        reason: err,
+        url: sanitizeUrl(trimmed),
+      },
+    });
     return NextResponse.json({ error: err }, { status: 400 });
   }
 
-  // 5. Forward to Java backend (only the sanitized, trimmed URL)
   let backendRes: Response;
   try {
     backendRes = await fetch(`${API_BASE}/api/audits`, {
@@ -119,24 +150,50 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ url: trimmed }),
     });
-  } catch (e) {
-    console.error("[BFF] Backend unreachable:", e);
+  } catch (error) {
+    console.error("[BFF] Backend unreachable:", error);
+    logger.error("audit_bff_backend_unreachable", {
+      action: "create_audit",
+      details: {
+        durationMs: Date.now() - startedAt,
+        error: safeError(error),
+        url: sanitizeUrl(trimmed),
+      },
+    });
     return NextResponse.json({ error: "Service temporarily unavailable" }, { status: 503 });
   }
 
   const text = await backendRes.text();
+  if (backendRes.ok) {
+    logger.info("audit_bff_backend_response_ok", {
+      action: "create_audit",
+      details: {
+        durationMs: Date.now() - startedAt,
+        statusCode: backendRes.status,
+        url: sanitizeUrl(trimmed),
+      },
+    });
+  } else {
+    logger.warn("audit_bff_backend_response_error", {
+      action: "create_audit",
+      details: {
+        durationMs: Date.now() - startedAt,
+        statusCode: backendRes.status,
+        url: sanitizeUrl(trimmed),
+      },
+    });
+  }
+
   return new NextResponse(text, {
     status: backendRes.status,
     headers: { "Content-Type": "application/json" },
   });
 }
 
-// ─── GET /api/audits ───────────────────────────────────────────────────────────
 // Proxy the list endpoint so this route file doesn't shadow the rewrite for GETs.
-
 export async function GET(request: NextRequest): Promise<NextResponse> {
+  const startedAt = Date.now();
   const limit = request.nextUrl.searchParams.get("limit") ?? "50";
-  // Clamp to valid range to prevent abuse
   const safeLimit = Math.max(1, Math.min(200, parseInt(limit, 10) || 50));
 
   let backendRes: Response;
@@ -144,12 +201,40 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     backendRes = await fetch(`${API_BASE}/api/audits?limit=${safeLimit}`, {
       headers: { "Content-Type": "application/json" },
     });
-  } catch (e) {
-    console.error("[BFF] Backend unreachable:", e);
+  } catch (error) {
+    console.error("[BFF] Backend unreachable:", error);
+    logger.error("audit_list_bff_backend_unreachable", {
+      action: "list_audits",
+      details: {
+        durationMs: Date.now() - startedAt,
+        error: safeError(error),
+        limit: safeLimit,
+      },
+    });
     return NextResponse.json({ error: "Service temporarily unavailable" }, { status: 503 });
   }
 
   const text = await backendRes.text();
+  if (backendRes.ok) {
+    logger.info("audit_list_bff_response_ok", {
+      action: "list_audits",
+      details: {
+        durationMs: Date.now() - startedAt,
+        limit: safeLimit,
+        statusCode: backendRes.status,
+      },
+    });
+  } else {
+    logger.warn("audit_list_bff_response_error", {
+      action: "list_audits",
+      details: {
+        durationMs: Date.now() - startedAt,
+        limit: safeLimit,
+        statusCode: backendRes.status,
+      },
+    });
+  }
+
   return new NextResponse(text, {
     status: backendRes.status,
     headers: { "Content-Type": "application/json" },
