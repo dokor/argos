@@ -1,4 +1,5 @@
 import { Report } from "@/components/report/types";
+import { createLogger, safeError } from "@/lib/logger";
 
 export type CreateAuditRequest = {
   url: string;
@@ -9,6 +10,14 @@ export type CreateAuditResponse = {
   runId: string | number;
   status: "QUEUED" | "RUNNING" | "FAILED" | "COMPLETED";
   normalizedUrl?: string;
+  /** Token pré-généré : la page /report/{reportToken} est accessible immédiatement. */
+  reportToken?: string | null;
+};
+
+export type ModuleStatus = {
+  id: string;
+  label: string;
+  status: "PENDING" | "RUNNING" | "COMPLETED" | "FAILED" | "SKIPPED";
 };
 
 export type AuditRunStatusResponse = {
@@ -21,6 +30,8 @@ export type AuditRunStatusResponse = {
   startedAt?: string | null;
   finishedAt?: string | null;
   reportToken?: string | null;
+  /** JSON string contenant un tableau de ModuleStatus. */
+  moduleStatuses?: string | null;
 };
 
 export type AuditListItem = {
@@ -39,6 +50,7 @@ export type AuditListItem = {
 
 // API_BASE is only used server-side (SSR); client calls use relative paths proxied by next.config.ts
 const API_BASE: string = process.env.API_BASE ?? "http://api-backend:8081";
+const apiLogger = createLogger("app", { route: "api-client" });
 
 export async function http<T>(path: string, init?: RequestInit): Promise<T> {
   const url: string =
@@ -46,17 +58,38 @@ export async function http<T>(path: string, init?: RequestInit): Promise<T> {
       ? `${API_BASE}${path}` // SSR => absolute URL
       : path;               // Client => relative, proxied via next.config.ts rewrites
 
-  const res = await fetch(url, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...init?.headers,
-    },
-    cache: "no-store",
-  });
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      ...init,
+      headers: {
+        "Content-Type": "application/json",
+        ...init?.headers,
+      },
+      cache: "no-store",
+    });
+  } catch (error) {
+    apiLogger.error("api_client_request_failed", {
+      action: init?.method ?? "GET",
+      route: path,
+      details: {
+        error: safeError(error),
+      },
+    });
+    throw error;
+  }
 
   if (!res.ok) {
     const text: string = await res.text().catch(() => "");
+    apiLogger.warn("api_client_response_error", {
+      action: init?.method ?? "GET",
+      route: path,
+      details: {
+        responseBody: text,
+        statusCode: res.status,
+        statusText: res.statusText,
+      },
+    });
     throw new Error(`HTTP ${res.status} ${res.statusText} - ${text}`);
   }
 
@@ -83,4 +116,8 @@ export const argosApi = {
 
   getRunsByRunId: (runId: string | number): Promise<AuditRunStatusResponse> =>
     http<AuditRunStatusResponse>(`/api/audits/runs/${runId}`, { method: "GET" }),
+
+  /** Statut d'un run via son reportToken — disponible avant publication du rapport. */
+  getReportStatus: (token: string): Promise<AuditRunStatusResponse> =>
+    http<AuditRunStatusResponse>(`/api/reports/${token}/status`, { method: "GET" }),
 };

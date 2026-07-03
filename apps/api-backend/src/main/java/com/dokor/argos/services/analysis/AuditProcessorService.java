@@ -144,7 +144,7 @@ public class AuditProcessorService {
             // HTTP (page-level : status, redirects, headers, body)
             final AuditContext baseContext = context;
             AuditModuleResult httpModule = runModule(
-                "http", "HTTP", moduleStatuses,
+                runId, "http", "HTTP", moduleStatuses,
                 () -> httpModuleAnalyzer.analyze(baseContext, logger));
 
             // Enrichir le contexte avec les données HTTP (finalUrl, headers, body…)
@@ -152,34 +152,34 @@ public class AuditProcessorService {
             final AuditContext ctx = context;
 
             AuditModuleResult htmlModule = runModule(
-                "html", "HTML", moduleStatuses,
+                runId, "html", "HTML", moduleStatuses,
                 () -> htmlModuleAnalyzer.analyze(ctx, logger));
 
             AuditModuleResult runtimeModule = runModule(
-                "runtime", "Runtime (Playwright)", moduleStatuses,
+                runId, "runtime", "Runtime (Playwright)", moduleStatuses,
                 () -> runtimeModuleAnalyzer.analyze(ctx, logger));
 
             AuditModuleResult lighthouseModule = runModule(
-                "lighthouse", "Lighthouse", moduleStatuses,
+                runId, "lighthouse", "Lighthouse", moduleStatuses,
                 () -> lighthouseModuleAnalyzer.analyze(ctx, logger));
 
             // --- Modules DOMAIN ---
 
             AuditModuleResult observatoryModule = runModule(
-                "observatory", "Observatory", moduleStatuses,
+                runId, "observatory", "Observatory", moduleStatuses,
                 () -> observatoryModuleAnalyzer.analyze(ctx, logger));
 
             AuditModuleResult sslModule = runModule(
-                "ssl", "SSL Labs", moduleStatuses,
+                runId, "ssl", "SSL Labs", moduleStatuses,
                 () -> sslLabsModuleAnalyzer.analyze(ctx, logger));
 
             AuditModuleResult zapModule = runModule(
-                "zap", "OWASP ZAP", moduleStatuses,
+                runId, "zap", "OWASP ZAP", moduleStatuses,
                 () -> zapModuleAnalyzer.analyze(ctx, logger));
 
             // --- Module DOMAIN (tech) — cache 24h partagé entre toutes les pages du domaine ---
             AuditModuleResult techModule = runModule(
-                "tech", "Tech stack", moduleStatuses,
+                runId, "tech", "Tech stack", moduleStatuses,
                 () -> domainAnalysisService.getOrRunTechAnalysis(ctx, logger));
 
             List<AuditModuleResult> allModules = List.of(
@@ -225,9 +225,9 @@ public class AuditProcessorService {
 
             auditRunService.complete(runId, json);
             // Publish public report (tokenized) for /report/[token]
-            reportPublishService.publishIfAbsent(runId, audit, report)
+            reportPublishService.publishIfAbsent(runId, audit, report, run.getReportToken())
                 .ifPresentOrElse(
-                    token -> logger.info("Public report ready runId={} token={}", runId, token),
+                    token -> logger.info("Public report ready runId={}", runId),
                     () -> logger.warn("Public report not published runId={}", runId)
                 );
             logger.info(
@@ -236,6 +236,9 @@ public class AuditProcessorService {
                 score.global().ratio()
             );
         } catch (Exception e) {
+            // Marque le(s) module(s) resté(s) en RUNNING comme FAILED pour que la
+            // vue de progression n'affiche pas un spinner infini sur ce module.
+            auditRunService.failRunningModules(runId);
             auditRunService.fail(runId, e.getMessage());
             logger.warn("Run failed runId={} error={}", runId, e.getMessage(), e);
         }
@@ -265,13 +268,16 @@ public class AuditProcessorService {
      * TIMEOUT / FAILED) et, en cas d'échec, un résultat "indisponible" (WARN, non
      * scorable) est substitué afin que le reste de l'analyse se poursuive.
      */
-    private AuditModuleResult runModule(String moduleId, String title,
+    private AuditModuleResult runModule(long runId, String moduleId, String title,
                                         Map<String, String> statuses, ModuleCall call) {
-        logger.info("Running module={}", moduleId);
+        logger.info("Running module={} runId={}", moduleId, runId);
+        // Statut live (frontend polling) : le module démarre.
+        auditRunService.updateModuleStatus(runId, moduleId, "RUNNING");
         try {
             AuditModuleResult raw = call.run();
             if (raw == null) {
                 statuses.put(moduleId, "FAILED");
+                auditRunService.updateModuleStatus(runId, moduleId, "FAILED");
                 logger.warn("Module {} returned null -> mode dégradé", moduleId);
                 return annotateWithSource(fallbackModule(moduleId, title, false,
                     new IllegalStateException("module returned null")));
@@ -281,13 +287,18 @@ public class AuditProcessorService {
             if (data != null && Boolean.FALSE.equals(data.get("available"))) {
                 Object reason = data.get("reason");
                 statuses.put(moduleId, reason != null ? reason.toString() : "UNAVAILABLE");
+                // Module indisponible (dégradé) : marqué FAILED côté live (le détail
+                // fin — UNAVAILABLE/TIMEOUT — reste dans meta.moduleStatuses du rapport).
+                auditRunService.updateModuleStatus(runId, moduleId, "FAILED");
             } else {
                 statuses.put(moduleId, "COMPLETED");
+                auditRunService.updateModuleStatus(runId, moduleId, "COMPLETED");
             }
             return res;
         } catch (Exception e) {
             boolean timeout = isTimeout(e);
             statuses.put(moduleId, timeout ? "TIMEOUT" : "FAILED");
+            auditRunService.updateModuleStatus(runId, moduleId, "FAILED");
             logger.warn("Module {} unavailable ({}) error={}", moduleId,
                 timeout ? "timeout" : "failed", e.getMessage(), e);
             return annotateWithSource(fallbackModule(moduleId, title, timeout, e));

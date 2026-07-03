@@ -35,8 +35,11 @@ public record AuditRunStatusResponse(
     @Schema(description = "Result payload if the run completed successfully", nullable = true)
     String resultJson,
 
-    @Schema(description = "Result payload if the run completed successfully", nullable = true)
-    String reportToken
+    @Schema(description = "Public report token (pre-generated at creation)", nullable = true)
+    String reportToken,
+
+    @Schema(description = "JSON array of per-module statuses. Each entry: {id, label, status} where status is PENDING|RUNNING|COMPLETED|FAILED|SKIPPED", nullable = true)
+    String moduleStatuses
 
 ) {
 }

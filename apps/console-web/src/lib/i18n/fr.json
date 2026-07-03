@@ -406,6 +406,32 @@
       "evidenceLabel": "Preuve / Contexte",
       "recommendationLabel": "Recommandation",
       "detailsLabel": "Détails"
+    },
+    "progress": {
+      "titleQueued": "Analyse en attente…",
+      "titleRunning": "Analyse en cours…",
+      "titleFailed": "Analyse échouée",
+      "subtitle": "Argos analyse votre site. Le rapport s'affichera automatiquement.",
+      "estimate": "Analyse typique : ~20 à 30 secondes.",
+      "retryLink": "Lancer une nouvelle analyse",
+      "genericError": "L'analyse a échoué.",
+      "connectionError": "Erreur de connexion. Nouvelle tentative…",
+      "timeoutError": "L'analyse prend plus de temps que prévu. Réessayez plus tard.",
+      "modulesLabel": "Progression des modules",
+      "status": {
+        "PENDING": "En attente",
+        "RUNNING": "En cours…",
+        "COMPLETED": "Terminé",
+        "FAILED": "Erreur",
+        "SKIPPED": "Ignoré"
+      },
+      "icon": {
+        "ok": "OK",
+        "failed": "Erreur",
+        "skipped": "Ignoré",
+        "running": "En cours",
+        "pending": "En attente"
+      }
     }
   },
   "auditForm": {

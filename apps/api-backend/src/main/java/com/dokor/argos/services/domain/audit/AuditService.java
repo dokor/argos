@@ -155,7 +155,8 @@ public class AuditService {
             run.getId(),
             run.getAuditId(),
             run.getStatus(),
-            run.getCreatedAt()
+            run.getCreatedAt(),
+            run.getReportToken()
         );
     }
 
@@ -164,10 +165,6 @@ public class AuditService {
 
         AuditRun run = auditRunService.getRun(runId)
             .orElseThrow(() -> new NotFoundException("AuditRun not found: " + runId));
-
-        String reportToken = auditDao.findReportByRunId(runId)
-            .map(r -> r.getPublicToken())
-            .orElse(null);
 
         return new AuditRunStatusResponse(
             run.getId(),
@@ -178,7 +175,8 @@ public class AuditService {
             run.getFinishedAt(),
             run.getLastError(),
             run.getResultJson(),
-            reportToken
+            run.getReportToken(),
+            run.getModuleStatuses()
         );
     }
 }
