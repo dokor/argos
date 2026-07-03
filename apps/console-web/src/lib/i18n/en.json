@@ -376,6 +376,17 @@
         "opportunity": "Opportunity"
       }
     },
+    "categoryInfo": {
+      "fallback": "What this category measures and how it affects your site's quality.",
+      "security": "HTTP security: protection headers (HSTS, CSP…), information exposure and common vulnerabilities. A good score lowers attack risks (XSS, clickjacking).",
+      "ssl": "TLS/HTTPS certificate and encryption: supported protocol versions and configuration strength. Protects the confidentiality of exchanges.",
+      "observatory": "Mozilla Observatory analysis: recommended security headers and Content-Security-Policy. Reflects hardening best practices.",
+      "seo": "Search engine optimization: meta tags, heading structure and indexability. A good score improves visibility on search engines.",
+      "a11y": "Accessibility: how usable the site is for everyone, including assistive technologies (screen readers, keyboard navigation).",
+      "performance": "Loading speed and perceived smoothness (Core Web Vitals, resource weight). Directly impacts user experience and SEO.",
+      "runtime": "Behavior in a real browser: console errors, failed requests and rendering metrics (LCP, FCP). Surfaces issues visible to visitors.",
+      "lighthouse": "Google Lighthouse scores (performance, accessibility, best practices, SEO) measured on a real page load."
+    },
     "scoreGrid": {
       "title": "Scores by category",
       "desc": "Synthetic view for prioritization. Click a category to see details.",

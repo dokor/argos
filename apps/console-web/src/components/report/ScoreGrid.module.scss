@@ -98,6 +98,13 @@
   flex-shrink: 0;
 }
 
+.catDesc {
+  font-size: t.$text-xs;
+  line-height: 1.45;
+  color: t.$color-slate-400;
+  margin: 0 0 t.$space-4;
+}
+
 .track {
   height: 6px;
   background: t.$color-slate-200;
