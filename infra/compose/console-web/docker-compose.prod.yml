@@ -28,7 +28,7 @@ services:
       - traefik.http.routers.console-web-api.service=console-web
       - traefik.http.routers.console-web-api.priority=200
       - traefik.http.routers.console-web-api.tls.options=modern@file
-      -
+
       - traefik.http.routers.console-web.tls.certresolver=le
       - traefik.http.routers.console-web.tls.options=modern@file
 
