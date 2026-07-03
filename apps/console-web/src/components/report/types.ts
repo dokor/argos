@@ -64,6 +64,8 @@ export type PriorityItem = {
 export type Issue = {
   id: string;
   categoryKey: string;
+  /** Toutes les catégories métier auxquelles le point appartient (ex. ["security","ssl"]). */
+  categoryKeys?: string[];
   module?: string;
   severity: "critical" | "important" | "info";
   title: string;

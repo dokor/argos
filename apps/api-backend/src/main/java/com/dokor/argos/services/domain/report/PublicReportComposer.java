@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 import java.net.URI;
 import java.time.Instant;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Singleton
 public class PublicReportComposer {
@@ -43,8 +42,15 @@ public class PublicReportComposer {
 
         List<ReportDto.Issue> issues = buildIssues(internalReport);
 
-        Map<String, Long> issuesByCat = issues.stream()
-            .collect(Collectors.groupingBy(ReportDto.Issue::categoryKey, Collectors.counting()));
+        // Un point peut relever de plusieurs catégories (ex. un check SSL alimente
+        // les catégories "security" ET "ssl", comme son score). On compte donc le
+        // point dans chacune de ses catégories pour rester cohérent avec les scores.
+        Map<String, Long> issuesByCat = new HashMap<>();
+        for (ReportDto.Issue issue : issues) {
+            for (String key : issue.categoryKeys()) {
+                issuesByCat.merge(key, 1L, Long::sum);
+            }
+        }
 
         List<ReportDto.CategoryScore> byCategoryWithCounts = byCategory.stream()
             .map(cat -> new ReportDto.CategoryScore(
@@ -114,11 +120,13 @@ public class PublicReportComposer {
                 }
 
                 String categoryKey = pickCategoryKey(module.id(), check.tags());
+                List<String> categoryKeys = issueCategoryKeys(module.id(), check.tags());
                 ReportDto.IssueSeverity sev = toIssueSeverity(check.status(), check.severity());
 
                 issues.add(new ReportDto.Issue(
                     check.key(),
                     categoryKey,
+                    categoryKeys,
                     module.id(),
                     sev,
                     check.title() != null ? check.title() : check.key(),
@@ -196,6 +204,27 @@ public class PublicReportComposer {
 
     // Semantic business categories take priority over technical/module tags
     private static final Set<String> PRIORITY_CATEGORIES = Set.of("performance", "security", "seo", "a11y");
+
+    /**
+     * Catégories métier d'un point : toutes les catégories (tags métier) auxquelles le
+     * check contribue — cohérent avec l'agrégation des scores {@code byTag}, où un check
+     * peut peser dans plusieurs catégories (ex. SSL ⇒ {@code security} + {@code ssl}).
+     * <p>
+     * Repli sur {@link #pickCategoryKey} si le check n'a aucun tag métier (ex. checks de
+     * structure HTTP rattachés à leur module).
+     */
+    private static List<String> issueCategoryKeys(String moduleId, List<String> tags) {
+        LinkedHashSet<String> keys = new LinkedHashSet<>();
+        if (tags != null) {
+            for (String t : tags) {
+                if (isBusinessTag(t)) keys.add(t);
+            }
+        }
+        if (keys.isEmpty()) {
+            keys.add(pickCategoryKey(moduleId, tags));
+        }
+        return List.copyOf(keys);
+    }
 
     private static String pickCategoryKey(String moduleId, List<String> tags) {
         if (tags != null) {

@@ -24,12 +24,19 @@ function scoreColor(score: number): string {
 
 function clamp(n: number) { return Math.max(0, Math.min(100, n ?? 0)); }
 
-function groupBy<T extends Record<string, unknown>>(items: T[], key: keyof T): Map<string, T[]> {
-  const map = new Map<string, T[]>();
-  for (const it of items) {
-    const k = String(it[key] ?? "other");
-    if (!map.has(k)) map.set(k, []);
-    map.get(k)!.push(it);
+// Regroupe les points par catégorie. Un point peut relever de plusieurs catégories
+// (ex. un point SSL apparaît sous "security" ET "ssl", cohérent avec les scores) :
+// il est alors ajouté à chacune. Repli sur categoryKey si categoryKeys est absent.
+function groupIssuesByCategory(issues: Issue[]): Map<string, Issue[]> {
+  const map = new Map<string, Issue[]>();
+  for (const issue of issues) {
+    const keys = issue.categoryKeys && issue.categoryKeys.length > 0
+      ? issue.categoryKeys
+      : [issue.categoryKey];
+    for (const k of keys) {
+      if (!map.has(k)) map.set(k, []);
+      map.get(k)!.push(issue);
+    }
   }
   return map;
 }
@@ -51,7 +58,7 @@ export default function IssuesByCategory({ report }: { report: Report }) {
   const categories: CategoryScore[] = report.scores.byCategory || [];
   const allIssues: Issue[] = report.issues || [];
   const filtered = filter === "all" ? allIssues : allIssues.filter((i) => i.severity === filter);
-  const byCat = groupBy(filtered, "categoryKey");
+  const byCat = groupIssuesByCategory(filtered);
 
   const FILTERS: { key: Filter; label: string }[] = [
     { key: "all",       label: ti.filterAll },

@@ -31,6 +31,16 @@ class PublicReportComposerTest {
         );
     }
 
+    private static AuditCheckResult checkWithTags(String key, AuditStatus status, List<String> tags) {
+        return AuditCheckResult.of(
+            key, "Title for " + key,
+            status, AuditSeverity.MEDIUM,
+            true, 5.0, tags,
+            null, Map.of(),
+            "Impact message", "Fix this"
+        );
+    }
+
     private static AuditModuleResult module(String id, Map<String, Object> data, AuditCheckResult... checks) {
         return new AuditModuleResult(id, id.toUpperCase(), "ok", data, List.of(checks));
     }
@@ -176,6 +186,33 @@ class PublicReportComposerTest {
         assertEquals(2, dto.issues().size());
         assertEquals(ReportDto.IssueSeverity.critical, dto.issues().get(0).severity());
         assertEquals(ReportDto.IssueSeverity.important, dto.issues().get(1).severity());
+    }
+
+    @Test
+    void sslIssueShouldBucketUnderBothSecurityAndSsl() {
+        // Régression #111 : un check SSL (tags security+ssl) alimente les catégories
+        // security ET ssl côté score ; son point doit apparaître sous les deux, sinon
+        // la carte SSL affiche un score mais aucun point.
+        AuditModuleResult sslModule = module("ssl", Map.of(),
+            checkWithTags("ssl.grade", AuditStatus.FAIL, List.of("security", "ssl")));
+        AuditReportJson input = report(List.of(sslModule),
+            scoreOf(0.46, "security", "0.76", "ssl", "0.46"));
+
+        ReportDto dto = composer.compose(input);
+
+        ReportDto.Issue issue = dto.issues().stream()
+            .filter(i -> "ssl.grade".equals(i.id()))
+            .findFirst()
+            .orElseThrow(() -> new AssertionError("ssl.grade issue not found"));
+        assertTrue(issue.categoryKeys().contains("ssl"), "issue should belong to ssl");
+        assertTrue(issue.categoryKeys().contains("security"), "issue should belong to security");
+
+        ReportDto.CategoryScore sslCat = dto.scores().byCategory().stream()
+            .filter(c -> "ssl".equals(c.key()))
+            .findFirst()
+            .orElseThrow(() -> new AssertionError("ssl category not found"));
+        assertEquals(46, sslCat.score());
+        assertTrue(sslCat.issues() >= 1, "SSL category must list its points, not show a score with 0 issue");
     }
 
     // ------------------------------------------------------------------ score
