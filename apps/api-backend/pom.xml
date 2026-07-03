@@ -10,6 +10,15 @@
 
 	<name>api-backend</name>
 
+	<licenses>
+		<license>
+			<name>Business Source License 1.1</name>
+			<url>https://mariadb.com/bsl11/</url>
+			<comments>Source-available. Converts to Apache-2.0 on 2030-07-03. See the LICENSE file at the repository root.</comments>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.source>21</maven.compiler.source>

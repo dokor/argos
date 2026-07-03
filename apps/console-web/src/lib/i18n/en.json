@@ -64,7 +64,7 @@
         },
         {
           "icon": "✶",
-          "label": "Open source · MIT"
+          "label": "Source available · BSL 1.1"
         }
       ]
     },
@@ -146,11 +146,11 @@
     },
     "cta": {
       "title": "Ready to see what's hiding in your site?",
-      "sub": "Free · No account · Private report · Open source"
+      "sub": "Free · No account · Private report · Source available"
     },
     "footer": {
       "built": "Made by Antoine LE LOUËT.",
-      "copy": "© 2026 Argos. MIT License."
+      "copy": "© 2026 Antoine LE LOUËT · BSL 1.1 License"
     }
   },
   "faq": {

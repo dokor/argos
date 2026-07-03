@@ -2,6 +2,7 @@
   "name": "argos",
   "version": "0.0.0",
   "private": true,
+  "license": "BUSL-1.1",
   "type": "module",
   "scripts": {
     "ade:backlog": "ade backlog:run brief.md",

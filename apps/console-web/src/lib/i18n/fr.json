@@ -64,7 +64,7 @@
         },
         {
           "icon": "✶",
-          "label": "Open source · MIT"
+          "label": "Source disponible · BSL 1.1"
         }
       ]
     },
@@ -146,11 +146,11 @@
     },
     "cta": {
       "title": "Prêt à voir ce que cache votre site ?",
-      "sub": "Gratuit · Sans compte · Rapport privé · Open source"
+      "sub": "Gratuit · Sans compte · Rapport privé · Source disponible"
     },
     "footer": {
       "built": "Fait par Antoine LE LOUËT.",
-      "copy": "© 2026 Argos. MIT License."
+      "copy": "© 2026 Antoine LE LOUËT · Licence BSL 1.1"
     }
   },
   "faq": {

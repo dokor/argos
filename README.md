@@ -97,4 +97,12 @@ Chaque application dispose de son propre workflow GitHub Actions (`/.github/work
 
 ## Licence
 
-MIT — fait par [Antoine LE LOUËT](https://github.com/antoinelelouet).
+Argos est distribué sous **[Business Source License 1.1](./LICENSE)** (BSL 1.1) — une licence *source-available* : le code est public, lisible, auditable et modifiable, mais son exploitation commerciale est encadrée.
+
+- ✅ **Autorisé** : lecture, audit, modification, contribution, usage non-production (dev, test, évaluation) et usage en production **hors** offre concurrente.
+- 🚫 **Restreint** : proposer à des tiers un service hébergé/managé d'audit de site web substantiellement similaire à Argos (voir *Additional Use Grant* du fichier `LICENSE`).
+- ⏳ **Bascule open source** : chaque version passe automatiquement sous **Apache-2.0** à sa *Change Date* (**2030-07-03**), soit au plus tard 4 ans après sa publication.
+
+Copyright © 2026 [Antoine LE LOUËT](https://github.com/antoinelelouet). Pour un usage commercial hors périmètre, ou une licence alternative, contactez le titulaire.
+
+Voir [`CONTRIBUTING.md`](./CONTRIBUTING.md) pour les règles de contribution et de redistribution.
