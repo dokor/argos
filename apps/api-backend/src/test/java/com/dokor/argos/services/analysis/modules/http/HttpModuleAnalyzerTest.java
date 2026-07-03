@@ -7,10 +7,17 @@ import com.dokor.argos.services.analysis.model.enums.AuditStatus;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 
+import java.net.http.HttpClient;
+import java.net.http.HttpHeaders;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests unitaires de {@link HttpModuleAnalyzer}.
@@ -129,11 +136,117 @@ class HttpModuleAnalyzerTest {
     }
 
     // -------------------------
+    // SEO resources: robots.txt & sitemap.xml (issue #31)
+    // -------------------------
+
+    @Test
+    void analyze_shouldDetectRobotsAndSitemapWhenPresent() throws Exception {
+        HttpModuleAnalyzer mockedAnalyzer = new HttpModuleAnalyzer(stubClient(
+            resp(200, "<html></html>"),
+            resp(200, "User-agent: *\nSitemap: https://example.com/sitemap.xml\n"),
+            resp(200, "<urlset></urlset>")
+        ));
+        AuditContext ctx = new AuditContext("https://example.com", "https://example.com", 0L);
+
+        AuditModuleResult result = mockedAnalyzer.analyze(ctx, LoggerFactory.getLogger("test"));
+
+        assertEquals(AuditStatus.PASS, checkByKey(result, "http.seo.robots_txt").status());
+        assertEquals(AuditStatus.PASS, checkByKey(result, "http.seo.sitemap").status());
+    }
+
+    @Test
+    void analyze_shouldWarnWhenRobotsAndSitemapMissing() throws Exception {
+        HttpModuleAnalyzer mockedAnalyzer = new HttpModuleAnalyzer(stubClient(
+            resp(200, "<html></html>"),
+            resp(404, "Not found"),
+            resp(404, "Not found")
+        ));
+        AuditContext ctx = new AuditContext("https://example.com", "https://example.com", 0L);
+
+        AuditModuleResult result = mockedAnalyzer.analyze(ctx, LoggerFactory.getLogger("test"));
+
+        assertEquals(AuditStatus.WARN, checkByKey(result, "http.seo.robots_txt").status());
+        assertEquals(AuditStatus.WARN, checkByKey(result, "http.seo.sitemap").status());
+    }
+
+    @Test
+    void analyze_shouldDetectSitemapDeclaredInRobotsEvenIfXmlMissing() throws Exception {
+        HttpModuleAnalyzer mockedAnalyzer = new HttpModuleAnalyzer(stubClient(
+            resp(200, "<html></html>"),
+            resp(200, "Sitemap: https://example.com/custom-sitemap.xml\n"),
+            resp(404, "Not found")
+        ));
+        AuditContext ctx = new AuditContext("https://example.com", "https://example.com", 0L);
+
+        AuditModuleResult result = mockedAnalyzer.analyze(ctx, LoggerFactory.getLogger("test"));
+
+        // Sitemap déclaré dans robots.txt ⇒ considéré présent malgré /sitemap.xml en 404.
+        assertEquals(AuditStatus.PASS, checkByKey(result, "http.seo.sitemap").status());
+    }
+
+    @Test
+    void analyze_shouldNotProbeSeoResourcesWhenSiteRespondsWithError() throws Exception {
+        HttpModuleAnalyzer mockedAnalyzer = new HttpModuleAnalyzer(stubClient(
+            resp(500, "Server error"),
+            resp(200, "should-not-be-requested"),
+            resp(200, "should-not-be-requested")
+        ));
+        AuditContext ctx = new AuditContext("https://example.com", "https://example.com", 0L);
+
+        AuditModuleResult result = mockedAnalyzer.analyze(ctx, LoggerFactory.getLogger("test"));
+
+        List<String> keys = result.checks().stream().map(AuditCheckResult::key).toList();
+        assertFalse(keys.contains("http.seo.robots_txt"), "robots probe should be skipped on 5xx");
+        assertFalse(keys.contains("http.seo.sitemap"), "sitemap probe should be skipped on 5xx");
+    }
+
+    // -------------------------
     // moduleId
     // -------------------------
 
     @Test
     void moduleId_shouldReturnHttp() {
         assertEquals("http", analyzer.moduleId());
+    }
+
+    // -------------------------
+    // Helpers pour les tests SEO
+    // -------------------------
+
+    private static AuditCheckResult checkByKey(AuditModuleResult result, String key) {
+        return result.checks().stream()
+            .filter(c -> key.equals(c.key()))
+            .findFirst()
+            .orElseThrow(() -> new AssertionError("check not found: " + key));
+    }
+
+    /**
+     * Construit un HttpClient mocké qui répond selon l'URL demandée :
+     * /robots.txt → robotsResp, /sitemap.xml → sitemapResp, sinon → mainResp.
+     */
+    private static HttpClient stubClient(
+        HttpResponse<String> mainResp,
+        HttpResponse<String> robotsResp,
+        HttpResponse<String> sitemapResp
+    ) throws Exception {
+        HttpClient client = mock(HttpClient.class);
+        when(client.send(any(HttpRequest.class), any())).thenAnswer(invocation -> {
+            HttpRequest req = invocation.getArgument(0);
+            String uri = req.uri().toString();
+            if (uri.endsWith("/robots.txt")) return robotsResp;
+            if (uri.endsWith("/sitemap.xml")) return sitemapResp;
+            return mainResp;
+        });
+        return client;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static HttpResponse<String> resp(int status, String body) {
+        HttpResponse<String> r = mock(HttpResponse.class);
+        when(r.statusCode()).thenReturn(status);
+        when(r.body()).thenReturn(body);
+        when(r.headers()).thenReturn(HttpHeaders.of(Map.of(), (a, b) -> true));
+        when(r.version()).thenReturn(HttpClient.Version.HTTP_1_1);
+        return r;
     }
 }

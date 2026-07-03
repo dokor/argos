@@ -165,6 +165,24 @@ class ScorePolicyV2Test {
         assertTrue(rule.tags().contains("security"));
     }
 
+    @Test
+    void robotsTxtShouldBeScoredUnderSeo() {
+        // issue #31 : présence de robots.txt intégrée au score SEO.
+        ScorePolicy.ScoreRule rule = policy.ruleFor("http", "http.seo.robots_txt");
+        assertTrue(rule.scorable());
+        assertEquals(2.0, rule.weight());
+        assertTrue(rule.tags().contains("seo"));
+    }
+
+    @Test
+    void sitemapShouldBeScoredUnderSeo() {
+        // issue #31 : présence du sitemap intégrée au score SEO.
+        ScorePolicy.ScoreRule rule = policy.ruleFor("http", "http.seo.sitemap");
+        assertTrue(rule.scorable());
+        assertEquals(3.0, rule.weight());
+        assertTrue(rule.tags().contains("seo"));
+    }
+
     // ------------------------------------------------------------------ Availability / degraded stubs
 
     @Test
