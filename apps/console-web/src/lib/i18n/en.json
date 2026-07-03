@@ -412,6 +412,8 @@
       "titleRunning": "Analysis in progress…",
       "titleFailed": "Analysis failed",
       "subtitle": "Argos is analysing your site. The report will appear automatically.",
+      "estimate": "Typical analysis: ~20 to 30 seconds.",
+      "retryLink": "Start a new analysis",
       "genericError": "The analysis failed.",
       "connectionError": "Connection error. Retrying…",
       "timeoutError": "The analysis is taking longer than expected. Please try again later.",

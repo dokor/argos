@@ -46,6 +46,25 @@
   line-height: 1.5;
 }
 
+.estimate {
+  font-size: 0.8125rem;
+  color: #64748b;
+  margin: 0.5rem 0 0;
+}
+
+.retryLink {
+  display: inline-block;
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #818cf8;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
 // ── Progress bar ──────────────────────────────────────────────────────────────
 
 .progressBar {

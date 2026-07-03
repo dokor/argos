@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { argosApi, AuditRunStatusResponse, ModuleStatus } from "@/lib/ArgosApi";
 import { createLogger, safeError, maskToken } from "@/lib/logger";
@@ -209,6 +210,12 @@ export default function AuditProgressView({ token }: Props) {
             <p className={s.subtitle}>
               {isBlockingError ? errorMessage : tp.subtitle}
             </p>
+            {/* Estimation de durée pour rassurer pendant l'attente (U1). */}
+            {!isBlockingError && <p className={s.estimate}>{tp.estimate}</p>}
+            {/* Lien de repli en cas d'échec pour relancer une analyse (U1). */}
+            {isBlockingError && (
+              <Link href="/" className={s.retryLink}>{tp.retryLink}</Link>
+            )}
           </div>
         </div>
 
