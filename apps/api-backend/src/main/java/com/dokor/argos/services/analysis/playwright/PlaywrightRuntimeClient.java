@@ -1,8 +1,11 @@
 package com.dokor.argos.services.analysis.playwright;
 
+import com.dokor.argos.logging.ExternalServiceCall;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -13,6 +16,8 @@ import java.util.Map;
 
 @Singleton
 public class PlaywrightRuntimeClient {
+
+    private static final Logger logger = LoggerFactory.getLogger(PlaywrightRuntimeClient.class);
 
     /** URL par défaut du service Playwright. Surchargeable via la variable d'environnement PLAYWRIGHT_SERVICE_URL. */
     private static final String DEFAULT_PLAYWRIGHT_SERVICE_URL = "http://playwright-service:3016";
@@ -39,23 +44,25 @@ public class PlaywrightRuntimeClient {
     }
 
     public RuntimeAnalyzeResponse analyzeRuntime(String url) throws Exception {
-        URI endpoint = URI.create(baseUrl + "/analyze/runtime");
+        return ExternalServiceCall.timed(logger, "playwright", url, () -> {
+            URI endpoint = URI.create(baseUrl + "/analyze/runtime");
 
-        String body = objectMapper.writeValueAsString(Map.of("url", url));
+            String body = objectMapper.writeValueAsString(Map.of("url", url));
 
-        HttpRequest req = HttpRequest.newBuilder(endpoint)
-            .timeout(requestTimeout)
-            .header("content-type", "application/json")
-            .POST(HttpRequest.BodyPublishers.ofString(body))
-            .build();
+            HttpRequest req = HttpRequest.newBuilder(endpoint)
+                .timeout(requestTimeout)
+                .header("content-type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .build();
 
-        HttpResponse<String> res = http.send(req, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> res = http.send(req, HttpResponse.BodyHandlers.ofString());
 
-        if (res.statusCode() < 200 || res.statusCode() >= 300) {
-            throw new IllegalStateException("Playwright service error status=" + res.statusCode() + " body=" + truncate(res.body(), 500));
-        }
+            if (res.statusCode() < 200 || res.statusCode() >= 300) {
+                throw new IllegalStateException("Playwright service error status=" + res.statusCode() + " body=" + truncate(res.body(), 500));
+            }
 
-        return objectMapper.readValue(res.body(), RuntimeAnalyzeResponse.class);
+            return objectMapper.readValue(res.body(), RuntimeAnalyzeResponse.class);
+        });
     }
 
     private static String truncate(String s, int max) {

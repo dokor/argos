@@ -1,9 +1,12 @@
 package com.dokor.argos.services.analysis.lighthouse;
 
+import com.dokor.argos.logging.ExternalServiceCall;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -14,6 +17,8 @@ import java.util.Map;
 
 @Singleton
 public class LighthouseClient {
+
+    private static final Logger logger = LoggerFactory.getLogger(LighthouseClient.class);
 
     /** Timeout par défaut alloué à une analyse Lighthouse (surchargeable via LIGHTHOUSE_TIMEOUT_SECONDS). */
     private static final int DEFAULT_LIGHTHOUSE_TIMEOUT_SECONDS = 240;
@@ -38,22 +43,24 @@ public class LighthouseClient {
     }
 
     public JsonNode analyze(String url) throws Exception {
-        URI endpoint = URI.create(baseUrl + "/analyze");
-        String payload = objectMapper.writeValueAsString(Map.of("url", url));
+        return ExternalServiceCall.timed(logger, "lighthouse", url, () -> {
+            URI endpoint = URI.create(baseUrl + "/analyze");
+            String payload = objectMapper.writeValueAsString(Map.of("url", url));
 
-        HttpRequest req = HttpRequest.newBuilder(endpoint)
-            .timeout(requestTimeout)
-            .header("content-type", "application/json")
-            .POST(HttpRequest.BodyPublishers.ofString(payload))
-            .build();
+            HttpRequest req = HttpRequest.newBuilder(endpoint)
+                .timeout(requestTimeout)
+                .header("content-type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(payload))
+                .build();
 
-        HttpResponse<String> res = http.send(req, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> res = http.send(req, HttpResponse.BodyHandlers.ofString());
 
-        if (res.statusCode() < 200 || res.statusCode() >= 300) {
-            throw new IllegalStateException("Lighthouse service error status=" + res.statusCode() + " body=" + truncate(res.body(), 500));
-        }
+            if (res.statusCode() < 200 || res.statusCode() >= 300) {
+                throw new IllegalStateException("Lighthouse service error status=" + res.statusCode() + " body=" + truncate(res.body(), 500));
+            }
 
-        return objectMapper.readTree(res.body());
+            return objectMapper.readTree(res.body());
+        });
     }
 
     private static String truncate(String s, int max) {

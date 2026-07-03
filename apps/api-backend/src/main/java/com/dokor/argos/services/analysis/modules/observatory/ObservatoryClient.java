@@ -1,9 +1,12 @@
 package com.dokor.argos.services.analysis.modules.observatory;
 
+import com.dokor.argos.logging.ExternalServiceCall;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -13,6 +16,8 @@ import java.time.Duration;
 
 @Singleton
 public class ObservatoryClient {
+
+    private static final Logger logger = LoggerFactory.getLogger(ObservatoryClient.class);
 
     private static final String API_BASE = "https://observatory-api.mdn.mozilla.net/api/v2";
 
@@ -32,22 +37,24 @@ public class ObservatoryClient {
      * Uses POST with empty body (application/x-www-form-urlencoded).
      */
     public JsonNode scan(String hostname) throws Exception {
-        String url = API_BASE + "/scan?host=" + hostname + "&rescan=false";
+        return ExternalServiceCall.timed(logger, "observatory", hostname, () -> {
+            String url = API_BASE + "/scan?host=" + hostname + "&rescan=false";
 
-        HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create(url))
-            .timeout(Duration.ofSeconds(30))
-            .header("User-Agent", "argos-auditor/1.0")
-            .header("Content-Type", "application/x-www-form-urlencoded")
-            .POST(HttpRequest.BodyPublishers.noBody())
-            .build();
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .timeout(Duration.ofSeconds(30))
+                .header("User-Agent", "argos-auditor/1.0")
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .POST(HttpRequest.BodyPublishers.noBody())
+                .build();
 
-        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
-        if (response.statusCode() < 200 || response.statusCode() >= 300) {
-            throw new RuntimeException("Observatory API returned HTTP " + response.statusCode() + " for host=" + hostname);
-        }
+            if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                throw new RuntimeException("Observatory API returned HTTP " + response.statusCode() + " for host=" + hostname);
+            }
 
-        return objectMapper.readTree(response.body());
+            return objectMapper.readTree(response.body());
+        });
     }
 }
