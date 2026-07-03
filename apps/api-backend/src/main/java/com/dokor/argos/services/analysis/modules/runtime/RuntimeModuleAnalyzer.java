@@ -8,6 +8,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 
+import java.net.http.HttpTimeoutException;
 import java.util.*;
 
 @Singleton
@@ -35,7 +36,13 @@ public class RuntimeModuleAnalyzer implements AuditModuleAnalyzer {
         try {
             r = client.analyzeRuntime(url);
         } catch (Exception e) {
-            // module "soft fail" : on ne casse pas tout l’audit
+            // module "soft fail" : on ne casse pas tout l'audit
+            boolean timeout = e instanceof HttpTimeoutException;
+            String reason = timeout ? "TIMEOUT" : "FAILED";
+            String errorMsg = String.valueOf(e.getMessage());
+            String message = timeout
+                ? "Runtime (Playwright) indisponible : délai d'attente dépassé (timeout)."
+                : "Impossible de collecter les métriques runtime (Playwright).";
             List<AuditCheckResult> checks = List.of(AuditCheckResult.of(
                 "runtime.collect",
                 "Runtime collection (Playwright)",
@@ -43,16 +50,16 @@ public class RuntimeModuleAnalyzer implements AuditModuleAnalyzer {
                 AuditSeverity.MEDIUM,
                 false, 0.0, List.of("runtime"),
                 false,
-                Map.of("error", e.getMessage()),
-                "Impossible de collecter les métriques runtime (Playwright).",
+                Map.of("error", errorMsg, "reason", reason),
+                message,
                 "Vérifier que playwright-service est up et joignable depuis api-backend."
             ));
 
             return new AuditModuleResult(
                 moduleId(),
                 "Runtime behavior",
-                "runtime=unavailable",
-                Map.of("available", false, "error", e.getMessage()),
+                "runtime=unavailable(" + reason.toLowerCase(Locale.ROOT) + ")",
+                Map.of("available", false, "error", errorMsg, "reason", reason),
                 checks
             );
         }

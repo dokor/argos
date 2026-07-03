@@ -15,13 +15,14 @@ import java.util.Map;
 @Singleton
 public class LighthouseClient {
 
-    /** Timeout alloué à une analyse Lighthouse (le service peut être lent sur les pages complexes). */
-    private static final int TIMEOUT_LIGHTHOUSE_REQUEST_SECONDS = 240;
+    /** Timeout par défaut alloué à une analyse Lighthouse (surchargeable via LIGHTHOUSE_TIMEOUT_SECONDS). */
+    private static final int DEFAULT_LIGHTHOUSE_TIMEOUT_SECONDS = 240;
     private static final String DEFAULT_URL_LIGHTHOUSE_SERVICE = "http://lighthouse-service:3017";
 
     private final HttpClient http;
     private final ObjectMapper objectMapper;
     private final String baseUrl;
+    private final Duration requestTimeout;
 
     @Inject
     public LighthouseClient(ObjectMapper objectMapper) {
@@ -32,6 +33,8 @@ public class LighthouseClient {
 
         // ex: http://lighthouse-service:3017
         this.baseUrl = System.getenv().getOrDefault("LIGHTHOUSE_SERVICE_URL", DEFAULT_URL_LIGHTHOUSE_SERVICE);
+        this.requestTimeout = Duration.ofSeconds(
+            parseTimeoutSeconds(System.getenv("LIGHTHOUSE_TIMEOUT_SECONDS"), DEFAULT_LIGHTHOUSE_TIMEOUT_SECONDS));
     }
 
     public JsonNode analyze(String url) throws Exception {
@@ -39,7 +42,7 @@ public class LighthouseClient {
         String payload = objectMapper.writeValueAsString(Map.of("url", url));
 
         HttpRequest req = HttpRequest.newBuilder(endpoint)
-            .timeout(Duration.ofSeconds(TIMEOUT_LIGHTHOUSE_REQUEST_SECONDS))
+            .timeout(requestTimeout)
             .header("content-type", "application/json")
             .POST(HttpRequest.BodyPublishers.ofString(payload))
             .build();
@@ -56,5 +59,16 @@ public class LighthouseClient {
     private static String truncate(String s, int max) {
         if (s == null) return null;
         return s.length() <= max ? s : s.substring(0, max) + "…";
+    }
+
+    /** Parse un timeout (secondes) depuis une variable d'env ; retombe sur la valeur par défaut si absent/invalide. */
+    private static int parseTimeoutSeconds(String value, int defaultSeconds) {
+        if (value == null || value.isBlank()) return defaultSeconds;
+        try {
+            int parsed = Integer.parseInt(value.trim());
+            return parsed > 0 ? parsed : defaultSeconds;
+        } catch (NumberFormatException e) {
+            return defaultSeconds;
+        }
     }
 }
