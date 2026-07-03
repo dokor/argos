@@ -84,7 +84,8 @@ public record ReportDto(
 
     public record Issue(
         String id,
-        String categoryKey,
+        String categoryKey,        // catégorie principale (rétro-compat)
+        List<String> categoryKeys, // toutes les catégories métier auxquelles le point appartient
         String module,
         IssueSeverity severity, // critical|important|info
         String title,
