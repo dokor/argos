@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { useLang } from "@/lib/i18n/LangContext";
 import { useIsAdmin } from "@/lib/useIsAdmin";
+import { createLogger } from "@/lib/logger";
 import ArgosIcon from "@/components/ArgosIcon";
 import LangToggle from "@/components/LangToggle";
 import s from "./not-found.module.scss";
@@ -11,6 +13,15 @@ export default function NotFound() {
   const { t } = useLang();
   const nf = t.notFound;
   const isAdmin = useIsAdmin();
+
+  const loggerRef = useRef(createLogger("app", { route: "/not-found" }));
+  useEffect(() => {
+    // Journalise les accès 404 (liens morts, parcours cassés) — issue #40.
+    loggerRef.current.warn("page_not_found", {
+      action: "render_not_found",
+      details: { referrer: typeof document !== "undefined" ? document.referrer || null : null },
+    });
+  }, []);
 
   return (
     <div className={s.page}>
