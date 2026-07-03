@@ -269,6 +269,13 @@
       "cta": "Analyze my site →"
     }
   },
+  "notFound": {
+    "badge": "Error 404",
+    "title": "This page can't be found",
+    "sub": "The page you're looking for doesn't exist, has been moved, or its link has expired. Head back home to run a new analysis.",
+    "homeCta": "Analyze a site →",
+    "faqCta": "Read the FAQ"
+  },
   "dashboard": {
     "title": "Argos – Console",
     "newAudit": "New audit",

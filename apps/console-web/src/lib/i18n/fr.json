@@ -269,6 +269,13 @@
       "cta": "Analyser mon site →"
     }
   },
+  "notFound": {
+    "badge": "Erreur 404",
+    "title": "Cette page est introuvable",
+    "sub": "La page que vous cherchez n'existe pas, a été déplacée, ou son lien a expiré. Revenez à l'accueil pour lancer une nouvelle analyse.",
+    "homeCta": "Analyser un site →",
+    "faqCta": "Consulter la FAQ"
+  },
   "dashboard": {
     "title": "Argos – Console",
     "newAudit": "Nouvel audit",
