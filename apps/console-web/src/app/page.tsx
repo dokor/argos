@@ -15,6 +15,10 @@ import s from "./page.module.scss";
 
 const POLL_INTERVAL_MS = 2500;
 const MAX_POLL = 48; // ~2 min
+// Délai maximum d'attente sur la landing avant de rediriger vers la page
+// rapport (issue #105) : on ne fait pas patienter l'utilisateur ici, la page
+// /report/{token} affiche la progression live via AuditProgressView.
+const MAX_WAIT_MS = 5000; // 5 s
 
 // ─── Hero audit form ──────────────────────────────────────────────────────────
 
@@ -45,6 +49,7 @@ function HeroAuditForm({
   const [errMsg, setErrMsg] = useState("");
   const [stepIdx, setStepIdx] = useState(0);
   const runIdRef = useRef<string | number | null>(null);
+  const reportTokenRef = useRef<string | null>(null);
   const pollCountRef = useRef(0);
   const pollErrorCountRef = useRef(0);
   const loggerRef = useRef(
@@ -58,8 +63,31 @@ function HeroAuditForm({
   const h = isHero ? 52 : 46;
   const fs = isHero ? 16 : 15;
 
+  // Redirige vers la page rapport (une seule fois) et bascule en phase
+  // "redirecting". La page /report/{token} prend le relais pour la progression.
+  const redirectToReport = React.useCallback(
+    (reportToken: string, reason: "completed" | "timeout", polls: number) => {
+      setPhase("redirecting");
+      loggerRef.current.info("landing_audit_redirect", {
+        action: "redirect_to_report",
+        details: { reason, reportToken, runId: runIdRef.current, polls },
+      });
+      router.push(`/report/${reportToken}`);
+    },
+    [router]
+  );
+
   useEffect(() => {
     if (phase !== "polling") return;
+
+    // Repli : au plus tard au bout de 5 s, on redirige vers la page rapport
+    // même si l'analyse est encore en cours (issue #105).
+    const redirectTimer = setTimeout(() => {
+      if (reportTokenRef.current) {
+        clearInterval(id);
+        redirectToReport(reportTokenRef.current, "timeout", pollCountRef.current);
+      }
+    }, MAX_WAIT_MS);
 
     const id = setInterval(async () => {
       pollCountRef.current++;
@@ -86,18 +114,11 @@ function HeroAuditForm({
 
         if (run.status === "COMPLETED" && run.reportToken) {
           clearInterval(id);
-          setPhase("redirecting");
-          loggerRef.current.info("landing_audit_completed", {
-            action: "redirect_to_report",
-            details: {
-              polls: pollCountRef.current,
-              reportToken: run.reportToken,
-              runId: run.runId,
-            },
-          });
-          router.push(`/report/${run.reportToken}`);
+          clearTimeout(redirectTimer);
+          redirectToReport(run.reportToken, "completed", pollCountRef.current);
         } else if (run.status === "FAILED") {
           clearInterval(id);
+          clearTimeout(redirectTimer);
           setPhase("error");
           setErrMsg(t.errorFailed);
           loggerRef.current.warn("landing_audit_failed", {
@@ -123,8 +144,11 @@ function HeroAuditForm({
       }
     }, POLL_INTERVAL_MS);
 
-    return () => clearInterval(id);
-  }, [phase, router, t]);
+    return () => {
+      clearInterval(id);
+      clearTimeout(redirectTimer);
+    };
+  }, [phase, router, t, redirectToReport]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -148,6 +172,7 @@ function HeroAuditForm({
     try {
       const res = await argosApi.createAudit({ url: normalized });
       runIdRef.current = res.runId;
+      reportTokenRef.current = res.reportToken ?? null;
       pollCountRef.current = 0;
       pollErrorCountRef.current = 0;
       setStepIdx(0);
