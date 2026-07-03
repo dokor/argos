@@ -77,6 +77,7 @@ function LoginForm() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Mot de passe"
+          aria-label="Mot de passe"
           autoFocus
           required
           className={s.input}

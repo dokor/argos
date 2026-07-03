@@ -26,6 +26,7 @@ type AuditPhase = "idle" | "submitting" | "polling" | "redirecting" | "error";
 
 type AuditFormT = {
   inputPlaceholder: string;
+  inputAriaLabel: string;
   cta: string;
   ctaLoading: string;
   hint: string;
@@ -223,6 +224,7 @@ function HeroAuditForm({
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           placeholder={t.inputPlaceholder}
+          aria-label={t.inputAriaLabel}
           disabled={phase === "submitting"}
           className={s.input}
           style={{ height: h, fontSize: fs }}
@@ -384,6 +386,7 @@ export default function LandingPage() {
 
   const formT: AuditFormT = {
     inputPlaceholder: tl.hero.inputPlaceholder,
+    inputAriaLabel: tl.hero.inputAriaLabel,
     cta: tl.hero.cta,
     ctaLoading: tl.hero.ctaLoading,
     hint: tl.hero.hint,
