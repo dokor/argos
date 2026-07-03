@@ -11,13 +11,15 @@ import java.util.Map;
 /**
  * Un check = une unité atomique exploitable pour :
  * - afficher (PDF/Front)
- * - scorer (pondération par key + status + severity)
+ * - scorer (poids déterminé par la key via {@code ScorePolicy}, pondéré par le status)
  * <p>
  * Règles importantes :
  * - key doit être STABLE dans le temps (ne pas la renommer après publication)
  * Exemple : "http.status_code", "html.title.present"
- * - status est standardisé (PASS/WARN/FAIL/INFO)
- * - severity permet de pondérer (LOW/MEDIUM/HIGH)
+ * - status est standardisé (PASS/WARN/FAIL/INFO) et pilote le ratio de score
+ *   (PASS=1, WARN=0.5, FAIL/INFO=0)
+ * - severity (LOW/MEDIUM/HIGH) sert à l'AFFICHAGE et à la PRIORISATION des issues,
+ *   PAS au calcul du poids (celui-ci vient exclusivement de la key via ScorePolicy)
  * <p>
  * value + evidence doivent rester simples (JSON sérialisable).
  * sources : modules qui ont contribué à ce check (rempli par CheckMergerService / annotateWithSource).
