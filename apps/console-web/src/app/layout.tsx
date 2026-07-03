@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { LangProvider } from "@/lib/i18n/LangContext";
+import ClientErrorLogger from "@/components/ClientErrorLogger";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -114,6 +115,7 @@ export default function RootLayout({
         />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <ClientErrorLogger />
         <LangProvider>{children}</LangProvider>
       </body>
     </html>
