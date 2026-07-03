@@ -16,6 +16,7 @@
       "sub": "HTTP, SEO, performance, stack - Argos analyse tout et vous rend un rapport priorisé avec les actions concrètes à mener en premier.",
       "audience": "Pour les devs, les équipes growth et les agences.",
       "inputPlaceholder": "https://monsite.com",
+      "inputAriaLabel": "URL du site à analyser",
       "cta": "Analyser maintenant →",
       "ctaLoading": "Soumission…",
       "hint": "Gratuit · Sans compte · Rapport privé, non indexé",

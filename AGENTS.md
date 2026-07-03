@@ -226,6 +226,15 @@ Le one-liner du rapport est retourné comme clé (`"high"` | `"good"` | `"fair"`
 - Ne jamais utiliser `localStorage` (non supporté dans l'environnement de rendu)
 - Les rewrites `afterFiles` sont contournés par les Route Handlers Next.js — utiliser un Route Handler pour intercepter avant proxy
 
+### Accessibilité (a11y)
+- Tout champ de saisie doit avoir un **nom accessible** : `<label htmlFor>` visible, ou à défaut `aria-label` (un `placeholder` ne suffit pas).
+- Tout élément interactif **icône seule** (bouton/lien sans texte) doit porter un `aria-label`.
+- Les icônes/décorations purement visuelles portent `aria-hidden="true"`.
+- Les images de contenu ont un `alt` pertinent ; `alt=""` pour les images décoratives.
+- Ne pas retirer l'outline de focus sans fournir un style de focus visible équivalent (navigation clavier).
+- Respecter la hiérarchie des titres (un seul `<h1>` par page, pas de saut de niveau).
+- Viser un contraste texte/fond suffisant (WCAG AA) — attention aux gris clairs sur blanc.
+
 ### Sécurité
 - Toute URL soumise par l'utilisateur passe par la validation SSRF du BFF **et** du backend Java
 - Les tokens de rapport sont générés à la création du run (pré-génération) — ne pas les régénérer à la publication

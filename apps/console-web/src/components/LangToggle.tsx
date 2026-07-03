@@ -1,5 +1,6 @@
 "use client";
 
+import { Fragment } from "react";
 import { useLang, Lang } from "@/lib/i18n/LangContext";
 import s from "./LangToggle.module.scss";
 
@@ -18,17 +19,18 @@ export default function LangToggle({ className, variant = "light" }: Props) {
       aria-label="Language"
     >
       {(["fr", "en"] as Lang[]).map((l, i) => (
-        <>
-          {i === 1 && <span key="sep" className={s.sep} aria-hidden="true" />}
+        <Fragment key={l}>
+          {i === 1 && <span className={s.sep} aria-hidden="true" />}
           <button
-            key={l}
+            type="button"
             onClick={() => setLang(l)}
             className={`${s.option} ${lang === l ? s.active : ""}`}
             aria-pressed={lang === l}
+            aria-label={l === "fr" ? "Français" : "English"}
           >
             {l.toUpperCase()}
           </button>
-        </>
+        </Fragment>
       ))}
     </div>
   );
