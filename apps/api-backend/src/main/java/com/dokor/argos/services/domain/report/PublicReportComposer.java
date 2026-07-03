@@ -29,6 +29,7 @@ public class PublicReportComposer {
 
         AuditScoreReport score = internalReport.score();
         int global100 = score != null ? toScore100(score.global().ratio()) : 0;
+        Integer completeness = parseIntOrNull(internalReport.meta(), "completeness");
 
         List<ReportDto.CategoryScore> byCategory = (score == null ? List.<ScoreAggregate>of() : score.byTag()).stream()
             .filter(agg -> isBusinessTag(agg.id()))
@@ -98,7 +99,7 @@ public class PublicReportComposer {
             domain,
             url,
             new ReportDto.Site(siteTitle, null),
-            new ReportDto.Scores(global100, byCategoryWithCounts),
+            new ReportDto.Scores(global100, completeness, byCategoryWithCounts),
             new ReportDto.Summary(oneLiner, priorities),
             issues,
             tech
@@ -179,6 +180,18 @@ public class PublicReportComposer {
             };
         }
         return ReportDto.IssueSeverity.info;
+    }
+
+    /** Lit une valeur entière depuis la map meta ({@code null} si absente/illisible). */
+    private static Integer parseIntOrNull(Map<String, String> meta, String key) {
+        if (meta == null) return null;
+        String value = meta.get(key);
+        if (value == null || value.isBlank()) return null;
+        try {
+            return Integer.parseInt(value.trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     private static int toScore100(double ratio) {

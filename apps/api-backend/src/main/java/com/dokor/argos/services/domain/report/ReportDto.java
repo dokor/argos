@@ -56,6 +56,7 @@ public record ReportDto(
 
     public record Scores(
         int global, // 0..100
+        Integer completeness, // 0..100 : part des modules évalués (null si inconnu). Voir issue #101.
         List<CategoryScore> byCategory
     ) {
     }

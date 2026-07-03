@@ -393,7 +393,9 @@
       "globalLabel": "Global",
       "globalTooltip": "Aggregated global score (0–100) based on detected issues.",
       "issueCount": "issue(s)",
-      "seeDetail": "See details →"
+      "seeDetail": "See details →",
+      "partial": "Partial analysis · {n}% coverage",
+      "partialTooltip": "One or more modules could not be evaluated (service temporarily unavailable). The score covers the modules actually analyzed — the site is not penalized."
     },
     "issuesByCategory": {
       "title": "Details by category",

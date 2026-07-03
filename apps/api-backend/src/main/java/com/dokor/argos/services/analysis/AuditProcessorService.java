@@ -189,8 +189,14 @@ public class AuditProcessorService {
 
             boolean degraded = moduleStatuses.values().stream()
                 .anyMatch(st -> !"COMPLETED".equals(st));
+            int modulesTotal = moduleStatuses.size();
+            int modulesEvaluated = (int) moduleStatuses.values().stream()
+                .filter("COMPLETED"::equals)
+                .count();
+            int completeness = completenessPercent(modulesEvaluated, modulesTotal);
             if (degraded) {
-                logger.warn("Run degraded runId={} moduleStatuses={}", runId, moduleStatuses);
+                logger.warn("Run degraded runId={} completeness={}% moduleStatuses={}",
+                    runId, completeness, moduleStatuses);
             }
 
             // Merge cross-module duplicate checks
@@ -209,6 +215,12 @@ public class AuditProcessorService {
             meta.put("httpStatusCode", String.valueOf(context.httpStatusCode()));
             meta.put("auditDurationMs", String.valueOf(Instant.now().toEpochMilli() - context.startedAt().toEpochMilli()));
             meta.put("degraded", String.valueOf(degraded));
+            // Complétude : part des modules réellement évalués (issue #101). Permet de
+            // situer un score partiel sans altérer le ratio ni pénaliser le site pour
+            // une indisponibilité côté Argos.
+            meta.put("completeness", String.valueOf(completeness));
+            meta.put("modulesEvaluated", String.valueOf(modulesEvaluated));
+            meta.put("modulesTotal", String.valueOf(modulesTotal));
             meta.put("moduleStatuses", objectMapper.writeValueAsString(moduleStatuses));
 
             AuditReportJson report = new AuditReportJson(
@@ -253,6 +265,16 @@ public class AuditProcessorService {
             .map(c -> c.sources().isEmpty() ? c.withSources(List.of(module.id())) : c)
             .toList();
         return new AuditModuleResult(module.id(), module.title(), module.summary(), module.data(), annotated);
+    }
+
+    /**
+     * Complétude d'un audit (0..100) : proportion de modules réellement évalués
+     * (statut COMPLETED) sur le total prévu. Un audit sans module renvoie 100
+     * (rien à évaluer, pas de partialité). Voir issue #101.
+     */
+    static int completenessPercent(int evaluated, int total) {
+        if (total <= 0) return 100;
+        return (int) Math.round(100.0 * evaluated / total);
     }
 
     @FunctionalInterface

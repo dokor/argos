@@ -30,6 +30,14 @@
   margin: 0;
 }
 
+.partialNote {
+  margin: t.$space-2 0 0;
+  font-size: t.$text-sm;
+  font-weight: 600;
+  color: t.$color-amber;
+  cursor: help;
+}
+
 .globalChip {
   display: flex;
   align-items: center;
