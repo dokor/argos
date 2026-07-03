@@ -22,6 +22,7 @@ export default function ScoreGrid({
 }) {
   const { t } = useLang();
   const ts = t.report.scoreGrid;
+  const catInfo = t.report.categoryInfo as Record<string, string>;
   const cats = [...(categories || [])].sort((a, b) => a.score - b.score);
   const global = clamp(globalScore);
 
@@ -54,6 +55,8 @@ export default function ScoreGrid({
                 </div>
                 <span className={s.scoreValue} style={{ color }}>{sc}</span>
               </div>
+
+              <p className={s.catDesc}>{catInfo[c.key] ?? catInfo.fallback}</p>
 
               <div className={s.track}>
                 <div className={s.fill} style={{ width: `${sc}%`, background: color }} />

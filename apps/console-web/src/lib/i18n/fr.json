@@ -376,6 +376,17 @@
         "opportunity": "Opportunité"
       }
     },
+    "categoryInfo": {
+      "fallback": "Ce que cette catégorie mesure et son impact sur la qualité de votre site.",
+      "security": "Sécurité HTTP : en-têtes de protection (HSTS, CSP…), exposition d'informations et vulnérabilités courantes. Un bon score réduit les risques d'attaque (XSS, clickjacking).",
+      "ssl": "Certificat et chiffrement TLS/HTTPS : versions de protocole supportées et robustesse de la configuration. Protège la confidentialité des échanges.",
+      "observatory": "Analyse Mozilla Observatory : en-têtes de sécurité recommandés et politique de sécurité du contenu (CSP). Reflète les bonnes pratiques de durcissement.",
+      "seo": "Référencement naturel : balises meta, structure des titres et indexabilité. Un bon score améliore la visibilité sur les moteurs de recherche.",
+      "a11y": "Accessibilité : capacité du site à être utilisé par tous, y compris avec des technologies d'assistance (lecteurs d'écran, navigation clavier).",
+      "performance": "Rapidité de chargement et fluidité perçue (Core Web Vitals, poids des ressources). Impacte directement l'expérience utilisateur et le SEO.",
+      "runtime": "Comportement dans un navigateur réel : erreurs console, requêtes échouées et métriques de rendu (LCP, FCP). Révèle les problèmes visibles côté visiteur.",
+      "lighthouse": "Scores Google Lighthouse (performance, accessibilité, bonnes pratiques, SEO) mesurés sur un chargement réel de la page."
+    },
     "scoreGrid": {
       "title": "Scores par catégorie",
       "desc": "Vue synthétique pour prioriser. Clique sur une catégorie pour aller au détail.",

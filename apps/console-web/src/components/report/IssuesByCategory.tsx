@@ -45,6 +45,7 @@ type Filter = "all" | SevKey;
 export default function IssuesByCategory({ report }: { report: Report }) {
   const { t } = useLang();
   const ti = t.report.issuesByCategory;
+  const catInfo = t.report.categoryInfo as Record<string, string>;
   const [filter, setFilter] = React.useState<Filter>("all");
 
   const categories: CategoryScore[] = report.scores.byCategory || [];
@@ -95,6 +96,7 @@ export default function IssuesByCategory({ report }: { report: Report }) {
             <div className={s.catHeader}>
               <div className={s.catMeta}>
                 <p className={s.catLabel}>{cat.label}</p>
+                <p className={s.catDesc}>{catInfo[cat.key] ?? catInfo.fallback}</p>
                 <p className={s.catInfo}>
                   {issues.length} {ti.issueCount}
                 </p>
