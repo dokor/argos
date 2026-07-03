@@ -117,6 +117,28 @@ public class AuditDao extends CrudDaoQuerydsl<Audit> {
 
 
     /**
+     * Historique des runs d'un audit (une URL), avec leur rapport public éventuel.
+     * <p>
+     * Le Tuple retourné contient dans l'ordre : AuditRun (0), AuditReport (1, nullable).
+     * Les runs sont triés du plus récent au plus ancien.
+     *
+     * @param auditId identifiant de l'audit (URL)
+     * @param limit   nombre max de runs
+     */
+    public List<Tuple> listRunsWithReportByAuditId(long auditId, int limit) {
+        logger.debug("Listing run history auditId={} limit={}", auditId, limit);
+
+        return transactionManager.selectQuery()
+            .select(RUN, AUDIT_REPORT)
+            .from(RUN)
+            .leftJoin(AUDIT_REPORT).on(AUDIT_REPORT.runId.eq(RUN.id))
+            .where(RUN.auditId.eq(auditId))
+            .orderBy(RUN.createdAt.desc(), RUN.id.desc())
+            .limit(limit)
+            .fetch();
+    }
+
+    /**
      * Recherche le rapport public associé à un run.
      *
      * @param runId identifiant du run

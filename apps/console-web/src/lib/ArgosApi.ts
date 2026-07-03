@@ -48,6 +48,17 @@ export type AuditListItem = {
   resultJson?: string | null;
 };
 
+export type AuditHistoryItem = {
+  runId: number;
+  status: "QUEUED" | "RUNNING" | "FAILED" | "COMPLETED";
+  createdAt?: string;
+  finishedAt?: string | null;
+  reportToken?: string | null;
+  reportUrl?: string | null;
+  /** Score global 0..100 issu du rapport publié, ou null si indisponible. */
+  globalScore?: number | null;
+};
+
 // API_BASE is only used server-side (SSR); client calls use relative paths proxied by next.config.ts
 const API_BASE: string = process.env.API_BASE ?? "http://api-backend:8081";
 const apiLogger = createLogger("app", { route: "api-client" });
@@ -120,4 +131,8 @@ export const argosApi = {
   /** Statut d'un run via son reportToken — disponible avant publication du rapport. */
   getReportStatus: (token: string): Promise<AuditRunStatusResponse> =>
     http<AuditRunStatusResponse>(`/api/reports/${token}/status`, { method: "GET" }),
+
+  /** Historique des analyses (runs) d'un audit (une URL), du plus récent au plus ancien. */
+  getAuditHistory: (auditId: number, historyLimit = 20): Promise<AuditHistoryItem[]> =>
+    http<AuditHistoryItem[]>(`/api/audits/${auditId}/history?limit=${historyLimit}`, { method: "GET" }),
 };

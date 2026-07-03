@@ -477,6 +477,15 @@
       "techLabel": "Tech",
       "clearFilters": "Clear filters",
       "noResults": "No results for these filters."
+    },
+    "history": {
+      "toggle": "Analysis history",
+      "loading": "Loading history…",
+      "empty": "No previous analysis for this URL.",
+      "error": "Could not load history.",
+      "current": "current",
+      "view": "View",
+      "scoreNa": "—"
     }
   },
   "langToggle": {

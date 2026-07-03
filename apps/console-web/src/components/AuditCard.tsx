@@ -1,16 +1,40 @@
 "use client";
 
-import React from "react";
+import React, { useCallback, useRef, useState } from "react";
 import Link from "next/link";
 import styles from "./AuditCard.module.scss";
-import { AuditListItem } from "@/lib/ArgosApi";
+import { argosApi, AuditHistoryItem, AuditListItem } from "@/lib/ArgosApi";
 import { AuditReportV2, AuditScoreReport, extractTechs, formatPct, prettyJson } from "@/lib/auditTypes";
+import { createLogger, safeError } from "@/lib/logger";
 import { ScoreChip, ScoreBubbles } from "./ScoreChip";
 import StatusBadge from "./StatusBadge";
 
 function isFinal(status: AuditListItem["status"]) {
   return status === "COMPLETED" || status === "FAILED";
 }
+
+function scoreColor(score: number): string {
+  if (score >= 85) return "#10b981";
+  if (score >= 70) return "#3b82f6";
+  if (score >= 55) return "#f59e0b";
+  return "#ef4444";
+}
+
+function formatDate(iso?: string | null): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? "—" : d.toLocaleString();
+}
+
+type HistoryTranslations = {
+  toggle: string;
+  loading: string;
+  empty: string;
+  error: string;
+  current: string;
+  view: string;
+  scoreNa: string;
+};
 
 type Translations = {
   modulesLabel: string;
@@ -25,6 +49,7 @@ type Translations = {
   copied: string;
   showJson: string;
   status: Record<string, string>;
+  history: HistoryTranslations;
 };
 
 type Props = {
@@ -49,6 +74,34 @@ export default function AuditCard({
   const score: AuditScoreReport | undefined = report?.score;
   const techs = extractTechs(report);
   const reportHref = item.reportToken ? "/report/" + item.reportToken : null;
+
+  const th = tl.history;
+  const [history, setHistory] = useState<AuditHistoryItem[] | null>(null);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState(false);
+  const historyLoadedRef = useRef(false);
+  const loggerRef = useRef(createLogger("dashboard", { route: "/dashboard" }));
+
+  // Chargement paresseux : l'historique n'est récupéré qu'à la première ouverture.
+  const loadHistory = useCallback(async () => {
+    if (historyLoadedRef.current) return;
+    historyLoadedRef.current = true;
+    setHistoryLoading(true);
+    setHistoryError(false);
+    try {
+      const items = await argosApi.getAuditHistory(item.auditId);
+      setHistory(items);
+    } catch (e) {
+      historyLoadedRef.current = false; // autorise un nouvel essai à la prochaine ouverture
+      setHistoryError(true);
+      loggerRef.current.warn("dashboard_audit_history_load_failed", {
+        action: "load_audit_history",
+        details: { auditId: item.auditId, error: safeError(e) },
+      });
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, [item.auditId]);
 
   return (
     <div className={styles.card}>
@@ -162,6 +215,51 @@ export default function AuditCard({
           </>
         )}
       </div>
+
+      {/* Historique des analyses de cette URL (chargé à la demande) */}
+      <details
+        className={styles.historySection}
+        onToggle={(e) => {
+          if ((e.currentTarget as HTMLDetailsElement).open) loadHistory();
+        }}
+      >
+        <summary className={styles.summary}>{th.toggle}</summary>
+
+        {historyLoading && <div className={styles.muted}>{th.loading}</div>}
+        {historyError && <div className={styles.muted}>{th.error}</div>}
+        {!historyLoading && !historyError && history && history.length === 0 && (
+          <div className={styles.muted}>{th.empty}</div>
+        )}
+
+        {!historyLoading && !historyError && history && history.length > 0 && (
+          <ul className={styles.historyList}>
+            {history.map((h) => {
+              const isCurrent = h.runId === item.runId;
+              const href = h.reportToken ? "/report/" + h.reportToken : null;
+              return (
+                <li key={h.runId} className={styles.historyRow}>
+                  <span className={styles.historyDate}>{formatDate(h.createdAt)}</span>
+                  <StatusBadge status={h.status} labels={tl.status} />
+                  {typeof h.globalScore === "number" ? (
+                    <span
+                      className={styles.historyScore}
+                      style={{ color: scoreColor(h.globalScore) }}
+                    >
+                      {h.globalScore}/100
+                    </span>
+                  ) : (
+                    <span className={styles.historyScoreNa}>{th.scoreNa}</span>
+                  )}
+                  {isCurrent && <span className={styles.historyCurrent}>{th.current}</span>}
+                  {href && !isCurrent && (
+                    <Link href={href} className={styles.historyLink}>{th.view}</Link>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </details>
     </div>
   );
 }

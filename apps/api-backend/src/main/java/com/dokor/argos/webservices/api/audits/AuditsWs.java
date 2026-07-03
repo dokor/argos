@@ -3,6 +3,7 @@ package com.dokor.argos.webservices.api.audits;
 import com.coreoz.plume.jersey.security.permission.PublicApi;
 import com.dokor.argos.services.domain.audit.AuditService;
 import com.dokor.argos.services.domain.audit.UrlNormalizer;
+import com.dokor.argos.webservices.api.audits.data.AuditHistoryItemResponse;
 import com.dokor.argos.webservices.api.audits.data.AuditListItemResponse;
 import com.dokor.argos.webservices.api.audits.data.AuditRunStatusResponse;
 import com.dokor.argos.webservices.api.audits.data.CreateAuditRequest;
@@ -117,5 +118,24 @@ public class AuditsWs {
         int safeLimit = Math.max(1, Math.min(limit, 200));
         logger.info("List audits limit={}", safeLimit);
         return auditService.listAudits(safeLimit);
+    }
+
+    /**
+     * Historique des analyses d'un audit (une URL) : runs passés triés du plus
+     * récent au plus ancien, avec lien de rapport et score global.
+     *
+     * @param auditId identifiant de l'audit
+     * @param limit   nombre max de runs (entre 1 et 100, défaut 20)
+     */
+    @GET
+    @Path("/{auditId}/history")
+    @Operation(description = "Historique des analyses (runs) d'un audit")
+    public List<AuditHistoryItemResponse> getAuditHistory(
+        @Parameter(required = true) @PathParam("auditId") Long auditId,
+        @QueryParam("limit") @DefaultValue("20") int limit
+    ) {
+        int safeLimit = Math.max(1, Math.min(limit, 100));
+        logger.info("Get audit history auditId={} limit={}", auditId, safeLimit);
+        return auditService.getAuditHistory(auditId, safeLimit);
     }
 }
