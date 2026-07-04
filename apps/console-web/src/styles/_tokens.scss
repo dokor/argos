@@ -15,6 +15,22 @@ $color-slate-100:  #f1f5f9;
 $color-slate-50:   #f8fafc;
 $color-white:      #ffffff;
 
+// ── Tokens sémantiques théma-aware (issues #81 / #121) ────────────────────────
+// Résolvent vers des variables CSS définies dans globals.css qui basculent en
+// dark (data-theme / prefers-color-scheme). À privilégier pour toute surface
+// « claire » afin qu'elle suive automatiquement le thème. Les surfaces
+// volontairement sombres (hero, footer) gardent la palette brute.
+$bg:            var(--argos-bg);            // fond « pur » (blanc en clair)
+$canvas:        var(--argos-canvas);        // fond de page/app (slate-50 en clair)
+$surface:       var(--argos-surface);       // cartes/panneaux
+$surface-2:     var(--argos-surface-2);     // sous-surface imbriquée
+$text:          var(--argos-text);          // texte principal
+$text-muted:    var(--argos-text-muted);    // texte secondaire
+$text-subtle:   var(--argos-text-subtle);   // texte tertiaire / légendes
+$border:        var(--argos-border);        // bordure standard
+$border-subtle: var(--argos-border-subtle); // bordure discrète
+$header-bg:     var(--argos-header-bg);     // fond d'en-tête translucide (blur)
+
 // ── Colors: brand ─────────────────────────────────────────────────────────────
 $color-indigo:     #6366f1;
 $color-indigo-dim: rgba(99, 102, 241, 0.15);

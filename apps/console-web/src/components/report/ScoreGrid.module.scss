@@ -1,8 +1,8 @@
 @use '../../styles/tokens' as t;
 
 .section {
-  background: t.$color-white;
-  border: 1px solid t.$color-slate-200;
+  background: t.$surface;
+  border: 1px solid t.$border;
   border-radius: t.$radius-2xl;
   padding: t.$space-6;
   box-shadow: t.$shadow-sm;
@@ -22,11 +22,11 @@
   font-size: t.$text-2xl;
   font-weight: 700;
   margin: 0 0 t.$space-1;
-  color: t.$color-navy;
+  color: t.$text;
 }
 .sectionDesc {
   font-size: t.$text-base;
-  color: t.$color-slate-500;
+  color: t.$text-muted;
   margin: 0;
 }
 
@@ -42,11 +42,11 @@
   display: flex;
   align-items: center;
   gap: t.$space-2;
-  border: 1px solid t.$color-slate-200;
+  border: 1px solid t.$border;
   border-radius: t.$radius-pill;
   padding: 6px 14px;
   font-size: t.$text-base;
-  color: t.$color-slate-600;
+  color: t.$text-muted;
   font-weight: 600;
   white-space: nowrap;
 
@@ -63,17 +63,17 @@
 }
 
 .card {
-  border: 1px solid t.$color-slate-100;
+  border: 1px solid t.$border-subtle;
   border-radius: t.$radius-xl;
   padding: t.$space-5;
-  background: t.$color-slate-50;
+  background: t.$surface-2;
   text-decoration: none;
   display: block;
   transition: box-shadow 0.15s, border-color 0.15s;
 
   &:hover {
     box-shadow: t.$shadow-md;
-    border-color: t.$color-slate-200;
+    border-color: t.$border;
   }
 }
 
@@ -88,13 +88,13 @@
 .catLabel {
   font-size: t.$text-lg;
   font-weight: 600;
-  color: t.$color-navy;
+  color: t.$text;
   margin: 0;
 }
 
 .catIssues {
   font-size: t.$text-xs;
-  color: t.$color-slate-400;
+  color: t.$text-subtle;
   margin-top: 2px;
 }
 
@@ -109,13 +109,13 @@
 .catDesc {
   font-size: t.$text-xs;
   line-height: 1.45;
-  color: t.$color-slate-400;
+  color: t.$text-subtle;
   margin: 0 0 t.$space-4;
 }
 
 .track {
   height: 6px;
-  background: t.$color-slate-200;
+  background: t.$border;
   border-radius: 999px;
   overflow: hidden;
   margin-bottom: t.$space-3;
@@ -129,6 +129,6 @@
 
 .detailLink {
   font-size: t.$text-sm;
-  color: t.$color-slate-400;
+  color: t.$text-subtle;
   font-weight: 500;
 }

@@ -1,8 +1,8 @@
 @use '../../styles/tokens' as t;
 
 .section {
-  background: t.$color-white;
-  border: 1px solid t.$color-slate-200;
+  background: t.$surface;
+  border: 1px solid t.$border;
   border-radius: t.$radius-2xl;
   padding: t.$space-6;
   box-shadow: t.$shadow-sm;
@@ -16,12 +16,12 @@
   font-size: t.$text-2xl;
   font-weight: 700;
   margin: 0 0 t.$space-1;
-  color: t.$color-navy;
+  color: t.$text;
 }
 
 .sectionDesc {
   font-size: t.$text-base;
-  color: t.$color-slate-500;
+  color: t.$text-muted;
   margin: 0;
 }
 
@@ -32,7 +32,7 @@
 }
 
 .card {
-  border: 1px solid t.$color-slate-200;
+  border: 1px solid t.$border;
   border-radius: t.$radius-xl;
   padding: t.$space-5;
   display: flex;
@@ -40,7 +40,7 @@
   gap: t.$space-3;
   position: relative;
   overflow: hidden;
-  background: t.$color-white;
+  background: t.$surface;
 
   // Left accent border (color set via inline style)
   &::before {
@@ -73,29 +73,29 @@
 .effortBadge {
   font-size: t.$text-xs;
   font-weight: 600;
-  border: 1px solid t.$color-slate-200;
+  border: 1px solid t.$border;
   border-radius: t.$radius-pill;
   padding: 2px 9px;
-  color: t.$color-slate-500;
+  color: t.$text-muted;
 }
 
 .cardTitle {
   font-size: t.$text-lg;
   font-weight: 600;
-  color: t.$color-navy;
+  color: t.$text;
   margin: 0;
   line-height: 1.4;
 }
 
 .cardImpact {
   font-size: t.$text-base;
-  color: t.$color-slate-500;
+  color: t.$text-muted;
   margin: 0;
   line-height: 1.6;
 }
 
 .empty {
   font-size: t.$text-base;
-  color: t.$color-slate-400;
+  color: t.$text-subtle;
   padding: t.$space-4 0;
 }
