@@ -91,4 +91,30 @@ class HtmlModuleAnalyzerTest {
 
         assertTrue(result.checks().stream().anyMatch(c -> c.key().equals("html.anchors.href_coverage") && c.status() == AuditStatus.WARN));
     }
+
+    @Test
+    void shouldPassDoctypeAndCharsetWhenPresent() {
+        String html = "<!doctype html><html lang=\"fr\"><head><meta charset=\"utf-8\"><title>T</title></head><body><h1>x</h1></body></html>";
+
+        AuditContext ctx = new AuditContext("http://x", "http://x", 0L)
+            .withHttpResult("http://x", 200, 10, java.util.List.of("http://x"), java.util.Map.of(), html);
+
+        AuditModuleResult result = analyzer.analyze(ctx, LoggerFactory.getLogger("test"));
+
+        assertTrue(result.checks().stream().anyMatch(c -> c.key().equals("html.doctype.html5") && c.status() == AuditStatus.PASS));
+        assertTrue(result.checks().stream().anyMatch(c -> c.key().equals("html.meta.charset.present") && c.status() == AuditStatus.PASS));
+    }
+
+    @Test
+    void shouldWarnWhenDoctypeAndCharsetMissing() {
+        String html = "<html><head><title>T</title></head><body><h1>x</h1></body></html>";
+
+        AuditContext ctx = new AuditContext("http://x", "http://x", 0L)
+            .withHttpResult("http://x", 200, 10, java.util.List.of("http://x"), java.util.Map.of(), html);
+
+        AuditModuleResult result = analyzer.analyze(ctx, LoggerFactory.getLogger("test"));
+
+        assertTrue(result.checks().stream().anyMatch(c -> c.key().equals("html.doctype.html5") && c.status() == AuditStatus.WARN));
+        assertTrue(result.checks().stream().anyMatch(c -> c.key().equals("html.meta.charset.present") && c.status() == AuditStatus.WARN));
+    }
 }
