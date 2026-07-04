@@ -1,0 +1,22 @@
+@use '../styles/tokens' as t;
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: t.$radius-pill;
+  border: 1px solid var(--argos-border);
+  background: transparent;
+  color: var(--argos-text-muted);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+
+  &:hover {
+    color: var(--argos-text);
+    border-color: var(--argos-text-muted);
+  }
+}

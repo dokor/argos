@@ -4,6 +4,7 @@ import React, { useState, useMemo } from "react";
 import AuditForm from "@/components/AuditForm";
 import AuditList from "@/components/AuditList";
 import LangToggle from "@/components/LangToggle";
+import ThemeToggle from "@/components/ThemeToggle";
 import KpiCard from "@/components/KpiCard";
 import { useLang } from "@/lib/i18n/LangContext";
 import { AuditListItem } from "@/lib/ArgosApi";
@@ -58,7 +59,8 @@ export default function DashboardPage() {
             <span className={styles.logoName}>Argos</span>
             <span className={styles.logoBadge}>Console</span>
           </div>
-          <LangToggle />
+          <ThemeToggle />
+            <LangToggle />
         </div>
       </header>
 

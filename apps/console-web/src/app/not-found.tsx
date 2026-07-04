@@ -7,6 +7,7 @@ import { useIsAdmin } from "@/lib/useIsAdmin";
 import { createLogger } from "@/lib/logger";
 import ArgosIcon from "@/components/ArgosIcon";
 import LangToggle from "@/components/LangToggle";
+import ThemeToggle from "@/components/ThemeToggle";
 import s from "./not-found.module.scss";
 
 export default function NotFound() {
@@ -36,6 +37,7 @@ export default function NotFound() {
             <a href="/faq" className={s.navLink}>
               {t.nav.faq}
             </a>
+            <ThemeToggle />
             <LangToggle />
             {isAdmin && (
               <a href="/dashboard" className={s.navCta}>

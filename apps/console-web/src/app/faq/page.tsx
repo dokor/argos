@@ -6,6 +6,7 @@ import { useLang } from "@/lib/i18n/LangContext";
 import { useIsAdmin } from "@/lib/useIsAdmin";
 import ArgosIcon from "@/components/ArgosIcon";
 import LangToggle from "@/components/LangToggle";
+import ThemeToggle from "@/components/ThemeToggle";
 import s from "./page.module.scss";
 
 export default function FaqPage() {
@@ -23,6 +24,7 @@ export default function FaqPage() {
             <span className={s.logoText}>{t.nav.logo}</span>
           </Link>
           <div className={s.navRight}>
+            <ThemeToggle />
             <LangToggle />
             {isAdmin && (
               <a href="/dashboard" className={s.navCta}>

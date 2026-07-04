@@ -7,6 +7,7 @@ import { useAuditSubmit } from "@/lib/useAuditSubmit";
 import { useIsAdmin } from "@/lib/useIsAdmin";
 import ArgosIcon from "@/components/ArgosIcon";
 import LangToggle from "@/components/LangToggle";
+import ThemeToggle from "@/components/ThemeToggle";
 import s from "./page.module.scss";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -284,6 +285,7 @@ export default function LandingPage() {
             <a href="/faq" className={s.navLink}>
               {t.nav.faq}
             </a>
+            <ThemeToggle />
             <LangToggle />
             {isAdmin && (
               <a href="/dashboard" className={s.navCta}>
