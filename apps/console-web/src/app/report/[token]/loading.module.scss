@@ -1,0 +1,33 @@
+// Skeleton de chargement de la route rapport, réécrit en SCSS Modules
+// (retrait de Tailwind/shadcn — issue #124). Tokens --argos-* théma-aware.
+
+.wrapper {
+  margin: 0 auto;
+  width: 100%;
+  max-width: 72rem; // max-w-6xl
+  padding: 2.5rem 1rem; // py-10 px-4
+}
+
+.block {
+  border: 1px solid var(--argos-border);
+  border-radius: 16px; // rounded-2xl
+  background: var(--argos-surface-2); // bg-muted/30
+}
+
+.blockHero {
+  height: 6rem; // h-24
+}
+
+.grid {
+  margin-top: 1.5rem; // mt-6
+  display: grid;
+  gap: 1.5rem; // gap-6
+}
+
+.blockMd {
+  height: 10rem; // h-40
+}
+
+.blockLg {
+  height: 20rem; // h-80
+}

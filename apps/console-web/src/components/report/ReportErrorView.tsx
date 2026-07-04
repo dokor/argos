@@ -3,6 +3,7 @@
 import Link from "next/link";
 import AuditForm from "@/components/AuditForm";
 import { useLang } from "@/lib/i18n/LangContext";
+import s from "./ReportErrorView.module.scss";
 
 export type ReportErrorKind = "notFound" | "failed";
 
@@ -15,8 +16,8 @@ type Props = {
  * (token inconnu/expiré) ou analyse en échec. Propose de relancer
  * gratuitement une analyse via {@link AuditForm}.
  *
- * Stylée avec les utilitaires Tailwind/shadcn (bg-card, text-muted-foreground…)
- * afin de suivre automatiquement le thème clair/sombre.
+ * Stylée en SCSS Modules avec les tokens sémantiques --argos-* (théma-aware
+ * clair/sombre). Cf. #124 (retrait de Tailwind/shadcn).
  */
 export default function ReportErrorView({ kind }: Props) {
   const { t } = useLang();
@@ -25,22 +26,19 @@ export default function ReportErrorView({ kind }: Props) {
   const icon = kind === "failed" ? "⚠️" : "🔍";
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col items-center px-4 py-16 text-center">
-      <div className="w-full rounded-2xl border bg-card p-8 shadow-sm">
-        <div className="text-4xl" aria-hidden>{icon}</div>
-        <h1 className="mt-4 text-2xl font-semibold text-foreground">{copy.title}</h1>
-        <p className="mt-2 text-sm text-muted-foreground">{copy.description}</p>
+    <div className={s.wrapper}>
+      <div className={s.card}>
+        <div className={s.icon} aria-hidden>{icon}</div>
+        <h1 className={s.title}>{copy.title}</h1>
+        <p className={s.description}>{copy.description}</p>
 
-        <div className="mt-8 border-t pt-6 text-left">
-          <h2 className="text-base font-semibold text-foreground">{tu.rerunTitle}</h2>
-          <p className="mt-1 mb-4 text-sm text-muted-foreground">{tu.rerunHint}</p>
+        <div className={s.rerun}>
+          <h2 className={s.rerunTitle}>{tu.rerunTitle}</h2>
+          <p className={s.rerunHint}>{tu.rerunHint}</p>
           <AuditForm />
         </div>
 
-        <Link
-          href="/"
-          className="mt-6 inline-block rounded-xl border bg-background px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted"
-        >
+        <Link href="/" className={s.backHome}>
           {tu.backHome}
         </Link>
       </div>
