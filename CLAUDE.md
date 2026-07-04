@@ -254,16 +254,16 @@ Jouer les rôles sur le diff. Deux cas possibles :
 
 **11. Notifier — uniquement quand toutes les reviews passent**
 ```bash
-gh issue comment <N> --repo dokor/argos --body "PR #${PR_NUMBER} prête pour review : cc @alelouet"
+gh issue comment <N> --repo dokor/argos --body "PR #${PR_NUMBER} prête pour review : cc @dokor"
 gh issue edit <N> --repo dokor/argos --remove-label "in-progress" --add-label "pr-ready"
-gh pr edit ${PR_NUMBER} --repo dokor/argos --add-assignee "alelouet"
+gh pr edit ${PR_NUMBER} --repo dokor/argos --add-assignee "dokor"
 ```
 
 ---
 
 ## Workflow 3 — Review et merge (manuel)
 
-@alelouet reçoit la notification GitHub (assignation + commentaire), fait la review finale et merge.
+@dokor reçoit la notification GitHub (assignation + commentaire), fait la review finale et merge.
 **Claude Code ne merge jamais sans validation humaine explicite.**
 
 ---
