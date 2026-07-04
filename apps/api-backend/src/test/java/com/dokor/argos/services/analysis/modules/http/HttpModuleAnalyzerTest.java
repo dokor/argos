@@ -279,4 +279,66 @@ class HttpModuleAnalyzerTest {
         when(r.version()).thenReturn(HttpClient.Version.HTTP_1_1);
         return r;
     }
+
+    @SuppressWarnings("unchecked")
+    private static HttpResponse<String> resp(int status, String body, Map<String, List<String>> headers, HttpClient.Version version) {
+        HttpResponse<String> r = mock(HttpResponse.class);
+        when(r.statusCode()).thenReturn(status);
+        when(r.body()).thenReturn(body);
+        when(r.headers()).thenReturn(HttpHeaders.of(headers, (a, b) -> true));
+        when(r.version()).thenReturn(version);
+        return r;
+    }
+
+    // -------------------------
+    // Cookies & HTTP/2 (issue #151)
+    // -------------------------
+
+    @Test
+    void analyze_shouldWarnWhenCookiesLackSecurityFlags() throws Exception {
+        HttpModuleAnalyzer a = new HttpModuleAnalyzer(stubClient(
+            resp(200, "<html></html>", Map.of("set-cookie", List.of("sid=abc; Path=/")), HttpClient.Version.HTTP_2),
+            resp(404, "x"), resp(404, "x")));
+        AuditContext ctx = new AuditContext("https://example.com", "https://example.com", 0L);
+
+        AuditModuleResult result = a.analyze(ctx, LoggerFactory.getLogger("test"));
+
+        assertEquals(AuditStatus.WARN, checkByKey(result, "http.security.cookie_flags").status());
+    }
+
+    @Test
+    void analyze_shouldPassWhenCookiesHaveSecureAndHttpOnly() throws Exception {
+        HttpModuleAnalyzer a = new HttpModuleAnalyzer(stubClient(
+            resp(200, "<html></html>", Map.of("set-cookie", List.of("sid=abc; Secure; HttpOnly")), HttpClient.Version.HTTP_2),
+            resp(404, "x"), resp(404, "x")));
+        AuditContext ctx = new AuditContext("https://example.com", "https://example.com", 0L);
+
+        AuditModuleResult result = a.analyze(ctx, LoggerFactory.getLogger("test"));
+
+        assertEquals(AuditStatus.PASS, checkByKey(result, "http.security.cookie_flags").status());
+    }
+
+    @Test
+    void analyze_shouldWarnHttp2WhenHttpsServedInHttp1() throws Exception {
+        HttpModuleAnalyzer a = new HttpModuleAnalyzer(stubClient(
+            resp(200, "<html></html>", Map.of(), HttpClient.Version.HTTP_1_1),
+            resp(404, "x"), resp(404, "x")));
+        AuditContext ctx = new AuditContext("https://example.com", "https://example.com", 0L);
+
+        AuditModuleResult result = a.analyze(ctx, LoggerFactory.getLogger("test"));
+
+        assertEquals(AuditStatus.WARN, checkByKey(result, "http.protocol.http2").status());
+    }
+
+    @Test
+    void analyze_shouldPassHttp2WhenServedInHttp2() throws Exception {
+        HttpModuleAnalyzer a = new HttpModuleAnalyzer(stubClient(
+            resp(200, "<html></html>", Map.of(), HttpClient.Version.HTTP_2),
+            resp(404, "x"), resp(404, "x")));
+        AuditContext ctx = new AuditContext("https://example.com", "https://example.com", 0L);
+
+        AuditModuleResult result = a.analyze(ctx, LoggerFactory.getLogger("test"));
+
+        assertEquals(AuditStatus.PASS, checkByKey(result, "http.protocol.http2").status());
+    }
 }
