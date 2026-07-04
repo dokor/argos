@@ -135,13 +135,15 @@ export default function AuditProgressView({ token }: Props) {
 
         if (status.status === "FAILED") {
           loggerRef.current.warn("report_progress_failed", {
-            action: "poll_report_status",
+            action: "refresh_report_page",
             details: {
               reportToken: maskToken(token),
               runId: status.runId,
             },
           });
-          setErrorKind("failed");
+          // Le run a échoué : on recharge le server component, qui affichera la
+          // page d'erreur dédiée (issue #63) plutôt que la carte de progression.
+          router.refresh();
           return;
         }
 

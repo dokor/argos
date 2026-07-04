@@ -306,6 +306,19 @@
       "title": "Could not load the report",
       "back": "Back"
     },
+    "unavailable": {
+      "notFound": {
+        "title": "Report not found",
+        "description": "This report doesn't exist, has expired, or the link is incorrect."
+      },
+      "failed": {
+        "title": "The analysis failed",
+        "description": "Something went wrong while analyzing this site. Sorry for the inconvenience."
+      },
+      "rerunTitle": "Run a new analysis, for free",
+      "rerunHint": "Enter a URL to start a new analysis — it's on us.",
+      "backHome": "Back to home"
+    },
     "page": {
       "private": "Private report • Not indexed",
       "tabs": {
