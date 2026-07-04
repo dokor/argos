@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Tests unitaires de {@link ExternalServiceCall} (issue #41) : l'enveloppe de
- * logging ne doit rien changer au contrat — retour transmis, exception propagée —
+ * logging ne doit rien changer au contrat - retour transmis, exception propagée -
  * quelle que soit la cible (y compris null ou contenant des CRLF).
  */
 class ExternalServiceCallTest {

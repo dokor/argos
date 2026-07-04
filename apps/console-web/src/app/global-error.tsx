@@ -13,7 +13,7 @@ import { createLogger, safeError } from "@/lib/logger";
  * element) so the page never depends on anything that may have failed to load.
  *
  * Le thème sombre suit `prefers-color-scheme` (le ThemeProvider / le toggle ne
- * sont pas disponibles ici) — seul signal accessible pour un boundary
+ * sont pas disponibles ici) - seul signal accessible pour un boundary
  * catastrophique. Les couleurs reprennent la palette --argos-* mais en dur,
  * pour rester sans dépendance.
  */

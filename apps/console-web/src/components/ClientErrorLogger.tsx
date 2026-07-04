@@ -7,7 +7,7 @@ import { createLogger, safeError } from "@/lib/logger";
  * Capture globale des erreurs client non gérées (issue #40).
  * <p>
  * Monté une fois dans le layout racine, il journalise via le logger applicatif :
- * - les erreurs JS non capturées (`window` "error") — hors try/catch et hors
+ * - les erreurs JS non capturées (`window` "error") - hors try/catch et hors
  *   error boundaries React,
  * - les rejets de promesses non gérés (`unhandledrejection`).
  * <p>

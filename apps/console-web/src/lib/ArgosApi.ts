@@ -144,7 +144,7 @@ export const argosApi = {
   getRunsByRunId: (runId: string | number): Promise<AuditRunStatusResponse> =>
     http<AuditRunStatusResponse>(`/api/audits/runs/${runId}`, { method: "GET" }),
 
-  /** Statut d'un run via son reportToken — disponible avant publication du rapport. */
+  /** Statut d'un run via son reportToken - disponible avant publication du rapport. */
   getReportStatus: (token: string): Promise<AuditRunStatusResponse> =>
     http<AuditRunStatusResponse>(`/api/reports/${token}/status`, { method: "GET" }),
 

@@ -45,7 +45,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // Valeur initiale "light" côté SSR ; hydratée après montage (SSR-safe, cf. LangContext).
   const [theme, setThemeState] = useState<Theme>("light");
 
-  // Hydrate depuis le choix explicite persisté, sinon la préférence système —
+  // Hydrate depuis le choix explicite persisté, sinon la préférence système -
   // identique au script anti-FOUC, donc pas de flash. setState différé
   // (setTimeout) pour éviter react-hooks/set-state-in-effect (cf. LangContext).
   useEffect(() => {

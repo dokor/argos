@@ -1,7 +1,7 @@
 /**
  * Pure sanitisation helpers for structured logging.
  *
- * No side-effects, no I/O, no environment access — safe to unit-test directly.
+ * No side-effects, no I/O, no environment access - safe to unit-test directly.
  * `logger.ts` depends on this module; nothing else in the app should need to
  * import it directly (use the re-exports from `logger.ts` instead).
  */

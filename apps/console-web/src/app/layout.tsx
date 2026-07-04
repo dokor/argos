@@ -20,7 +20,7 @@ const geistMono = Geist_Mono({
 });
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://argos.lelouet.fr";
-const TITLE = "Argos – Analyseur de site web";
+const TITLE = "Argos - Analyseur de site web";
 const DESCRIPTION =
   "Argos analyse vos headers HTTP, HTML, stack technique et performances. Rapport scoré, privé, sans login.";
 
@@ -59,7 +59,7 @@ export const metadata: Metadata = {
         url: "/og.png",
         width: 1200,
         height: 630,
-        alt: "Argos – Analyseur de site web",
+        alt: "Argos - Analyseur de site web",
       },
     ],
   },

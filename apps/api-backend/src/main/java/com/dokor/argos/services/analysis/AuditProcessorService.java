@@ -148,7 +148,7 @@ public class AuditProcessorService {
 
             // Statut par module : COMPLETED / UNAVAILABLE / TIMEOUT / FAILED.
             // Chaque module est exécuté de façon isolée : un timeout ou une erreur
-            // n'interrompt plus tout l'audit — on poursuit en mode dégradé avec un
+            // n'interrompt plus tout l'audit - on poursuit en mode dégradé avec un
             // rapport partiel. Le détail est exposé dans meta.moduleStatuses / meta.degraded.
             Map<String, String> moduleStatuses = new LinkedHashMap<>();
 
@@ -190,7 +190,7 @@ public class AuditProcessorService {
                 runId, "zap", "OWASP ZAP", moduleStatuses,
                 () -> zapModuleAnalyzer.analyze(ctx, logger));
 
-            // --- Module DOMAIN (tech) — cache 24h partagé entre toutes les pages du domaine ---
+            // --- Module DOMAIN (tech) - cache 24h partagé entre toutes les pages du domaine ---
             AuditModuleResult techModule = runModule(
                 runId, "tech", "Tech stack", moduleStatuses,
                 () -> domainAnalysisService.getOrRunTechAnalysis(ctx, logger));
@@ -328,7 +328,7 @@ public class AuditProcessorService {
                 status = reason != null ? reason.toString() : "UNAVAILABLE";
                 statuses.put(moduleId, status);
                 // Module indisponible (dégradé) : marqué FAILED côté live (le détail
-                // fin — UNAVAILABLE/TIMEOUT — reste dans meta.moduleStatuses du rapport).
+                // fin - UNAVAILABLE/TIMEOUT - reste dans meta.moduleStatuses du rapport).
                 auditRunService.updateModuleStatus(runId, moduleId, "FAILED");
             } else {
                 status = "COMPLETED";

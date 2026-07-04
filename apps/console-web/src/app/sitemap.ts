@@ -9,7 +9,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 1,
-      // Alternate language versions — fr is canonical, en available via toggle
+      // Alternate language versions - fr is canonical, en available via toggle
       alternates: {
         languages: {
           fr: SITE_URL,

@@ -1,4 +1,4 @@
-# Argos — Instructions pour Claude Code
+# Argos - Instructions pour Claude Code
 
 > Pour la documentation technique complète (stack, routes, DB, conventions),
 > lire **AGENTS.md** en priorité. Ce fichier couvre uniquement les workflows IA.
@@ -22,7 +22,7 @@ Rôles : `ux-ui`, `frontend`, `backend`, `qa`, `tech-lead`,
 
 ---
 
-## Workflow 1 — Enrichissement des issues GitHub
+## Workflow 1 - Enrichissement des issues GitHub
 
 **Déclencheur :** "Parcours les issues et améliore leurs descriptions"
 
@@ -68,11 +68,11 @@ e. Mettre à jour l'issue :
 
 ---
 
-## Workflow 2 — Développement d'une issue
+## Workflow 2 - Développement d'une issue
 
 **Déclencheur :** "Travaille sur l'issue <N>" ou "Développe l'issue <N>"
 
-### ⚠️ Gate PO/PM obligatoire — à exécuter AVANT tout développement
+### ⚠️ Gate PO/PM obligatoire - à exécuter AVANT tout développement
 
 **1. Lire l'issue**
 ```bash
@@ -203,12 +203,12 @@ Closes #<N>
 <séquençage + architecture>
 
 ---
-*Généré avec AI Delivery Engine — review humaine requise avant merge.*
+*Généré avec AI Delivery Engine - review humaine requise avant merge.*
 PREOF
 )"
 ```
 
-**10. Review post-PR — Tech Lead + QA sur le diff réel**
+**10. Review post-PR - Tech Lead + QA sur le diff réel**
 
 ```bash
 PR_NUMBER=$(gh pr list --repo dokor/argos --head "feat/issue-<N>-<slug>" --json number --jq '.[0].number')
@@ -218,15 +218,15 @@ gh pr diff ${PR_NUMBER} --repo dokor/argos > /tmp/pr-${PR_NUMBER}-diff.md
 
 # Créer le fichier de contexte pour les reviews
 cat > /tmp/pr-${PR_NUMBER}-review.md << EOF
-# PR #${PR_NUMBER} — Review post-implémentation
-Issue : #<N> — <Titre>
+# PR #${PR_NUMBER} - Review post-implémentation
+Issue : #<N> - <Titre>
 
 ## Diff complet
 $(cat /tmp/pr-${PR_NUMBER}-diff.md)
 EOF
 ```
 
-Générer les reviews sur le diff réel — mêmes rôles que l'étape 7 (toujours tech-lead + qa, plus les rôles domaine) :
+Générer les reviews sur le diff réel - mêmes rôles que l'étape 7 (toujours tech-lead + qa, plus les rôles domaine) :
 ```bash
 npx ade prompt:specialist tech-lead /tmp/pr-${PR_NUMBER}-review.md outputs/
 npx ade prompt:specialist qa /tmp/pr-${PR_NUMBER}-review.md outputs/
@@ -235,9 +235,9 @@ npx ade prompt:specialist qa /tmp/pr-${PR_NUMBER}-review.md outputs/
 
 Jouer les rôles sur le diff. Deux cas possibles :
 
-**Cas A — Aucun point bloquant** : passer à l'étape 11.
+**Cas A - Aucun point bloquant** : passer à l'étape 11.
 
-**Cas B — Des corrections sont nécessaires** :
+**Cas B - Des corrections sont nécessaires** :
 - Corriger le code sur la même branche
 - Relancer les tests :
   ```bash
@@ -252,7 +252,7 @@ Jouer les rôles sur le diff. Deux cas possibles :
 - Retourner à l'étape 10 (re-review du nouveau diff)
 - La PR reste `in-progress` pendant toute cette phase
 
-**11. Notifier — uniquement quand toutes les reviews passent**
+**11. Notifier - uniquement quand toutes les reviews passent**
 ```bash
 gh issue comment <N> --repo dokor/argos --body "PR #${PR_NUMBER} prête pour review : cc @dokor"
 gh issue edit <N> --repo dokor/argos --remove-label "in-progress" --add-label "pr-ready"
@@ -261,7 +261,7 @@ gh pr edit ${PR_NUMBER} --repo dokor/argos --add-assignee "dokor"
 
 ---
 
-## Workflow 3 — Review et merge (manuel)
+## Workflow 3 - Review et merge (manuel)
 
 @dokor reçoit la notification GitHub (assignation + commentaire), fait la review finale et merge.
 **Claude Code ne merge jamais sans validation humaine explicite.**

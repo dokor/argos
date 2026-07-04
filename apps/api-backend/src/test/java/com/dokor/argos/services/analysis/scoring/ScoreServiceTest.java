@@ -96,7 +96,7 @@ class ScoreServiceTest {
     }
 
     // -------------------------
-    // Ratio de score continu (scoreRatio) — anti-falaise Lighthouse (issue #100)
+    // Ratio de score continu (scoreRatio) - anti-falaise Lighthouse (issue #100)
     // -------------------------
 
     @Test

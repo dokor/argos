@@ -47,7 +47,7 @@ public class DomainDao extends CrudDaoQuerydsl<Domain> {
      * <p>
      * Cette méthode n'est pas atomique (pas de INSERT OR IGNORE).
      * En environnement multi-worker, la contrainte unique sur hostname garantit
-     * l'unicité — une éventuelle race condition produira une exception SQL
+     * l'unicité - une éventuelle race condition produira une exception SQL
      * qui sera rattrapée par l'appelant si nécessaire.
      *
      * @param hostname  hostname normalisé (ex: {@code example.com})

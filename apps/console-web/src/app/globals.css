@@ -1,4 +1,4 @@
-/* Styles de base — SCSS Modules est le système de style canonique (issue #124).
+/* Styles de base - SCSS Modules est le système de style canonique (issue #124).
    Tailwind et shadcn/ui ont été retirés ; ce fichier ne contient plus que le
    reset de base et les tokens sémantiques maison (théma-aware). */
 

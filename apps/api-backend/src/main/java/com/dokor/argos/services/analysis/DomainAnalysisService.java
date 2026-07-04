@@ -71,7 +71,7 @@ public class DomainAnalysisService {
         }
 
         // 2. Pas de cache valide → exécuter le module
-        logger.info("Tech analysis cache miss domainId={} — running TechModuleAnalyzer", domainId);
+        logger.info("Tech analysis cache miss domainId={} - running TechModuleAnalyzer", domainId);
         AuditModuleResult result = techModuleAnalyzer.analyze(context, logger);
 
         // 3. Persister (remplace l'ancienne entrée si présente)
@@ -90,7 +90,7 @@ public class DomainAnalysisService {
         } catch (Exception e) {
             // Cache corrompu : on loggue et on laisse l'appelant gérer (il repassera par run)
             DomainAnalysisService.logger.warn(
-                "Failed to deserialize cached tech result domainId={} — will re-run",
+                "Failed to deserialize cached tech result domainId={} - will re-run",
                 entity.getDomainId(), e
             );
             throw new IllegalStateException("Corrupted domain analysis cache for domainId=" + entity.getDomainId(), e);

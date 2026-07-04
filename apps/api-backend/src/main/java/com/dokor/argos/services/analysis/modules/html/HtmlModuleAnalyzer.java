@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
  * <p>
  * Ce module analyse le contenu HTML récupéré par {@link com.dokor.argos.services.analysis.modules.http.HttpModuleAnalyzer}
  * et transmis via l'{@link com.dokor.argos.services.analysis.model.AuditContext}.
- * Il ne refait pas de fetch HTTP — il exploite uniquement le body déjà disponible dans le contexte.
+ * Il ne refait pas de fetch HTTP - il exploite uniquement le body déjà disponible dans le contexte.
  * <p>
  * 👉 Dans l'immédiat, on expose une méthode analyzeHtml(...) utilisée par l'orchestrateur.
  * Et la méthode analyze(...) retourne un module "vide" + warning si l'orchestrateur n'a pas fourni le HTML.

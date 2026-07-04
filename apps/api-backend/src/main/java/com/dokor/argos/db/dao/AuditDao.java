@@ -36,7 +36,7 @@ public class AuditDao extends CrudDaoQuerydsl<Audit> {
     private static final QAudit AUDIT = QAudit.audit;
     private static final QDomain DOMAIN = QDomain.domain;
     private static final QAuditRun RUN = QAuditRun.auditRun;
-    /** Alias séparé pour la sous-requête MAX(id) — évite l'ambiguïté de colonnes. */
+    /** Alias séparé pour la sous-requête MAX(id) - évite l'ambiguïté de colonnes. */
     private static final QAuditRun SUB_RUN = new QAuditRun("subRun");
     private static final QAuditReport AUDIT_REPORT = QAuditReport.auditReport;
 

@@ -1,4 +1,4 @@
-# Argos — Outil d'audit de sites web
+# Argos - Outil d'audit de sites web
 
 ## Type
 
@@ -38,12 +38,12 @@ la persistance des analyses dans le temps, et l'évolution vers une offre SaaS.
 ## Constraints
 
 - Monorepo avec 4 applications : api-backend (Java 21 / Jersey / MariaDB), console-web (Next.js 14), playwright-service (Node.js headless), lighthouse-service (Node.js headless)
-- Déploiement Docker + Traefik sur argos.lelouet.fr — pas de downtime acceptable
+- Déploiement Docker + Traefik sur argos.lelouet.fr - pas de downtime acceptable
 - Les tokens de rapport sont pré-générés à la création du run (ne pas changer ce mécanisme)
 - Toute URL soumise par l'utilisateur doit passer la validation SSRF côté BFF ET backend
 - Les logs ne doivent jamais contenir d'URLs brutes (utiliser sanitizeForLog / sanitizeUrl)
 - Pas de localStorage côté frontend (non supporté dans l'environnement Next.js)
-- Internationalisation FR/EN en place (LangContext + fr.json / en.json) — maintenir la parité
+- Internationalisation FR/EN en place (LangContext + fr.json / en.json) - maintenir la parité
 
 ## Success Criteria
 
@@ -58,4 +58,4 @@ la persistance des analyses dans le temps, et l'évolution vers une offre SaaS.
 - Architecture détaillée dans AGENTS.md (stack, routes, DB schema, conventions)
 - Scoring : ScorePolicyV1 par checkKey puis préfixe ; catégories prioritaires : performance, security, seo, a11y
 - Compteurs ReportHero : source unique = report.issues (pas summary.priorities)
-- Migrations Flyway : V1 à V5 en place — toute nouvelle feature DB nécessite une V6+
+- Migrations Flyway : V1 à V5 en place - toute nouvelle feature DB nécessite une V6+

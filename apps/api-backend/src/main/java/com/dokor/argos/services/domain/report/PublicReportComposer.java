@@ -220,7 +220,7 @@ public class PublicReportComposer {
 
     /**
      * Catégories métier d'un point : toutes les catégories (tags métier) auxquelles le
-     * check contribue — cohérent avec l'agrégation des scores {@code byTag}, où un check
+     * check contribue - cohérent avec l'agrégation des scores {@code byTag}, où un check
      * peut peser dans plusieurs catégories (ex. SSL ⇒ {@code security} + {@code ssl}).
      * <p>
      * Repli sur {@link #pickCategoryKey} si le check n'a aucun tag métier (ex. checks de

@@ -7,7 +7,7 @@
 // PriorityCards et ReportHero, avec des valeurs hex codées en dur.
 //
 // Centraliser ici élimine la duplication et fournit le point d'ancrage sémantique
-// pour un futur passage en tokens CSS / dark mode (cf. #81) — sans changer les
+// pour un futur passage en tokens CSS / dark mode (cf. #81) - sans changer les
 // couleurs actuelles.
 
 /** Couleur d'un score 0..100, en 4 bandes (excellent / bon / moyen / faible). */

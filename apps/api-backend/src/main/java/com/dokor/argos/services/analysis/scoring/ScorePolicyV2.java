@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 
 /**
- * Politique de scoring v2 — fiabilisation des indicateurs (issue #18).
+ * Politique de scoring v2 - fiabilisation des indicateurs (issue #18).
  * <p>
  * Principes :
  * <ul>
@@ -25,11 +25,11 @@ import java.util.*;
  * <ul>
  *   <li><b>Runtime</b> : les overrides utilisent désormais les clés réellement émises par
  *       {@code RuntimeModuleAnalyzer} ({@code runtime.console.errors}, {@code runtime.js.errors},
- *       {@code runtime.network.5xx}, {@code runtime.network.failed_requests}) — en v1 les clés
+ *       {@code runtime.network.5xx}, {@code runtime.network.failed_requests}) - en v1 les clés
  *       ne matchaient jamais et les poids voulus n'étaient pas appliqués. Tags {@code performance}.</li>
  *   <li><b>SSL & Observatory</b> : désormais scorés sous le tag {@code security} (ignorés en v1
  *       car aucune règle de préfixe n'existait).</li>
- *   <li><b>ZAP</b> : les alertes génériques {@code zap.alert.*} restent informatives — les
+ *   <li><b>ZAP</b> : les alertes génériques {@code zap.alert.*} restent informatives - les
  *       findings d'en-têtes de sécurité de ZAP remontent déjà via les clés partagées
  *       {@code http.security.*} (cf. {@code CheckMergerService}), ce qui évite que le nombre
  *       d'alertes fasse varier le score de façon instable.</li>
@@ -91,7 +91,7 @@ public class ScorePolicyV2 implements ScorePolicy {
         map.put("lighthouse.score.seo",            rule(true, 8,  "seo",         "lighthouse"));
         map.put("lighthouse.collect",              rule(false, 0, "lighthouse")); // stub dispo
 
-        // ----- Runtime (Playwright) — clés réellement émises par l'analyzer -----
+        // ----- Runtime (Playwright) - clés réellement émises par l'analyzer -----
         map.put("runtime.console.errors",           rule(true, 5, "performance", "runtime"));
         map.put("runtime.js.errors",                rule(true, 6, "performance", "runtime"));
         map.put("runtime.network.5xx",              rule(true, 8, "performance", "runtime"));

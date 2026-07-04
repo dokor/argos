@@ -1,6 +1,6 @@
 {
   "layout": {
-    "title": "Argos – Website auditor",
+    "title": "Argos - Website auditor",
     "description": "Argos scans HTTP headers, HTML quality, tech stack and Lighthouse performance. Scored, private report - no login required."
   },
   "nav": {
@@ -156,7 +156,7 @@
   },
   "faq": {
     "meta": {
-      "title": "FAQ – Frequently asked questions",
+      "title": "FAQ - Frequently asked questions",
       "description": "Answers to common questions about Argos: how it works, reports, analysis limits, privacy and what's coming next."
     },
     "hero": {
@@ -293,7 +293,7 @@
     "error": "Something went wrong"
   },
   "dashboard": {
-    "title": "Argos – Console",
+    "title": "Argos - Console",
     "newAudit": "New audit",
     "stats": {
       "analyzed": "Analyzed",
@@ -324,7 +324,7 @@
         "description": "Something went wrong while analyzing this site. Sorry for the inconvenience."
       },
       "rerunTitle": "Run a new analysis, for free",
-      "rerunHint": "Enter a URL to start a new analysis — it's on us.",
+      "rerunHint": "Enter a URL to start a new analysis - it's on us.",
       "backHome": "Back to home"
     },
     "page": {
@@ -352,7 +352,7 @@
         "priority": "Critical"
       },
       "scoreGlobal": "Global score",
-      "scoreTooltip": "Aggregated score (0–100) based on detected issues.",
+      "scoreTooltip": "Aggregated score (0-100) based on detected issues.",
       "scoreObjectivePrefix": "Goal:",
       "scoreMaintain": "maintain",
       "scoreQuickwins": "focus on quick wins",
@@ -413,11 +413,11 @@
       "title": "Scores by category",
       "desc": "Synthetic view for prioritization. Click a category to see details.",
       "globalLabel": "Global",
-      "globalTooltip": "Aggregated global score (0–100) based on detected issues.",
+      "globalTooltip": "Aggregated global score (0-100) based on detected issues.",
       "issueCount": "issue(s)",
       "seeDetail": "See details →",
       "partial": "Partial analysis · {n}% coverage",
-      "partialTooltip": "One or more modules could not be evaluated (service temporarily unavailable). The score covers the modules actually analyzed — the site is not penalized."
+      "partialTooltip": "One or more modules could not be evaluated (service temporarily unavailable). The score covers the modules actually analyzed - the site is not penalized."
     },
     "issuesByCategory": {
       "title": "Details by category",
@@ -520,7 +520,7 @@
       "error": "Could not load history.",
       "current": "current",
       "view": "View",
-      "scoreNa": "—"
+      "scoreNa": "-"
     }
   },
   "langToggle": {

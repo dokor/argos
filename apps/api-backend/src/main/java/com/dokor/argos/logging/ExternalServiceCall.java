@@ -29,7 +29,7 @@ public final class ExternalServiceCall {
      *
      * @param logger  logger du client appelant
      * @param service nom court du service externe (ex. "lighthouse")
-     * @param target  cible de l'appel (URL/host) — sera sanitisée avant log
+     * @param target  cible de l'appel (URL/host) - sera sanitisée avant log
      * @param action  l'appel effectif (envoi HTTP + parsing)
      * @return le résultat de {@code action}
      * @throws Exception l'exception levée par {@code action} (rethrow après log)

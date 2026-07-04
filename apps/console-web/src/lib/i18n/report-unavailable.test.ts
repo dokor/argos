@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import fr from "./fr.json";
 import en from "./en.json";
 
-// Garde le sous-arbre report.unavailable (issue #63 — page d'erreur des rapports)
+// Garde le sous-arbre report.unavailable (issue #63 - page d'erreur des rapports)
 // contre la dérive fr/en et les copies vides. Consommé par
 // src/components/report/ReportErrorView.tsx.
 

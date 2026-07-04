@@ -15,7 +15,7 @@ import java.util.*;
  * Pour chaque check scorable ({@link AuditCheckResult#scorable()} = true), le score
  * est calculé comme {@code weight × ratio} où le ratio vaut :
  * <ul>
- *   <li>{@link AuditCheckResult#scoreRatio()} (borné à [0,1]) s'il est renseigné —
+ *   <li>{@link AuditCheckResult#scoreRatio()} (borné à [0,1]) s'il est renseigné -
  *       ratio continu pour les checks à note graduée (ex. Lighthouse), évitant les
  *       effets de falaise aux bornes de seuils ;</li>
  *   <li>sinon le ratio dérivé du status : 1.0 pour PASS, 0.5 pour WARN, 0.0 pour
