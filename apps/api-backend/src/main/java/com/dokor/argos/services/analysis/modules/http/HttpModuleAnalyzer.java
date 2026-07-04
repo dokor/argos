@@ -138,6 +138,12 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
         // 7) Security headers (HSTS, CSP, etc.)
         checks.addAll(checkSecurityHeaders(lastHeaders));
 
+        // 7b) Attributs de sécurité des cookies (Secure / HttpOnly) — issue #151
+        checks.add(checkCookieFlags(lastHeaders));
+
+        // 7c) Support de HTTP/2 (uniquement pertinent en HTTPS) — issue #151
+        checks.add(checkHttp2(httpVersion, currentUrl));
+
         // 8) Compression (Content-Encoding)
         checks.add(checkCompression(lastHeaders));
 
@@ -471,6 +477,80 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
         ));
 
         return out;
+    }
+
+    /**
+     * Attributs de sécurité des cookies posés par la réponse (Secure, HttpOnly).
+     * Déterministe (lu dans l'en-tête Set-Cookie) : pas de faux positif lié au réseau.
+     */
+    private static AuditCheckResult checkCookieFlags(Map<String, String> headers) {
+        String setCookie = headers.get("set-cookie");
+        boolean hasCookies = setCookie != null && !setCookie.isBlank();
+        if (!hasCookies) {
+            return AuditCheckResult.of(
+                "http.security.cookie_flags",
+                "Attributs de sécurité des cookies",
+                AuditStatus.PASS,
+                AuditSeverity.LOW,
+                false, 0.0, List.of(),
+                false,
+                Map.of(),
+                "Aucun cookie posé par la réponse.",
+                null
+            );
+        }
+        String low = setCookie.toLowerCase(Locale.ROOT);
+        List<String> missing = new ArrayList<>();
+        if (!low.contains("secure")) missing.add("Secure");
+        if (!low.contains("httponly")) missing.add("HttpOnly");
+        boolean ok = missing.isEmpty();
+        return AuditCheckResult.of(
+            "http.security.cookie_flags",
+            "Attributs de sécurité des cookies",
+            ok ? AuditStatus.PASS : AuditStatus.WARN,
+            ok ? AuditSeverity.LOW : AuditSeverity.MEDIUM,
+            false, 0.0, List.of(),
+            missing,
+            Map.of("secure", low.contains("secure"), "httpOnly", low.contains("httponly")),
+            ok ? "Les cookies portent les attributs Secure et HttpOnly."
+               : "Attribut(s) manquant(s) sur les cookies : " + String.join(", ", missing) + ".",
+            ok ? null : "Ajoutez Secure (transmission en HTTPS uniquement) et HttpOnly (cookie inaccessible au JavaScript) pour limiter le vol de session."
+        );
+    }
+
+    /**
+     * Support de HTTP/2 (multiplexage, meilleures performances). Évalué uniquement
+     * en HTTPS : en clair, HTTP/2 n'est pas négociable et l'absence de HTTPS est déjà
+     * signalée par un autre check (pas de double pénalité).
+     */
+    private static AuditCheckResult checkHttp2(String httpVersion, String finalUrl) {
+        boolean https = finalUrl != null && finalUrl.toLowerCase(Locale.ROOT).startsWith("https://");
+        boolean http2 = "HTTP_2".equals(httpVersion) || "HTTP_3".equals(httpVersion);
+        String shown = httpVersion != null ? httpVersion : "inconnu";
+        if (!https) {
+            return AuditCheckResult.of(
+                "http.protocol.http2",
+                "Support de HTTP/2",
+                AuditStatus.INFO,
+                AuditSeverity.LOW,
+                false, 0.0, List.of(),
+                httpVersion,
+                Map.of("httpVersion", shown),
+                "HTTP/2 non évalué (site non servi en HTTPS).",
+                null
+            );
+        }
+        return AuditCheckResult.of(
+            "http.protocol.http2",
+            "Support de HTTP/2",
+            http2 ? AuditStatus.PASS : AuditStatus.WARN,
+            AuditSeverity.LOW,
+            false, 0.0, List.of(),
+            httpVersion,
+            Map.of("httpVersion", shown),
+            http2 ? "Le site répond en HTTP/2 (ou supérieur)." : "Le site répond en HTTP/1.1.",
+            http2 ? null : "Activez HTTP/2 (au niveau du serveur ou du CDN) pour améliorer les performances de chargement grâce au multiplexage."
+        );
     }
 
     private static AuditCheckResult checkCompression(Map<String, String> headers) {
