@@ -394,7 +394,9 @@
       "globalLabel": "Global",
       "globalTooltip": "Score global agrégé (0–100) basé sur les points détectés.",
       "issueCount": "point(s)",
-      "seeDetail": "Voir le détail →"
+      "seeDetail": "Voir le détail →",
+      "partial": "Analyse partielle · complétude {n}%",
+      "partialTooltip": "Un ou plusieurs modules n'ont pas pu être évalués (service momentanément indisponible). Le score porte sur les modules réellement analysés — le site n'est pas pénalisé."
     },
     "issuesByCategory": {
       "title": "Détail par catégorie",

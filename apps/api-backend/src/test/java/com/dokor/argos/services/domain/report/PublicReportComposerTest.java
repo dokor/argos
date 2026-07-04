@@ -50,12 +50,16 @@ class PublicReportComposerTest {
     }
 
     private static AuditReportJson report(List<AuditModuleResult> modules, AuditScoreReport score) {
+        return report(modules, score, Map.of());
+    }
+
+    private static AuditReportJson report(List<AuditModuleResult> modules, AuditScoreReport score, Map<String, String> meta) {
         return new AuditReportJson(
             4,
             "http://example.com",
             "https://example.com",
             Instant.now(),
-            Map.of(),
+            meta,
             modules,
             score
         );
@@ -223,6 +227,28 @@ class PublicReportComposerTest {
     }
 
     // ------------------------------------------------------------------ score
+
+    @Test
+    void shouldExposeCompletenessFromMeta() {
+        // issue #101 : la complétude accompagne le score (analyse partielle identifiable).
+        AuditReportJson input = report(
+            List.of(module("html", Map.of())),
+            scoreOf(0.8),
+            Map.of("completeness", "75"));
+
+        ReportDto dto = composer.compose(input);
+
+        assertEquals(75, dto.scores().completeness());
+    }
+
+    @Test
+    void shouldLeaveCompletenessNullWhenAbsentFromMeta() {
+        AuditReportJson input = report(List.of(module("html", Map.of())), scoreOf(0.8));
+
+        ReportDto dto = composer.compose(input);
+
+        assertNull(dto.scores().completeness());
+    }
 
     @Test
     void shouldComputeGlobalScoreFrom100() {
