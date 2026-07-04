@@ -9,6 +9,14 @@ const PORT = 3017;
 const server = http.createServer(async (req, res) => {
   const { pathname } = parse(req.url, true);
 
+  // Sonde de disponibilité (healthcheck Docker + vérif amont). Légère : ne
+  // lance pas Chrome, répond immédiatement si le process est up.
+  if (req.method === "GET" && pathname === "/health") {
+    res.setHeader("Content-Type", "application/json");
+    res.end(JSON.stringify({ status: "ok", service: "lighthouse-service" }));
+    return;
+  }
+
   if (req.method === "POST" && pathname === "/analyze") {
     try {
       const body = await once(req, "data").then(([chunk]) => JSON.parse(chunk.toString()));

@@ -6,6 +6,12 @@ const PORT = process.env.PORT || 3016;
 const app = express();
 app.use(express.json({ limit: '1mb' }));
 
+// Sonde de disponibilité (healthcheck Docker + vérif amont). Volontairement
+// légère : ne lance pas de navigateur, répond immédiatement si le process est up.
+app.get('/health', (_req, res) => {
+  res.json({ status: 'ok', service: 'playwright-service' });
+});
+
 app.post('/analyze/runtime', async (req, res) => {
   const { url } = req.body ?? {};
   if (!url) return res.status(400).json({ error: 'Missing url' });
