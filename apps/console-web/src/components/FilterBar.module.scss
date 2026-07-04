@@ -1,8 +1,8 @@
 @use '../styles/tokens' as t;
 
 .bar {
-  background: t.$color-white;
-  border: 1px solid t.$color-slate-200;
+  background: t.$surface;
+  border: 1px solid t.$border;
   border-radius: t.$radius-xl;
   padding: 14px t.$space-4;
   display: grid;
@@ -20,7 +20,7 @@
 .groupLabel {
   font-size: t.$text-xs;
   font-weight: 700;
-  color: t.$color-slate-400;
+  color: t.$text-subtle;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-right: 2px;
@@ -46,8 +46,8 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  background: t.$color-slate-50;
-  border: 1px solid t.$color-slate-200;
+  background: t.$surface-2;
+  border: 1px solid t.$border;
   border-radius: t.$radius-sm;
   padding: t.$space-1 10px;
 }
@@ -55,7 +55,7 @@
 .selectLabel {
   font-size: t.$text-xs;
   font-weight: 700;
-  color: t.$color-slate-400;
+  color: t.$text-subtle;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   white-space: nowrap;
@@ -66,7 +66,7 @@
   background: transparent;
   font-size: t.$text-sm;
   font-weight: 700;
-  color: t.$color-navy;
+  color: t.$text;
   cursor: pointer;
   outline: none;
   padding: 2px 0;

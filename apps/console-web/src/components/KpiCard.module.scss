@@ -1,8 +1,8 @@
 @use '../styles/tokens' as t;
 
 .card {
-  background: t.$color-white;
-  border: 1px solid var(--card-border, #{t.$color-slate-200});
+  background: t.$surface;
+  border: 1px solid var(--card-border, #{t.$border});
   border-radius: t.$radius-2xl;
   padding: 18px t.$space-5;
   box-shadow: var(--card-shadow, #{t.$shadow-sm});
@@ -10,7 +10,7 @@
   gap: t.$space-3;
 
   &.highlight {
-    box-shadow: var(--card-shadow, 0 0 0 2px var(--card-border, #{t.$color-slate-200})), t.$shadow-sm;
+    box-shadow: var(--card-shadow, 0 0 0 2px var(--card-border, #{t.$border})), t.$shadow-sm;
   }
 }
 
@@ -24,7 +24,7 @@
 .label {
   font-size: t.$text-xs;
   font-weight: 700;
-  color: t.$color-slate-500;
+  color: t.$text-muted;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   line-height: 1.3;
@@ -47,13 +47,13 @@
 .value {
   font-size: 32px;
   font-weight: 900;
-  color: t.$color-navy;
+  color: t.$text;
   line-height: 1;
   letter-spacing: -0.03em;
 }
 
 .description {
   font-size: t.$text-xs;
-  color: t.$color-slate-400;
+  color: t.$text-subtle;
   line-height: 1.4;
 }

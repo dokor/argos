@@ -2,9 +2,9 @@
 
 .card {
   padding: 18px t.$space-5;
-  border: 1px solid t.$color-slate-200;
+  border: 1px solid t.$border;
   border-radius: t.$radius-xl;
-  background: t.$color-white;
+  background: t.$surface;
   box-shadow: t.$shadow-sm;
   display: grid;
   gap: 14px;
@@ -27,7 +27,7 @@
 
 .url {
   font-weight: 900;
-  color: t.$color-navy;
+  color: t.$text;
   font-size: t.$text-md;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -37,7 +37,7 @@
 
 .urlPath {
   font-size: t.$text-sm;
-  color: t.$color-slate-400;
+  color: t.$text-subtle;
   font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -54,7 +54,7 @@
 
 .metaText {
   font-size: t.$text-xs;
-  color: t.$color-slate-400;
+  color: t.$text-subtle;
 }
 
 .techBadge {
@@ -84,12 +84,12 @@
 .scoreText {
   font-size: t.$text-base;
   font-weight: 900;
-  color: t.$color-navy;
+  color: t.$text;
 }
 
 .mutedSmall {
   font-size: t.$text-xs;
-  color: t.$color-slate-400;
+  color: t.$text-subtle;
 }
 
 .linkBtn {
@@ -106,10 +106,10 @@
 .linkBtnDisabled {
   font-size: t.$text-sm;
   font-weight: 600;
-  color: t.$color-slate-400;
+  color: t.$text-subtle;
   padding: 5px 10px;
   border-radius: t.$radius-sm;
-  border: 1px solid t.$color-slate-200;
+  border: 1px solid t.$border;
 }
 
 .scoreSection {
@@ -120,7 +120,7 @@
 .sectionLabel {
   font-size: t.$text-xs;
   font-weight: 800;
-  color: t.$color-slate-500;
+  color: t.$text-muted;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -137,20 +137,20 @@
   flex-wrap: wrap;
   align-items: center;
   padding-top: t.$space-1;
-  border-top: 1px solid t.$color-slate-100;
+  border-top: 1px solid t.$border-subtle;
 }
 
 .muted {
   font-size: t.$text-base;
-  color: t.$color-slate-400;
+  color: t.$text-subtle;
 }
 
 .copyBtn {
   padding: 7px t.$space-3;
   border-radius: t.$radius-sm;
-  border: 1px solid t.$color-navy;
-  background: t.$color-navy;
-  color: t.$color-white;
+  border: 1px solid t.$text;
+  background: t.$text;
+  color: t.$bg;
   font-weight: 800;
   font-size: t.$text-sm;
   cursor: pointer;
@@ -160,7 +160,7 @@
   cursor: pointer;
   font-weight: 700;
   font-size: t.$text-base;
-  color: t.$color-slate-600;
+  color: t.$text-muted;
 }
 
 .pre {
@@ -178,7 +178,7 @@
 
 .historySection {
   padding-top: t.$space-1;
-  border-top: 1px solid t.$color-slate-100;
+  border-top: 1px solid t.$border-subtle;
 }
 
 .historyList {
@@ -196,12 +196,12 @@
   flex-wrap: wrap;
   padding: 6px 8px;
   border-radius: t.$radius-sm;
-  background: t.$color-slate-50;
+  background: t.$surface-2;
 }
 
 .historyDate {
   font-size: t.$text-sm;
-  color: t.$color-slate-600;
+  color: t.$text-muted;
   min-width: 150px;
 }
 
@@ -212,13 +212,13 @@
 
 .historyScoreNa {
   font-size: t.$text-base;
-  color: t.$color-slate-400;
+  color: t.$text-subtle;
 }
 
 .historyCurrent {
   font-size: t.$text-xs;
   font-weight: 800;
-  color: t.$color-slate-500;
+  color: t.$text-muted;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
