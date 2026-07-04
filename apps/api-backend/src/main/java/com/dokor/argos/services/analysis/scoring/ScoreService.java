@@ -13,8 +13,14 @@ import java.util.*;
  * Calcule le score global d'un audit à partir des résultats enrichis des modules.
  * <p>
  * Pour chaque check scorable ({@link AuditCheckResult#scorable()} = true), le score
- * est calculé comme {@code weight × ratio(status)} où le ratio vaut :
- * 1.0 pour PASS, 0.5 pour WARN, 0.0 pour FAIL, 0.0 pour INFO.
+ * est calculé comme {@code weight × ratio} où le ratio vaut :
+ * <ul>
+ *   <li>{@link AuditCheckResult#scoreRatio()} (borné à [0,1]) s'il est renseigné —
+ *       ratio continu pour les checks à note graduée (ex. Lighthouse), évitant les
+ *       effets de falaise aux bornes de seuils ;</li>
+ *   <li>sinon le ratio dérivé du status : 1.0 pour PASS, 0.5 pour WARN, 0.0 pour
+ *       FAIL, 0.0 pour INFO.</li>
+ * </ul>
  * <p>
  * Les checks doivent avoir été préalablement enrichis par {@link ScoreEnricherService}.
  * Les résultats sont agrégés par module et par tag pour une vue granulaire.
@@ -42,7 +48,7 @@ public class ScoreService {
             byModule.putIfAbsent(moduleId, new double[]{0.0, 0.0});
 
             for (AuditCheckResult check : module.checks()) {
-                double ratio = ratioFor(check.status());
+                double ratio = effectiveRatio(check);
 
                 double weight = (check.scorable() && check.weight() > 0.0) ? check.weight() : 0.0;
                 double score = weight * ratio;
@@ -104,6 +110,18 @@ public class ScoreService {
             tagAgg,
             scoredChecks
         );
+    }
+
+    /**
+     * Ratio de score effectif d'un check : ratio continu {@link AuditCheckResult#scoreRatio()}
+     * borné à [0,1] s'il est renseigné, sinon ratio dérivé du status.
+     */
+    private static double effectiveRatio(AuditCheckResult check) {
+        Double continuous = check.scoreRatio();
+        if (continuous != null) {
+            return Math.max(0.0, Math.min(1.0, continuous));
+        }
+        return ratioFor(check.status());
     }
 
     private static double ratioFor(AuditStatus status) {

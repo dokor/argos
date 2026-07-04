@@ -114,6 +114,10 @@ public class LighthouseModuleAnalyzer implements AuditModuleAnalyzer {
     }
 
     private static AuditCheckResult scoreCheck(String key, String title, int score100) {
+        // Le status (PASS/WARN/FAIL) reste dérivé de seuils pour l'AFFICHAGE (badge, priorisation
+        // des issues), mais le SCORE utilise un ratio continu (score/100) attaché via
+        // withScoreRatio : ainsi 59 vs 60 ne fait plus basculer tout le poids du check
+        // (effet de falaise), le score varie de façon proportionnelle à la note Lighthouse.
         AuditStatus status =
             score100 >= 85 ? AuditStatus.PASS :
                 score100 >= 60 ? AuditStatus.WARN :
@@ -134,7 +138,7 @@ public class LighthouseModuleAnalyzer implements AuditModuleAnalyzer {
             Map.of("score100", score100),
             "Score " + title + " : " + score100 + "/100",
             score100 >= 85 ? null : "Optimiser les points relevés par Lighthouse pour améliorer ce score."
-        );
+        ).withScoreRatio(score100 / 100.0);
     }
 
     private static int score100(JsonNode lhr, String categoryKey) {
