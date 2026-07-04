@@ -1,0 +1,41 @@
+// Frontière d'erreur de la route rapport, réécrite en SCSS Modules
+// (retrait de Tailwind/shadcn — issue #124). Tokens --argos-* théma-aware.
+
+.wrapper {
+  margin: 0 auto;
+  width: 100%;
+  max-width: 72rem; // max-w-6xl
+  padding: 2.5rem 1rem; // py-10 px-4
+}
+
+.card {
+  border: 1px solid var(--argos-border);
+  border-radius: 16px; // rounded-2xl
+  background: var(--argos-surface);
+  padding: 1.5rem; // p-6
+}
+
+.title {
+  font-size: 1.125rem; // text-lg
+  font-weight: 600;
+  color: var(--argos-text);
+}
+
+.message {
+  margin-top: 0.5rem; // mt-2
+  font-size: 0.875rem; // text-sm
+  color: var(--argos-text-muted);
+}
+
+.back {
+  margin-top: 1rem; // mt-4
+  display: inline-block;
+  border: 1px solid var(--argos-border);
+  border-radius: 14px; // rounded-xl
+  background: var(--argos-bg);
+  padding: 0.5rem 1rem; // py-2 px-4
+  font-size: 0.875rem; // text-sm
+  font-weight: 600;
+  color: var(--argos-text);
+  text-decoration: none;
+}

@@ -125,10 +125,12 @@ Fichiers clés : `UrlNormalizerTest`, `ScoreServiceTest`, `ScorePolicyV1Test`, `
 ## App 2 : `console-web` (Next.js 14 App Router)
 
 ### Stack technique
-- Next.js 14, TypeScript, SCSS Modules
+- Next.js 14, TypeScript, **SCSS Modules** (système de style canonique)
 - `"use client"` pour les pages interactives ; layouts = toujours Server Components
 - Internationalisation maison (`LangContext` + `fr.json` / `en.json`)
-- shadcn/ui pour les composants UI de base
+- Styles : **SCSS Modules uniquement** — Tailwind et shadcn/ui ont été retirés (issue #124).
+  Couleurs via les tokens sémantiques `--argos-*` (théma-aware) de `globals.css` + `_tokens.scss`.
+  Ne pas réintroduire de classes utilitaires Tailwind ni de dépendance shadcn/Radix.
 
 ### Routes
 | Route | Type | Description |
