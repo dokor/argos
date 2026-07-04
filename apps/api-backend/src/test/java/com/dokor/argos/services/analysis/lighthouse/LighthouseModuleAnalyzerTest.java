@@ -77,4 +77,62 @@ class LighthouseModuleAnalyzerTest {
             .findFirst().orElseThrow();
         assertEquals(1.0, seo.scoreRatio(), 0.0001);
     }
+
+    // -------------------------
+    // Audits individuels (issue #154)
+    // -------------------------
+
+    /** LHR avec une catégorie perf + 3 audits : un échec net, un échec léger, un réussi. */
+    private static String lhrWithAudits() {
+        return "{\"categories\":{\"performance\":{\"score\":0.5,\"title\":\"Performance\",\"auditRefs\":["
+            + "{\"id\":\"uses-responsive-images\",\"weight\":10,\"group\":\"load-opportunities\"},"
+            + "{\"id\":\"uses-text-compression\",\"weight\":3},"
+            + "{\"id\":\"is-on-https\",\"weight\":1},"
+            + "{\"id\":\"network-requests\",\"weight\":0}]},"
+            + "\"accessibility\":{\"score\":0.9,\"title\":\"Accessibilité\"},"
+            + "\"best-practices\":{\"score\":0.9,\"title\":\"Bonnes pratiques\"},"
+            + "\"seo\":{\"score\":1.0,\"title\":\"SEO\"}},"
+            + "\"audits\":{"
+            + "\"uses-responsive-images\":{\"id\":\"uses-responsive-images\",\"title\":\"Dimensionner correctement les images\",\"description\":\"Servez des images adaptées. [En savoir plus](https://x.dev/y).\",\"score\":0.2,\"scoreDisplayMode\":\"metricSavings\"},"
+            + "\"uses-text-compression\":{\"id\":\"uses-text-compression\",\"title\":\"Activer la compression du texte\",\"description\":\"Compressez les ressources texte.\",\"score\":0.7,\"scoreDisplayMode\":\"metricSavings\"},"
+            + "\"is-on-https\":{\"id\":\"is-on-https\",\"title\":\"Utilise HTTPS\",\"description\":\"ok\",\"score\":1.0,\"scoreDisplayMode\":\"binary\"},"
+            + "\"network-requests\":{\"id\":\"network-requests\",\"title\":\"Requêtes réseau\",\"description\":\"info\",\"score\":null,\"scoreDisplayMode\":\"informative\"}}}";
+    }
+
+    @Test
+    void surfacesFailingAuditsAsChecks() throws Exception {
+        LighthouseClient client = mock(LighthouseClient.class);
+        when(client.analyze(anyString())).thenReturn(new ObjectMapper().readTree(lhrWithAudits()));
+
+        AuditModuleResult res = new LighthouseModuleAnalyzer(client)
+            .analyze(ctx(), LoggerFactory.getLogger("test"));
+
+        // L'audit en échec net (score 0.2 < 0.5) => check FAIL, libellé et reco nettoyée.
+        AuditCheckResult resp = res.checks().stream()
+            .filter(c -> "lighthouse.audit.uses-responsive-images".equals(c.key()))
+            .findFirst().orElseThrow();
+        assertEquals(AuditStatus.FAIL, resp.status());
+        assertEquals("Servez des images adaptées. En savoir plus.", resp.recommendation());
+
+        // L'audit en échec léger (0.7) => présent en WARN.
+        assertEquals(AuditStatus.WARN, res.checks().stream()
+            .filter(c -> "lighthouse.audit.uses-text-compression".equals(c.key()))
+            .findFirst().orElseThrow().status());
+    }
+
+    @Test
+    void ignoresPassingAndInformativeAudits() throws Exception {
+        LighthouseClient client = mock(LighthouseClient.class);
+        when(client.analyze(anyString())).thenReturn(new ObjectMapper().readTree(lhrWithAudits()));
+
+        AuditModuleResult res = new LighthouseModuleAnalyzer(client)
+            .analyze(ctx(), LoggerFactory.getLogger("test"));
+
+        // Audit réussi (is-on-https, score 1.0) et audit informatif (score null) => non remontés.
+        assertEquals(0, res.checks().stream()
+            .filter(c -> c.key().equals("lighthouse.audit.is-on-https")
+                || c.key().equals("lighthouse.audit.network-requests"))
+            .count());
+        assertEquals(2, res.data().get("auditsSurfaced"));
+    }
 }
