@@ -306,6 +306,19 @@
       "title": "Impossible de charger le rapport",
       "back": "Retour"
     },
+    "unavailable": {
+      "notFound": {
+        "title": "Rapport introuvable",
+        "description": "Ce rapport n'existe pas, a expiré, ou son lien est incorrect."
+      },
+      "failed": {
+        "title": "L'analyse a échoué",
+        "description": "Une erreur est survenue pendant l'analyse de ce site. Désolé pour la gêne."
+      },
+      "rerunTitle": "Relancez gratuitement une analyse",
+      "rerunHint": "Saisissez une URL pour lancer une nouvelle analyse — c'est offert.",
+      "backHome": "Retour à l'accueil"
+    },
     "page": {
       "private": "Rapport privé • Non indexable",
       "tabs": {
