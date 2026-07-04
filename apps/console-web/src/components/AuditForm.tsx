@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import { argosApi, AuditListItem, CreateAuditRequest, CreateAuditResponse } from "@/lib/ArgosApi";
+import React, { useMemo, useState } from "react";
+import { AuditListItem, CreateAuditResponse } from "@/lib/ArgosApi";
 import { useLang } from "@/lib/i18n/LangContext";
-import { createLogger, safeError, sanitizeUrl } from "@/lib/logger";
-import { normalizeInputUrl } from "@/lib/url";
+import { createLogger } from "@/lib/logger";
+import { useAuditSubmit } from "@/lib/useAuditSubmit";
 import s from "./AuditForm.module.scss";
 
 type Props = {
@@ -15,82 +14,42 @@ type Props = {
 export default function AuditForm({ onCreated }: Props) {
   const { t } = useLang();
   const tf = t.auditForm;
-  const router = useRouter();
-  const loggerRef = useRef(createLogger("dashboard", { route: "/dashboard" }));
+  const logger = useMemo(() => createLogger("dashboard", { route: "/dashboard" }), []);
 
   const [url, setUrl] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [emptyError, setEmptyError] = useState<string | null>(null);
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    setErrorMsg(null);
-
-    const trimmed = url.trim();
-    if (!trimmed) {
-      setErrorMsg(tf.errorUrlMissing);
-      return;
-    }
-
-    // Ajoute https:// si aucun protocole n'est fourni (ex: "argos.lelouet.fr")
-    const normalized = normalizeInputUrl(trimmed);
-    loggerRef.current.info("dashboard_audit_submit", {
-      action: "create_audit",
-      details: {
-        addedScheme: normalized !== trimmed,
-        url: sanitizeUrl(normalized),
-      },
-    });
-
-    setSubmitting(true);
-    try {
-      const payload: CreateAuditRequest = { url: normalized };
-      const res: CreateAuditResponse = await argosApi.createAudit(payload);
-
-      // Notifie le parent si nécessaire (dashboard)
+  // Création → redirection immédiate vers le rapport, factorisée dans useAuditSubmit (#122).
+  const { phase, error, submit } = useAuditSubmit({
+    logger,
+    onCreated: (res: CreateAuditResponse, normalizedUrl: string) => {
       onCreated?.({
         auditId: Number(res.auditId),
-        inputUrl: normalized,
+        inputUrl: normalizedUrl,
         normalizedUrl: res.normalizedUrl ?? "",
         runId: Number(res.runId),
         status: res.status,
         reportToken: res.reportToken ?? null,
         resultJson: null,
       });
+    },
+  });
 
-      // Redirection immédiate vers la page rapport.
-      // La page gère elle-même l'état "en cours" via polling.
-      if (res.reportToken) {
-        loggerRef.current.info("dashboard_audit_created", {
-          action: "redirect_to_report",
-          details: {
-            reportToken: res.reportToken,
-            runId: res.runId,
-            status: res.status,
-          },
-        });
-        router.push(`/report/${res.reportToken}`);
-      } else {
-        // Pas de token → pas de redirection : on réactive le formulaire
-        // pour ne pas laisser le bouton bloqué en "submitting".
-        setSubmitting(false);
-      }
-    } catch (err: unknown) {
-      loggerRef.current.error("dashboard_audit_create_failed", {
-        action: "create_audit",
-        details: {
-          error: safeError(err),
-          url: sanitizeUrl(normalized),
-        },
-      });
-      setErrorMsg(err instanceof Error ? err.message : tf.errorUnknown);
-      setSubmitting(false);
+  const submitting = phase === "submitting" || phase === "redirecting";
+  const errorMsg = emptyError ?? (phase === "error" ? error?.message ?? tf.errorUnknown : null);
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setEmptyError(null);
+    if (!url.trim()) {
+      setEmptyError(tf.errorUrlMissing);
+      return;
     }
-    // Ne pas reset submitting si redirect : le composant sera démonté
+    submit(url);
   }
 
   return (
-    <form onSubmit={submit} className={s.form}>
+    <form onSubmit={handleSubmit} className={s.form}>
       <div className={s.fieldGroup}>
         <label htmlFor="url" className={s.label}>{tf.urlLabel}</label>
         <input

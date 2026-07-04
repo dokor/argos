@@ -1,11 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
-import { argosApi } from "@/lib/ArgosApi";
+import React, { useState, useMemo } from "react";
 import { useLang } from "@/lib/i18n/LangContext";
-import { createLogger, safeError, sanitizeUrl } from "@/lib/logger";
-import { normalizeInputUrl } from "@/lib/url";
+import { createLogger } from "@/lib/logger";
+import { useAuditSubmit } from "@/lib/useAuditSubmit";
 import { useIsAdmin } from "@/lib/useIsAdmin";
 import ArgosIcon from "@/components/ArgosIcon";
 import LangToggle from "@/components/LangToggle";
@@ -21,8 +19,6 @@ const MAX_POLL = 48; // ~2 min
 const MAX_WAIT_MS = 5000; // 5 s
 
 // ─── Hero audit form ──────────────────────────────────────────────────────────
-
-type AuditPhase = "idle" | "submitting" | "polling" | "redirecting" | "error";
 
 type AuditFormT = {
   inputPlaceholder: string;
@@ -46,156 +42,30 @@ function HeroAuditForm({
   variant?: "hero" | "cta";
 }) {
   const [url, setUrl] = useState("");
-  const [phase, setPhase] = useState<AuditPhase>("idle");
-  const [errMsg, setErrMsg] = useState("");
   const [stepIdx, setStepIdx] = useState(0);
-  const runIdRef = useRef<string | number | null>(null);
-  const reportTokenRef = useRef<string | null>(null);
-  const pollCountRef = useRef(0);
-  const pollErrorCountRef = useRef(0);
-  const loggerRef = useRef(
-    createLogger("landing", {
-      route: "/",
-      details: { origin: variant },
-    })
+  const logger = useMemo(
+    () => createLogger("landing", { route: "/", details: { origin: variant } }),
+    [variant]
   );
-  const router = useRouter();
+  // Logique création → polling → redirection factorisée dans useAuditSubmit (#122).
+  const { phase, errorKind, submit, reset } = useAuditSubmit({
+    logger,
+    maxWaitMs: MAX_WAIT_MS,
+    pollIntervalMs: POLL_INTERVAL_MS,
+    maxPolls: MAX_POLL,
+    onPollTick: () => setStepIdx((i) => (i + 1) % t.analyzeSteps.length),
+  });
   const isHero = variant === "hero";
   const h = isHero ? 52 : 46;
   const fs = isHero ? 16 : 15;
 
-  // Redirige vers la page rapport (une seule fois) et bascule en phase
-  // "redirecting". La page /report/{token} prend le relais pour la progression.
-  const redirectToReport = React.useCallback(
-    (reportToken: string, reason: "completed" | "timeout", polls: number) => {
-      setPhase("redirecting");
-      loggerRef.current.info("landing_audit_redirect", {
-        action: "redirect_to_report",
-        details: { reason, reportToken, runId: runIdRef.current, polls },
-      });
-      router.push(`/report/${reportToken}`);
-    },
-    [router]
-  );
+  // Le hook classe l'erreur ; la landing choisit la copie i18n correspondante.
+  const errMsg = errorKind === "failed" ? t.errorFailed : errorKind ? t.errorMsg : "";
 
-  useEffect(() => {
-    if (phase !== "polling") return;
-
-    // Repli : au plus tard au bout de 5 s, on redirige vers la page rapport
-    // même si l'analyse est encore en cours (issue #105).
-    const redirectTimer = setTimeout(() => {
-      if (reportTokenRef.current) {
-        clearInterval(id);
-        redirectToReport(reportTokenRef.current, "timeout", pollCountRef.current);
-      }
-    }, MAX_WAIT_MS);
-
-    const id = setInterval(async () => {
-      pollCountRef.current++;
-      setStepIdx((i) => (i + 1) % t.analyzeSteps.length);
-
-      if (pollCountRef.current > MAX_POLL) {
-        clearInterval(id);
-        setPhase("error");
-        setErrMsg(t.errorMsg);
-        loggerRef.current.warn("landing_audit_poll_timeout", {
-          action: "poll_run_status",
-          details: {
-            polls: pollCountRef.current,
-            runId: runIdRef.current,
-          },
-        });
-        return;
-      }
-
-      if (runIdRef.current === null) return;
-      try {
-        const run = await argosApi.getRunsByRunId(runIdRef.current);
-        pollErrorCountRef.current = 0;
-
-        if (run.status === "COMPLETED" && run.reportToken) {
-          clearInterval(id);
-          clearTimeout(redirectTimer);
-          redirectToReport(run.reportToken, "completed", pollCountRef.current);
-        } else if (run.status === "FAILED") {
-          clearInterval(id);
-          clearTimeout(redirectTimer);
-          setPhase("error");
-          setErrMsg(t.errorFailed);
-          loggerRef.current.warn("landing_audit_failed", {
-            action: "poll_run_status",
-            details: {
-              lastError: run.lastError,
-              runId: run.runId,
-            },
-          });
-        }
-      } catch (error) {
-        pollErrorCountRef.current += 1;
-        if (pollErrorCountRef.current === 1 || pollErrorCountRef.current % 5 === 0) {
-          loggerRef.current.warn("landing_audit_poll_transient_error", {
-            action: "poll_run_status",
-            details: {
-              error: safeError(error),
-              occurrence: pollErrorCountRef.current,
-              runId: runIdRef.current,
-            },
-          });
-        }
-      }
-    }, POLL_INTERVAL_MS);
-
-    return () => {
-      clearInterval(id);
-      clearTimeout(redirectTimer);
-    };
-  }, [phase, router, t, redirectToReport]);
-
-  async function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const trimmed = url.trim();
-    if (!trimmed || phase !== "idle") return;
-
-    // Prepend https:// when the scheme is omitted so scheme-less input
-    // (e.g. "example.com") is accepted, matching the BFF/backend behavior.
-    const normalized = normalizeInputUrl(trimmed);
-
-    loggerRef.current.info("landing_audit_submit", {
-      action: "create_audit",
-      details: {
-        hasScheme: /^https?:\/\//i.test(trimmed),
-        url: sanitizeUrl(normalized),
-      },
-    });
-
-    setPhase("submitting");
-    setErrMsg("");
-    try {
-      const res = await argosApi.createAudit({ url: normalized });
-      runIdRef.current = res.runId;
-      reportTokenRef.current = res.reportToken ?? null;
-      pollCountRef.current = 0;
-      pollErrorCountRef.current = 0;
-      setStepIdx(0);
-      setPhase("polling");
-      loggerRef.current.info("landing_audit_created", {
-        action: "poll_run_status",
-        details: {
-          runId: res.runId,
-          status: res.status,
-        },
-      });
-    } catch (error) {
-      setPhase("error");
-      setErrMsg(t.errorMsg);
-      loggerRef.current.error("landing_audit_create_failed", {
-        action: "create_audit",
-        details: {
-          error: safeError(error),
-          url: sanitizeUrl(normalized),
-        },
-      });
-    }
+    setStepIdx(0); // repart de la première étape à chaque nouvelle analyse
+    submit(url);
   }
 
   if (phase === "polling" || phase === "redirecting") {
@@ -246,7 +116,7 @@ function HeroAuditForm({
           <button
             type="button"
             className={s.retryBtn}
-            onClick={() => setPhase("idle")}
+            onClick={reset}
           >
             {t.retry}
           </button>
