@@ -1,5 +1,5 @@
 {
-  "name": "playwright-service",
+  "name": "lighthouse-service",
   "private": true,
   "license": "BUSL-1.1",
   "type": "module",
@@ -7,7 +7,7 @@
 	"start": "node server.mjs"
   },
   "dependencies": {
-	"express": "^4.19.2",
+	"chrome-launcher": "^1.2.1",
 	"lighthouse": "^13.0.3"
   }
 }
