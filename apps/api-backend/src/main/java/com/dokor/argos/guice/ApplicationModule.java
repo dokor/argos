@@ -9,7 +9,7 @@ import com.dokor.argos.services.analysis.modules.http.HttpModuleAnalyzer;
 import com.dokor.argos.services.analysis.modules.runtime.RuntimeModuleAnalyzer;
 import com.dokor.argos.services.analysis.modules.tech.TechModuleAnalyzer;
 import com.dokor.argos.services.analysis.scoring.ScorePolicy;
-import com.dokor.argos.services.analysis.scoring.ScorePolicyV4;
+import com.dokor.argos.services.analysis.scoring.ScorePolicyV5;
 import com.dokor.argos.services.domain.domain.DomainService;
 import com.google.inject.multibindings.Multibinder;
 import jakarta.inject.Singleton;
@@ -46,7 +46,7 @@ public class ApplicationModule extends AbstractModule {
 
 
         bind(ScorePolicy.class)
-            .to(ScorePolicyV4.class)
+            .to(ScorePolicyV5.class)
             .in(Singleton.class);
 
         // Domain-level services

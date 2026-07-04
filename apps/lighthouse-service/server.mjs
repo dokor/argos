@@ -32,6 +32,9 @@ const server = http.createServer(async (req, res) => {
         port: chrome.port,
         output: "json",
         logLevel: "error",
+        // Titres et descriptions d'audits renvoyés en français (issue #154) : Argos
+        // remonte désormais les audits individuels, dont le libellé doit être FR.
+        locale: "fr",
       });
       await chrome.kill();
 

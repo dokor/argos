@@ -79,6 +79,12 @@ public class LighthouseModuleAnalyzer implements AuditModuleAnalyzer {
         checks.add(scoreCheck("best-practices", "Bonnes pratiques", bp));
         checks.add(scoreCheck("seo", "SEO", seo));
 
+        // Audits individuels en échec (issue #154) : en complément des 4 notes agrégées,
+        // on remonte les points précis et actionnables (ex. « images non dimensionnées »)
+        // pour transformer une note en liste de corrections concrètes.
+        List<AuditCheckResult> auditChecks = buildAuditChecks(lhr, logger);
+        checks.addAll(auditChecks);
+
         // Data payload (stocké dans report_json)
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("available", true);
@@ -99,8 +105,10 @@ public class LighthouseModuleAnalyzer implements AuditModuleAnalyzer {
             "seoTitle", textOrNull(lhr.at("/categories/seo/title"))
         ));
         data.put("durationMs", durationMs);
+        data.put("auditsSurfaced", auditChecks.size());
 
-        String summary = "perf=" + perf + " a11y=" + a11y + " bp=" + bp + " seo=" + seo + " durationMs=" + durationMs;
+        String summary = "perf=" + perf + " a11y=" + a11y + " bp=" + bp + " seo=" + seo
+            + " audits=" + auditChecks.size() + " durationMs=" + durationMs;
 
         logger.info("LIGHTHOUSE module done: {}", summary);
 
@@ -111,6 +119,99 @@ public class LighthouseModuleAnalyzer implements AuditModuleAnalyzer {
             data,
             checks
         );
+    }
+
+    /** Nombre maximal d'audits individuels remontés — évite de noyer le rapport. */
+    static final int MAX_AUDITS = 12;
+    /** Seuls les audits réellement notés sont actionnables (on ignore informative/manual/n.a.). */
+    private static final Set<String> SCORED_MODES = Set.of("binary", "numeric", "metricSavings");
+    private static final String[] CATEGORIES = {"performance", "accessibility", "best-practices", "seo"};
+
+    private record AuditCandidate(String id, String category, int weight, double score,
+                                  String title, String description) {}
+
+    /**
+     * Extrait les audits Lighthouse en échec (score &lt; 0,9), priorisés par le poids de leur
+     * catégorie puis par gravité (score croissant), plafonnés à {@link #MAX_AUDITS}.
+     * <p>
+     * Remontés comme checks {@code lighthouse.audit.<id>} — rendus <b>scorables mais de poids
+     * nul</b> par la ScorePolicy : ils apparaissent comme issues actionnables <b>sans</b>
+     * peser une seconde fois dans le score (les 4 notes de catégorie portent déjà le poids
+     * agrégé de Lighthouse — pas de double comptage).
+     */
+    private static List<AuditCheckResult> buildAuditChecks(JsonNode lhr, Logger logger) {
+        JsonNode audits = lhr.at("/audits");
+        if (audits == null || !audits.isObject()) return List.of();
+
+        List<AuditCandidate> candidates = new ArrayList<>();
+        Set<String> seen = new HashSet<>();
+        for (String cat : CATEGORIES) {
+            JsonNode refs = lhr.at("/categories/" + cat + "/auditRefs");
+            if (refs == null || !refs.isArray()) continue;
+            for (JsonNode ref : refs) {
+                String id = textOrNull(ref.path("id"));
+                if (id == null || seen.contains(id)) continue;
+                JsonNode audit = audits.path(id);
+                if (audit.isMissingNode()) continue;
+
+                String mode = textOrNull(audit.path("scoreDisplayMode"));
+                if (mode == null || !SCORED_MODES.contains(mode)) continue;
+
+                JsonNode scoreNode = audit.path("score");
+                if (scoreNode.isMissingNode() || scoreNode.isNull()) continue;
+                double score = scoreNode.asDouble();
+                if (score >= 0.9) continue; // audit réussi : rien à corriger
+
+                seen.add(id);
+                candidates.add(new AuditCandidate(
+                    id, cat, ref.path("weight").asInt(0), score,
+                    textOrNull(audit.path("title")),
+                    cleanDescription(textOrNull(audit.path("description")))
+                ));
+            }
+        }
+
+        candidates.sort(Comparator
+            .comparingInt(AuditCandidate::weight).reversed()
+            .thenComparingDouble(AuditCandidate::score));
+
+        List<AuditCheckResult> out = new ArrayList<>();
+        for (AuditCandidate c : candidates) {
+            if (out.size() >= MAX_AUDITS) break;
+            AuditStatus status = c.score() < 0.5 ? AuditStatus.FAIL : AuditStatus.WARN;
+            AuditSeverity severity = status == AuditStatus.FAIL ? AuditSeverity.HIGH : AuditSeverity.MEDIUM;
+
+            Map<String, Object> details = new LinkedHashMap<>();
+            details.put("category", c.category());
+            details.put("score", c.score());
+            details.put("weight", c.weight());
+
+            String label = c.title() != null ? c.title() : c.id();
+            out.add(AuditCheckResult.of(
+                "lighthouse.audit." + c.id(),
+                label,
+                status,
+                severity,
+                false, 0.0, List.of("lighthouse", c.category()),
+                Math.round(c.score() * 100.0) / 100.0,
+                details,
+                label,
+                c.description()
+            ));
+        }
+
+        if (candidates.size() > out.size()) {
+            logger.info("LIGHTHOUSE: {} audits en échec, {} remontés (plafond {})",
+                candidates.size(), out.size(), MAX_AUDITS);
+        }
+        return out;
+    }
+
+    /** Retire la syntaxe markdown des liens ([texte](url) → texte) et normalise les espaces. */
+    private static String cleanDescription(String desc) {
+        if (desc == null) return null;
+        String s = desc.replaceAll("\\[([^\\]]+)\\]\\([^)]+\\)", "$1");
+        return s.replaceAll("\\s+", " ").trim();
     }
 
     private static AuditCheckResult scoreCheck(String key, String title, int score100) {
