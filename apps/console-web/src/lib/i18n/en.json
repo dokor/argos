@@ -284,6 +284,14 @@
     "backHome": "Back to home",
     "reference": "Reference"
   },
+  "login": {
+    "title": "Restricted access",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Password",
+    "submit": "Sign in",
+    "submitting": "Signing in…",
+    "error": "Something went wrong"
+  },
   "dashboard": {
     "title": "Argos – Console",
     "newAudit": "New audit",

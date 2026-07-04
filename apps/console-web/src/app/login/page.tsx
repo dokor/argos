@@ -4,12 +4,15 @@ import { useRef, useState, FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { createLogger, safeError } from "@/lib/logger";
+import { useLang } from "@/lib/i18n/LangContext";
 import s from "./page.module.scss";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const from = searchParams.get("from") || "/dashboard";
+  const { t } = useLang();
+  const tl = t.login;
   const loggerRef = useRef(createLogger("login", { route: "/login" }));
 
   const [password, setPassword] = useState("");
@@ -52,7 +55,7 @@ function LoginForm() {
             statusCode: res.status,
           },
         });
-        setError(data.error || "Erreur");
+        setError(data.error || tl.error);
         setLoading(false);
       }
     } catch (fetchError) {
@@ -62,7 +65,7 @@ function LoginForm() {
           error: safeError(fetchError),
         },
       });
-      setError("Erreur");
+      setError(tl.error);
       setLoading(false);
     }
   }
@@ -70,14 +73,13 @@ function LoginForm() {
   return (
     <main className={s.root}>
       <form onSubmit={handleSubmit} className={s.form}>
-        <h1 className={s.title}>Accès restreint</h1>
-
+        <h1 className={s.title}>{tl.title}</h1>
         <input
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="Mot de passe"
-          aria-label="Mot de passe"
+          placeholder={tl.passwordPlaceholder}
+          aria-label={tl.passwordLabel}
           autoFocus
           required
           className={s.input}
@@ -86,7 +88,7 @@ function LoginForm() {
         {error && <p className={s.error}>{error}</p>}
 
         <button type="submit" disabled={loading} className={s.btn}>
-          {loading ? "..." : "Connexion"}
+          {loading ? tl.submitting : tl.submit}
         </button>
       </form>
     </main>
