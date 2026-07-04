@@ -69,9 +69,9 @@ export default function FilterBar({
               onClick={() => setFilterStatus(s)}
               className={styles.chip}
               style={{
-                background: active ? "#0f172a" : "#f8fafc",
-                color: active ? "#ffffff" : "#475569",
-                border: active ? "1px solid #0f172a" : "1px solid #e2e8f0",
+                background: active ? "var(--argos-text)" : "var(--argos-surface-2)",
+                color: active ? "var(--argos-bg)" : "var(--argos-text-muted)",
+                border: active ? "1px solid var(--argos-text)" : "1px solid var(--argos-border)",
                 fontWeight: active ? 800 : 600,
               }}
             >

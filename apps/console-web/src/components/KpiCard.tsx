@@ -18,7 +18,7 @@ export default function KpiCard({ label, value, icon, accent, bg, description, h
     <div
       className={styles.card}
       style={{
-        "--card-border": highlight ? accent + "55" : "#e2e8f0",
+        "--card-border": highlight ? accent + "55" : "var(--argos-border)",
         "--card-shadow": highlight ? "0 0 0 3px " + accent + "18" : "0 1px 3px rgba(15,23,42,0.04)",
       } as React.CSSProperties}
     >

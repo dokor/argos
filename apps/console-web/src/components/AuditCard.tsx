@@ -8,16 +8,10 @@ import { AuditReportV2, AuditScoreReport, extractTechs, formatPct, prettyJson } 
 import { createLogger, safeError } from "@/lib/logger";
 import { ScoreChip, ScoreBubbles } from "./ScoreChip";
 import StatusBadge from "./StatusBadge";
+import { scoreColor } from "./report/reportColors";
 
 function isFinal(status: AuditListItem["status"]) {
   return status === "COMPLETED" || status === "FAILED";
-}
-
-function scoreColor(score: number): string {
-  if (score >= 85) return "#10b981";
-  if (score >= 70) return "#3b82f6";
-  if (score >= 55) return "#f59e0b";
-  return "#ef4444";
 }
 
 function formatDate(iso?: string | null): string {
