@@ -13,7 +13,7 @@
 .card {
   width: 100%;
   max-width: 480px;
-  background: t.$color-white;
+  background: t.$surface;
   border-radius: t.$radius-2xl;
   box-shadow: t.$shadow-hero;
   padding: t.$space-10 t.$space-8;
@@ -24,7 +24,7 @@
 }
 
 .icon {
-  color: t.$color-navy;
+  color: t.$text;
   margin-bottom: t.$space-4;
 }
 
@@ -44,12 +44,12 @@
   font-size: clamp(22px, 3vw, 28px);
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: t.$color-navy;
+  color: t.$text;
   margin: 0 0 t.$space-3;
 }
 
 .description {
-  color: t.$color-slate-600;
+  color: t.$text-muted;
   font-size: t.$text-xl;
   line-height: 1.6;
   margin: 0 0 t.$space-8;
@@ -66,8 +66,8 @@
   appearance: none;
   border: none;
   cursor: pointer;
-  background: t.$color-navy;
-  color: t.$color-white;
+  background: t.$text;
+  color: t.$bg;
   font-size: t.$text-xl;
   font-weight: 600;
   padding: t.$space-3 t.$space-6;
@@ -83,28 +83,28 @@
 .secondaryBtn {
   display: inline-block;
   text-decoration: none;
-  background: t.$color-white;
-  color: t.$color-navy;
+  background: t.$surface;
+  color: t.$text;
   font-size: t.$text-xl;
   font-weight: 600;
   padding: t.$space-3 t.$space-6;
-  border: 1px solid t.$color-slate-200;
+  border: 1px solid t.$border;
   border-radius: t.$radius-sm;
   transition: border-color 0.15s ease;
 
   &:hover {
-    border-color: t.$color-slate-400;
+    border-color: t.$text-subtle;
   }
 }
 
 .reference {
   margin: t.$space-6 0 0;
   font-size: t.$text-base;
-  color: t.$color-slate-400;
+  color: t.$text-subtle;
 
   code {
     font-family: var(--font-geist-mono, monospace);
-    color: t.$color-slate-500;
+    color: t.$text-muted;
     word-break: break-all;
   }
 }

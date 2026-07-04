@@ -4,9 +4,9 @@
   display: grid;
   gap: t.$space-3;
   padding: t.$space-4;
-  border: 1px solid t.$color-slate-200;
+  border: 1px solid t.$border;
   border-radius: t.$radius-lg;
-  background: t.$color-white;
+  background: t.$surface;
 }
 
 .fieldGroup {
@@ -16,15 +16,16 @@
 
 .label {
   font-weight: 600;
-  color: t.$color-navy;
+  color: t.$text;
   font-size: t.$text-md;
 }
 
 .input {
   padding: 10px;
   border-radius: t.$radius-md;
-  border: 1px solid t.$color-slate-300;
-  color: t.$color-navy;
+  border: 1px solid t.$border;
+  background: t.$surface;
+  color: t.$text;
   font-size: t.$text-lg;
   outline: none;
 
@@ -40,9 +41,9 @@
 .submitBtn {
   padding: 10px;
   border-radius: t.$radius-md;
-  border: 1px solid t.$color-navy;
-  background: t.$color-navy;
-  color: t.$color-white;
+  border: 1px solid t.$text;
+  background: t.$text;
+  color: t.$bg;
   font-weight: 600;
   font-size: t.$text-lg;
   cursor: pointer;

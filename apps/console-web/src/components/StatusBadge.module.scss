@@ -26,7 +26,7 @@
 }
 
 .muted {
-  border: 1px solid t.$color-slate-200;
-  background: t.$color-slate-50;
-  color: t.$color-slate-600;
+  border: 1px solid t.$border;
+  background: t.$surface-2;
+  color: t.$text-muted;
 }

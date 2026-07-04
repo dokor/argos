@@ -9,15 +9,15 @@
 }
 
 .light {
-  background: t.$color-slate-100;
-  border: 1px solid t.$color-slate-200;
+  background: t.$surface-2;
+  border: 1px solid t.$border;
 
   .option {
-    color: t.$color-slate-500;
-    &:hover:not(.active) { color: t.$color-navy; }
+    color: t.$text-muted;
+    &:hover:not(.active) { color: t.$text; }
   }
 
-  .sep { background: t.$color-slate-300; }
+  .sep { background: t.$border; }
 }
 
 .dark {

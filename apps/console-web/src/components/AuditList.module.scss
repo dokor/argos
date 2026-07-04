@@ -16,20 +16,20 @@
 .sectionLabel {
   font-size: t.$text-xs;
   font-weight: 800;
-  color: t.$color-slate-400;
+  color: t.$text-subtle;
   text-transform: uppercase;
   letter-spacing: 0.07em;
 }
 
 .count {
   font-size: t.$text-sm;
-  color: t.$color-slate-400;
+  color: t.$text-subtle;
   font-weight: 600;
 }
 
 .helper {
   padding: t.$space-4;
-  color: t.$color-slate-500;
+  color: t.$text-muted;
 }
 
 .errorBox {
@@ -43,10 +43,10 @@
 
 .emptyCard {
   padding: t.$space-6;
-  border: 1px solid t.$color-slate-200;
+  border: 1px solid t.$border;
   border-radius: t.$radius-xl;
-  background: t.$color-white;
+  background: t.$surface;
   text-align: center;
   font-size: t.$text-base;
-  color: t.$color-slate-400;
+  color: t.$text-subtle;
 }

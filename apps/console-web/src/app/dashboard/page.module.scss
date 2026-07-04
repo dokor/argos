@@ -2,12 +2,12 @@
 
 .root {
   min-height: 100vh;
-  background: t.$color-slate-50;
+  background: t.$canvas;
 }
 
 .header {
-  background: t.$color-white;
-  border-bottom: 1px solid t.$color-slate-200;
+  background: t.$surface;
+  border-bottom: 1px solid t.$border;
   position: sticky;
   top: 0;
   z-index: t.$z-sticky;
@@ -33,12 +33,12 @@
   width: 28px;
   height: 28px;
   border-radius: t.$radius-sm;
-  background: t.$color-navy;
+  background: t.$text;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: t.$color-white;
+  color: t.$bg;
   font-size: t.$text-base;
   font-weight: 900;
   line-height: 1;
@@ -47,18 +47,18 @@
 .logoName {
   font-size: t.$text-xl;
   font-weight: 900;
-  color: t.$color-navy;
+  color: t.$text;
   letter-spacing: -0.02em;
 }
 
 .logoBadge {
   font-size: t.$text-xs;
   font-weight: 700;
-  color: t.$color-slate-500;
-  background: t.$color-slate-100;
+  color: t.$text-muted;
+  background: t.$surface-2;
   padding: 2px t.$space-2;
   border-radius: t.$radius-pill;
-  border: 1px solid t.$color-slate-200;
+  border: 1px solid t.$border;
 }
 
 .main {
@@ -78,7 +78,7 @@
 .sectionLabel {
   font-size: t.$text-xs;
   font-weight: 800;
-  color: t.$color-slate-400;
+  color: t.$text-subtle;
   text-transform: uppercase;
   letter-spacing: 0.07em;
 }
