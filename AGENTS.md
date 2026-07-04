@@ -158,6 +158,13 @@ Fichiers clés : `UrlNormalizerTest`, `ScoreServiceTest`, `ScorePolicyV1Test`, `
 `next.config.ts` - rewrite `afterFiles` : `/api/:path*` → `${API_BASE}/api/:path*`.
 Exception : la route `src/app/api/audits/route.ts` intercepte `POST /api/audits` avant le rewrite (validation BFF).
 
+### Architecture SSR / BFF (issue #136)
+- **Aucun appel navigateur → service externe en direct.** Le navigateur n'appelle que des chemins **same-origin `/api/*`**, résolus côté serveur :
+  - **Route handlers** (`src/app/api/*`) pour les flux avec validation/secrets : `POST/GET /api/audits` (SSRF + longueur), `POST /api/newsletter`, `POST /api/auth/login`.
+  - **Rewrite proxy** pour les lectures restantes (`/api/reports/*`, `/api/audits/runs/*`, `/api/audits/*/history`).
+- `API_BASE` (URL interne du backend Java) est **exclusivement serveur** — jamais exposée au client. `argosApi.http()` (`src/lib/ArgosApi.ts`) utilise l'URL absolue en SSR et un chemin relatif côté client (proxifié).
+- **Frontière client/serveur** : la plupart des composants sont `"use client"` **parce que l'i18n (`LangContext`) et le thème (`ThemeContext`) sont des contextes client**, en plus de l'interactivité. Réduire davantage l'hydratation des contenus statiques suppose une **i18n résolue côté serveur** (chantier séparé). Les composants purs sans hook/événement ne portent pas la directive (ex. `KpiCard`, `StatusBadge`).
+
 ### Composants rapport (`src/components/report/`)
 | Composant | Rôle |
 |---|---|

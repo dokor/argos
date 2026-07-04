@@ -1,5 +1,3 @@
-"use client";
-
 import React from "react";
 import styles from "./StatusBadge.module.scss";
 import { AuditListItem } from "@/lib/ArgosApi";
