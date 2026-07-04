@@ -62,41 +62,40 @@ public class ZapModuleAnalyzer implements AuditModuleAnalyzer {
             return emptyModule("Unexpected ZAP response format.");
         }
 
-        List<AuditCheckResult> checks = new ArrayList<>();
-        int alertCount = 0;
+        // Agrégation par clé de check : ZAP émet souvent la même alerte pour plusieurs
+        // URLs d'une même page. On déduplique (une issue par finding, N occurrences) et on
+        // écarte les faux positifs signalés par ZAP (confidence=0) — garde-fous #157.
+        Map<String, ZapFinding> byKey = new LinkedHashMap<>();
+        int rawCount = 0;
+        int falsePositives = 0;
 
         for (JsonNode alert : alerts) {
-            alertCount++;
+            rawCount++;
+            // confidence ZAP : 0 = False Positive, 1 = Low, 2 = Medium, 3 = High.
+            String confidence = textOrDefault(alert.path("confidence"), "");
+            if ("0".equals(confidence)) {
+                falsePositives++;
+                continue;
+            }
             String pluginId = textOrDefault(alert.path("pluginId"), "");
             String alertName = textOrDefault(alert.path("alert"), "Alerte inconnue");
-            String riskcode = textOrDefault(alert.path("riskcode"), "0");
+            int risk = parseRisk(textOrDefault(alert.path("riskcode"), "0"));
             String description = textOrDefault(alert.path("description"), "");
             String alertUrl = textOrDefault(alert.path("url"), url);
-
             String checkKey = PLUGIN_KEY_MAP.getOrDefault(pluginId, "zap.alert." + pluginId);
-            AuditSeverity severity = mapRiskToSeverity(riskcode);
-            AuditStatus status = mapRiskToStatus(riskcode);
 
-            Map<String, Object> details = new LinkedHashMap<>();
-            details.put("pluginId", pluginId);
-            details.put("riskcode", riskcode);
-            details.put("url", alertUrl);
-            if (!description.isBlank()) details.put("description", description);
-
-            checks.add(AuditCheckResult.of(
-                checkKey,
-                alertName,
-                status,
-                severity,
-                true,
-                0.0,
-                List.of(),
-                riskcode,
-                details,
-                alertName + " détecté par l'analyse passive ZAP.",
-                "Examinez et corrigez ce problème de sécurité : " + alertName
-            ));
+            byKey.computeIfAbsent(checkKey, k -> new ZapFinding(k, pluginId))
+                .addInstance(risk, alertName, description, alertUrl);
         }
+
+        logger.info("ZAP module: {} alertes brutes, {} faux positifs écartés, {} findings distincts",
+            rawCount, falsePositives, byKey.size());
+
+        // Restitution triée par gravité décroissante.
+        List<AuditCheckResult> checks = byKey.values().stream()
+            .sorted(java.util.Comparator.comparingInt((ZapFinding f) -> f.maxRisk).reversed())
+            .map(f -> f.toCheck(url))
+            .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
 
         if (checks.isEmpty()) {
             checks.add(AuditCheckResult.of(
@@ -116,9 +115,12 @@ public class ZapModuleAnalyzer implements AuditModuleAnalyzer {
 
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("url", url);
-        data.put("alertCount", alertCount);
+        data.put("alertCount", rawCount);
+        data.put("distinctFindings", byKey.size());
+        data.put("falsePositivesFiltered", falsePositives);
 
-        String summary = "url=" + url + " alerts=" + alertCount;
+        String summary = "url=" + url + " alerts=" + rawCount
+            + " distinct=" + byKey.size() + " fp=" + falsePositives;
         logger.info("ZAP module done: {}", summary);
 
         return new AuditModuleResult(moduleId(), "OWASP ZAP", summary, data, checks);
@@ -142,19 +144,89 @@ public class ZapModuleAnalyzer implements AuditModuleAnalyzer {
             Map.of("available", false, "reason", reason), checks);
     }
 
-    private static AuditSeverity mapRiskToSeverity(String riskcode) {
-        return switch (riskcode) {
-            case "3" -> AuditSeverity.HIGH;
-            case "2" -> AuditSeverity.MEDIUM;
-            default -> AuditSeverity.LOW; // "0", "1"
+    /** Nombre maximal d'URLs affectées listées par finding (évite de gonfler le rapport). */
+    private static final int MAX_URLS_PER_FINDING = 5;
+
+    /**
+     * Finding ZAP dédupliqué : agrège toutes les occurrences d'une même alerte (même clé de
+     * check) rencontrées sur la page, en conservant la gravité maximale et un échantillon
+     * d'URLs affectées.
+     */
+    private static final class ZapFinding {
+        private final String key;
+        private final String pluginId;
+        private String name = "Alerte inconnue";
+        private String description = "";
+        private int maxRisk = -1;
+        private int instances = 0;
+        private final List<String> urls = new ArrayList<>();
+
+        ZapFinding(String key, String pluginId) {
+            this.key = key;
+            this.pluginId = pluginId;
+        }
+
+        void addInstance(int risk, String name, String description, String url) {
+            instances++;
+            // On garde le libellé/description de l'occurrence la plus grave.
+            if (risk > maxRisk) {
+                this.maxRisk = risk;
+                this.name = name;
+                this.description = description;
+            }
+            if (url != null && !url.isBlank() && !urls.contains(url) && urls.size() < MAX_URLS_PER_FINDING) {
+                urls.add(url);
+            }
+        }
+
+        AuditCheckResult toCheck(String fallbackUrl) {
+            Map<String, Object> details = new LinkedHashMap<>();
+            details.put("pluginId", pluginId);
+            details.put("riskcode", String.valueOf(maxRisk));
+            details.put("instances", instances);
+            details.put("urls", urls.isEmpty() ? List.of(fallbackUrl) : urls);
+            if (!description.isBlank()) details.put("description", description);
+
+            String message = name + " détecté par l'analyse passive ZAP"
+                + (instances > 1 ? " (" + instances + " occurrences)." : ".");
+
+            return AuditCheckResult.of(
+                key,
+                name,
+                mapRiskToStatus(maxRisk),
+                mapRiskToSeverity(maxRisk),
+                true,
+                0.0,
+                List.of(),
+                String.valueOf(maxRisk),
+                details,
+                message,
+                "Examinez et corrigez ce problème de sécurité : " + name
+            );
+        }
+    }
+
+    private static int parseRisk(String riskcode) {
+        try {
+            return Integer.parseInt(riskcode.trim());
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
+    private static AuditSeverity mapRiskToSeverity(int risk) {
+        return switch (risk) {
+            case 3 -> AuditSeverity.HIGH;
+            case 2 -> AuditSeverity.MEDIUM;
+            default -> AuditSeverity.LOW; // 0, 1
         };
     }
 
-    private static AuditStatus mapRiskToStatus(String riskcode) {
-        return switch (riskcode) {
-            case "3" -> AuditStatus.FAIL;
-            case "2", "1" -> AuditStatus.WARN;
-            default -> AuditStatus.INFO; // "0"
+    private static AuditStatus mapRiskToStatus(int risk) {
+        return switch (risk) {
+            case 3 -> AuditStatus.FAIL;
+            case 2, 1 -> AuditStatus.WARN;
+            default -> AuditStatus.INFO; // 0
         };
     }
 
