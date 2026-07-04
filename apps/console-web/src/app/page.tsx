@@ -424,6 +424,7 @@ export default function LandingPage() {
         </div>
       </nav>
 
+      <main>
       {/* HERO */}
       <section className={s.heroSection}>
         <div className={s.dotPattern} aria-hidden="true" />
@@ -523,6 +524,8 @@ export default function LandingPage() {
           <HeroAuditForm t={formT} variant="cta" />
         </div>
       </section>
+
+      </main>
 
       {/* FOOTER */}
       <footer className={s.footer}>
