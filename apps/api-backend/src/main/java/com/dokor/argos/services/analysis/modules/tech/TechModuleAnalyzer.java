@@ -61,6 +61,12 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
     private static final Pattern APACHE_HINT_PATTERN = Pattern.compile("(?is)apache");
     private static final Pattern CLOUDFLARE_HINT_PATTERN = Pattern.compile("(?is)cloudflare|cf-ray|cf-cache-status");
 
+    // Bannière de version exposée dans un en-tête, ex. "Apache/2.4.41", "nginx/1.18.0",
+    // "PHP/7.4.3". Exige un nom SUIVI d'un numéro X.Y(.Z) : on ne signale donc jamais
+    // une simple mention de techno sans version (ex. "cloudflare", "PHP").
+    private static final Pattern VERSION_BANNER_PATTERN =
+        Pattern.compile("[A-Za-z][A-Za-z.+_-]*[/ ]\\d+(?:\\.\\d+)+");
+
     @Override
     public String moduleId() {
         return "tech";
@@ -133,7 +139,7 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
         // 1) CMS
         checks.add(AuditCheckResult.of(
             "tech.cms",
-            "CMS detection",
+            "Détection du CMS",
             cms.confidence >= 0.7 ? AuditStatus.PASS : AuditStatus.INFO,
             AuditSeverity.LOW,
             false,          // scorable filled later
@@ -141,14 +147,14 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
             List.of(),      // tags filled later
             mapCms,
             Map.of("signals", cms.signals),
-            cms.name != null ? ("Detected CMS: " + cms.name) : "No CMS detected (heuristic).",
+            cms.name != null ? ("CMS détecté : " + cms.name) : "Aucun CMS détecté (heuristique).",
             null
         ));
 
         // 2) Frontend framework
         checks.add(AuditCheckResult.of(
             "tech.frontend.framework",
-            "Frontend framework detection",
+            "Détection du framework frontend",
             frontend.confidence >= 0.7 ? AuditStatus.PASS : AuditStatus.INFO,
             AuditSeverity.LOW,
             false,          // scorable filled later
@@ -156,7 +162,7 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
             List.of(),      // tags filled later
             Map.of("name", frontend.name, "confidence", frontend.confidence),
             Map.of("signals", frontend.signals),
-            !frontend.name.equals("unknown") ? "Detected frontend framework: " + frontend.name : "No frontend framework detected (heuristic).",
+            !frontend.name.equals("unknown") ? "Framework frontend détecté : " + frontend.name : "Aucun framework frontend détecté (heuristique).",
             null
         ));
 
@@ -178,7 +184,7 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
 
         checks.add(AuditCheckResult.of(
             "tech.frontend.nextjs",
-            "Next.js detection & version (best-effort)",
+            "Détection de Next.js et version (best-effort)",
             next.isNext() ? AuditStatus.PASS : AuditStatus.INFO,
             AuditSeverity.LOW,
             false,
@@ -187,10 +193,10 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
             nextData,
             Map.of("evidence", next.evidence()),
             next.isNext()
-                ? ("Next.js detected (router=" + next.router() + "). Version guess: " + safe(next.version().guess()))
-                : "Next.js not detected.",
+                ? ("Next.js détecté (router=" + next.router() + "). Version estimée : " + safe(next.version().guess()))
+                : "Next.js non détecté.",
             next.isNext() && next.version().exact() == null
-                ? "Exact Next.js version is rarely exposed in production. This is a best-effort guess based on public signals."
+                ? "La version exacte de Next.js est rarement exposée en production : cette estimation repose sur des signaux publics."
                 : null
         ));
 
@@ -208,7 +214,7 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
         // 3) Backend hints (info)
         checks.add(AuditCheckResult.of(
             "tech.backend.hints",
-            "Backend hints (headers/cookies)",
+            "Indices de backend (en-têtes/cookies)",
             AuditStatus.INFO,
             AuditSeverity.LOW,
             false,          // scorable filled later
@@ -216,14 +222,14 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
             List.of(),      // tags filled later
             backendHints,
             objectMap,
-            backendHints.isEmpty() ? "No strong backend hint detected." : "Backend hints detected: " + String.join(", ", backendHints),
+            backendHints.isEmpty() ? "Aucun indice de backend marqué." : "Indices de backend détectés : " + String.join(", ", backendHints),
             null
         ));
 
         // 4) CDN/Proxy
         checks.add(AuditCheckResult.of(
             "tech.cdn.cloudflare",
-            "Cloudflare detected",
+            "Cloudflare détecté",
             AuditStatus.INFO,
             AuditSeverity.LOW,
             false,          // scorable filled later
@@ -231,14 +237,14 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
             List.of(),      // tags filled later
             cloudflare,
             Map.of("signals", cloudflare ? List.of("cf-ray/cf-cache-status/server=cloudflare") : List.of()),
-            cloudflare ? "Cloudflare appears to be in front of the site." : "No Cloudflare signal detected.",
+            cloudflare ? "Cloudflare semble être placé devant le site." : "Aucun signal Cloudflare détecté.",
             null
         ));
 
         // 5) Server header (info)
         checks.add(AuditCheckResult.of(
             "tech.http.server_header",
-            "Server header (raw)",
+            "En-tête Server (brut)",
             AuditStatus.INFO,
             AuditSeverity.LOW,
             false,          // scorable filled later
@@ -246,15 +252,40 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
             List.of(),      // tags filled later
             serverHeader,
             serverHeader != null ? Map.of("server", serverHeader) : Map.of(),
-            serverHeader != null ? "Server header is present." : "Server header not present.",
+            serverHeader != null ? "L'en-tête Server est présent." : "L'en-tête Server est absent.",
             null
+        ));
+
+        // 5b) Divulgation de version logicielle (hygiène de sécurité) — signal scoré.
+        List<String> exposedVersions = new ArrayList<>();
+        String serverVer = extractVersionBanner(serverHeader);
+        String poweredVer = extractVersionBanner(poweredBy);
+        if (serverVer != null) exposedVersions.add("Server: " + serverVer);
+        if (poweredVer != null) exposedVersions.add("X-Powered-By: " + poweredVer);
+        boolean versionExposed = !exposedVersions.isEmpty();
+        checks.add(AuditCheckResult.of(
+            "tech.security.version_disclosure",
+            "Divulgation de version logicielle",
+            versionExposed ? AuditStatus.WARN : AuditStatus.PASS,
+            AuditSeverity.LOW,
+            true,           // scorable filled later (poids via ScorePolicy)
+            0.0,            // weight filled later
+            List.of(),      // tags filled later
+            exposedVersions,
+            versionExposed ? Map.of("exposed", exposedVersions) : Map.of(),
+            versionExposed
+                ? "Des numéros de version logicielle sont exposés dans les en-têtes (" + String.join(", ", exposedVersions) + ")."
+                : "Aucun numéro de version logicielle exposé dans les en-têtes.",
+            versionExposed
+                ? "Masquez les numéros de version (en-têtes Server, X-Powered-By) : ils facilitent le ciblage de vulnérabilités connues."
+                : null
         ));
 
         // 6) Orchestrator coverage (warn if missing html)
         if (html == null || html.isBlank()) {
             checks.add(AuditCheckResult.of(
                 "tech.html.available",
-                "HTML available for tech detection",
+                "HTML disponible pour la détection tech",
                 AuditStatus.WARN,
                 AuditSeverity.MEDIUM,
                 false,          // scorable filled later
@@ -262,15 +293,15 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
                 List.of(),      // tags filled later
                 false,
                 Map.of("reason", "html not provided"),
-                "HTML not provided: tech detection is limited to HTTP headers.",
-                "Ensure the orchestrator passes HTML content from the HTTP module to improve detection accuracy."
+                "HTML non fourni : la détection tech est limitée aux en-têtes HTTP.",
+                "Vérifiez que l'orchestrateur transmet le contenu HTML du module HTTP pour améliorer la détection."
             ));
         }
 
         // 7) Duration (info)
         checks.add(AuditCheckResult.of(
             "tech.analysis.duration_ms",
-            "Tech analysis duration",
+            "Durée de l'analyse tech",
             AuditStatus.INFO,
             AuditSeverity.LOW,
             false,          // scorable filled later
@@ -278,7 +309,7 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
             List.of(),      // tags filled later
             durationMs,
             Map.of("durationMs", durationMs),
-            "Tech analysis completed in " + durationMs + " ms.",
+            "Analyse tech terminée en " + durationMs + " ms.",
             null
         ));
 
@@ -464,6 +495,13 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
 
     private static String safe(String s) {
         return s == null ? "" : s;
+    }
+
+    /** Extrait une bannière "nom/version" (X.Y[.Z]) d'un en-tête, ou null si absent. */
+    private static String extractVersionBanner(String header) {
+        if (header == null || header.isBlank()) return null;
+        var m = VERSION_BANNER_PATTERN.matcher(header);
+        return m.find() ? m.group() : null;
     }
 
     private static final class DetectedTech {

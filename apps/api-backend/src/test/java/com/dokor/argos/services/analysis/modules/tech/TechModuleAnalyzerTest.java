@@ -83,4 +83,37 @@ class TechModuleAnalyzerTest {
 
         assertTrue(result.checks().stream().anyMatch(c -> c.key().equals("tech.html.available") && c.status() == AuditStatus.WARN));
     }
+
+    @Test
+    void shouldWarnWhenServerExposesVersion() {
+        Map<String, String> headers = Map.of("server", "Apache/2.4.41 (Ubuntu)", "x-powered-by", "PHP/7.4.3");
+
+        AuditContext ctx = new AuditContext("http://x", "http://x", 0L)
+            .withHttpResult("http://x", 200, 10, List.of("http://x"), headers, "<html/>");
+
+        AuditModuleResult result = analyzer.analyze(ctx, LoggerFactory.getLogger("test"));
+
+        var check = result.checks().stream()
+            .filter(c -> c.key().equals("tech.security.version_disclosure"))
+            .findFirst().orElseThrow();
+        assertEquals(AuditStatus.WARN, check.status());
+        assertTrue(check.value().toString().contains("Apache/2.4.41"));
+        assertTrue(check.value().toString().contains("PHP/7.4.3"));
+    }
+
+    @Test
+    void shouldPassWhenNoVersionExposed() {
+        // "cloudflare" / "PHP" sans numéro de version => pas de divulgation.
+        Map<String, String> headers = Map.of("server", "cloudflare", "x-powered-by", "PHP");
+
+        AuditContext ctx = new AuditContext("http://x", "http://x", 0L)
+            .withHttpResult("http://x", 200, 10, List.of("http://x"), headers, "<html/>");
+
+        AuditModuleResult result = analyzer.analyze(ctx, LoggerFactory.getLogger("test"));
+
+        var check = result.checks().stream()
+            .filter(c -> c.key().equals("tech.security.version_disclosure"))
+            .findFirst().orElseThrow();
+        assertEquals(AuditStatus.PASS, check.status());
+    }
 }
