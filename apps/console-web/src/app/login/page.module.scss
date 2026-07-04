@@ -5,11 +5,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: t.$color-slate-100;
+  background: t.$canvas;
 }
 
 .form {
-  background: t.$color-white;
+  background: t.$surface;
   border-radius: t.$radius-lg;
   padding: t.$space-10 t.$space-8;
   box-shadow: t.$shadow-md;
@@ -30,14 +30,16 @@
 .title {
   margin: 0;
   font-size: t.$text-3xl;
-  color: t.$color-navy;
+  color: t.$text;
   text-align: center;
 }
 
 .input {
   padding: 10px 14px;
   border-radius: t.$radius-sm;
-  border: 1px solid t.$color-slate-300;
+  border: 1px solid t.$border;
+  background: t.$surface;
+  color: t.$text;
   font-size: t.$text-lg;
   outline: none;
   width: 100%;
@@ -58,8 +60,8 @@
 .btn {
   padding: 10px;
   border-radius: t.$radius-sm;
-  background: t.$color-navy;
-  color: t.$color-white;
+  background: t.$text;
+  color: t.$bg;
   border: none;
   font-size: t.$text-lg;
   cursor: pointer;
@@ -67,7 +69,7 @@
   transition: opacity 0.15s;
 
   &:disabled {
-    background: t.$color-slate-400;
+    background: t.$text-subtle;
     cursor: not-allowed;
   }
 }
