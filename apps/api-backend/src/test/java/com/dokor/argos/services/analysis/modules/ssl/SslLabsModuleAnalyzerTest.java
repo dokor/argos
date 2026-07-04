@@ -61,4 +61,31 @@ class SslLabsModuleAnalyzerTest {
         AuditModuleResult result = analyze("{\"endpoints\":[{\"grade\":\"B\"}]}");
         assertEquals(AuditStatus.WARN, check(result, "ssl.grade").status());
     }
+
+    // Protocoles obsolètes (issue #155)
+
+    @Test
+    void legacyProtocolsEnabledIsFail() throws Exception {
+        // TLS 1.3/1.2 actifs MAIS TLS 1.0 encore proposé => FAIL (protocole déprécié).
+        AuditModuleResult result = analyze("{\"endpoints\":[{\"grade\":\"A\",\"details\":{\"protocols\":["
+            + "{\"name\":\"TLS\",\"version\":\"1.3\"},"
+            + "{\"name\":\"TLS\",\"version\":\"1.2\"},"
+            + "{\"name\":\"TLS\",\"version\":\"1.0\"}]}}]}");
+        assertEquals(AuditStatus.FAIL, check(result, "ssl.protocols.legacy_disabled").status());
+    }
+
+    @Test
+    void onlyModernProtocolsIsPass() throws Exception {
+        AuditModuleResult result = analyze("{\"endpoints\":[{\"grade\":\"A\",\"details\":{\"protocols\":["
+            + "{\"name\":\"TLS\",\"version\":\"1.3\"},"
+            + "{\"name\":\"TLS\",\"version\":\"1.2\"}]}}]}");
+        assertEquals(AuditStatus.PASS, check(result, "ssl.protocols.legacy_disabled").status());
+    }
+
+    @Test
+    void unknownProtocolsIsInfoNotFail() throws Exception {
+        // Pas de liste de protocoles (SSL Labs incomplet) => INFO non scoré, pas FAIL.
+        AuditModuleResult result = analyze("{\"endpoints\":[{\"grade\":\"A\"}]}");
+        assertEquals(AuditStatus.INFO, check(result, "ssl.protocols.legacy_disabled").status());
+    }
 }

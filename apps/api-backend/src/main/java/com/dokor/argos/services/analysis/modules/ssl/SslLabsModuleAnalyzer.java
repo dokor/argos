@@ -177,17 +177,24 @@ public class SslLabsModuleAnalyzer implements AuditModuleAnalyzer {
             ));
         }
 
-        // ssl.protocols.tls13 and ssl.protocols.tls12
+        // ssl.protocols.tls13, ssl.protocols.tls12 et ssl.protocols.legacy_disabled
         JsonNode protocols = details != null ? details.path("protocols") : null;
         boolean hasTls13 = false;
         boolean hasTls12 = false;
+        boolean hasTls10 = false;
+        boolean hasTls11 = false;
+        boolean hasSsl3 = false;
+        boolean hasProtocolData = protocols != null && protocols.isArray() && protocols.size() > 0;
 
-        if (protocols != null && protocols.isArray()) {
+        if (hasProtocolData) {
             for (JsonNode proto : protocols) {
                 String name = textOrNull(proto.path("name"));
                 String version = textOrNull(proto.path("version"));
                 if ("TLS".equals(name) && "1.3".equals(version)) hasTls13 = true;
                 if ("TLS".equals(name) && "1.2".equals(version)) hasTls12 = true;
+                if ("TLS".equals(name) && "1.1".equals(version)) hasTls11 = true;
+                if ("TLS".equals(name) && "1.0".equals(version)) hasTls10 = true;
+                if ("SSL".equals(name)) hasSsl3 = true;
             }
         }
 
@@ -217,6 +224,34 @@ public class SslLabsModuleAnalyzer implements AuditModuleAnalyzer {
             Map.of("tls12", hasTls12),
             hasTls12 ? "TLS 1.2 est pris en charge." : "TLS 1.2 n'est pas pris en charge.",
             hasTls12 ? null : "TLS 1.2 doit être pris en charge pour la compatibilité avec la majorité des navigateurs."
+        ));
+
+        // ssl.protocols.legacy_disabled — présence de protocoles obsolètes (SSL 2/3, TLS 1.0/1.1).
+        // Ces versions sont dépréciées (RFC 8996) et vulnérables (POODLE, BEAST…). Distinct de
+        // "TLS 1.2/1.3 activés" : un serveur peut proposer 1.3 tout en gardant 1.0 actif.
+        // Sans données de protocoles (SSL Labs incomplet) => INFO non scoré ("inconnu" ≠ "défaut").
+        boolean hasLegacy = hasSsl3 || hasTls10 || hasTls11;
+        AuditStatus legacyStatus = !hasProtocolData ? AuditStatus.INFO
+            : hasLegacy ? AuditStatus.FAIL : AuditStatus.PASS;
+        List<String> legacyProtos = new ArrayList<>();
+        if (hasSsl3) legacyProtos.add("SSL");
+        if (hasTls10) legacyProtos.add("TLS 1.0");
+        if (hasTls11) legacyProtos.add("TLS 1.1");
+
+        checks.add(AuditCheckResult.of(
+            "ssl.protocols.legacy_disabled",
+            "Désactivation des protocoles obsolètes",
+            legacyStatus,
+            legacyStatus == AuditStatus.FAIL ? AuditSeverity.HIGH : AuditSeverity.LOW,
+            hasProtocolData,
+            0.0,
+            List.of(),
+            hasProtocolData ? !hasLegacy : null,
+            hasProtocolData ? Map.of("legacyEnabled", hasLegacy, "protocols", legacyProtos) : Map.of(),
+            !hasProtocolData ? "Liste des protocoles TLS indisponible."
+                : hasLegacy ? "Des protocoles obsolètes sont encore activés : " + String.join(", ", legacyProtos) + "."
+                : "Aucun protocole obsolète (SSL, TLS 1.0/1.1) n'est activé.",
+            hasLegacy ? "Désactivez SSL 2/3 et TLS 1.0/1.1 : ces versions sont dépréciées et vulnérables." : null
         ));
 
         // http.security.hsts - reuses existing key, will be merged by CheckMergerService
@@ -249,6 +284,7 @@ public class SslLabsModuleAnalyzer implements AuditModuleAnalyzer {
         data.put("hasWarnings", hasWarnings);
         data.put("tls13", hasTls13);
         data.put("tls12", hasTls12);
+        data.put("legacyProtocolsEnabled", hasProtocolData ? hasLegacy : null);
         data.put("certIssues", certIssues >= 0 ? certIssues : null);
         data.put("hstsPresent", hstsPresent);
 
