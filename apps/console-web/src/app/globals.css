@@ -53,9 +53,14 @@ ul, ol {
   padding: 0;
 }
 
-/* ─── Tokens sémantiques Argos (issue #81) ──────────────────────────────────
-   Théma-aware : clair par défaut ; sombre selon prefers-color-scheme (sauf
-   choix explicite) ou via l'attribut data-theme posé par ThemeProvider. */
+/* ─── Tokens sémantiques Argos (issues #81 / #121) ──────────────────────────
+   Source de vérité des couleurs théma-aware. Les composants les consomment via
+   les alias SCSS de `styles/_tokens.scss` (t.$surface, t.$text, …).
+   Clair par défaut ; sombre dans deux cas, d'où les deux blocs ci-dessous :
+     - @media (prefers-color-scheme: dark) sans choix explicite → préférence système ;
+     - [data-theme="dark"] → choix explicite (ThemeProvider / script anti-FOUC).
+   Les deux définissent les mêmes valeurs (CSS ne permet pas de les factoriser
+   proprement sans JS). */
 :root {
   --argos-bg: #ffffff;
   --argos-canvas: #f8fafc;
