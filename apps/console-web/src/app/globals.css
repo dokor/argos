@@ -58,31 +58,43 @@ ul, ol {
    choix explicite) ou via l'attribut data-theme posé par ThemeProvider. */
 :root {
   --argos-bg: #ffffff;
+  --argos-canvas: #f8fafc;
   --argos-surface: #ffffff;
   --argos-surface-2: #f8fafc;
   --argos-text: #0f172a;
   --argos-text-muted: #64748b;
+  --argos-text-subtle: #94a3b8;
   --argos-border: #e2e8f0;
+  --argos-border-subtle: #f1f5f9;
+  --argos-header-bg: rgba(255, 255, 255, 0.92);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --argos-bg: #0b1220;
+    --argos-canvas: #0b1220;
     --argos-surface: #0f172a;
     --argos-surface-2: #1e293b;
     --argos-text: #e2e8f0;
     --argos-text-muted: #94a3b8;
+    --argos-text-subtle: #64748b;
     --argos-border: #334155;
+    --argos-border-subtle: #1e293b;
+    --argos-header-bg: rgba(11, 18, 32, 0.85);
   }
 }
 
 :root[data-theme="dark"] {
   --argos-bg: #0b1220;
+  --argos-canvas: #0b1220;
   --argos-surface: #0f172a;
   --argos-surface-2: #1e293b;
   --argos-text: #e2e8f0;
   --argos-text-muted: #94a3b8;
+  --argos-text-subtle: #64748b;
   --argos-border: #334155;
+  --argos-border-subtle: #1e293b;
+  --argos-header-bg: rgba(11, 18, 32, 0.85);
 }
 
 body {

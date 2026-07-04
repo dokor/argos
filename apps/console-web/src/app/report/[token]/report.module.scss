@@ -2,9 +2,9 @@
 
 .page {
   font-family: 'Inter', system-ui, sans-serif;
-  background: t.$color-slate-50;
+  background: t.$canvas;
   min-height: 100vh;
-  color: t.$color-navy;
+  color: t.$text;
 }
 
 .main {
@@ -17,8 +17,8 @@
 
 // ─── Raw data panel ───────────────────────────────────────────────────────────
 .dataPanel {
-  background: t.$color-white;
-  border: 1px solid t.$color-slate-200;
+  background: t.$surface;
+  border: 1px solid t.$border;
   border-radius: t.$radius-2xl;
   padding: t.$space-6;
 
@@ -33,7 +33,7 @@
   list-style: none;
   font-size: t.$text-base;
   font-weight: 600;
-  color: t.$color-slate-500;
+  color: t.$text-muted;
   user-select: none;
 
   &::-webkit-details-marker { display: none; }
@@ -47,7 +47,7 @@
 
 .dataDesc {
   font-size: t.$text-sm;
-  color: t.$color-slate-400;
+  color: t.$text-subtle;
   margin: t.$space-2 0 0;
 }
 

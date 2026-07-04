@@ -1,8 +1,8 @@
 @use '../../styles/tokens' as t;
 
 .section {
-  background: t.$color-white;
-  border: 1px solid t.$color-slate-200;
+  background: t.$surface;
+  border: 1px solid t.$border;
   border-radius: t.$radius-2xl;
   overflow: hidden;
   box-shadow: t.$shadow-sm;
@@ -13,8 +13,8 @@
   position: sticky;
   top: 52px; // below ReportHeader
   z-index: 10;
-  background: t.$color-white;
-  border-bottom: 1px solid t.$color-slate-100;
+  background: t.$surface;
+  border-bottom: 1px solid t.$border-subtle;
   padding: t.$space-4 t.$space-6;
   display: flex;
   align-items: center;
@@ -27,14 +27,14 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  color: t.$color-slate-400;
+  color: t.$text-subtle;
   margin-right: t.$space-1;
 }
 
 .filterBtn {
-  border: 1px solid t.$color-slate-200;
-  background: t.$color-slate-50;
-  color: t.$color-slate-600;
+  border: 1px solid t.$border;
+  background: t.$surface-2;
+  color: t.$text-muted;
   border-radius: t.$radius-pill;
   padding: 4px 14px;
   font-size: t.$text-base;
@@ -43,14 +43,14 @@
   transition: background 0.12s, color 0.12s, border-color 0.12s;
 
   &:hover {
-    background: t.$color-slate-100;
-    border-color: t.$color-slate-300;
+    background: t.$border-subtle;
+    border-color: t.$border;
   }
 
   &.active {
-    background: t.$color-navy;
-    color: t.$color-white;
-    border-color: t.$color-navy;
+    background: t.$text;
+    color: t.$surface;
+    border-color: t.$text;
   }
 }
 
@@ -62,18 +62,18 @@
   font-size: t.$text-2xl;
   font-weight: 700;
   margin: 0 0 t.$space-1;
-  color: t.$color-navy;
+  color: t.$text;
 }
 
 .sectionDesc {
   font-size: t.$text-base;
-  color: t.$color-slate-500;
+  color: t.$text-muted;
   margin: 0 0 t.$space-5;
 }
 
 // ─── Category block ───────────────────────────────────────────────────────────
 .catBlock {
-  border-bottom: 1px solid t.$color-slate-100;
+  border-bottom: 1px solid t.$border-subtle;
   padding: t.$space-5 t.$space-6;
   scroll-margin-top: 110px;
 
@@ -96,21 +96,21 @@
 .catLabel {
   font-size: t.$text-xl;
   font-weight: 700;
-  color: t.$color-navy;
+  color: t.$text;
   margin: 0 0 2px;
 }
 
 .catDesc {
   font-size: t.$text-sm;
   line-height: 1.5;
-  color: t.$color-slate-500;
+  color: t.$text-muted;
   max-width: 60ch;
   margin: 4px 0 6px;
 }
 
 .catInfo {
   font-size: t.$text-base;
-  color: t.$color-slate-400;
+  color: t.$text-subtle;
 }
 
 .catScoreChip {
@@ -123,13 +123,13 @@
 
 .backTop {
   font-size: t.$text-sm;
-  color: t.$color-slate-400;
+  color: t.$text-subtle;
   text-decoration: none;
   font-weight: 500;
   white-space: nowrap;
 
   &:hover {
-    color: t.$color-navy;
+    color: t.$text;
   }
 }
 
@@ -140,15 +140,15 @@
 }
 
 .issueRow {
-  border: 1px solid t.$color-slate-100;
+  border: 1px solid t.$border-subtle;
   border-radius: t.$radius-xl;
   overflow: hidden;
-  background: t.$color-white;
+  background: t.$surface;
   transition: border-color 0.12s;
 
   &[open],
   &:hover {
-    border-color: t.$color-slate-200;
+    border-color: t.$border;
   }
 }
 
@@ -190,23 +190,23 @@
 .effortTag {
   font-size: t.$text-xs;
   font-weight: 600;
-  border: 1px solid t.$color-slate-200;
+  border: 1px solid t.$border;
   border-radius: t.$radius-pill;
   padding: 2px 8px;
-  color: t.$color-slate-500;
+  color: t.$text-muted;
 }
 
 .issueTitle {
   font-size: t.$text-base;
   font-weight: 600;
-  color: t.$color-navy;
+  color: t.$text;
   flex: 1;
   min-width: 0;
 }
 
 .issueImpact {
   font-size: t.$text-sm;
-  color: t.$color-slate-500;
+  color: t.$text-muted;
   flex: 2;
   min-width: 0;
 }
@@ -214,7 +214,7 @@
 .chevron {
   margin-left: auto;
   font-size: t.$text-base;
-  color: t.$color-slate-400;
+  color: t.$text-subtle;
   flex-shrink: 0;
   transition: transform 0.2s;
 
@@ -225,13 +225,13 @@
 
 .issueDetail {
   padding: t.$space-4 t.$space-5 t.$space-5;
-  border-top: 1px solid t.$color-slate-100;
+  border-top: 1px solid t.$border-subtle;
   display: grid;
   gap: t.$space-3;
 }
 
 .detailBlock {
-  background: t.$color-slate-50;
+  background: t.$surface-2;
   border-radius: t.$radius-lg;
   padding: t.$space-3 t.$space-4;
 }
@@ -241,13 +241,13 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: t.$color-slate-400;
+  color: t.$text-subtle;
   margin-bottom: t.$space-1;
 }
 
 .detailBlockText {
   font-size: t.$text-base;
-  color: t.$color-navy;
+  color: t.$text;
   line-height: 1.6;
   white-space: pre-wrap;
   margin: 0;
@@ -255,7 +255,7 @@
 
 .noIssues {
   font-size: t.$text-base;
-  color: t.$color-slate-400;
+  color: t.$text-subtle;
   padding: t.$space-3 0;
 }
 
