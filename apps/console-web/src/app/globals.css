@@ -2,7 +2,10 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
+/* Le dark mode est piloté par l'attribut data-theme sur <html> (posé par le script
+   anti-FOUC et ThemeProvider), pas par une classe .dark — un seul mécanisme, cohérent
+   avec les tokens --argos-* ci-dessous. Cf. #81/#121. */
+@custom-variant dark (&:is([data-theme="dark"] *));
 
 @theme inline {
   --color-background: var(--background);
@@ -94,7 +97,7 @@
   --sidebar-ring: oklch(0.704 0.04 256.788);
 }
 
-.dark {
+:root[data-theme="dark"] {
   --background: oklch(0.129 0.042 264.695);
   --foreground: oklch(0.984 0.003 247.858);
   --card: oklch(0.208 0.042 265.755);

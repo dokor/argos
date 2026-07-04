@@ -24,32 +24,50 @@ function applyTheme(theme: Theme) {
   }
 }
 
+function systemTheme(): Theme {
+  return typeof window !== "undefined" &&
+    window.matchMedia?.("(prefers-color-scheme: dark)").matches
+    ? "dark"
+    : "light";
+}
+
+/** Choix explicite persisté, ou null si l'utilisateur suit la préférence système. */
+function storedChoice(): Theme | null {
+  try {
+    const s = localStorage.getItem(STORAGE_KEY);
+    return s === "dark" || s === "light" ? s : null;
+  } catch {
+    return null;
+  }
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // Valeur initiale "light" côté SSR ; hydratée après montage (SSR-safe, cf. LangContext).
   const [theme, setThemeState] = useState<Theme>("light");
 
-  // Hydrate l'état React depuis le thème déjà appliqué par le script anti-FOUC
-  // (data-theme), sinon le choix persistant / la préférence système.
-  // setState différé (setTimeout) pour ne pas déclencher react-hooks/set-state-in-effect,
-  // même pattern que LangContext.
+  // Hydrate depuis le choix explicite persisté, sinon la préférence système —
+  // identique au script anti-FOUC, donc pas de flash. setState différé
+  // (setTimeout) pour éviter react-hooks/set-state-in-effect (cf. LangContext).
   useEffect(() => {
-    let initial: Theme = "light";
-    try {
-      const attr = document.documentElement.getAttribute("data-theme");
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (attr === "dark" || attr === "light") {
-        initial = attr;
-      } else if (stored === "dark" || stored === "light") {
-        initial = stored;
-      } else if (window.matchMedia?.("(prefers-color-scheme: dark)").matches) {
-        initial = "dark";
-      }
-    } catch {
-      // localStorage indisponible : on reste en clair.
-    }
+    const initial = storedChoice() ?? systemTheme();
     applyTheme(initial);
     const timerId = window.setTimeout(() => setThemeState(initial), 0);
-    return () => window.clearTimeout(timerId);
+
+    // Réactivité live : tant qu'aucun choix explicite n'a été fait, on suit les
+    // changements de thème de l'OS pendant que la page est ouverte.
+    const mql = window.matchMedia?.("(prefers-color-scheme: dark)");
+    const onSystemChange = () => {
+      if (storedChoice()) return; // un choix explicite l'emporte sur le système
+      const next = systemTheme();
+      applyTheme(next);
+      setThemeState(next);
+    };
+    mql?.addEventListener("change", onSystemChange);
+
+    return () => {
+      window.clearTimeout(timerId);
+      mql?.removeEventListener("change", onSystemChange);
+    };
   }, []);
 
   function setTheme(next: Theme) {
