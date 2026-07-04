@@ -37,6 +37,11 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
     private static final Pattern H1_PATTERN = Pattern.compile("(?is)<h1\\b[^>]*>(.*?)</h1>");
     private static final Pattern LANG_PATTERN = Pattern.compile("(?is)<html\\b[^>]*lang\\s*=\\s*['\"]([^'\"]+)['\"][^>]*>");
     private static final Pattern VIEWPORT_PATTERN = Pattern.compile("(?is)<meta\\b[^>]*name\\s*=\\s*['\"]viewport['\"][^>]*>");
+    // Doctype HTML5 (déclenche le mode standards). Présent dans le HTML initial, y
+    // compris pour une SPA → sûr sur les contenus dynamiques (issue #152).
+    private static final Pattern DOCTYPE_HTML5_PATTERN = Pattern.compile("(?i)<!doctype\\s+html\\s*>");
+    // Déclaration d'encodage : <meta charset=...> ou http-equiv Content-Type ...charset=.
+    private static final Pattern CHARSET_PATTERN = Pattern.compile("(?is)<meta\\b[^>]*charset\\s*=");
     private static final Pattern OG_TITLE_PATTERN = Pattern.compile("(?is)<meta\\b[^>]*property\\s*=\\s*['\"]og:title['\"][^>]*>");
     private static final Pattern OG_DESC_PATTERN = Pattern.compile("(?is)<meta\\b[^>]*property\\s*=\\s*['\"]og:description['\"][^>]*>");
     private static final Pattern OG_IMAGE_PATTERN = Pattern.compile("(?is)<meta\\b[^>]*property\\s*=\\s*['\"]og:image['\"][^>]*>");
@@ -70,6 +75,8 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
         boolean hasRobots = META_ROBOTS_PATTERN.matcher(html).find();
         boolean hasCanonical = CANONICAL_PATTERN.matcher(html).find();
         boolean hasViewport = VIEWPORT_PATTERN.matcher(html).find();
+        boolean hasDoctype = DOCTYPE_HTML5_PATTERN.matcher(html).find();
+        boolean hasCharset = CHARSET_PATTERN.matcher(html).find();
 
         boolean hasOgTitle = OG_TITLE_PATTERN.matcher(html).find();
         boolean hasOgDesc = OG_DESC_PATTERN.matcher(html).find();
@@ -107,6 +114,12 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
 
         // 6) viewport (mobile)
         checks.add(checkViewport(hasViewport));
+
+        // 6b) Doctype HTML5 (mode standards) — issue #152
+        checks.add(checkDoctype(hasDoctype));
+
+        // 6c) Déclaration d'encodage (charset) — issue #152
+        checks.add(checkCharset(hasCharset));
 
         // 7) Robots meta (info)
         checks.add(AuditCheckResult.of(
@@ -384,6 +397,38 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
             Map.of("present", present),
             present ? "La balise meta viewport est présente." : "La balise meta viewport est absente.",
             present ? null : "Ajoutez <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"> pour l'affichage mobile."
+        );
+    }
+
+    private static AuditCheckResult checkDoctype(boolean present) {
+        return AuditCheckResult.of(
+            "html.doctype.html5",
+            "Doctype HTML5",
+            present ? AuditStatus.PASS : AuditStatus.WARN,
+            present ? AuditSeverity.LOW : AuditSeverity.MEDIUM,
+            false,          // scorable filled later
+            0.0,            // weight filled later
+            List.of(),      // tags filled later
+            present,
+            Map.of("present", present),
+            present ? "Le doctype HTML5 est déclaré (mode standards)." : "Aucun doctype HTML5 déclaré.",
+            present ? null : "Ajoutez <!doctype html> en tête de page : sans lui, le navigateur passe en mode quirks et le rendu peut être imprévisible."
+        );
+    }
+
+    private static AuditCheckResult checkCharset(boolean present) {
+        return AuditCheckResult.of(
+            "html.meta.charset.present",
+            "Déclaration d'encodage (charset)",
+            present ? AuditStatus.PASS : AuditStatus.WARN,
+            present ? AuditSeverity.LOW : AuditSeverity.MEDIUM,
+            false,          // scorable filled later
+            0.0,            // weight filled later
+            List.of(),      // tags filled later
+            present,
+            Map.of("present", present),
+            present ? "L'encodage est déclaré." : "Aucune déclaration d'encodage détectée.",
+            present ? null : "Déclarez l'encodage tôt dans le <head> : <meta charset=\"utf-8\"> pour éviter les problèmes d'affichage des caractères."
         );
     }
 
