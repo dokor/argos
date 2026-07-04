@@ -83,7 +83,8 @@ public class ScoreEnricherService {
             base.details(),
             base.message(),
             base.recommendation(),
-            base.sources()
+            base.sources(),
+            base.scoreRatio()
         );
     }
 
