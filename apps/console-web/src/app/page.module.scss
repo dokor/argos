@@ -3,8 +3,8 @@
 // ─── Root ─────────────────────────────────────────────────────────────────────
 .page {
   font-family: 'Inter', system-ui, sans-serif;
-  color: t.$color-navy;
-  background: t.$color-white;
+  color: t.$text;
+  background: t.$bg;
 }
 
 // ─── Nav ──────────────────────────────────────────────────────────────────────
@@ -12,9 +12,9 @@
   position: sticky;
   top: 0;
   z-index: t.$z-sticky;
-  background: rgba(255, 255, 255, 0.9);
+  background: t.$header-bg;
   backdrop-filter: blur(12px);
-  border-bottom: 1px solid t.$color-slate-100;
+  border-bottom: 1px solid t.$border-subtle;
 }
 
 .navInner {
@@ -39,8 +39,8 @@
 }
 
 .navCta {
-  background: t.$color-navy;
-  color: t.$color-white;
+  background: t.$text;
+  color: t.$bg;
   text-decoration: none;
   padding: t.$space-2 t.$space-4;
   border-radius: t.$radius-sm;
@@ -49,14 +49,14 @@
 }
 
 .navLink {
-  color: t.$color-slate-600;
+  color: t.$text-muted;
   text-decoration: none;
   font-size: t.$text-base;
   font-weight: 500;
   padding: t.$space-2;
 
   &:hover {
-    color: t.$color-navy;
+    color: t.$text;
   }
 }
 
@@ -117,7 +117,7 @@
   left: 0;
   right: 0;
   height: 80px;
-  background: linear-gradient(to bottom, transparent, t.$color-white);
+  background: linear-gradient(to bottom, transparent, t.$bg);
 }
 
 .badge {
@@ -284,8 +284,8 @@
   flex-wrap: wrap;
   gap: t.$space-2 t.$space-6;
   padding: 16px t.$space-6;
-  background: t.$color-slate-50;
-  border-bottom: 1px solid t.$color-slate-100;
+  background: t.$surface-2;
+  border-bottom: 1px solid t.$border-subtle;
 }
 
 .socialProofItem {
@@ -293,12 +293,12 @@
   align-items: center;
   gap: t.$space-2;
   font-size: t.$text-base;
-  color: t.$color-slate-500;
+  color: t.$text-muted;
   font-weight: 500;
 }
 
 .socialProofDivider {
-  color: t.$color-slate-300;
+  color: t.$text-subtle;
   font-size: t.$text-md;
   user-select: none;
 }
@@ -414,7 +414,7 @@
 
 .sectionAlt {
   padding: 72px t.$space-6;
-  background: t.$color-slate-50;
+  background: t.$surface-2;
 }
 
 .sectionDark {
@@ -454,7 +454,7 @@
 }
 
 .sectionSub {
-  color: t.$color-slate-500;
+  color: t.$text-muted;
   font-size: t.$text-xl;
   margin: 0;
 }
@@ -487,8 +487,8 @@
 }
 
 .moduleCard {
-  background: t.$color-slate-50;
-  border: 1px solid t.$color-slate-200;
+  background: t.$surface-2;
+  border: 1px solid t.$border;
   border-radius: 14px;
   padding: 22px t.$space-5;
   display: flex;
@@ -498,7 +498,7 @@
 
 .moduleIcon  { font-size: 26px; }
 .moduleLabel { font-size: t.$text-lg; font-weight: 600; margin: 0; }
-.moduleDesc  { font-size: t.$text-base; color: t.$color-slate-500; line-height: 1.6; margin: 0; }
+.moduleDesc  { font-size: t.$text-base; color: t.$text-muted; line-height: 1.6; margin: 0; }
 
 // ─── Steps ────────────────────────────────────────────────────────────────────
 .stepsGrid {
@@ -518,7 +518,7 @@
 .stepNumber {
   font-size: 36px;
   font-weight: 800;
-  color: t.$color-slate-200;
+  color: t.$border;
   letter-spacing: -0.04em;
   line-height: 1;
   margin-bottom: t.$space-3;
@@ -529,11 +529,11 @@
   right: -12px;
   top: 8px;
   font-size: t.$text-3xl;
-  color: t.$color-slate-300;
+  color: t.$text-subtle;
 }
 
 .stepLabel { font-size: 17px; font-weight: 600; margin: 0 0 t.$space-2; }
-.stepDesc  { font-size: t.$text-md; color: t.$color-slate-500; line-height: 1.6; margin: 0; }
+.stepDesc  { font-size: t.$text-md; color: t.$text-muted; line-height: 1.6; margin: 0; }
 
 // ─── Why cards ────────────────────────────────────────────────────────────────
 .grid4 {
@@ -544,9 +544,9 @@
 
 .whyCard {
   padding: t.$space-6;
-  border: 1px solid t.$color-slate-100;
+  border: 1px solid t.$border-subtle;
   border-radius: 14px;
-  background: t.$color-white;
+  background: t.$surface;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   display: flex;
   flex-direction: column;
@@ -555,7 +555,7 @@
 
 .whyIcon  { font-size: 24px; }
 .whyLabel { font-size: t.$text-lg; font-weight: 600; margin: 0; }
-.whyDesc  { font-size: t.$text-base; color: t.$color-slate-500; line-height: 1.6; margin: 0; }
+.whyDesc  { font-size: t.$text-base; color: t.$text-muted; line-height: 1.6; margin: 0; }
 
 // ─── Responsive ───────────────────────────────────────────────────────────────
 @media (max-width: 640px) {
