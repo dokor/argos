@@ -1,4 +1,4 @@
-# Argos — Website Auditor
+# Argos - Website Auditor
 
 ## What is Argos?
 
@@ -9,24 +9,24 @@ and returns a scored, private report. It is open source (MIT license) and built 
 
 Argos runs five independent analysis modules in sequence:
 
-1. **HTTP & Security** — HTTPS enforcement, HSTS, CSP, X-Frame-Options, X-Content-Type-Options,
+1. **HTTP & Security** - HTTPS enforcement, HSTS, CSP, X-Frame-Options, X-Content-Type-Options,
    Referrer-Policy, Permissions-Policy, redirect chains, response time.
 
-2. **HTML & SEO** — Title tag, meta description, canonical URL, H1, lang attribute, viewport,
+2. **HTML & SEO** - Title tag, meta description, canonical URL, H1, lang attribute, viewport,
    OpenGraph, Twitter Card, image alt coverage, anchor href coverage.
 
-3. **Tech stack detection** — CMS (WordPress, Shopify, Wix…), frameworks (Next.js, Nuxt, React,
+3. **Tech stack detection** - CMS (WordPress, Shopify, Wix…), frameworks (Next.js, Nuxt, React,
    Vue…), backend hints, Cloudflare CDN detection.
 
-4. **Runtime (Playwright)** — Metrics collected on the fully-rendered page: console errors, failed
+4. **Runtime (Playwright)** - Metrics collected on the fully-rendered page: console errors, failed
    network requests, request count, estimated page weight, LCP, FCP, TTI.
 
-5. **Lighthouse** — Performance, accessibility, best-practices, and SEO scores via headless
+5. **Lighthouse** - Performance, accessibility, best-practices, and SEO scores via headless
    Lighthouse (when available).
 
 ## Output
 
-- A global score (0–100) weighted across all modules.
+- A global score (0-100) weighted across all modules.
 - Per-category scores: Security, SEO, A11y, Performance, Runtime.
 - A prioritized list of issues (critical / important / info) with recommendations and effort estimates.
 - A private report URL (token-based, non-indexable) shareable without login.
@@ -44,7 +44,7 @@ setting up a SaaS account.
 
 ## Contact
 
-Built by Antoine LE LOUËT — a.lelouet.freelance@gmail.com
+Built by Antoine LE LOUËT - a.lelouet.freelance@gmail.com
 Source code: https://github.com/dokor/argos (MIT)
 
 ## AI usage guidance

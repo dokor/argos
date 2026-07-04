@@ -1,4 +1,4 @@
-# Argos — Instructions pour agents IA
+# Argos - Instructions pour agents IA
 
 Argos est un outil d'audit de site web : l'utilisateur soumet une URL, cinq modules d'analyse tournent en séquence, et un rapport scoré privé est produit en ~20 secondes.
 
@@ -9,10 +9,10 @@ Argos est un outil d'audit de site web : l'utilisateur soumet une URL, cinq modu
 ```
 argos/
 ├── apps/
-│   ├── api-backend/        Java 21, Maven, Jersey/Grizzly — API REST + traitement des audits
-│   ├── console-web/        Next.js 14 App Router — frontend public + dashboard admin
-│   ├── playwright-service/ Node.js — headless browser (runtime metrics)
-│   └── lighthouse-service/ Node.js — Lighthouse headless (perf/a11y scores)
+│   ├── api-backend/        Java 21, Maven, Jersey/Grizzly - API REST + traitement des audits
+│   ├── console-web/        Next.js 14 App Router - frontend public + dashboard admin
+│   ├── playwright-service/ Node.js - headless browser (runtime metrics)
+│   └── lighthouse-service/ Node.js - Lighthouse headless (perf/a11y scores)
 └── infra/
     └── compose/            docker-compose.prod.yml par service (déployé via Traefik)
 ```
@@ -41,17 +41,17 @@ argos/
 | `services.domain.report` | `PublicReportComposer`, `ReportPublishService`, `ReportReadService` |
 | `services.domain.domain` | `DomainService` |
 | `services.token` | `TokenService` (génération de tokens base64url + SHA-256) |
-| `services.scheduler` | `SchedulerJobs` — tick toutes les `audit.scheduler.interval` (défaut : 1 min) |
+| `services.scheduler` | `SchedulerJobs` - tick toutes les `audit.scheduler.interval` (défaut : 1 min) |
 | `webservices.api` | `AuditsWs`, `ReportsWs`, `NewsletterWs` |
 | `webservices.internal` | `MonitoringWs`, `SwaggerWs` |
 
 ### Base URL
-Le serveur Grizzly monte sur `/api` — toutes les routes JAX-RS sont donc préfixées `/api`.
-- `POST /api/audits` — crée un audit
-- `GET /api/audits?limit=N` — liste
-- `GET /api/audits/runs/{runId}` — statut d'un run
-- `GET /api/reports/{token}` — rapport public
-- `GET /api/reports/{token}/status` — statut de progression (avant publication)
+Le serveur Grizzly monte sur `/api` - toutes les routes JAX-RS sont donc préfixées `/api`.
+- `POST /api/audits` - crée un audit
+- `GET /api/audits?limit=N` - liste
+- `GET /api/audits/runs/{runId}` - statut d'un run
+- `GET /api/reports/{token}` - rapport public
+- `GET /api/reports/{token}/status` - statut de progression (avant publication)
 
 ### Flux d'audit (async)
 ```
@@ -88,17 +88,17 @@ Scheduler (tick 1 min)
 | `ARG_DOMAIN_ANALYSIS` | `id`, `domain_id`, `tech_json`, `analyzed_at` (cache 24h) |
 
 ### Migrations Flyway
-- `V1` — tables de base (Audit, AuditRun, AuditReport)
-- `V2.0 / V2.1` — AuditReport
-- `V3` — newsletter
-- `V4` — Domain + DomainAnalysis
-- `V5` — `report_token` + `module_statuses` sur ARG_AUDIT_RUN
+- `V1` - tables de base (Audit, AuditRun, AuditReport)
+- `V2.0 / V2.1` - AuditReport
+- `V3` - newsletter
+- `V4` - Domain + DomainAnalysis
+- `V5` - `report_token` + `module_statuses` sur ARG_AUDIT_RUN
 
 ### Scoring
-- **`ScorePolicyV1`** — overrides exacts par `checkKey` puis fallback par préfixe. Chaque règle définit `scorable`, `weight`, `tags[]`.
-- **`ScoreEnricherService`** — fusionne les tags du check + ceux de la policy via `mergeTags()` (LinkedHashSet, dédup). Module `runtime.*` → tag `"runtime"` uniquement (pas `"performance"`).
-- **`ScoreService`** — accumule le score par tag (`byTag`). Catégories prioritaires : `performance`, `security`, `seo`, `a11y`.
-- **`PublicReportComposer`** — `buildIssues()` : ignore les checks non-scorables (`scorable == false`). `pickCategoryKey()` : préfère les catégories PRIORITY_CATEGORIES.
+- **`ScorePolicyV1`** - overrides exacts par `checkKey` puis fallback par préfixe. Chaque règle définit `scorable`, `weight`, `tags[]`.
+- **`ScoreEnricherService`** - fusionne les tags du check + ceux de la policy via `mergeTags()` (LinkedHashSet, dédup). Module `runtime.*` → tag `"runtime"` uniquement (pas `"performance"`).
+- **`ScoreService`** - accumule le score par tag (`byTag`). Catégories prioritaires : `performance`, `security`, `seo`, `a11y`.
+- **`PublicReportComposer`** - `buildIssues()` : ignore les checks non-scorables (`scorable == false`). `pickCategoryKey()` : préfère les catégories PRIORITY_CATEGORIES.
 
 ### Sécurité (UrlNormalizer)
 - Longueur max : 2048 chars
@@ -128,7 +128,7 @@ Fichiers clés : `UrlNormalizerTest`, `ScoreServiceTest`, `ScorePolicyV1Test`, `
 - Next.js 14, TypeScript, **SCSS Modules** (système de style canonique)
 - `"use client"` pour les pages interactives ; layouts = toujours Server Components
 - Internationalisation maison (`LangContext` + `fr.json` / `en.json`)
-- Styles : **SCSS Modules uniquement** — Tailwind et shadcn/ui ont été retirés (issue #124).
+- Styles : **SCSS Modules uniquement** - Tailwind et shadcn/ui ont été retirés (issue #124).
   Couleurs via les tokens sémantiques `--argos-*` (théma-aware) de `globals.css` + `_tokens.scss`.
   Ne pas réintroduire de classes utilitaires Tailwind ni de dépendance shadcn/Radix.
 
@@ -149,13 +149,13 @@ Fichiers clés : `UrlNormalizerTest`, `ScoreServiceTest`, `ScorePolicyV1Test`, `
 | `API_BASE` | Serveur | URL interne du backend Java (ex: `http://api-backend:8081`) |
 | `ADMIN_PASSWORD` | Serveur | Mot de passe admin |
 | `ADMIN_TOKEN` | Serveur | Token de session admin |
-| `NEXT_PUBLIC_SITE_URL` | Client | URL publique du site (ex: `https://argos.lelouet.fr`) — défaut dans le code |
+| `NEXT_PUBLIC_SITE_URL` | Client | URL publique du site (ex: `https://argos.lelouet.fr`) - défaut dans le code |
 | `NEXT_PUBLIC_CALENDLY_URL` | Client | URL Calendly pour le CTA |
 | `NEXT_PUBLIC_APP_LOGS_ENABLED` | Client | Active les logs structurés côté client |
 | `APP_LOGS_ENABLED` | Serveur | Active les logs structurés côté serveur |
 
 ### Proxy API
-`next.config.ts` — rewrite `afterFiles` : `/api/:path*` → `${API_BASE}/api/:path*`.
+`next.config.ts` - rewrite `afterFiles` : `/api/:path*` → `${API_BASE}/api/:path*`.
 Exception : la route `src/app/api/audits/route.ts` intercepte `POST /api/audits` avant le rewrite (validation BFF).
 
 ### Composants rapport (`src/components/report/`)
@@ -179,12 +179,12 @@ Clés de traduction dans `src/lib/i18n/fr.json` et `en.json` :
 Le one-liner du rapport est retourné comme clé (`"high"` | `"good"` | `"fair"` | `"low"`) par le backend et traduit côté frontend via `t.report.hero.oneLiner[key]`.
 
 ### SEO / Indexabilité
-- `src/app/robots.ts` — crawl autorisé sur `/`, bloqué sur `/dashboard/`, `/login/`, `/api/`, `/report/`
-- `src/app/sitemap.ts` — homepage uniquement, changeFrequency weekly
-- `src/app/layout.tsx` — métadonnées OG complètes, JSON-LD `WebApplication`, `manifest.json`
+- `src/app/robots.ts` - crawl autorisé sur `/`, bloqué sur `/dashboard/`, `/login/`, `/api/`, `/report/`
+- `src/app/sitemap.ts` - homepage uniquement, changeFrequency weekly
+- `src/app/layout.tsx` - métadonnées OG complètes, JSON-LD `WebApplication`, `manifest.json`
 - `/login` et `/dashboard` ont des `layout.tsx` segment avec `robots: { index: false }` (les pages `"use client"` ne peuvent pas exporter `metadata`)
-- `public/og.png` — image OG 1200×630 générée avec Pillow (script `outputs/gen_og.py`)
-- `public/llms.txt` — description pour les crawlers IA
+- `public/og.png` - image OG 1200×630 générée avec Pillow (script `outputs/gen_og.py`)
+- `public/llms.txt` - description pour les crawlers IA
 
 ---
 
@@ -226,7 +226,7 @@ Le one-liner du rapport est retourné comme clé (`"high"` | `"good"` | `"fair"`
 ### Frontend
 - Pas de `metadata` dans les pages `"use client"` → utiliser un `layout.tsx` de segment
 - Ne jamais utiliser `localStorage` (non supporté dans l'environnement de rendu)
-- Les rewrites `afterFiles` sont contournés par les Route Handlers Next.js — utiliser un Route Handler pour intercepter avant proxy
+- Les rewrites `afterFiles` sont contournés par les Route Handlers Next.js - utiliser un Route Handler pour intercepter avant proxy
 
 ### Accessibilité (a11y)
 - Tout champ de saisie doit avoir un **nom accessible** : `<label htmlFor>` visible, ou à défaut `aria-label` (un `placeholder` ne suffit pas).
@@ -235,11 +235,11 @@ Le one-liner du rapport est retourné comme clé (`"high"` | `"good"` | `"fair"`
 - Les images de contenu ont un `alt` pertinent ; `alt=""` pour les images décoratives.
 - Ne pas retirer l'outline de focus sans fournir un style de focus visible équivalent (navigation clavier).
 - Respecter la hiérarchie des titres (un seul `<h1>` par page, pas de saut de niveau).
-- Viser un contraste texte/fond suffisant (WCAG AA) — attention aux gris clairs sur blanc.
+- Viser un contraste texte/fond suffisant (WCAG AA) - attention aux gris clairs sur blanc.
 
 ### Sécurité
 - Toute URL soumise par l'utilisateur passe par la validation SSRF du BFF **et** du backend Java
-- Les tokens de rapport sont générés à la création du run (pré-génération) — ne pas les régénérer à la publication
+- Les tokens de rapport sont générés à la création du run (pré-génération) - ne pas les régénérer à la publication
 - Les logs ne doivent jamais contenir d'URLs brutes non sanitisées (utiliser `sanitizeForLog` / `sanitizeUrl`)
 
 ### Tests Java

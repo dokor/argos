@@ -58,7 +58,7 @@ class ScoreEnricherServiceTest {
 
     @Test
     void runtimeEmittedKeyReceivesItsWeight_fixA() {
-        // Clé réellement émise par RuntimeModuleAnalyzer — doit recevoir le poids 5 (pas le fallback 4).
+        // Clé réellement émise par RuntimeModuleAnalyzer - doit recevoir le poids 5 (pas le fallback 4).
         AuditCheckResult r = enrichOne("runtime", check("runtime.console.errors", AuditStatus.FAIL, List.of()));
         assertTrue(r.scorable());
         assertEquals(5.0, r.weight());

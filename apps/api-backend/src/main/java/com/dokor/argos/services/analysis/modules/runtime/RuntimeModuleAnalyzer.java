@@ -17,7 +17,7 @@ public class RuntimeModuleAnalyzer implements AuditModuleAnalyzer {
     // Seuils des erreurs console. Relevés (vs 2 auparavant) car les scripts tiers
     // légitimes (analytics, régies pub, widgets, extensions) émettent couramment
     // quelques erreurs console indépendantes de la qualité du site : un seuil bas
-    // produisait des faux positifs FAIL. Cf. issue #100 — point "runtime.console.errors".
+    // produisait des faux positifs FAIL. Cf. issue #100 - point "runtime.console.errors".
     // 0 => PASS ; 1..WARN_MAX => WARN ; > WARN_MAX => FAIL.
     static final int CONSOLE_ERRORS_WARN_MAX = 10;
 

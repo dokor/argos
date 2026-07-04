@@ -1,8 +1,8 @@
 # Argos
 
-Argos analyse n'importe quel site web et produit un rapport scoré, privé et actionnable — sans compte, sans tracking.
+Argos analyse n'importe quel site web et produit un rapport scoré, privé et actionnable - sans compte, sans tracking.
 
-Soumettez une URL, attendez ~20 secondes, récupérez un rapport complet avec un score global (0–100), des priorités triées par impact, et des recommandations concrètes.
+Soumettez une URL, attendez ~20 secondes, récupérez un rapport complet avec un score global (0-100), des priorités triées par impact, et des recommandations concrètes.
 
 ---
 
@@ -28,10 +28,10 @@ Monorepo avec 4 applications indépendantes :
 
 ```
 apps/
-├── api-backend/          # API REST Java — orchestration des audits, scoring, rapports
-├── console-web/          # Frontend Next.js — landing page + console privée
-├── lighthouse-service/   # Microservice Node.js — analyses Lighthouse
-└── playwright-service/   # Microservice Node.js — métriques runtime navigateur
+├── api-backend/          # API REST Java - orchestration des audits, scoring, rapports
+├── console-web/          # Frontend Next.js - landing page + console privée
+├── lighthouse-service/   # Microservice Node.js - analyses Lighthouse
+└── playwright-service/   # Microservice Node.js - métriques runtime navigateur
 ```
 
 ### api-backend
@@ -97,7 +97,7 @@ Chaque application dispose de son propre workflow GitHub Actions (`/.github/work
 
 ## Licence
 
-Argos est distribué sous **[Business Source License 1.1](./LICENSE)** (BSL 1.1) — une licence *source-available* : le code est public, lisible, auditable et modifiable, mais son exploitation commerciale est encadrée.
+Argos est distribué sous **[Business Source License 1.1](./LICENSE)** (BSL 1.1) - une licence *source-available* : le code est public, lisible, auditable et modifiable, mais son exploitation commerciale est encadrée.
 
 - ✅ **Autorisé** : lecture, audit, modification, contribution, usage non-production (dev, test, évaluation) et usage en production **hors** offre concurrente.
 - 🚫 **Restreint** : proposer à des tiers un service hébergé/managé d'audit de site web substantiellement similaire à Argos (voir *Additional Use Grant* du fichier `LICENSE`).

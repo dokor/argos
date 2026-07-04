@@ -191,7 +191,7 @@ public class UrlNormalizer {
             throw new IllegalArgumentException("Target host is not allowed: private IPv6 address");
         }
 
-        // Passe 3 : résolution DNS — attrapable uniquement pour les IPs littérales non-standard
+        // Passe 3 : résolution DNS - attrapable uniquement pour les IPs littérales non-standard
         // (ex: 0x7f000001 = 127.0.0.1 en hexadécimal)
         // On tente uniquement si le host ressemble à une IP (pas de point alphabétique)
         if (looksLikeIp(host)) {

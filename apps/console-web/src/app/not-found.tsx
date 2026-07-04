@@ -17,7 +17,7 @@ export default function NotFound() {
 
   const loggerRef = useRef(createLogger("app", { route: "/not-found" }));
   useEffect(() => {
-    // Journalise les accès 404 (liens morts, parcours cassés) — issue #40.
+    // Journalise les accès 404 (liens morts, parcours cassés) - issue #40.
     loggerRef.current.warn("page_not_found", {
       action: "render_not_found",
       details: { referrer: typeof document !== "undefined" ? document.referrer || null : null },

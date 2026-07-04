@@ -375,7 +375,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
         // lui-même (redirections incluses), mesurée depuis le worker Argos et donc dépendante
         // de son réseau. La transformer en WARN/FAIL produisait des faux positifs non
         // déterministes. La performance perçue est déjà couverte par Lighthouse (métrique
-        // stable côté client). Cf. issue #100 — point "temps de réponse".
+        // stable côté client). Cf. issue #100 - point "temps de réponse".
         return AuditCheckResult.of(
             "http.response_time_ms",
             "Response time",
@@ -502,7 +502,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
         // Toujours INFO (non scoré) : l'absence de header de cache sur le document HTML est
         // souvent le comportement CORRECT (page dynamique/personnalisée qui ne doit pas être
         // mise en cache). Warner ici produisait un faux positif. La recommandation reste
-        // affichée à titre indicatif. Cf. issue #100 — point "cache HTTP sur du HTML".
+        // affichée à titre indicatif. Cf. issue #100 - point "cache HTTP sur du HTML".
         return AuditCheckResult.of(
             "http.headers.caching",
             "Caching headers (Cache-Control / Expires)",

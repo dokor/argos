@@ -5,7 +5,7 @@ import javax.annotation.processing.Generated;
 import com.querydsl.sql.Column;
 
 /**
- * Domain is a Querydsl bean type — représente un domaine (hostname) unique.
+ * Domain is a Querydsl bean type - représente un domaine (hostname) unique.
  */
 @Generated("com.coreoz.plume.db.querydsl.generation.IdBeanSerializer")
 public class Domain extends com.coreoz.plume.db.querydsl.crud.CrudEntityQuerydsl {

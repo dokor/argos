@@ -30,7 +30,7 @@ export default async function ReportPageHome({ params }: Readonly<Props>) {
         reportToken: maskToken(token),
       },
     });
-    // 404 = rapport pas encore publié (analyse en cours) — on laisse report à null
+    // 404 = rapport pas encore publié (analyse en cours) - on laisse report à null
   }
 
   // Rapport prêt → affichage normal

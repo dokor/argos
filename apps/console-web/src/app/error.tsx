@@ -11,7 +11,7 @@ import s from "./error.module.scss";
  * Global application error boundary (App Router).
  *
  * Catches unhandled runtime errors thrown while rendering any route under
- * `app/` (except the root layout itself — that is handled by global-error.tsx).
+ * `app/` (except the root layout itself - that is handled by global-error.tsx).
  * Rendered inside the root layout, so the i18n provider and fonts are available.
  */
 export default function AppError({

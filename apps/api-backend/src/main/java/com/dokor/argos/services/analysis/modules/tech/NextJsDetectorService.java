@@ -110,7 +110,7 @@ public class NextJsDetectorService {
         } else if ("pages".equals(router) && (hasNextData || hasNextStatic)) {
             // Pages router could be 9+ and still on 14. We can’t cap max.
             min = "9.0.0";
-            guess = "12.x–14.x (pages router)";
+            guess = "12.x-14.x (pages router)";
             guessConfidence = 0.35;
         } else if (hasNextStatic) {
             min = "9.0.0";

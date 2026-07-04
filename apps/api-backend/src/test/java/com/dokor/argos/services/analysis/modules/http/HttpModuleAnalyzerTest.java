@@ -99,7 +99,7 @@ class HttpModuleAnalyzerTest {
     }
 
     // -------------------------
-    // analyze — gestion d'erreur réseau
+    // analyze - gestion d'erreur réseau
     // -------------------------
 
     @Test

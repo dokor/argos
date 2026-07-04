@@ -15,7 +15,7 @@ import static org.mockito.Mockito.when;
 
 /**
  * Tests de {@link SslLabsModuleAnalyzer} centrés sur la distinction
- * « indisponible/inconnu » (INFO, non scoré) vs « médiocre » (WARN/FAIL) — issue #100.
+ * « indisponible/inconnu » (INFO, non scoré) vs « médiocre » (WARN/FAIL) - issue #100.
  */
 class SslLabsModuleAnalyzerTest {
 

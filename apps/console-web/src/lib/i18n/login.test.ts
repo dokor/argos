@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import fr from "./fr.json";
 import en from "./en.json";
 
-// Garde la section login (issue #125 — i18n de la page login) contre la dérive
+// Garde la section login (issue #125 - i18n de la page login) contre la dérive
 // fr/en et les copies vides. Consommée par src/app/login/page.tsx.
 
 const REQUIRED_KEYS = [

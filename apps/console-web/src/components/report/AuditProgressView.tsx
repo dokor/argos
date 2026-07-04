@@ -9,7 +9,7 @@ import { useLang } from "@/lib/i18n/LangContext";
 import s from "./AuditProgressView.module.scss";
 
 // Intervalle de polling et plafond global (évite un polling infini si le run
-// reste bloqué en QUEUED/RUNNING — scheduler down, module qui hang…).
+// reste bloqué en QUEUED/RUNNING - scheduler down, module qui hang…).
 const POLL_INTERVAL_MS = 1500;
 const MAX_POLLS = 160; // ~4 min à 1,5 s
 
@@ -173,7 +173,7 @@ export default function AuditProgressView({ token }: Props) {
   const modules = parseModuleStatuses(runStatus?.moduleStatuses);
   const globalStatus = runStatus?.status ?? "QUEUED";
   // Progression : les états terminaux (COMPLETED/FAILED/SKIPPED) comptent pour un
-  // pas plein, le module en cours (RUNNING) pour un demi-pas — la barre avance de
+  // pas plein, le module en cours (RUNNING) pour un demi-pas - la barre avance de
   // façon fluide et atteint 100 % même si un module se termine en échec.
   const isTerminal = (st: ModuleStatus["status"]) =>
     st === "COMPLETED" || st === "FAILED" || st === "SKIPPED";

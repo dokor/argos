@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   },
 };
 
-// FAQPage structured data — helps search engines surface the Q&A directly.
+// FAQPage structured data - helps search engines surface the Q&A directly.
 const faqJsonLd = {
   "@context": "https://schema.org",
   "@type": "FAQPage",

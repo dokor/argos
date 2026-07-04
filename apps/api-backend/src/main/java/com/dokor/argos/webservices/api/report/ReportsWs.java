@@ -86,7 +86,7 @@ public class ReportsWs {
 
     /**
      * Masque un token pour le log : ne conserve que les 4 premiers caractères.
-     * Un token de rapport est un credential d'accès — jamais logué en clair.
+     * Un token de rapport est un credential d'accès - jamais logué en clair.
      */
     private static String maskToken(String token) {
         if (token == null) return "null";

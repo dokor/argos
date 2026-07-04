@@ -1,6 +1,6 @@
 {
   "layout": {
-    "title": "Argos – Analyseur de site web",
+    "title": "Argos - Analyseur de site web",
     "description": "Argos analyse vos headers HTTP, HTML, stack technique et performances. Rapport scoré, privé, sans login."
   },
   "nav": {
@@ -156,7 +156,7 @@
   },
   "faq": {
     "meta": {
-      "title": "FAQ – Questions fréquentes",
+      "title": "FAQ - Questions fréquentes",
       "description": "Réponses aux questions fréquentes sur Argos : fonctionnement, rapports, limites d'analyse, confidentialité et évolutions à venir."
     },
     "hero": {
@@ -293,7 +293,7 @@
     "error": "Une erreur est survenue"
   },
   "dashboard": {
-    "title": "Argos – Console",
+    "title": "Argos - Console",
     "newAudit": "Nouvel audit",
     "stats": {
       "analyzed": "Analysés",
@@ -324,7 +324,7 @@
         "description": "Une erreur est survenue pendant l'analyse de ce site. Désolé pour la gêne."
       },
       "rerunTitle": "Relancez gratuitement une analyse",
-      "rerunHint": "Saisissez une URL pour lancer une nouvelle analyse — c'est offert.",
+      "rerunHint": "Saisissez une URL pour lancer une nouvelle analyse - c'est offert.",
       "backHome": "Retour à l'accueil"
     },
     "page": {
@@ -352,7 +352,7 @@
         "priority": "Prioritaire"
       },
       "scoreGlobal": "Score global",
-      "scoreTooltip": "Score agrégé (0–100) basé sur les points détectés.",
+      "scoreTooltip": "Score agrégé (0-100) basé sur les points détectés.",
       "scoreObjectivePrefix": "Objectif :",
       "scoreMaintain": "maintenir",
       "scoreQuickwins": "prioriser les quick wins",
@@ -413,11 +413,11 @@
       "title": "Scores par catégorie",
       "desc": "Vue synthétique pour prioriser. Clique sur une catégorie pour aller au détail.",
       "globalLabel": "Global",
-      "globalTooltip": "Score global agrégé (0–100) basé sur les points détectés.",
+      "globalTooltip": "Score global agrégé (0-100) basé sur les points détectés.",
       "issueCount": "point(s)",
       "seeDetail": "Voir le détail →",
       "partial": "Analyse partielle · complétude {n}%",
-      "partialTooltip": "Un ou plusieurs modules n'ont pas pu être évalués (service momentanément indisponible). Le score porte sur les modules réellement analysés — le site n'est pas pénalisé."
+      "partialTooltip": "Un ou plusieurs modules n'ont pas pu être évalués (service momentanément indisponible). Le score porte sur les modules réellement analysés - le site n'est pas pénalisé."
     },
     "issuesByCategory": {
       "title": "Détail par catégorie",
@@ -520,7 +520,7 @@
       "error": "Impossible de charger l'historique.",
       "current": "actuel",
       "view": "Voir",
-      "scoreNa": "—"
+      "scoreNa": "-"
     }
   },
   "langToggle": {
