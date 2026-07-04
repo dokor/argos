@@ -52,7 +52,7 @@ export function ScoreBubbles({ ratio }: BubblesProps) {
         <span
           key={i}
           className={styles.bubble}
-          style={{ background: i < filled ? dot : "#e2e8f0" }}
+          style={{ background: i < filled ? dot : "var(--argos-border)" }}
         />
       ))}
     </div>
