@@ -12,9 +12,22 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', service: 'playwright-service' });
 });
 
+// Domaine enregistrable (approx eTLD+1 : deux derniers labels) pour distinguer
+// les erreurs du site des erreurs de scripts tiers (issue #153).
+function registrableDomain(host) {
+  if (!host) return '';
+  const parts = host.split('.');
+  return parts.length <= 2 ? host : parts.slice(-2).join('.');
+}
+function hostOf(u) {
+  try { return registrableDomain(new URL(u).hostname); } catch { return ''; }
+}
+
 app.post('/analyze/runtime', async (req, res) => {
   const { url } = req.body ?? {};
   if (!url) return res.status(400).json({ error: 'Missing url' });
+
+  const pageDomain = hostOf(url);
 
   const browser = await chromium.launch({ args: ['--no-sandbox'] });
   const context = await browser.newContext();
@@ -22,13 +35,19 @@ app.post('/analyze/runtime', async (req, res) => {
 
   const consoleSamples = [];
   let consoleErrors = 0;
+  let consoleErrorsFirstParty = 0;
   let consoleWarnings = 0;
 
   page.on('console', (msg) => {
     const type = msg.type(); // log, error, warning, ...
     const text = msg.text();
     const loc = msg.location?.();
-    if (type === 'error') consoleErrors++;
+    if (type === 'error') {
+      consoleErrors++;
+      // Sans URL de localisation (script inline / eval) : attribué au site.
+      const d = loc?.url ? hostOf(loc.url) : pageDomain;
+      if (!d || d === pageDomain) consoleErrorsFirstParty++;
+    }
     if (type === 'warning') consoleWarnings++;
 
     if ((type === 'error' || type === 'warning') && consoleSamples.length < 10) {
@@ -125,6 +144,7 @@ app.post('/analyze/runtime', async (req, res) => {
     timings: { domContentLoadedMs, loadMs },
     console: {
       errors: consoleErrors,
+      errorsFirstParty: consoleErrorsFirstParty,
       warnings: consoleWarnings,
       samples: consoleSamples
     },

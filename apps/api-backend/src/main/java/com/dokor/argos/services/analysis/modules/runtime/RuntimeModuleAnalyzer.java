@@ -75,6 +75,12 @@ public class RuntimeModuleAnalyzer implements AuditModuleAnalyzer {
 
         // -------- checks --------
         int consoleErrors = safeInt(r.console() != null ? r.console().errors() : null);
+        // Distinction première partie / tiers (issue #153) : on ne pénalise que les
+        // erreurs du site lui-même. Si le service ne fournit pas la distinction
+        // (errorsFirstParty == null), on retombe sur le total (comportement historique).
+        Integer fpObj = r.console() != null ? r.console().errorsFirstParty() : null;
+        int firstPartyErrors = fpObj != null ? fpObj : consoleErrors;
+        int thirdPartyErrors = Math.max(0, consoleErrors - firstPartyErrors);
         int jsErrors = safeInt(r.jsErrors() != null ? r.jsErrors().count() : null);
         int failedReq = safeInt(r.network() != null ? r.network().failedRequests() : null);
         int s5xx = safeInt(r.network() != null ? r.network().status5xx() : null);
@@ -83,17 +89,32 @@ public class RuntimeModuleAnalyzer implements AuditModuleAnalyzer {
 
         List<AuditCheckResult> checks = new ArrayList<>();
 
-        // 1) Console errors
+        // 1) Console errors — statut fondé sur les erreurs de première partie (celles
+        //    que le propriétaire du site peut corriger), pas sur le bruit des scripts tiers.
+        String consoleMsg;
+        if (firstPartyErrors == 0) {
+            consoleMsg = thirdPartyErrors == 0
+                ? "Aucune erreur console détectée."
+                : "Aucune erreur console de votre site (" + thirdPartyErrors + " erreur(s) tierce(s) ignorée(s)).";
+        } else {
+            consoleMsg = firstPartyErrors + " erreur(s) console sur votre site"
+                + (thirdPartyErrors > 0 ? " (+ " + thirdPartyErrors + " tierce(s), non comptée(s))" : "")
+                + " détectée(s).";
+        }
+        Map<String, Object> consoleDetails = new LinkedHashMap<>();
+        consoleDetails.put("firstParty", firstPartyErrors);
+        consoleDetails.put("thirdParty", thirdPartyErrors);
+        if (sampleConsole(r, "error") != null) consoleDetails.put("samples", sampleConsole(r, "error"));
         checks.add(AuditCheckResult.of(
             "runtime.console.errors",
-            "Console errors",
-            consoleErrors == 0 ? AuditStatus.PASS : (consoleErrors <= CONSOLE_ERRORS_WARN_MAX ? AuditStatus.WARN : AuditStatus.FAIL),
-            consoleErrors == 0 ? AuditSeverity.LOW : AuditSeverity.MEDIUM,
+            "Erreurs console",
+            firstPartyErrors == 0 ? AuditStatus.PASS : (firstPartyErrors <= CONSOLE_ERRORS_WARN_MAX ? AuditStatus.WARN : AuditStatus.FAIL),
+            firstPartyErrors == 0 ? AuditSeverity.LOW : AuditSeverity.MEDIUM,
             false, 0.0, List.of("runtime"),
-            consoleErrors,
-            sampleConsole(r, "error") != null ? Map.of("samples", sampleConsole(r, "error")) : Map.of(),
-            consoleErrors == 0 ? "Aucune erreur console détectée." : (consoleErrors + " erreur(s) console détectée(s)."),
-            consoleErrors == 0 ? null : "Corriger les erreurs JS (impact sur UX, tracking, conversion)."
+            firstPartyErrors,
+            consoleDetails,
+            consoleMsg,
+            firstPartyErrors == 0 ? null : "Corrigez les erreurs JavaScript de votre site (impact sur l'UX, le tracking, la conversion)."
         ));
 
         // 2) JS page errors
@@ -185,6 +206,8 @@ public class RuntimeModuleAnalyzer implements AuditModuleAnalyzer {
         ));
         data.put("console", Map.of(
             "errors", consoleErrors,
+            "errorsFirstParty", firstPartyErrors,
+            "errorsThirdParty", thirdPartyErrors,
             "warnings", safeInt(r.console() != null ? r.console().warnings() : null),
             "samples", safeList(r.console() != null ? r.console().samples() : null)
         ));
