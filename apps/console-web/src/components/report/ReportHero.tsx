@@ -2,23 +2,10 @@
 
 import { Report, TechSummary } from "./types";
 import { useLang } from "@/lib/i18n/LangContext";
+import { scoreColor, scoreBg, SEVERITY_COLORS } from "./reportColors";
 import s from "./ReportHero.module.scss";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function scoreColor(score: number): string {
-  if (score >= 85) return "#10b981";
-  if (score >= 70) return "#3b82f6";
-  if (score >= 55) return "#f59e0b";
-  return "#ef4444";
-}
-
-function scoreBg(score: number): string {
-  if (score >= 85) return "rgba(16,185,129,0.15)";
-  if (score >= 70) return "rgba(59,130,246,0.15)";
-  if (score >= 55) return "rgba(245,158,11,0.15)";
-  return "rgba(239,68,68,0.15)";
-}
 
 function scoreGradient(score: number): string {
   const c = scoreColor(score);
@@ -89,9 +76,9 @@ function ScoreRing({ score }: { score: number }) {
 // ─── Severity counts ──────────────────────────────────────────────────────────
 
 const SEV_CONFIG = [
-  { key: "critical",    color: "#ef4444" },
-  { key: "important",   color: "#f59e0b" },
-  { key: "opportunity", color: "#10b981" },
+  { key: "critical",    color: SEVERITY_COLORS.critical.dot },
+  { key: "important",   color: SEVERITY_COLORS.important.dot },
+  { key: "opportunity", color: SEVERITY_COLORS.opportunity.dot },
 ] as const;
 
 // ─── Main component ───────────────────────────────────────────────────────────

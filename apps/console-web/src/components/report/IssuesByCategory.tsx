@@ -3,24 +3,12 @@
 import React from "react";
 import { Report, Issue, CategoryScore } from "./types";
 import { useLang } from "@/lib/i18n/LangContext";
+import { scoreColor, SEVERITY_COLORS } from "./reportColors";
 import s from "./IssuesByCategory.module.scss";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 type SevKey = "critical" | "important" | "info";
-
-const SEV: Record<SevKey, { dot: string; color: string; bg: string }> = {
-  critical:  { dot: "#ef4444", color: "#dc2626", bg: "#fef2f2" },
-  important: { dot: "#f59e0b", color: "#d97706", bg: "#fffbeb" },
-  info:      { dot: "#94a3b8", color: "#64748b", bg: "#f8fafc" },
-};
-
-function scoreColor(score: number): string {
-  if (score >= 85) return "#10b981";
-  if (score >= 70) return "#3b82f6";
-  if (score >= 55) return "#f59e0b";
-  return "#ef4444";
-}
 
 function clamp(n: number) { return Math.max(0, Math.min(100, n ?? 0)); }
 
@@ -124,7 +112,7 @@ export default function IssuesByCategory({ report }: { report: Report }) {
                 <p className={s.noIssues}>{ti.noIssues}</p>
               ) : (
                 issues.map((issue) => {
-                  const sv = SEV[issue.severity as SevKey] ?? SEV.info;
+                  const sv = SEVERITY_COLORS[issue.severity as SevKey] ?? SEVERITY_COLORS.info;
                   return (
                     <details key={issue.id} className={s.issueRow}>
                       <summary className={s.issueSummary}>
