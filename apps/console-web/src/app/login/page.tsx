@@ -74,7 +74,6 @@ function LoginForm() {
     <main className={s.root}>
       <form onSubmit={handleSubmit} className={s.form}>
         <h1 className={s.title}>{tl.title}</h1>
-
         <input
           type="password"
           value={password}

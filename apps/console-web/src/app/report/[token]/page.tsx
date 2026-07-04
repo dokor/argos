@@ -1,7 +1,8 @@
 import { Metadata } from "next";
-import { argosApi } from "@/lib/ArgosApi";
+import { ApiError, argosApi, AuditRunStatusResponse } from "@/lib/ArgosApi";
 import ReportPage from "@/app/report/[token]/ReportPage";
 import AuditProgressView from "@/components/report/AuditProgressView";
+import ReportErrorView from "@/components/report/ReportErrorView";
 import { createLogger, maskToken, safeError } from "@/lib/logger";
 
 export const metadata: Metadata = {
@@ -42,6 +43,38 @@ export default async function ReportPageHome({ params }: Readonly<Props>) {
       },
     });
     return <ReportPage params={{ report }} />;
+  }
+
+  // Rapport absent : on lève l'ambiguïté via le statut du run.
+  // - 404 (token inconnu/expiré) → page d'erreur "introuvable"
+  // - run FAILED                 → page d'erreur "échec"
+  // - QUEUED/RUNNING/COMPLETED   → vue de progression (polling ; gère la course
+  //   de publication sur COMPLETED)
+  // - statut injoignable (backend down, non-404) → on laisse la vue de
+  //   progression retenter côté client plutôt que d'afficher un faux "introuvable".
+  let status: AuditRunStatusResponse | null = null;
+  try {
+    status = await argosApi.getReportStatus(token);
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) {
+      logger.info("report_not_found", {
+        action: "render_error_view",
+        details: { errorKind: "notFound", reportToken: maskToken(token) },
+      });
+      return <ReportErrorView kind="notFound" />;
+    }
+    logger.warn("report_status_unavailable", {
+      action: "fetch_status",
+      details: { error: safeError(error), reportToken: maskToken(token) },
+    });
+  }
+
+  if (status?.status === "FAILED") {
+    logger.info("report_failed", {
+      action: "render_error_view",
+      details: { errorKind: "failed", reportToken: maskToken(token) },
+    });
+    return <ReportErrorView kind="failed" />;
   }
 
   // Analyse en cours → vue de progression (client, polling)

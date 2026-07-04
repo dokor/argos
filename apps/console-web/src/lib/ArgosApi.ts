@@ -1,6 +1,22 @@
 import { Report } from "@/components/report/types";
 import { createLogger, safeError } from "@/lib/logger";
 
+/**
+ * Erreur HTTP portant le code de statut, pour permettre aux appelants de
+ * distinguer un 404 (ressource introuvable) d'une autre erreur (backend
+ * indisponible, 5xx…). Le `message` reste identique à l'ancien format
+ * (`HTTP <status> <statusText> - <body>`) pour la rétro-compatibilité.
+ */
+export class ApiError extends Error {
+  readonly status: number;
+
+  constructor(status: number, statusText: string, body: string) {
+    super(`HTTP ${status} ${statusText} - ${body}`);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
 export type CreateAuditRequest = {
   url: string;
 };
@@ -101,7 +117,7 @@ export async function http<T>(path: string, init?: RequestInit): Promise<T> {
         statusText: res.statusText,
       },
     });
-    throw new Error(`HTTP ${res.status} ${res.statusText} - ${text}`);
+    throw new ApiError(res.status, res.statusText, text);
   }
 
   // Some endpoints may respond 204 No Content

@@ -26,7 +26,7 @@ export default function ReportPage({ params }: Readonly<Params>) {
 
       <main className={s.main}>
         <PriorityCards priorities={report.summary.priorities} />
-        <ScoreGrid categories={report.scores.byCategory} globalScore={report.scores.global} />
+        <ScoreGrid categories={report.scores.byCategory} globalScore={report.scores.global} completeness={report.scores.completeness} />
         <IssuesByCategory report={report} />
 
         {/* Raw JSON - admin only */}

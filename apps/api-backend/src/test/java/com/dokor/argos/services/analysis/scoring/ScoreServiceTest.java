@@ -96,6 +96,45 @@ class ScoreServiceTest {
     }
 
     // -------------------------
+    // Ratio de score continu (scoreRatio) — anti-falaise Lighthouse (issue #100)
+    // -------------------------
+
+    @Test
+    void continuousScoreRatioOverridesStatusRatio() {
+        // status=FAIL donnerait ratio 0 ; le scoreRatio continu (0.59) doit primer.
+        AuditCheckResult c = check("lighthouse.score.performance", AuditStatus.FAIL, true, 10.0)
+            .withScoreRatio(0.59);
+
+        AuditScoreReport report = service.compute(1, List.of(module("lighthouse", c)));
+
+        assertEquals(5.9, report.global().score(), 0.001);   // 10 × 0.59, pas 0
+        assertEquals(10.0, report.global().maxScore(), 0.001);
+    }
+
+    @Test
+    void continuousScoreRatioRemovesCliffAtThresholds() {
+        // 59/100 (FAIL) et 60/100 (WARN) ne doivent plus produire un écart de score abrupt.
+        AuditCheckResult at59 = check("lh59", AuditStatus.FAIL, true, 15.0).withScoreRatio(0.59);
+        AuditCheckResult at60 = check("lh60", AuditStatus.WARN, true, 15.0).withScoreRatio(0.60);
+
+        double score59 = service.compute(1, List.of(module("m", at59))).global().score();
+        double score60 = service.compute(1, List.of(module("m", at60))).global().score();
+
+        assertEquals(0.15, score60 - score59, 0.001); // 15 × 0.01, continu (vs 7.5 avec les seuils)
+    }
+
+    @Test
+    void continuousScoreRatioIsClampedToUnitInterval() {
+        AuditCheckResult tooHigh = check("k.high", AuditStatus.PASS, true, 10.0).withScoreRatio(1.5);
+        AuditCheckResult tooLow = check("k.low", AuditStatus.PASS, true, 10.0).withScoreRatio(-0.5);
+
+        AuditScoreReport report = service.compute(1, List.of(module("m", tooHigh, tooLow)));
+
+        assertEquals(10.0, report.global().score(), 0.001); // 10×1.0 (clampé) + 10×0.0 (clampé)
+        assertEquals(20.0, report.global().maxScore(), 0.001);
+    }
+
+    // -------------------------
     // Agrégats par module
     // -------------------------
 

@@ -16,15 +16,19 @@ function clamp(n: number) { return Math.max(0, Math.min(100, n ?? 0)); }
 export default function ScoreGrid({
   categories,
   globalScore,
+  completeness,
 }: {
   categories: CategoryScore[];
   globalScore: number;
+  completeness?: number | null;
 }) {
   const { t } = useLang();
   const ts = t.report.scoreGrid;
   const catInfo = t.report.categoryInfo as Record<string, string>;
   const cats = [...(categories || [])].sort((a, b) => a.score - b.score);
   const global = clamp(globalScore);
+  // Analyse partielle : un ou plusieurs modules n'ont pas pu être évalués (issue #101).
+  const isPartial = typeof completeness === "number" && completeness < 100;
 
   return (
     <section className={s.section}>
@@ -32,6 +36,11 @@ export default function ScoreGrid({
         <div className={s.titleBlock}>
           <h2 className={s.sectionTitle}>{ts.title}</h2>
           <p className={s.sectionDesc}>{ts.desc}</p>
+          {isPartial && (
+            <p className={s.partialNote} title={ts.partialTooltip}>
+              ⚠︎ {ts.partial.replace("{n}", String(completeness))}
+            </p>
+          )}
         </div>
         <div className={s.globalChip}>
           {ts.globalLabel}

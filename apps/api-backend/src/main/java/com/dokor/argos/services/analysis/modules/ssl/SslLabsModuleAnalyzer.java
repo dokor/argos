@@ -69,9 +69,12 @@ public class SslLabsModuleAnalyzer implements AuditModuleAnalyzer {
         String grade = endpoint != null ? textOrNull(endpoint.path("grade")) : null;
         boolean hasWarnings = endpoint != null && endpoint.path("hasWarnings").asBoolean(false);
 
+        // Grade indisponible (SSL Labs en cours, endpoint absent, erreur amont) => INFO
+        // non scoré : on ne confond plus "inconnu" avec "moyen" (B=WARN). Le score n'est
+        // pas pénalisé par une simple indisponibilité. Cf. issue #100 — point "SSL unknown".
         AuditStatus gradeStatus;
         if (grade == null) {
-            gradeStatus = AuditStatus.WARN;
+            gradeStatus = AuditStatus.INFO;
         } else if (grade.startsWith("A")) {
             gradeStatus = AuditStatus.PASS;
         } else if ("B".equals(grade)) {
@@ -102,9 +105,11 @@ public class SslLabsModuleAnalyzer implements AuditModuleAnalyzer {
         int certIssues = cert != null && !cert.isMissingNode() ? cert.path("issues").asInt(0) : -1;
         long notAfterMs = cert != null && !cert.isMissingNode() ? cert.path("notAfter").asLong(0L) : 0L;
 
+        // Validité indéterminée (pas de détails de cert) => INFO non scoré plutôt que WARN :
+        // "inconnu" ≠ "certificat problématique". Cf. issue #100 — point "SSL unknown".
         AuditStatus certValidStatus;
         if (certIssues < 0) {
-            certValidStatus = AuditStatus.WARN;
+            certValidStatus = AuditStatus.INFO;
         } else {
             certValidStatus = certIssues == 0 ? AuditStatus.PASS : AuditStatus.FAIL;
         }
@@ -155,10 +160,12 @@ public class SslLabsModuleAnalyzer implements AuditModuleAnalyzer {
                 expiryDays < 60 ? "Renew the SSL certificate before it expires." : null
             ));
         } else {
+            // Date d'expiration indisponible => INFO (inconnu), pas WARN (qui suggérerait
+            // une expiration proche). Cf. issue #100 — point "SSL unknown".
             checks.add(AuditCheckResult.of(
                 "ssl.certificate.expiry_days",
                 "SSL certificate expiry",
-                AuditStatus.WARN,
+                AuditStatus.INFO,
                 AuditSeverity.LOW,
                 false,
                 0.0,

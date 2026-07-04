@@ -371,39 +371,23 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
     }
 
     private static AuditCheckResult checkResponseTime(long durationMs) {
-        AuditStatus status;
-        AuditSeverity severity;
-        String message;
-        String recommendation = null;
-
-        if (durationMs <= 1000) {
-            status = AuditStatus.PASS;
-            severity = AuditSeverity.LOW;
-            message = "Response time is good (" + durationMs + " ms).";
-        } else if (durationMs <= 3000) {
-            status = AuditStatus.WARN;
-            severity = AuditSeverity.MEDIUM;
-            message = "Response time is moderate (" + durationMs + " ms).";
-            recommendation = "Consider performance optimizations (caching, CDN, server tuning).";
-        } else {
-            status = AuditStatus.FAIL;
-            severity = AuditSeverity.HIGH;
-            message = "Response time is slow (" + durationMs + " ms).";
-            recommendation = "Investigate server performance, network latency, and heavy redirects.";
-        }
-
+        // Purement informatif (non scoré) : cette durée est la latence de fetch de l'audit
+        // lui-même (redirections incluses), mesurée depuis le worker Argos et donc dépendante
+        // de son réseau. La transformer en WARN/FAIL produisait des faux positifs non
+        // déterministes. La performance perçue est déjà couverte par Lighthouse (métrique
+        // stable côté client). Cf. issue #100 — point "temps de réponse".
         return AuditCheckResult.of(
             "http.response_time_ms",
             "Response time",
-            status,
-            severity,
+            AuditStatus.INFO,
+            AuditSeverity.LOW,
             false,          // scorable filled later
             0.0,            // weight filled later
             List.of(),      // tags filled later
             durationMs,
             Map.of("durationMs", durationMs),
-            message,
-            recommendation
+            "Auditor fetch time: " + durationMs + " ms (network-dependent, informational only).",
+            null
         );
     }
 
@@ -515,21 +499,22 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
         boolean hasExpires = (expires != null && !expires.isBlank());
         boolean hasCachingInfo = hasCacheControl || hasExpires;
 
-        AuditStatus status = hasCachingInfo ? AuditStatus.INFO : AuditStatus.WARN;
-        AuditSeverity severity = AuditSeverity.LOW;
-
+        // Toujours INFO (non scoré) : l'absence de header de cache sur le document HTML est
+        // souvent le comportement CORRECT (page dynamique/personnalisée qui ne doit pas être
+        // mise en cache). Warner ici produisait un faux positif. La recommandation reste
+        // affichée à titre indicatif. Cf. issue #100 — point "cache HTTP sur du HTML".
         return AuditCheckResult.of(
             "http.headers.caching",
             "Caching headers (Cache-Control / Expires)",
-            status,
-            severity,
+            AuditStatus.INFO,
+            AuditSeverity.LOW,
             false,          // scorable filled later
             0.0,            // weight filled later
             List.of(),      // tags filled later
             (hasCacheControl && hasExpires) ? Map.of("cache-control", cacheControl, "expires", expires) : Map.of(),
             (hasCacheControl && hasExpires) ? Map.of("cache-control", cacheControl, "expires", expires) : Map.of(),
-            hasCachingInfo ? "Caching headers detected." : "No caching headers detected.",
-            hasCachingInfo ? null : "Consider adding Cache-Control for static assets and appropriate caching strategies."
+            hasCachingInfo ? "Caching headers detected." : "No caching headers on the HTML document (often expected for dynamic pages).",
+            hasCachingInfo ? null : "Set explicit Cache-Control on static assets (JS/CSS/images) rather than on the HTML document."
         );
     }
 

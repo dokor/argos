@@ -136,6 +136,36 @@ class HttpModuleAnalyzerTest {
     }
 
     // -------------------------
+    // Seuils déterministes (issue #100) : response time & caching non scorés
+    // -------------------------
+
+    @Test
+    void analyze_responseTimeShouldBeInformationalOnly() {
+        // Le temps de réponse dépend du réseau du worker : il ne doit plus produire de
+        // FAIL/WARN (non déterministe) mais rester purement informatif (INFO => non scoré).
+        AuditContext ctx = new AuditContext("http://localhost:1", "http://localhost:1", 0L);
+
+        AuditModuleResult result = analyzer.analyze(ctx, LoggerFactory.getLogger("test"));
+
+        assertEquals(AuditStatus.INFO, checkByKey(result, "http.response_time_ms").status());
+    }
+
+    @Test
+    void analyze_cachingHeadersShouldBeInformationalOnly() throws Exception {
+        // Absence de header de cache sur le HTML = souvent correct : ne doit pas warner.
+        HttpModuleAnalyzer mockedAnalyzer = new HttpModuleAnalyzer(stubClient(
+            resp(200, "<html></html>"),
+            resp(404, "Not found"),
+            resp(404, "Not found")
+        ));
+        AuditContext ctx = new AuditContext("https://example.com", "https://example.com", 0L);
+
+        AuditModuleResult result = mockedAnalyzer.analyze(ctx, LoggerFactory.getLogger("test"));
+
+        assertEquals(AuditStatus.INFO, checkByKey(result, "http.headers.caching").status());
+    }
+
+    // -------------------------
     // SEO resources: robots.txt & sitemap.xml (issue #31)
     // -------------------------
 

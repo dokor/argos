@@ -35,6 +35,14 @@ export function LangProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Maintient l'attribut lang du <html> synchronisé avec la langue active.
+  // Le layout (Server Component) rend statiquement lang="fr" ; sans cette
+  // synchronisation, passer en anglais laissait le DOM en lang="fr"
+  // (mauvaise prononciation lecteurs d'écran, sémantique erronée).
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
+
   function setLang(l: Lang) {
     setLangState(l);
     localStorage.setItem(STORAGE_KEY, l);

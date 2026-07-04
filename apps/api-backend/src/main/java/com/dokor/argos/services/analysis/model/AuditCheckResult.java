@@ -23,6 +23,12 @@ import java.util.Map;
  * <p>
  * value + evidence doivent rester simples (JSON sérialisable).
  * sources : modules qui ont contribué à ce check (rempli par CheckMergerService / annotateWithSource).
+ * <p>
+ * scoreRatio : ratio de score continu dans [0,1] qui, lorsqu'il est renseigné,
+ * <b>remplace</b> le ratio dérivé du status (PASS=1 / WARN=0.5 / FAIL=0) dans
+ * {@code ScoreService}. Il permet aux checks fondés sur une note graduée (ex. scores
+ * Lighthouse 0..100) d'éviter les effets de falaise aux bornes des seuils PASS/WARN/FAIL.
+ * {@code null} ⇒ on retombe sur le ratio dérivé du status (cas général).
  */
 public record AuditCheckResult(
     String key,
@@ -40,7 +46,8 @@ public record AuditCheckResult(
 
     String message,
     String recommendation,
-    List<String> sources
+    List<String> sources,
+    Double scoreRatio     // null => ratio dérivé du status ; sinon ratio continu [0,1]
 ) {
     public AuditCheckResult {
         sources = sources != null ? List.copyOf(sources) : List.of();
@@ -56,12 +63,22 @@ public record AuditCheckResult(
         String message, String recommendation
     ) {
         return new AuditCheckResult(key, title, status, severity, scorable, weight, tags,
-            value, details, message, recommendation, List.of());
+            value, details, message, recommendation, List.of(), null);
     }
 
     public AuditCheckResult withSources(List<String> newSources) {
         return new AuditCheckResult(key, title, status, severity, scorable, weight, tags,
-            value, details, message, recommendation, newSources);
+            value, details, message, recommendation, newSources, scoreRatio);
+    }
+
+    /**
+     * Attache un ratio de score continu dans [0,1] (voir {@link #scoreRatio()}).
+     * Utilisé par les checks à note graduée (ex. Lighthouse) pour éviter les
+     * effets de falaise aux bornes des seuils de status.
+     */
+    public AuditCheckResult withScoreRatio(Double ratio) {
+        return new AuditCheckResult(key, title, status, severity, scorable, weight, tags,
+            value, details, message, recommendation, sources, ratio);
     }
 
     public AuditCheckResult mergeWith(AuditCheckResult other) {
@@ -73,9 +90,11 @@ public record AuditCheckResult(
         other.sources.forEach(s -> { if (!mergedSources.contains(s)) mergedSources.add(s); });
         String mergedMessage = statusRank(other.status) > statusRank(this.status) ? other.message : this.message;
         String mergedReco = this.recommendation != null ? this.recommendation : other.recommendation;
+        Double mergedScoreRatio = this.scoreRatio != null ? this.scoreRatio : other.scoreRatio;
         return new AuditCheckResult(key, title, mergedStatus, mergedSeverity,
             this.scorable || other.scorable, Math.max(this.weight, other.weight),
-            this.tags, this.value, mergedDetails, mergedMessage, mergedReco, List.copyOf(mergedSources));
+            this.tags, this.value, mergedDetails, mergedMessage, mergedReco, List.copyOf(mergedSources),
+            mergedScoreRatio);
     }
 
     private static int statusRank(AuditStatus s) {

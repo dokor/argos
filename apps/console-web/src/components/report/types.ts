@@ -8,6 +8,8 @@ export type Report = {
   };
   scores: {
     global: number;
+    /** Part des modules réellement évalués (0-100). Analyse partielle si < 100. */
+    completeness?: number | null;
     byCategory: CategoryScore[];
   };
   summary: {
