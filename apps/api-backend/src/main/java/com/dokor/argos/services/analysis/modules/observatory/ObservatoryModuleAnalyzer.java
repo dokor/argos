@@ -68,10 +68,13 @@ public class ObservatoryModuleAnalyzer implements AuditModuleAnalyzer {
         List<AuditCheckResult> checks = new ArrayList<>();
 
         // observatory.score
+        // Score indisponible (API Observatory KO/en cours) => INFO non scoré : une
+        // indisponibilité externe ne doit pas être interprétée comme un défaut du site
+        // (le status INFO est mis à poids 0 par ScoreEnricherService). Cf. issue #100/#156.
         AuditStatus scoreStatus;
         String scoreMessage;
         if (score < 0) {
-            scoreStatus = AuditStatus.WARN;
+            scoreStatus = AuditStatus.INFO;
             scoreMessage = "Score Observatory indisponible.";
         } else if (score >= 75) {
             scoreStatus = AuditStatus.PASS;
@@ -83,7 +86,7 @@ public class ObservatoryModuleAnalyzer implements AuditModuleAnalyzer {
             scoreStatus = AuditStatus.FAIL;
             scoreMessage = "Score de sécurité Observatory faible : " + score + "/100.";
         }
-        checks.add(AuditCheckResult.of(
+        AuditCheckResult scoreCheck = AuditCheckResult.of(
             "observatory.score",
             "Score de sécurité Mozilla Observatory",
             scoreStatus,
@@ -94,8 +97,14 @@ public class ObservatoryModuleAnalyzer implements AuditModuleAnalyzer {
             score >= 0 ? score : null,
             score >= 0 ? Map.of("score", score) : Map.of(),
             scoreMessage,
-            score < 75 ? "Corrigez les en-têtes et politiques de sécurité signalés par Mozilla Observatory." : null
-        ));
+            (score >= 0 && score < 75) ? "Corrigez les en-têtes et politiques de sécurité signalés par Mozilla Observatory." : null
+        );
+        // Scoring continu (anti-effet de falaise, cf. #100) : le score/100 pilote le ratio,
+        // au lieu du seul palier PASS/WARN/FAIL. Uniquement quand le score est disponible.
+        if (score >= 0) {
+            scoreCheck = scoreCheck.withScoreRatio(score / 100.0);
+        }
+        checks.add(scoreCheck);
 
         // observatory.grade
         checks.add(AuditCheckResult.of(
@@ -115,7 +124,8 @@ public class ObservatoryModuleAnalyzer implements AuditModuleAnalyzer {
         // observatory.tests.passed
         String testsMessage;
         if (testsPassed >= 0 && testsQuantity > 0) {
-            testsMessage = testsPassed + "/" + testsQuantity + " tests réussis.";
+            testsMessage = testsPassed + "/" + testsQuantity + " tests réussis"
+                + (testsFailed > 0 ? " (" + testsFailed + " en échec)." : ".");
         } else {
             testsMessage = "Résultats des tests Observatory indisponibles.";
         }
