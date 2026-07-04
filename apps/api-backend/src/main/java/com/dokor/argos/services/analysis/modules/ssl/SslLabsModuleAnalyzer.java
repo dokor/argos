@@ -85,7 +85,7 @@ public class SslLabsModuleAnalyzer implements AuditModuleAnalyzer {
 
         checks.add(AuditCheckResult.of(
             "ssl.grade",
-            "SSL Labs grade",
+            "Note SSL Labs",
             gradeStatus,
             gradeStatus == AuditStatus.FAIL ? AuditSeverity.HIGH
                 : gradeStatus == AuditStatus.WARN ? AuditSeverity.MEDIUM : AuditSeverity.LOW,
@@ -94,8 +94,8 @@ public class SslLabsModuleAnalyzer implements AuditModuleAnalyzer {
             List.of(),
             grade,
             grade != null ? Map.of("grade", grade, "hasWarnings", hasWarnings) : Map.of(),
-            grade != null ? "SSL Labs grade: " + grade + (hasWarnings ? " (with warnings)" : "") : "SSL Labs grade not available.",
-            gradeStatus != AuditStatus.PASS ? "Investigate SSL/TLS configuration issues flagged by SSL Labs." : null
+            grade != null ? "Note SSL Labs : " + grade + (hasWarnings ? " (avec avertissements)" : "") : "Note SSL Labs indisponible.",
+            gradeStatus != AuditStatus.PASS ? "Corrigez la configuration SSL/TLS signalée par SSL Labs." : null
         ));
 
         // ssl.certificate.valid & ssl.certificate.expiry_days
@@ -116,7 +116,7 @@ public class SslLabsModuleAnalyzer implements AuditModuleAnalyzer {
 
         checks.add(AuditCheckResult.of(
             "ssl.certificate.valid",
-            "SSL certificate validity",
+            "Validité du certificat SSL",
             certValidStatus,
             certValidStatus == AuditStatus.FAIL ? AuditSeverity.HIGH : AuditSeverity.LOW,
             true,
@@ -124,10 +124,10 @@ public class SslLabsModuleAnalyzer implements AuditModuleAnalyzer {
             List.of(),
             certIssues >= 0 ? certIssues == 0 : null,
             certIssues >= 0 ? Map.of("issues", certIssues) : Map.of(),
-            certIssues < 0 ? "Certificate validity could not be determined."
-                : certIssues == 0 ? "SSL certificate has no issues."
-                : "SSL certificate has " + certIssues + " issue(s).",
-            certIssues > 0 ? "Investigate and fix SSL certificate issues (chain, revocation, expiry)." : null
+            certIssues < 0 ? "Validité du certificat indéterminée."
+                : certIssues == 0 ? "Le certificat SSL ne présente aucun problème."
+                : "Le certificat SSL présente " + certIssues + " problème(s).",
+            certIssues > 0 ? "Corrigez les problèmes du certificat SSL (chaîne, révocation, expiration)." : null
         ));
 
         // ssl.certificate.expiry_days
@@ -147,7 +147,7 @@ public class SslLabsModuleAnalyzer implements AuditModuleAnalyzer {
 
             checks.add(AuditCheckResult.of(
                 "ssl.certificate.expiry_days",
-                "SSL certificate expiry",
+                "Expiration du certificat SSL",
                 expiryStatus,
                 expiryStatus == AuditStatus.FAIL ? AuditSeverity.HIGH
                     : expiryStatus == AuditStatus.WARN ? AuditSeverity.MEDIUM : AuditSeverity.LOW,
@@ -156,15 +156,15 @@ public class SslLabsModuleAnalyzer implements AuditModuleAnalyzer {
                 List.of(),
                 expiryDays,
                 Map.of("expiryDays", expiryDays, "notAfterMs", notAfterMs),
-                "SSL certificate expires in " + expiryDays + " day(s).",
-                expiryDays < 60 ? "Renew the SSL certificate before it expires." : null
+                "Le certificat SSL expire dans " + expiryDays + " jour(s).",
+                expiryDays < 60 ? "Renouvelez le certificat SSL avant son expiration." : null
             ));
         } else {
             // Date d'expiration indisponible => INFO (inconnu), pas WARN (qui suggérerait
             // une expiration proche). Cf. issue #100 - point "SSL unknown".
             checks.add(AuditCheckResult.of(
                 "ssl.certificate.expiry_days",
-                "SSL certificate expiry",
+                "Expiration du certificat SSL",
                 AuditStatus.INFO,
                 AuditSeverity.LOW,
                 false,
@@ -172,7 +172,7 @@ public class SslLabsModuleAnalyzer implements AuditModuleAnalyzer {
                 List.of(),
                 null,
                 Map.of(),
-                "SSL certificate expiry date not available.",
+                "Date d'expiration du certificat indisponible.",
                 null
             ));
         }
@@ -193,7 +193,7 @@ public class SslLabsModuleAnalyzer implements AuditModuleAnalyzer {
 
         checks.add(AuditCheckResult.of(
             "ssl.protocols.tls13",
-            "TLS 1.3 support",
+            "Prise en charge de TLS 1.3",
             hasTls13 ? AuditStatus.PASS : AuditStatus.WARN,
             AuditSeverity.LOW,
             true,
@@ -201,13 +201,13 @@ public class SslLabsModuleAnalyzer implements AuditModuleAnalyzer {
             List.of(),
             hasTls13,
             Map.of("tls13", hasTls13),
-            hasTls13 ? "TLS 1.3 is supported." : "TLS 1.3 is not supported.",
-            hasTls13 ? null : "Consider enabling TLS 1.3 for improved security and performance."
+            hasTls13 ? "TLS 1.3 est pris en charge." : "TLS 1.3 n'est pas pris en charge.",
+            hasTls13 ? null : "Activez TLS 1.3 pour améliorer la sécurité et les performances."
         ));
 
         checks.add(AuditCheckResult.of(
             "ssl.protocols.tls12",
-            "TLS 1.2 support",
+            "Prise en charge de TLS 1.2",
             hasTls12 ? AuditStatus.PASS : AuditStatus.FAIL,
             hasTls12 ? AuditSeverity.LOW : AuditSeverity.HIGH,
             true,
@@ -215,8 +215,8 @@ public class SslLabsModuleAnalyzer implements AuditModuleAnalyzer {
             List.of(),
             hasTls12,
             Map.of("tls12", hasTls12),
-            hasTls12 ? "TLS 1.2 is supported." : "TLS 1.2 is not supported.",
-            hasTls12 ? null : "TLS 1.2 must be supported for broad client compatibility."
+            hasTls12 ? "TLS 1.2 est pris en charge." : "TLS 1.2 n'est pas pris en charge.",
+            hasTls12 ? null : "TLS 1.2 doit être pris en charge pour la compatibilité avec la majorité des navigateurs."
         ));
 
         // http.security.hsts - reuses existing key, will be merged by CheckMergerService
@@ -237,8 +237,8 @@ public class SslLabsModuleAnalyzer implements AuditModuleAnalyzer {
             List.of(),
             hstsPresent,
             buildHstsDetails(hstsStatus, hstsMaxAge),
-            hstsPresent ? "HSTS is present (max-age=" + hstsMaxAge + ")." : "HSTS is not present.",
-            hstsPresent ? null : "Enable HSTS to enforce HTTPS connections."
+            hstsPresent ? "HSTS est actif (max-age=" + hstsMaxAge + ")." : "HSTS n'est pas actif.",
+            hstsPresent ? null : "Activez HSTS pour forcer les connexions HTTPS."
         ));
 
         // Build data
@@ -261,7 +261,7 @@ public class SslLabsModuleAnalyzer implements AuditModuleAnalyzer {
     private AuditModuleResult errorModule(String reason) {
         List<AuditCheckResult> checks = List.of(AuditCheckResult.of(
             "ssl.available",
-            "SSL Labs availability",
+            "Disponibilité de SSL Labs",
             AuditStatus.WARN,
             AuditSeverity.LOW,
             false,
@@ -269,8 +269,8 @@ public class SslLabsModuleAnalyzer implements AuditModuleAnalyzer {
             List.of(),
             false,
             Map.of("reason", reason),
-            "SSL Labs analysis could not run: " + reason,
-            "Ensure network access to api.ssllabs.com is available."
+            "L'analyse SSL Labs n'a pas pu s'exécuter : " + reason,
+            "Vérifiez l'accès réseau à api.ssllabs.com."
         ));
         return new AuditModuleResult(moduleId(), "SSL Labs", "ssl=unavailable",
             Map.of("available", false, "reason", reason), checks);

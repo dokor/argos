@@ -174,8 +174,8 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
                 List.of(),      // tags filled later
                 errors,
                 Map.of("errors", errors),
-                "Some errors occurred during HTTP analysis",
-                "Investigate connectivity, DNS, TLS, redirects, and server availability."
+                "Des erreurs sont survenues pendant l'analyse HTTP.",
+                "Examinez la connectivité, le DNS, le TLS, les redirections et la disponibilité du serveur."
             ));
         }
 
@@ -234,27 +234,27 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
         if (statusCode >= 200 && statusCode < 300) {
             status = AuditStatus.PASS;
             severity = AuditSeverity.LOW;
-            message = "HTTP status is successful (" + statusCode + ").";
+            message = "Le statut HTTP est un succès (" + statusCode + ").";
         } else if (statusCode >= 300 && statusCode < 400) {
             status = AuditStatus.WARN;
             severity = AuditSeverity.MEDIUM;
-            message = "HTTP status indicates redirection (" + statusCode + ").";
-            recommendation = "Ensure redirects are expected and minimal.";
+            message = "Le statut HTTP indique une redirection (" + statusCode + ").";
+            recommendation = "Assurez-vous que les redirections sont attendues et limitées.";
         } else if (statusCode >= 400 && statusCode < 600) {
             status = AuditStatus.FAIL;
             severity = AuditSeverity.HIGH;
-            message = "HTTP status indicates an error (" + statusCode + ").";
-            recommendation = "Fix server response (4xx/5xx). Check routing, auth, and server health.";
+            message = "Le statut HTTP indique une erreur (" + statusCode + ").";
+            recommendation = "Corrigez la réponse du serveur (4xx/5xx) : routage, authentification, état du serveur.";
         } else {
             status = AuditStatus.FAIL;
             severity = AuditSeverity.HIGH;
-            message = "No valid HTTP status received.";
-            recommendation = "Check DNS, connectivity, TLS, and server availability.";
+            message = "Aucun statut HTTP valide reçu.";
+            recommendation = "Vérifiez le DNS, la connectivité, le TLS et la disponibilité du serveur.";
         }
 
         return AuditCheckResult.of(
             "http.status_code",
-            "HTTP status code",
+            "Code de statut HTTP",
             status,
             severity,
             false,          // scorable filled later
@@ -278,26 +278,26 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
         if (redirects == 0) {
             status = AuditStatus.PASS;
             severity = AuditSeverity.LOW;
-            message = "No redirects detected.";
+            message = "Aucune redirection détectée.";
         } else if (redirects <= 2) {
             status = AuditStatus.PASS;
             severity = AuditSeverity.LOW;
-            message = "Redirects are minimal (" + redirects + ").";
+            message = "Redirections limitées (" + redirects + ").";
         } else if (redirects <= 5) {
             status = AuditStatus.WARN;
             severity = AuditSeverity.MEDIUM;
-            message = "Multiple redirects detected (" + redirects + ").";
-            recommendation = "Reduce redirects to improve performance and reliability.";
+            message = "Plusieurs redirections détectées (" + redirects + ").";
+            recommendation = "Réduisez les redirections pour améliorer les performances et la fiabilité.";
         } else {
             status = AuditStatus.FAIL;
             severity = AuditSeverity.HIGH;
-            message = "Too many redirects detected (" + redirects + ").";
-            recommendation = "Fix redirect chain to avoid loops and reduce latency.";
+            message = "Trop de redirections détectées (" + redirects + ").";
+            recommendation = "Corrigez la chaîne de redirections pour éviter les boucles et réduire la latence.";
         }
 
         return AuditCheckResult.of(
             "http.redirect.count",
-            "Redirect count",
+            "Nombre de redirections",
             status,
             severity,
             false,          // scorable filled later
@@ -318,7 +318,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
 
         return AuditCheckResult.of(
             "http.final_url.https",
-            "Final URL uses HTTPS",
+            "URL finale en HTTPS",
             status,
             severity,
             false,          // scorable filled later
@@ -326,8 +326,8 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
             List.of(),      // tags filled later
             isHttps,
             Map.of("finalUrl", finalUrl),
-            isHttps ? "Final URL uses HTTPS." : "Final URL is not HTTPS.",
-            isHttps ? null : "Prefer HTTPS to protect users and improve trust."
+            isHttps ? "L'URL finale utilise HTTPS." : "L'URL finale n'utilise pas HTTPS.",
+            isHttps ? null : "Privilégiez HTTPS pour protéger les visiteurs et renforcer la confiance."
         );
     }
 
@@ -343,21 +343,21 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
         if (!inputIsHttp) {
             status = AuditStatus.INFO;
             severity = AuditSeverity.LOW;
-            message = "Input URL is not HTTP (no need to redirect to HTTPS).";
+            message = "L'URL soumise n'est pas en HTTP (redirection vers HTTPS inutile).";
         } else if (finalIsHttps) {
             status = AuditStatus.PASS;
             severity = AuditSeverity.LOW;
-            message = "HTTP is redirected to HTTPS.";
+            message = "Le HTTP est bien redirigé vers HTTPS.";
         } else {
             status = AuditStatus.WARN;
             severity = AuditSeverity.MEDIUM;
-            message = "Input URL is HTTP and final URL is not HTTPS.";
-            recommendation = "Redirect HTTP to HTTPS to improve security.";
+            message = "L'URL soumise est en HTTP et l'URL finale n'est pas en HTTPS.";
+            recommendation = "Redirigez le HTTP vers HTTPS pour améliorer la sécurité.";
         }
 
         return AuditCheckResult.of(
             "http.redirect.to_https",
-            "Redirect HTTP to HTTPS",
+            "Redirection HTTP vers HTTPS",
             status,
             severity,
             false,          // scorable filled later
@@ -400,7 +400,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
 
         return AuditCheckResult.of(
             "http.headers.content_type",
-            "Content-Type header",
+            "En-tête Content-Type",
             status,
             severity,
             false,          // scorable filled later
@@ -408,8 +408,8 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
             List.of(),      // tags filled later
             ct,
             present ? Map.of("content-type", ct) : Map.of(),
-            present ? "Content-Type is present." : "Content-Type header is missing.",
-            present ? null : "Return an appropriate Content-Type header (e.g. text/html; charset=utf-8)."
+            present ? "L'en-tête Content-Type est présent." : "L'en-tête Content-Type est absent.",
+            present ? null : "Renvoyez un en-tête Content-Type approprié (ex. text/html; charset=utf-8)."
         );
     }
 
@@ -422,7 +422,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
             "http.security.hsts",
             "HSTS (Strict-Transport-Security)",
             AuditSeverity.MEDIUM,
-            "Consider enabling HSTS to enforce HTTPS (only if you are confident HTTPS is correctly configured)."
+            "Activez HSTS pour forcer HTTPS (uniquement si HTTPS est correctement configuré)."
         ));
 
         out.add(checkHeaderPresence(
@@ -431,7 +431,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
             "http.security.csp",
             "CSP (Content-Security-Policy)",
             AuditSeverity.MEDIUM,
-            "Consider adding a CSP to reduce XSS risk."
+            "Ajoutez une Content-Security-Policy (CSP) pour réduire le risque de XSS."
         ));
 
         out.add(checkHeaderPresence(
@@ -440,7 +440,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
             "http.security.x_content_type_options",
             "X-Content-Type-Options",
             AuditSeverity.LOW,
-            "Consider setting X-Content-Type-Options: nosniff."
+            "Définissez l'en-tête X-Content-Type-Options: nosniff."
         ));
 
         out.add(checkHeaderPresence(
@@ -449,7 +449,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
             "http.security.x_frame_options",
             "X-Frame-Options",
             AuditSeverity.LOW,
-            "Consider setting X-Frame-Options (or frame-ancestors via CSP) to mitigate clickjacking."
+            "Définissez X-Frame-Options (ou frame-ancestors via CSP) pour limiter le clickjacking."
         ));
 
         out.add(checkHeaderPresence(
@@ -458,7 +458,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
             "http.security.referrer_policy",
             "Referrer-Policy",
             AuditSeverity.LOW,
-            "Consider setting Referrer-Policy to control referrer data leakage."
+            "Définissez Referrer-Policy pour maîtriser la fuite d'informations de provenance."
         ));
 
         out.add(checkHeaderPresence(
@@ -467,7 +467,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
             "http.security.permissions_policy",
             "Permissions-Policy",
             AuditSeverity.LOW,
-            "Consider adding Permissions-Policy to limit powerful browser features."
+            "Ajoutez Permissions-Policy pour restreindre les fonctionnalités sensibles du navigateur."
         ));
 
         return out;
@@ -487,7 +487,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
             List.of(),      // tags filled later
             enc,
             enabled ? Map.of("content-encoding", enc) : Map.of(),
-            enabled ? "Compression is enabled (" + enc + ")." : "No Content-Encoding detected.",
+            enabled ? "Compression activée (" + enc + ")." : "Aucun Content-Encoding détecté.",
             null
         );
     }
@@ -513,8 +513,8 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
             List.of(),      // tags filled later
             (hasCacheControl && hasExpires) ? Map.of("cache-control", cacheControl, "expires", expires) : Map.of(),
             (hasCacheControl && hasExpires) ? Map.of("cache-control", cacheControl, "expires", expires) : Map.of(),
-            hasCachingInfo ? "Caching headers detected." : "No caching headers on the HTML document (often expected for dynamic pages).",
-            hasCachingInfo ? null : "Set explicit Cache-Control on static assets (JS/CSS/images) rather than on the HTML document."
+            hasCachingInfo ? "En-têtes de cache détectés." : "Aucun en-tête de cache sur le document HTML (souvent normal pour une page dynamique).",
+            hasCachingInfo ? null : "Définissez un Cache-Control explicite sur les ressources statiques (JS/CSS/images) plutôt que sur le document HTML."
         );
     }
 
@@ -530,7 +530,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
             List.of(),      // tags filled later
             server,
             server != null ? Map.of("server", server) : Map.of(),
-            server != null ? "Server header is present." : "Server header is not present.",
+            server != null ? "L'en-tête Server est présent." : "L'en-tête Server est absent.",
             null
         );
     }
@@ -558,7 +558,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
             List.of(),      // tags filled later
             value,
             present ? Map.of(headerKeyLowerCase, value) : Map.of(),
-            present ? (label + " is present.") : (label + " is missing."),
+            present ? (label + " est présent.") : (label + " est absent."),
             present ? null : recommendationIfMissing
         );
     }
@@ -647,7 +647,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
         boolean present = seo.robotsPresent();
         return AuditCheckResult.of(
             "http.seo.robots_txt",
-            "robots.txt present",
+            "Présence de robots.txt",
             present ? AuditStatus.PASS : AuditStatus.WARN,
             present ? AuditSeverity.LOW : AuditSeverity.MEDIUM,
             false,          // scorable filled later
@@ -655,8 +655,8 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
             List.of(),      // tags filled later
             present,
             Map.of("present", present, "status", seo.robotsStatus()),
-            present ? "robots.txt is present." : "robots.txt is missing.",
-            present ? null : "Add a /robots.txt to guide crawlers and reference your sitemap."
+            present ? "Le fichier robots.txt est présent." : "Le fichier robots.txt est absent.",
+            present ? null : "Ajoutez un /robots.txt pour guider les robots d'indexation et référencer votre sitemap."
         );
     }
 
@@ -665,7 +665,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
         String via = seo.sitemapDirect() ? "sitemap.xml" : (seo.sitemapInRobots() ? "robots.txt" : "none");
         return AuditCheckResult.of(
             "http.seo.sitemap",
-            "Sitemap present",
+            "Présence du sitemap",
             present ? AuditStatus.PASS : AuditStatus.WARN,
             present ? AuditSeverity.LOW : AuditSeverity.MEDIUM,
             false,          // scorable filled later
@@ -678,8 +678,8 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
                 "sitemapXmlStatus", seo.sitemapStatus(),
                 "declaredInRobots", seo.sitemapInRobots()
             ),
-            present ? ("Sitemap detected (via " + via + ").") : "No sitemap detected (/sitemap.xml or robots.txt).",
-            present ? null : "Publish a sitemap.xml and reference it in robots.txt to help indexing."
+            present ? ("Sitemap détecté (via " + via + ").") : "Aucun sitemap détecté (/sitemap.xml ou robots.txt).",
+            present ? null : "Publiez un sitemap.xml et référencez-le dans robots.txt pour faciliter l'indexation."
         );
     }
 

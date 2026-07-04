@@ -60,7 +60,7 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
 
         if (html == null || html.isBlank()) {
             logger.warn("HTML module: empty HTML input url={} normalizedUrl={}", inputUrl, normalizedUrl);
-            return emptyHtmlModule(inputUrl, normalizedUrl, finalUrl, "HTML is empty or null");
+            return emptyHtmlModule(inputUrl, normalizedUrl, finalUrl, "Le HTML est vide ou absent.");
         }
 
         String title = firstGroup(TITLE_PATTERN, html);
@@ -111,7 +111,7 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
         // 7) Robots meta (info)
         checks.add(AuditCheckResult.of(
             "html.meta.robots.present",
-            "Meta robots present",
+            "Présence de la balise meta robots",
             AuditStatus.INFO,
             AuditSeverity.LOW,
             false,          // scorable filled later
@@ -119,7 +119,7 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
             List.of(),      // tags filled later
             hasRobots,
             Map.of("present", hasRobots),
-            hasRobots ? "Meta robots tag detected." : "No meta robots tag detected.",
+            hasRobots ? "Balise meta robots détectée." : "Aucune balise meta robots détectée.",
             null
         ));
 
@@ -135,7 +135,7 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
         // 11) Script count (info)
         checks.add(AuditCheckResult.of(
             "html.scripts.count",
-            "Script tags count",
+            "Nombre de balises script",
             AuditStatus.INFO,
             AuditSeverity.LOW,
             false,          // scorable filled later
@@ -143,14 +143,14 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
             List.of(),      // tags filled later
             scriptCount,
             Map.of("scriptCount", scriptCount),
-            "Found " + scriptCount + " <script> tags.",
+            scriptCount + " balise(s) <script> détectée(s).",
             null
         ));
 
         // 12) HTML size (info)
         checks.add(AuditCheckResult.of(
             "html.size.bytes",
-            "HTML size (bytes)",
+            "Taille du HTML (octets)",
             AuditStatus.INFO,
             AuditSeverity.LOW,
             false,          // scorable filled later
@@ -158,14 +158,14 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
             List.of(),      // tags filled later
             html.length(),
             Map.of("bytes", html.length()),
-            "HTML size is " + html.length() + " bytes.",
+            "Taille du HTML : " + html.length() + " bytes.",
             null
         ));
 
         // 13) Analysis duration (info)
         checks.add(AuditCheckResult.of(
             "html.analysis.duration_ms",
-            "HTML analysis duration",
+            "Durée de l'analyse HTML",
             AuditStatus.INFO,
             AuditSeverity.LOW,
             false,          // scorable filled later
@@ -173,7 +173,7 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
             List.of(),      // tags filled later
             durationMs,
             Map.of("durationMs", durationMs),
-            "HTML analysis completed in " + durationMs + " ms.",
+            "Analyse HTML terminée en " + durationMs + " ms.",
             null
         ));
 
@@ -247,22 +247,22 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
         if (!present) {
             status = AuditStatus.FAIL;
             severity = AuditSeverity.HIGH;
-            message = "Missing <title> tag.";
-            recommendation = "Add a meaningful <title> for SEO and usability.";
+            message = "Balise <title> absente.";
+            recommendation = "Ajoutez une balise <title> descriptive pour le SEO et l'utilisabilité.";
         } else if (len < 10) {
             status = AuditStatus.WARN;
             severity = AuditSeverity.MEDIUM;
-            message = "Title is present but very short (" + len + " chars).";
-            recommendation = "Use a more descriptive title (often 30-60 chars is a good target).";
+            message = "Le titre est présent mais très court (" + len + " chars).";
+            recommendation = "Utilisez un titre plus descriptif (idéalement 30 à 60 caractères).";
         } else if (len > 80) {
             status = AuditStatus.WARN;
             severity = AuditSeverity.LOW;
-            message = "Title is long (" + len + " chars).";
-            recommendation = "Consider shortening the title (often 30-60 chars is a good target).";
+            message = "Le titre est long (" + len + " chars).";
+            recommendation = "Raccourcissez le titre (idéalement 30 à 60 caractères).";
         } else {
             status = AuditStatus.PASS;
             severity = AuditSeverity.LOW;
-            message = "Title is present (" + len + " chars).";
+            message = "Le titre est présent (" + len + " chars).";
         }
 
         return AuditCheckResult.of(
@@ -283,7 +283,7 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
     private static AuditCheckResult checkMetaDescription(boolean present) {
         return AuditCheckResult.of(
             "html.meta.description.present",
-            "Meta description present",
+            "Présence de la meta description",
             present ? AuditStatus.PASS : AuditStatus.WARN,
             present ? AuditSeverity.LOW : AuditSeverity.MEDIUM,
             false,          // scorable filled later
@@ -291,15 +291,15 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
             List.of(),      // tags filled later
             present,
             Map.of("present", present),
-            present ? "Meta description is present." : "Meta description is missing.",
-            present ? null : "Add a meta description to improve search snippets."
+            present ? "La meta description est présente." : "La meta description est absente.",
+            present ? null : "Ajoutez une meta description pour améliorer l'aperçu dans les résultats de recherche."
         );
     }
 
     private static AuditCheckResult checkCanonical(boolean present) {
         return AuditCheckResult.of(
             "html.link.canonical.present",
-            "Canonical link present",
+            "Présence du lien canonical",
             present ? AuditStatus.PASS : AuditStatus.WARN,
             present ? AuditSeverity.LOW : AuditSeverity.MEDIUM,
             false,          // scorable filled later
@@ -307,8 +307,8 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
             List.of(),      // tags filled later
             present,
             Map.of("present", present),
-            present ? "Canonical link is present." : "Canonical link is missing.",
-            present ? null : "Add a canonical link to reduce duplicate content issues."
+            present ? "Le lien canonical est présent." : "Le lien canonical est absent.",
+            present ? null : "Ajoutez un lien canonical pour limiter le contenu dupliqué."
         );
     }
 
@@ -322,8 +322,8 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
             case 0 -> {
                 status = AuditStatus.WARN;
                 severity = AuditSeverity.MEDIUM;
-                message = "No <h1> found.";
-                recommendation = "Add one H1 to describe the main topic of the page.";
+                message = "Aucun <h1> trouvé.";
+                recommendation = "Ajoutez un H1 décrivant le sujet principal de la page.";
             }
             case 1 -> {
                 status = AuditStatus.PASS;
@@ -334,13 +334,13 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
                 status = AuditStatus.WARN;
                 severity = AuditSeverity.LOW;
                 message = "Multiple <h1> found (" + h1Count + ").";
-                recommendation = "Prefer a single H1 for clarity (unless your page structure requires otherwise).";
+                recommendation = "Privilégiez un seul H1 pour la clarté (sauf si la structure de la page l'impose).";
             }
         }
 
         return AuditCheckResult.of(
             "html.h1.count",
-            "H1 heading count",
+            "Nombre de titres H1",
             status,
             severity,
             false,          // scorable filled later
@@ -358,7 +358,7 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
 
         return AuditCheckResult.of(
             "html.lang",
-            "HTML lang attribute",
+            "Attribut lang du HTML",
             present ? AuditStatus.PASS : AuditStatus.WARN,
             AuditSeverity.LOW,
             false,          // scorable filled later
@@ -366,7 +366,7 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
             List.of(),      // tags filled later
             lang,
             present ? Map.of("lang", lang) : Map.of(),
-            present ? "HTML lang is set (" + lang + ")." : "Missing lang attribute on <html>.",
+            present ? "L'attribut lang est défini (" + lang + ")." : "Attribut lang absent sur le <html>.",
             present ? null : "Set <html lang=\"...\"> for accessibility and SEO."
         );
     }
@@ -374,7 +374,7 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
     private static AuditCheckResult checkViewport(boolean present) {
         return AuditCheckResult.of(
             "html.meta.viewport.present",
-            "Viewport meta present",
+            "Présence de la balise meta viewport",
             present ? AuditStatus.PASS : AuditStatus.WARN,
             present ? AuditSeverity.LOW : AuditSeverity.MEDIUM,
             false,          // scorable filled later
@@ -382,8 +382,8 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
             List.of(),      // tags filled later
             present,
             Map.of("present", present),
-            present ? "Viewport meta is present." : "Viewport meta is missing.",
-            present ? null : "Add <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"> for mobile friendliness."
+            present ? "La balise meta viewport est présente." : "La balise meta viewport est absente.",
+            present ? null : "Ajoutez <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"> pour l'affichage mobile."
         );
     }
 
@@ -402,22 +402,22 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
         if (presentCount >= 3) {
             status = AuditStatus.PASS;
             severity = AuditSeverity.LOW;
-            message = "Social meta tags are mostly present.";
+            message = "Les balises meta sociales sont globalement présentes.";
         } else if (presentCount >= 1) {
             status = AuditStatus.WARN;
             severity = AuditSeverity.LOW;
-            message = "Some social meta tags are missing.";
-            recommendation = "Consider adding OpenGraph (og:title, og:description, og:image) and Twitter card tags.";
+            message = "Certaines balises meta sociales sont absentes.";
+            recommendation = "Ajoutez les balises OpenGraph (og:title, og:description, og:image) et Twitter card.";
         } else {
             status = AuditStatus.INFO;
             severity = AuditSeverity.LOW;
-            message = "No social meta tags detected.";
-            recommendation = "Add OpenGraph/Twitter tags to improve link previews on social platforms.";
+            message = "Aucune balise meta sociale détectée.";
+            recommendation = "Ajoutez des balises OpenGraph/Twitter pour améliorer les aperçus de partage sur les réseaux sociaux.";
         }
 
         return AuditCheckResult.of(
             "html.social.meta",
-            "Social meta tags (OpenGraph/Twitter)",
+            "Balises meta sociales (OpenGraph/Twitter)",
             status,
             severity,
             false,          // scorable filled later
@@ -444,7 +444,7 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
         if (imgCount == 0) {
             return AuditCheckResult.of(
                 "html.images.alt_coverage",
-                "Image alt coverage",
+                "Couverture des attributs alt (images)",
                 AuditStatus.INFO,
                 AuditSeverity.LOW,
                 false,          // scorable filled later
@@ -452,7 +452,7 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
                 List.of(),      // tags filled later
                 Map.of("imgCount", 0, "missingAltCount", 0),
                 Map.of("imgCount", 0),
-                "No images detected.",
+                "Aucune image détectée.",
                 null
             );
         }
@@ -468,22 +468,22 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
         if (imgAltMissingCount == 0) {
             status = AuditStatus.PASS;
             severity = AuditSeverity.LOW;
-            message = "All images have an alt attribute.";
+            message = "Toutes les images ont un attribut alt.";
         } else if (missingPct <= 20) {
             status = AuditStatus.WARN;
             severity = AuditSeverity.LOW;
-            message = "Some images are missing alt attributes (" + missingPct + "%).";
-            recommendation = "Add alt attributes for accessibility and SEO.";
+            message = "Certaines images n'ont pas d'attribut alt (" + missingPct + "%).";
+            recommendation = "Ajoutez des attributs alt pour l'accessibilité et le SEO.";
         } else {
             status = AuditStatus.WARN;
             severity = AuditSeverity.MEDIUM;
-            message = "Many images are missing alt attributes (" + missingPct + "%).";
-            recommendation = "Add meaningful alt attributes to improve accessibility.";
+            message = "De nombreuses images n'ont pas d'attribut alt (" + missingPct + "%).";
+            recommendation = "Ajoutez des attributs alt pertinents pour améliorer l'accessibilité.";
         }
 
         return AuditCheckResult.of(
             "html.images.alt_coverage",
-            "Image alt coverage",
+            "Couverture des attributs alt (images)",
             status,
             severity,
             false,          // scorable filled later
@@ -500,7 +500,7 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
         if (anchorCount == 0) {
             return AuditCheckResult.of(
                 "html.anchors.href_coverage",
-                "Anchor href coverage",
+                "Couverture des liens (href)",
                 AuditStatus.INFO,
                 AuditSeverity.LOW,
                 false,          // scorable filled later
@@ -508,7 +508,7 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
                 List.of(),      // tags filled later
                 Map.of("anchorCount", 0, "noHrefCount", 0),
                 Map.of("anchorCount", 0),
-                "No anchors detected.",
+                "Aucun lien détecté.",
                 null
             );
         }
@@ -524,22 +524,22 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
         if (noHrefCount == 0) {
             status = AuditStatus.PASS;
             severity = AuditSeverity.LOW;
-            message = "All anchors have an href attribute.";
+            message = "Tous les liens ont un attribut href.";
         } else if (missingPct <= 10) {
             status = AuditStatus.WARN;
             severity = AuditSeverity.LOW;
-            message = "Some anchors are missing href (" + missingPct + "%).";
-            recommendation = "Ensure <a> tags are valid links or use buttons for actions.";
+            message = "Certains liens n'ont pas d'attribut href (" + missingPct + "%).";
+            recommendation = "Assurez-vous que les balises <a> sont des liens valides, ou utilisez des boutons pour les actions.";
         } else {
             status = AuditStatus.WARN;
             severity = AuditSeverity.MEDIUM;
-            message = "Many anchors are missing href (" + missingPct + "%).";
+            message = "De nombreux liens n'ont pas d'attribut href (" + missingPct + "%).";
             recommendation = "Replace non-link anchors with <button> or add proper href attributes.";
         }
 
         return AuditCheckResult.of(
             "html.anchors.href_coverage",
-            "Anchor href coverage",
+            "Couverture des liens (href)",
             status,
             severity,
             false,          // scorable filled later
@@ -560,7 +560,7 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
         return new AuditModuleResult(
             "html",
             "HTML",
-            "HTML analysis not available: " + reason,
+            "Analyse HTML indisponible : " + reason,
             Map.of(
                 "inputUrl", inputUrl,
                 "normalizedUrl", normalizedUrl,
@@ -570,7 +570,7 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
             List.of(
                 AuditCheckResult.of(
                     "html.available",
-                    "HTML available",
+                    "Disponibilité du HTML",
                     AuditStatus.WARN,
                     AuditSeverity.MEDIUM,
                     false,          // scorable filled later
@@ -578,8 +578,8 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
                     List.of(),      // tags filled later
                     false,
                     Map.of("reason", reason),
-                    "HTML analysis could not run.",
-                    "Ensure the orchestrator provides HTML content (fetch or reuse HTTP module body)."
+                    "L'analyse HTML n'a pas pu s'exécuter.",
+                    "Vérifiez que l'orchestrateur fournit le contenu HTML (fetch ou réutilisation du body du module HTTP)."
                 )
             )
         );

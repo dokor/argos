@@ -68,7 +68,7 @@ public class ZapModuleAnalyzer implements AuditModuleAnalyzer {
         for (JsonNode alert : alerts) {
             alertCount++;
             String pluginId = textOrDefault(alert.path("pluginId"), "");
-            String alertName = textOrDefault(alert.path("alert"), "Unknown alert");
+            String alertName = textOrDefault(alert.path("alert"), "Alerte inconnue");
             String riskcode = textOrDefault(alert.path("riskcode"), "0");
             String description = textOrDefault(alert.path("description"), "");
             String alertUrl = textOrDefault(alert.path("url"), url);
@@ -93,15 +93,15 @@ public class ZapModuleAnalyzer implements AuditModuleAnalyzer {
                 List.of(),
                 riskcode,
                 details,
-                alertName + " detected by ZAP passive scan.",
-                "Review and remediate the security issue: " + alertName
+                alertName + " détecté par l'analyse passive ZAP.",
+                "Examinez et corrigez ce problème de sécurité : " + alertName
             ));
         }
 
         if (checks.isEmpty()) {
             checks.add(AuditCheckResult.of(
                 "zap.scan.result",
-                "ZAP passive scan result",
+                "Analyse passive OWASP ZAP",
                 AuditStatus.INFO,
                 AuditSeverity.LOW,
                 false,
@@ -109,7 +109,7 @@ public class ZapModuleAnalyzer implements AuditModuleAnalyzer {
                 List.of(),
                 0,
                 Map.of("alertCount", 0),
-                "ZAP passive scan found no alerts.",
+                "L'analyse passive ZAP n'a détecté aucune alerte.",
                 null
             ));
         }
@@ -127,7 +127,7 @@ public class ZapModuleAnalyzer implements AuditModuleAnalyzer {
     private AuditModuleResult emptyModule(String reason) {
         List<AuditCheckResult> checks = List.of(AuditCheckResult.of(
             "zap.available",
-            "OWASP ZAP availability",
+            "Disponibilité d'OWASP ZAP",
             AuditStatus.WARN,
             AuditSeverity.LOW,
             false,
@@ -135,7 +135,7 @@ public class ZapModuleAnalyzer implements AuditModuleAnalyzer {
             List.of(),
             false,
             Map.of("reason", reason),
-            "OWASP ZAP analysis could not run: " + reason,
+            "L'analyse OWASP ZAP n'a pas pu s'exécuter : " + reason,
             "Start the ZAP daemon and set ZAP_API_URL environment variable."
         ));
         return new AuditModuleResult(moduleId(), "OWASP ZAP", "zap=unavailable",
