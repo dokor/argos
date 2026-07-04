@@ -72,9 +72,33 @@ class RuntimeModuleAnalyzerTest {
         assertEquals(AuditStatus.FAIL, consoleErrorsStatus(RuntimeModuleAnalyzer.CONSOLE_ERRORS_WARN_MAX + 1));
     }
 
+    // Distinction première partie / tiers (issue #153) : le statut se fonde sur les
+    // erreurs du site, pas sur le bruit des scripts tiers.
+    @Test
+    void consoleErrors_thirdPartyNoiseIgnored() throws Exception {
+        // 20 erreurs au total mais 0 de première partie => PASS (bruit tiers ignoré).
+        assertEquals(AuditStatus.PASS, consoleErrorsStatus(20, 0));
+    }
+
+    @Test
+    void consoleErrors_firstPartyDrivesStatus() throws Exception {
+        // 20 au total, 15 de première partie => FAIL (> seuil), le tiers n'y change rien.
+        assertEquals(AuditStatus.FAIL, consoleErrorsStatus(20, 15));
+        // 20 au total, 3 de première partie => WARN.
+        assertEquals(AuditStatus.WARN, consoleErrorsStatus(20, 3));
+    }
+
     private static AuditStatus consoleErrorsStatus(int consoleErrors) throws Exception {
+        return consoleErrorsStatusOf(response(consoleErrors));
+    }
+
+    private static AuditStatus consoleErrorsStatus(int consoleErrors, int firstParty) throws Exception {
+        return consoleErrorsStatusOf(response(consoleErrors, firstParty));
+    }
+
+    private static AuditStatus consoleErrorsStatusOf(PlaywrightRuntimeClient.RuntimeAnalyzeResponse resp) throws Exception {
         PlaywrightRuntimeClient client = mock(PlaywrightRuntimeClient.class);
-        when(client.analyzeRuntime(anyString())).thenReturn(response(consoleErrors));
+        when(client.analyzeRuntime(anyString())).thenReturn(resp);
 
         AuditModuleResult res = new RuntimeModuleAnalyzer(client)
             .analyze(ctx(), LoggerFactory.getLogger("test"));
@@ -86,11 +110,16 @@ class RuntimeModuleAnalyzerTest {
     }
 
     private static PlaywrightRuntimeClient.RuntimeAnalyzeResponse response(int consoleErrors) {
+        // errorsFirstParty = null => repli sur le total (comportement historique).
+        return response(consoleErrors, -1);
+    }
+
+    private static PlaywrightRuntimeClient.RuntimeAnalyzeResponse response(int consoleErrors, int firstParty) {
         return new PlaywrightRuntimeClient.RuntimeAnalyzeResponse(
             "https://example.com",
             "https://example.com",
             new PlaywrightRuntimeClient.Timings(100L, 200L),
-            new PlaywrightRuntimeClient.Console(consoleErrors, 0, List.of()),
+            new PlaywrightRuntimeClient.Console(consoleErrors, 0, List.of(), firstParty < 0 ? null : firstParty),
             new PlaywrightRuntimeClient.JsErrors(0, List.of()),
             new PlaywrightRuntimeClient.Network(10, 0, 0, 0, 1_000L, Map.of(), List.of())
         );

@@ -101,7 +101,10 @@ public class PlaywrightRuntimeClient {
     public record Console(
         Integer errors,
         Integer warnings,
-        java.util.List<ConsoleSample> samples
+        java.util.List<ConsoleSample> samples,
+        // Erreurs attribuées au site lui-même (même domaine enregistrable) — issue #153.
+        // null si le service playwright ne fournit pas la distinction (rétro-compat).
+        Integer errorsFirstParty
     ) {
     }
 
