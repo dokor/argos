@@ -72,20 +72,20 @@ public class ObservatoryModuleAnalyzer implements AuditModuleAnalyzer {
         String scoreMessage;
         if (score < 0) {
             scoreStatus = AuditStatus.WARN;
-            scoreMessage = "Observatory score not available.";
+            scoreMessage = "Score Observatory indisponible.";
         } else if (score >= 75) {
             scoreStatus = AuditStatus.PASS;
-            scoreMessage = "Observatory security score is good: " + score + "/100.";
+            scoreMessage = "Score de sécurité Observatory bon : " + score + "/100.";
         } else if (score >= 50) {
             scoreStatus = AuditStatus.WARN;
-            scoreMessage = "Observatory security score is moderate: " + score + "/100.";
+            scoreMessage = "Score de sécurité Observatory moyen : " + score + "/100.";
         } else {
             scoreStatus = AuditStatus.FAIL;
-            scoreMessage = "Observatory security score is low: " + score + "/100.";
+            scoreMessage = "Score de sécurité Observatory faible : " + score + "/100.";
         }
         checks.add(AuditCheckResult.of(
             "observatory.score",
-            "Mozilla Observatory security score",
+            "Score de sécurité Mozilla Observatory",
             scoreStatus,
             score >= 75 ? AuditSeverity.LOW : score >= 50 ? AuditSeverity.MEDIUM : AuditSeverity.HIGH,
             true,
@@ -94,13 +94,13 @@ public class ObservatoryModuleAnalyzer implements AuditModuleAnalyzer {
             score >= 0 ? score : null,
             score >= 0 ? Map.of("score", score) : Map.of(),
             scoreMessage,
-            score < 75 ? "Review failing security headers and policies flagged by Mozilla Observatory." : null
+            score < 75 ? "Corrigez les en-têtes et politiques de sécurité signalés par Mozilla Observatory." : null
         ));
 
         // observatory.grade
         checks.add(AuditCheckResult.of(
             "observatory.grade",
-            "Mozilla Observatory grade",
+            "Note Mozilla Observatory",
             AuditStatus.INFO,
             AuditSeverity.LOW,
             false,
@@ -108,20 +108,20 @@ public class ObservatoryModuleAnalyzer implements AuditModuleAnalyzer {
             List.of(),
             grade,
             grade != null ? Map.of("grade", grade) : Map.of(),
-            grade != null ? "Observatory grade: " + grade : "Observatory grade not available.",
+            grade != null ? "Note Observatory : " + grade : "Note Observatory indisponible.",
             null
         ));
 
         // observatory.tests.passed
         String testsMessage;
         if (testsPassed >= 0 && testsQuantity > 0) {
-            testsMessage = testsPassed + "/" + testsQuantity + " tests passed.";
+            testsMessage = testsPassed + "/" + testsQuantity + " tests réussis.";
         } else {
-            testsMessage = "Observatory test results not available.";
+            testsMessage = "Résultats des tests Observatory indisponibles.";
         }
         checks.add(AuditCheckResult.of(
             "observatory.tests.passed",
-            "Observatory tests passed",
+            "Tests Observatory réussis",
             AuditStatus.INFO,
             AuditSeverity.LOW,
             false,
@@ -150,7 +150,7 @@ public class ObservatoryModuleAnalyzer implements AuditModuleAnalyzer {
     private AuditModuleResult errorModule(String reason) {
         List<AuditCheckResult> checks = List.of(AuditCheckResult.of(
             "observatory.available",
-            "Mozilla Observatory availability",
+            "Disponibilité de Mozilla Observatory",
             AuditStatus.WARN,
             AuditSeverity.LOW,
             false,
@@ -158,8 +158,8 @@ public class ObservatoryModuleAnalyzer implements AuditModuleAnalyzer {
             List.of(),
             false,
             Map.of("reason", reason),
-            "Mozilla Observatory analysis could not run: " + reason,
-            "Ensure network access to observatory-api.mdn.mozilla.net is available."
+            "L'analyse Mozilla Observatory n'a pas pu s'exécuter : " + reason,
+            "Vérifiez l'accès réseau à observatory-api.mdn.mozilla.net."
         ));
         return new AuditModuleResult(moduleId(), "Mozilla Observatory", "observatory=unavailable",
             Map.of("available", false, "reason", reason), checks);
