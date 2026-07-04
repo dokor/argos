@@ -4,12 +4,7 @@ import { CategoryScore } from "./types";
 import { useLang } from "@/lib/i18n/LangContext";
 import s from "./ScoreGrid.module.scss";
 
-function scoreColor(score: number): string {
-  if (score >= 85) return "#10b981";
-  if (score >= 70) return "#3b82f6";
-  if (score >= 55) return "#f59e0b";
-  return "#ef4444";
-}
+import { scoreColor } from "./reportColors";
 
 function clamp(n: number) { return Math.max(0, Math.min(100, n ?? 0)); }
 

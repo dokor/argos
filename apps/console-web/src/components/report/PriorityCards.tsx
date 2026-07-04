@@ -2,15 +2,10 @@
 
 import { PriorityItem } from "./types";
 import { useLang } from "@/lib/i18n/LangContext";
+import { SEVERITY_COLORS } from "./reportColors";
 import s from "./PriorityCards.module.scss";
 
 type SevKey = "critical" | "important" | "opportunity";
-
-const SEV: Record<SevKey, { color: string; bg: string; label?: string }> = {
-  critical:    { color: "#dc2626", bg: "#fef2f2" },
-  important:   { color: "#d97706", bg: "#fffbeb" },
-  opportunity: { color: "#059669", bg: "#f0fdf4" },
-};
 
 export default function PriorityCards({ priorities }: { priorities: PriorityItem[] }) {
   const { t } = useLang();
@@ -29,7 +24,7 @@ export default function PriorityCards({ priorities }: { priorities: PriorityItem
       ) : (
         <div className={s.grid}>
           {list.map((p, i) => {
-            const sev = SEV[p.severity as SevKey] ?? SEV.opportunity;
+            const sev = SEVERITY_COLORS[p.severity as SevKey] ?? SEVERITY_COLORS.opportunity;
             return (
               <div
                 key={`${p.title}-${i}`}
