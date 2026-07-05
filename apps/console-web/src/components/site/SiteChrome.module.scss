@@ -1,0 +1,90 @@
+@use '../../styles/tokens' as t;
+
+// Nav + footer partagés des pages marketing (not-found, faq).
+// Styles repris à l'identique de not-found.module.scss / faq/page.module.scss
+// (issue #143). La landing conserve son propre chrome (fond de nav thématisé,
+// footer navy) car son rendu diverge.
+
+// ─── Nav ────────────────────────────────────────────────────────────────────
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: t.$z-sticky;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid t.$border-subtle;
+}
+.navInner {
+  max-width: t.$container-width;
+  margin: 0 auto;
+  padding: 0 t.$space-6;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: t.$space-2;
+  color: t.$text;
+  text-decoration: none;
+}
+.logoIcon {
+  display: block;
+  flex-shrink: 0;
+}
+.logoText {
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+}
+.navRight {
+  display: flex;
+  align-items: center;
+  gap: t.$space-3;
+}
+.navLink {
+  color: t.$text-muted;
+  text-decoration: none;
+  font-size: t.$text-xl;
+  font-weight: 500;
+
+  &:hover {
+    color: t.$text;
+  }
+}
+.navCta {
+  background: t.$text;
+  color: t.$bg;
+  text-decoration: none;
+  padding: t.$space-2 t.$space-4;
+  border-radius: t.$radius-sm;
+  font-size: t.$text-base;
+  font-weight: 500;
+}
+
+// ─── Footer ───────────────────────────────────────────────────────────────────
+.footer {
+  border-top: 1px solid t.$border-subtle;
+  background: t.$surface;
+}
+.footerInner {
+  max-width: t.$container-width;
+  margin: 0 auto;
+  padding: t.$space-6;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: t.$space-3;
+  flex-wrap: wrap;
+  color: t.$text-muted;
+  font-size: t.$text-base;
+}
+
+@media (max-width: 560px) {
+  .footerInner {
+    flex-direction: column;
+    text-align: center;
+  }
+}
