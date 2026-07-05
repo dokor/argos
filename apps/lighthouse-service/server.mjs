@@ -1,5 +1,4 @@
 import http from "node:http";
-import { parse } from "node:url";
 import { once } from "node:events";
 import lighthouse from "lighthouse";
 import { launch } from "chrome-launcher";
@@ -7,18 +6,14 @@ import { launch } from "chrome-launcher";
 const PORT = 3017;
 
 const CHROME_FLAGS = [
-  // Le mode "new" n'est pas disponible sur toutes les versions de Chromium
-  // distribuées par Debian. Le flag historique reste compatible et suffit à Lighthouse.
   "--headless",
   "--no-sandbox",
   "--disable-setuid-sandbox",
   "--disable-gpu",
-  "--disable-software-rasterizer",
-  "--remote-debugging-address=127.0.0.1",
 ];
 
 const server = http.createServer(async (req, res) => {
-  const { pathname } = parse(req.url, true);
+  const pathname = new URL(req.url ?? "/", `http://${req.headers.host ?? "localhost"}`).pathname;
 
   // Sonde de disponibilité (healthcheck Docker + vérif amont). Légère : ne
   // lance pas Chrome, répond immédiatement si le process est up.
@@ -43,7 +38,6 @@ const server = http.createServer(async (req, res) => {
       chrome = await launch({
         chromePath: process.env.CHROME_PATH,
         chromeFlags: CHROME_FLAGS,
-        logLevel: "verbose",
       });
 
       const result = await lighthouse(url, {
