@@ -6,6 +6,18 @@ import { launch } from "chrome-launcher";
 
 const PORT = 3017;
 
+const CHROME_FLAGS = [
+  // Le mode "new" n'est pas disponible sur toutes les versions de Chromium
+  // distribuées par Debian. Le flag historique reste compatible et suffit à Lighthouse.
+  "--headless",
+  "--no-sandbox",
+  "--disable-setuid-sandbox",
+  "--disable-dev-shm-usage",
+  "--disable-gpu",
+  "--disable-software-rasterizer",
+  "--remote-debugging-address=127.0.0.1",
+];
+
 const server = http.createServer(async (req, res) => {
   const { pathname } = parse(req.url, true);
 
@@ -31,13 +43,8 @@ const server = http.createServer(async (req, res) => {
 
       chrome = await launch({
         chromePath: process.env.CHROME_PATH,
-        chromeFlags: [
-          "--headless=new",
-          "--no-sandbox",
-          "--disable-setuid-sandbox",
-          "--disable-dev-shm-usage",
-          "--disable-gpu",
-        ],
+        chromeFlags: CHROME_FLAGS,
+        logLevel: "verbose",
       });
 
       const result = await lighthouse(url, {
@@ -52,7 +59,7 @@ const server = http.createServer(async (req, res) => {
       res.setHeader("Content-Type", "application/json");
       res.end(JSON.stringify(result.lhr)); // Only send the LHR (Lighthouse Result)
     } catch (err) {
-      console.error("[lighthouse-service]", err);
+      console.error("[lighthouse-service] Chrome launch or Lighthouse execution failed", err);
       res.writeHead(500).end("Internal Error");
     } finally {
       await chrome?.kill();
