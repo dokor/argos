@@ -6,6 +6,7 @@ import com.dokor.argos.services.analysis.model.AuditModuleAnalyzer;
 import com.dokor.argos.services.analysis.model.AuditModuleResult;
 import com.dokor.argos.services.analysis.model.enums.AuditSeverity;
 import com.dokor.argos.services.analysis.model.enums.AuditStatus;
+import com.dokor.argos.services.domain.audit.UrlNormalizer;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.slf4j.Logger;
@@ -71,6 +72,18 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
 
         try {
             for (int i = 0; i < MAX_REDIRECTS; i++) {
+                // Revalidation SSRF à chaque saut (URL initiale + cibles de redirection),
+                // au moment du fetch : bloque une redirection vers une IP interne et couvre
+                // le DNS rebinding entre la soumission et le traitement (#217).
+                try {
+                    UrlNormalizer.validatePublicUrl(currentUrl);
+                } catch (IllegalArgumentException ssrf) {
+                    logger.warn("HTTP module: blocked SSRF target url={} reason={}",
+                        UrlNormalizer.sanitizeForLog(currentUrl), ssrf.getMessage());
+                    errors.add("SsrfBlocked: " + ssrf.getMessage());
+                    break;
+                }
+
                 redirectChain.add(currentUrl);
 
                 HttpRequest request = HttpRequest.newBuilder()
@@ -778,6 +791,9 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
     }
 
     private HttpResponse<String> getResource(String url) throws Exception {
+        // Défense en profondeur : les probes SEO refetchent l'origine finale, revalider
+        // évite d'atteindre une IP interne (rebinding entre le fetch page et le probe).
+        UrlNormalizer.validatePublicUrl(url);
         HttpRequest req = HttpRequest.newBuilder()
             .uri(URI.create(url))
             .timeout(Duration.ofSeconds(10))

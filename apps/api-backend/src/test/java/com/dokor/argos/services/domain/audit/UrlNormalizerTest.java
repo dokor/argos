@@ -3,6 +3,9 @@ package com.dokor.argos.services.domain.audit;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
+
+import java.net.InetAddress;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -157,5 +160,79 @@ class UrlNormalizerTest {
     @Test
     void shouldExtractHostname() {
         assertEquals("example.com", normalizer.extractHostname("https://example.com/path?q=1"));
+    }
+
+    // -------------------------
+    // Protection SSRF (#217)
+    // -------------------------
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "http://localhost",
+        "http://foo.local",
+        "http://svc.internal",
+        "http://127.0.0.1",
+        "http://127.0.0.5:8080",
+        "http://10.0.0.1",
+        "http://172.16.0.1",
+        "http://172.31.255.255",
+        "http://192.168.1.1",
+        "http://169.254.169.254",     // métadonnées cloud (link-local)
+        "http://0.0.0.0",
+        "http://[::1]",               // loopback IPv6
+        "http://[::ffff:127.0.0.1]",  // IPv4-mapped loopback → résolu et bloqué
+    })
+    void shouldRejectSsrfTargets(String url) {
+        assertThrows(IllegalArgumentException.class, () -> normalizer.normalize(url));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "http://localhost/admin",
+        "http://127.0.0.1/latest/meta-data/",
+        "http://169.254.169.254/",
+        "http://[::1]/",
+    })
+    void validatePublicUrl_shouldRejectPrivateTargets(String url) {
+        assertThrows(IllegalArgumentException.class, () -> UrlNormalizer.validatePublicUrl(url));
+    }
+
+    @Test
+    void validatePublicUrl_shouldAcceptPublicIpLiteral() {
+        // 8.8.8.8 : IP publique littérale, résolue localement, non bloquée.
+        assertDoesNotThrow(() -> UrlNormalizer.validatePublicUrl("http://8.8.8.8/path"));
+    }
+
+    @Test
+    void validatePublicUrl_shouldRejectMalformedOrHostless() {
+        assertThrows(IllegalArgumentException.class, () -> UrlNormalizer.validatePublicUrl("http://"));
+        assertThrows(IllegalArgumentException.class, () -> UrlNormalizer.validatePublicUrl(":::not a url"));
+    }
+
+    // isBlockedAddress : classification des IP résolues (cœur anti-SSRF)
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "127.0.0.1",          // loopback
+        "10.1.2.3",           // RFC-1918
+        "172.16.5.6",         // RFC-1918
+        "192.168.0.1",        // RFC-1918
+        "169.254.169.254",    // link-local / métadonnées
+        "100.64.0.1",         // CGNAT (RFC-6598)
+        "100.127.255.254",    // CGNAT (borne haute)
+    })
+    void isBlockedAddress_shouldFlagPrivateAndReserved(String ip) throws Exception {
+        assertTrue(UrlNormalizer.isBlockedAddress(InetAddress.getByName(ip)), ip);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "8.8.8.8",            // public
+        "1.1.1.1",            // public
+        "100.63.255.255",     // juste sous la plage CGNAT
+        "100.128.0.1",        // juste au-dessus de la plage CGNAT
+    })
+    void isBlockedAddress_shouldAllowPublic(String ip) throws Exception {
+        assertFalse(UrlNormalizer.isBlockedAddress(InetAddress.getByName(ip)), ip);
     }
 }
