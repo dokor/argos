@@ -8,8 +8,9 @@ services:
     environment:
       - PORT=3017
       - NODE_ENV=production
-      # optionnel : limites / timeouts
-      - MAX_CONCURRENCY=2
+      # Un audit Lighthouse est exécuté à la fois pour éviter la contention
+      # mémoire/CPU Chromium sur le Raspberry.
+      - MAX_CONCURRENCY=1
       - NAV_TIMEOUT_MS=45000
     healthcheck:
       test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:3017/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
