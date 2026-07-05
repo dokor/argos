@@ -18,6 +18,8 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.method === "POST" && pathname === "/analyze") {
+    let chrome;
+
     try {
       const body = await once(req, "data").then(([chunk]) => JSON.parse(chunk.toString()));
       const { url } = body;
@@ -27,7 +29,17 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      const chrome = await launch({ chromeFlags: ["--headless"] });
+      chrome = await launch({
+        chromePath: process.env.CHROME_PATH,
+        chromeFlags: [
+          "--headless=new",
+          "--no-sandbox",
+          "--disable-setuid-sandbox",
+          "--disable-dev-shm-usage",
+          "--disable-gpu",
+        ],
+      });
+
       const result = await lighthouse(url, {
         port: chrome.port,
         output: "json",
@@ -36,15 +48,16 @@ const server = http.createServer(async (req, res) => {
         // remonte désormais les audits individuels, dont le libellé doit être FR.
         locale: "fr",
       });
-      await chrome.kill();
 
       res.setHeader("Content-Type", "application/json");
       res.end(JSON.stringify(result.lhr)); // Only send the LHR (Lighthouse Result)
-
     } catch (err) {
       console.error("[lighthouse-service]", err);
       res.writeHead(500).end("Internal Error");
+    } finally {
+      await chrome?.kill();
     }
+
     return;
   }
 
