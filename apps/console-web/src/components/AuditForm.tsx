@@ -19,9 +19,11 @@ export default function AuditForm({ onCreated }: Props) {
   const [url, setUrl] = useState("");
   const [emptyError, setEmptyError] = useState<string | null>(null);
 
-  // Création → redirection immédiate vers le rapport, factorisée dans useAuditSubmit (#122).
+  // Création → ouverture du rapport dans un nouvel onglet (#169), factorisée
+  // dans useAuditSubmit (#122). L'admin reste sur le dashboard.
   const { phase, error, submit } = useAuditSubmit({
     logger,
+    openInNewTab: true,
     onCreated: (res: CreateAuditResponse, normalizedUrl: string) => {
       onCreated?.({
         auditId: Number(res.auditId),
