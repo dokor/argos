@@ -8,6 +8,7 @@ import { useIsAdmin } from "@/lib/useIsAdmin";
 import ArgosIcon from "@/components/ArgosIcon";
 import LangToggle from "@/components/LangToggle";
 import ThemeToggle from "@/components/ThemeToggle";
+import ScoreRingSvg from "@/components/report/ScoreRing";
 import s from "./page.module.scss";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -165,23 +166,21 @@ function ScoreRing({
   label: string;
   color: string;
 }) {
-  const r = 28;
-  const circ = 2 * Math.PI * r;
-  const dash = (value / 100) * circ;
   return (
     <div className={s.ringWrap}>
-      <svg width={72} height={72} viewBox="0 0 72 72">
-        <circle cx={36} cy={36} r={r} fill="none" stroke="#e2e8f0" strokeWidth={6} />
-        <circle
-          cx={36} cy={36} r={r} fill="none" stroke={color} strokeWidth={6}
-          strokeDasharray={`${dash} ${circ - dash}`}
-          strokeDashoffset={circ / 4}
-          strokeLinecap="round"
-        />
+      <ScoreRingSvg
+        score={value}
+        size={72}
+        strokeWidth={6}
+        radius={28}
+        color={color}
+        trackColor="#e2e8f0"
+        ariaLabel={`${label}: ${value}/100`}
+      >
         <text x={36} y={40} textAnchor="middle" fontSize={15} fontWeight={700} fill="#0f172a">
           {value}
         </text>
-      </svg>
+      </ScoreRingSvg>
       <span className={s.ringLabel}>{label}</span>
     </div>
   );

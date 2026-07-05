@@ -3,6 +3,7 @@
 import { Report, TechSummary } from "./types";
 import { useLang } from "@/lib/i18n/LangContext";
 import { scoreColor, scoreBg, SEVERITY_COLORS } from "./reportColors";
+import ScoreRing from "./ScoreRing";
 import s from "./ReportHero.module.scss";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -35,42 +36,6 @@ function techLabels(tech?: TechSummary): string[] {
     labels.push(tech.frontendFramework.name);
   }
   return labels;
-}
-
-// ─── Score ring SVG ───────────────────────────────────────────────────────────
-
-function ScoreRing({ score }: { score: number }) {
-  const size = 140;
-  const strokeW = 10;
-  const r = (size - strokeW) / 2;
-  const cx = size / 2;
-  const cy = size / 2;
-  const circ = 2 * Math.PI * r;
-  const dash = Math.max(0, Math.min(1, score / 100)) * circ;
-  const color = scoreColor(score);
-
-  return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-label={`Score ${score}/100`}>
-      {/* Track */}
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={strokeW} />
-      {/* Arc */}
-      <circle
-        cx={cx} cy={cy} r={r} fill="none"
-        stroke={color} strokeWidth={strokeW}
-        strokeDasharray={`${dash} ${circ - dash}`}
-        strokeDashoffset={circ / 4}
-        strokeLinecap="round"
-        style={{ transition: "stroke-dasharray 0.6s ease" }}
-      />
-      {/* Score text */}
-      <text x={cx} y={cy - 6} textAnchor="middle" fontSize={38} fontWeight={800} fill="#f8fafc" fontFamily="Inter,system-ui,sans-serif">
-        {score}
-      </text>
-      <text x={cx} y={cy + 16} textAnchor="middle" fontSize={13} fill="#94a3b8" fontFamily="Inter,system-ui,sans-serif">
-        /100
-      </text>
-    </svg>
-  );
 }
 
 // ─── Severity counts ──────────────────────────────────────────────────────────
@@ -145,7 +110,14 @@ export default function ReportHero({ report }: { report: Report }) {
 
           {/* Score ring */}
           <div className={s.scoreBlock}>
-            <ScoreRing score={score} />
+            <ScoreRing score={score}>
+              <text x={70} y={64} textAnchor="middle" fontSize={38} fontWeight={800} fill="#f8fafc" fontFamily="Inter,system-ui,sans-serif">
+                {score}
+              </text>
+              <text x={70} y={86} textAnchor="middle" fontSize={13} fill="#94a3b8" fontFamily="Inter,system-ui,sans-serif">
+                /100
+              </text>
+            </ScoreRing>
             <span
               className={s.scoreLabel}
               style={{ color, background: scoreBg(score) }}
