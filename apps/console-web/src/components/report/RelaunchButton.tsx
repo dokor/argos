@@ -31,7 +31,7 @@ export default function RelaunchButton({ url }: { url: string }) {
         className={s.btn}
         onClick={() => submit(url)}
         disabled={busy || !url}
-        aria-label={th.relaunchAria}
+        aria-busy={busy}
       >
         <svg
           className={busy ? `${s.icon} ${s.spinning}` : s.icon}

@@ -30,7 +30,7 @@ describe("RelaunchButton (relance d'analyse #9)", () => {
 
     render(<RelaunchButton url="https://example.com" />);
 
-    const btn = screen.getByRole("button", { name: /nouvelle analyse|re-run/i });
+    const btn = screen.getByRole("button", { name: /relancer|re-run/i });
     fireEvent.click(btn);
 
     await waitFor(() => {
