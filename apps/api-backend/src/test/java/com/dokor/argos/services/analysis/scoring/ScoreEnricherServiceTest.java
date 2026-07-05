@@ -35,8 +35,8 @@ class ScoreEnricherServiceTest {
     }
 
     @Test
-    void scoringVersionShouldBe6() {
-        assertEquals(6, enricher.scoringVersion());
+    void scoringVersionShouldBe8() {
+        assertEquals(8, enricher.scoringVersion());
     }
 
     @Test
@@ -62,9 +62,9 @@ class ScoreEnricherServiceTest {
         AuditCheckResult r = enrichOne("runtime", check("runtime.console.errors", AuditStatus.FAIL, List.of()));
         assertTrue(r.scorable());
         assertEquals(5.0, r.weight());
-        // Catégorie "runtime" seule, plus "performance" (issue #172).
+        // Rattaché au domaine métier Performance (#197) ; "runtime" reste en provenance.
+        assertTrue(r.tags().contains("performance"));
         assertTrue(r.tags().contains("runtime"));
-        assertFalse(r.tags().contains("performance"));
     }
 
     @Test

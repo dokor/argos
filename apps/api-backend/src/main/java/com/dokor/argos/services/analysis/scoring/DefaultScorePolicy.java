@@ -10,14 +10,15 @@ import java.util.*;
  * Politique de scoring unique d'Argos — aplatissement des versions V2→V6 (issue #188).
  * <p>
  * Historiquement le barème était réparti sur une chaîne d'héritage
- * ({@code ScorePolicyV2 → V3 → V4 → V5 → V6}), chaque cran ajoutant un delta minime.
- * Une seule version était réellement active en production (V6, bind Guice) et les
+ * ({@code ScorePolicyV2 → V3 → V4 → V5 → V6 → V7 → V8}), chaque cran ajoutant un delta
+ * minime. Une seule version était réellement active en production (bind Guice) et les
  * rapports produits sont figés en base sous forme de JSON (avec leur {@code scoringVersion}) —
  * aucun code ne relit cette version pour rejouer un ancien audit. La chaîne d'héritage
- * n'apportait donc que de la dette : elle est ici aplatie en une classe unique.
+ * n'apportait donc que de la dette : elle est ici aplatie en une classe unique intégrant
+ * l'ensemble des deltas jusqu'à V8 inclus.
  * <p>
- * {@link #version()} reste fixé à <b>6</b> pour préserver la continuité des
- * {@code scoringVersion} déjà écrits en base : un rapport marqué "6" reste cohérent
+ * {@link #version()} est fixé à <b>8</b> pour préserver la continuité des
+ * {@code scoringVersion} déjà écrits en base : un rapport marqué "8" reste cohérent
  * avec le barème appliqué par cette classe.
  *
  * <h3>Principes</h3>
@@ -29,11 +30,15 @@ import java.util.*;
  *   <li>Les stubs de disponibilité / mode dégradé ({@code *.available}, {@code *.collect})
  *       sont explicitement non scorés : bien qu'émis en WARN, ils ne doivent jamais peser
  *       sur le score (une panne de service externe ne doit pas faire chuter la note).</li>
- *   <li>Les checks {@code runtime.*} relèvent de la catégorie {@code runtime} seule
- *       (issue #172) — la catégorie « Performance » est alimentée par Lighthouse.</li>
+ *   <li>Les catégories affichées sont les seuls <b>domaines métier</b> (performance,
+ *       security, seo, a11y) — issue #197. Les tags d'outil (lighthouse, ssl, observatory,
+ *       zap, runtime) ne sont plus des catégories, ils restent une info de provenance
+ *       (filtrage dans {@code PublicReportComposer#isBusinessTag}). Les checks
+ *       {@code runtime.*} sont donc rattachés au domaine {@code performance} (sinon leurs
+ *       points seraient orphelins, faute de catégorie « Runtime »).</li>
  * </ul>
  *
- * <h3>Barème par tag (checks scorés)</h3>
+ * <h3>Barème par domaine (checks scorés)</h3>
  * <pre>
  * security     : http.security.hsts(8) csp(10) x_frame_options(6) x_content_type_options(4)
  *                referrer_policy(3) · ssl.grade(10) certificate.valid(6) certificate.expiry_days(3)
@@ -43,8 +48,8 @@ import java.util.*;
  *                · http.seo.robots_txt(2) sitemap(3) · lighthouse.score.seo(8)
  * a11y         : html.images.alt_coverage(4) anchors.href_coverage(2) lang(2)
  *                · lighthouse.score.accessibility(10)
- * performance  : lighthouse.score.performance(15)
- * runtime      : runtime.console.errors(5) js.errors(6) network.5xx(8) network.failed_requests(4)
+ * performance  : lighthouse.score.performance(22, #199) · runtime.console.errors(5)
+ *                js.errors(6) network.5xx(8) network.failed_requests(4)
  * </pre>
  */
 @Singleton
@@ -52,8 +57,8 @@ public class DefaultScorePolicy implements ScorePolicy {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultScorePolicy.class);
 
-    /** Fixé à 6 : continuité des {@code scoringVersion} déjà persistés (issue #188). */
-    private static final int VERSION = 6;
+    /** Fixé à 8 : continuité des {@code scoringVersion} déjà persistés (aplatissement V2→V8). */
+    private static final int VERSION = 8;
 
     private final Map<String, ScoreRule> overrides;
 
@@ -84,17 +89,21 @@ public class DefaultScorePolicy implements ScorePolicy {
         map.put("html.lang",                  rule(true, 2, "a11y", "html"));
 
         // ----- Lighthouse (clés = ids de catégorie Lighthouse, avec tiret) -----
-        map.put("lighthouse.score.performance",    rule(true, 15, "performance", "lighthouse"));
+        // Poids perf relevé 15 -> 22 pour donner plus d'impact à la performance (issue #199).
+        map.put("lighthouse.score.performance",    rule(true, 22, "performance", "lighthouse"));
         map.put("lighthouse.score.accessibility",  rule(true, 10, "a11y",        "lighthouse"));
         map.put("lighthouse.score.best-practices", rule(true, 6,  "security",    "lighthouse"));
         map.put("lighthouse.score.seo",            rule(true, 8,  "seo",         "lighthouse"));
         map.put("lighthouse.collect",              rule(false, 0, "lighthouse")); // stub dispo
 
-        // ----- Runtime (Playwright) — catégorie "runtime" seule, PAS "performance" (issue #172) -----
-        map.put("runtime.console.errors",           rule(true, 5, "runtime"));
-        map.put("runtime.js.errors",                rule(true, 6, "runtime"));
-        map.put("runtime.network.5xx",              rule(true, 8, "runtime"));
-        map.put("runtime.network.failed_requests",  rule(true, 4, "runtime"));
+        // ----- Runtime (Playwright) — domaine "performance" + provenance "runtime" (issue #197) -----
+        // Rattaché au domaine métier Performance : depuis la catégorisation par domaine
+        // (#197) il n'existe plus de catégorie « Runtime », donc sans ce domaine les points
+        // runtime seraient orphelins. Le tag "runtime" ne sert plus que de provenance.
+        map.put("runtime.console.errors",           rule(true, 5, "performance", "runtime"));
+        map.put("runtime.js.errors",                rule(true, 6, "performance", "runtime"));
+        map.put("runtime.network.5xx",              rule(true, 8, "performance", "runtime"));
+        map.put("runtime.network.failed_requests",  rule(true, 4, "performance", "runtime"));
         map.put("runtime.collect",                  rule(false, 0, "runtime")); // stub dispo (WARN)
 
         // ----- SSL / TLS (Qualys SSL Labs) -----
@@ -172,8 +181,8 @@ public class DefaultScorePolicy implements ScorePolicy {
         }
 
         if (checkKey.startsWith("runtime.")) {
-            // Catégorie "runtime" seule (issue #172).
-            return rule(true, 4, "runtime");
+            // Domaine Performance + provenance runtime (issue #197).
+            return rule(true, 4, "performance", "runtime");
         }
 
         if (checkKey.startsWith("ssl.")) {
