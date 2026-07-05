@@ -100,6 +100,30 @@ class LighthouseModuleAnalyzerTest {
         assertEquals(0, res.checks().stream().filter(c -> c.key().startsWith("lighthouse.score.")).count());
     }
 
+    /**
+     * Garde-fou : un score de catégorie réellement à 0 (site catastrophique) DOIT être conservé
+     * et pénaliser — ce n'est pas le cas "réponse vide". Distingue 0 numérique légitime vs nœud absent.
+     */
+    @Test
+    void keepsGenuineZeroCategoryScore() throws Exception {
+        LighthouseClient client = mock(LighthouseClient.class);
+        String json = "{\"categories\":{\"performance\":{\"score\":0.0,\"title\":\"Performance\"}}}";
+        when(client.analyze(anyString())).thenReturn(new ObjectMapper().readTree(json));
+
+        AuditModuleResult res = new LighthouseModuleAnalyzer(client)
+            .analyze(ctx(), LoggerFactory.getLogger("test"));
+
+        assertEquals(Boolean.TRUE, res.data().get("available"));
+        AuditCheckResult perf = res.checks().stream()
+            .filter(c -> "lighthouse.score.performance".equals(c.key()))
+            .findFirst().orElseThrow();
+        assertEquals(0.0, perf.scoreRatio(), 0.0001);
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> scores = (Map<String, Object>) res.data().get("scores");
+        assertEquals(0, scores.get("performance"));
+    }
+
     /** Réponse partielle (2 catégories notées sur 4) : on émet uniquement les notes présentes, sans NPE ni 0 fabriqué. */
     @Test
     void surfacesOnlyPresentCategoriesOnPartialResponse() throws Exception {

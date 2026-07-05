@@ -77,8 +77,9 @@ public class LighthouseModuleAnalyzer implements AuditModuleAnalyzer {
         Map<String, Object> scores = new LinkedHashMap<>();
         categoryScores.forEach((cat, score) -> scores.put(dataKey(cat), score));
 
+        // Titres uniquement pour les catégories réellement notées, cohérent avec data.scores.
         Map<String, Object> categoryTitles = new LinkedHashMap<>();
-        for (String cat : CATEGORIES) {
+        for (String cat : categoryScores.keySet()) {
             String title = textOrNull(lhr.at("/categories/" + cat + "/title"));
             if (title != null) categoryTitles.put(dataKey(cat) + "Title", title);
         }
