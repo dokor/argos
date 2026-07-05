@@ -14,9 +14,13 @@ import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.Map;
 
+import org.mockito.ArgumentCaptor;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -327,6 +331,35 @@ class HttpModuleAnalyzerTest {
     void checkStatusCode_challengeIsInfoNotFail() {
         assertEquals(AuditStatus.INFO, HttpModuleAnalyzer.checkStatusCode(403, true).status());
         assertEquals(AuditStatus.FAIL, HttpModuleAnalyzer.checkStatusCode(403, false).status());
+    }
+
+    // -------------------------
+    // SSRF : revalidation des redirections (#217)
+    // -------------------------
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void analyze_shouldNotFollowRedirectToPrivateAddress() throws Exception {
+        HttpClient client = mock(HttpClient.class);
+        // Redirection d'un site public vers l'endpoint de métadonnées cloud (SSRF).
+        HttpResponse<String> redirect = resp(302, "",
+            Map.of("location", List.of("http://127.0.0.1/latest/meta-data/")), HttpClient.Version.HTTP_1_1);
+        when(client.send(any(HttpRequest.class), any())).thenAnswer(inv -> redirect);
+
+        HttpModuleAnalyzer a = new HttpModuleAnalyzer(client);
+        AuditContext ctx = new AuditContext("https://example.com", "https://example.com", 0L);
+
+        AuditModuleResult result = a.analyze(ctx, LoggerFactory.getLogger("test"));
+
+        List<String> errors = (List<String>) result.data().get("errors");
+        assertNotNull(errors);
+        assertTrue(errors.stream().anyMatch(e -> e.startsWith("SsrfBlocked")),
+            "expected an SsrfBlocked error, got: " + errors);
+
+        // La cible interne n'a jamais été requêtée : un seul send (l'URL publique initiale).
+        ArgumentCaptor<HttpRequest> captor = ArgumentCaptor.forClass(HttpRequest.class);
+        verify(client, times(1)).send(captor.capture(), any());
+        assertEquals("https://example.com", captor.getValue().uri().toString());
     }
 
     @SuppressWarnings("unchecked")

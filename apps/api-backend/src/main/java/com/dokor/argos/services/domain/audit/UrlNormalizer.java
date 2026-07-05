@@ -166,16 +166,42 @@ public class UrlNormalizer {
     // ─── Validation SSRF ──────────────────────────────────────────────────────────
 
     /**
+     * Valide qu'une URL (initiale ou cible de redirection) ne pointe pas vers une
+     * adresse privée/interne. À appeler pour revalider <b>chaque saut de redirection</b>
+     * au moment du fetch (anti-SSRF, anti-DNS-rebinding), en complément de la validation
+     * faite à la soumission par {@link #normalize}.
+     *
+     * @param url URL absolue à vérifier
+     * @throws IllegalArgumentException si l'URL est malformée, sans host, ou pointe vers
+     *                                  une adresse privée/réservée
+     */
+    public static void validatePublicUrl(String url) {
+        String host;
+        try {
+            host = new URI(url).getHost();
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Malformed URL");
+        }
+        if (host == null || host.isBlank()) {
+            throw new IllegalArgumentException("URL contains no valid host");
+        }
+        validateNotSsrf(host.toLowerCase(Locale.ROOT));
+    }
+
+    /**
      * Vérifie que le host ne pointe pas vers une adresse privée/loopback (SSRF).
      * <p>
-     * Deux passes :
+     * Trois passes :
      * <ol>
-     *   <li>Regex sur les patterns connus (localhost, *.local, plages RFC-1918).</li>
-     *   <li>Résolution DNS + vérification {@link InetAddress} pour catcher les cas
-     *       non-littéraux (ex: IP décimale compactée) si le host ressemble à une IP.</li>
+     *   <li>Regex sur les hostnames connus (localhost, *.local, *.internal…).</li>
+     *   <li>Regex sur les plages IP littérales (RFC-1918, loopback, link-local…).</li>
+     *   <li>Résolution DNS <b>systématique</b> (y compris pour les noms de domaine) +
+     *       vérification de <b>toutes</b> les {@link InetAddress} résolues. Bloque le cas
+     *       d'un domaine public résolvant vers une IP interne (ex: {@code 127.0.0.1},
+     *       {@code 169.254.169.254}) et les notations alternatives (hex/octal/IPv4-mapped).</li>
      * </ol>
      *
-     * @throws IllegalArgumentException si le host est privé/local
+     * @throws IllegalArgumentException si le host est privé/local/réservé
      */
     private static void validateNotSsrf(String host) {
         // Passe 1 : hostnames connus
@@ -191,33 +217,45 @@ public class UrlNormalizer {
             throw new IllegalArgumentException("Target host is not allowed: private IPv6 address");
         }
 
-        // Passe 3 : résolution DNS - attrapable uniquement pour les IPs littérales non-standard
-        // (ex: 0x7f000001 = 127.0.0.1 en hexadécimal)
-        // On tente uniquement si le host ressemble à une IP (pas de point alphabétique)
-        if (looksLikeIp(host)) {
-            try {
-                InetAddress addr = InetAddress.getByName(host);
-                if (addr.isLoopbackAddress() || addr.isLinkLocalAddress()
-                    || addr.isSiteLocalAddress() || addr.isAnyLocalAddress()
-                    || addr.isMulticastAddress()) {
-                    throw new IllegalArgumentException("Target host is not allowed: private or reserved IP address");
+        // Passe 3 : résolution DNS systématique. Un nom de domaine public peut résoudre
+        // vers une IP interne (SSRF / DNS rebinding) : on vérifie toutes les IP résolues.
+        try {
+            InetAddress[] resolved = InetAddress.getAllByName(stripBrackets(host));
+            for (InetAddress addr : resolved) {
+                if (isBlockedAddress(addr)) {
+                    throw new IllegalArgumentException(
+                        "Target host is not allowed: resolves to a private or reserved IP address");
                 }
-            } catch (IllegalArgumentException e) {
-                throw e; // re-throw our own
-            } catch (Exception ignored) {
-                // En cas d'échec de résolution, on laisse passer : le module HTTP gérera l'erreur
             }
+        } catch (IllegalArgumentException e) {
+            throw e; // re-throw our own
+        } catch (Exception ignored) {
+            // Échec de résolution : on laisse passer, le fetch échouera de lui-même.
+            // Un host non résolvable n'est pas un vecteur SSRF.
         }
     }
 
-    /** Retourne true si le host semble être une adresse IP (pas un nom de domaine). */
-    private static boolean looksLikeIp(String host) {
-        // IPv6 entre crochets, ou chiffres/hex seulement (pas de lettres alphabétiques hors a-f)
-        if (host.startsWith("[")) return true;
-        // IPv4 pure : que des chiffres et des points
-        if (host.matches("^[0-9.]+$")) return true;
-        // Notation alternative (hex, octal, entier 32-bit) : commence par 0 ou 0x
-        return host.matches("^0[xX0-9].*");
+    /**
+     * Retourne true si l'adresse résolue est privée, loopback, link-local, réservée,
+     * multicast, ou dans la plage CGNAT (RFC-6598, 100.64.0.0/10). Les adresses
+     * IPv4-mapped IPv6 ({@code ::ffff:127.0.0.1}) sont classées comme leur IPv4 par la JVM.
+     */
+    static boolean isBlockedAddress(InetAddress addr) {
+        if (addr.isLoopbackAddress() || addr.isLinkLocalAddress()
+            || addr.isSiteLocalAddress() || addr.isAnyLocalAddress()
+            || addr.isMulticastAddress()) {
+            return true;
+        }
+        byte[] b = addr.getAddress();
+        if (b.length == 4) {
+            int o0 = b[0] & 0xFF;
+            int o1 = b[1] & 0xFF;
+            // CGNAT 100.64.0.0/10 (RFC-6598)
+            if (o0 == 100 && o1 >= 64 && o1 <= 127) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static String stripBrackets(String host) {
