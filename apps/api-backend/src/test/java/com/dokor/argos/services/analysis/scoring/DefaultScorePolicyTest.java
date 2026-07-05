@@ -17,17 +17,18 @@ class DefaultScorePolicyTest {
     private final DefaultScorePolicy policy = new DefaultScorePolicy();
 
     @Test
-    void versionShouldStayAt6ForScoringContinuity() {
-        assertEquals(6, policy.version());
+    void versionShouldStayAt8ForScoringContinuity() {
+        assertEquals(8, policy.version());
     }
 
     // ------------------------------------------------------------------ Lighthouse
 
+    /** Poids perf relevé 15 -> 22 (issue #199). */
     @Test
-    void lighthousePerformanceShouldBeScorableWithWeight15() {
+    void lighthousePerformanceShouldBeScorableWithWeight22() {
         ScorePolicy.ScoreRule rule = policy.ruleFor("lighthouse", "lighthouse.score.performance");
         assertTrue(rule.scorable());
-        assertEquals(15.0, rule.weight());
+        assertEquals(22.0, rule.weight());
         assertTrue(rule.tags().contains("performance"));
         assertTrue(rule.tags().contains("lighthouse"));
     }
@@ -72,15 +73,16 @@ class DefaultScorePolicyTest {
         assertTrue(rule.tags().contains("lighthouse"));
     }
 
-    // ------------------------------------------------------------------ Runtime (catégorie propre, #172)
+    // ------------------------------------------------------------------ Runtime (domaine performance, #197)
 
     @Test
-    void runtimeConsoleErrorsIsRuntimeOnlyNotPerformance() {
+    void runtimeConsoleErrorsIsInPerformanceDomain() {
         ScorePolicy.ScoreRule rule = policy.ruleFor("runtime", "runtime.console.errors");
         assertTrue(rule.scorable());
         assertEquals(5.0, rule.weight());
+        // Domaine métier Performance (#197) + provenance runtime conservée.
+        assertTrue(rule.tags().contains("performance"));
         assertTrue(rule.tags().contains("runtime"));
-        assertFalse(rule.tags().contains("performance"));
     }
 
     @Test
@@ -88,7 +90,7 @@ class DefaultScorePolicyTest {
         ScorePolicy.ScoreRule rule = policy.ruleFor("runtime", "runtime.js.errors");
         assertTrue(rule.scorable());
         assertEquals(6.0, rule.weight());
-        assertFalse(rule.tags().contains("performance"));
+        assertTrue(rule.tags().contains("performance"));
     }
 
     @Test
@@ -106,12 +108,12 @@ class DefaultScorePolicyTest {
     }
 
     @Test
-    void unknownRuntimeKeyFallsBackToRuntimeOnly() {
+    void unknownRuntimeKeyFallsBackToPerformanceDomain() {
         ScorePolicy.ScoreRule rule = policy.ruleFor("runtime", "runtime.some.new.check");
         assertTrue(rule.scorable());
         assertEquals(4.0, rule.weight());
+        assertTrue(rule.tags().contains("performance"));
         assertTrue(rule.tags().contains("runtime"));
-        assertFalse(rule.tags().contains("performance"));
     }
 
     // ------------------------------------------------------------------ SSL / Observatory
