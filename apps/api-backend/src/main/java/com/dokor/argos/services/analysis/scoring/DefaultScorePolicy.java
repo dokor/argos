@@ -7,32 +7,30 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 
 /**
- * Politique de scoring v2 - fiabilisation des indicateurs (issue #18).
+ * Politique de scoring unique d'Argos — aplatissement des versions V2→V6 (issue #188).
  * <p>
- * Principes :
+ * Historiquement le barème était réparti sur une chaîne d'héritage
+ * ({@code ScorePolicyV2 → V3 → V4 → V5 → V6}), chaque cran ajoutant un delta minime.
+ * Une seule version était réellement active en production (V6, bind Guice) et les
+ * rapports produits sont figés en base sous forme de JSON (avec leur {@code scoringVersion}) —
+ * aucun code ne relit cette version pour rejouer un ancien audit. La chaîne d'héritage
+ * n'apportait donc que de la dette : elle est ici aplatie en une classe unique.
+ * <p>
+ * {@link #version()} reste fixé à <b>6</b> pour préserver la continuité des
+ * {@code scoringVersion} déjà écrits en base : un rapport marqué "6" reste cohérent
+ * avec le barème appliqué par cette classe.
+ *
+ * <h3>Principes</h3>
  * <ul>
- *   <li>Le poids et les tags d'un check sont déterminés <b>uniquement</b> par sa clé
- *       (1) override exact, puis (2) fallback par préfixe. La sévérité
- *       ({@code AuditSeverity}) sert à l'affichage / la priorisation, jamais au calcul
- *       du poids.</li>
+ *   <li>Le poids et les tags d'un check sont déterminés <b>uniquement</b> par sa clé :
+ *       (1) override exact, puis (2) fallback par préfixe. La sévérité sert à l'affichage,
+ *       jamais au calcul du poids.</li>
  *   <li>INFO ⇒ non scoré (forcé en amont par {@link ScoreEnricherService}).</li>
  *   <li>Les stubs de disponibilité / mode dégradé ({@code *.available}, {@code *.collect})
- *       sont explicitement non scorés : bien qu'émis en WARN, ils ne doivent jamais
- *       peser sur le score (sinon une panne de service externe ferait chuter la note).</li>
- * </ul>
- *
- * Corrections apportées vs v1 :
- * <ul>
- *   <li><b>Runtime</b> : les overrides utilisent désormais les clés réellement émises par
- *       {@code RuntimeModuleAnalyzer} ({@code runtime.console.errors}, {@code runtime.js.errors},
- *       {@code runtime.network.5xx}, {@code runtime.network.failed_requests}) - en v1 les clés
- *       ne matchaient jamais et les poids voulus n'étaient pas appliqués. Tags {@code performance}.</li>
- *   <li><b>SSL & Observatory</b> : désormais scorés sous le tag {@code security} (ignorés en v1
- *       car aucune règle de préfixe n'existait).</li>
- *   <li><b>ZAP</b> : les alertes génériques {@code zap.alert.*} restent informatives - les
- *       findings d'en-têtes de sécurité de ZAP remontent déjà via les clés partagées
- *       {@code http.security.*} (cf. {@code CheckMergerService}), ce qui évite que le nombre
- *       d'alertes fasse varier le score de façon instable.</li>
+ *       sont explicitement non scorés : bien qu'émis en WARN, ils ne doivent jamais peser
+ *       sur le score (une panne de service externe ne doit pas faire chuter la note).</li>
+ *   <li>Les checks {@code runtime.*} relèvent de la catégorie {@code runtime} seule
+ *       (issue #172) — la catégorie « Performance » est alimentée par Lighthouse.</li>
  * </ul>
  *
  * <h3>Barème par tag (checks scorés)</h3>
@@ -40,25 +38,26 @@ import java.util.*;
  * security     : http.security.hsts(8) csp(10) x_frame_options(6) x_content_type_options(4)
  *                referrer_policy(3) · ssl.grade(10) certificate.valid(6) certificate.expiry_days(3)
  *                protocols.tls13(2) protocols.tls12(2) · observatory.score(8)
- *                · lighthouse.score.best-practices(6)
+ *                · lighthouse.score.best-practices(6) · tech.security.version_disclosure(3)
  * seo          : html.title(4) meta.description.present(3) link.canonical.present(2) h1.count(3)
- *                · lighthouse.score.seo(8)
+ *                · http.seo.robots_txt(2) sitemap(3) · lighthouse.score.seo(8)
  * a11y         : html.images.alt_coverage(4) anchors.href_coverage(2) lang(2)
  *                · lighthouse.score.accessibility(10)
- * performance  : lighthouse.score.performance(15) · runtime.console.errors(5) js.errors(6)
- *                network.5xx(8) network.failed_requests(4)
+ * performance  : lighthouse.score.performance(15)
+ * runtime      : runtime.console.errors(5) js.errors(6) network.5xx(8) network.failed_requests(4)
  * </pre>
  */
 @Singleton
-public class ScorePolicyV2 implements ScorePolicy {
+public class DefaultScorePolicy implements ScorePolicy {
 
-    private static final Logger logger = LoggerFactory.getLogger(ScorePolicyV2.class);
+    private static final Logger logger = LoggerFactory.getLogger(DefaultScorePolicy.class);
 
-    private static final int VERSION = 2;
+    /** Fixé à 6 : continuité des {@code scoringVersion} déjà persistés (issue #188). */
+    private static final int VERSION = 6;
 
     private final Map<String, ScoreRule> overrides;
 
-    public ScorePolicyV2() {
+    public DefaultScorePolicy() {
         // LinkedHashMap pour un ordre d'itération stable (logs, tests reproductibles)
         Map<String, ScoreRule> map = new LinkedHashMap<>();
 
@@ -91,11 +90,11 @@ public class ScorePolicyV2 implements ScorePolicy {
         map.put("lighthouse.score.seo",            rule(true, 8,  "seo",         "lighthouse"));
         map.put("lighthouse.collect",              rule(false, 0, "lighthouse")); // stub dispo
 
-        // ----- Runtime (Playwright) - clés réellement émises par l'analyzer -----
-        map.put("runtime.console.errors",           rule(true, 5, "performance", "runtime"));
-        map.put("runtime.js.errors",                rule(true, 6, "performance", "runtime"));
-        map.put("runtime.network.5xx",              rule(true, 8, "performance", "runtime"));
-        map.put("runtime.network.failed_requests",  rule(true, 4, "performance", "runtime"));
+        // ----- Runtime (Playwright) — catégorie "runtime" seule, PAS "performance" (issue #172) -----
+        map.put("runtime.console.errors",           rule(true, 5, "runtime"));
+        map.put("runtime.js.errors",                rule(true, 6, "runtime"));
+        map.put("runtime.network.5xx",              rule(true, 8, "runtime"));
+        map.put("runtime.network.failed_requests",  rule(true, 4, "runtime"));
         map.put("runtime.collect",                  rule(false, 0, "runtime")); // stub dispo (WARN)
 
         // ----- SSL / TLS (Qualys SSL Labs) -----
@@ -116,7 +115,9 @@ public class ScorePolicyV2 implements ScorePolicy {
         // ----- HTML : stub HTML vide -----
         map.put("html.available", rule(false, 0, "html")); // stub dispo (WARN)
 
-        // ----- Tech (informatif) -----
+        // ----- Tech -----
+        // Divulgation de version logicielle via en-têtes : scorable sécurité (ex-V4, issue #158).
+        map.put("tech.security.version_disclosure", rule(true, 3, "security", "tech"));
         map.put("tech.cms",                rule(false, 0, "tech"));
         map.put("tech.frontend.framework", rule(false, 0, "tech"));
         map.put("tech.backend.hints",      rule(false, 0, "tech"));
@@ -124,7 +125,7 @@ public class ScorePolicyV2 implements ScorePolicy {
 
         this.overrides = Map.copyOf(map);
 
-        logger.info("ScorePolicyV2 initialized overrides={}", overrides.size());
+        logger.info("DefaultScorePolicy initialized scoringVersion={} overrides={}", VERSION, overrides.size());
     }
 
     @Override
@@ -138,6 +139,15 @@ public class ScorePolicyV2 implements ScorePolicy {
         if (exact != null) return exact;
 
         // ---- Fallback rules by prefix ----
+
+        // Audits Lighthouse individuels (ex-V5, issue #154) : scorables pour être surfacés
+        // comme issues actionnables, mais de poids nul — les 4 notes de catégorie portent
+        // déjà le poids agrégé de Lighthouse (pas de double comptage). Doit précéder le
+        // fallback lighthouse.* générique.
+        if (checkKey != null && checkKey.startsWith("lighthouse.audit.")) {
+            return rule(true, 0, "lighthouse");
+        }
+
         if (checkKey.startsWith("http.security.")) {
             return rule(true, 6, "security", "http");
         }
@@ -162,7 +172,8 @@ public class ScorePolicyV2 implements ScorePolicy {
         }
 
         if (checkKey.startsWith("runtime.")) {
-            return rule(true, 4, "performance", "runtime");
+            // Catégorie "runtime" seule (issue #172).
+            return rule(true, 4, "runtime");
         }
 
         if (checkKey.startsWith("ssl.")) {
