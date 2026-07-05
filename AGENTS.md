@@ -96,9 +96,10 @@ Scheduler (tick 1 min)
 
 ### Scoring
 - **`ScorePolicyV1`** - overrides exacts par `checkKey` puis fallback par préfixe. Chaque règle définit `scorable`, `weight`, `tags[]`.
-- **`ScoreEnricherService`** - fusionne les tags du check + ceux de la policy via `mergeTags()` (LinkedHashSet, dédup). Module `runtime.*` → tag `"runtime"` uniquement (pas `"performance"`).
-- **`ScoreService`** - accumule le score par tag (`byTag`). Catégories prioritaires : `performance`, `security`, `seo`, `a11y`.
-- **`PublicReportComposer`** - `buildIssues()` : ignore les checks non-scorables (`scorable == false`). `pickCategoryKey()` : préfère les catégories PRIORITY_CATEGORIES.
+- **`ScoreEnricherService`** - fusionne les tags du check + ceux de la policy via `mergeTags()` (LinkedHashSet, dédup).
+- **`ScoreService`** - accumule le score par tag (`byTag`). Un check porte un tag de **domaine** (`performance`/`security`/`seo`/`a11y`) et souvent un tag d'**outil** (`lighthouse`/`ssl`/`observatory`/`zap`/`runtime`).
+- **Policy active** : `ScorePolicyV7` (issue #197). Chaîne V2→…→V7. V7 rattache `runtime.*` au domaine `performance` (le tag `runtime` sert de provenance).
+- **`PublicReportComposer`** - **catégorisation par domaine** (issue #197) : `isBusinessTag()` ne retient que les 4 domaines `PRIORITY_CATEGORIES` (`performance`, `security`, `seo`, `a11y`) ; les tags d'outil et de module (`http`/`html`/`tech`) ne sont pas des catégories. Une issue n'apparaît donc que dans **une** catégorie (son domaine), plus de doublon. `buildIssues()` ignore les checks non-scorables (`scorable == false`).
 
 ### Sécurité (UrlNormalizer)
 - Longueur max : 2048 chars
