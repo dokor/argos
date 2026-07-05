@@ -1,6 +1,7 @@
 package com.dokor.argos.services.analysis.lighthouse;
 
 import com.dokor.argos.logging.ExternalServiceCall;
+import com.dokor.argos.services.analysis.BoundedBodyHandlers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
@@ -53,7 +54,7 @@ public class LighthouseClient {
                 .POST(HttpRequest.BodyPublishers.ofString(payload))
                 .build();
 
-            HttpResponse<String> res = http.send(req, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> res = http.send(req, BoundedBodyHandlers.ofString(BoundedBodyHandlers.MAX_JSON_BYTES));
 
             if (res.statusCode() < 200 || res.statusCode() >= 300) {
                 throw new IllegalStateException("Lighthouse service error status=" + res.statusCode() + " body=" + truncate(res.body(), 500));

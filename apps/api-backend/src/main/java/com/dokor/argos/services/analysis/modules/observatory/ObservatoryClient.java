@@ -1,6 +1,7 @@
 package com.dokor.argos.services.analysis.modules.observatory;
 
 import com.dokor.argos.logging.ExternalServiceCall;
+import com.dokor.argos.services.analysis.BoundedBodyHandlers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
@@ -48,7 +49,7 @@ public class ObservatoryClient {
                 .POST(HttpRequest.BodyPublishers.noBody())
                 .build();
 
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = httpClient.send(request, BoundedBodyHandlers.ofString(BoundedBodyHandlers.MAX_PAGE_BYTES));
 
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
                 throw new RuntimeException("Observatory API returned HTTP " + response.statusCode() + " for host=" + hostname);
@@ -74,7 +75,7 @@ public class ObservatoryClient {
                 .GET()
                 .build();
 
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = httpClient.send(request, BoundedBodyHandlers.ofString(BoundedBodyHandlers.MAX_PAGE_BYTES));
 
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
                 throw new RuntimeException("Observatory tests API returned HTTP " + response.statusCode() + " for scan=" + scanId);

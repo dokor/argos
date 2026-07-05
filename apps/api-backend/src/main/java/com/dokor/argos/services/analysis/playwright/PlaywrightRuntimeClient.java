@@ -1,6 +1,7 @@
 package com.dokor.argos.services.analysis.playwright;
 
 import com.dokor.argos.logging.ExternalServiceCall;
+import com.dokor.argos.services.analysis.BoundedBodyHandlers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -55,7 +56,7 @@ public class PlaywrightRuntimeClient {
                 .POST(HttpRequest.BodyPublishers.ofString(body))
                 .build();
 
-            HttpResponse<String> res = http.send(req, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> res = http.send(req, BoundedBodyHandlers.ofString(BoundedBodyHandlers.MAX_PAGE_BYTES));
 
             if (res.statusCode() < 200 || res.statusCode() >= 300) {
                 throw new IllegalStateException("Playwright service error status=" + res.statusCode() + " body=" + truncate(res.body(), 500));

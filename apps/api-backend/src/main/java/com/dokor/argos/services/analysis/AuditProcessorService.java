@@ -164,6 +164,11 @@ public class AuditProcessorService {
             context = HttpModuleAnalyzer.enrichContext(context, httpModule);
             final AuditContext ctx = context;
 
+            // #221 : le corps HTML brut a servi à enrichir le contexte (consommé par les
+            // modules html/tech via AuditContext.body()) ; il ne doit PAS être persisté dans
+            // result_json (poids mémoire à la sérialisation + grossissement de la table).
+            httpModule = stripRawBody(httpModule);
+
             AuditModuleResult htmlModule = runModule(
                 runId, "html", "HTML", moduleStatuses,
                 () -> htmlModuleAnalyzer.analyze(ctx, logger));
@@ -289,6 +294,20 @@ public class AuditProcessorService {
             .map(c -> c.sources().isEmpty() ? c.withSources(List.of(module.id())) : c)
             .toList();
         return new AuditModuleResult(module.id(), module.title(), module.summary(), module.data(), annotated);
+    }
+
+    /**
+     * Retourne une copie du module HTTP sans la clé {@code body} (corps HTML brut).
+     * Le body est déjà consommé par l'enrichissement du contexte au moment de l'appel ;
+     * on l'exclut ici pour qu'il ne soit pas sérialisé dans {@code result_json} (#221).
+     */
+    static AuditModuleResult stripRawBody(AuditModuleResult module) {
+        if (module == null || module.data() == null || !module.data().containsKey("body")) {
+            return module;
+        }
+        Map<String, Object> trimmed = new LinkedHashMap<>(module.data());
+        trimmed.remove("body");
+        return new AuditModuleResult(module.id(), module.title(), module.summary(), trimmed, module.checks());
     }
 
     /**
