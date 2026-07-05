@@ -4,7 +4,20 @@ import lighthouse from "lighthouse";
 import { launch } from "chrome-launcher";
 
 const PORT = 3017;
+const SERVICE = "lighthouse-service";
 const MAX_CONCURRENCY = parsePositiveInteger(process.env.MAX_CONCURRENCY, 1);
+
+// Sanitise une URL avant journalisation : supprime les CR/LF (anti log-forging)
+// et borne la longueur pour éviter des lignes de log démesurées.
+function sanitizeUrlForLog(url) {
+  if (typeof url !== "string") return "";
+  return url.replace(/[\r\n]+/g, " ").slice(0, 200);
+}
+
+// Log structuré (une ligne JSON) horodaté en ISO 8601, exploitable via Docker logs.
+function log(event, fields = {}) {
+  console.log(JSON.stringify({ ts: new Date().toISOString(), service: SERVICE, event, ...fields }));
+}
 
 const CHROME_FLAGS = [
   "--headless",
@@ -80,6 +93,9 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.method === "POST" && pathname === "/analyze") {
+    // Hissé hors du try pour rester loguable même si une exception survient.
+    let safeUrl = "";
+    const startedAt = Date.now();
     try {
       const body = await once(req, "data").then(([chunk]) => JSON.parse(chunk.toString()));
       const { url } = body;
@@ -89,12 +105,21 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
+      safeUrl = sanitizeUrlForLog(url);
+      log("analyze.start", { url: safeUrl });
+
       const result = await withConcurrencyLimit(() => runLighthouse(url));
+
+      log("analyze.done", { url: safeUrl, durationMs: Date.now() - startedAt });
 
       res.setHeader("Content-Type", "application/json");
       res.end(JSON.stringify(result.lhr)); // Only send the LHR (Lighthouse Result)
     } catch (err) {
-      console.error("[lighthouse-service] Chrome launch or Lighthouse execution failed", err);
+      log("analyze.error", {
+        url: safeUrl,
+        durationMs: Date.now() - startedAt,
+        error: String(err?.message ?? err).slice(0, 300)
+      });
       res.writeHead(500).end("Internal Error");
     }
 
@@ -105,5 +130,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`✅ Lighthouse service listening on :${PORT} (max concurrency: ${MAX_CONCURRENCY})`);
+  log("startup", { port: PORT, maxConcurrency: MAX_CONCURRENCY });
 });
