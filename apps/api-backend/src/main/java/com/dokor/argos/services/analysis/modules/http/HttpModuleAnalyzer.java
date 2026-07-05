@@ -1,5 +1,6 @@
 package com.dokor.argos.services.analysis.modules.http;
 
+import com.dokor.argos.services.analysis.BoundedBodyHandlers;
 import com.dokor.argos.services.analysis.model.AuditCheckResult;
 import com.dokor.argos.services.analysis.model.AuditContext;
 import com.dokor.argos.services.analysis.model.AuditModuleAnalyzer;
@@ -83,7 +84,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
 
                 logger.debug("HTTP module: requesting url={}", currentUrl);
 
-                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+                HttpResponse<String> response = client.send(request, BoundedBodyHandlers.ofString(BoundedBodyHandlers.MAX_PAGE_BYTES));
 
                 body = response.body();
                 lastStatus = response.statusCode();
@@ -785,7 +786,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
             .header("Accept", "*/*")
             .GET()
             .build();
-        return client.send(req, HttpResponse.BodyHandlers.ofString());
+        return client.send(req, BoundedBodyHandlers.ofString(BoundedBodyHandlers.MAX_PAGE_BYTES));
     }
 
     /** Reconstruit l'origine (scheme://host[:port]) à partir d'une URL, ou null si invalide. */

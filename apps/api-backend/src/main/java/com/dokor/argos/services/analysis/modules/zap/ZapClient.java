@@ -1,6 +1,7 @@
 package com.dokor.argos.services.analysis.modules.zap;
 
 import com.dokor.argos.logging.ExternalServiceCall;
+import com.dokor.argos.services.analysis.BoundedBodyHandlers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
@@ -50,7 +51,7 @@ public class ZapClient {
                 .GET()
                 .build();
 
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = httpClient.send(request, BoundedBodyHandlers.ofString(BoundedBodyHandlers.MAX_PAGE_BYTES));
 
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
                 throw new RuntimeException("ZAP API returned HTTP " + response.statusCode());

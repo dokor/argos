@@ -22,11 +22,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class AuditProcessorServiceTest {
@@ -252,5 +253,30 @@ class AuditProcessorServiceTest {
         String json = jsonCaptor.getValue();
         assertTrue(json.contains("\"degraded\":\"true\""), "report meta should flag degraded=true");
         assertTrue(json.contains("FAILED"), "report meta should record the failing module status");
+    }
+
+    // -------------------------
+    // #221 : le corps HTML brut ne doit pas être persisté
+    // -------------------------
+
+    @Test
+    void stripRawBody_removesBodyKeyAndCopiesDefensively() {
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("finalUrl", "https://example.com");
+        data.put("body", "<html>....large....</html>");
+        AuditModuleResult module = new AuditModuleResult("http", "HTTP", "ok", data, List.of());
+
+        AuditModuleResult stripped = AuditProcessorService.stripRawBody(module);
+
+        assertFalse(stripped.data().containsKey("body"), "body doit être retiré du module persisté");
+        assertEquals("https://example.com", stripped.data().get("finalUrl"));
+        // Copie défensive : le module d'origine n'est pas muté.
+        assertTrue(module.data().containsKey("body"));
+    }
+
+    @Test
+    void stripRawBody_isNoopWhenNoBody() {
+        AuditModuleResult module = new AuditModuleResult("http", "HTTP", "ok", Map.of("finalUrl", "x"), List.of());
+        assertSame(module, AuditProcessorService.stripRawBody(module));
     }
 }

@@ -1,6 +1,7 @@
 package com.dokor.argos.services.analysis.modules.ssl;
 
 import com.dokor.argos.logging.ExternalServiceCall;
+import com.dokor.argos.services.analysis.BoundedBodyHandlers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
@@ -65,7 +66,7 @@ public class SslLabsClient {
             .GET()
             .build();
 
-        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response = httpClient.send(request, BoundedBodyHandlers.ofString(BoundedBodyHandlers.MAX_PAGE_BYTES));
 
         if (response.statusCode() == 429) {
             throw new RuntimeException("SSL Labs API rate limit exceeded (HTTP 429)");
