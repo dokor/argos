@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+
+// RelaunchButton (#9) utilise useRouter via useAuditSubmit : on mocke le routing.
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn(), refresh: vi.fn(), replace: vi.fn() }),
+}));
+
 import ReportHero from "./ReportHero";
 import type { Report } from "./types";
 

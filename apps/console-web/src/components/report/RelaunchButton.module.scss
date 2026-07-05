@@ -1,0 +1,67 @@
+@use '../../styles/tokens' as t;
+
+.wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: t.$space-2;
+}
+
+// Bouton sur fond navy du hero : clair-sur-sombre volontaire.
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: t.$space-2;
+  padding: 8px t.$space-4;
+  border-radius: t.$radius-pill;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  color: t.$color-slate-50;
+  font-size: t.$text-md;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  &:focus-visible {
+    outline: 2px solid t.$color-indigo-muted;
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.icon {
+  flex-shrink: 0;
+}
+
+.spinning {
+  animation: relaunch-spin 0.8s linear infinite;
+}
+
+@keyframes relaunch-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinning {
+    animation: none;
+  }
+}
+
+.error {
+  font-size: t.$text-sm;
+  color: t.$color-red-border; // lisible sur le navy sombre
+  text-align: center;
+  max-width: 200px;
+}

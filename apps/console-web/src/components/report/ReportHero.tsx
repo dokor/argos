@@ -4,6 +4,7 @@ import { Report, TechSummary } from "./types";
 import { useLang } from "@/lib/i18n/LangContext";
 import { scoreColor, scoreBg, SEVERITY_COLORS } from "./reportColors";
 import ScoreRing from "./ScoreRing";
+import RelaunchButton from "./RelaunchButton";
 import s from "./ReportHero.module.scss";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -124,6 +125,7 @@ export default function ReportHero({ report }: { report: Report }) {
             >
               {scoreUiLabel}
             </span>
+            <RelaunchButton url={report.url} />
           </div>
         </div>
 

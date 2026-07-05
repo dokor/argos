@@ -367,6 +367,9 @@
         "low": "Big opportunities: fixing critical issues will improve trust and conversion."
       },
       "analyzedAt": "Analyzed",
+      "relaunch": "Re-run analysis",
+      "relaunching": "Re-running…",
+      "relaunchError": "Re-run failed. Please try again.",
       "priorities": "priority(ies)",
       "issues": "issue(s)",
       "urlAnalyzed": "Analyzed URL",

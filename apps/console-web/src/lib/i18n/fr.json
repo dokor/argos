@@ -367,6 +367,9 @@
         "low": "De grosses opportunités : corriger les points critiques pour améliorer confiance et conversion."
       },
       "analyzedAt": "Analysé",
+      "relaunch": "Relancer l'analyse",
+      "relaunching": "Relance en cours…",
+      "relaunchError": "Échec de la relance. Réessayez.",
       "priorities": "priorité(s)",
       "issues": "point(s)",
       "urlAnalyzed": "URL analysée",
