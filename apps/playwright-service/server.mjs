@@ -2,6 +2,19 @@ import express from 'express';
 import { chromium } from 'playwright';
 
 const PORT = process.env.PORT || 3016;
+const SERVICE = 'playwright-service';
+
+// Sanitise une URL avant journalisation : supprime les CR/LF (anti log-forging)
+// et borne la longueur pour éviter des lignes de log démesurées.
+function sanitizeUrlForLog(url) {
+  if (typeof url !== 'string') return '';
+  return url.replace(/[\r\n]+/g, ' ').slice(0, 200);
+}
+
+// Log structuré (une ligne JSON) horodaté en ISO 8601, exploitable via Docker logs.
+function log(event, fields = {}) {
+  console.log(JSON.stringify({ ts: new Date().toISOString(), service: SERVICE, event, ...fields }));
+}
 
 const app = express();
 app.use(express.json({ limit: '1mb' }));
@@ -26,6 +39,10 @@ function hostOf(u) {
 app.post('/analyze/runtime', async (req, res) => {
   const { url } = req.body ?? {};
   if (!url) return res.status(400).json({ error: 'Missing url' });
+
+  const safeUrl = sanitizeUrlForLog(url);
+  const startedAt = Date.now();
+  log('analyze.start', { url: safeUrl });
 
   const pageDomain = hostOf(url);
 
@@ -134,9 +151,19 @@ app.post('/analyze/runtime', async (req, res) => {
     await page.waitForTimeout(1500);
   } catch (e) {
     // si le site bloque, on renvoie ce qu’on a
+    log('analyze.navigation_error', { url: safeUrl, error: String(e?.message ?? e).slice(0, 300) });
   } finally {
     await browser.close();
   }
+
+  log('analyze.done', {
+    url: safeUrl,
+    durationMs: Date.now() - startedAt,
+    consoleErrors,
+    jsErrors: jsErrorSamples.length,
+    failedRequests,
+    status5xx
+  });
 
   res.json({
     url,
@@ -164,5 +191,5 @@ app.post('/analyze/runtime', async (req, res) => {
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Playwright runtime analyzer listening on :${PORT}`);
+  log('startup', { port: Number(PORT) });
 });
