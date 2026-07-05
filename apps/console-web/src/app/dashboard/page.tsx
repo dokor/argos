@@ -9,15 +9,8 @@ import KpiCard from "@/components/KpiCard";
 import { useLang } from "@/lib/i18n/LangContext";
 import { AuditListItem } from "@/lib/ArgosApi";
 import { getGlobalScore } from "@/lib/auditTypes";
+import { scoreKpiTheme } from "@/components/report/reportColors";
 import styles from "./page.module.scss";
-
-function scoreColors(score: number | null): { accent: string; bg: string } {
-  if (score === null) return { accent: "#64748b", bg: "#f1f5f9" };
-  if (score >= 80)    return { accent: "#16a34a", bg: "#dcfce7" };
-  if (score >= 60)    return { accent: "#0284c7", bg: "#e0f2fe" };
-  if (score >= 40)    return { accent: "#d97706", bg: "#fef9c3" };
-  return               { accent: "#dc2626", bg: "#fee2e2" };
-}
 
 export default function DashboardPage() {
   const { t } = useLang();
@@ -48,7 +41,7 @@ export default function DashboardPage() {
   }, [items]);
 
   const td = t.dashboard;
-  const { accent: scoreAccent, bg: scoreBg } = scoreColors(stats.avgScore);
+  const { accent: scoreAccent, bg: scoreBg } = scoreKpiTheme(stats.avgScore);
 
   return (
     <div className={styles.root}>
