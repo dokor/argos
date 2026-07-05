@@ -3,37 +3,18 @@
 import React from "react";
 import Link from "next/link";
 import { useLang } from "@/lib/i18n/LangContext";
-import { useIsAdmin } from "@/lib/useIsAdmin";
-import ArgosIcon from "@/components/ArgosIcon";
-import LangToggle from "@/components/LangToggle";
-import ThemeToggle from "@/components/ThemeToggle";
+import SiteNav from "@/components/site/SiteNav";
+import SiteFooter from "@/components/site/SiteFooter";
 import s from "./page.module.scss";
 
 export default function FaqPage() {
   const { t } = useLang();
   const f = t.faq;
-  const isAdmin = useIsAdmin();
 
   return (
     <div className={s.page}>
       {/* NAV */}
-      <nav className={s.nav}>
-        <div className={s.navInner}>
-          <Link href="/" className={s.logo} aria-label={t.nav.logo}>
-            <ArgosIcon size={22} className={s.logoIcon} />
-            <span className={s.logoText}>{t.nav.logo}</span>
-          </Link>
-          <div className={s.navRight}>
-            <ThemeToggle />
-            <LangToggle />
-            {isAdmin && (
-              <a href="/dashboard" className={s.navCta}>
-                {t.nav.openConsole}
-              </a>
-            )}
-          </div>
-        </div>
-      </nav>
+      <SiteNav />
 
       {/* HERO */}
       <header className={s.hero}>
@@ -80,12 +61,7 @@ export default function FaqPage() {
       </main>
 
       {/* FOOTER */}
-      <footer className={s.footer}>
-        <div className={s.footerInner}>
-          <span>{t.landing.footer.built}</span>
-          <span>{t.landing.footer.copy}</span>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }
