@@ -130,6 +130,19 @@
   }
 }
 
+// Couleurs de l'anneau de score et du compteur total, sur le hero navy
+// (clair-sur-sombre volontaire). Tokens de palette fixe aux mêmes valeurs
+// qu'auparavant (#f8fafc / #94a3b8) — plus de hex en dur (issue #192).
+.ringScore {
+  fill: t.$color-slate-50;
+}
+.ringUnit {
+  fill: t.$color-slate-400;
+}
+.statTotalValue {
+  color: t.$color-slate-400;
+}
+
 .statValue {
   font-size: 28px;
   font-weight: 800;
