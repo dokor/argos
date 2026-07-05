@@ -9,9 +9,11 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 
 import java.net.http.HttpTimeoutException;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.*;
 
 class LighthouseModuleAnalyzerTest {
@@ -44,6 +46,110 @@ class LighthouseModuleAnalyzerTest {
 
         assertEquals(Boolean.FALSE, res.data().get("available"));
         assertEquals("FAILED", res.data().get("reason"));
+    }
+
+    // -------------------------
+    // Réponse HTTP 200 mais inexploitable (issue #205)
+    // -------------------------
+
+    /** Corps vide ({}) : aucun score exploitable => module marqué indisponible, pas de check scorable. */
+    @Test
+    void treatsEmptyBodyAsUnavailable() throws Exception {
+        LighthouseClient client = mock(LighthouseClient.class);
+        when(client.analyze(anyString())).thenReturn(new ObjectMapper().readTree("{}"));
+
+        AuditModuleResult res = new LighthouseModuleAnalyzer(client)
+            .analyze(ctx(), LoggerFactory.getLogger("test"));
+
+        assertEquals(Boolean.FALSE, res.data().get("available"));
+        assertEquals("UNAVAILABLE", res.data().get("reason"));
+        // Un seul check "collect" non scorable, aucun lighthouse.score.* qui pénaliserait le score.
+        assertEquals(1, res.checks().size());
+        assertEquals("lighthouse.collect", res.checks().get(0).key());
+        assertEquals(0, res.checks().stream().filter(c -> c.key().startsWith("lighthouse.score.")).count());
+    }
+
+    /** Corps sans nœud "categories" : même traitement que le corps vide. */
+    @Test
+    void treatsBodyWithoutCategoriesAsUnavailable() throws Exception {
+        LighthouseClient client = mock(LighthouseClient.class);
+        when(client.analyze(anyString()))
+            .thenReturn(new ObjectMapper().readTree("{\"lighthouseVersion\":\"11.0.0\",\"audits\":{}}"));
+
+        AuditModuleResult res = new LighthouseModuleAnalyzer(client)
+            .analyze(ctx(), LoggerFactory.getLogger("test"));
+
+        assertEquals(Boolean.FALSE, res.data().get("available"));
+        assertEquals("UNAVAILABLE", res.data().get("reason"));
+        assertEquals(0, res.checks().stream().filter(c -> c.key().startsWith("lighthouse.score.")).count());
+    }
+
+    /** Catégories présentes mais toutes en score null (catégories en erreur) : indisponible, pas de 0 fabriqué. */
+    @Test
+    void treatsNullCategoryScoresAsUnavailable() throws Exception {
+        LighthouseClient client = mock(LighthouseClient.class);
+        String json = "{\"categories\":{"
+            + "\"performance\":{\"score\":null,\"title\":\"Performance\"},"
+            + "\"seo\":{\"score\":null}}}";
+        when(client.analyze(anyString())).thenReturn(new ObjectMapper().readTree(json));
+
+        AuditModuleResult res = new LighthouseModuleAnalyzer(client)
+            .analyze(ctx(), LoggerFactory.getLogger("test"));
+
+        assertEquals(Boolean.FALSE, res.data().get("available"));
+        assertEquals(0, res.checks().stream().filter(c -> c.key().startsWith("lighthouse.score.")).count());
+    }
+
+    /**
+     * Garde-fou : un score de catégorie réellement à 0 (site catastrophique) DOIT être conservé
+     * et pénaliser — ce n'est pas le cas "réponse vide". Distingue 0 numérique légitime vs nœud absent.
+     */
+    @Test
+    void keepsGenuineZeroCategoryScore() throws Exception {
+        LighthouseClient client = mock(LighthouseClient.class);
+        String json = "{\"categories\":{\"performance\":{\"score\":0.0,\"title\":\"Performance\"}}}";
+        when(client.analyze(anyString())).thenReturn(new ObjectMapper().readTree(json));
+
+        AuditModuleResult res = new LighthouseModuleAnalyzer(client)
+            .analyze(ctx(), LoggerFactory.getLogger("test"));
+
+        assertEquals(Boolean.TRUE, res.data().get("available"));
+        AuditCheckResult perf = res.checks().stream()
+            .filter(c -> "lighthouse.score.performance".equals(c.key()))
+            .findFirst().orElseThrow();
+        assertEquals(0.0, perf.scoreRatio(), 0.0001);
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> scores = (Map<String, Object>) res.data().get("scores");
+        assertEquals(0, scores.get("performance"));
+    }
+
+    /** Réponse partielle (2 catégories notées sur 4) : on émet uniquement les notes présentes, sans NPE ni 0 fabriqué. */
+    @Test
+    void surfacesOnlyPresentCategoriesOnPartialResponse() throws Exception {
+        LighthouseClient client = mock(LighthouseClient.class);
+        String json = "{\"categories\":{"
+            + "\"performance\":{\"score\":0.42,\"title\":\"Performance\"},"
+            + "\"seo\":{\"score\":0.9,\"title\":\"SEO\"}}}";
+        when(client.analyze(anyString())).thenReturn(new ObjectMapper().readTree(json));
+
+        AuditModuleResult res = new LighthouseModuleAnalyzer(client)
+            .analyze(ctx(), LoggerFactory.getLogger("test"));
+
+        assertEquals(Boolean.TRUE, res.data().get("available"));
+        // Seules les catégories réellement fournies deviennent des checks scorés.
+        assertEquals(2, res.checks().stream().filter(c -> c.key().startsWith("lighthouse.score.")).count());
+        assertEquals(0, res.checks().stream()
+            .filter(c -> c.key().equals("lighthouse.score.accessibility")
+                || c.key().equals("lighthouse.score.best-practices"))
+            .count());
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> scores = (Map<String, Object>) res.data().get("scores");
+        assertEquals(2, scores.size());
+        assertEquals(42, scores.get("performance"));
+        // Pas de note fabriquée à 0 pour les catégories absentes.
+        assertNull(scores.get("accessibility"));
     }
 
     /**
