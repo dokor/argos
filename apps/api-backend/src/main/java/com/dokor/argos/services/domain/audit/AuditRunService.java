@@ -142,6 +142,16 @@ public class AuditRunService {
     }
 
     /**
+     * Réinitialise tous les statuts de modules à PENDING. Utilisé lors de la reprise
+     * (requeue) d'un run bloqué pour repartir d'un état propre avant un nouveau
+     * traitement complet.
+     */
+    public void resetModuleStatuses(long runId) {
+        auditRunDao.updateModuleStatuses(runId, serializeModuleStatuses(INITIAL_MODULE_STATUSES));
+        logger.debug("Module statuses reset to PENDING runId={}", runId);
+    }
+
+    /**
      * Tente de claim un run pour traitement.
      */
     public Optional<String> claim(long runId) {

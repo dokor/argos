@@ -46,6 +46,8 @@ public class QAuditRun extends com.querydsl.sql.RelationalPathBase<AuditRun> {
 
     public final StringPath status = createString("status");
 
+    public final NumberPath<Integer> attemptCount = createNumber("attemptCount", Integer.class);
+
     public final com.querydsl.sql.PrimaryKey<AuditRun> primary = createPrimaryKey(id);
 
     public final com.querydsl.sql.ForeignKey<Audit> runAuditFk = createForeignKey(auditId, "id");
@@ -89,6 +91,7 @@ public class QAuditRun extends com.querydsl.sql.RelationalPathBase<AuditRun> {
         addMetadata(resultJson, ColumnMetadata.named("result_json").withIndex(8).ofType(Types.LONGVARCHAR).withSize(2147483647));
         addMetadata(startedAt, ColumnMetadata.named("started_at").withIndex(5).ofType(Types.TIMESTAMP).withSize(23));
         addMetadata(status, ColumnMetadata.named("status").withIndex(3).ofType(Types.VARCHAR).withSize(16).notNull());
+        addMetadata(attemptCount, ColumnMetadata.named("attempt_count").withIndex(12).ofType(Types.INTEGER).withSize(10).notNull());
     }
 
 }

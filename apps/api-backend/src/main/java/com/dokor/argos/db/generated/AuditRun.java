@@ -45,6 +45,9 @@ public class AuditRun extends com.coreoz.plume.db.querydsl.crud.CrudEntityQueryd
     @Column("status")
     private String status;
 
+    @Column("attempt_count")
+    private Integer attemptCount;
+
     public Long getAuditId() {
         return auditId;
     }
@@ -131,6 +134,14 @@ public class AuditRun extends com.coreoz.plume.db.querydsl.crud.CrudEntityQueryd
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public Integer getAttemptCount() {
+        return attemptCount;
+    }
+
+    public void setAttemptCount(Integer attemptCount) {
+        this.attemptCount = attemptCount;
     }
 
     @Override

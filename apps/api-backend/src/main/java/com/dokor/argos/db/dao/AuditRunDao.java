@@ -10,6 +10,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 
@@ -83,6 +84,9 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
             .set(RUN.claimToken, claimToken)
             .set(RUN.status, AuditRunStatus.RUNNING.name())
             .set(RUN.startedAt, now)
+            // Chaque claim = une tentative de traitement. Compteur utilisé par le
+            // reaper (StuckAuditRunReaper) pour borner les reprises (#127, #211).
+            .set(RUN.attemptCount, RUN.attemptCount.add(1))
             .where(
                 RUN.id.eq(runId),
                 RUN.status.eq(AuditRunStatus.QUEUED.name()),
@@ -130,6 +134,84 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
             .set(RUN.lastError, lastError)
             .where(RUN.id.eq(runId))
             .execute();
+    }
+
+    /**
+     * Recherche les runs bloqués en {@code RUNNING} : démarrés (claim) avant
+     * {@code threshold} et jamais terminés. Correspond à un worker mort/redémarré
+     * ou à un traitement figé (#127, #211).
+     *
+     * @param threshold instant limite ; un run dont {@code started_at < threshold}
+     *                  est considéré comme bloqué
+     * @return les runs bloqués, du plus ancien au plus récent
+     */
+    public List<AuditRun> findStuckRunningRuns(Instant threshold) {
+        return transactionManager.selectQuery()
+            .select(RUN)
+            .from(RUN)
+            .where(
+                RUN.status.eq(AuditRunStatus.RUNNING.name()),
+                RUN.startedAt.isNotNull(),
+                RUN.startedAt.lt(threshold)
+            )
+            .orderBy(RUN.startedAt.asc())
+            .fetch();
+    }
+
+    /**
+     * Remet atomiquement un run bloqué en file d'attente pour un nouveau traitement.
+     * <p>
+     * L'update est gardé par {@code status = RUNNING} : si le run a entre-temps été
+     * terminé (COMPLETED/FAILED) ou re-claimé, aucune ligne n'est modifiée — on évite
+     * ainsi d'écraser un run redevenu actif ou une double reprise concurrente.
+     * <p>
+     * Le {@code claim_token} et {@code started_at} sont remis à NULL pour que le run
+     * redevienne éligible à {@link #findNextQueuedRun()}. {@code attempt_count} est
+     * conservé (déjà incrémenté au claim initial) : il sera ré-incrémenté au prochain
+     * claim, ce qui borne le nombre de reprises.
+     *
+     * @param runId identifiant du run à relancer
+     * @return true si le run a bien été remis en QUEUED, false sinon
+     */
+    public boolean requeueStuckRun(long runId) {
+        long updated = transactionManager.update(RUN)
+            .set(RUN.status, AuditRunStatus.QUEUED.name())
+            .setNull(RUN.claimToken)
+            .setNull(RUN.startedAt)
+            .setNull(RUN.finishedAt)
+            .setNull(RUN.lastError)
+            .where(
+                RUN.id.eq(runId),
+                RUN.status.eq(AuditRunStatus.RUNNING.name())
+            )
+            .execute();
+
+        return updated == 1;
+    }
+
+    /**
+     * Marque atomiquement un run bloqué comme {@code FAILED} (abandon volontaire).
+     * <p>
+     * Gardé par {@code status = RUNNING} pour ne jamais écraser un run terminé
+     * normalement ou re-claimé entre-temps.
+     *
+     * @param runId      identifiant du run à abandonner
+     * @param finishedAt date de fin (abandon)
+     * @param lastError  message d'erreur exploitable
+     * @return true si le run a bien été marqué FAILED, false sinon
+     */
+    public boolean markStuckFailed(long runId, Instant finishedAt, String lastError) {
+        long updated = transactionManager.update(RUN)
+            .set(RUN.status, AuditRunStatus.FAILED.name())
+            .set(RUN.finishedAt, finishedAt)
+            .set(RUN.lastError, lastError)
+            .where(
+                RUN.id.eq(runId),
+                RUN.status.eq(AuditRunStatus.RUNNING.name())
+            )
+            .execute();
+
+        return updated == 1;
     }
 
     /**
