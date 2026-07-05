@@ -35,6 +35,12 @@ export type UseAuditSubmitOptions = {
   pollIntervalMs?: number;
   /** Nombre maximum de polls avant timeout. */
   maxPolls?: number;
+  /**
+   * Ouvre le rapport dans un nouvel onglet au lieu de naviguer dans l'onglet
+   * courant (dashboard : #169). Repli automatique sur une navigation même
+   * onglet si le navigateur bloque la popup. Défaut : `false` (landing).
+   */
+  openInNewTab?: boolean;
   /** Notifié après création réussie de l'audit (ex: MAJ liste dashboard). */
   onCreated?: (res: CreateAuditResponse, normalizedUrl: string) => void;
   /** Notifié à chaque tick de polling (ex: animation d'étapes de la landing). */
@@ -59,6 +65,7 @@ export function useAuditSubmit(options: UseAuditSubmitOptions): UseAuditSubmitRe
     maxWaitMs = 0,
     pollIntervalMs = DEFAULT_POLL_INTERVAL_MS,
     maxPolls = DEFAULT_MAX_POLLS,
+    openInNewTab = false,
     onCreated,
     onPollTick,
   } = options;
@@ -84,14 +91,31 @@ export function useAuditSubmit(options: UseAuditSubmitOptions): UseAuditSubmitRe
 
   const redirectToReport = useCallback(
     (reportToken: string, reason: "completed" | "timeout" | "created", polls: number) => {
-      setPhase("redirecting");
+      const href = `/report/${reportToken}`;
       logger.info("audit_submit_redirect", {
         action: "redirect_to_report",
-        details: { reason, reportToken, runId: runIdRef.current, polls },
+        details: { reason, reportToken, runId: runIdRef.current, polls, openInNewTab },
       });
-      router.push(`/report/${reportToken}`);
+
+      if (openInNewTab && typeof window !== "undefined") {
+        // On n'utilise pas la feature "noopener" dans window.open : plusieurs
+        // navigateurs renvoient alors null même en cas de succès, ce qui
+        // fausserait la détection de blocage. On neutralise `opener` à la main
+        // (protection reverse-tabnabbing, ici même origine).
+        const win = window.open(href, "_blank");
+        if (win) {
+          win.opener = null;
+          // Onglet courant inchangé : on réactive le formulaire.
+          setPhase("idle");
+          return;
+        }
+        // Popup bloquée → repli sur une navigation dans l'onglet courant.
+      }
+
+      setPhase("redirecting");
+      router.push(href);
     },
-    [logger, router]
+    [logger, router, openInNewTab]
   );
 
   // Effet de polling (cas landing) : actif uniquement en phase "polling".
