@@ -10,9 +10,14 @@ public record ReportDto(
     Scores scores,
     Summary summary,
     List<Issue> issues,
-    Tech tech
+    Tech tech,
+    AntiBot antiBot   // non nul uniquement si une protection anti-bot a été détectée (#195)
 ) {
     public record Site(String title, String logoUrl) {
+    }
+
+    /** Signale une protection anti-bot (Cloudflare…) : l'analyse peut être partielle. */
+    public record AntiBot(boolean detected, String vendor) {
     }
 
     public record Tech(

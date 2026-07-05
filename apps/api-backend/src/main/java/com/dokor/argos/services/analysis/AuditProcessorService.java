@@ -235,6 +235,17 @@ public class AuditProcessorService {
             meta.put("modulesEvaluated", String.valueOf(modulesEvaluated));
             meta.put("modulesTotal", String.valueOf(modulesTotal));
             meta.put("moduleStatuses", objectMapper.writeValueAsString(moduleStatuses));
+            // Protection anti-bot détectée par le module HTTP (issue #56/#195) : on
+            // propage le flag pour permettre au rapport de signaler une analyse
+            // potentiellement partielle (page de challenge).
+            if (httpModule != null && httpModule.data() != null
+                && Boolean.TRUE.equals(httpModule.data().get("antiBotDetected"))) {
+                meta.put("antiBotDetected", "true");
+                Object antiBotVendor = httpModule.data().get("antiBotVendor");
+                if (antiBotVendor != null) {
+                    meta.put("antiBotVendor", String.valueOf(antiBotVendor));
+                }
+            }
 
             AuditReportJson report = new AuditReportJson(
                 REPORT_SCHEMA_VERSION,

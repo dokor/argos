@@ -2,6 +2,7 @@
 
 import ReportHeader from "@/components/report/ReportHeader";
 import ReportHero from "@/components/report/ReportHero";
+import AntiBotNotice from "@/components/report/AntiBotNotice";
 import ScoreGrid from "@/components/report/ScoreGrid";
 import PriorityCards from "@/components/report/PriorityCards";
 import IssuesByCategory from "@/components/report/IssuesByCategory";
@@ -25,6 +26,7 @@ export default function ReportPage({ params }: Readonly<Params>) {
       <ReportHero report={report} />
 
       <main className={s.main}>
+        <AntiBotNotice antiBot={report.antiBot} />
         <PriorityCards priorities={report.summary.priorities} />
         <ScoreGrid categories={report.scores.byCategory} globalScore={report.scores.global} completeness={report.scores.completeness} />
         <IssuesByCategory report={report} />

@@ -31,6 +31,12 @@ public class PublicReportComposer {
         int global100 = score != null ? toScore100(score.global().ratio()) : 0;
         Integer completeness = parseIntOrNull(internalReport.meta(), "completeness");
 
+        // Protection anti-bot détectée (issue #195) : exposée pour un bandeau côté rapport.
+        Map<String, String> meta = internalReport.meta();
+        ReportDto.AntiBot antiBot = (meta != null && "true".equals(meta.get("antiBotDetected")))
+            ? new ReportDto.AntiBot(true, meta.get("antiBotVendor"))
+            : null;
+
         List<ReportDto.CategoryScore> byCategory = (score == null ? List.<ScoreAggregate>of() : score.byTag()).stream()
             .filter(agg -> isBusinessTag(agg.id()))
             .map(agg -> new ReportDto.CategoryScore(
@@ -102,7 +108,8 @@ public class PublicReportComposer {
             new ReportDto.Scores(global100, completeness, byCategoryWithCounts),
             new ReportDto.Summary(oneLiner, priorities),
             issues,
-            tech
+            tech,
+            antiBot
         );
     }
 
