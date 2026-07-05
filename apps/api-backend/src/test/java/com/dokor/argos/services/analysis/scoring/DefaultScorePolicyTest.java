@@ -4,13 +4,21 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class ScorePolicyV2Test {
+/**
+ * Tests de {@link DefaultScorePolicy} — barème unique aplati (issue #188).
+ * <p>
+ * Consolide les assertions historiques des tests V2→V6 : barème complet (V2),
+ * {@code tech.security.version_disclosure} (ex-V4), {@code lighthouse.audit.*} poids nul
+ * (ex-V5) et {@code runtime.*} en catégorie runtime seule (ex-V6). {@code version()} doit
+ * rester 6 pour la continuité des {@code scoringVersion} persistés.
+ */
+class DefaultScorePolicyTest {
 
-    private final ScorePolicyV2 policy = new ScorePolicyV2();
+    private final DefaultScorePolicy policy = new DefaultScorePolicy();
 
     @Test
-    void versionShouldBe2() {
-        assertEquals(2, policy.version());
+    void versionShouldStayAt6ForScoringContinuity() {
+        assertEquals(6, policy.version());
     }
 
     // ------------------------------------------------------------------ Lighthouse
@@ -34,7 +42,6 @@ class ScorePolicyV2Test {
 
     @Test
     void lighthouseBestPracticesUsesHyphenKeyAndIsTaggedSecurity() {
-        // La clé émise par l'analyzer est l'id de catégorie Lighthouse "best-practices" (avec tiret).
         ScorePolicy.ScoreRule rule = policy.ruleFor("lighthouse", "lighthouse.score.best-practices");
         assertTrue(rule.scorable());
         assertEquals(6.0, rule.weight());
@@ -51,20 +58,29 @@ class ScorePolicyV2Test {
 
     @Test
     void unknownLighthouseKeyShouldBeInformationalOnly() {
-        // Fiabilité : un check lighthouse inconnu ne doit pas être scoré automatiquement.
         ScorePolicy.ScoreRule rule = policy.ruleFor("lighthouse", "lighthouse.some.new.metric");
         assertFalse(rule.scorable());
         assertEquals(0.0, rule.weight());
     }
 
-    // ------------------------------------------------------------------ Runtime (fix A)
+    /** Ex-V5 : audits Lighthouse individuels scorables mais de poids nul (surfacés sans double comptage). */
+    @Test
+    void lighthouseIndividualAuditsAreScorableButZeroWeight() {
+        ScorePolicy.ScoreRule rule = policy.ruleFor("lighthouse", "lighthouse.audit.uses-responsive-images");
+        assertTrue(rule.scorable());
+        assertEquals(0.0, rule.weight());
+        assertTrue(rule.tags().contains("lighthouse"));
+    }
+
+    // ------------------------------------------------------------------ Runtime (catégorie propre, #172)
 
     @Test
-    void runtimeConsoleErrorsUsesEmittedKeyAndScoresPerformance() {
+    void runtimeConsoleErrorsIsRuntimeOnlyNotPerformance() {
         ScorePolicy.ScoreRule rule = policy.ruleFor("runtime", "runtime.console.errors");
         assertTrue(rule.scorable());
         assertEquals(5.0, rule.weight());
-        assertTrue(rule.tags().contains("performance"));
+        assertTrue(rule.tags().contains("runtime"));
+        assertFalse(rule.tags().contains("performance"));
     }
 
     @Test
@@ -72,6 +88,7 @@ class ScorePolicyV2Test {
         ScorePolicy.ScoreRule rule = policy.ruleFor("runtime", "runtime.js.errors");
         assertTrue(rule.scorable());
         assertEquals(6.0, rule.weight());
+        assertFalse(rule.tags().contains("performance"));
     }
 
     @Test
@@ -89,14 +106,15 @@ class ScorePolicyV2Test {
     }
 
     @Test
-    void unknownRuntimeKeyFallsBackToPerformance() {
+    void unknownRuntimeKeyFallsBackToRuntimeOnly() {
         ScorePolicy.ScoreRule rule = policy.ruleFor("runtime", "runtime.some.new.check");
         assertTrue(rule.scorable());
         assertEquals(4.0, rule.weight());
-        assertTrue(rule.tags().contains("performance"));
+        assertTrue(rule.tags().contains("runtime"));
+        assertFalse(rule.tags().contains("performance"));
     }
 
-    // ------------------------------------------------------------------ SSL / Observatory (fix B)
+    // ------------------------------------------------------------------ SSL / Observatory
 
     @Test
     void sslGradeShouldBeScoredUnderSecurity() {
@@ -134,14 +152,12 @@ class ScorePolicyV2Test {
 
     @Test
     void genericZapAlertsAreInformationalOnly() {
-        // Les alertes ZAP génériques ne sont pas scorées (les findings d'en-têtes
-        // remontent via http.security.*), pour éviter l'inflation par nombre d'alertes.
         ScorePolicy.ScoreRule rule = policy.ruleFor("zap", "zap.alert.10038");
         assertFalse(rule.scorable());
         assertEquals(0.0, rule.weight());
     }
 
-    // ------------------------------------------------------------------ HTTP / HTML
+    // ------------------------------------------------------------------ HTTP / HTML / Tech
 
     @Test
     void httpHstsShouldBeScorableWithWeight8() {
@@ -167,7 +183,6 @@ class ScorePolicyV2Test {
 
     @Test
     void robotsTxtShouldBeScoredUnderSeo() {
-        // issue #31 : présence de robots.txt intégrée au score SEO.
         ScorePolicy.ScoreRule rule = policy.ruleFor("http", "http.seo.robots_txt");
         assertTrue(rule.scorable());
         assertEquals(2.0, rule.weight());
@@ -176,18 +191,26 @@ class ScorePolicyV2Test {
 
     @Test
     void sitemapShouldBeScoredUnderSeo() {
-        // issue #31 : présence du sitemap intégrée au score SEO.
         ScorePolicy.ScoreRule rule = policy.ruleFor("http", "http.seo.sitemap");
         assertTrue(rule.scorable());
         assertEquals(3.0, rule.weight());
         assertTrue(rule.tags().contains("seo"));
     }
 
-    // ------------------------------------------------------------------ Availability / degraded stubs
+    /** Ex-V4 : divulgation de version logicielle scorable sous security (issue #158). */
+    @Test
+    void versionDisclosureIsScorableSecurity() {
+        ScorePolicy.ScoreRule rule = policy.ruleFor("tech", "tech.security.version_disclosure");
+        assertTrue(rule.scorable());
+        assertEquals(3.0, rule.weight());
+        assertTrue(rule.tags().contains("security"));
+        assertTrue(rule.tags().contains("tech"));
+    }
+
+    // ------------------------------------------------------------------ Availability / unknown
 
     @Test
     void availabilityStubsAreNeverScored() {
-        // Statut WARN mais ne doivent jamais peser sur le score (panne service externe).
         for (String key : new String[]{
             "ssl.available", "runtime.collect", "html.available",
             "observatory.available", "zap.available", "lighthouse.collect"
@@ -197,8 +220,6 @@ class ScorePolicyV2Test {
             assertEquals(0.0, rule.weight(), key + " should have weight 0");
         }
     }
-
-    // ------------------------------------------------------------------ Tech / unknown
 
     @Test
     void techKeysShouldNotBeScored() {

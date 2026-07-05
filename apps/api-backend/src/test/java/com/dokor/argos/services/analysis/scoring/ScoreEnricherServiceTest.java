@@ -13,11 +13,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Couvre l'enrichissement des checks (couche où se logent les bugs de câblage clé→règle).
- * Utilise la vraie {@link ScorePolicyV2} pour valider l'intégration bout-en-bout.
+ * Utilise la vraie {@link DefaultScorePolicy} pour valider l'intégration bout-en-bout.
  */
 class ScoreEnricherServiceTest {
 
-    private final ScoreEnricherService enricher = new ScoreEnricherService(new ScorePolicyV2());
+    private final ScoreEnricherService enricher = new ScoreEnricherService(new DefaultScorePolicy());
 
     private static AuditCheckResult check(String key, AuditStatus status, List<String> tags) {
         return AuditCheckResult.of(
@@ -35,8 +35,8 @@ class ScoreEnricherServiceTest {
     }
 
     @Test
-    void scoringVersionShouldBe2() {
-        assertEquals(2, enricher.scoringVersion());
+    void scoringVersionShouldBe6() {
+        assertEquals(6, enricher.scoringVersion());
     }
 
     @Test
@@ -62,7 +62,9 @@ class ScoreEnricherServiceTest {
         AuditCheckResult r = enrichOne("runtime", check("runtime.console.errors", AuditStatus.FAIL, List.of()));
         assertTrue(r.scorable());
         assertEquals(5.0, r.weight());
-        assertTrue(r.tags().contains("performance"));
+        // Catégorie "runtime" seule, plus "performance" (issue #172).
+        assertTrue(r.tags().contains("runtime"));
+        assertFalse(r.tags().contains("performance"));
     }
 
     @Test
