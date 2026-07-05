@@ -5,14 +5,34 @@ import AuditProgressView from "@/components/report/AuditProgressView";
 import ReportErrorView from "@/components/report/ReportErrorView";
 import { createLogger, maskToken, safeError } from "@/lib/logger";
 
-export const metadata: Metadata = {
-  title: "Rapport Argos",
-  robots: { index: false, follow: false },
-};
-
 type Props = {
   params: Promise<{ token: string }>;
 };
+
+// Les rapports ne sont jamais indexés (contenu privé, tokenisé).
+const REPORT_ROBOTS = { index: false, follow: false } as const;
+const REPORT_TITLE = "Rapport Argos";
+
+/**
+ * Titre de l'onglet : « Rapport Argos | <domaine> » quand le rapport est
+ * publié, sinon « Rapport Argos » (analyse en cours / token inconnu).
+ *
+ * `title.absolute` court-circuite le template « %s | Argos » du layout racine.
+ * S'exécute côté serveur : pas d'accès au contexte i18n client (libellé fr).
+ */
+export async function generateMetadata({ params }: Readonly<Props>): Promise<Metadata> {
+  const { token } = await params;
+  try {
+    const report = await argosApi.getReport(token);
+    const domain = report.domain?.trim();
+    if (domain) {
+      return { title: { absolute: `${REPORT_TITLE} | ${domain}` }, robots: REPORT_ROBOTS };
+    }
+  } catch {
+    // Rapport non disponible (404 / analyse en cours) → titre générique.
+  }
+  return { title: REPORT_TITLE, robots: REPORT_ROBOTS };
+}
 
 export default async function ReportPageHome({ params }: Readonly<Props>) {
   const { token } = await params;
