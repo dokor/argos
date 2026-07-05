@@ -5,6 +5,8 @@ services:
       dockerfile: Dockerfile
     container_name: lighthouse-service
     restart: unless-stopped
+    init: true
+    shm_size: 1gb
     environment:
       - PORT=3017
       - NODE_ENV=production
