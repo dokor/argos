@@ -214,15 +214,15 @@ public class PublicReportComposer {
         }
     }
 
+    // Catégories affichées = domaines métier uniquement (issue #197). Les tags d'outil
+    // (lighthouse, ssl, observatory, zap, runtime) et les tags de module (http/html/tech)
+    // ne sont PAS des catégories — ils restent une info de provenance. Cela évite qu'une
+    // même issue apparaisse dans deux catégories (ex. « Lighthouse » ET « Performance »).
     private static boolean isBusinessTag(String tag) {
-        // on exclut les tags modules si tu les ajoutes (http/html/tech)
-        return tag != null && !tag.isBlank()
-            && !tag.equals("http")
-            && !tag.equals("html")
-            && !tag.equals("tech");
+        return tag != null && PRIORITY_CATEGORIES.contains(tag);
     }
 
-    // Semantic business categories take priority over technical/module tags
+    // Domaines métier (les 4 seules catégories affichées / scorées).
     private static final Set<String> PRIORITY_CATEGORIES = Set.of("performance", "security", "seo", "a11y");
 
     /**

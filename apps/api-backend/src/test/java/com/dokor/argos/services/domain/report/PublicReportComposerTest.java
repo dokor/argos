@@ -223,10 +223,10 @@ class PublicReportComposerTest {
     }
 
     @Test
-    void sslIssueShouldBucketUnderBothSecurityAndSsl() {
-        // Régression #111 : un check SSL (tags security+ssl) alimente les catégories
-        // security ET ssl côté score ; son point doit apparaître sous les deux, sinon
-        // la carte SSL affiche un score mais aucun point.
+    void sslIssueShouldBucketOnlyUnderSecurityDomain() {
+        // #197 : catégories par domaine. Un check SSL (tags security+ssl) n'apparaît que
+        // sous le domaine "security" ; "ssl" (outil) n'est plus une catégorie -> pas de
+        // doublon Sécurité/SSL.
         AuditModuleResult sslModule = module("ssl", Map.of(),
             checkWithTags("ssl.grade", AuditStatus.FAIL, List.of("security", "ssl")));
         AuditReportJson input = report(List.of(sslModule),
@@ -238,15 +238,12 @@ class PublicReportComposerTest {
             .filter(i -> "ssl.grade".equals(i.id()))
             .findFirst()
             .orElseThrow(() -> new AssertionError("ssl.grade issue not found"));
-        assertTrue(issue.categoryKeys().contains("ssl"), "issue should belong to ssl");
-        assertTrue(issue.categoryKeys().contains("security"), "issue should belong to security");
+        assertTrue(issue.categoryKeys().contains("security"), "issue should belong to security domain");
+        assertFalse(issue.categoryKeys().contains("ssl"), "ssl (outil) ne doit plus être une catégorie (#197)");
 
-        ReportDto.CategoryScore sslCat = dto.scores().byCategory().stream()
-            .filter(c -> "ssl".equals(c.key()))
-            .findFirst()
-            .orElseThrow(() -> new AssertionError("ssl category not found"));
-        assertEquals(46, sslCat.score());
-        assertTrue(sslCat.issues() >= 1, "SSL category must list its points, not show a score with 0 issue");
+        List<String> catKeys = dto.scores().byCategory().stream().map(ReportDto.CategoryScore::key).toList();
+        assertTrue(catKeys.contains("security"), "le domaine security doit être présent");
+        assertFalse(catKeys.contains("ssl"), "l'outil ssl ne doit pas être une catégorie (#197)");
     }
 
     // ------------------------------------------------------------------ score
@@ -292,19 +289,26 @@ class PublicReportComposerTest {
     }
 
     @Test
-    void shouldFilterOutInternalTagsFromCategoryScores() {
+    void shouldKeepOnlyDomainCategories() {
+        // #197 : seules les 4 catégories de domaine sont exposées ; les tags de module
+        // (http/html/tech) ET d'outil (ssl/lighthouse/observatory/zap/runtime) sont exclus.
         AuditReportJson input = report(
             List.of(module("html", Map.of())),
-            scoreOf(0.6, "performance", "0.6", "http", "0.9", "html", "0.8", "tech", "0.0")
+            scoreOf(0.6,
+                "performance", "0.6", "http", "0.9", "html", "0.8", "tech", "0.0",
+                "ssl", "0.5", "lighthouse", "0.7", "runtime", "0.5")
         );
 
         ReportDto dto = composer.compose(input);
 
         List<String> catKeys = dto.scores().byCategory().stream().map(ReportDto.CategoryScore::key).toList();
-        assertTrue(catKeys.contains("performance"), "performance should be included");
-        assertFalse(catKeys.contains("http"),  "http should be excluded (internal)");
-        assertFalse(catKeys.contains("html"),  "html should be excluded (internal)");
-        assertFalse(catKeys.contains("tech"),  "tech should be excluded (internal)");
+        assertTrue(catKeys.contains("performance"), "performance (domaine) doit être inclus");
+        assertFalse(catKeys.contains("http"),  "http exclu (module)");
+        assertFalse(catKeys.contains("html"),  "html exclu (module)");
+        assertFalse(catKeys.contains("tech"),  "tech exclu (module)");
+        assertFalse(catKeys.contains("ssl"),        "ssl exclu (outil, #197)");
+        assertFalse(catKeys.contains("lighthouse"), "lighthouse exclu (outil, #197)");
+        assertFalse(catKeys.contains("runtime"),    "runtime exclu (outil, #197)");
     }
 
     // ------------------------------------------------------------------ domain
