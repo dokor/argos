@@ -8,15 +8,18 @@ Soumettez une URL, attendez ~20 secondes, récupérez un rapport complet avec un
 
 ## Ce qu'Argos analyse
 
-Cinq modules indépendants s'exécutent en séquence sur chaque audit :
+Huit modules indépendants s'exécutent sur chaque audit :
 
 | Module | Ce qui est vérifié |
 |---|---|
 | **HTTP & Sécurité** | Status code, redirections, HTTPS, HSTS, CSP, X-Frame-Options, Referrer-Policy, compression |
 | **HTML & SEO** | Title, meta description, canonical, H1, lang, viewport, OpenGraph, Twitter Card, alt images |
-| **Stack technique** | CMS (WordPress, Shopify…), frameworks (Next.js, Nuxt, React, Vue…), CDN Cloudflare |
 | **Runtime Playwright** | Page rendue en navigateur headless : LCP, FCP, TTI, console errors, ressources bloquantes |
 | **Lighthouse** | Scores de performance, accessibilité, bonnes pratiques et SEO via Lighthouse headless |
+| **Mozilla Observatory** | Score de sécurité HTTP Mozilla Observatory + détail des en-têtes/politiques en échec (CSP, HSTS, X-Content-Type-Options…) |
+| **SSL / TLS** | Configuration TLS via SSL Labs : protocoles supportés, certificat, qualité de la chaîne |
+| **OWASP ZAP** | Analyse de vulnérabilités OWASP ZAP (déduplication et filtrage des faux positifs) |
+| **Stack technique** | CMS (WordPress, Shopify…), frameworks (Next.js, Nuxt, React, Vue…), CDN Cloudflare — mis en cache par domaine |
 
 Chaque point détecté est pondéré, priorisé par niveau de sévérité (critique / important / info) et accompagné d'une recommandation concrète.
 
@@ -35,9 +38,9 @@ apps/
 ```
 
 ### api-backend
-- Java avec [Plume](https://github.com/Coreoz/Plume) (Guice + Grizzly + Jersey + QueryDSL)
-- PostgreSQL
-- Orchestration du pipeline d'analyse : HTTP → HTML → Tech → Runtime → Lighthouse
+- Java 21 avec [Plume](https://github.com/Coreoz/Plume) (Guice + Grizzly + Jersey + QueryDSL)
+- MariaDB (via HikariCP + migrations Flyway)
+- Orchestration du pipeline d'analyse : HTTP → HTML → Runtime → Lighthouse → Observatory → SSL → ZAP (+ détection de stack technique mise en cache par domaine)
 - Calcul du score par module et score global
 - Génération des rapports accessibles via token unique (non indexable)
 
@@ -58,7 +61,7 @@ apps/
 ### Prérequis
 - Java 21+, Maven 3.9+
 - Node.js 20+
-- PostgreSQL
+- MariaDB
 - Docker (optionnel)
 
 ### Backend
@@ -67,7 +70,7 @@ apps/
 cd apps/api-backend
 # Configurer src/main/resources/application.conf
 mvn package
-java -cp "target/dist/api-backend/lib/*" com.dokar.argos.WebApplication
+java -cp "target/dist/api-backend/lib/*" com.dokor.argos.WebApplication
 # → http://localhost:8081
 ```
 
