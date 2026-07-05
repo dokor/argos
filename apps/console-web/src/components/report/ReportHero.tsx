@@ -111,10 +111,10 @@ export default function ReportHero({ report }: { report: Report }) {
           {/* Score ring */}
           <div className={s.scoreBlock}>
             <ScoreRing score={score}>
-              <text x={70} y={64} textAnchor="middle" fontSize={38} fontWeight={800} fill="#f8fafc" fontFamily="Inter,system-ui,sans-serif">
+              <text x={70} y={64} textAnchor="middle" fontSize={38} fontWeight={800} className={s.ringScore} fontFamily="Inter,system-ui,sans-serif">
                 {score}
               </text>
-              <text x={70} y={86} textAnchor="middle" fontSize={13} fill="#94a3b8" fontFamily="Inter,system-ui,sans-serif">
+              <text x={70} y={86} textAnchor="middle" fontSize={13} className={s.ringUnit} fontFamily="Inter,system-ui,sans-serif">
                 /100
               </text>
             </ScoreRing>
@@ -138,7 +138,7 @@ export default function ReportHero({ report }: { report: Report }) {
             </div>
           ))}
           <div className={s.stat}>
-            <div className={s.statValue} style={{ color: "#94a3b8" }}>
+            <div className={`${s.statValue} ${s.statTotalValue}`}>
               {issuesCount}
             </div>
             <div className={s.statLabel}>{th.issues}</div>

@@ -177,7 +177,7 @@ function ScoreRing({
         trackColor="#e2e8f0"
         ariaLabel={`${label}: ${value}/100`}
       >
-        <text x={36} y={40} textAnchor="middle" fontSize={15} fontWeight={700} fill="#0f172a">
+        <text x={36} y={40} textAnchor="middle" fontSize={15} fontWeight={700} className={s.ringValue}>
           {value}
         </text>
       </ScoreRingSvg>
