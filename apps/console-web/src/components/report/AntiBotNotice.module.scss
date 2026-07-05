@@ -1,0 +1,39 @@
+@use '../../styles/tokens' as t;
+
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: t.$space-3;
+  padding: t.$space-4 t.$space-5;
+  margin-bottom: t.$space-6;
+  border: 1px solid t.$border;
+  border-left: 3px solid t.$color-amber;
+  border-radius: t.$radius-md;
+  background: t.$surface-2;
+}
+
+.icon {
+  font-size: t.$text-2xl;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: t.$space-1;
+}
+
+.title {
+  margin: 0;
+  font-weight: 600;
+  font-size: t.$text-xl;
+  color: t.$text;
+}
+
+.description {
+  margin: 0;
+  font-size: t.$text-base;
+  line-height: 1.5;
+  color: t.$text-muted;
+}

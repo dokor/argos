@@ -310,6 +310,10 @@
     "metadata": {
       "title": "Rapport Argos"
     },
+    "antiBot": {
+      "title": "Analyse potentiellement partielle",
+      "description": "Ce site est protégé par une protection anti-bot : l'analyse a porté sur la page de challenge et certains résultats peuvent être incomplets. Ce blocage n'est pas imputé au score."
+    },
     "error": {
       "title": "Impossible de charger le rapport",
       "back": "Retour"

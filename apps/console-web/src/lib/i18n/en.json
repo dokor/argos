@@ -310,6 +310,10 @@
     "metadata": {
       "title": "Argos Report"
     },
+    "antiBot": {
+      "title": "Analysis may be partial",
+      "description": "This site is behind an anti-bot protection: the analysis ran against the challenge page and some results may be incomplete. This block is not counted against the score."
+    },
     "error": {
       "title": "Could not load the report",
       "back": "Back"

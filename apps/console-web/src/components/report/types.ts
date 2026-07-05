@@ -18,6 +18,8 @@ export type Report = {
   };
   issues: Issue[];
   tech?: TechSummary;
+  /** Présent uniquement si une protection anti-bot a été détectée (analyse partielle). */
+  antiBot?: { detected: boolean; vendor?: string | null } | null;
 };
 
 export type TechSummary = {

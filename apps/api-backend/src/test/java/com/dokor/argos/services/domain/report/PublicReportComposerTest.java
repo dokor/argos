@@ -19,6 +19,29 @@ class PublicReportComposerTest {
 
     private final PublicReportComposer composer = new PublicReportComposer();
 
+    // ---------------------------------------------------- anti-bot (issue #195)
+
+    @Test
+    void shouldExposeAntiBotWhenDetectedInMeta() {
+        AuditReportJson input = report(
+            List.of(module("http", Map.of())),
+            scoreOf(0.5),
+            Map.of("antiBotDetected", "true", "antiBotVendor", "cloudflare"));
+
+        ReportDto dto = composer.compose(input);
+
+        assertNotNull(dto.antiBot());
+        assertTrue(dto.antiBot().detected());
+        assertEquals("cloudflare", dto.antiBot().vendor());
+    }
+
+    @Test
+    void shouldNotExposeAntiBotWhenAbsent() {
+        AuditReportJson input = report(List.of(module("html", Map.of())), scoreOf(0.8));
+
+        assertNull(composer.compose(input).antiBot());
+    }
+
     // ------------------------------------------------------------------ helpers
 
     private static AuditCheckResult check(String key, AuditStatus status) {
