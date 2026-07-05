@@ -10,7 +10,10 @@
   position: sticky;
   top: 0;
   z-index: t.$z-sticky;
-  background: rgba(255, 255, 255, 0.9);
+  // Token théma-aware (issue #191) : la valeur codée en dur rgba(255,255,255,.9)
+  // laissait la barre blanche en thème sombre. $header-bg suit le thème (clair
+  // ≈ blanc translucide, sombre = navy translucide).
+  background: t.$header-bg;
   backdrop-filter: blur(12px);
   border-bottom: 1px solid t.$border-subtle;
 }
