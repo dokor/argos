@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -86,6 +87,31 @@ public class ObservatoryModuleAnalyzer implements AuditModuleAnalyzer {
             scoreStatus = AuditStatus.FAIL;
             scoreMessage = "Score de sécurité Observatory faible : " + score + "/100.";
         }
+        // Détail des tests échoués (en-têtes/politiques précis) pour une recommandation
+        // actionnable (issue #171). On ne l'appelle que lorsque le score pose problème
+        // (< 75) : inutile de solliciter l'API /tests quand tout va bien. Toute erreur
+        // de cet appel secondaire est absorbée (repli sur la reco générique) : elle ne
+        // doit jamais faire échouer le module ni dégrader le score.
+        String detailsUrl = nodeText(result, "details_url");
+        List<FailedTest> failedTests = List.of();
+        if (score >= 0 && score < 75) {
+            int scanId = firstInt(result, -1, "scan_id", "id");
+            if (scanId >= 0) {
+                try {
+                    failedTests = parseFailedTests(client.tests(scanId));
+                } catch (Exception e) {
+                    logger.warn("Observatory module: tests detail unavailable scanId={} error={}", scanId, e.getMessage());
+                }
+            }
+        }
+
+        Map<String, Object> scoreDetails = new LinkedHashMap<>();
+        if (score >= 0) scoreDetails.put("score", score);
+        if (!failedTests.isEmpty()) {
+            scoreDetails.put("failedPolicies", failedTests.stream().map(FailedTest::name).toList());
+        }
+        if (detailsUrl != null) scoreDetails.put("detailsUrl", detailsUrl);
+
         AuditCheckResult scoreCheck = AuditCheckResult.of(
             "observatory.score",
             "Score de sécurité Mozilla Observatory",
@@ -95,9 +121,9 @@ public class ObservatoryModuleAnalyzer implements AuditModuleAnalyzer {
             0.0, // weight filled later by ScoreEnricherService
             List.of(),
             score >= 0 ? score : null,
-            score >= 0 ? Map.of("score", score) : Map.of(),
+            scoreDetails,
             scoreMessage,
-            (score >= 0 && score < 75) ? "Corrigez les en-têtes et politiques de sécurité signalés par Mozilla Observatory." : null
+            buildScoreRecommendation(score, failedTests, detailsUrl)
         );
         // Scoring continu (anti-effet de falaise, cf. #100) : le score/100 pilote le ratio,
         // au lieu du seul palier PASS/WARN/FAIL. Uniquement quand le score est disponible.
@@ -150,6 +176,9 @@ public class ObservatoryModuleAnalyzer implements AuditModuleAnalyzer {
         data.put("testsPassed", testsPassed >= 0 ? testsPassed : null);
         data.put("testsFailed", testsFailed >= 0 ? testsFailed : null);
         data.put("testsQuantity", testsQuantity >= 0 ? testsQuantity : null);
+        if (!failedTests.isEmpty()) {
+            data.put("failedPolicies", failedTests.stream().map(FailedTest::name).toList());
+        }
 
         String summary = "hostname=" + hostname + " score=" + (score >= 0 ? score : "n/a") + " grade=" + grade;
         logger.info("Observatory module done: {}", summary);
@@ -201,5 +230,81 @@ public class ObservatoryModuleAnalyzer implements AuditModuleAnalyzer {
         if (failed >= 0) m.put("failed", failed);
         if (quantity >= 0) m.put("quantity", quantity);
         return m;
+    }
+
+    /** Un test Observatory en échec : {@code name} = clé stable de la règle, {@code description} = explication lisible. */
+    private record FailedTest(String name, String description) {}
+
+    /**
+     * Construit la recommandation de {@code observatory.score}. Quand des tests
+     * échoués sont connus, elle liste les points précis à corriger ; sinon elle
+     * reste générique. {@code null} si le score est bon (>= 75) ou indisponible.
+     */
+    private static String buildScoreRecommendation(int score, List<FailedTest> failedTests, String detailsUrl) {
+        if (score < 0 || score >= 75) return null;
+        String suffix = detailsUrl != null ? " Détails complets : " + detailsUrl : "";
+        if (!failedTests.isEmpty()) {
+            String items = failedTests.stream()
+                .map(FailedTest::description)
+                .collect(java.util.stream.Collectors.joining(" ; "));
+            return "Corrigez les en-têtes/politiques de sécurité signalés par Mozilla Observatory : " + items + "." + suffix;
+        }
+        return "Corrigez les en-têtes et politiques de sécurité signalés par Mozilla Observatory." + suffix;
+    }
+
+    /**
+     * Parse la réponse de {@code /tests} en liste des tests échoués. Parsing
+     * défensif : tolère une racine tableau ou objet (clé = nom du test) et des
+     * noms de champs variables ({@code name}, {@code score_description}…). Un test
+     * n'est retenu comme échoué que si {@code pass == false} explicitement.
+     */
+    private static List<FailedTest> parseFailedTests(JsonNode node) {
+        if (node == null || node.isNull()) return List.of();
+        List<FailedTest> out = new ArrayList<>();
+        if (node.isArray()) {
+            for (JsonNode el : node) addIfFailed(el, null, out);
+        } else if (node.isObject()) {
+            Iterator<Map.Entry<String, JsonNode>> it = node.fields();
+            while (it.hasNext()) {
+                Map.Entry<String, JsonNode> e = it.next();
+                addIfFailed(e.getValue(), e.getKey(), out);
+            }
+        }
+        return out;
+    }
+
+    private static void addIfFailed(JsonNode test, String keyName, List<FailedTest> out) {
+        if (test == null || !test.isObject()) return;
+        JsonNode passNode = test.get("pass");
+        // Champ pass absent/null => on ne présume pas l'échec (prudence).
+        boolean failed = passNode != null && !passNode.isNull() && !passNode.asBoolean(true);
+        if (!failed) return;
+        String name = firstText(test, "name");
+        if (name == null) name = keyName;
+        if (name == null) name = "test";
+        String desc = firstText(test, "score_description", "description", "result");
+        if (desc == null) desc = name;
+        out.add(new FailedTest(name, desc));
+    }
+
+    /** Premier champ textuel non vide parmi {@code fields}, ou {@code null}. */
+    private static String firstText(JsonNode node, String... fields) {
+        if (node == null) return null;
+        for (String f : fields) {
+            String v = nodeText(node, f);
+            if (v != null) return v;
+        }
+        return null;
+    }
+
+    /** Premier champ entier présent parmi {@code fields}, ou {@code defaultValue}. */
+    private static int firstInt(JsonNode node, int defaultValue, String... fields) {
+        if (node == null) return defaultValue;
+        for (String f : fields) {
+            if (node.has(f) && !node.get(f).isNull() && node.get(f).canConvertToInt()) {
+                return node.get(f).asInt(defaultValue);
+            }
+        }
+        return defaultValue;
     }
 }

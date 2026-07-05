@@ -57,4 +57,30 @@ public class ObservatoryClient {
             return objectMapper.readTree(response.body());
         });
     }
+
+    /**
+     * Récupère le détail des tests individuels d'un scan (en-têtes/politiques
+     * évalués, pass/fail, description). Utilisé pour produire des recommandations
+     * actionnables (issue #171). GET /tests?scan={scanId}.
+     */
+    public JsonNode tests(int scanId) throws Exception {
+        return ExternalServiceCall.timed(logger, "observatory-tests", "scan=" + scanId, () -> {
+            String url = API_BASE + "/tests?scan=" + scanId;
+
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .timeout(Duration.ofSeconds(30))
+                .header("User-Agent", "argos-auditor/1.0")
+                .GET()
+                .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                throw new RuntimeException("Observatory tests API returned HTTP " + response.statusCode() + " for scan=" + scanId);
+            }
+
+            return objectMapper.readTree(response.body());
+        });
+    }
 }
