@@ -1,0 +1,7 @@
+# Diagnostic uniquement : à appliquer temporairement avec le compose de production
+# pour vérifier si le profil seccomp Docker provoque le crash SIGTRAP de Chromium ARM64.
+# Ne pas utiliser en production sans profil seccomp minimal dédié.
+services:
+  lighthouse-service:
+    security_opt:
+      - seccomp=unconfined
