@@ -12,7 +12,6 @@ const CHROME_FLAGS = [
   "--headless",
   "--no-sandbox",
   "--disable-setuid-sandbox",
-  "--disable-dev-shm-usage",
   "--disable-gpu",
   "--disable-software-rasterizer",
   "--remote-debugging-address=127.0.0.1",
