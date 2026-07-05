@@ -57,7 +57,7 @@ function ScoreRing({ score }: { score: number }) {
       <circle
         cx={cx} cy={cy} r={r} fill="none"
         stroke={color} strokeWidth={strokeW}
-        strokeDasharray={`${dash} ${circ}`}
+        strokeDasharray={`${dash} ${circ - dash}`}
         strokeDashoffset={circ / 4}
         strokeLinecap="round"
         style={{ transition: "stroke-dasharray 0.6s ease" }}
