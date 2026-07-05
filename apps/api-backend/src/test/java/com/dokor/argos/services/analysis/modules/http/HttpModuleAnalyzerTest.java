@@ -270,6 +270,65 @@ class HttpModuleAnalyzerTest {
         return client;
     }
 
+    // -------------------------
+    // Détection anti-bot (issue #56)
+    // -------------------------
+
+    @Test
+    void analyze_detectsCloudflareChallengeAndDoesNotPenalize() throws Exception {
+        HttpModuleAnalyzer a = new HttpModuleAnalyzer(stubClient(
+            resp(403, "<html><title>Just a moment...</title></html>",
+                Map.of("cf-ray", List.of("abc123"), "server", List.of("cloudflare")),
+                HttpClient.Version.HTTP_2),
+            resp(404, "x"), resp(404, "x")));
+        AuditContext ctx = new AuditContext("https://example.com", "https://example.com", 0L);
+
+        AuditModuleResult result = a.analyze(ctx, LoggerFactory.getLogger("test"));
+
+        // Check anti-bot informatif émis.
+        AuditCheckResult antibot = checkByKey(result, "http.antibot.challenge");
+        assertEquals(AuditStatus.INFO, antibot.status());
+        assertEquals("cloudflare", antibot.value());
+        // Le statut 403 du challenge n'est PAS pénalisant (INFO au lieu de FAIL).
+        assertEquals(AuditStatus.INFO, checkByKey(result, "http.status_code").status());
+        // Flags exposés dans data.
+        assertEquals(true, result.data().get("antiBotDetected"));
+        assertEquals("cloudflare", result.data().get("antiBotVendor"));
+    }
+
+    @Test
+    void analyze_normalCloudflareSiteIsNotFlagged() throws Exception {
+        // CDN Cloudflare sur une 200 sans marqueur => pas de challenge (pas de faux positif).
+        HttpModuleAnalyzer a = new HttpModuleAnalyzer(stubClient(
+            resp(200, "<html><body>Bienvenue</body></html>",
+                Map.of("cf-ray", List.of("abc123"), "server", List.of("cloudflare")),
+                HttpClient.Version.HTTP_2),
+            resp(404, "x"), resp(404, "x")));
+        AuditContext ctx = new AuditContext("https://example.com", "https://example.com", 0L);
+
+        AuditModuleResult result = a.analyze(ctx, LoggerFactory.getLogger("test"));
+
+        assertEquals(false, result.data().get("antiBotDetected"));
+        assertEquals(AuditStatus.PASS, checkByKey(result, "http.status_code").status());
+    }
+
+    @Test
+    void detectAntiBot_genericChallengeByBodyMarkerAndStatus() {
+        assertEquals("generic",
+            HttpModuleAnalyzer.detectAntiBot(503, Map.of(), "Checking your browser before accessing the site"));
+    }
+
+    @Test
+    void detectAntiBot_normalSiteReturnsNull() {
+        assertNull(HttpModuleAnalyzer.detectAntiBot(200, Map.of("server", "nginx"), "<html><body>Hello</body></html>"));
+    }
+
+    @Test
+    void checkStatusCode_challengeIsInfoNotFail() {
+        assertEquals(AuditStatus.INFO, HttpModuleAnalyzer.checkStatusCode(403, true).status());
+        assertEquals(AuditStatus.FAIL, HttpModuleAnalyzer.checkStatusCode(403, false).status());
+    }
+
     @SuppressWarnings("unchecked")
     private static HttpResponse<String> resp(int status, String body) {
         HttpResponse<String> r = mock(HttpResponse.class);
