@@ -114,11 +114,37 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
 
         long durationMs = System.currentTimeMillis() - start;
 
+        // Détection d'une protection anti-bot (Cloudflare…) — issue #56 : on dégrade
+        // proprement (statut non pénalisant + check informatif) au lieu de compter le
+        // challenge comme un échec du site.
+        String antiBotVendor = detectAntiBot(lastStatus, lastHeaders, body);
+        if (antiBotVendor != null) {
+            logger.info("HTTP module: anti-bot challenge detected vendor={} status={}", antiBotVendor, lastStatus);
+        }
+
         // --- Construire les checks (indicateurs) ---
         List<AuditCheckResult> checks = new ArrayList<>();
 
-        // 1) Reachable / status code
-        checks.add(checkStatusCode(lastStatus));
+        // 1) Reachable / status code (non pénalisant si challenge anti-bot détecté)
+        checks.add(checkStatusCode(lastStatus, antiBotVendor != null));
+
+        // 1b) Protection anti-bot détectée (INFO, non scorable) — issue #56
+        if (antiBotVendor != null) {
+            checks.add(AuditCheckResult.of(
+                "http.antibot.challenge",
+                "Protection anti-bot détectée",
+                AuditStatus.INFO,
+                AuditSeverity.MEDIUM,
+                false,
+                0.0,
+                List.of(),
+                antiBotVendor,
+                Map.of("vendor", antiBotVendor, "statusCode", lastStatus),
+                "Le site est protégé par une protection anti-bot (" + antiBotVendor + ") : l'analyse a porté "
+                    + "sur la page de challenge et peut être partielle. Ce blocage n'est pas imputé au score du site.",
+                null
+            ));
+        }
 
         // 2) Redirect chain size
         checks.add(checkRedirectCount(redirectChain));
@@ -208,6 +234,10 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
         data.put("headers", lastHeaders);
         data.put("httpVersion", httpVersion);
         data.put("errors", errors);
+        data.put("antiBotDetected", antiBotVendor != null);
+        if (antiBotVendor != null) {
+            data.put("antiBotVendor", antiBotVendor);
+        }
         if (seoResources != null) {
             data.put("robotsTxtPresent", seoResources.robotsPresent());
             data.put("sitemapPresent", seoResources.sitemapPresent());
@@ -231,11 +261,31 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
     // Checks builders
     // -------------------------
 
-    private static AuditCheckResult checkStatusCode(int statusCode) {
+    static AuditCheckResult checkStatusCode(int statusCode, boolean antiBotChallenge) {
         AuditStatus status;
         AuditSeverity severity;
         String message;
         String recommendation = null;
+
+        // Protection anti-bot (Cloudflare…) : le statut renvoyé (403/503…) reflète le
+        // challenge, pas un défaut du site. On le rend INFO (donc non scorable) pour ne
+        // pas pénaliser injustement le site — issue #56. La détection est signalée par
+        // le check dédié http.antibot.challenge.
+        if (antiBotChallenge) {
+            return AuditCheckResult.of(
+                "http.status_code",
+                "Code de statut HTTP",
+                AuditStatus.INFO,
+                AuditSeverity.LOW,
+                false,
+                0.0,
+                List.of(),
+                statusCode,
+                Map.of("statusCode", statusCode, "antiBotChallenge", true),
+                "Statut HTTP " + statusCode + " renvoyé par une protection anti-bot : non imputé au site.",
+                null
+            );
+        }
 
         if (statusCode >= 200 && statusCode < 300) {
             status = AuditStatus.PASS;
@@ -271,6 +321,34 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
             message,
             recommendation
         );
+    }
+
+    /** Marqueurs textuels d'une page de challenge anti-bot (Cloudflare & génériques). */
+    private static final java.util.regex.Pattern ANTIBOT_BODY_MARKERS = java.util.regex.Pattern.compile(
+        "(?i)just a moment|cf-browser-verification|_cf_chl_opt|attention required|checking your browser");
+
+    /**
+     * Détecte une protection anti-bot / challenge (Cloudflare & co.) — issue #56.
+     * Retourne le fournisseur détecté ({@code "cloudflare"} / {@code "generic"}) ou
+     * {@code null}. On évite les faux positifs : un simple CDN Cloudflare (en-têtes
+     * {@code cf-ray} sur une 200 sans marqueur) n'est PAS un challenge.
+     */
+    static String detectAntiBot(int statusCode, Map<String, String> headers, String body) {
+        Map<String, String> h = headers != null ? headers : Map.of();
+        String server = h.getOrDefault("server", "").toLowerCase();
+        boolean cloudflare = h.containsKey("cf-ray") || h.containsKey("cf-mitigated") || server.contains("cloudflare");
+        boolean challengeStatus = statusCode == 403 || statusCode == 429 || statusCode == 503;
+        boolean bodyMarker = body != null && ANTIBOT_BODY_MARKERS.matcher(body).find();
+
+        // Cloudflare : en-têtes CF + (statut de challenge OU marqueur de challenge).
+        if (cloudflare && (challengeStatus || bodyMarker)) {
+            return "cloudflare";
+        }
+        // Générique : marqueur explicite de challenge sur un statut de blocage.
+        if (bodyMarker && challengeStatus) {
+            return "generic";
+        }
+        return null;
     }
 
     private static AuditCheckResult checkRedirectCount(List<String> chain) {
