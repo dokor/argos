@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "root": ".",
+  "sections": [
+    "stack",
+    "packages",
+    "modules",
+    "commands",
+    "conventions",
+    "entryPoints",
+    "sensitiveZones",
+    "adrs"
+  ],
+  "stack": {
+    "name": "argos",
+    "version": "0.0.0",
+    "moduleType": "module",
+    "engines": {},
+    "dependencies": [],
+    "devDependencies": [
+      "@alelouet/ai-delivery-engine"
+    ]
+  },
+  "packages": [],
+  "modules": [],
+  "commands": [
+    {
+      "name": "ade:backlog",
+      "script": "ade backlog:run brief.md"
+    },
+    {
+      "name": "ade:issues",
+      "script": "gh issue list --repo dokor/argos --state open --json number,title,labels --limit 50"
+    },
+    {
+      "name": "ade:prompt-po",
+      "script": "ade prompt:po brief.md"
+    },
+    {
+      "name": "ade:specialists",
+      "script": "ade prompt:specialists"
+    },
+    {
+      "name": "ade:status",
+      "script": "ade project:status"
+    }
+  ],
+  "conventions": [],
+  "entryPoints": [],
+  "sensitiveZones": [
+    ".env*",
+    "**/*.key",
+    "**/*.pem",
+    "**/secrets.*"
+  ],
+  "adrs": [],
+  "fingerprint": "116416aff8bb633fa35d09fdc0cf923a27ea610204f621dc65dba8c1d41a1d85"
+}
