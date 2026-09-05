@@ -1,3 +1,7 @@
 .idea/
 node_modules/
-outputs/
+outputs/*
+!outputs/context/
+outputs/context/*
+!outputs/context/context.json
+!outputs/context/context.md
