@@ -93,17 +93,21 @@ public class CodexSummaryClient {
         input.put("priorities", report.summary().priorities());
         input.put("issues", report.issues().stream()
             .limit(12)
-            .map(issue -> Map.of(
-                "severity", issue.severity(),
-                "category", issue.categoryKey(),
-                "title", issue.title(),
-                "impact", issue.impact(),
-                "recommendation", issue.recommendation()
-            ))
+            .map(this::issueInput)
             .toList());
         input.put("tech", report.tech());
         input.put("antiBot", report.antiBot());
         return input;
+    }
+
+    private Map<String, Object> issueInput(ReportDto.Issue issue) {
+        Map<String, Object> value = new LinkedHashMap<>();
+        value.put("severity", issue.severity());
+        value.put("category", issue.categoryKey());
+        value.put("title", issue.title());
+        value.put("impact", issue.impact());
+        value.put("recommendation", issue.recommendation());
+        return value;
     }
 
     private String buildPrompt(String reportJson) {
