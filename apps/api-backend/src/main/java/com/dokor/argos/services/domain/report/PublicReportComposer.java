@@ -106,7 +106,7 @@ public class PublicReportComposer {
             url,
             new ReportDto.Site(siteTitle, null),
             new ReportDto.Scores(global100, completeness, byCategoryWithCounts),
-            new ReportDto.Summary(oneLiner, priorities),
+            new ReportDto.Summary(oneLiner, priorities, null),
             issues,
             tech,
             antiBot
