@@ -23,6 +23,7 @@ public class ReportPublishService {
     private final AuditReportDao auditReportDao;
     private final TokenService tokenService;
     private final PublicReportComposer composer;
+    private final AiReportSummaryService aiReportSummaryService;
     private final ObjectMapper objectMapper;
 
     @Inject
@@ -30,11 +31,13 @@ public class ReportPublishService {
         AuditReportDao auditReportDao,
         TokenService tokenService,
         PublicReportComposer composer,
+        AiReportSummaryService aiReportSummaryService,
         ObjectMapper objectMapper
     ) {
         this.auditReportDao = auditReportDao;
         this.tokenService = tokenService;
         this.composer = composer;
+        this.aiReportSummaryService = aiReportSummaryService;
         this.objectMapper = objectMapper;
     }
 
@@ -54,7 +57,7 @@ public class ReportPublishService {
 
         try {
             // 2) Build public DTO
-            ReportDto dto = composer.compose(internalReport);
+            ReportDto dto = aiReportSummaryService.enrich(composer.compose(internalReport));
 
             // Option : injecter title/logo si tu les as déjà ailleurs
             // dto.site.title/logoUrl seront enrichis plus tard
