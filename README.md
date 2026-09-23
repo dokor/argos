@@ -43,6 +43,7 @@ apps/
 - Orchestration du pipeline d'analyse : HTTP → HTML → Runtime → Lighthouse → Observatory → SSL → ZAP (+ détection de stack technique mise en cache par domaine)
 - Calcul du score par module et score global
 - Génération des rapports accessibles via token unique (non indexable)
+- Synthèse exécutive optionnelle générée par Codex à partir des résultats Argos normalisés
 
 ### console-web
 - Next.js 16 (App Router), TypeScript, React 19
@@ -109,3 +110,14 @@ Argos est distribué sous **[Business Source License 1.1](./LICENSE)** (BSL 1.1)
 Copyright © 2026 [Antoine LE LOUËT](https://github.com/antoinelelouet). Pour un usage commercial hors périmètre, ou une licence alternative, contactez le titulaire.
 
 Voir [`CONTRIBUTING.md`](./CONTRIBUTING.md) pour les règles de contribution et de redistribution.
+
+
+## Runtime Codex partagé
+
+Argos utilise le runtime Docker Codex commun du homelab pour la synthèse des rapports :
+
+```text
+ghcr.io/dokor/codex-runtime:0.156.1-r1
+```
+
+Le service Codex reste isolé du backend et des sources. Docker peut réutiliser la même couche que le worker ADE et le bridge n8n, sans partager leurs processus ni leurs workspaces.
