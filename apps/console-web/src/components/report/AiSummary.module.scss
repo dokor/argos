@@ -1,0 +1,57 @@
+@use '../../styles/tokens' as t;
+
+.section {
+  background: t.$surface;
+  border: 1px solid t.$border;
+  border-radius: t.$radius-2xl;
+  padding: t.$space-6;
+  box-shadow: t.$shadow-sm;
+}
+
+.eyebrow {
+  color: t.$text-muted;
+  font-size: t.$text-xs;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: t.$space-2;
+}
+
+.title {
+  color: t.$text;
+  font-size: t.$text-2xl;
+  line-height: 1.25;
+  margin: 0 0 t.$space-3;
+}
+
+.summary {
+  color: t.$text-muted;
+  font-size: t.$text-base;
+  line-height: 1.7;
+  margin: 0;
+}
+
+.points {
+  margin-top: t.$space-5;
+}
+
+.pointsTitle {
+  color: t.$text;
+  font-size: t.$text-base;
+  margin: 0 0 t.$space-2;
+}
+
+.list {
+  color: t.$text-muted;
+  display: grid;
+  gap: t.$space-2;
+  margin: 0;
+  padding-left: t.$space-5;
+  line-height: 1.6;
+}
+
+.note {
+  color: t.$text-subtle;
+  font-size: t.$text-xs;
+  margin: t.$space-5 0 0;
+}
