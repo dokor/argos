@@ -134,7 +134,13 @@ public class PlaywrightRuntimeClient {
         Integer status5xx,
         Long totalBytesEstimated,
         Map<String, Integer> byType,
-        java.util.List<LargestResource> topLargest
+        java.util.List<LargestResource> topLargest,
+        // Champs optionnels ajoutés par playwright-service (issue #247). Null
+        // signifie qu'un ancien producteur est encore déployé.
+        Integer failedRequestsFirstParty,
+        Integer failedRequestsThirdParty,
+        Integer status5xxFirstParty,
+        Integer status5xxThirdParty
     ) {
     }
 

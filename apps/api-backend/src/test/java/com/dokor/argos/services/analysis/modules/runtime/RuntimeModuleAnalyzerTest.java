@@ -88,6 +88,35 @@ class RuntimeModuleAnalyzerTest {
         assertEquals(AuditStatus.WARN, consoleErrorsStatus(20, 3));
     }
 
+    @Test
+    void networkErrors_thirdPartyOnlyDoNotAffectScore() throws Exception {
+        AuditModuleResult result = analyze(response(0, -1, 2, 3, 0, 0, 2, 3));
+
+        assertEquals(AuditStatus.PASS, checkStatus(result, "runtime.network.5xx"));
+        assertEquals(AuditStatus.PASS, checkStatus(result, "runtime.network.failed_requests"));
+        assertEquals(AuditStatus.WARN, checkStatus(result, "runtime.network.third_party_errors"));
+        assertEquals(5, checkValue(result, "runtime.network.third_party_errors"));
+    }
+
+    @Test
+    void networkErrors_firstPartyAndMixedErrorsDriveOnlyFirstPartyChecks() throws Exception {
+        AuditModuleResult result = analyze(response(0, -1, 3, 2, 1, 2, 2, 0));
+
+        assertEquals(AuditStatus.FAIL, checkStatus(result, "runtime.network.5xx"));
+        assertEquals(AuditStatus.WARN, checkStatus(result, "runtime.network.failed_requests"));
+        assertEquals(2, checkValue(result, "runtime.network.5xx"));
+        assertEquals(1, checkValue(result, "runtime.network.failed_requests"));
+        assertEquals(2, checkValue(result, "runtime.network.third_party_errors"));
+    }
+
+    @Test
+    void networkErrors_legacyProducerFallsBackToAggregateCounters() throws Exception {
+        AuditModuleResult result = analyze(response(0, -1, 1, 1, null, null, null, null));
+
+        assertEquals(AuditStatus.FAIL, checkStatus(result, "runtime.network.5xx"));
+        assertEquals(AuditStatus.WARN, checkStatus(result, "runtime.network.failed_requests"));
+    }
+
     private static AuditStatus consoleErrorsStatus(int consoleErrors) throws Exception {
         return consoleErrorsStatusOf(response(consoleErrors));
     }
@@ -97,15 +126,26 @@ class RuntimeModuleAnalyzerTest {
     }
 
     private static AuditStatus consoleErrorsStatusOf(PlaywrightRuntimeClient.RuntimeAnalyzeResponse resp) throws Exception {
+        return checkStatus(analyze(resp), "runtime.console.errors");
+    }
+
+    private static AuditModuleResult analyze(PlaywrightRuntimeClient.RuntimeAnalyzeResponse resp) throws Exception {
         PlaywrightRuntimeClient client = mock(PlaywrightRuntimeClient.class);
         when(client.analyzeRuntime(anyString())).thenReturn(resp);
+        return new RuntimeModuleAnalyzer(client).analyze(ctx(), LoggerFactory.getLogger("test"));
+    }
 
-        AuditModuleResult res = new RuntimeModuleAnalyzer(client)
-            .analyze(ctx(), LoggerFactory.getLogger("test"));
-
-        return res.checks().stream()
-            .filter(c -> "runtime.console.errors".equals(c.key()))
+    private static AuditStatus checkStatus(AuditModuleResult result, String key) {
+        return result.checks().stream()
+            .filter(c -> key.equals(c.key()))
             .map(AuditCheckResult::status)
+            .findFirst().orElseThrow();
+    }
+
+    private static Object checkValue(AuditModuleResult result, String key) {
+        return result.checks().stream()
+            .filter(c -> key.equals(c.key()))
+            .map(AuditCheckResult::value)
             .findFirst().orElseThrow();
     }
 
@@ -115,13 +155,23 @@ class RuntimeModuleAnalyzerTest {
     }
 
     private static PlaywrightRuntimeClient.RuntimeAnalyzeResponse response(int consoleErrors, int firstParty) {
+        return response(consoleErrors, firstParty, 0, 0, 0, 0, 0, 0);
+    }
+
+    private static PlaywrightRuntimeClient.RuntimeAnalyzeResponse response(
+        int consoleErrors, int firstParty, int failedRequests, int status5xx,
+        Integer failedRequestsFirstParty, Integer status5xxFirstParty,
+        Integer failedRequestsThirdParty, Integer status5xxThirdParty
+    ) {
         return new PlaywrightRuntimeClient.RuntimeAnalyzeResponse(
             "https://example.com",
             "https://example.com",
             new PlaywrightRuntimeClient.Timings(100L, 200L),
             new PlaywrightRuntimeClient.Console(consoleErrors, 0, List.of(), firstParty < 0 ? null : firstParty),
             new PlaywrightRuntimeClient.JsErrors(0, List.of()),
-            new PlaywrightRuntimeClient.Network(10, 0, 0, 0, 1_000L, Map.of(), List.of())
+            new PlaywrightRuntimeClient.Network(
+                10, failedRequests, 0, status5xx, 1_000L, Map.of(), List.of(),
+                failedRequestsFirstParty, failedRequestsThirdParty, status5xxFirstParty, status5xxThirdParty)
         );
     }
 }
