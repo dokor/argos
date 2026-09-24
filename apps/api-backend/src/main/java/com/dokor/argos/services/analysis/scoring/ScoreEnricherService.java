@@ -61,7 +61,10 @@ public class ScoreEnricherService {
         }
 
         ScorePolicy.ScoreRule rule = scorePolicy.ruleFor(moduleId, check.key());
-        List<String> tags = mergeTags(check.tags(), rule.tags(), List.of(moduleId));
+        List<String> category = scorePolicy.businessCategoryFor(moduleId, check.key(), check.tags())
+            .map(List::of)
+            .orElseGet(List::of);
+        List<String> tags = mergeTags(check.tags(), rule.tags(), category, List.of(moduleId));
 
         // si la policy dit non scoré => poids 0
         boolean scorable = rule.scorable();

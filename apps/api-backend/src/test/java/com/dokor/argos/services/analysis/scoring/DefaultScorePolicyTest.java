@@ -2,6 +2,8 @@ package com.dokor.argos.services.analysis.scoring;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -159,6 +161,14 @@ class DefaultScorePolicyTest {
         assertEquals(0.0, rule.weight());
     }
 
+    @Test
+    void lighthouseNativeCategoriesShouldMapToDisplayedBusinessDomains() {
+        assertEquals("a11y", policy.businessCategoryFor(
+            "lighthouse", "lighthouse.audit.color-contrast", List.of("lighthouse", "accessibility")).orElseThrow());
+        assertEquals("security", policy.businessCategoryFor(
+            "lighthouse", "lighthouse.audit.no-vulnerable-libraries", List.of("lighthouse", "best-practices")).orElseThrow());
+    }
+
     // ------------------------------------------------------------------ HTTP / HTML / Tech
 
     @Test
@@ -197,6 +207,14 @@ class DefaultScorePolicyTest {
         assertTrue(rule.scorable());
         assertEquals(3.0, rule.weight());
         assertTrue(rule.tags().contains("seo"));
+    }
+
+    @Test
+    void structuralHttpFallbackShouldRemainVisibleUnderPerformance() {
+        ScorePolicy.ScoreRule rule = policy.ruleFor("http", "http.future.structure_check");
+        assertTrue(rule.scorable());
+        assertTrue(rule.tags().contains("performance"));
+        assertEquals("performance", policy.businessCategoryFor("http", "http.future.structure_check", List.of()).orElseThrow());
     }
 
     /** Ex-V4 : divulgation de version logicielle scorable sous security (issue #158). */

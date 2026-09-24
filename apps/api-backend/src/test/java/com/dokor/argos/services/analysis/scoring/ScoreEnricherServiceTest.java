@@ -91,4 +91,24 @@ class ScoreEnricherServiceTest {
         assertTrue(r.tags().contains("custom"));
         assertTrue(r.tags().contains("http"));
     }
+
+    @Test
+    void lighthouseDetailedAccessibilityAuditIsVisibleUnderA11y() {
+        AuditCheckResult r = enrichOne("lighthouse", check(
+            "lighthouse.audit.color-contrast", AuditStatus.FAIL, List.of("lighthouse", "accessibility")));
+
+        assertTrue(r.scorable());
+        assertEquals(0.0, r.weight());
+        assertTrue(r.tags().contains("a11y"));
+        assertTrue(r.tags().contains("lighthouse"));
+    }
+
+    @Test
+    void lighthouseDetailedBestPracticesAuditIsVisibleUnderSecurity() {
+        AuditCheckResult r = enrichOne("lighthouse", check(
+            "lighthouse.audit.no-vulnerable-libraries", AuditStatus.FAIL, List.of("lighthouse", "best-practices")));
+
+        assertTrue(r.tags().contains("security"));
+        assertTrue(r.tags().contains("lighthouse"));
+    }
 }
