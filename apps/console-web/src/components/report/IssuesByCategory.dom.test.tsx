@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import IssuesByCategory from "./IssuesByCategory";
 import type { Report } from "./types";
 
@@ -30,8 +30,8 @@ describe("IssuesByCategory", () => {
   it("renders every issue in its canonical business category", () => {
     render(<IssuesByCategory report={report} />);
 
-    expect(screen.getByText("HTTP status")).toBeInTheDocument();
-    expect(screen.getByText("Color contrast")).toBeInTheDocument();
-    expect(screen.getByText("Libraries")).toBeInTheDocument();
+    expect(within(document.querySelector("#cat-performance")!).getByText("HTTP status")).toBeInTheDocument();
+    expect(within(document.querySelector("#cat-a11y")!).getByText("Color contrast")).toBeInTheDocument();
+    expect(within(document.querySelector("#cat-security")!).getByText("Libraries")).toBeInTheDocument();
   });
 });

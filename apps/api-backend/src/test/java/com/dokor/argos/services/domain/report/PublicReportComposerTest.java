@@ -258,9 +258,17 @@ class PublicReportComposerTest {
 
         ReportDto dto = composer.compose(input);
 
-        assertEquals(List.of("performance"), dto.issues().get(0).categoryKeys());
-        assertEquals(List.of("a11y"), dto.issues().get(1).categoryKeys());
-        assertEquals(List.of("security"), dto.issues().get(2).categoryKeys());
+        assertEquals(List.of("performance"), issueCategoryKeys(dto, "http.status_code"));
+        assertEquals(List.of("a11y"), issueCategoryKeys(dto, "lighthouse.audit.color-contrast"));
+        assertEquals(List.of("security"), issueCategoryKeys(dto, "lighthouse.audit.no-vulnerable-libraries"));
+    }
+
+    private static List<String> issueCategoryKeys(ReportDto dto, String issueId) {
+        return dto.issues().stream()
+            .filter(issue -> issueId.equals(issue.id()))
+            .findFirst()
+            .orElseThrow(() -> new AssertionError("Issue not found: " + issueId))
+            .categoryKeys();
     }
 
     // ------------------------------------------------------------------ score
