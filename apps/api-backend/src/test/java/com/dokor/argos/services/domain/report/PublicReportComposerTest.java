@@ -246,6 +246,31 @@ class PublicReportComposerTest {
         assertFalse(catKeys.contains("ssl"), "l'outil ssl ne doit pas être une catégorie (#197)");
     }
 
+    @Test
+    void canonicalBusinessTagsShouldKeepFallbackAndLighthouseIssuesVisible() {
+        AuditModuleResult module = module("lighthouse", Map.of(),
+            checkWithTags("http.status_code", AuditStatus.FAIL, List.of("performance", "http")),
+            checkWithTags("lighthouse.audit.color-contrast", AuditStatus.FAIL, List.of("a11y", "lighthouse", "accessibility")),
+            checkWithTags("lighthouse.audit.no-vulnerable-libraries", AuditStatus.FAIL, List.of("security", "lighthouse", "best-practices"))
+        );
+        AuditReportJson input = report(List.of(module), scoreOf(0.4,
+            "performance", "0.4", "a11y", "0.4", "security", "0.4"));
+
+        ReportDto dto = composer.compose(input);
+
+        assertEquals(List.of("performance"), issueCategoryKeys(dto, "http.status_code"));
+        assertEquals(List.of("a11y"), issueCategoryKeys(dto, "lighthouse.audit.color-contrast"));
+        assertEquals(List.of("security"), issueCategoryKeys(dto, "lighthouse.audit.no-vulnerable-libraries"));
+    }
+
+    private static List<String> issueCategoryKeys(ReportDto dto, String issueId) {
+        return dto.issues().stream()
+            .filter(issue -> issueId.equals(issue.id()))
+            .findFirst()
+            .orElseThrow(() -> new AssertionError("Issue not found: " + issueId))
+            .categoryKeys();
+    }
+
     // ------------------------------------------------------------------ score
 
     @Test

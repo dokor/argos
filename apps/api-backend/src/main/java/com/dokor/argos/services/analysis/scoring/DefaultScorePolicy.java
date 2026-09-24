@@ -72,12 +72,25 @@ public class DefaultScorePolicy implements ScorePolicy {
         map.put("http.security.x_frame_options",       rule(true, 6,  "security", "http"));
         map.put("http.security.x_content_type_options", rule(true, 4, "security", "http"));
         map.put("http.security.referrer_policy",       rule(true, 3,  "security", "http"));
+        map.put("http.security.permissions_policy",    rule(true, 6,  "security", "http"));
+        map.put("http.security.cookie_flags",          rule(true, 6,  "security", "http"));
+
+        // HTTP structure : faute de catégorie Reliability dans le produit, ces
+        // signaux d'accessibilité et de chemin de chargement sont rattachés à Performance.
+        map.put("http.status_code",              rule(true, 2, "performance", "http"));
+        map.put("http.redirect.count",           rule(true, 2, "performance", "http"));
+        map.put("http.final_url.https",          rule(true, 2, "security", "http"));
+        map.put("http.redirect.to_https",        rule(true, 2, "security", "http"));
+        map.put("http.headers.content_type",     rule(true, 2, "seo", "http"));
 
         // ----- SEO (HTML) -----
         map.put("html.title",                    rule(true, 4, "seo", "html"));
         map.put("html.meta.description.present", rule(true, 3, "seo", "html"));
         map.put("html.link.canonical.present",   rule(true, 2, "seo", "html"));
         map.put("html.h1.count",                 rule(true, 3, "seo", "html"));
+        map.put("html.meta.viewport.present",    rule(true, 2, "a11y", "html"));
+        map.put("html.doctype.html5",            rule(true, 1, "a11y", "html"));
+        map.put("html.social.meta",              rule(true, 1, "seo", "html"));
 
         // ----- SEO (ressources : robots.txt / sitemap.xml, émises par le module HTTP) -----
         map.put("http.seo.robots_txt", rule(true, 2, "seo", "http"));
@@ -112,6 +125,7 @@ public class DefaultScorePolicy implements ScorePolicy {
         map.put("ssl.certificate.expiry_days", rule(true, 3, "security", "ssl"));
         map.put("ssl.protocols.tls13",        rule(true, 2,  "security", "ssl"));
         map.put("ssl.protocols.tls12",        rule(true, 2,  "security", "ssl"));
+        map.put("ssl.protocols.legacy_disabled", rule(true, 3, "security", "ssl"));
         map.put("ssl.available",              rule(false, 0, "ssl")); // stub dispo (WARN)
 
         // ----- Observatory (Mozilla) -----
@@ -161,8 +175,9 @@ public class DefaultScorePolicy implements ScorePolicy {
             return rule(true, 6, "security", "http");
         }
         if (checkKey.startsWith("http.")) {
-            // HTTP "structure" (redirect count, status, timings) => http / reliability
-            return rule(true, 2, "http");
+            // Les futures clés HTTP restent expliquées sous Performance jusqu'à
+            // l'éventuelle introduction d'un domaine Reliability.
+            return rule(true, 2, "performance", "http");
         }
 
         if (checkKey.startsWith("html.meta.") || checkKey.startsWith("html.link.canonical")) {
@@ -172,7 +187,7 @@ public class DefaultScorePolicy implements ScorePolicy {
             return rule(true, 2, "a11y", "html");
         }
         if (checkKey.startsWith("html.")) {
-            return rule(true, 1, "html");
+            return rule(true, 1, "seo", "html");
         }
 
         if (checkKey.startsWith("lighthouse.")) {
@@ -204,6 +219,24 @@ public class DefaultScorePolicy implements ScorePolicy {
 
         // unknown => non scoré par défaut (évite de polluer le score)
         return rule(false, 0, "misc");
+    }
+
+    @Override
+    public Optional<String> businessCategoryFor(String moduleId, String checkKey, List<String> sourceTags) {
+        if (checkKey != null && checkKey.startsWith("lighthouse.audit.")) {
+            if (sourceTags == null) return Optional.empty();
+            return sourceTags.stream()
+                .map(String::trim)
+                .map(category -> switch (category) {
+                    case "accessibility" -> "a11y";
+                    case "best-practices" -> "security";
+                    case "performance", "security", "seo", "a11y" -> category;
+                    default -> null;
+                })
+                .filter(Objects::nonNull)
+                .findFirst();
+        }
+        return ScorePolicy.super.businessCategoryFor(moduleId, checkKey, sourceTags);
     }
 
     private static ScoreRule rule(boolean scorable, double weight, String... tags) {
