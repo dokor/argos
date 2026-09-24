@@ -84,6 +84,14 @@ public class RuntimeModuleAnalyzer implements AuditModuleAnalyzer {
         int jsErrors = safeInt(r.jsErrors() != null ? r.jsErrors().count() : null);
         int failedReq = safeInt(r.network() != null ? r.network().failedRequests() : null);
         int s5xx = safeInt(r.network() != null ? r.network().status5xx() : null);
+        int firstPartyFailedReq = firstPartyOrLegacy(
+            r.network() != null ? r.network().failedRequestsFirstParty() : null, failedReq);
+        int thirdPartyFailedReq = thirdPartyOrDerived(
+            r.network() != null ? r.network().failedRequestsThirdParty() : null, failedReq, firstPartyFailedReq);
+        int firstParty5xx = firstPartyOrLegacy(
+            r.network() != null ? r.network().status5xxFirstParty() : null, s5xx);
+        int thirdParty5xx = thirdPartyOrDerived(
+            r.network() != null ? r.network().status5xxThirdParty() : null, s5xx, firstParty5xx);
         int reqCount = safeInt(r.network() != null ? r.network().requests() : null);
         long bytes = safeLong(r.network() != null ? r.network().totalBytesEstimated() : null);
 
@@ -134,26 +142,43 @@ public class RuntimeModuleAnalyzer implements AuditModuleAnalyzer {
         checks.add(AuditCheckResult.of(
             "runtime.network.5xx",
             "HTTP 5xx responses",
-            s5xx == 0 ? AuditStatus.PASS : AuditStatus.FAIL,
-            s5xx == 0 ? AuditSeverity.LOW : AuditSeverity.HIGH,
+            firstParty5xx == 0 ? AuditStatus.PASS : AuditStatus.FAIL,
+            firstParty5xx == 0 ? AuditSeverity.LOW : AuditSeverity.HIGH,
             false, 0.0, List.of("runtime"),
-            s5xx,
+            firstParty5xx,
             safeList(r.network() != null ? r.network().topLargest() : null) != null ? Map.of("topLargest", safeList(r.network() != null ? r.network().topLargest() : null)) : Map.of(),
-            s5xx == 0 ? "Aucune réponse 5xx observée." : (s5xx + " réponse(s) 5xx observée(s)."),
-            s5xx == 0 ? null : "Analyser les endpoints en erreur (logs serveur, timeouts, config CDN)."
+            firstParty5xx == 0 ? "Aucune réponse 5xx de votre site observée." : (firstParty5xx + " réponse(s) 5xx de votre site observée(s)."),
+            firstParty5xx == 0 ? null : "Analyser les endpoints en erreur (logs serveur, timeouts, config CDN)."
         ));
 
         // 4) Request failures
         checks.add(AuditCheckResult.of(
             "runtime.network.failed_requests",
             "Failed network requests",
-            failedReq == 0 ? AuditStatus.PASS : AuditStatus.WARN,
-            failedReq == 0 ? AuditSeverity.LOW : AuditSeverity.MEDIUM,
+            firstPartyFailedReq == 0 ? AuditStatus.PASS : AuditStatus.WARN,
+            firstPartyFailedReq == 0 ? AuditSeverity.LOW : AuditSeverity.MEDIUM,
             false, 0.0, List.of("runtime"),
-            failedReq,
+            firstPartyFailedReq,
             Map.of(),
-            failedReq == 0 ? "Aucune requête réseau en échec." : (failedReq + " requête(s) réseau en échec."),
-            failedReq == 0 ? null : "Vérifier les ressources bloquées (CORS, DNS, timeouts, adblock, mixed content)."
+            firstPartyFailedReq == 0 ? "Aucune requête réseau de votre site en échec." : (firstPartyFailedReq + " requête(s) réseau de votre site en échec."),
+            firstPartyFailedReq == 0 ? null : "Vérifier les ressources bloquées (CORS, DNS, timeouts, adblock, mixed content)."
+        ));
+
+        // Les incidents tiers sont utiles au diagnostic, mais ne doivent jamais
+        // modifier la note du site. Le poids zéro est explicite dans la policy.
+        int thirdPartyNetworkErrors = thirdPartyFailedReq + thirdParty5xx;
+        checks.add(AuditCheckResult.of(
+            "runtime.network.third_party_errors",
+            "Third-party network incidents",
+            thirdPartyNetworkErrors == 0 ? AuditStatus.PASS : AuditStatus.WARN,
+            AuditSeverity.LOW,
+            false, 0.0, List.of("runtime"),
+            thirdPartyNetworkErrors,
+            Map.of("failedRequests", thirdPartyFailedReq, "status5xx", thirdParty5xx),
+            thirdPartyNetworkErrors == 0
+                ? "Aucun incident réseau tiers observé."
+                : thirdPartyNetworkErrors + " incident(s) réseau tiers observé(s), non compté(s) dans votre score.",
+            thirdPartyNetworkErrors == 0 ? null : "Aucune action requise sur votre site ; vous pouvez vérifier le fournisseur tiers concerné."
         ));
 
         // 5) Request count
@@ -219,8 +244,12 @@ public class RuntimeModuleAnalyzer implements AuditModuleAnalyzer {
             data.put("network", Map.of(
                 "requests", reqCount,
                 "failedRequests", failedReq,
+                "failedRequestsFirstParty", firstPartyFailedReq,
+                "failedRequestsThirdParty", thirdPartyFailedReq,
                 "status4xx", safeInt(r.network().status4xx()),
                 "status5xx", s5xx,
+                "status5xxFirstParty", firstParty5xx,
+                "status5xxThirdParty", thirdParty5xx,
                 "totalBytesEstimated", bytes,
                 "byType", r.network().byType() != null ? r.network().byType() : Map.of(),
                 "topLargest", safeList(r.network().topLargest())
@@ -231,7 +260,7 @@ public class RuntimeModuleAnalyzer implements AuditModuleAnalyzer {
             + " jsErrors=" + jsErrors
             + " req=" + reqCount
             + " bytes=~" + bytes
-            + " 5xx=" + s5xx;
+            + " 5xx=" + firstParty5xx + "/" + s5xx;
 
         logger.info("RUNTIME module done: {}", summary);
 
@@ -247,6 +276,16 @@ public class RuntimeModuleAnalyzer implements AuditModuleAnalyzer {
     private static int safeInt(Integer v) { return v == null ? 0 : v; }
     private static long safeLong(Long v) { return v == null ? 0L : v; }
     private static List<?> safeList(Object v) { return v instanceof List<?> l ? l : List.of(); }
+
+    private static int firstPartyOrLegacy(Integer firstParty, int total) {
+        if (firstParty == null) return total;
+        return Math.min(total, Math.max(0, firstParty));
+    }
+
+    private static int thirdPartyOrDerived(Integer thirdParty, int total, int firstParty) {
+        if (thirdParty == null) return Math.max(0, total - firstParty);
+        return Math.min(Math.max(0, total - firstParty), Math.max(0, thirdParty));
+    }
 
     private static List<Map<String, String>> sampleConsole(PlaywrightRuntimeClient.RuntimeAnalyzeResponse r, String type) {
         if (r.console() == null || r.console().samples() == null) return List.of();

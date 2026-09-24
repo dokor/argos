@@ -117,6 +117,8 @@ public class DefaultScorePolicy implements ScorePolicy {
         map.put("runtime.js.errors",                rule(true, 6, "performance", "runtime"));
         map.put("runtime.network.5xx",              rule(true, 8, "performance", "runtime"));
         map.put("runtime.network.failed_requests",  rule(true, 4, "performance", "runtime"));
+        // Signal diagnostique explicitement visible, mais sans impact sur la note.
+        map.put("runtime.network.third_party_errors", rule(true, 0, "performance", "runtime"));
         map.put("runtime.collect",                  rule(false, 0, "runtime")); // stub dispo (WARN)
 
         // ----- SSL / TLS (Qualys SSL Labs) -----

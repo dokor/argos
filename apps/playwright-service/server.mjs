@@ -1,5 +1,6 @@
 import express from 'express';
 import { chromium } from 'playwright';
+import { partitionNetworkErrors, registrableDomainForUrl } from './domain.mjs';
 
 const PORT = process.env.PORT || 3016;
 const SERVICE = 'playwright-service';
@@ -25,17 +26,6 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', service: 'playwright-service' });
 });
 
-// Domaine enregistrable (approx eTLD+1 : deux derniers labels) pour distinguer
-// les erreurs du site des erreurs de scripts tiers (issue #153).
-function registrableDomain(host) {
-  if (!host) return '';
-  const parts = host.split('.');
-  return parts.length <= 2 ? host : parts.slice(-2).join('.');
-}
-function hostOf(u) {
-  try { return registrableDomain(new URL(u).hostname); } catch { return ''; }
-}
-
 app.post('/analyze/runtime', async (req, res) => {
   const { url } = req.body ?? {};
   if (!url) return res.status(400).json({ error: 'Missing url' });
@@ -44,7 +34,7 @@ app.post('/analyze/runtime', async (req, res) => {
   const startedAt = Date.now();
   log('analyze.start', { url: safeUrl });
 
-  const pageDomain = hostOf(url);
+  const pageDomain = registrableDomainForUrl(url);
 
   const browser = await chromium.launch({ args: ['--no-sandbox'] });
   const context = await browser.newContext();
@@ -87,6 +77,8 @@ app.post('/analyze/runtime', async (req, res) => {
   let failedRequests = 0;
   let status4xx = 0;
   let status5xx = 0;
+  const failedRequestUrls = [];
+  const status5xxUrls = [];
   let totalBytesEstimated = 0;
 
   const byType = {};
@@ -105,13 +97,17 @@ app.post('/analyze/runtime', async (req, res) => {
 
   page.on('requestfailed', (request) => {
     failedRequests++;
+    failedRequestUrls.push(request.url());
   });
 
   page.on('response', async (response) => {
     const url = response.url();
     const status = response.status();
     if (status >= 400 && status < 500) status4xx++;
-    if (status >= 500) status5xx++;
+    if (status >= 500) {
+      status5xx++;
+      status5xxUrls.push(url);
+    }
 
     // bytes estimation (best effort)
     let bytes = 0;
@@ -153,8 +149,14 @@ app.post('/analyze/runtime', async (req, res) => {
     // si le site bloque, on renvoie ce qu’on a
     log('analyze.navigation_error', { url: safeUrl, error: String(e?.message ?? e).slice(0, 300) });
   } finally {
+    // page.url() reflète aussi la dernière URL atteinte si la navigation échoue
+    // après une redirection. La classification doit utiliser cette URL finale,
+    // et non l'URL initialement saisie par l'utilisateur.
+    finalUrl = page.url() || finalUrl;
     await browser.close();
   }
+
+  const networkOwnership = partitionNetworkErrors({ failedRequestUrls, status5xxUrls }, finalUrl);
 
   log('analyze.done', {
     url: safeUrl,
@@ -181,8 +183,12 @@ app.post('/analyze/runtime', async (req, res) => {
         ? Object.values(byType).reduce((a, b) => a + b, 0)
         : 0,
       failedRequests,
+      failedRequestsFirstParty: networkOwnership.failedRequests.firstParty,
+      failedRequestsThirdParty: networkOwnership.failedRequests.thirdParty,
       status4xx,
       status5xx,
+      status5xxFirstParty: networkOwnership.status5xx.firstParty,
+      status5xxThirdParty: networkOwnership.status5xx.thirdParty,
       totalBytesEstimated,
       byType,
       topLargest

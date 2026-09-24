@@ -110,6 +110,14 @@ class DefaultScorePolicyTest {
     }
 
     @Test
+    void thirdPartyRuntimeErrorsRemainVisibleButHaveZeroWeight() {
+        ScorePolicy.ScoreRule rule = policy.ruleFor("runtime", "runtime.network.third_party_errors");
+        assertTrue(rule.scorable());
+        assertEquals(0.0, rule.weight());
+        assertTrue(rule.tags().contains("performance"));
+    }
+
+    @Test
     void unknownRuntimeKeyFallsBackToPerformanceDomain() {
         ScorePolicy.ScoreRule rule = policy.ruleFor("runtime", "runtime.some.new.check");
         assertTrue(rule.scorable());
