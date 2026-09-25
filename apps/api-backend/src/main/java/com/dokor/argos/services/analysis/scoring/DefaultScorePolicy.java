@@ -15,11 +15,11 @@ import java.util.*;
  * rapports produits sont figés en base sous forme de JSON (avec leur {@code scoringVersion}) —
  * aucun code ne relit cette version pour rejouer un ancien audit. La chaîne d'héritage
  * n'apportait donc que de la dette : elle est ici aplatie en une classe unique intégrant
- * l'ensemble des deltas jusqu'à V8 inclus.
+ * l'ensemble des deltas jusqu'à V8 inclus. La V10 conserve ce catalogue et versionne
+ * le calcul global normalisé par domaine (issue #249 ; V9 est réservée au catalogue #248).
  * <p>
- * {@link #version()} est fixé à <b>8</b> pour préserver la continuité des
- * {@code scoringVersion} déjà écrits en base : un rapport marqué "8" reste cohérent
- * avec le barème appliqué par cette classe.
+ * {@link #version()} est fixé à <b>10</b> pour identifier les nouveaux rapports produits
+ * avec le calcul par domaine. Les rapports historiques conservent leur version stockée.
  *
  * <h3>Principes</h3>
  * <ul>
@@ -57,8 +57,8 @@ public class DefaultScorePolicy implements ScorePolicy {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultScorePolicy.class);
 
-    /** Fixé à 8 : continuité des {@code scoringVersion} déjà persistés (aplatissement V2→V8). */
-    private static final int VERSION = 8;
+    /** V10 réserve V9 au catalogue explicite (#248) et versionne les poids par domaine (#249). */
+    private static final int VERSION = 10;
 
     private final Map<String, ScoreRule> overrides;
 

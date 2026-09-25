@@ -23,7 +23,11 @@ import java.util.*;
  * </ul>
  * <p>
  * Les checks doivent avoir été préalablement enrichis par {@link ScoreEnricherService}.
- * Les résultats sont agrégés par module et par tag pour une vue granulaire.
+ * Chaque domaine métier est d'abord normalisé sur ses propres checks, puis le global est
+ * la somme des quatre domaines configurés à poids égal (25 % chacun). Lorsqu'un domaine
+ * n'est pas mesurable, son poids est redistribué entre les domaines mesurables. Sans
+ * aucun domaine mesurable, le global est {@code 0/0}, donc indisponible plutôt qu'en échec.
+ * Les résultats sont aussi agrégés par module et par tag pour une vue granulaire.
  *
  * @see AuditScoreReport
  * @see ScoreEnricherService
@@ -32,6 +36,13 @@ import java.util.*;
 public class ScoreService {
 
     private static final Logger logger = LoggerFactory.getLogger(ScoreService.class);
+    /** Décision produit #249 : quatre domaines égaux, puis renormalisation des mesurables. */
+    private static final Map<ScoreDomain, Double> CONFIGURED_DOMAIN_WEIGHTS = Map.of(
+        ScoreDomain.PERFORMANCE, 0.25,
+        ScoreDomain.SECURITY, 0.25,
+        ScoreDomain.SEO, 0.25,
+        ScoreDomain.A11Y, 0.25
+    );
 
     public AuditScoreReport compute(int scoringVersion, List<AuditModuleResult> modules) {
         logger.info("Computing score scoringVersion={} modules={}", scoringVersion, modules.size());
@@ -39,9 +50,10 @@ public class ScoreService {
         List<ScoredCheck> scoredChecks = new ArrayList<>();
         Map<String, double[]> byModule = new LinkedHashMap<>(); // id -> [score, max]
         Map<String, double[]> byTag = new LinkedHashMap<>();    // tag -> [score, max]
-
-        double globalScore = 0.0;
-        double globalMax = 0.0;
+        Map<ScoreDomain, double[]> byDomain = new EnumMap<>(ScoreDomain.class);
+        for (ScoreDomain domain : ScoreDomain.values()) {
+            byDomain.put(domain, new double[]{0.0, 0.0});
+        }
 
         for (AuditModuleResult module : modules) {
             String moduleId = module.id();
@@ -67,10 +79,6 @@ public class ScoreService {
                     continue; // non scoré
                 }
 
-                // global
-                globalScore += score;
-                globalMax += weight;
-
                 // module
                 double[] m = byModule.get(moduleId);
                 m[0] += score;
@@ -83,10 +91,28 @@ public class ScoreService {
                     t[0] += score;
                     t[1] += weight;
                 }
+
+                businessDomain(check.tags()).ifPresent(domain -> {
+                    double[] aggregate = byDomain.get(domain);
+                    aggregate[0] += score;
+                    aggregate[1] += weight;
+                });
             }
         }
 
-        ScoreAggregate global = ScoreAggregate.of("global", globalScore, globalMax);
+        List<ScoreAggregate> domainAgg = Arrays.stream(ScoreDomain.values())
+            .map(domain -> ScoreAggregate.of(domain.id(), byDomain.get(domain)[0], byDomain.get(domain)[1]))
+            .toList();
+        Map<String, Double> effectiveDomainWeights = effectiveDomainWeights(byDomain);
+        double globalRatio = domainAgg.stream()
+            .mapToDouble(domain -> domain.ratio() * effectiveDomainWeights.getOrDefault(domain.id(), 0.0))
+            .sum();
+        boolean hasMeasurableDomain = effectiveDomainWeights.values().stream().anyMatch(weight -> weight > 0.0);
+        // Le global est exprimé sur 100, indépendamment du nombre de checks disponibles.
+        // Sans domaine mesurable, 0/0 signale explicitement une note indisponible.
+        ScoreAggregate global = hasMeasurableDomain
+            ? ScoreAggregate.of("global", globalRatio * 100.0, 100.0)
+            : ScoreAggregate.of("global", 0.0, 0.0);
 
         List<ScoreAggregate> moduleAgg = byModule.entrySet().stream()
             .map(e -> ScoreAggregate.of(e.getKey(), e.getValue()[0], e.getValue()[1]))
@@ -108,6 +134,8 @@ public class ScoreService {
             global,
             moduleAgg,
             tagAgg,
+            domainAgg,
+            effectiveDomainWeights,
             scoredChecks
         );
     }
@@ -140,6 +168,30 @@ public class ScoreService {
             .map(String::trim)
             .filter(s -> !s.isBlank())
             .toList();
+    }
+
+    private static Optional<ScoreDomain> businessDomain(List<String> tags) {
+        Set<String> normalizedTags = new HashSet<>(safeTags(tags));
+        return Arrays.stream(ScoreDomain.values())
+            .filter(domain -> normalizedTags.contains(domain.id()))
+            .findFirst();
+    }
+
+    private static Map<String, Double> effectiveDomainWeights(Map<ScoreDomain, double[]> byDomain) {
+        double measurableWeight = CONFIGURED_DOMAIN_WEIGHTS.entrySet().stream()
+            .filter(entry -> byDomain.get(entry.getKey())[1] > 0.0)
+            .mapToDouble(Map.Entry::getValue)
+            .sum();
+
+        Map<String, Double> result = new LinkedHashMap<>();
+        for (ScoreDomain domain : ScoreDomain.values()) {
+            boolean measurable = byDomain.get(domain)[1] > 0.0;
+            double configuredWeight = CONFIGURED_DOMAIN_WEIGHTS.get(domain);
+            result.put(domain.id(), measurableWeight > 0.0 && measurable
+                ? configuredWeight / measurableWeight
+                : 0.0);
+        }
+        return Collections.unmodifiableMap(result);
     }
 
     private static double round2(double v) {
