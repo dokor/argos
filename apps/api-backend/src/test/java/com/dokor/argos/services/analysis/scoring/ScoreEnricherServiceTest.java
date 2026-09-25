@@ -35,8 +35,9 @@ class ScoreEnricherServiceTest {
     }
 
     @Test
-    void scoringVersionShouldBe8() {
-        assertEquals(8, enricher.scoringVersion());
+    void scoringVersionAndFingerprintExposeTheActiveRubric() {
+        assertEquals(9, enricher.scoringVersion());
+        assertTrue(enricher.scoringFingerprint().matches("[0-9a-f]{64}"));
     }
 
     @Test

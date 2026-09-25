@@ -4,6 +4,9 @@ import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 /**
@@ -15,16 +18,17 @@ import java.util.*;
  * rapports produits sont figés en base sous forme de JSON (avec leur {@code scoringVersion}) —
  * aucun code ne relit cette version pour rejouer un ancien audit. La chaîne d'héritage
  * n'apportait donc que de la dette : elle est ici aplatie en une classe unique intégrant
- * l'ensemble des deltas jusqu'à V8 inclus.
+ * l'ensemble des deltas jusqu'à V8 inclus. La V9 introduit le catalogue explicite
+ * et son empreinte déterministe.
  * <p>
- * {@link #version()} est fixé à <b>8</b> pour préserver la continuité des
- * {@code scoringVersion} déjà écrits en base : un rapport marqué "8" reste cohérent
+ * {@link #version()} est fixé à <b>9</b> pour préserver la continuité des
+ * {@code scoringVersion} déjà écrits en base : un rapport marqué "9" reste cohérent
  * avec le barème appliqué par cette classe.
  *
  * <h3>Principes</h3>
  * <ul>
- *   <li>Le poids et les tags d'un check sont déterminés <b>uniquement</b> par sa clé :
- *       (1) override exact, puis (2) fallback par préfixe. La sévérité sert à l'affichage,
+ *   <li>Le poids, l'applicabilité, le domaine métier et la provenance sont déterminés
+ *       <b>uniquement</b> par une clé exacte du catalogue. La sévérité sert à l'affichage,
  *       jamais au calcul du poids.</li>
  *   <li>INFO ⇒ non scoré (forcé en amont par {@link ScoreEnricherService}).</li>
  *   <li>Les stubs de disponibilité / mode dégradé ({@code *.available}, {@code *.collect})
@@ -57,10 +61,11 @@ public class DefaultScorePolicy implements ScorePolicy {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultScorePolicy.class);
 
-    /** Fixé à 8 : continuité des {@code scoringVersion} déjà persistés (aplatissement V2→V8). */
-    private static final int VERSION = 8;
+    /** Version incrémentée : passage à un catalogue explicite (issue #248). */
+    private static final int VERSION = 9;
 
-    private final Map<String, ScoreRule> overrides;
+    private final Map<String, ScoreRule> catalogue;
+    private final String fingerprint;
 
     public DefaultScorePolicy() {
         // LinkedHashMap pour un ordre d'itération stable (logs, tests reproductibles)
@@ -140,6 +145,31 @@ public class DefaultScorePolicy implements ScorePolicy {
         // ----- HTML : stub HTML vide -----
         map.put("html.available", rule(false, 0, "html")); // stub dispo (WARN)
 
+        // Les anciennes règles de préfixe rendaient implicitement ces clés
+        // scorables. Elles sont désormais toutes déclarées et revues ici.
+        map.put("http.antibot.challenge",   rule(true, 2, "performance", "http"));
+        map.put("http.protocol.version",    rule(true, 2, "performance", "http"));
+        map.put("http.errors",              rule(true, 2, "performance", "http"));
+        map.put("http.response_time_ms",    rule(true, 2, "performance", "http"));
+        map.put("http.protocol.http2",      rule(true, 2, "performance", "http"));
+        map.put("http.headers.compression", rule(true, 2, "performance", "http"));
+        map.put("http.headers.caching",     rule(true, 2, "performance", "http"));
+        map.put("http.headers.server",      rule(true, 2, "performance", "http"));
+
+        map.put("html.meta.robots.present", rule(true, 2, "seo", "html"));
+        map.put("html.scripts.count",       rule(true, 1, "seo", "html"));
+        map.put("html.size.bytes",          rule(true, 1, "seo", "html"));
+        map.put("html.analysis.duration_ms", rule(true, 1, "seo", "html"));
+        map.put("html.meta.charset.present", rule(true, 2, "seo", "html"));
+
+        map.put("runtime.network.request_count", rule(true, 4, "performance", "runtime"));
+        map.put("runtime.network.bytes_estimated", rule(true, 4, "performance", "runtime"));
+        map.put("runtime.analysis.duration_ms", rule(true, 4, "performance", "runtime"));
+
+        map.put("observatory.grade", rule(false, 0, "observatory"));
+        map.put("observatory.tests.passed", rule(false, 0, "observatory"));
+        map.put("zap.scan.result", rule(false, 0, "zap"));
+
         // ----- Tech -----
         // Divulgation de version logicielle via en-têtes : scorable sécurité (ex-V4, issue #158).
         map.put("tech.security.version_disclosure", rule(true, 3, "security", "tech"));
@@ -147,10 +177,16 @@ public class DefaultScorePolicy implements ScorePolicy {
         map.put("tech.frontend.framework", rule(false, 0, "tech"));
         map.put("tech.backend.hints",      rule(false, 0, "tech"));
         map.put("tech.cdn.cloudflare",     rule(false, 0, "tech"));
+        map.put("tech.frontend.nextjs",     rule(false, 0, "tech"));
+        map.put("tech.http.server_header",  rule(false, 0, "tech"));
+        map.put("tech.html.available",      rule(false, 0, "tech"));
+        map.put("tech.analysis.duration_ms", rule(false, 0, "tech"));
 
-        this.overrides = Map.copyOf(map);
+        this.catalogue = Collections.unmodifiableMap(new TreeMap<>(map));
+        this.fingerprint = fingerprintOf(catalogue);
 
-        logger.info("DefaultScorePolicy initialized scoringVersion={} overrides={}", VERSION, overrides.size());
+        logger.info("DefaultScorePolicy initialized scoringVersion={} catalogue={} fingerprint={}",
+            VERSION, catalogue.size(), fingerprint);
     }
 
     @Override
@@ -159,68 +195,29 @@ public class DefaultScorePolicy implements ScorePolicy {
     }
 
     @Override
+    public String fingerprint() {
+        return fingerprint;
+    }
+
+    @Override
+    public Set<String> cataloguedKeys() {
+        return catalogue.keySet();
+    }
+
+    @Override
     public ScoreRule ruleFor(String moduleId, String checkKey) {
-        ScoreRule exact = overrides.get(checkKey);
+        ScoreRule exact = checkKey == null ? null : catalogue.get(checkKey);
         if (exact != null) return exact;
 
-        // ---- Fallback rules by prefix ----
-
-        // Audits Lighthouse individuels (ex-V5, issue #154) : scorables pour être surfacés
-        // comme issues actionnables, mais de poids nul — les 4 notes de catégorie portent
-        // déjà le poids agrégé de Lighthouse (pas de double comptage). Doit précéder le
-        // fallback lighthouse.* générique.
+        // Les audits Lighthouse détaillés ont des ids dynamiques. Cette unique règle de
+        // pattern est volontaire : elle les expose à poids nul, sans jamais scorer une
+        // nouvelle clé Lighthouse automatiquement.
         if (checkKey != null && checkKey.startsWith("lighthouse.audit.")) {
-            return rule(true, 0, "lighthouse");
+            return diagnostic(BusinessCategory.NONE, TechnicalSource.LIGHTHOUSE);
         }
 
-        if (checkKey.startsWith("http.security.")) {
-            return rule(true, 6, "security", "http");
-        }
-        if (checkKey.startsWith("http.")) {
-            // Les futures clés HTTP restent expliquées sous Performance jusqu'à
-            // l'éventuelle introduction d'un domaine Reliability.
-            return rule(true, 2, "performance", "http");
-        }
+        return informational(TechnicalSource.fromTag(moduleId));
 
-        if (checkKey.startsWith("html.meta.") || checkKey.startsWith("html.link.canonical")) {
-            return rule(true, 2, "seo", "html");
-        }
-        if (checkKey.startsWith("html.images.") || checkKey.startsWith("html.anchors.") || checkKey.equals("html.lang")) {
-            return rule(true, 2, "a11y", "html");
-        }
-        if (checkKey.startsWith("html.")) {
-            return rule(true, 1, "seo", "html");
-        }
-
-        if (checkKey.startsWith("lighthouse.")) {
-            // checks lighthouse inconnus = informatifs, ne polluent pas le score
-            return rule(false, 0, "lighthouse");
-        }
-
-        if (checkKey.startsWith("runtime.")) {
-            // Domaine Performance + provenance runtime (issue #197).
-            return rule(true, 4, "performance", "runtime");
-        }
-
-        if (checkKey.startsWith("ssl.")) {
-            return rule(true, 3, "security", "ssl");
-        }
-
-        // Observatory / ZAP inconnus = informatifs (leur valeur "sécurité" passe par
-        // observatory.score et les clés partagées http.security.*).
-        if (checkKey.startsWith("observatory.")) {
-            return rule(false, 0, "security", "observatory");
-        }
-        if (checkKey.startsWith("zap.")) {
-            return rule(false, 0, "security", "zap");
-        }
-
-        if (checkKey.startsWith("tech.")) {
-            return rule(false, 0, "tech");
-        }
-
-        // unknown => non scoré par défaut (évite de polluer le score)
-        return rule(false, 0, "misc");
     }
 
     @Override
@@ -242,6 +239,38 @@ public class DefaultScorePolicy implements ScorePolicy {
     }
 
     private static ScoreRule rule(boolean scorable, double weight, String... tags) {
-        return new ScoreRule(scorable, weight, List.of(tags));
+        BusinessCategory category = tags.length > 0
+            ? BusinessCategory.fromTag(tags[0]).orElse(BusinessCategory.NONE)
+            : BusinessCategory.NONE;
+        TechnicalSource source = tags.length > 1
+            ? TechnicalSource.fromTag(tags[1])
+            : (tags.length == 1 ? TechnicalSource.fromTag(tags[0]) : TechnicalSource.MISC);
+        if (scorable && weight > 0.0) {
+            return new ScoreRule(ScoreApplicability.SCORE, weight, category, source);
+        }
+        return scorable ? diagnostic(category, source) : informational(source);
+    }
+
+    private static ScoreRule diagnostic(BusinessCategory category, TechnicalSource source) {
+        return new ScoreRule(ScoreApplicability.VISIBLE_DIAGNOSTIC, 0.0, category, source);
+    }
+
+    private static ScoreRule informational(TechnicalSource source) {
+        return new ScoreRule(ScoreApplicability.INFORMATIONAL, 0.0, BusinessCategory.NONE, source);
+    }
+
+    private static String fingerprintOf(Map<String, ScoreRule> rules) {
+        String canonical = "version=" + VERSION + "\n" + rules.entrySet().stream()
+            .map(entry -> entry.getKey() + "|" + entry.getValue().applicability() + "|"
+                + entry.getValue().weight() + "|" + entry.getValue().businessCategory() + "|"
+                + entry.getValue().technicalSource())
+            .collect(java.util.stream.Collectors.joining("\n"));
+        try {
+            byte[] bytes = MessageDigest.getInstance("SHA-256")
+                .digest(canonical.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(bytes);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 is required for the scoring fingerprint", e);
+        }
     }
 }

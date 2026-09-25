@@ -19,8 +19,10 @@ class DefaultScorePolicyTest {
     private final DefaultScorePolicy policy = new DefaultScorePolicy();
 
     @Test
-    void versionShouldStayAt8ForScoringContinuity() {
-        assertEquals(8, policy.version());
+    void versionShouldAdvanceForExplicitRubric() {
+        assertEquals(9, policy.version());
+        assertTrue(policy.fingerprint().matches("[0-9a-f]{64}"));
+        assertEquals(policy.fingerprint(), new DefaultScorePolicy().fingerprint());
     }
 
     // ------------------------------------------------------------------ Lighthouse
@@ -118,11 +120,10 @@ class DefaultScorePolicyTest {
     }
 
     @Test
-    void unknownRuntimeKeyFallsBackToPerformanceDomain() {
+    void unknownRuntimeKeyCannotAffectScore() {
         ScorePolicy.ScoreRule rule = policy.ruleFor("runtime", "runtime.some.new.check");
-        assertTrue(rule.scorable());
-        assertEquals(4.0, rule.weight());
-        assertTrue(rule.tags().contains("performance"));
+        assertFalse(rule.scorable());
+        assertEquals(0.0, rule.weight());
         assertTrue(rule.tags().contains("runtime"));
     }
 
@@ -145,11 +146,11 @@ class DefaultScorePolicyTest {
     }
 
     @Test
-    void unknownSslKeyFallsBackToSecurity() {
+    void unknownSslKeyCannotAffectScore() {
         ScorePolicy.ScoreRule rule = policy.ruleFor("ssl", "ssl.protocols.new_thing");
-        assertTrue(rule.scorable());
-        assertEquals(3.0, rule.weight());
-        assertTrue(rule.tags().contains("security"));
+        assertFalse(rule.scorable());
+        assertEquals(0.0, rule.weight());
+        assertTrue(rule.tags().contains("ssl"));
     }
 
     @Test
@@ -195,10 +196,11 @@ class DefaultScorePolicyTest {
     }
 
     @Test
-    void unknownHttpSecurityKeyFallsBackToSecurity() {
+    void unknownHttpSecurityKeyCannotAffectScore() {
         ScorePolicy.ScoreRule rule = policy.ruleFor("http", "http.security.new_header");
-        assertTrue(rule.scorable());
-        assertTrue(rule.tags().contains("security"));
+        assertFalse(rule.scorable());
+        assertEquals(0.0, rule.weight());
+        assertTrue(rule.tags().contains("http"));
     }
 
     @Test
@@ -218,11 +220,11 @@ class DefaultScorePolicyTest {
     }
 
     @Test
-    void structuralHttpFallbackShouldRemainVisibleUnderPerformance() {
+    void structuralHttpKeyRequiresExplicitCatalogueEntry() {
         ScorePolicy.ScoreRule rule = policy.ruleFor("http", "http.future.structure_check");
-        assertTrue(rule.scorable());
-        assertTrue(rule.tags().contains("performance"));
-        assertEquals("performance", policy.businessCategoryFor("http", "http.future.structure_check", List.of()).orElseThrow());
+        assertFalse(rule.scorable());
+        assertEquals(0.0, rule.weight());
+        assertTrue(policy.businessCategoryFor("http", "http.future.structure_check", List.of()).isEmpty());
     }
 
     /** Ex-V4 : divulgation de version logicielle scorable sous security (issue #158). */

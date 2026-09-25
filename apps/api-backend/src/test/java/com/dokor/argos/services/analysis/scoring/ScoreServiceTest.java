@@ -134,6 +134,19 @@ class ScoreServiceTest {
         assertEquals(20.0, report.global().maxScore(), 0.001);
     }
 
+    @Test
+    void nonFiniteRatiosAndWeightsCannotCorruptAggregates() {
+        AuditCheckResult invalidRatio = check("ratio", AuditStatus.PASS, true, 10.0).withScoreRatio(Double.NaN);
+        AuditCheckResult invalidWeight = check("weight", AuditStatus.PASS, true, Double.POSITIVE_INFINITY);
+        AuditCheckResult negativeWeight = check("negative", AuditStatus.PASS, true, -4.0);
+
+        AuditScoreReport report = service.compute(1, List.of(module("m", invalidRatio, invalidWeight, negativeWeight)));
+
+        assertEquals(10.0, report.global().score(), 0.001);
+        assertEquals(10.0, report.global().maxScore(), 0.001);
+        assertTrue(Double.isFinite(report.global().ratio()));
+    }
+
     // -------------------------
     // Agrégats par module
     // -------------------------
@@ -172,14 +185,25 @@ class ScoreServiceTest {
         assertEquals(12.0, secAgg.maxScore(), 0.001);
     }
 
+    @Test
+    void duplicateTagsAreAggregatedOnlyOnce() {
+        AuditCheckResult check = check("k", AuditStatus.PASS, true, 8.0, "security", "security");
+
+        AuditScoreReport report = service.compute(1, List.of(module("http", check)));
+
+        ScoreAggregate security = report.byTag().stream().filter(a -> "security".equals(a.id())).findFirst().orElseThrow();
+        assertEquals(8.0, security.maxScore(), 0.001);
+    }
+
     // -------------------------
     // scoringVersion transmis
     // -------------------------
 
     @Test
     void shouldForwardScoringVersion() {
-        AuditScoreReport report = service.compute(42, List.of(module("m")));
+        AuditScoreReport report = service.compute(42, "rubric-fingerprint", List.of(module("m")));
         assertEquals(42, report.scoringVersion());
+        assertEquals("rubric-fingerprint", report.scoringFingerprint());
     }
 
     // -------------------------
