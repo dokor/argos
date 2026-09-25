@@ -35,8 +35,8 @@ class ScoreEnricherServiceTest {
     }
 
     @Test
-    void scoringVersionShouldBe8() {
-        assertEquals(8, enricher.scoringVersion());
+    void scoringVersionShouldBe10() {
+        assertEquals(10, enricher.scoringVersion());
     }
 
     @Test
