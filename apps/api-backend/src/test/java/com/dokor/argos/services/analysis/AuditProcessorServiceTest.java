@@ -50,7 +50,8 @@ class AuditProcessorServiceTest {
     private static void stubScorePipeline(ScoreEnricherService enricher, ScoreService scorer) {
         when(enricher.enrich(anyList())).thenReturn(List.of());
         when(enricher.scoringVersion()).thenReturn(1);
-        when(scorer.compute(anyInt(), anyList())).thenReturn(emptyScore());
+        when(enricher.scoringFingerprint()).thenReturn("test-rubric");
+        when(scorer.compute(anyInt(), anyString(), anyList())).thenReturn(emptyScore());
     }
 
     @Test

@@ -34,6 +34,10 @@ public class ScoreService {
     private static final Logger logger = LoggerFactory.getLogger(ScoreService.class);
 
     public AuditScoreReport compute(int scoringVersion, List<AuditModuleResult> modules) {
+        return compute(scoringVersion, null, modules);
+    }
+
+    public AuditScoreReport compute(int scoringVersion, String scoringFingerprint, List<AuditModuleResult> modules) {
         logger.info("Computing score scoringVersion={} modules={}", scoringVersion, modules.size());
 
         List<ScoredCheck> scoredChecks = new ArrayList<>();
@@ -50,7 +54,9 @@ public class ScoreService {
             for (AuditCheckResult check : module.checks()) {
                 double ratio = effectiveRatio(check);
 
-                double weight = (check.scorable() && check.weight() > 0.0) ? check.weight() : 0.0;
+                double weight = (check.scorable() && Double.isFinite(check.weight()) && check.weight() > 0.0)
+                    ? check.weight()
+                    : 0.0;
                 double score = weight * ratio;
 
                 scoredChecks.add(new ScoredCheck(
@@ -60,7 +66,7 @@ public class ScoreService {
                     check.scorable(),
                     weight,
                     score,
-                    check.tags() != null ? check.tags() : List.of()
+                    safeTags(check.tags())
                 ));
 
                 if (weight <= 0.0) {
@@ -105,6 +111,7 @@ public class ScoreService {
 
         return new AuditScoreReport(
             scoringVersion,
+            scoringFingerprint,
             global,
             moduleAgg,
             tagAgg,
@@ -118,7 +125,7 @@ public class ScoreService {
      */
     private static double effectiveRatio(AuditCheckResult check) {
         Double continuous = check.scoreRatio();
-        if (continuous != null) {
+        if (continuous != null && Double.isFinite(continuous)) {
             return Math.max(0.0, Math.min(1.0, continuous));
         }
         return ratioFor(check.status());
@@ -139,6 +146,8 @@ public class ScoreService {
             .filter(Objects::nonNull)
             .map(String::trim)
             .filter(s -> !s.isBlank())
+            .collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new))
+            .stream()
             .toList();
     }
 

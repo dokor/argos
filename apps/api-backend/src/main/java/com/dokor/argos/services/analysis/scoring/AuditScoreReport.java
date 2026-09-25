@@ -9,6 +9,7 @@ import java.util.List;
  */
 public record AuditScoreReport(
     int scoringVersion,
+    String scoringFingerprint,
 
     ScoreAggregate global,
     List<ScoreAggregate> byModule,    // id=moduleId
@@ -16,5 +17,15 @@ public record AuditScoreReport(
 
     List<ScoredCheck> checks          // traçabilité check par check
 ) {
+    /** Compatibilité source pour les consommateurs qui n'ont pas encore d'empreinte. */
+    public AuditScoreReport(
+        int scoringVersion,
+        ScoreAggregate global,
+        List<ScoreAggregate> byModule,
+        List<ScoreAggregate> byTag,
+        List<ScoredCheck> checks
+    ) {
+        this(scoringVersion, null, global, byModule, byTag, checks);
+    }
 }
 

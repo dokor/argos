@@ -27,6 +27,10 @@ public class ScoreEnricherService {
         return scorePolicy.version();
     }
 
+    public String scoringFingerprint() {
+        return scorePolicy.fingerprint();
+    }
+
     /**
      * Enrichit tous les checks de tous les modules.
      */
@@ -68,7 +72,9 @@ public class ScoreEnricherService {
 
         // si la policy dit non scoré => poids 0
         boolean scorable = rule.scorable();
-        double weight = scorable ? rule.weight() : 0.0;
+        double weight = rule.applicability().contributesToScore() && Double.isFinite(rule.weight()) && rule.weight() > 0.0
+            ? rule.weight()
+            : 0.0;
 
         return withScore(check, scorable, weight, tags);
     }
