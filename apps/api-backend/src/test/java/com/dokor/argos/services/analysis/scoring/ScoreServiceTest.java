@@ -143,8 +143,10 @@ class ScoreServiceTest {
 
         AuditScoreReport report = service.compute(1, List.of(module("m", invalidRatio, invalidWeight, negativeWeight)));
 
-        assertEquals(10.0, report.global().score(), 0.001);
-        assertEquals(10.0, report.global().maxScore(), 0.001);
+        // Le seul check valide appartient au domaine mesurable Performance :
+        // le global normalisé vaut donc 100/100, sans propagation de NaN/Inf.
+        assertEquals(100.0, report.global().score(), 0.001);
+        assertEquals(100.0, report.global().maxScore(), 0.001);
         assertTrue(Double.isFinite(report.global().ratio()));
     }
 
