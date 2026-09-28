@@ -10,6 +10,7 @@ import java.util.Map;
  */
 public record AuditScoreReport(
     int scoringVersion,
+    String scoringFingerprint,
 
     ScoreAggregate global,
     List<ScoreAggregate> byModule,    // id=moduleId
@@ -19,7 +20,20 @@ public record AuditScoreReport(
 
     List<ScoredCheck> checks          // traçabilité check par check
 ) {
-    /** Compatibilité source pour les producteurs/lecteurs qui ne portent pas encore les domaines. */
+    /** Compatibilité source pour les consommateurs qui ne portent ni empreinte ni domaines. */
+    public AuditScoreReport(
+        int scoringVersion,
+        ScoreAggregate global,
+        List<ScoreAggregate> byModule,
+        List<ScoreAggregate> byTag,
+        List<ScoreAggregate> byDomain,
+        Map<String, Double> domainWeights,
+        List<ScoredCheck> checks
+    ) {
+        this(scoringVersion, null, global, byModule, byTag, byDomain, domainWeights, checks);
+    }
+
+    /** Compatibilité source pour les consommateurs qui ne portent ni empreinte ni domaines. */
     public AuditScoreReport(
         int scoringVersion,
         ScoreAggregate global,
@@ -27,7 +41,7 @@ public record AuditScoreReport(
         List<ScoreAggregate> byTag,
         List<ScoredCheck> checks
     ) {
-        this(scoringVersion, global, byModule, byTag, List.of(), Map.of(), checks);
+        this(scoringVersion, null, global, byModule, byTag, List.of(), Map.of(), checks);
     }
 }
 

@@ -135,6 +135,21 @@ class ScoreServiceTest {
         assertEquals(100.0, report.global().maxScore(), 0.001);
     }
 
+    @Test
+    void nonFiniteRatiosAndWeightsCannotCorruptAggregates() {
+        AuditCheckResult invalidRatio = check("ratio", AuditStatus.PASS, true, 10.0).withScoreRatio(Double.NaN);
+        AuditCheckResult invalidWeight = check("weight", AuditStatus.PASS, true, Double.POSITIVE_INFINITY);
+        AuditCheckResult negativeWeight = check("negative", AuditStatus.PASS, true, -4.0);
+
+        AuditScoreReport report = service.compute(1, List.of(module("m", invalidRatio, invalidWeight, negativeWeight)));
+
+        // Le seul check valide appartient au domaine mesurable Performance :
+        // le global normalisé vaut donc 100/100, sans propagation de NaN/Inf.
+        assertEquals(100.0, report.global().score(), 0.001);
+        assertEquals(100.0, report.global().maxScore(), 0.001);
+        assertTrue(Double.isFinite(report.global().ratio()));
+    }
+
     // -------------------------
     // Agrégats par module
     // -------------------------
@@ -173,35 +188,46 @@ class ScoreServiceTest {
         assertEquals(12.0, secAgg.maxScore(), 0.001);
     }
 
+    @Test
+    void duplicateTagsAreAggregatedOnlyOnce() {
+        AuditCheckResult check = check("k", AuditStatus.PASS, true, 8.0, "security", "security");
+
+        AuditScoreReport report = service.compute(1, List.of(module("http", check)));
+
+        ScoreAggregate security = report.byTag().stream().filter(a -> "security".equals(a.id())).findFirst().orElseThrow();
+        assertEquals(8.0, security.maxScore(), 0.001);
+    }
+
     // -------------------------
     // scoringVersion transmis
     // -------------------------
 
     @Test
     void shouldForwardScoringVersion() {
-        AuditScoreReport report = service.compute(42, List.of(module("m")));
+        AuditScoreReport report = service.compute(42, "rubric-fingerprint", List.of(module("m")));
         assertEquals(42, report.scoringVersion());
+        assertEquals("rubric-fingerprint", report.scoringFingerprint());
     }
 
     @Test
     void globalUsesEqualWeightsAcrossNormalizedDomains() {
-        AuditCheckResult performance = check("perf", AuditStatus.PASS, true, 100.0, "performance");
-        AuditCheckResult security = check("sec", AuditStatus.FAIL, true, 1.0, "security");
+        AuditCheckResult performanceCheck = check("perf", AuditStatus.PASS, true, 100.0, "performance");
+        AuditCheckResult securityCheck = check("sec", AuditStatus.FAIL, true, 1.0, "security");
 
-        AuditScoreReport report = service.compute(10, List.of(module("m", performance, security)));
+        AuditScoreReport report = service.compute(10, List.of(module("m", performanceCheck, securityCheck)));
 
         assertEquals(0.5, report.global().ratio(), 0.001);
         assertEquals(50.0, report.global().score(), 0.001);
         assertEquals(0.5, report.domainWeights().get("performance"), 0.001);
         assertEquals(0.5, report.domainWeights().get("security"), 0.001);
-        ScoreAggregate performance = report.byDomain().stream()
+        ScoreAggregate performanceDomain = report.byDomain().stream()
             .filter(aggregate -> "performance".equals(aggregate.id()))
             .findFirst().orElseThrow();
-        ScoreAggregate security = report.byDomain().stream()
+        ScoreAggregate securityDomain = report.byDomain().stream()
             .filter(aggregate -> "security".equals(aggregate.id()))
             .findFirst().orElseThrow();
-        assertEquals(1.0, performance.ratio(), 0.001);
-        assertEquals(0.0, security.ratio(), 0.001);
+        assertEquals(1.0, performanceDomain.ratio(), 0.001);
+        assertEquals(0.0, securityDomain.ratio(), 0.001);
     }
 
     @Test
