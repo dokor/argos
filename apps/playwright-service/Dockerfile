@@ -6,7 +6,7 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm ci --omit=dev
 
-COPY server.mjs ./
+COPY server.mjs domain.mjs ./
 
 ENV NODE_ENV=production
 ENV PORT=3016
