@@ -241,18 +241,18 @@ public class RuntimeModuleAnalyzer implements AuditModuleAnalyzer {
             "samples", safeList(r.jsErrors() != null ? r.jsErrors().samples() : null)
         ));
         if (r.network() != null) {
-            data.put("network", Map.of(
-                "requests", reqCount,
-                "failedRequests", failedReq,
-                "failedRequestsFirstParty", firstPartyFailedReq,
-                "failedRequestsThirdParty", thirdPartyFailedReq,
-                "status4xx", safeInt(r.network().status4xx()),
-                "status5xx", s5xx,
-                "status5xxFirstParty", firstParty5xx,
-                "status5xxThirdParty", thirdParty5xx,
-                "totalBytesEstimated", bytes,
-                "byType", r.network().byType() != null ? r.network().byType() : Map.of(),
-                "topLargest", safeList(r.network().topLargest())
+            data.put("network", Map.ofEntries(
+                Map.entry("requests", reqCount),
+                Map.entry("failedRequests", failedReq),
+                Map.entry("failedRequestsFirstParty", firstPartyFailedReq),
+                Map.entry("failedRequestsThirdParty", thirdPartyFailedReq),
+                Map.entry("status4xx", safeInt(r.network().status4xx())),
+                Map.entry("status5xx", s5xx),
+                Map.entry("status5xxFirstParty", firstParty5xx),
+                Map.entry("status5xxThirdParty", thirdParty5xx),
+                Map.entry("totalBytesEstimated", bytes),
+                Map.entry("byType", r.network().byType() != null ? r.network().byType() : Map.of()),
+                Map.entry("topLargest", safeList(r.network().topLargest()))
             ));
         }
 
