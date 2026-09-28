@@ -84,3 +84,46 @@ More modules
 
 Check the [showcase project](https://github.com/Coreoz/Plume-showcase)
 to see an example with these modules.
+
+
+## Codex report summary
+
+The production stack can generate a short executive summary before publishing a report.
+
+The dedicated `codex-summary` container inherits from:
+
+```text
+ghcr.io/dokor/codex-runtime:0.156.1-r1
+```
+
+It is isolated from the application source and is reachable only from `api-backend` on the private `argos_ai` Docker network.
+
+Runtime variables:
+
+```env
+CODEX_SUMMARY_ENABLED=true
+CODEX_SUMMARY_SERVICE_URL=http://codex-summary:3010
+CODEX_SUMMARY_TIMEOUT_SECONDS=45
+CODEX_RUNTIME_IMAGE=ghcr.io/dokor/codex-runtime:0.156.1-r1
+```
+
+The feature is fail-open: a Codex timeout, quota error, invalid response or unavailable service never prevents report publication.
+
+### First authentication
+
+After the first deployment, authenticate the dedicated Codex home once:
+
+```bash
+cd /srv/apps/api-backend
+docker compose -f docker-compose.prod.yml run --rm --entrypoint codex codex-summary login
+docker compose -f docker-compose.prod.yml run --rm --entrypoint codex codex-summary login status
+docker compose -f docker-compose.prod.yml up -d
+```
+
+The auth state is stored in the `argos_codex_home` Docker volume.
+
+### GHCR access
+
+The deploy workflow logs into GHCR with the repository `GITHUB_TOKEN` and requests `packages: read`.
+
+If `dokor/codex-runtime` is private, its package settings must grant **Actions access / Read** to `dokor/argos`. No PAT is required once that repository access is granted.

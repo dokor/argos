@@ -72,4 +72,21 @@ public class ConfigurationService {
         }
         return config.getInt("audit.scheduler.max-attempts");
     }
+
+    public boolean codexSummaryEnabled() {
+        return Boolean.parseBoolean(System.getenv().getOrDefault("CODEX_SUMMARY_ENABLED", "false"));
+    }
+
+    public String codexSummaryServiceUrl() {
+        return System.getenv().getOrDefault("CODEX_SUMMARY_SERVICE_URL", "http://codex-summary:3010");
+    }
+
+    public Duration codexSummaryTimeout() {
+        String raw = System.getenv().getOrDefault("CODEX_SUMMARY_TIMEOUT_SECONDS", "45");
+        try {
+            return Duration.ofSeconds(Math.max(5, Long.parseLong(raw)));
+        } catch (NumberFormatException e) {
+            return Duration.ofSeconds(45);
+        }
+    }
 }

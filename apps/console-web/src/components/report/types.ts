@@ -15,6 +15,10 @@ export type Report = {
   summary: {
     oneLiner: string;
     priorities: PriorityItem[];
+    ai?: {
+      fr: AiSummaryLocale;
+      en: AiSummaryLocale;
+    } | null;
   };
   issues: Issue[];
   tech?: TechSummary;
@@ -79,3 +83,9 @@ export type Issue = {
   effort?: Effort;
 };
 
+
+export type AiSummaryLocale = {
+  headline: string;
+  summary: string;
+  keyPoints: string[];
+};

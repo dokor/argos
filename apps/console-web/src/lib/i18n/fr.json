@@ -474,6 +474,11 @@
         "running": "En cours",
         "pending": "En attente"
       }
+    },
+    "aiSummary": {
+      "label": "Synthèse de l’audit",
+      "keyPoints": "À retenir",
+      "note": "Synthèse générée par Codex à partir des résultats mesurés par Argos."
     }
   },
   "auditForm": {

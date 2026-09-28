@@ -76,7 +76,21 @@ public record ReportDto(
 
     public record Summary(
         String oneLiner,
-        List<Priority> priorities
+        List<Priority> priorities,
+        AiSummary ai
+    ) {
+    }
+
+    public record AiSummary(
+        AiSummaryLocale fr,
+        AiSummaryLocale en
+    ) {
+    }
+
+    public record AiSummaryLocale(
+        String headline,
+        String summary,
+        List<String> keyPoints
     ) {
     }
 
