@@ -38,7 +38,7 @@ public class AuditProcessorService {
     private static final Logger logger = LoggerFactory.getLogger(AuditProcessorService.class);
 
     // Version du schema du rapport
-    private static final int REPORT_SCHEMA_VERSION = 5;
+    private static final int REPORT_SCHEMA_VERSION = 6;
 
     private final AuditRunService auditRunService;
     private final AuditDao auditDao;
@@ -223,12 +223,14 @@ public class AuditProcessorService {
             // Enrich checks (tags/scorable/weight) + compute score
             List<AuditModuleResult> enrichedModules = scoreEnricherService.enrich(mergedModules);
             int scoringVersion = scoreEnricherService.scoringVersion();
-            AuditScoreReport score = scoreService.compute(scoringVersion, enrichedModules);
+            String scoringFingerprint = Objects.requireNonNullElse(scoreEnricherService.scoringFingerprint(), "unknown");
+            AuditScoreReport score = scoreService.compute(scoringVersion, scoringFingerprint, enrichedModules);
 
             Map<String, String> meta = new LinkedHashMap<>();
             meta.put("generator", "argos-api-backend");
             meta.put("schemaVersion", String.valueOf(REPORT_SCHEMA_VERSION));
             meta.put("scoringVersion", String.valueOf(scoringVersion));
+            meta.put("scoringFingerprint", scoringFingerprint);
             meta.put("runId", String.valueOf(runId));
             meta.put("httpStatusCode", String.valueOf(context.httpStatusCode()));
             meta.put("auditDurationMs", String.valueOf(Instant.now().toEpochMilli() - context.startedAt().toEpochMilli()));
