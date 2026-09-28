@@ -26,6 +26,19 @@ public record AuditScoreReport(
         ScoreAggregate global,
         List<ScoreAggregate> byModule,
         List<ScoreAggregate> byTag,
+        List<ScoreAggregate> byDomain,
+        Map<String, Double> domainWeights,
+        List<ScoredCheck> checks
+    ) {
+        this(scoringVersion, null, global, byModule, byTag, byDomain, domainWeights, checks);
+    }
+
+    /** Compatibilité source pour les consommateurs qui ne portent ni empreinte ni domaines. */
+    public AuditScoreReport(
+        int scoringVersion,
+        ScoreAggregate global,
+        List<ScoreAggregate> byModule,
+        List<ScoreAggregate> byTag,
         List<ScoredCheck> checks
     ) {
         this(scoringVersion, null, global, byModule, byTag, List.of(), Map.of(), checks);

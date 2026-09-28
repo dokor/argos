@@ -209,23 +209,23 @@ class ScoreServiceTest {
 
     @Test
     void globalUsesEqualWeightsAcrossNormalizedDomains() {
-        AuditCheckResult performance = check("perf", AuditStatus.PASS, true, 100.0, "performance");
-        AuditCheckResult security = check("sec", AuditStatus.FAIL, true, 1.0, "security");
+        AuditCheckResult performanceCheck = check("perf", AuditStatus.PASS, true, 100.0, "performance");
+        AuditCheckResult securityCheck = check("sec", AuditStatus.FAIL, true, 1.0, "security");
 
-        AuditScoreReport report = service.compute(10, List.of(module("m", performance, security)));
+        AuditScoreReport report = service.compute(10, List.of(module("m", performanceCheck, securityCheck)));
 
         assertEquals(0.5, report.global().ratio(), 0.001);
         assertEquals(50.0, report.global().score(), 0.001);
         assertEquals(0.5, report.domainWeights().get("performance"), 0.001);
         assertEquals(0.5, report.domainWeights().get("security"), 0.001);
-        ScoreAggregate performance = report.byDomain().stream()
+        ScoreAggregate performanceDomain = report.byDomain().stream()
             .filter(aggregate -> "performance".equals(aggregate.id()))
             .findFirst().orElseThrow();
-        ScoreAggregate security = report.byDomain().stream()
+        ScoreAggregate securityDomain = report.byDomain().stream()
             .filter(aggregate -> "security".equals(aggregate.id()))
             .findFirst().orElseThrow();
-        assertEquals(1.0, performance.ratio(), 0.001);
-        assertEquals(0.0, security.ratio(), 0.001);
+        assertEquals(1.0, performanceDomain.ratio(), 0.001);
+        assertEquals(0.0, securityDomain.ratio(), 0.001);
     }
 
     @Test
