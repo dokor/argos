@@ -37,8 +37,15 @@ public class PublicReportComposer {
             ? new ReportDto.AntiBot(true, meta.get("antiBotVendor"))
             : null;
 
-        List<ReportDto.CategoryScore> byCategory = (score == null ? List.<ScoreAggregate>of() : score.byTag()).stream()
+        List<ScoreAggregate> categoryAggregates = score == null
+            ? List.of()
+            : score.byDomain() != null && !score.byDomain().isEmpty()
+                ? score.byDomain()
+                : score.byTag(); // rapports historiques, antérieurs aux domaines normalisés
+
+        List<ReportDto.CategoryScore> byCategory = categoryAggregates.stream()
             .filter(agg -> isBusinessTag(agg.id()))
+            .filter(agg -> agg.maxScore() > 0.0)
             .map(agg -> new ReportDto.CategoryScore(
                 agg.id(),
                 labelize(agg.id()),

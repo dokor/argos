@@ -336,6 +336,39 @@ class PublicReportComposerTest {
         assertFalse(catKeys.contains("runtime"),    "runtime exclu (outil, #197)");
     }
 
+    @Test
+    void shouldPreferNormalizedDomainAggregatesForNewReports() {
+        ScoreAggregate global = ScoreAggregate.of("global", 75.0, 100.0);
+        AuditScoreReport score = new AuditScoreReport(
+            10,
+            global,
+            List.of(),
+            List.of(ScoreAggregate.of("performance", 10.0, 100.0)),
+            List.of(
+                ScoreAggregate.of("performance", 90.0, 100.0),
+                ScoreAggregate.of("security", 60.0, 100.0),
+                ScoreAggregate.of("seo", 0.0, 0.0),
+                ScoreAggregate.of("a11y", 0.0, 0.0)
+            ),
+            Map.of("performance", 0.5, "security", 0.5, "seo", 0.0, "a11y", 0.0),
+            List.of()
+        );
+
+        ReportDto dto = composer.compose(report(List.of(module("html", Map.of())), score));
+
+        assertEquals(90, categoryScore(dto, "performance"));
+        assertEquals(60, categoryScore(dto, "security"));
+        assertEquals(2, dto.scores().byCategory().size());
+    }
+
+    private static int categoryScore(ReportDto dto, String key) {
+        return dto.scores().byCategory().stream()
+            .filter(category -> key.equals(category.key()))
+            .findFirst()
+            .orElseThrow()
+            .score();
+    }
+
     // ------------------------------------------------------------------ domain
 
     @Test

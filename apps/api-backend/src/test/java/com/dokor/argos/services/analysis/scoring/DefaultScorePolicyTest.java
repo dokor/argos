@@ -19,8 +19,8 @@ class DefaultScorePolicyTest {
     private final DefaultScorePolicy policy = new DefaultScorePolicy();
 
     @Test
-    void versionShouldStayAt8ForScoringContinuity() {
-        assertEquals(8, policy.version());
+    void versionShouldAdvanceForDomainWeightedGlobal() {
+        assertEquals(10, policy.version());
     }
 
     // ------------------------------------------------------------------ Lighthouse
