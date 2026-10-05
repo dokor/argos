@@ -35,6 +35,7 @@ public class WebApplication {
     public static void main(String[] args) {
         try {
             long startTimestamp = System.currentTimeMillis();
+            new ConfigurationService(com.typesafe.config.ConfigFactory.load()).validateRequiredSecrets();
 
             // Initialize all application objects with Guice
             Injector injector = Guice.createInjector(Stage.PRODUCTION, new ApplicationModule());
