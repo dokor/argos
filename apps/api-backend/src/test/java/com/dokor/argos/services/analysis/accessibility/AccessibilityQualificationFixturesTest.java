@@ -46,4 +46,3 @@ class AccessibilityQualificationFixturesTest {
         return facts.has(key) ? mapper.treeToValue(facts.get(key), Fact.class) : null;
     }
 }
-

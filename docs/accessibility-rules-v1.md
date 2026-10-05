@@ -126,4 +126,3 @@ Revoir à chaque modification de texte/référentiel, changement de pays/service
 ou avant une activation/publication ; consigner l'ancienne et la nouvelle version.
 ADE 1.2.1 : revue Tech Lead, QA et Legal/Compliance ; ce livrable ne vaut pas leur
 approbation humaine.
-
