@@ -24,6 +24,43 @@ export type Report = {
   tech?: TechSummary;
   /** Présent uniquement si une protection anti-bot a été détectée (analyse partielle). */
   antiBot?: { detected: boolean; vendor?: string | null } | null;
+  accessibilityEvidence?: AccessibilityEvidence | null;
+  accessibilityCompliance?: AccessibilityCompliance | null;
+};
+
+export type AccessibilityEvidence = {
+  version: string;
+  mappingVersion: string;
+  sourceVersion?: string | null;
+  coverage: "COMPLETE" | "PARTIAL" | "UNAVAILABLE";
+  referencedAudits: number;
+  statusCounts: Partial<Record<"PASS" | "FAIL" | "MANUAL" | "NOT_APPLICABLE" | "NOT_TESTED" | "ERROR", number>>;
+  failedAudits: number;
+  reportedElements: number;
+  elementCountComplete: boolean;
+  surfacedFindings: number;
+  truncated: boolean;
+  findings: Array<{
+    id: string;
+    source: string;
+    kind: "IMAGE_ALTERNATIVE" | "CONTRAST" | "ACCESSIBLE_NAME" | "LANGUAGE" | "OTHER";
+    severity: "LOW" | "MEDIUM" | "HIGH";
+    score?: number | null;
+    reportedElements?: number | null;
+    wcagCriteria: string[];
+  }>;
+};
+
+export type AccessibilityCompliance = {
+  accessibilityComplianceVersion: string;
+  rulesValidated: boolean;
+  scopes: Array<"POTENTIALLY_EAA" | "POTENTIALLY_ARTICLE_47" | "OUT_OF_SCOPE" | "UNKNOWN">;
+  confidence: "LOW" | "HIGH" | "UNKNOWN";
+  risk: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" | "UNKNOWN";
+  riskReason: "RULES_PENDING" | "SCOPE_UNKNOWN" | "COLLECTION_INCOMPLETE" | "FAILED_AUDITS" | "NO_DETECTED_FAILURE" | "OUTSIDE_SCOPE";
+  signals: Array<{ code: string; provenance: "OBSERVED" | "DECLARED" | "VERIFIED"; value: boolean }>;
+  missingInformation: string[];
+  references: Array<{ title: string; url: string }>;
 };
 
 export type TechSummary = {

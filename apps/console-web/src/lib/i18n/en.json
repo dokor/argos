@@ -307,6 +307,132 @@
     }
   },
   "report": {
+    "accessibility": {
+      "title": "Accessibility: findings and potential scope",
+      "limit": "This automated analysis identifies potential technical and regulatory risks. It is neither a complete RGAA/WCAG audit nor legal advice.",
+      "unknown": "Unknown",
+      "technicalScore": "Argos technical accessibility score",
+      "coverageTitle": "Automated coverage",
+      "scopeTitle": "Potential scope",
+      "confidenceTitle": "Scope confidence",
+      "riskTitle": "Indicative regulatory risk",
+      "coverage": {
+        "COMPLETE": "Referenced automated results available",
+        "PARTIAL": "Partial collection",
+        "UNAVAILABLE": "Collection unavailable"
+      },
+      "scopes": {
+        "POTENTIALLY_EAA": "Potentially within EAA scope",
+        "POTENTIALLY_ARTICLE_47": "Potentially within article 47 scope",
+        "OUT_OF_SCOPE": "Outside the reviewed scope after verification",
+        "UNKNOWN": "Scope unknown"
+      },
+      "confidence": {
+        "LOW": "Low — hypothesis to verify",
+        "HIGH": "High — scope reviewed",
+        "UNKNOWN": "Unknown"
+      },
+      "risk": {
+        "LOW": "Low (indicative)",
+        "MEDIUM": "Moderate (indicative)",
+        "HIGH": "High (indicative)",
+        "CRITICAL": "Critical (indicative)",
+        "UNKNOWN": "Unknown"
+      },
+      "riskReasons": {
+        "RULES_PENDING": "Qualification rules need human validation. No regulatory risk level is concluded.",
+        "SCOPE_UNKNOWN": "The available information is insufficient to qualify the scope.",
+        "COLLECTION_INCOMPLETE": "The collection is insufficient to establish a risk level.",
+        "FAILED_AUDITS": "The indicative level uses failed automated audits and the reviewed scope, without a legal conclusion.",
+        "NO_DETECTED_FAILURE": "No defect detected by the available checks does not prove conformance.",
+        "OUTSIDE_SCOPE": "This determination only concerns the reviewed scope; it does not validate technical accessibility."
+      },
+      "counts": "{audits} referenced audits · {failed} failed audits · {shown} findings shown",
+      "elements": "{count} elements reported in failed audits (not deduplicated across audits)",
+      "elementsIncomplete": "partial count, missing details",
+      "statuses": {
+        "PASS": "Passed",
+        "FAIL": "Failed",
+        "MANUAL": "Manual check required",
+        "NOT_APPLICABLE": "Not applicable",
+        "NOT_TESTED": "Not tested or missing",
+        "ERROR": "Error"
+      },
+      "truncated": "The finding list is limited. The failed audit total includes audits that are not shown.",
+      "noFailure": "No defect detected in the available results. This does not mean the site conforms.",
+      "findingsTitle": "View priority technical findings",
+      "severityTitle": "Technical severity",
+      "evidenceTitle": "Lighthouse evidence",
+      "elementCount": "{count} reported elements",
+      "mapping": "Partial technical association with WCAG:",
+      "unmapped": "No reliable WCAG mapping recorded.",
+      "severity": {
+        "LOW": "Low",
+        "MEDIUM": "Moderate",
+        "HIGH": "High"
+      },
+      "qualificationTitle": "View signals, missing information and sources",
+      "signalsTitle": "Signals and provenance",
+      "noSignal": "No sufficient signal observed; this does not prove exclusion.",
+      "missingTitle": "Missing information or validations",
+      "noMissing": "No missing information recorded for the reviewed scope.",
+      "sourcesTitle": "Reference sources",
+      "yes": "Yes",
+      "no": "No",
+      "provenance": {
+        "OBSERVED": "Automatically observed",
+        "DECLARED": "Declared, not verified",
+        "VERIFIED": "Verified"
+      },
+      "information": {
+        "PRICE": "Displayed price",
+        "COMMERCE_CTA": "Commercial action",
+        "B2C_SERVICE": "Consumer service",
+        "ARTICLE47_OPERATOR": "Operator potentially within article 47",
+        "OUTSIDE_SCOPE": "Outside-scope determination",
+        "EXEMPTION": "Exemption",
+        "EXEMPTIONS": "Exemption conditions",
+        "SCOPE_REVIEWED": "Reviewed scope",
+        "OPERATOR_STATUS": "Operator status",
+        "JURISDICTION": "Jurisdiction",
+        "SERVICE_DATES": "Relevant service dates",
+        "ENTERPRISE_SIZE": "Headcount and financial thresholds",
+        "ARTICLE47_OPERATOR_CATEGORY": "Article 47 operator category",
+        "PAGE_UNAVAILABLE": "Page unavailable or anti-bot challenge",
+        "CONFLICTING_SCOPE": "Conflicting scope information",
+        "RULES_REVIEW": "Rules validation",
+        "SCOPE_REVIEW": "Full scope verification"
+      },
+      "manual": "Keyboard navigation, focus, announcements and user journeys require human checks. Manual and not-applicable states are not passed tests.",
+      "versions": "Versions used",
+      "kinds": {
+        "IMAGE_ALTERNATIVE": {
+          "title": "Image text alternatives",
+          "impact": "An image without an alternative may deny users its information.",
+          "recommendation": "Check the purpose of each image; add a meaningful alternative or an empty one for decorative content."
+        },
+        "CONTRAST": {
+          "title": "Text contrast",
+          "impact": "Insufficient contrast can make text difficult to read.",
+          "recommendation": "Check the colours in the affected states, improve contrast and verify manually."
+        },
+        "ACCESSIBLE_NAME": {
+          "title": "Accessible control names",
+          "impact": "A control without a meaningful name may be hard to understand with assistive technology.",
+          "recommendation": "Associate an accessible label with the control and check its announcement in the user journey."
+        },
+        "LANGUAGE": {
+          "title": "Page language",
+          "impact": "A missing or incorrect language can affect screen reader pronunciation.",
+          "recommendation": "Declare a valid language matching the content and check language changes."
+        },
+        "OTHER": {
+          "title": "Lighthouse accessibility finding",
+          "impact": "An automated check reported a point to examine.",
+          "recommendation": "Inspect the identified Lighthouse audit and verify its impact on the user journey."
+        }
+      }
+    },
     "metadata": {
       "title": "Argos Report"
     },

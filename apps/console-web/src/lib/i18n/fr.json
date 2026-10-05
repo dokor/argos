@@ -307,6 +307,132 @@
     }
   },
   "report": {
+    "accessibility": {
+      "title": "Accessibilité : constats et périmètre potentiel",
+      "limit": "Cette analyse automatisée identifie des risques techniques et réglementaires potentiels. Elle ne constitue ni un audit RGAA/WCAG complet ni un avis juridique.",
+      "unknown": "Indéterminé",
+      "technicalScore": "Score technique d’accessibilité Argos",
+      "coverageTitle": "Couverture automatisée",
+      "scopeTitle": "Périmètre potentiel",
+      "confidenceTitle": "Confiance dans le périmètre",
+      "riskTitle": "Risque réglementaire indicatif",
+      "coverage": {
+        "COMPLETE": "Résultats automatisés référencés disponibles",
+        "PARTIAL": "Collecte partielle",
+        "UNAVAILABLE": "Collecte indisponible"
+      },
+      "scopes": {
+        "POTENTIALLY_EAA": "EAA potentiellement concerné",
+        "POTENTIALLY_ARTICLE_47": "Article 47 potentiellement concerné",
+        "OUT_OF_SCOPE": "Hors du périmètre examiné après vérification",
+        "UNKNOWN": "Périmètre indéterminé"
+      },
+      "confidence": {
+        "LOW": "Faible — hypothèse à vérifier",
+        "HIGH": "Élevée — périmètre revu",
+        "UNKNOWN": "Indéterminée"
+      },
+      "risk": {
+        "LOW": "Faible (indicatif)",
+        "MEDIUM": "Modéré (indicatif)",
+        "HIGH": "Élevé (indicatif)",
+        "CRITICAL": "Critique (indicatif)",
+        "UNKNOWN": "Indéterminé"
+      },
+      "riskReasons": {
+        "RULES_PENDING": "Les règles de qualification nécessitent une validation humaine. Aucun niveau de risque réglementaire n’est conclu.",
+        "SCOPE_UNKNOWN": "Les informations disponibles ne suffisent pas à qualifier le périmètre.",
+        "COLLECTION_INCOMPLETE": "La collecte ne permet pas d’établir un niveau de risque.",
+        "FAILED_AUDITS": "Le niveau indicatif dépend des audits automatisés en échec et du périmètre revu, sans conclusion juridique.",
+        "NO_DETECTED_FAILURE": "Aucun défaut détecté par les contrôles disponibles ne prouve la conformité.",
+        "OUTSIDE_SCOPE": "Cette détermination concerne uniquement le périmètre examiné ; elle ne valide pas l’accessibilité technique."
+      },
+      "counts": "{audits} audits référencés · {failed} audits en échec · {shown} constats affichés",
+      "elements": "{count} éléments signalés dans les audits en échec (non dédupliqués entre audits)",
+      "elementsIncomplete": "décompte partiel, détails manquants",
+      "statuses": {
+        "PASS": "Réussis",
+        "FAIL": "En échec",
+        "MANUAL": "À contrôler manuellement",
+        "NOT_APPLICABLE": "Non applicables",
+        "NOT_TESTED": "Non testés ou absents",
+        "ERROR": "En erreur"
+      },
+      "truncated": "La liste de constats est limitée. Le total des audits en échec inclut ceux qui ne sont pas affichés.",
+      "noFailure": "Aucun défaut détecté dans les résultats disponibles. Cela ne signifie pas que le site est conforme.",
+      "findingsTitle": "Consulter les constats techniques prioritaires",
+      "severityTitle": "Gravité technique",
+      "evidenceTitle": "Preuve Lighthouse",
+      "elementCount": "{count} éléments signalés",
+      "mapping": "Association technique partielle à WCAG :",
+      "unmapped": "Aucune correspondance WCAG fiable enregistrée.",
+      "severity": {
+        "LOW": "Faible",
+        "MEDIUM": "Modérée",
+        "HIGH": "Élevée"
+      },
+      "qualificationTitle": "Consulter les indices, informations manquantes et sources",
+      "signalsTitle": "Indices et provenance",
+      "noSignal": "Aucun indice suffisant observé ; cela ne prouve pas une exclusion.",
+      "missingTitle": "Informations ou validations manquantes",
+      "noMissing": "Aucune information manquante enregistrée pour le périmètre examiné.",
+      "sourcesTitle": "Sources de référence",
+      "yes": "Oui",
+      "no": "Non",
+      "provenance": {
+        "OBSERVED": "Observé automatiquement",
+        "DECLARED": "Déclaré, non vérifié",
+        "VERIFIED": "Vérifié"
+      },
+      "information": {
+        "PRICE": "Prix affiché",
+        "COMMERCE_CTA": "Action commerciale",
+        "B2C_SERVICE": "Service destiné aux consommateurs",
+        "ARTICLE47_OPERATOR": "Organisme relevant potentiellement de l’article 47",
+        "OUTSIDE_SCOPE": "Détermination du périmètre hors champ",
+        "EXEMPTION": "Exemption",
+        "EXEMPTIONS": "Conditions d’exemption",
+        "SCOPE_REVIEWED": "Périmètre revu",
+        "OPERATOR_STATUS": "Statut de l’organisme",
+        "JURISDICTION": "Juridiction",
+        "SERVICE_DATES": "Dates pertinentes du service",
+        "ENTERPRISE_SIZE": "Effectif et seuils financiers",
+        "ARTICLE47_OPERATOR_CATEGORY": "Catégorie d’organisme article 47",
+        "PAGE_UNAVAILABLE": "Page inaccessible ou challenge anti-bot",
+        "CONFLICTING_SCOPE": "Contradiction dans le périmètre",
+        "RULES_REVIEW": "Validation des règles",
+        "SCOPE_REVIEW": "Vérification complète du périmètre"
+      },
+      "manual": "Navigation clavier, focus, annonces et parcours utilisateur nécessitent un contrôle humain. Les états manuels et non applicables ne sont pas des tests réussis.",
+      "versions": "Versions utilisées",
+      "kinds": {
+        "IMAGE_ALTERNATIVE": {
+          "title": "Alternatives textuelles des images",
+          "impact": "Une image sans alternative peut priver les utilisateurs de son information.",
+          "recommendation": "Vérifier l’usage de chaque image ; ajouter une alternative pertinente ou une alternative vide si elle est décorative."
+        },
+        "CONTRAST": {
+          "title": "Contraste du texte",
+          "impact": "Un contraste insuffisant peut rendre le texte difficile à lire.",
+          "recommendation": "Vérifier les couleurs dans les états concernés et améliorer le contraste, puis contrôler manuellement."
+        },
+        "ACCESSIBLE_NAME": {
+          "title": "Nom accessible des contrôles",
+          "impact": "Un contrôle sans nom pertinent peut être difficile à comprendre avec une technologie d’assistance.",
+          "recommendation": "Associer un libellé accessible au contrôle et vérifier son annonce dans le parcours."
+        },
+        "LANGUAGE": {
+          "title": "Langue de la page",
+          "impact": "Une langue absente ou incorrecte peut perturber la prononciation du lecteur d’écran.",
+          "recommendation": "Déclarer une langue valide correspondant au contenu et vérifier les changements de langue."
+        },
+        "OTHER": {
+          "title": "Constat d’accessibilité Lighthouse",
+          "impact": "Un contrôle automatisé a signalé un point à examiner.",
+          "recommendation": "Examiner l’audit Lighthouse identifié et vérifier son impact dans le parcours utilisateur."
+        }
+      }
+    },
     "metadata": {
       "title": "Rapport Argos"
     },
