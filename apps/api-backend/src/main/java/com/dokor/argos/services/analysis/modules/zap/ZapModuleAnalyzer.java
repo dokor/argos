@@ -46,13 +46,14 @@ public class ZapModuleAnalyzer implements AuditModuleAnalyzer {
     public AuditModuleResult analyze(AuditContext context, Logger logger) {
         String url = context.finalUrl() != null ? context.finalUrl() : context.normalizedUrl();
 
-        logger.info("ZAP module: fetching alerts for url={}", url);
+        logger.info("ZAP module: analyzing HTTP snapshot url={}", com.dokor.argos.services.domain.audit.UrlNormalizer.sanitizeForLog(url));
 
         JsonNode response;
         try {
-            response = client.getAlerts(url);
+            response = client.analyze(context);
         } catch (Exception e) {
-            logger.warn("ZAP module: ZAP daemon unavailable url={} error={}", url, e.getMessage());
+            logger.warn("ZAP module: passive analysis unavailable url={} error={}",
+                com.dokor.argos.services.domain.audit.UrlNormalizer.sanitizeForLog(url), e.getClass().getSimpleName());
             return emptyModule("ZAP daemon unavailable: " + e.getMessage());
         }
 
@@ -108,20 +109,21 @@ public class ZapModuleAnalyzer implements AuditModuleAnalyzer {
                 List.of(),
                 0,
                 Map.of("alertCount", 0),
-                "L'analyse passive ZAP n'a détecté aucune alerte.",
+                "L'analyse passive ZAP de la réponse HTTP collectée n'a détecté aucune alerte (sans exploration du site).",
                 null
             ));
         }
 
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("url", url);
+        data.put("scope", "HTTP_SNAPSHOT");
         data.put("alertCount", rawCount);
         data.put("distinctFindings", byKey.size());
         data.put("falsePositivesFiltered", falsePositives);
 
         String summary = "url=" + url + " alerts=" + rawCount
             + " distinct=" + byKey.size() + " fp=" + falsePositives;
-        logger.info("ZAP module done: {}", summary);
+        logger.info("ZAP module done: alerts={} distinct={} fp={}", rawCount, byKey.size(), falsePositives);
 
         return new AuditModuleResult(moduleId(), "OWASP ZAP", summary, data, checks);
     }
