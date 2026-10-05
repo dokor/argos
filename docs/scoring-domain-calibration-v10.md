@@ -43,7 +43,9 @@ La restitution publique ajoute `scores.globalAvailable` et un bloc optionnel
 `scores.calculation` contenant version, empreinte, score, dénominateur, ratio
 et coefficient effectif pour chaque domaine. Le global affiché est arrondi
 à l'entier ; sa décomposition conserve les valeurs non arrondies.
-L'onglet Données permet de consulter ce bloc.
+Le JSON de l'API publique expose ce bloc ; le panneau Données du rapport
+permet aussi aux administrateurs de le consulter. Le Hero et la grille
+de score affichent l'état indisponible au lieu de zéro.
 
 ## Courbes et compatibilité
 

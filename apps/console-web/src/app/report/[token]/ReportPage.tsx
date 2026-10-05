@@ -31,7 +31,7 @@ export default function ReportPage({ params }: Readonly<Params>) {
         <AntiBotNotice antiBot={report.antiBot} />
         <AiSummary summary={report.summary.ai} />
         <PriorityCards priorities={report.summary.priorities} />
-        <ScoreGrid categories={report.scores.byCategory} globalScore={report.scores.global} completeness={report.scores.completeness} />
+        <ScoreGrid categories={report.scores.byCategory} globalScore={report.scores.global} globalAvailable={report.scores.globalAvailable} completeness={report.scores.completeness} />
         <AccessibilitySection report={report} />
         <IssuesByCategory report={report} />
 
