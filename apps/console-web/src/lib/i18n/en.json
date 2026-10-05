@@ -317,6 +317,13 @@
       "scopeTitle": "Potential scope",
       "confidenceTitle": "Scope confidence",
       "riskTitle": "Indicative regulatory risk",
+      "rulesReviewTitle": "Review of this report’s rules",
+      "rulesReview": {
+        "VALIDATED": "Validation recorded for the rules used",
+        "PENDING": "Human validation pending",
+        "UNKNOWN": "Validation not recorded"
+      },
+      "rulesSnapshot": "This state and the rules version are preserved as of the report date. Validation does not certify the site’s compliance; later rule changes do not alter this report.",
       "coverage": {
         "COMPLETE": "Referenced automated results available",
         "PARTIAL": "Partial collection",

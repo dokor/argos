@@ -114,6 +114,38 @@ describe("AccessibilitySection (#263)", () => {
     expect(screen.getByText(en.report.accessibility.limit)).toBeInTheDocument();
     expect(screen.queryByText(fr.report.accessibility.limit)).not.toBeInTheDocument();
   });
+  it.each(["fr", "en"] as const)("shows persisted rule review states independently of score and risk in %s", language => {
+    locale = language;
+    const copy = (language === "fr" ? fr : en).report.accessibility;
+    const report = fixture();
+    const { rerender } = render(<AccessibilitySection report={report} />);
+    expect(screen.getByText(copy.rulesReviewTitle).nextElementSibling).toHaveTextContent(copy.rulesReview.PENDING);
+    expect(screen.getByText(copy.rulesSnapshot)).toBeInTheDocument();
+    expect(screen.queryByText(copy.rulesReview.VALIDATED)).not.toBeInTheDocument();
+
+    // Reading a hypothetical historical approved snapshot must not requalify it with today's pending rules.
+    report.accessibilityCompliance!.rulesValidated = true;
+    report.accessibilityCompliance!.accessibilityComplianceVersion = "historical-rules-version";
+    report.accessibilityCompliance!.riskReason = "SCOPE_UNKNOWN";
+    rerender(<AccessibilitySection report={report} />);
+    expect(screen.getByText(copy.rulesReviewTitle).nextElementSibling).toHaveTextContent(copy.rulesReview.VALIDATED);
+    expect(screen.getByText(copy.riskTitle).nextElementSibling).toHaveTextContent(copy.risk.UNKNOWN);
+    expect(screen.getByText(/historical-rules-version/)).toBeInTheDocument();
+    expect(report.issues).toEqual([]);
+    expect(report.summary.priorities).toEqual([]);
+
+    delete (report.accessibilityCompliance as Partial<NonNullable<Report["accessibilityCompliance"]>>).rulesValidated;
+    rerender(<AccessibilitySection report={report} />);
+    expect(screen.getByText(copy.rulesReviewTitle).nextElementSibling).toHaveTextContent(copy.rulesReview.UNKNOWN);
+  });
+  it("does not invent a rules review when only technical evidence was persisted", () => {
+    const report = fixture();
+    delete report.accessibilityCompliance;
+    render(<AccessibilitySection report={report} />);
+    expect(screen.queryByText(fr.report.accessibility.rulesReviewTitle)).not.toBeInTheDocument();
+    expect(screen.queryByText(fr.report.accessibility.rulesSnapshot)).not.toBeInTheDocument();
+    expect(screen.getByText("93/100")).toBeInTheDocument();
+  });
   it("escapes external text and supports long lists without changing counters", () => {
     const report = fixture();
     report.accessibilityEvidence!.findings = Array.from({ length: 50 }, (_, i) => ({
