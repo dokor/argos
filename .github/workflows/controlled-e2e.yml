@@ -1,0 +1,105 @@
+name: Controlled audit E2E
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  audit-e2e:
+    name: Controlled audit E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      mariadb:
+        image: mariadb:11.4
+        env:
+          MARIADB_ROOT_PASSWORD: synthetic-root-fixture
+          MARIADB_DATABASE: argos_credentials_test
+          MARIADB_USER: argos_fixture
+          MARIADB_PASSWORD: synthetic-fixture
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s --health-timeout=5s --health-retries=15
+    env:
+      ARGOS_E2E: 'true'
+      ARGOS_TEST_CREDENTIALS_URL: jdbc:mariadb://127.0.0.1:3306/argos_credentials_test
+      ARGOS_TEST_CREDENTIALS_USER: argos_fixture
+      ARGOS_TEST_CREDENTIALS_PASSWORD: synthetic-fixture
+      API_BASE: http://127.0.0.1:8081
+      PLAYWRIGHT_SERVICE_URL: http://127.0.0.1:3016
+      LIGHTHOUSE_SERVICE_URL: http://127.0.0.1:3017
+      PLAYWRIGHT_TIMEOUT_SECONDS: '10'
+      LIGHTHOUSE_TIMEOUT_SECONDS: '30'
+      NEXT_TELEMETRY_DISABLED: '1'
+      APP_LOGS_ENABLED: 'false'
+      NEXT_PUBLIC_APP_LOGS_ENABLED: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: apps/api-backend/pom.xml
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.13.0'
+          cache: npm
+          cache-dependency-path: |
+            apps/console-web/package-lock.json
+            apps/playwright-service/package-lock.json
+            apps/lighthouse-service/package-lock.json
+      - run: npm ci --prefix apps/console-web
+      - run: npm ci --prefix apps/playwright-service
+      - run: npm ci --prefix apps/lighthouse-service
+      - name: Install controlled Chromium
+        working-directory: apps/playwright-service
+        run: npx playwright install --with-deps chromium
+      - name: Build frontend for the local backend
+        run: npm run build --prefix apps/console-web
+      - name: Start local frontend and controlled headless services
+        run: |
+          mkdir -p outputs
+          node --check scripts/e2e/headless.mjs
+          node --check scripts/e2e/browser.mjs
+          node scripts/e2e/headless.mjs > outputs/headless-e2e.log 2>&1 &
+          npm run start --prefix apps/console-web -- --hostname 127.0.0.1 > outputs/frontend-e2e.log 2>&1 &
+          node --input-type=module <<'JS'
+          for (const url of ['http://127.0.0.1:3016/health','http://127.0.0.1:3017/health','http://127.0.0.1:3000']) {
+            let ready=false;
+            for(let i=0;i<60;i++) {
+              try {if((await fetch(url)).ok) {ready=true;break;}} catch {}
+              await new Promise(resolve=>setTimeout(resolve,500));
+            }
+            if(!ready) throw new Error('Controlled service failed readiness');
+          }
+          JS
+      - name: Run real database and browser lifecycle
+        run: mvn --batch-mode -f apps/api-backend/pom.xml -P mariadb-integration -Dit.test=ControlledAuditE2eIT verify
+      - name: Rehearse consistent backup and isolated restore
+        env:
+          DB_FIXTURE_CONTAINER: ${{ job.services.mariadb.id }}
+        run: |
+          docker exec "$DB_FIXTURE_CONTAINER" mariadb-dump -uroot -psynthetic-root-fixture --single-transaction --hex-blob argos_credentials_test > outputs/controlled-backup.sql
+          docker exec "$DB_FIXTURE_CONTAINER" mariadb -uroot -psynthetic-root-fixture -e 'CREATE DATABASE argos_restore_test'
+          docker exec -i "$DB_FIXTURE_CONTAINER" mariadb -uroot -psynthetic-root-fixture argos_restore_test < outputs/controlled-backup.sql
+          query="SELECT COUNT(*), SHA2(GROUP_CONCAT(CONCAT(id,':',run_id,':',HEX(token_hash),':',SHA2(report_json,256)) ORDER BY id SEPARATOR '|'),256) FROM ARG_AUDIT_REPORT"
+          original=$(docker exec "$DB_FIXTURE_CONTAINER" mariadb -uroot -psynthetic-root-fixture -N argos_credentials_test -e "$query")
+          restored=$(docker exec "$DB_FIXTURE_CONTAINER" mariadb -uroot -psynthetic-root-fixture -N argos_restore_test -e "$query")
+          test "$original" = "$restored"
+          printf '%s\n' '{"fixture":"isolated-mariadb-11.4","backup":"single-transaction-hex-blob","restore":"PASS","reportCountAndHashDigestEqual":true}' > outputs/controlled-restore.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: controlled-e2e-${{ github.sha }}
+          path: |
+            outputs/controlled-e2e.json
+            outputs/controlled-e2e-error.log
+            outputs/controlled-restore.json
+            apps/api-backend/target/failsafe-reports/
+          if-no-files-found: error
+          retention-days: 14
