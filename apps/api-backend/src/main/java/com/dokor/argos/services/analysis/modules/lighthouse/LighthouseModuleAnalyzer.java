@@ -1,10 +1,11 @@
-package com.dokor.argos.services.analysis.lighthouse;
+package com.dokor.argos.services.analysis.modules.lighthouse;
 
 import com.dokor.argos.services.analysis.model.*;
 import com.dokor.argos.services.analysis.accessibility.LighthouseAccessibilityNormalizer;
 import com.dokor.argos.services.analysis.model.enums.AuditSeverity;
 import com.dokor.argos.services.analysis.model.enums.AuditStatus;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.dokor.argos.util.JsonNodes;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.slf4j.Logger;
@@ -81,16 +82,16 @@ public class LighthouseModuleAnalyzer implements AuditModuleAnalyzer {
         // Titres uniquement pour les catégories réellement notées, cohérent avec data.scores.
         Map<String, Object> categoryTitles = new LinkedHashMap<>();
         for (String cat : categoryScores.keySet()) {
-            String title = textOrNull(lhr.at("/categories/" + cat + "/title"));
+            String title = JsonNodes.nonBlankText(lhr.at("/categories/" + cat + "/title"));
             if (title != null) categoryTitles.put(dataKey(cat) + "Title", title);
         }
 
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("available", true);
         data.put("requestedUrl", url);
-        data.put("finalUrl", textOrNull(lhr.at("/finalDisplayedUrl")));
-        data.put("fetchTime", textOrNull(lhr.at("/fetchTime")));
-        data.put("lighthouseVersion", textOrNull(lhr.at("/lighthouseVersion")));
+        data.put("finalUrl", JsonNodes.nonBlankText(lhr.at("/finalDisplayedUrl")));
+        data.put("fetchTime", JsonNodes.nonBlankText(lhr.at("/fetchTime")));
+        data.put("lighthouseVersion", JsonNodes.nonBlankText(lhr.at("/lighthouseVersion")));
         data.put("scores", scores);
         data.put("categories", categoryTitles);
         data.put("durationMs", durationMs);
@@ -196,12 +197,12 @@ public class LighthouseModuleAnalyzer implements AuditModuleAnalyzer {
             JsonNode refs = lhr.at("/categories/" + cat + "/auditRefs");
             if (refs == null || !refs.isArray()) continue;
             for (JsonNode ref : refs) {
-                String id = textOrNull(ref.path("id"));
+                String id = JsonNodes.nonBlankText(ref.path("id"));
                 if (id == null || seen.contains(id)) continue;
                 JsonNode audit = audits.path(id);
                 if (audit.isMissingNode()) continue;
 
-                String mode = textOrNull(audit.path("scoreDisplayMode"));
+                String mode = JsonNodes.nonBlankText(audit.path("scoreDisplayMode"));
                 if (mode == null || !SCORED_MODES.contains(mode)) continue;
 
                 JsonNode scoreNode = audit.path("score");
@@ -212,8 +213,8 @@ public class LighthouseModuleAnalyzer implements AuditModuleAnalyzer {
                 seen.add(id);
                 candidates.add(new AuditCandidate(
                     id, cat, ref.path("weight").asInt(0), score,
-                    textOrNull(audit.path("title")),
-                    cleanDescription(textOrNull(audit.path("description")))
+                    JsonNodes.nonBlankText(audit.path("title")),
+                    cleanDescription(JsonNodes.nonBlankText(audit.path("description")))
                 ));
             }
         }
@@ -310,9 +311,4 @@ public class LighthouseModuleAnalyzer implements AuditModuleAnalyzer {
         return (int) Math.round(v * 100.0);
     }
 
-    private static String textOrNull(JsonNode n) {
-        if (n == null || n.isMissingNode() || n.isNull()) return null;
-        String s = n.asText();
-        return (s == null || s.isBlank()) ? null : s;
-    }
 }

@@ -1,5 +1,7 @@
 package com.dokor.argos.services.analysis.modules.ssl;
 
+import com.dokor.argos.util.Urls;
+import com.dokor.argos.util.JsonNodes;
 import com.dokor.argos.services.analysis.model.AuditCheckResult;
 import com.dokor.argos.services.analysis.model.AuditContext;
 import com.dokor.argos.services.analysis.model.AuditModuleAnalyzer;
@@ -12,7 +14,6 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 
-import java.net.URI;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -42,7 +43,7 @@ public class SslLabsModuleAnalyzer implements AuditModuleAnalyzer {
     @Override
     public AuditModuleResult analyze(AuditContext context, Logger logger) {
         String url = context.finalUrl() != null ? context.finalUrl() : context.normalizedUrl();
-        String host = extractHost(url);
+        String host = Urls.host(url);
 
         if (host == null) {
             logger.warn("SSL Labs module: could not extract host from url={}", url);
@@ -66,7 +67,7 @@ public class SslLabsModuleAnalyzer implements AuditModuleAnalyzer {
         List<AuditCheckResult> checks = new ArrayList<>();
 
         // ssl.grade
-        String grade = endpoint != null ? textOrNull(endpoint.path("grade")) : null;
+        String grade = endpoint != null ? JsonNodes.text(endpoint.path("grade")) : null;
         boolean hasWarnings = endpoint != null && endpoint.path("hasWarnings").asBoolean(false);
 
         // Grade indisponible (SSL Labs en cours, endpoint absent, erreur amont) => INFO
@@ -188,8 +189,8 @@ public class SslLabsModuleAnalyzer implements AuditModuleAnalyzer {
 
         if (hasProtocolData) {
             for (JsonNode proto : protocols) {
-                String name = textOrNull(proto.path("name"));
-                String version = textOrNull(proto.path("version"));
+                String name = JsonNodes.text(proto.path("name"));
+                String version = JsonNodes.text(proto.path("version"));
                 if ("TLS".equals(name) && "1.3".equals(version)) hasTls13 = true;
                 if ("TLS".equals(name) && "1.2".equals(version)) hasTls12 = true;
                 if ("TLS".equals(name) && "1.1".equals(version)) hasTls11 = true;
@@ -257,7 +258,7 @@ public class SslLabsModuleAnalyzer implements AuditModuleAnalyzer {
         // http.security.hsts - reuses existing key, will be merged by CheckMergerService
         JsonNode hstsPolicy = details != null ? details.path("hstsPolicy") : null;
         String hstsStatus = hstsPolicy != null && !hstsPolicy.isMissingNode()
-            ? textOrNull(hstsPolicy.path("status")) : null;
+            ? JsonNodes.text(hstsPolicy.path("status")) : null;
         long hstsMaxAge = hstsPolicy != null && !hstsPolicy.isMissingNode()
             ? hstsPolicy.path("maxAge").asLong(0L) : 0L;
         boolean hstsPresent = "present".equalsIgnoreCase(hstsStatus);
@@ -279,7 +280,7 @@ public class SslLabsModuleAnalyzer implements AuditModuleAnalyzer {
         // Build data
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("host", host);
-        data.put("status", textOrNull(result.path("status")));
+        data.put("status", JsonNodes.text(result.path("status")));
         data.put("grade", grade);
         data.put("hasWarnings", hasWarnings);
         data.put("tls13", hasTls13);
@@ -310,21 +311,6 @@ public class SslLabsModuleAnalyzer implements AuditModuleAnalyzer {
         ));
         return new AuditModuleResult(moduleId(), "SSL Labs", "ssl=unavailable",
             Map.of("available", false, "reason", reason), checks);
-    }
-
-    private static String extractHost(String url) {
-        if (url == null || url.isBlank()) return null;
-        try {
-            return URI.create(url).getHost();
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    private static String textOrNull(JsonNode node) {
-        if (node == null || node.isMissingNode() || node.isNull()) return null;
-        String s = node.asText();
-        return (s == null || s.isBlank() || "null".equals(s)) ? null : s;
     }
 
     private static Map<String, Object> buildHstsDetails(String status, long maxAge) {

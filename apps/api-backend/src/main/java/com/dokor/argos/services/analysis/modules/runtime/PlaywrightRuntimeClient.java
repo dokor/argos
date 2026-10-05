@@ -1,4 +1,4 @@
-package com.dokor.argos.services.analysis.playwright;
+package com.dokor.argos.services.analysis.modules.runtime;
 
 import com.dokor.argos.logging.ExternalServiceCall;
 import com.dokor.argos.services.analysis.BoundedBodyHandlers;

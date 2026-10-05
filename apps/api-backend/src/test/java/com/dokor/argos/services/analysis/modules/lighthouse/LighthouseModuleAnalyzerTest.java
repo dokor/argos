@@ -1,4 +1,4 @@
-package com.dokor.argos.services.analysis.lighthouse;
+package com.dokor.argos.services.analysis.modules.lighthouse;
 
 import com.dokor.argos.services.analysis.model.AuditCheckResult;
 import com.dokor.argos.services.analysis.model.AuditContext;
@@ -17,6 +17,20 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.*;
 
 class LighthouseModuleAnalyzerTest {
+
+    @Test
+    void literalNullTitlesRemainLiteralText() throws Exception {
+        LighthouseClient client = mock(LighthouseClient.class);
+        when(client.analyze(anyString())).thenReturn(new ObjectMapper().readTree("""
+            {"categories":{"performance":{"score":0.6,"title":"null"}},
+             "finalDisplayedUrl":"null","lighthouseVersion":"null"}
+            """));
+        var result = new LighthouseModuleAnalyzer(client).analyze(ctx(), LoggerFactory.getLogger("test"));
+        assertEquals("null", result.data().get("finalUrl"));
+        assertEquals("null", result.data().get("lighthouseVersion"));
+        assertEquals(Map.of("performanceTitle", "null"), result.data().get("categories"));
+        assertEquals("lighthouse.score.performance", result.checks().getFirst().key());
+    }
 
     private static AuditContext ctx() {
         return new AuditContext("http://example.com", "http://example.com", 1L);

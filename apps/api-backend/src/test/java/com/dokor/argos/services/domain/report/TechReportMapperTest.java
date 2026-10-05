@@ -9,6 +9,28 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class TechReportMapperTest {
 
+    @Test
+    void mixedTypePayloadKeepsPublicJsonFormat() throws Exception {
+        var mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        Map<String, Object> input = mapper.readValue("""
+            {"cms":{"name":"","confidence":"0.95"},
+             "frontendFramework":{"name":7,"confidence":"bad"},
+             "nextJs":{"isNext":" TRUE ","confidence":0.8,"router":"null","buildId":42,
+               "version":{"exact":"","min":13,"max":null,"guess":"14.x",
+                          "guessConfidence":"0.4","method":false},
+               "evidence":[null,"",3,false]}}
+            """, new com.fasterxml.jackson.core.type.TypeReference<>() {});
+        var expected = mapper.readTree("""
+            {"cms":{"name":"","confidence":0.95},
+             "frontendFramework":{"name":"7","confidence":null},
+             "nextJs":{"isNext":true,"confidence":0.8,"router":"null","buildId":"42",
+               "version":{"exact":"","min":"13","max":null,"guess":"14.x",
+                          "guessConfidence":0.4,"method":"false"},
+               "evidence":["","3","false"]}}
+            """);
+        assertEquals(expected, mapper.valueToTree(TechReportMapper.fromTechModuleData(input)));
+    }
+
     // ------------------------------------------------------------------ helpers
 
     private static Map<String, Object> techData(Object cms, Object ff, Object next) {

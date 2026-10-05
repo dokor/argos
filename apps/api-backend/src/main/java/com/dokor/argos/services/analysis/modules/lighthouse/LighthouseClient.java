@@ -1,4 +1,4 @@
-package com.dokor.argos.services.analysis.lighthouse;
+package com.dokor.argos.services.analysis.modules.lighthouse;
 
 import com.dokor.argos.logging.ExternalServiceCall;
 import com.dokor.argos.services.analysis.BoundedBodyHandlers;

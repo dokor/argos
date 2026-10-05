@@ -2,7 +2,7 @@ package com.dokor.argos.services.analysis;
 
 import com.dokor.argos.db.dao.AuditDao;
 import com.dokor.argos.db.generated.Audit;
-import com.dokor.argos.services.analysis.lighthouse.LighthouseModuleAnalyzer;
+import com.dokor.argos.services.analysis.modules.lighthouse.LighthouseModuleAnalyzer;
 import com.dokor.argos.services.analysis.model.AuditContext;
 import com.dokor.argos.services.analysis.model.AuditModuleResult;
 import com.dokor.argos.services.analysis.modules.html.HtmlModuleAnalyzer;
@@ -121,7 +121,7 @@ class AuditProcessorServiceTest {
     }
 
     @Test
-    void shouldNormalizeUrlWhenMissingAndComplete() {
+    void shouldNormalizeUrlWhenMissingAndComplete() throws Exception {
         AuditRunService runService = mock(AuditRunService.class);
         AuditDao auditDao = mock(AuditDao.class);
         UrlNormalizer normalizer = mock(UrlNormalizer.class);
@@ -194,6 +194,10 @@ class AuditProcessorServiceTest {
         verify(normalizer).normalize("http://example.com");
         ArgumentCaptor<String> completedJson = ArgumentCaptor.forClass(String.class);
         verify(runService).complete(eq(1L), completedJson.capture());
+        var moduleIds = new java.util.ArrayList<String>();
+        objectMapper().readTree(completedJson.getValue()).path("modules")
+            .forEach(module -> moduleIds.add(module.path("id").asText()));
+        assertEquals(List.of("http", "html", "runtime", "lighthouse", "observatory", "ssl", "zap", "tech"), moduleIds);
         assertTrue(completedJson.getValue().contains("accessibility-compliance-proposal-v1"));
         assertTrue(completedJson.getValue().contains("RULES_PENDING"));
         assertFalse(completedJson.getValue().contains("<html>"));

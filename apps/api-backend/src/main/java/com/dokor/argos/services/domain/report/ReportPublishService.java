@@ -1,5 +1,6 @@
 package com.dokor.argos.services.domain.report;
 
+import com.dokor.argos.util.Urls;
 import com.dokor.argos.db.dao.AuditReportDao;
 import com.dokor.argos.db.generated.Audit;
 import com.dokor.argos.db.generated.AuditReport;
@@ -11,7 +12,6 @@ import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.URI;
 import java.time.Instant;
 import java.util.Optional;
 
@@ -72,7 +72,7 @@ public class ReportPublishService {
             byte[] hash = tokenService.sha256(token);
 
             String url = audit.getNormalizedUrl();
-            String domain = extractDomain(url);
+            String domain = Urls.host(url, url);
 
             // 3) Persist
             AuditReport entity = new AuditReport();
@@ -101,14 +101,6 @@ public class ReportPublishService {
         } catch (Exception e) {
             logger.warn("Report publish failed runId={} auditId={} error={}", runId, audit.getId(), e.getMessage(), e);
             return Optional.empty();
-        }
-    }
-
-    private static String extractDomain(String url) {
-        try {
-            return URI.create(url).getHost();
-        } catch (Exception e) {
-            return url;
         }
     }
 
