@@ -11,7 +11,8 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.Context;
-import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.container.ContainerRequestContext;
+import com.dokor.argos.webservices.api.security.PublicWriteFilter;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.slf4j.Logger;
@@ -41,24 +42,17 @@ public class NewsletterWs {
     @POST
     @Path("/subscribe")
     @Operation(description = "Inscrit un email à la newsletter Argos.")
-    public Response subscribe(SubscribeRequest request, @Context HttpHeaders headers) {
+    public Response subscribe(SubscribeRequest request, @Context ContainerRequestContext context) {
         if (request == null || request.email() == null) {
             return Response.status(Response.Status.BAD_REQUEST)
                 .entity(new SubscribeResponse("error", "Email is required"))
                 .build();
         }
 
-        // IP hint (best effort, peut être absent derrière un proxy)
-        String ipHint = headers.getHeaderString("X-Forwarded-For");
-        if (ipHint != null && ipHint.contains(",")) {
-            ipHint = ipHint.split(",")[0].trim();
-        }
-
-        logger.info("Newsletter subscribe requested email={}", request.email());
+        String ipHint = context == null ? null : (String) context.getProperty(PublicWriteFilter.CLIENT_HINT);
 
         return switch (newsletterService.subscribe(request.email(), ipHint)) {
-            case SUBSCRIBED -> Response.ok(new SubscribeResponse("ok", "Subscribed successfully")).build();
-            case ALREADY_SUBSCRIBED -> Response.status(409).entity(new SubscribeResponse("already_subscribed", "Email already registered")).build();
+            case SUBSCRIBED, ALREADY_SUBSCRIBED -> Response.ok(new SubscribeResponse("ok", "Subscription request accepted")).header("Cache-Control", "no-store").build();
             case INVALID_EMAIL -> Response.status(Response.Status.BAD_REQUEST).entity(new SubscribeResponse("error", "Invalid email address")).build();
         };
     }

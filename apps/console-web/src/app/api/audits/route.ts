@@ -152,7 +152,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       body: JSON.stringify({ url: trimmed }),
     });
   } catch (error) {
-    console.error("[BFF] Backend unreachable:", error);
     logger.error("audit_bff_backend_unreachable", {
       action: "create_audit",
       details: {
@@ -187,7 +186,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   return new NextResponse(text, {
     status: backendRes.status,
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "Cache-Control": "no-store",
+      ...(backendRes.status === 429 && backendRes.headers.get("retry-after") ? { "Retry-After": backendRes.headers.get("retry-after")! } : {}) },
   });
 }
 
