@@ -116,6 +116,22 @@ informations manquantes. Ne pas promettre « conforme », « sans risque » ou u
 
 ## Publication et maintenance
 
+Le [registre de revue v1](accessibility-review-v1.json) identifie les douze
+règles de cette matrice avec cadre, date, sources, informations requises et
+fixtures liées. Il signale explicitement les lacunes de couverture des organismes
+d'intérêt général, associations et exceptions documentées. Les tests de contrat
+contrôlent les références et l'ensemble des fixtures ; leur succès ne valide
+aucune interprétation juridique. Ce registre documentaire n'est pas chargé par
+le runtime.
+
+Pour chaque décision du registre, le relecteur renseigne dans #260 : identifiant,
+APPROVED ou CHANGES_REQUIRED, auteur/rôle, date, justification, sources et SHA
+exact de la matrice, des fixtures et des textes FR/EN examinés. L'ensemble reste
+PENDING tant que ces preuves ne sont pas enregistrées. Un changement des règles,
+du barème ou du wording après revue exige une nouvelle décision sur le diff.
+L'activation demeure une PR applicative distincte ; ni le registre ni une fusion
+ne changent `Rules.pending()` ou les snapshots historiques.
+
 - [ ] @dokor désigne le relecteur juridique/produit et confirme la juridiction France.
 - [ ] Relecteur valide matrice, frontière 250 M€, transitions et référentiels.
 - [ ] Relecteur décide du barème de risque et valide le wording FR/EN.
