@@ -8,16 +8,23 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.util.Map;
 
 @Singleton
 public class ConfigurationService {
     private static final Logger logger = LoggerFactory.getLogger(ConfigurationService.class);
 
     private final Config config;
+    private final Map<String, String> environment;
 
     @Inject
     public ConfigurationService(Config config) {
+        this(config, System.getenv());
+    }
+
+    ConfigurationService(Config config, Map<String, String> environment) {
         this.config = config;
+        this.environment = Map.copyOf(environment);
         logger.debug("ConfigurationService has been initialized");
     }
 
@@ -74,15 +81,15 @@ public class ConfigurationService {
     }
 
     public boolean codexSummaryEnabled() {
-        return Boolean.parseBoolean(System.getenv().getOrDefault("CODEX_SUMMARY_ENABLED", "false"));
+        return Boolean.parseBoolean(environment.getOrDefault("CODEX_SUMMARY_ENABLED", "false"));
     }
 
     public String codexSummaryServiceUrl() {
-        return System.getenv().getOrDefault("CODEX_SUMMARY_SERVICE_URL", "http://codex-summary:3010");
+        return environment.getOrDefault("CODEX_SUMMARY_SERVICE_URL", "http://codex-summary:3010");
     }
 
     public Duration codexSummaryTimeout() {
-        String raw = System.getenv().getOrDefault("CODEX_SUMMARY_TIMEOUT_SECONDS", "45");
+        String raw = environment.getOrDefault("CODEX_SUMMARY_TIMEOUT_SECONDS", "45");
         try {
             return Duration.ofSeconds(Math.max(5, Long.parseLong(raw)));
         } catch (NumberFormatException e) {
