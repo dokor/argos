@@ -11,3 +11,13 @@ No DOM snippets, selectors, node attributes, external text or URLs are persisted
 ## Admission and sequencing
 
 The human request admits implementation and PR preparation. #260 has not approved the legal matrix or final wording. #262/#263 will remain draft pending that review. Runtime rules must report that pending state and retain UNKNOWN regulatory risk. Passive indicators are hypotheses; absence is never OUT_OF_SCOPE. No sanction amounts are published.
+
+## Qualification policy v1 (proposed, not approved)
+
+The candidate-framework list represents EAA and article 47 independently; it allows overlap. Signals are fixed codes with OBSERVED, DECLARED or VERIFIED provenance, never copied page content. Passive commerce is inferred only from two independent indicators (price and purchase/cart/reservation CTA) in visible HTML. It gives LOW confidence and missing B2C/service/operator/exemption data. Scripts/comments cannot provide a signal. Absence produces UNKNOWN.
+
+Verified operator facts can propose article 47 or EAA. Declared facts never receive HIGH confidence or remove missing information. OUT_OF_SCOPE requires an explicit verified human determination for the full target perimeter and no conflicting candidate or unresolved declaration. Exemptions are recorded as declarations/verified facts and never automatically exclude the site.
+
+Risk UNKNOWN if rules are unapproved, scope has insufficient confidence, or evidence is PARTIAL/UNAVAILABLE. With approved rules and verified candidate scope, the indicative proposal is LOW for 0 failed automatic audits, MEDIUM for 1–2, HIGH for 3–9 and CRITICAL for 10+. These are counts of failed audits, not legal infringements or fine calculations. OUT_OF_SCOPE gives UNKNOWN risk (not a technical pass). A good score never determines risk. This proposal needs owner review in #260.
+
+Runtime uses the immutable unapproved ruleset `accessibility-compliance-proposal-v1`. There is no endpoint to submit verified facts or activate the rules. Reports persist both the proposal version and its review state, and are never requalified on reads.

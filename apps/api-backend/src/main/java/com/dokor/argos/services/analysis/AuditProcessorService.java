@@ -4,6 +4,9 @@ import com.dokor.argos.db.dao.AuditDao;
 import com.dokor.argos.db.generated.Audit;
 import com.dokor.argos.services.analysis.lighthouse.LighthouseModuleAnalyzer;
 import com.dokor.argos.services.analysis.accessibility.LighthouseAccessibilityNormalizer;
+import com.dokor.argos.services.analysis.accessibility.AccessibilityEvidence;
+import com.dokor.argos.services.analysis.accessibility.AccessibilityRegulatoryScopeService;
+import com.dokor.argos.services.analysis.accessibility.AccessibilityComplianceRiskService;
 import com.dokor.argos.services.analysis.model.AuditCheckResult;
 import com.dokor.argos.services.analysis.model.AuditContext;
 import com.dokor.argos.services.analysis.model.AuditModuleResult;
@@ -61,6 +64,8 @@ public class AuditProcessorService {
     private final ObjectMapper objectMapper;
 
     private final ReportPublishService reportPublishService;
+    private final AccessibilityRegulatoryScopeService accessibilityScopeService;
+    private final AccessibilityComplianceRiskService accessibilityRiskService;
 
     @Inject
     public AuditProcessorService(
@@ -79,7 +84,9 @@ public class AuditProcessorService {
         ScoreEnricherService scoreEnricherService,
         ScoreService scoreService,
         ObjectMapper objectMapper,
-        ReportPublishService reportPublishService
+        ReportPublishService reportPublishService,
+        AccessibilityRegulatoryScopeService accessibilityScopeService,
+        AccessibilityComplianceRiskService accessibilityRiskService
     ) {
         this.auditRunService = auditRunService;
         this.auditDao = auditDao;
@@ -97,6 +104,20 @@ public class AuditProcessorService {
         this.scoreService = scoreService;
         this.objectMapper = objectMapper;
         this.reportPublishService = reportPublishService;
+        this.accessibilityScopeService = accessibilityScopeService;
+        this.accessibilityRiskService = accessibilityRiskService;
+    }
+
+    /** Compatibility constructor for existing tests/callers; production uses the injected services. */
+    public AuditProcessorService(AuditRunService runs, AuditDao audits, UrlNormalizer urls,
+        HttpModuleAnalyzer http, HtmlModuleAnalyzer html, RuntimeModuleAnalyzer runtime,
+        LighthouseModuleAnalyzer lighthouse, ObservatoryModuleAnalyzer observatory,
+        SslLabsModuleAnalyzer ssl, ZapModuleAnalyzer zap, DomainAnalysisService domains,
+        CheckMergerService merger, ScoreEnricherService enricher, ScoreService scores,
+        ObjectMapper mapper, ReportPublishService publisher) {
+        this(runs, audits, urls, http, html, runtime, lighthouse, observatory, ssl, zap, domains,
+            merger, enricher, scores, mapper, publisher, new AccessibilityRegulatoryScopeService(),
+            new AccessibilityComplianceRiskService());
     }
 
     public void process(long runId) {
@@ -188,6 +209,19 @@ public class AuditProcessorService {
                 lighthouseModule = new AuditModuleResult(lighthouseModule.id(), lighthouseModule.title(),
                     lighthouseModule.summary(), data, lighthouseModule.checks());
             }
+            boolean blockedPage = ctx.httpStatusCode() == 403 || ctx.httpStatusCode() == 429
+                || httpModule.data() != null && Boolean.TRUE.equals(httpModule.data().get("antiBotDetected"));
+            Map<String, Object> accessibilityData = new LinkedHashMap<>(
+                lighthouseModule.data() == null ? Map.of() : lighthouseModule.data());
+            AccessibilityEvidence evidence = accessibilityData.containsKey("accessibilityEvidence")
+                ? objectMapper.convertValue(accessibilityData.get("accessibilityEvidence"), AccessibilityEvidence.class)
+                : LighthouseAccessibilityNormalizer.unavailable();
+            accessibilityData.put("accessibilityEvidence", evidence);
+            accessibilityData.put("accessibilityCompliance", accessibilityRiskService.assess(evidence,
+                accessibilityScopeService.qualify(ctx.body(), blockedPage, AccessibilityRegulatoryScopeService.Facts.unknown()),
+                AccessibilityComplianceRiskService.Rules.pending()));
+            lighthouseModule = new AuditModuleResult(lighthouseModule.id(), lighthouseModule.title(),
+                lighthouseModule.summary(), accessibilityData, lighthouseModule.checks());
 
             // --- Modules DOMAIN ---
 
