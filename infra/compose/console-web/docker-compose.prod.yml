@@ -29,6 +29,32 @@ services:
       - traefik.http.routers.console-web-api.priority=200
       - traefik.http.routers.console-web-api.tls.options=modern@file
 
+      # Public writes: TCP peer only; never accept a browser-supplied forwarded IP.
+      - traefik.http.routers.argos-audit-write.rule=Host(`argos.lelouet.fr`) && Method(`POST`) && (Path(`/api/audits`) || Path(`/api/audits/`))
+      - traefik.http.routers.argos-audit-write.entrypoints=websecure
+      - traefik.http.routers.argos-audit-write.tls=true
+      - traefik.http.routers.argos-audit-write.tls.certresolver=le
+      - traefik.http.routers.argos-audit-write.tls.options=modern@file
+      - traefik.http.routers.argos-audit-write.service=console-web
+      - traefik.http.routers.argos-audit-write.priority=210
+      - traefik.http.routers.argos-audit-write.middlewares=argos-audit-limit
+      - traefik.http.middlewares.argos-audit-limit.ratelimit.average=5
+      - traefik.http.middlewares.argos-audit-limit.ratelimit.period=15m
+      - traefik.http.middlewares.argos-audit-limit.ratelimit.burst=2
+      - traefik.http.middlewares.argos-audit-limit.ratelimit.sourcecriterion.ipstrategy.depth=0
+      - traefik.http.routers.argos-newsletter-write.rule=Host(`argos.lelouet.fr`) && Method(`POST`) && (Path(`/api/newsletter`) || Path(`/api/newsletter/`) || Path(`/api/newsletter/subscribe`) || Path(`/api/newsletter/subscribe/`))
+      - traefik.http.routers.argos-newsletter-write.entrypoints=websecure
+      - traefik.http.routers.argos-newsletter-write.tls=true
+      - traefik.http.routers.argos-newsletter-write.tls.certresolver=le
+      - traefik.http.routers.argos-newsletter-write.tls.options=modern@file
+      - traefik.http.routers.argos-newsletter-write.service=console-web
+      - traefik.http.routers.argos-newsletter-write.priority=210
+      - traefik.http.routers.argos-newsletter-write.middlewares=argos-newsletter-limit
+      - traefik.http.middlewares.argos-newsletter-limit.ratelimit.average=20
+      - traefik.http.middlewares.argos-newsletter-limit.ratelimit.period=15m
+      - traefik.http.middlewares.argos-newsletter-limit.ratelimit.burst=5
+      - traefik.http.middlewares.argos-newsletter-limit.ratelimit.sourcecriterion.ipstrategy.depth=0
+
       - traefik.http.routers.console-web.tls.certresolver=le
       - traefik.http.routers.console-web.tls.options=modern@file
 
