@@ -24,8 +24,6 @@ public record AuditHistoryItemResponse(
     Instant createdAt,
     Instant finishedAt,
 
-    @Schema(example = "aB3dEf…")
-    String reportToken,
     @Schema(example = "/reports/aB3dEf…")
     String reportUrl,
 

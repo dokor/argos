@@ -28,7 +28,7 @@ public class QAuditRun extends com.querydsl.sql.RelationalPathBase<AuditRun> {
 
     public final StringPath claimToken = createString("claimToken");
 
-    public final StringPath reportToken = createString("reportToken");
+    public final SimplePath<byte[]> reportTokenHash = createSimple("reportTokenHash", byte[].class);
 
     public final StringPath moduleStatuses = createString("moduleStatuses");
 
@@ -82,7 +82,7 @@ public class QAuditRun extends com.querydsl.sql.RelationalPathBase<AuditRun> {
     public void addMetadata() {
         addMetadata(auditId, ColumnMetadata.named("audit_id").withIndex(2).ofType(Types.BIGINT).withSize(19).notNull());
         addMetadata(claimToken, ColumnMetadata.named("claim_token").withIndex(9).ofType(Types.VARCHAR).withSize(64));
-        addMetadata(reportToken, ColumnMetadata.named("report_token").withIndex(10).ofType(Types.VARCHAR).withSize(64));
+        addMetadata(reportTokenHash, ColumnMetadata.named("report_token_hash").withIndex(10).ofType(Types.BINARY).withSize(32));
         addMetadata(moduleStatuses, ColumnMetadata.named("module_statuses").withIndex(11).ofType(Types.LONGVARCHAR).withSize(65535));
         addMetadata(createdAt, ColumnMetadata.named("created_at").withIndex(4).ofType(Types.TIMESTAMP).withSize(23).notNull());
         addMetadata(finishedAt, ColumnMetadata.named("finished_at").withIndex(6).ofType(Types.TIMESTAMP).withSize(23));

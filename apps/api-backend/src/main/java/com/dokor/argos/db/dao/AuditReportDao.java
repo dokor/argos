@@ -37,14 +37,4 @@ public class AuditReportDao extends CrudDaoQuerydsl<AuditReport> {
                 .fetchOne()
         );
     }
-
-    public Optional<AuditReport> findByToken(String token) {
-        return Optional.ofNullable(
-            transactionManager.selectQuery()
-                .select(REPORT)
-                .from(REPORT)
-                .where(REPORT.publicToken.eq(token))
-                .fetchOne()
-        );
-    }
 }

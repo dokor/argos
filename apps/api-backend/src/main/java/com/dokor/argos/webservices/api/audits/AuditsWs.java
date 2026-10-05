@@ -3,6 +3,7 @@ package com.dokor.argos.webservices.api.audits;
 import com.coreoz.plume.jersey.security.permission.PublicApi;
 import com.dokor.argos.services.domain.audit.AuditService;
 import com.dokor.argos.services.domain.audit.UrlNormalizer;
+import com.dokor.argos.services.domain.report.ReportReadService;
 import com.dokor.argos.webservices.api.audits.data.CreateAuditRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -44,11 +45,13 @@ public class AuditsWs {
 
     private final AuditService auditService;
     private final AdminReadAccess adminReadAccess;
+    private final ReportReadService reportReadService;
 
     @Inject
-    public AuditsWs(AuditService auditService, AdminReadAccess adminReadAccess) {
+    public AuditsWs(AuditService auditService, AdminReadAccess adminReadAccess, ReportReadService reportReadService) {
         this.auditService = auditService;
         this.adminReadAccess = adminReadAccess;
+        this.reportReadService = reportReadService;
     }
 
     /**
@@ -146,5 +149,13 @@ public class AuditsWs {
 
     private Response privateRead(Object body) {
         return Response.ok(body).header("Cache-Control", "private, no-store").build();
+    }
+
+    @GET
+    @Path("/runs/{runId}/report")
+    public Response getAdminReport(@PathParam("runId") long runId, @HeaderParam("Authorization") String authorization) {
+        adminReadAccess.require(authorization);
+        return reportReadService.getByRunId(runId).map(this::privateRead)
+            .orElseGet(() -> Response.status(Response.Status.NOT_FOUND).header("Cache-Control", "no-store").build());
     }
 }

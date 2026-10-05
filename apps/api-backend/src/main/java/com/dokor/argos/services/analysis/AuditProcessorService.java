@@ -328,7 +328,7 @@ public class AuditProcessorService {
 
                 auditRunService.complete(runId, json);
                 // Publish public report (tokenized) for /report/[token]
-                reportPublishService.publishIfAbsent(runId, audit, report, run.getReportToken())
+                reportPublishService.publishIfAbsent(runId, audit, report, run.getReportTokenHash())
                     .ifPresentOrElse(
                         token -> logger.info("Public report ready runId={}", runId),
                         () -> logger.warn("Public report not published runId={}", runId)

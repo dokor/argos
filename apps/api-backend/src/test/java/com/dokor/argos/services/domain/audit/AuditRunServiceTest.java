@@ -50,17 +50,20 @@ class AuditRunServiceTest {
     @Test
     void createQueuedRun_preGeneratesTokenAndInitialisesModulesToPending() {
         AuditRunDao dao = mock(AuditRunDao.class);
-        TokenService tokenService = mock(TokenService.class);
-        when(tokenService.generateToken()).thenReturn("PREGEN_TOKEN_123456");
+        TokenService tokenService = spy(new TokenService());
+        doReturn("PREGEN_TOKEN_123456").when(tokenService).generateToken();
         when(dao.save(any(AuditRun.class))).thenAnswer(inv -> {
             AuditRun r = inv.getArgument(0);
             r.setId(42L);
             return r;
         });
 
-        AuditRun saved = newService(dao, tokenService).createQueuedRun(7L, Instant.now());
+        var created = newService(dao, tokenService).createQueuedRun(7L, Instant.now());
+        AuditRun saved = created.run();
 
-        assertEquals("PREGEN_TOKEN_123456", saved.getReportToken());
+        assertEquals("PREGEN_TOKEN_123456", created.reportToken());
+        assertArrayEquals(tokenService.sha256(created.reportToken()), saved.getReportTokenHash());
+        verify(tokenService).generateToken();
         List<ModuleStatus> statuses = parse(saved.getModuleStatuses());
         assertEquals(AuditRunService.INITIAL_MODULE_STATUSES.size(), statuses.size());
         assertTrue(statuses.stream().allMatch(m -> ModuleStatus.PENDING.equals(m.status())));
@@ -117,9 +120,10 @@ class AuditRunServiceTest {
         AuditRunDao dao = mock(AuditRunDao.class);
         AuditRun run = new AuditRun();
         run.setId(5L);
-        when(dao.findByReportToken("tok")).thenReturn(Optional.of(run));
+        run.setReportTokenHash(new TokenService().sha256("tok"));
+        when(dao.findByReportTokenHash(any(byte[].class))).thenReturn(Optional.of(run));
 
-        Optional<AuditRun> result = newService(dao, mock(TokenService.class)).findByReportToken("tok");
+        Optional<AuditRun> result = newService(dao, new TokenService()).findByReportToken("tok");
 
         assertTrue(result.isPresent());
         assertEquals(5L, result.get().getId());

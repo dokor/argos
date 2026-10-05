@@ -31,7 +31,7 @@ export default function AuditForm({ onCreated }: Props) {
         normalizedUrl: res.normalizedUrl ?? "",
         runId: Number(res.runId),
         status: res.status,
-        reportToken: res.reportToken ?? null,
+        reportUrl: null,
         resultJson: null,
       });
     },

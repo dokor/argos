@@ -33,12 +33,22 @@ public class ReportReadService {
     }
 
     public Optional<ReportDto> getByToken(String token) {
-        if (token == null || token.isBlank()) return Optional.empty();
+        if (token == null || token.isBlank() || token.length() > 512) return Optional.empty();
 
         byte[] hash = tokenService.sha256(token);
         return auditReportDao.findByTokenHash(hash)
+            .filter(entity -> entity.getTokenHash() != null && java.security.MessageDigest.isEqual(hash, entity.getTokenHash()))
             .filter(this::notExpired)
             .flatMap(this::deserialize);
+    }
+
+    public Optional<ReportDto> getByRunId(long runId) {
+        return auditReportDao.findByRunId(runId).filter(this::notExpired).flatMap(this::deserialize);
+    }
+
+    /** Pending runs have no report yet; published expiry also revokes polling. */
+    public boolean isExpired(long runId) {
+        return auditReportDao.findByRunId(runId).map(entity -> !notExpired(entity)).orElse(false);
     }
 
     private boolean notExpired(AuditReport entity) {

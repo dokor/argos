@@ -45,7 +45,6 @@ export type AuditRunStatusResponse = {
   createdAt?: string;
   startedAt?: string | null;
   finishedAt?: string | null;
-  reportToken?: string | null;
   /** JSON string contenant un tableau de ModuleStatus. */
   moduleStatuses?: string | null;
 };
@@ -61,7 +60,6 @@ export type AuditListItem = {
   status: "QUEUED" | "RUNNING" | "FAILED" | "COMPLETED";
   createdAt?: string;
   finishedAt?: string | null;
-  reportToken?: string | null;
   reportUrl?: string | null;
   resultJson?: string | null;
 };
@@ -71,7 +69,6 @@ export type AuditHistoryItem = {
   status: "QUEUED" | "RUNNING" | "FAILED" | "COMPLETED";
   createdAt?: string;
   finishedAt?: string | null;
-  reportToken?: string | null;
   reportUrl?: string | null;
   /** Score global 0..100 issu du rapport publié, ou null si indisponible. */
   globalScore?: number | null;

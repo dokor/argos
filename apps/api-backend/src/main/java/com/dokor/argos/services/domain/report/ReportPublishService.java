@@ -5,7 +5,6 @@ import com.dokor.argos.db.dao.AuditReportDao;
 import com.dokor.argos.db.generated.Audit;
 import com.dokor.argos.db.generated.AuditReport;
 import com.dokor.argos.services.analysis.model.AuditReportJson;
-import com.dokor.argos.services.token.TokenService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -21,7 +20,6 @@ public class ReportPublishService {
     private static final Logger logger = LoggerFactory.getLogger(ReportPublishService.class);
 
     private final AuditReportDao auditReportDao;
-    private final TokenService tokenService;
     private final PublicReportComposer composer;
     private final AiReportSummaryService aiReportSummaryService;
     private final ObjectMapper objectMapper;
@@ -29,13 +27,11 @@ public class ReportPublishService {
     @Inject
     public ReportPublishService(
         AuditReportDao auditReportDao,
-        TokenService tokenService,
         PublicReportComposer composer,
         AiReportSummaryService aiReportSummaryService,
         ObjectMapper objectMapper
     ) {
         this.auditReportDao = auditReportDao;
-        this.tokenService = tokenService;
         this.composer = composer;
         this.aiReportSummaryService = aiReportSummaryService;
         this.objectMapper = objectMapper;
@@ -43,16 +39,16 @@ public class ReportPublishService {
 
     /**
      * Publie un report "public" pour un run COMPLETED.
-     * Idempotent: si déjà publié pour runId, renvoie le token existant.
+     * Idempotent: si déjà publié pour runId, renvoie son identifiant.
      *
-     * @return token public (base64url)
+     * @return identifiant du rapport publié, sans reconstruire de credential
      */
-    public Optional<String> publishIfAbsent(long runId, Audit audit, AuditReportJson internalReport, String preGeneratedToken) {
+    public Optional<Long> publishIfAbsent(long runId, Audit audit, AuditReportJson internalReport, byte[] reportTokenHash) {
         // 1) déjà publié ?
         var existing = auditReportDao.findByRunId(runId);
         if (existing.isPresent()) {
             logger.info("Report already published runId={} reportId={}", runId, existing.get().getId());
-            return Optional.ofNullable(existing.get().getPublicToken());
+            return Optional.ofNullable(existing.get().getId());
         }
 
         try {
@@ -64,13 +60,7 @@ public class ReportPublishService {
 
             String reportJson = objectMapper.writeValueAsString(dto);
 
-            // Utilise le token pré-généré à la création du run pour que l'URL
-            // du rapport soit connue avant la fin de l'analyse.
-            String token = (preGeneratedToken != null && !preGeneratedToken.isBlank())
-                ? preGeneratedToken
-                : tokenService.generateToken();
-            byte[] hash = tokenService.sha256(token);
-
+            if (reportTokenHash == null || reportTokenHash.length != 32) throw new IllegalArgumentException("Missing report credential hash");
             String url = audit.getNormalizedUrl();
             String domain = Urls.host(url, url);
 
@@ -79,8 +69,7 @@ public class ReportPublishService {
             entity.setAuditId(audit.getId());
             entity.setRunId(runId);
 
-            entity.setPublicToken(token);
-            entity.setTokenHash(hash);
+            entity.setTokenHash(reportTokenHash);
 
             entity.setDomain(domain);
             entity.setTargetUrl(url);
@@ -93,19 +82,15 @@ public class ReportPublishService {
 
             AuditReport saved = auditReportDao.save(entity);
 
-            logger.info("Report published runId={} reportId={} domain={} token={}",
-                runId, saved.getId(), domain, safeToken(token)
+            logger.info("Report published runId={} reportId={} domain={}",
+                runId, saved.getId(), domain
             );
 
-            return Optional.of(token);
+            return Optional.of(saved.getId());
         } catch (Exception e) {
             logger.warn("Report publish failed runId={} auditId={} error={}", runId, audit.getId(), e.getMessage(), e);
             return Optional.empty();
         }
     }
 
-    private static String safeToken(String token) {
-        if (token == null) return "null";
-        return token.length() <= 8 ? "****" : token.substring(0, 4) + "…" + token.substring(token.length() - 4);
-    }
 }
