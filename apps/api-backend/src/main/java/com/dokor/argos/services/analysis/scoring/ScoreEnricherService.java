@@ -49,7 +49,7 @@ public class ScoreEnricherService {
             && module.data().get("measurementReason") instanceof String reason && !reason.isBlank();
 
         List<AuditCheckResult> enriched = module.checks().stream()
-            .map(check -> outsideScope || notApplicable(check) || MeasurementCoverageService.blocked(moduleId,check.key(),antiBot)
+            .map(check -> outsideScope || notApplicable(check) || MeasurementCoverageService.transportUnavailable(module) || MeasurementCoverageService.blocked(moduleId,check.key(),antiBot)
                 ? withScore(check,false,0.0,check.tags()) : enrichCheck(moduleId, check))
             .toList();
 
