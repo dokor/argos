@@ -77,8 +77,12 @@ public record ReportDto(
         Integer completeness, // 0..100 : part des modules évalués (null si inconnu). Voir issue #101.
         List<CategoryScore> byCategory,
         Boolean globalAvailable, // null pour les rapports historiques
-        ScoreCalculation calculation
+        ScoreCalculation calculation,
+        com.dokor.argos.services.analysis.scoring.MeasurementCoverage coverage
     ) {
+        public Scores(int global,Integer completeness,List<CategoryScore> categories,Boolean available,ScoreCalculation calculation) {
+            this(global,completeness,categories,available,calculation,null);
+        }
         public Scores(int global, Integer completeness, List<CategoryScore> byCategory) {
             this(global, completeness, byCategory, null, null);
         }
@@ -87,8 +91,15 @@ public record ReportDto(
     public record ScoreCalculation(
         int scoringVersion,
         String scoringFingerprint,
-        List<DomainCalculation> domains
-    ) {}
+        List<DomainCalculation> domains,
+        java.util.Map<String,Double> configuredDomainWeights,
+        List<CheckCalculation> checks
+    ) {
+        public ScoreCalculation(int version,String fingerprint,List<DomainCalculation> domains) {
+            this(version,fingerprint,domains,null,null);
+        }
+    }
+    public record CheckCalculation(String key,String module,String domain,double weight,double score) {}
 
     public record DomainCalculation(
         String key, double score, double maxScore, double ratio, double effectiveWeight
@@ -156,8 +167,13 @@ public record ReportDto(
         String impact,
         String evidence,
         String recommendation,
-        Effort effort
+        Effort effort,
+        String confidence
     ) {
+        public Issue(String id,String category,List<String> categories,String module,IssueSeverity severity,
+            String title,String impact,String evidence,String recommendation,Effort effort) {
+            this(id,category,categories,module,severity,title,impact,evidence,recommendation,effort,"UNKNOWN");
+        }
     }
 
     public enum Severity {critical, important, opportunity}

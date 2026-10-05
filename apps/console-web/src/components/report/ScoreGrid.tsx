@@ -1,6 +1,6 @@
 "use client";
 
-import { CategoryScore } from "./types";
+import { CategoryScore, Coverage } from "./types";
 import { useLang } from "@/lib/i18n/LangContext";
 import s from "./ScoreGrid.module.scss";
 
@@ -13,11 +13,13 @@ export default function ScoreGrid({
   globalScore,
   globalAvailable,
   completeness,
+  coverage,
 }: {
   categories: CategoryScore[];
   globalScore: number;
   globalAvailable?: boolean | null;
   completeness?: number | null;
+  coverage?: Coverage | null;
 }) {
   const { t } = useLang();
   const ts = t.report.scoreGrid;
@@ -41,6 +43,7 @@ export default function ScoreGrid({
         </div>
         <div className={`${s.globalChip} ${globalAvailable === false ? s.unavailable : ""}`}>
           {ts.globalLabel}
+          {coverage?.provisional && <span>{t.report.measurementCoverage.provisional}</span>}
           {globalAvailable !== false ? (
             <>
               <span className={s.globalValue} style={{ color: scoreColor(global) }}>{global}</span>

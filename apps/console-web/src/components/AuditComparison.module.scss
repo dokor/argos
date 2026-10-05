@@ -1,0 +1,6 @@
+.evidence {
+  width: 100%; overflow-wrap: anywhere;
+  padding: .5rem 0; color: var(--argos-text);
+  p { margin: .25rem 0; }
+  summary { cursor: pointer; }
+}

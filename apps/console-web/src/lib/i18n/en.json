@@ -307,6 +307,13 @@
     }
   },
   "report": {
+    "measurementCoverage": {
+      "title": "Measurement coverage", "provisional": "Provisional score", "sufficient": "Sufficient coverage", "unavailable": "Measurement unavailable", "notApplicable": "Not applicable",
+      "explanation": "Weighted share of the scoring catalogue actually measured. Below 80% overall or in an applicable domain, the score remains provisional and must not be compared with a complete audit.",
+      "statesTitle": "Measurement states", "confidenceExplanation": "Unavailable or blocked measurements are not site defects. Finding confidence remains separate from score coverage.",
+      "domains": { "performance": "Performance", "security": "Security", "seo": "SEO", "a11y": "Accessibility" },
+      "states": { "MEASURED": "Measured", "UNAVAILABLE": "Unavailable", "BLOCKED_BY_ANTIBOT": "Blocked by anti-bot protection", "NOT_APPLICABLE": "Not applicable" }
+    },
     "accessibility": {
       "title": "Accessibility: findings and potential scope",
       "limit": "This automated analysis identifies potential technical and regulatory risks. It is neither a complete RGAA/WCAG audit nor legal advice.",
@@ -638,6 +645,11 @@
     "errorUnknown": "Unknown error"
   },
   "auditList": {
+    "comparison": {
+      "method": "Frozen scoring policy", "coverage": "Coverage", "unknown": "Unknown", "coverageChanged": "Measurement coverage changed; this change is not a site regression.",
+      "delta": "Change since the previous report", "points": "points", "globalPoints": "global points", "domainPoints": "domain points", "contributions": "Main improvements and regressions",
+      "reasons": { "COMPARABLE": "Comparable audits", "NO_PREVIOUS_REPORT": "No previous report in this history.", "EVIDENCE_MISSING": "Comparison unavailable: insufficient historical evidence. Run a new audit with the current policy.", "SCOPE_CHANGED": "Comparison unavailable: different scope.", "METHODOLOGY_CHANGED": "Comparison unavailable: different policy or coefficients.", "COVERAGE_CHANGED": "Comparison unavailable: different usable measurements.", "INSUFFICIENT_COVERAGE": "Comparison unavailable: insufficient coverage or anti-bot protection.", "SCORE_UNAVAILABLE": "Comparison unavailable: score not measured." }
+    },
     "title": "Audits",
     "loading": "Loading…",
     "empty": "No audits yet.",
