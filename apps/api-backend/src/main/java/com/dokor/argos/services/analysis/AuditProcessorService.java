@@ -66,6 +66,12 @@ public class AuditProcessorService {
     private final ReportPublishService reportPublishService;
     private final AccessibilityRegulatoryScopeService accessibilityScopeService;
     private final AccessibilityComplianceRiskService accessibilityRiskService;
+    private RemoteModuleExecutor remoteModuleExecutor;
+
+    @Inject
+    void configureRemoteModuleExecutor(RemoteModuleExecutor executor) {
+        this.remoteModuleExecutor = executor;
+    }
 
     @Inject
     public AuditProcessorService(
@@ -121,20 +127,24 @@ public class AuditProcessorService {
     }
 
     public void process(long runId) {
+        // Direct-constructor callers (unit fixtures) own a short-lived pool; Guice injects the shared pool.
+        boolean ownedExecutor = remoteModuleExecutor == null;
+        RemoteModuleExecutor remote = ownedExecutor ? new RemoteModuleExecutor(java.time.Duration.ofMinutes(2)) : remoteModuleExecutor;
         // Corrélation : toutes les lignes de log de ce run portent runId (MDC).
         MDC.put("runId", String.valueOf(runId));
         long auditStart = System.currentTimeMillis();
         logger.info("audit_start runId={}", runId);
         try {
-            processInternal(runId);
+            processInternal(runId, remote);
         } finally {
+            if (ownedExecutor) remote.close();
             logger.info("audit_end runId={} durationMs={}", runId, System.currentTimeMillis() - auditStart);
             MDC.remove("runId");
             MDC.remove("module");
         }
     }
 
-    private void processInternal(long runId) {
+    private void processInternal(long runId, RemoteModuleExecutor remote) {
         var runOpt = auditRunService.getRun(runId);
         if (runOpt.isEmpty()) {
             logger.warn("Run not found runId={}", runId);
@@ -191,135 +201,144 @@ public class AuditProcessorService {
             // result_json (poids mémoire à la sérialisation + grossissement de la table).
             httpModule = stripRawBody(httpModule);
 
-            AuditModuleResult htmlModule = runModule(
-                runId, "html", "HTML", moduleStatuses,
-                () -> htmlModuleAnalyzer.analyze(ctx, logger));
+            // HTTP has supplied the immutable context. Only these two distant APIs overlap local work.
+            logger.info("module_start module=observatory runId={}", runId);
+            logger.info("module_start module=ssl runId={}", runId);
+            try (var observatory = remote.submit("observatory", () -> observatoryModuleAnalyzer.analyze(ctx, logger));
+                 var ssl = remote.submit("ssl", () -> sslLabsModuleAnalyzer.analyze(ctx, logger))) {
+                auditRunService.updateModuleStatus(runId, "observatory", "RUNNING");
+                auditRunService.updateModuleStatus(runId, "ssl", "RUNNING");
 
-            AuditModuleResult runtimeModule = runModule(
-                runId, "runtime", "Runtime (Playwright)", moduleStatuses,
-                () -> runtimeModuleAnalyzer.analyze(ctx, logger));
+                AuditModuleResult htmlModule = runModule(
+                    runId, "html", "HTML", moduleStatuses,
+                    () -> htmlModuleAnalyzer.analyze(ctx, logger));
 
-            AuditModuleResult lighthouseModule = runModule(
-                runId, "lighthouse", "Lighthouse", moduleStatuses,
-                () -> lighthouseModuleAnalyzer.analyze(ctx, logger));
-            if (httpModule.data() != null && Boolean.TRUE.equals(httpModule.data().get("antiBotDetected"))) {
-                Map<String, Object> data = new LinkedHashMap<>(
-                    lighthouseModule.data() == null ? Map.of() : lighthouseModule.data());
-                data.put("accessibilityEvidence", LighthouseAccessibilityNormalizer.unavailable());
-                lighthouseModule = new AuditModuleResult(lighthouseModule.id(), lighthouseModule.title(),
-                    lighthouseModule.summary(), data, lighthouseModule.checks());
-            }
-            boolean blockedPage = ctx.httpStatusCode() == 403 || ctx.httpStatusCode() == 429
-                || httpModule.data() != null && Boolean.TRUE.equals(httpModule.data().get("antiBotDetected"));
-            Map<String, Object> accessibilityData = new LinkedHashMap<>(
-                lighthouseModule.data() == null ? Map.of() : lighthouseModule.data());
-            AccessibilityEvidence evidence = accessibilityData.containsKey("accessibilityEvidence")
-                ? objectMapper.convertValue(accessibilityData.get("accessibilityEvidence"), AccessibilityEvidence.class)
-                : LighthouseAccessibilityNormalizer.unavailable();
-            accessibilityData.put("accessibilityEvidence", evidence);
-            accessibilityData.put("accessibilityCompliance", accessibilityRiskService.assess(evidence,
-                accessibilityScopeService.qualify(ctx.body(), blockedPage, AccessibilityRegulatoryScopeService.Facts.unknown()),
-                AccessibilityComplianceRiskService.Rules.pending()));
-            lighthouseModule = new AuditModuleResult(lighthouseModule.id(), lighthouseModule.title(),
-                lighthouseModule.summary(), accessibilityData, lighthouseModule.checks());
+                AuditModuleResult runtimeModule = runModule(
+                    runId, "runtime", "Runtime (Playwright)", moduleStatuses,
+                    () -> runtimeModuleAnalyzer.analyze(ctx, logger));
 
-            // --- Modules DOMAIN ---
-
-            AuditModuleResult observatoryModule = runModule(
-                runId, "observatory", "Observatory", moduleStatuses,
-                () -> observatoryModuleAnalyzer.analyze(ctx, logger));
-
-            AuditModuleResult sslModule = runModule(
-                runId, "ssl", "SSL Labs", moduleStatuses,
-                () -> sslLabsModuleAnalyzer.analyze(ctx, logger));
-
-            AuditModuleResult zapModule = runModule(
-                runId, "zap", "OWASP ZAP", moduleStatuses,
-                () -> zapModuleAnalyzer.analyze(ctx, logger));
-
-            // --- Module DOMAIN (tech) - cache 24h partagé entre toutes les pages du domaine ---
-            AuditModuleResult techModule = runModule(
-                runId, "tech", "Tech stack", moduleStatuses,
-                () -> domainAnalysisService.getOrRunTechAnalysis(ctx, logger));
-
-            List<AuditModuleResult> allModules = List.of(
-                httpModule, htmlModule, runtimeModule, lighthouseModule,
-                observatoryModule, sslModule, zapModule, techModule
-            );
-
-            boolean degraded = moduleStatuses.values().stream()
-                .anyMatch(st -> !"COMPLETED".equals(st));
-            int modulesTotal = moduleStatuses.size();
-            int modulesEvaluated = (int) moduleStatuses.values().stream()
-                .filter("COMPLETED"::equals)
-                .count();
-            int completeness = completenessPercent(modulesEvaluated, modulesTotal);
-            if (degraded) {
-                logger.warn("Run degraded runId={} completeness={}% moduleStatuses={}",
-                    runId, completeness, moduleStatuses);
-            }
-
-            // Merge cross-module duplicate checks
-            List<AuditModuleResult> mergedModules = checkMergerService.merge(allModules);
-
-            // Enrich checks (tags/scorable/weight) + compute score
-            List<AuditModuleResult> enrichedModules = scoreEnricherService.enrich(mergedModules);
-            int scoringVersion = scoreEnricherService.scoringVersion();
-            String scoringFingerprint = Objects.requireNonNullElse(scoreEnricherService.scoringFingerprint(), "unknown");
-            AuditScoreReport score = scoreService.compute(scoringVersion, scoringFingerprint, enrichedModules);
-
-            Map<String, String> meta = new LinkedHashMap<>();
-            meta.put("generator", "argos-api-backend");
-            meta.put("schemaVersion", String.valueOf(REPORT_SCHEMA_VERSION));
-            meta.put("scoringVersion", String.valueOf(scoringVersion));
-            meta.put("scoringFingerprint", scoringFingerprint);
-            meta.put("runId", String.valueOf(runId));
-            meta.put("httpStatusCode", String.valueOf(context.httpStatusCode()));
-            meta.put("auditDurationMs", String.valueOf(Instant.now().toEpochMilli() - context.startedAt().toEpochMilli()));
-            meta.put("degraded", String.valueOf(degraded));
-            // Complétude : part des modules réellement évalués (issue #101). Permet de
-            // situer un score partiel sans altérer le ratio ni pénaliser le site pour
-            // une indisponibilité côté Argos.
-            meta.put("completeness", String.valueOf(completeness));
-            meta.put("modulesEvaluated", String.valueOf(modulesEvaluated));
-            meta.put("modulesTotal", String.valueOf(modulesTotal));
-            meta.put("moduleStatuses", objectMapper.writeValueAsString(moduleStatuses));
-            // Protection anti-bot détectée par le module HTTP (issue #56/#195) : on
-            // propage le flag pour permettre au rapport de signaler une analyse
-            // potentiellement partielle (page de challenge).
-            if (httpModule != null && httpModule.data() != null
-                && Boolean.TRUE.equals(httpModule.data().get("antiBotDetected"))) {
-                meta.put("antiBotDetected", "true");
-                Object antiBotVendor = httpModule.data().get("antiBotVendor");
-                if (antiBotVendor != null) {
-                    meta.put("antiBotVendor", String.valueOf(antiBotVendor));
+                AuditModuleResult lighthouseModule = runModule(
+                    runId, "lighthouse", "Lighthouse", moduleStatuses,
+                    () -> lighthouseModuleAnalyzer.analyze(ctx, logger));
+                if (httpModule.data() != null && Boolean.TRUE.equals(httpModule.data().get("antiBotDetected"))) {
+                    Map<String, Object> data = new LinkedHashMap<>(
+                        lighthouseModule.data() == null ? Map.of() : lighthouseModule.data());
+                    data.put("accessibilityEvidence", LighthouseAccessibilityNormalizer.unavailable());
+                    lighthouseModule = new AuditModuleResult(lighthouseModule.id(), lighthouseModule.title(),
+                        lighthouseModule.summary(), data, lighthouseModule.checks());
                 }
-            }
+                boolean blockedPage = ctx.httpStatusCode() == 403 || ctx.httpStatusCode() == 429
+                    || httpModule.data() != null && Boolean.TRUE.equals(httpModule.data().get("antiBotDetected"));
+                Map<String, Object> accessibilityData = new LinkedHashMap<>(
+                    lighthouseModule.data() == null ? Map.of() : lighthouseModule.data());
+                AccessibilityEvidence evidence = accessibilityData.containsKey("accessibilityEvidence")
+                    ? objectMapper.convertValue(accessibilityData.get("accessibilityEvidence"), AccessibilityEvidence.class)
+                    : LighthouseAccessibilityNormalizer.unavailable();
+                accessibilityData.put("accessibilityEvidence", evidence);
+                accessibilityData.put("accessibilityCompliance", accessibilityRiskService.assess(evidence,
+                    accessibilityScopeService.qualify(ctx.body(), blockedPage, AccessibilityRegulatoryScopeService.Facts.unknown()),
+                    AccessibilityComplianceRiskService.Rules.pending()));
+                lighthouseModule = new AuditModuleResult(lighthouseModule.id(), lighthouseModule.title(),
+                    lighthouseModule.summary(), accessibilityData, lighthouseModule.checks());
 
-            AuditReportJson report = new AuditReportJson(
-                REPORT_SCHEMA_VERSION,
-                inputUrl,
-                normalizedUrl,
-                Instant.now(),
-                meta,
-                enrichedModules,
-                score
-            );
+                // --- Modules DOMAIN ---
 
-            String json = objectMapper.writeValueAsString(report);
+                AuditModuleResult observatoryModule = runModule(
+                    runId, "observatory", "Observatory", moduleStatuses,
+                    observatory::await, observatory.startedAtMillis(), true);
 
-            auditRunService.complete(runId, json);
-            // Publish public report (tokenized) for /report/[token]
-            reportPublishService.publishIfAbsent(runId, audit, report, run.getReportToken())
-                .ifPresentOrElse(
-                    token -> logger.info("Public report ready runId={}", runId),
-                    () -> logger.warn("Public report not published runId={}", runId)
+                AuditModuleResult sslModule = runModule(
+                    runId, "ssl", "SSL Labs", moduleStatuses,
+                    ssl::await, ssl.startedAtMillis(), true);
+
+                AuditModuleResult zapModule = runModule(
+                    runId, "zap", "OWASP ZAP", moduleStatuses,
+                    () -> zapModuleAnalyzer.analyze(ctx, logger));
+
+                // --- Module DOMAIN (tech) - cache 24h partagé entre toutes les pages du domaine ---
+                AuditModuleResult techModule = runModule(
+                    runId, "tech", "Tech stack", moduleStatuses,
+                    () -> domainAnalysisService.getOrRunTechAnalysis(ctx, logger));
+
+                List<AuditModuleResult> allModules = List.of(
+                    httpModule, htmlModule, runtimeModule, lighthouseModule,
+                    observatoryModule, sslModule, zapModule, techModule
                 );
-            logger.info(
-                "Run completed runId={} globalScoreRatio={}",
-                runId,
-                score.global().ratio()
-            );
+
+                boolean degraded = moduleStatuses.values().stream()
+                    .anyMatch(st -> !"COMPLETED".equals(st));
+                int modulesTotal = moduleStatuses.size();
+                int modulesEvaluated = (int) moduleStatuses.values().stream()
+                    .filter("COMPLETED"::equals)
+                    .count();
+                int completeness = completenessPercent(modulesEvaluated, modulesTotal);
+                if (degraded) {
+                    logger.warn("Run degraded runId={} completeness={}% moduleStatuses={}",
+                        runId, completeness, moduleStatuses);
+                }
+
+                // Merge cross-module duplicate checks
+                List<AuditModuleResult> mergedModules = checkMergerService.merge(allModules);
+
+                // Enrich checks (tags/scorable/weight) + compute score
+                List<AuditModuleResult> enrichedModules = scoreEnricherService.enrich(mergedModules);
+                int scoringVersion = scoreEnricherService.scoringVersion();
+                String scoringFingerprint = Objects.requireNonNullElse(scoreEnricherService.scoringFingerprint(), "unknown");
+                AuditScoreReport score = scoreService.compute(scoringVersion, scoringFingerprint, enrichedModules);
+
+                Map<String, String> meta = new LinkedHashMap<>();
+                meta.put("generator", "argos-api-backend");
+                meta.put("schemaVersion", String.valueOf(REPORT_SCHEMA_VERSION));
+                meta.put("scoringVersion", String.valueOf(scoringVersion));
+                meta.put("scoringFingerprint", scoringFingerprint);
+                meta.put("runId", String.valueOf(runId));
+                meta.put("httpStatusCode", String.valueOf(context.httpStatusCode()));
+                meta.put("auditDurationMs", String.valueOf(Instant.now().toEpochMilli() - context.startedAt().toEpochMilli()));
+                meta.put("degraded", String.valueOf(degraded));
+                // Complétude : part des modules réellement évalués (issue #101). Permet de
+                // situer un score partiel sans altérer le ratio ni pénaliser le site pour
+                // une indisponibilité côté Argos.
+                meta.put("completeness", String.valueOf(completeness));
+                meta.put("modulesEvaluated", String.valueOf(modulesEvaluated));
+                meta.put("modulesTotal", String.valueOf(modulesTotal));
+                meta.put("moduleStatuses", objectMapper.writeValueAsString(moduleStatuses));
+                // Protection anti-bot détectée par le module HTTP (issue #56/#195) : on
+                // propage le flag pour permettre au rapport de signaler une analyse
+                // potentiellement partielle (page de challenge).
+                if (httpModule != null && httpModule.data() != null
+                    && Boolean.TRUE.equals(httpModule.data().get("antiBotDetected"))) {
+                    meta.put("antiBotDetected", "true");
+                    Object antiBotVendor = httpModule.data().get("antiBotVendor");
+                    if (antiBotVendor != null) {
+                        meta.put("antiBotVendor", String.valueOf(antiBotVendor));
+                    }
+                }
+
+                AuditReportJson report = new AuditReportJson(
+                    REPORT_SCHEMA_VERSION,
+                    inputUrl,
+                    normalizedUrl,
+                    Instant.now(),
+                    meta,
+                    enrichedModules,
+                    score
+                );
+
+                String json = objectMapper.writeValueAsString(report);
+
+                auditRunService.complete(runId, json);
+                // Publish public report (tokenized) for /report/[token]
+                reportPublishService.publishIfAbsent(runId, audit, report, run.getReportToken())
+                    .ifPresentOrElse(
+                        token -> logger.info("Public report ready runId={}", runId),
+                        () -> logger.warn("Public report not published runId={}", runId)
+                    );
+                logger.info(
+                    "Run completed runId={} globalScoreRatio={}",
+                    runId,
+                    score.global().ratio()
+                );
+            }
         } catch (Exception e) {
             // Marque le(s) module(s) resté(s) en RUNNING comme FAILED pour que la
             // vue de progression n'affiche pas un spinner infini sur ce module.
@@ -379,11 +398,16 @@ public class AuditProcessorService {
      */
     private AuditModuleResult runModule(long runId, String moduleId, String title,
                                         Map<String, String> statuses, ModuleCall call) {
+        return runModule(runId, moduleId, title, statuses, call, System.currentTimeMillis(), false);
+    }
+
+    private AuditModuleResult runModule(long runId, String moduleId, String title,
+                                        Map<String, String> statuses, ModuleCall call, long start, boolean started) {
         MDC.put("module", moduleId);
-        long start = System.currentTimeMillis();
-        logger.info("module_start module={} runId={}", moduleId, runId);
-        // Statut live (frontend polling) : le module démarre.
-        auditRunService.updateModuleStatus(runId, moduleId, "RUNNING");
+        if (!started) {
+            logger.info("module_start module={} runId={}", moduleId, runId);
+            auditRunService.updateModuleStatus(runId, moduleId, "RUNNING");
+        }
         try {
             AuditModuleResult raw = call.run();
             if (raw == null) {
@@ -413,6 +437,10 @@ public class AuditProcessorService {
                 moduleId, status, System.currentTimeMillis() - start);
             return res;
         } catch (Exception e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException("Audit interrupted", e);
+            }
             boolean timeout = isTimeout(e);
             statuses.put(moduleId, timeout ? "TIMEOUT" : "FAILED");
             auditRunService.updateModuleStatus(runId, moduleId, "FAILED");

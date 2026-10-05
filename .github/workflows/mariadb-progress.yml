@@ -1,0 +1,57 @@
+name: MariaDB progress
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  progress:
+    name: MariaDB progress (${{ matrix.version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ['10.11', '11.4']
+    services:
+      mariadb:
+        image: mariadb:${{ matrix.version }}
+        env:
+          MARIADB_ROOT_PASSWORD: synthetic-root-fixture
+          MARIADB_DATABASE: argos_progress_test
+          MARIADB_USER: argos_fixture
+          MARIADB_PASSWORD: synthetic-fixture
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s --health-timeout=5s --health-retries=15
+    defaults:
+      run:
+        working-directory: apps/api-backend
+    env:
+      ARGOS_TEST_MARIADB_URL: jdbc:mariadb://127.0.0.1:3306/argos_progress_test
+      ARGOS_TEST_MARIADB_USER: argos_fixture
+      ARGOS_TEST_MARIADB_PASSWORD: synthetic-fixture
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: apps/api-backend/pom.xml
+      - run: mvn --batch-mode -P mariadb-integration verify
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mariadb-progress-${{ matrix.version }}-${{ github.sha }}
+          path: apps/api-backend/target/failsafe-reports/
+          if-no-files-found: error
+          retention-days: 14

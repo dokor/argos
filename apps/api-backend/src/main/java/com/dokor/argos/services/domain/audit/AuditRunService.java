@@ -5,7 +5,6 @@ import com.dokor.argos.db.generated.AuditRun;
 import com.dokor.argos.services.domain.audit.enums.AuditRunStatus;
 import com.dokor.argos.services.domain.audit.model.ModuleStatus;
 import com.dokor.argos.services.token.TokenService;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -13,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -105,19 +103,13 @@ public class AuditRunService {
      * @param status   nouveau statut ({@code RUNNING | COMPLETED | FAILED | SKIPPED})
      */
     public void updateModuleStatus(long runId, String moduleId, String status) {
-        AuditRun run = auditRunDao.findById(runId);
-        if (run == null) {
-            logger.warn("Cannot update module status: run not found runId={}", runId);
-            return;
-        }
-
-        List<ModuleStatus> statuses = deserializeModuleStatuses(run.getModuleStatuses());
-        List<ModuleStatus> updated = statuses.stream()
-            .map(m -> m.id().equals(moduleId) ? m.withStatus(status) : m)
-            .toList();
-
-        auditRunDao.updateModuleStatuses(runId, serializeModuleStatuses(updated));
-        logger.debug("Module status updated runId={} module={} status={}", runId, moduleId, status);
+        if (INITIAL_MODULE_STATUSES.stream().noneMatch(module -> module.id().equals(moduleId)))
+            throw new IllegalArgumentException("Unknown audit module");
+        if (!List.of(ModuleStatus.RUNNING, ModuleStatus.COMPLETED, ModuleStatus.FAILED, ModuleStatus.SKIPPED).contains(status))
+            throw new IllegalArgumentException("Invalid module transition");
+        boolean updated = auditRunDao.updateModuleStatus(runId, moduleId, status,
+            serializeModuleStatuses(INITIAL_MODULE_STATUSES), false);
+        logger.debug("Module status transition runId={} module={} status={} updated={}", runId, moduleId, status, updated);
     }
 
     /**
@@ -126,18 +118,9 @@ public class AuditRunService {
      * la vue de progression après un échec du traitement.
      */
     public void failRunningModules(long runId) {
-        AuditRun run = auditRunDao.findById(runId);
-        if (run == null) {
-            logger.warn("Cannot fail running modules: run not found runId={}", runId);
-            return;
-        }
-
-        List<ModuleStatus> statuses = deserializeModuleStatuses(run.getModuleStatuses());
-        List<ModuleStatus> updated = statuses.stream()
-            .map(m -> ModuleStatus.RUNNING.equals(m.status()) ? m.withStatus(ModuleStatus.FAILED) : m)
-            .toList();
-
-        auditRunDao.updateModuleStatuses(runId, serializeModuleStatuses(updated));
+        String initial = serializeModuleStatuses(INITIAL_MODULE_STATUSES);
+        for (ModuleStatus module : INITIAL_MODULE_STATUSES)
+            auditRunDao.updateModuleStatus(runId, module.id(), ModuleStatus.FAILED, initial, true);
         logger.debug("Running modules marked FAILED runId={}", runId);
     }
 
@@ -185,18 +168,6 @@ public class AuditRunService {
         } catch (Exception e) {
             logger.warn("Cannot serialize module statuses", e);
             return "[]";
-        }
-    }
-
-    private List<ModuleStatus> deserializeModuleStatuses(String json) {
-        if (json == null || json.isBlank()) {
-            return new ArrayList<>(INITIAL_MODULE_STATUSES);
-        }
-        try {
-            return objectMapper.readValue(json, new TypeReference<List<ModuleStatus>>() {});
-        } catch (Exception e) {
-            logger.warn("Cannot deserialize module statuses: {}", e.getMessage());
-            return new ArrayList<>(INITIAL_MODULE_STATUSES);
         }
     }
 
