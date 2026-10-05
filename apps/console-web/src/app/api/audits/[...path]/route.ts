@@ -8,5 +8,6 @@ export async function GET(request: NextRequest, context: { params: Promise<{ pat
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
   const limit = Math.max(1, Math.min(100, Number(request.nextUrl.searchParams.get("limit")) || 20));
-  return adminReadProxy(request, `/api/audits/${suffix}?limit=${Math.trunc(limit)}`);
+  const query = suffix.endsWith("/history") ? `?limit=${Math.trunc(limit)}` : "";
+  return adminReadProxy(request, `/api/audits/${suffix}${query}`);
 }
