@@ -1,6 +1,8 @@
 package com.dokor.argos.services.domain.report;
 
 import com.dokor.argos.services.analysis.model.AuditCheckResult;
+import com.dokor.argos.services.analysis.accessibility.AccessibilityEvidence;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.dokor.argos.services.analysis.model.AuditModuleResult;
 import com.dokor.argos.services.analysis.model.AuditReportJson;
 import com.dokor.argos.services.analysis.model.enums.AuditSeverity;
@@ -17,6 +19,7 @@ import java.util.*;
 
 @Singleton
 public class PublicReportComposer {
+    private static final ObjectMapper ACCESSIBILITY_MAPPER = new ObjectMapper();
 
     private static final Logger logger = LoggerFactory.getLogger(PublicReportComposer.class);
 
@@ -116,8 +119,17 @@ public class PublicReportComposer {
             new ReportDto.Summary(oneLiner, priorities, null),
             issues,
             tech,
-            antiBot
+            antiBot,
+            accessibilityEvidence(internalReport)
         );
+    }
+
+    private static AccessibilityEvidence accessibilityEvidence(AuditReportJson report) {
+        return report.modules().stream().filter(m -> "lighthouse".equals(m.id()))
+            .filter(m -> m.data() != null && m.data().containsKey("accessibilityEvidence"))
+            .map(m -> ACCESSIBILITY_MAPPER.convertValue(m.data().get("accessibilityEvidence"),
+                AccessibilityEvidence.class))
+            .filter(Objects::nonNull).findFirst().orElse(null);
     }
 
     private static List<ReportDto.Issue> buildIssues(AuditReportJson internalReport) {

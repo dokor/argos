@@ -1,6 +1,7 @@
 package com.dokor.argos.services.analysis.lighthouse;
 
 import com.dokor.argos.services.analysis.model.*;
+import com.dokor.argos.services.analysis.accessibility.LighthouseAccessibilityNormalizer;
 import com.dokor.argos.services.analysis.model.enums.AuditSeverity;
 import com.dokor.argos.services.analysis.model.enums.AuditStatus;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -94,6 +95,8 @@ public class LighthouseModuleAnalyzer implements AuditModuleAnalyzer {
         data.put("categories", categoryTitles);
         data.put("durationMs", durationMs);
         data.put("auditsSurfaced", auditChecks.size());
+        data.put("accessibilityEvidence", LighthouseAccessibilityNormalizer.normalize(lhr,
+            auditContext.httpStatusCode() == 403 || auditContext.httpStatusCode() == 429));
 
         StringBuilder summary = new StringBuilder();
         categoryScores.forEach((cat, score) ->
@@ -134,7 +137,8 @@ public class LighthouseModuleAnalyzer implements AuditModuleAnalyzer {
             moduleId(),
             "Lighthouse",
             "lighthouse=unavailable(" + reason.toLowerCase(Locale.ROOT) + ")",
-            Map.of("available", false, "error", errorMsg, "reason", reason),
+            Map.of("available", false, "error", errorMsg, "reason", reason,
+                "accessibilityEvidence", LighthouseAccessibilityNormalizer.unavailable()),
             checks
         );
     }
