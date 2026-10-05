@@ -3,6 +3,8 @@ services:
     build:
       context: /srv/apps/console-web/src
       dockerfile: Dockerfile
+      args:
+        ARGOS_REVISION: ${ARGOS_REVISION:-unknown}
     image: console-web:local
     container_name: console-web
     restart: unless-stopped

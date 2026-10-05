@@ -14,6 +14,9 @@ RUN mvn -q -DskipTests package \
 
 # ---- runtime stage ----
 FROM eclipse-temurin:21-jre
+ARG ARGOS_REVISION=unknown
+LABEL org.opencontainers.image.revision=$ARGOS_REVISION \
+      org.opencontainers.image.source="https://github.com/dokor/argos"
 WORKDIR /app
 
 # Copie le jar de l’app

@@ -3,6 +3,8 @@ services:
     build:
       context: /srv/apps/playwright-service/src
       dockerfile: Dockerfile
+      args:
+        ARGOS_REVISION: ${ARGOS_REVISION:-unknown}
     container_name: playwright-service
     restart: unless-stopped
     environment:

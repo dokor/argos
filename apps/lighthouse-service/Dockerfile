@@ -2,6 +2,9 @@
 # On utilise le même runtime Chromium que le playwright-service, déjà déployé
 # sur le Raspberry et adapté aux navigateurs headless en conteneur.
 FROM mcr.microsoft.com/playwright:v1.63.0-noble
+ARG ARGOS_REVISION=unknown
+LABEL org.opencontainers.image.revision=$ARGOS_REVISION \
+      org.opencontainers.image.source="https://github.com/dokor/argos"
 
 WORKDIR /app
 

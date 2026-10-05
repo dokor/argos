@@ -28,6 +28,15 @@ test('the committed snapshot stays NO_GO with all successful candidate CI checks
   assert.ok(result.blockers.includes('gate:accessibility-rules:unverified'));
   assert.ok(!result.blockers.some(blocker => blocker.startsWith('ci:')));
 });
+test('closing coordination with deferred validation does not certify technical readiness', () => {
+  const snapshot = JSON.parse(readFileSync(new URL('../docs/release/v1-evidence-2026-10-05.json', import.meta.url)));
+  assert.equal(snapshot.coordinationDecision.status, 'CLOSED_WITH_DEFERRED_VALIDATION');
+  assert.equal(snapshot.coordinationDecision.productionDeploymentAuthorized, false);
+  const result = assessReleaseEvidence(snapshot, snapshot.candidateSha);
+  assert.equal(result.status, 'NO_GO');
+  assert.ok(result.blockers.includes('gate:secrets:unverified'));
+  assert.ok(result.blockers.includes('gate:accessibility-rules:unverified'));
+});
 for (const name of REQUIRED_CHECKS) {
   test(`a missing, failing, duplicated or stale CI check blocks: ${name}`, () => {
     for (const mutation of [

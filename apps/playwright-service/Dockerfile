@@ -1,4 +1,7 @@
 FROM mcr.microsoft.com/playwright:v1.63.0-noble
+ARG ARGOS_REVISION=unknown
+LABEL org.opencontainers.image.revision=$ARGOS_REVISION \
+      org.opencontainers.image.source="https://github.com/dokor/argos"
 
 WORKDIR /app
 

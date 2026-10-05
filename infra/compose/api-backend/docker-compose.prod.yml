@@ -3,6 +3,8 @@ services:
     build:
       context: /srv/apps/api-backend/src
       dockerfile: Dockerfile
+      args:
+        ARGOS_REVISION: ${ARGOS_REVISION:-unknown}
     image: api-backend:local
     container_name: api-backend
     restart: unless-stopped
