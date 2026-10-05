@@ -39,11 +39,11 @@ jobs:
         run: |
           docker network create --internal argos-zap-test
           docker run -d --name argos-zap-test --network argos-zap-test \
-            -p 127.0.0.1:18080:8080 -e JAVA_OPTS=-Xmx512m \
-            ghcr.io/zaproxy/zaproxy:2.17.0 zap.sh -daemon -silent -host 0.0.0.0 -port 8080 \
+            -p 127.0.0.1:18080:8080 \
+            ghcr.io/zaproxy/zaproxy:2.17.0 zap.sh -Xmx512m -daemon -silent -host 0.0.0.0 -port 8080 \
             -config api.disablekey=true -config api.addrs.addr.name=.* -config api.addrs.addr.regex=true
           for attempt in $(seq 1 120); do
-            if curl --fail --silent http://127.0.0.1:18080/JSON/core/view/version/ >/dev/null; then
+            if curl --fail --silent --max-time 2 http://127.0.0.1:18080/JSON/core/view/version/ >/dev/null; then
               exit 0
             fi
             sleep 1
