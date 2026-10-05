@@ -57,7 +57,11 @@ class ZapClientTest {
                     int count = neverFinish && imported != null ? 1 : Math.max(0, pending--);
                     response = "{\"recordsToScan\":\"" + count + "\"}";
                 }
-                case "core/view/numberOfMessages/" -> response = "{\"numberOfMessages\":\"" + (emptyImport ? 0 : 1) + "\"}";
+                case "core/view/numberOfMessages/" -> {
+                    // The real daemon includes API/internal messages when baseurl is omitted.
+                    int count = emptyImport ? 0 : params.containsKey("baseurl") ? 1 : 2;
+                    response = "{\"numberOfMessages\":\"" + count + "\"}";
+                }
                 case "core/view/alerts/" -> { assertTrue(pending <= 0); response = "{\"alerts\":[]}"; }
                 default -> response = "{\"code\":\"unexpected_operation\"}";
             }
