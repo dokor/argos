@@ -9,6 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { adminReadProxy } from "@/lib/admin-read-proxy";
 import { createLogger, safeError, sanitizeText, sanitizeUrl } from "@/lib/logger";
 
 const API_BASE = process.env.API_BASE ?? "http://api-backend:8081";
@@ -190,53 +191,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   });
 }
 
-// Proxy the list endpoint so this route file doesn't shadow the rewrite for GETs.
 export async function GET(request: NextRequest): Promise<NextResponse> {
-  const startedAt = Date.now();
   const limit = request.nextUrl.searchParams.get("limit") ?? "50";
   const safeLimit = Math.max(1, Math.min(200, parseInt(limit, 10) || 50));
-
-  let backendRes: Response;
-  try {
-    backendRes = await fetch(`${API_BASE}/api/audits?limit=${safeLimit}`, {
-      headers: { "Content-Type": "application/json" },
-    });
-  } catch (error) {
-    console.error("[BFF] Backend unreachable:", error);
-    logger.error("audit_list_bff_backend_unreachable", {
-      action: "list_audits",
-      details: {
-        durationMs: Date.now() - startedAt,
-        error: safeError(error),
-        limit: safeLimit,
-      },
-    });
-    return NextResponse.json({ error: "Service temporarily unavailable" }, { status: 503 });
-  }
-
-  const text = await backendRes.text();
-  if (backendRes.ok) {
-    logger.info("audit_list_bff_response_ok", {
-      action: "list_audits",
-      details: {
-        durationMs: Date.now() - startedAt,
-        limit: safeLimit,
-        statusCode: backendRes.status,
-      },
-    });
-  } else {
-    logger.warn("audit_list_bff_response_error", {
-      action: "list_audits",
-      details: {
-        durationMs: Date.now() - startedAt,
-        limit: safeLimit,
-        statusCode: backendRes.status,
-      },
-    });
-  }
-
-  return new NextResponse(text, {
-    status: backendRes.status,
-    headers: { "Content-Type": "application/json" },
-  });
+  return adminReadProxy(request, `/api/audits?limit=${safeLimit}`);
 }

@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { ApiError, argosApi, AuditRunStatusResponse } from "@/lib/ArgosApi";
+import { ApiError, argosApi, PublicReportStatusResponse } from "@/lib/ArgosApi";
 import ReportPage from "@/app/report/[token]/ReportPage";
 import AuditProgressView from "@/components/report/AuditProgressView";
 import ReportErrorView from "@/components/report/ReportErrorView";
@@ -72,7 +72,7 @@ export default async function ReportPageHome({ params }: Readonly<Props>) {
   //   de publication sur COMPLETED)
   // - statut injoignable (backend down, non-404) → on laisse la vue de
   //   progression retenter côté client plutôt que d'afficher un faux "introuvable".
-  let status: AuditRunStatusResponse | null = null;
+  let status: PublicReportStatusResponse | null = null;
   try {
     status = await argosApi.getReportStatus(token);
   } catch (error) {

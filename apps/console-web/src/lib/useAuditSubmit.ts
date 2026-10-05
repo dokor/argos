@@ -147,15 +147,15 @@ export function useAuditSubmit(options: UseAuditSubmitOptions): UseAuditSubmitRe
         return;
       }
 
-      if (runIdRef.current === null) return;
+      if (reportTokenRef.current === null) return;
       try {
-        const run = await argosApi.getRunsByRunId(runIdRef.current);
+        const run = await argosApi.getReportStatus(reportTokenRef.current);
         pollErrorCountRef.current = 0;
 
-        if (run.status === "COMPLETED" && run.reportToken) {
+        if (run.status === "COMPLETED" && reportTokenRef.current) {
           clearInterval(id);
           clearTimeout(redirectTimer);
-          redirectToReport(run.reportToken, "completed", pollCountRef.current);
+          redirectToReport(reportTokenRef.current, "completed", pollCountRef.current);
         } else if (run.status === "FAILED") {
           clearInterval(id);
           clearTimeout(redirectTimer);
@@ -163,7 +163,7 @@ export function useAuditSubmit(options: UseAuditSubmitOptions): UseAuditSubmitRe
           setErrorKind("failed");
           logger.warn("audit_submit_failed", {
             action: "poll_run_status",
-            details: { lastError: run.lastError, runId: run.runId },
+            details: { runId: runIdRef.current },
           });
         }
       } catch (err) {

@@ -50,6 +50,8 @@ export type AuditRunStatusResponse = {
   moduleStatuses?: string | null;
 };
 
+export type PublicReportStatusResponse = Pick<AuditRunStatusResponse, "status" | "createdAt" | "startedAt" | "finishedAt" | "moduleStatuses">;
+
 export type AuditListItem = {
   auditId: number;
   hostname?: string;
@@ -145,8 +147,8 @@ export const argosApi = {
     http<AuditRunStatusResponse>(`/api/audits/runs/${runId}`, { method: "GET" }),
 
   /** Statut d'un run via son reportToken - disponible avant publication du rapport. */
-  getReportStatus: (token: string): Promise<AuditRunStatusResponse> =>
-    http<AuditRunStatusResponse>(`/api/reports/${token}/status`, { method: "GET" }),
+  getReportStatus: (token: string): Promise<PublicReportStatusResponse> =>
+    http<PublicReportStatusResponse>(`/api/reports/${token}/status`, { method: "GET" }),
 
   /** Historique des analyses (runs) d'un audit (une URL), du plus récent au plus ancien. */
   getAuditHistory: (auditId: number, historyLimit = 20): Promise<AuditHistoryItem[]> =>
