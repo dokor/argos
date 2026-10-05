@@ -8,6 +8,8 @@ import com.dokor.argos.db.generated.QAuditRun;
 import com.dokor.argos.services.domain.audit.enums.AuditRunStatus;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
+import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.StringExpression;
 
 import java.time.Instant;
 import java.util.List;
@@ -240,5 +242,24 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
             .set(RUN.moduleStatuses, statusesJson)
             .where(RUN.id.eq(runId))
             .execute();
+    }
+
+    /** One atomic UPDATE, without loading the run/result_json or overwriting another module. */
+    public boolean updateModuleStatus(long runId, String moduleId, String status,
+                                      String initialStatusesJson, boolean onlyRunning) {
+        StringExpression document = Expressions.stringTemplate(
+            "CASE WHEN JSON_VALID({0}) THEN CASE WHEN JSON_TYPE({0}) = 'ARRAY' AND JSON_LENGTH({0}) > 0 "
+                + "THEN {0} ELSE {1} END ELSE {1} END", RUN.moduleStatuses, initialStatusesJson);
+        StringExpression path = Expressions.stringTemplate(
+            "REPLACE(JSON_UNQUOTE(JSON_SEARCH({0}, 'one', {1}, NULL, '$[*].id')), '.id', '.status')",
+            document, moduleId);
+        StringExpression current = Expressions.stringTemplate("JSON_UNQUOTE(JSON_EXTRACT({0}, {1}))", document, path);
+        var allowed = onlyRunning ? current.eq("RUNNING") : "RUNNING".equals(status)
+            ? current.eq("PENDING") : current.in("PENDING", "RUNNING");
+        var runState = onlyRunning ? RUN.status.in("RUNNING", "FAILED") : RUN.status.eq("RUNNING");
+        return transactionManager.update(RUN)
+            .set(RUN.moduleStatuses, Expressions.stringTemplate("JSON_SET({0}, {1}, {2})", document, path, status))
+            .where(RUN.id.eq(runId), runState, path.isNotNull(), allowed)
+            .execute() == 1;
     }
 }

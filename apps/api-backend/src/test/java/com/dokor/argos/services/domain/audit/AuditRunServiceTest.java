@@ -72,45 +72,30 @@ class AuditRunServiceTest {
     @Test
     void updateModuleStatus_updatesOnlyTargetModule() {
         AuditRunDao dao = mock(AuditRunDao.class);
-        AuditRun run = new AuditRun();
-        run.setId(1L);
-        run.setModuleStatuses(serialize(AuditRunService.INITIAL_MODULE_STATUSES));
-        when(dao.findById(1L)).thenReturn(run);
-
         newService(dao, mock(TokenService.class)).updateModuleStatus(1L, "http", ModuleStatus.RUNNING);
-
         ArgumentCaptor<String> json = ArgumentCaptor.forClass(String.class);
-        verify(dao).updateModuleStatuses(eq(1L), json.capture());
-        List<ModuleStatus> result = parse(json.getValue());
-        assertEquals(ModuleStatus.RUNNING, find(result, "http").status());
-        assertEquals(ModuleStatus.PENDING, find(result, "html").status());
+        verify(dao).updateModuleStatus(eq(1L), eq("http"), eq(ModuleStatus.RUNNING), json.capture(), eq(false));
+        assertEquals(AuditRunService.INITIAL_MODULE_STATUSES, parse(json.getValue()));
+        verify(dao, never()).findById(anyLong());
+        verify(dao, never()).updateModuleStatuses(anyLong(), anyString());
     }
 
     @Test
     void updateModuleStatus_noopWhenRunMissing() {
         AuditRunDao dao = mock(AuditRunDao.class);
-        when(dao.findById(99L)).thenReturn(null);
-
         newService(dao, mock(TokenService.class)).updateModuleStatus(99L, "http", ModuleStatus.RUNNING);
-
+        verify(dao).updateModuleStatus(eq(99L), eq("http"), eq(ModuleStatus.RUNNING), anyString(), eq(false));
+        verify(dao, never()).findById(anyLong());
         verify(dao, never()).updateModuleStatuses(anyLong(), anyString());
     }
 
     @Test
-    void updateModuleStatus_fallsBackOnCorruptJson() {
+    void updateModuleStatus_rejectsUnknownModulesAndInvalidStatusesBeforeDbAccess() {
         AuditRunDao dao = mock(AuditRunDao.class);
-        AuditRun run = new AuditRun();
-        run.setId(1L);
-        run.setModuleStatuses("{ not valid json");
-        when(dao.findById(1L)).thenReturn(run);
-
-        // Ne doit pas lever : on repart des statuts initiaux puis on applique la MAJ.
-        newService(dao, mock(TokenService.class)).updateModuleStatus(1L, "ssl", ModuleStatus.COMPLETED);
-
-        ArgumentCaptor<String> json = ArgumentCaptor.forClass(String.class);
-        verify(dao).updateModuleStatuses(eq(1L), json.capture());
-        List<ModuleStatus> result = parse(json.getValue());
-        assertEquals(ModuleStatus.COMPLETED, find(result, "ssl").status());
+        var service = newService(dao, mock(TokenService.class));
+        assertThrows(IllegalArgumentException.class, () -> service.updateModuleStatus(1, "unknown", "RUNNING"));
+        assertThrows(IllegalArgumentException.class, () -> service.updateModuleStatus(1, "ssl", "PENDING"));
+        verifyNoInteractions(dao);
     }
 
     // ─── failRunningModules ───────────────────────────────────────────────────
@@ -118,24 +103,11 @@ class AuditRunServiceTest {
     @Test
     void failRunningModules_marksOnlyRunningAsFailed() {
         AuditRunDao dao = mock(AuditRunDao.class);
-        List<ModuleStatus> statuses = List.of(
-            new ModuleStatus("http", "HTTP", ModuleStatus.COMPLETED),
-            new ModuleStatus("html", "HTML", ModuleStatus.RUNNING),
-            new ModuleStatus("ssl", "SSL", ModuleStatus.PENDING)
-        );
-        AuditRun run = new AuditRun();
-        run.setId(1L);
-        run.setModuleStatuses(serialize(statuses));
-        when(dao.findById(1L)).thenReturn(run);
-
         newService(dao, mock(TokenService.class)).failRunningModules(1L);
-
-        ArgumentCaptor<String> json = ArgumentCaptor.forClass(String.class);
-        verify(dao).updateModuleStatuses(eq(1L), json.capture());
-        List<ModuleStatus> result = parse(json.getValue());
-        assertEquals(ModuleStatus.COMPLETED, find(result, "http").status());
-        assertEquals(ModuleStatus.FAILED, find(result, "html").status());
-        assertEquals(ModuleStatus.PENDING, find(result, "ssl").status());
+        for (ModuleStatus module : AuditRunService.INITIAL_MODULE_STATUSES)
+            verify(dao).updateModuleStatus(eq(1L), eq(module.id()), eq(ModuleStatus.FAILED), anyString(), eq(true));
+        verify(dao, never()).findById(anyLong());
+        verify(dao, never()).updateModuleStatuses(anyLong(), anyString());
     }
 
     // ─── findByReportToken ────────────────────────────────────────────────────

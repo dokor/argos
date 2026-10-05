@@ -6,6 +6,7 @@ import java.util.concurrent.TimeUnit;
 import com.coreoz.wisp.Scheduler;
 import com.dokor.argos.db.DatabaseInitializer;
 import com.dokor.argos.services.scheduler.SchedulerJobs;
+import com.dokor.argos.services.analysis.RemoteModuleExecutor;
 import org.glassfish.grizzly.GrizzlyFuture;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -56,7 +57,7 @@ public class WebApplication {
 
             injector.getInstance(SchedulerJobs.class).scheduleJobs();
 
-            addShutDownListener(httpServer, injector.getInstance(Scheduler.class));
+            addShutDownListener(httpServer, injector.getInstance(Scheduler.class), injector.getInstance(RemoteModuleExecutor.class));
 
             logger.info("Server started in {} ms", System.currentTimeMillis() - startTimestamp);
         } catch (Throwable e) {
@@ -68,7 +69,7 @@ public class WebApplication {
         }
     }
 
-    private static void addShutDownListener(HttpServer httpServer, Scheduler scheduler) {
+    private static void addShutDownListener(HttpServer httpServer, Scheduler scheduler, RemoteModuleExecutor remoteModules) {
         Runtime.getRuntime().addShutdownHook(new Thread(
             () -> {
                 logger.info("Stopping signal received, shutting down server and scheduler...");
@@ -83,6 +84,8 @@ public class WebApplication {
                     logger.error("Error while shutting down server.", e);
                     // It's not useful, but it makes Sonar happy
                     Thread.currentThread().interrupt();
+                } finally {
+                    remoteModules.close();
                 }
             },
             "shutdownHook"

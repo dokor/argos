@@ -66,6 +66,12 @@ public class AuditProcessorService {
     private final ReportPublishService reportPublishService;
     private final AccessibilityRegulatoryScopeService accessibilityScopeService;
     private final AccessibilityComplianceRiskService accessibilityRiskService;
+    private RemoteModuleExecutor remoteModuleExecutor;
+
+    @Inject
+    void configureRemoteModuleExecutor(RemoteModuleExecutor executor) {
+        this.remoteModuleExecutor = executor;
+    }
 
     @Inject
     public AuditProcessorService(
@@ -121,20 +127,24 @@ public class AuditProcessorService {
     }
 
     public void process(long runId) {
+        // Direct-constructor callers (unit fixtures) own a short-lived pool; Guice injects the shared pool.
+        boolean ownedExecutor = remoteModuleExecutor == null;
+        RemoteModuleExecutor remote = ownedExecutor ? new RemoteModuleExecutor(java.time.Duration.ofMinutes(2)) : remoteModuleExecutor;
         // Corrélation : toutes les lignes de log de ce run portent runId (MDC).
         MDC.put("runId", String.valueOf(runId));
         long auditStart = System.currentTimeMillis();
         logger.info("audit_start runId={}", runId);
         try {
-            processInternal(runId);
+            processInternal(runId, remote);
         } finally {
+            if (ownedExecutor) remote.close();
             logger.info("audit_end runId={} durationMs={}", runId, System.currentTimeMillis() - auditStart);
             MDC.remove("runId");
             MDC.remove("module");
         }
     }
 
-    private void processInternal(long runId) {
+    private void processInternal(long runId, RemoteModuleExecutor remote) {
         var runOpt = auditRunService.getRun(runId);
         if (runOpt.isEmpty()) {
             logger.warn("Run not found runId={}", runId);
@@ -191,6 +201,14 @@ public class AuditProcessorService {
             // result_json (poids mémoire à la sérialisation + grossissement de la table).
             httpModule = stripRawBody(httpModule);
 
+            // HTTP has supplied the immutable context. Only these two distant APIs overlap local work.
+            logger.info("module_start module=observatory runId={}", runId);
+            logger.info("module_start module=ssl runId={}", runId);
+            try (var observatory = remote.submit("observatory", () -> observatoryModuleAnalyzer.analyze(ctx, logger));
+                 var ssl = remote.submit("ssl", () -> sslLabsModuleAnalyzer.analyze(ctx, logger))) {
+            auditRunService.updateModuleStatus(runId, "observatory", "RUNNING");
+            auditRunService.updateModuleStatus(runId, "ssl", "RUNNING");
+
             AuditModuleResult htmlModule = runModule(
                 runId, "html", "HTML", moduleStatuses,
                 () -> htmlModuleAnalyzer.analyze(ctx, logger));
@@ -227,11 +245,11 @@ public class AuditProcessorService {
 
             AuditModuleResult observatoryModule = runModule(
                 runId, "observatory", "Observatory", moduleStatuses,
-                () -> observatoryModuleAnalyzer.analyze(ctx, logger));
+                observatory::await, observatory.startedAtMillis(), true);
 
             AuditModuleResult sslModule = runModule(
                 runId, "ssl", "SSL Labs", moduleStatuses,
-                () -> sslLabsModuleAnalyzer.analyze(ctx, logger));
+                ssl::await, ssl.startedAtMillis(), true);
 
             AuditModuleResult zapModule = runModule(
                 runId, "zap", "OWASP ZAP", moduleStatuses,
@@ -320,6 +338,7 @@ public class AuditProcessorService {
                 runId,
                 score.global().ratio()
             );
+            }
         } catch (Exception e) {
             // Marque le(s) module(s) resté(s) en RUNNING comme FAILED pour que la
             // vue de progression n'affiche pas un spinner infini sur ce module.
@@ -379,11 +398,16 @@ public class AuditProcessorService {
      */
     private AuditModuleResult runModule(long runId, String moduleId, String title,
                                         Map<String, String> statuses, ModuleCall call) {
+        return runModule(runId, moduleId, title, statuses, call, System.currentTimeMillis(), false);
+    }
+
+    private AuditModuleResult runModule(long runId, String moduleId, String title,
+                                        Map<String, String> statuses, ModuleCall call, long start, boolean started) {
         MDC.put("module", moduleId);
-        long start = System.currentTimeMillis();
-        logger.info("module_start module={} runId={}", moduleId, runId);
-        // Statut live (frontend polling) : le module démarre.
-        auditRunService.updateModuleStatus(runId, moduleId, "RUNNING");
+        if (!started) {
+            logger.info("module_start module={} runId={}", moduleId, runId);
+            auditRunService.updateModuleStatus(runId, moduleId, "RUNNING");
+        }
         try {
             AuditModuleResult raw = call.run();
             if (raw == null) {
@@ -413,6 +437,10 @@ public class AuditProcessorService {
                 moduleId, status, System.currentTimeMillis() - start);
             return res;
         } catch (Exception e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException("Audit interrupted", e);
+            }
             boolean timeout = isTimeout(e);
             statuses.put(moduleId, timeout ? "TIMEOUT" : "FAILED");
             auditRunService.updateModuleStatus(runId, moduleId, "FAILED");
