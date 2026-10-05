@@ -19,6 +19,14 @@ import static org.mockito.Mockito.when;
  */
 class SslLabsModuleAnalyzerTest {
 
+    @Test
+    void literalNullGradeRemainsUnavailable() throws Exception {
+        var grade = check(analyze("{\"endpoints\":[{\"grade\":\"null\"}]}"), "ssl.grade");
+        assertEquals(AuditStatus.INFO, grade.status());
+        assertEquals("Note SSL Labs indisponible.", grade.message());
+        assertEquals("Corrigez la configuration SSL/TLS signalée par SSL Labs.", grade.recommendation());
+    }
+
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private static AuditContext ctx() {

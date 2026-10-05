@@ -4,7 +4,7 @@ import com.dokor.argos.services.analysis.model.AuditCheckResult;
 import com.dokor.argos.services.analysis.model.AuditContext;
 import com.dokor.argos.services.analysis.model.AuditModuleResult;
 import com.dokor.argos.services.analysis.model.enums.AuditStatus;
-import com.dokor.argos.services.analysis.playwright.PlaywrightRuntimeClient;
+import com.dokor.argos.services.analysis.modules.runtime.PlaywrightRuntimeClient;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 

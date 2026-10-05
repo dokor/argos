@@ -1,5 +1,6 @@
 package com.dokor.argos.services.domain.report;
 
+import com.dokor.argos.util.Urls;
 import com.dokor.argos.services.analysis.model.AuditCheckResult;
 import com.dokor.argos.services.analysis.accessibility.AccessibilityEvidence;
 import com.dokor.argos.services.analysis.accessibility.AccessibilityCompliance;
@@ -14,7 +15,6 @@ import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.URI;
 import java.time.Instant;
 import java.util.*;
 
@@ -29,7 +29,7 @@ public class PublicReportComposer {
         logger.info("Composing public report from schemaVersion={}", internalReport.schemaVersion());
 
         String url = internalReport.normalizedUrl();
-        String domain = extractDomain(url);
+        String domain = Urls.host(url, url);
 
         AuditScoreReport score = internalReport.score();
         int global100 = score != null ? toScore100(score.global().ratio()) : 0;
@@ -226,14 +226,6 @@ public class PublicReportComposer {
     private static int toScore100(double ratio) {
         double r = Math.max(0.0, Math.min(1.0, ratio));
         return (int) Math.round(r * 100.0);
-    }
-
-    private static String extractDomain(String url) {
-        try {
-            return URI.create(url).getHost();
-        } catch (Exception e) {
-            return url;
-        }
     }
 
     // Catégories affichées = domaines métier uniquement (issue #197). Les tags d'outil

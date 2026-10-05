@@ -1,7 +1,7 @@
 package com.dokor.argos.services.analysis.accessibility;
 
 import com.dokor.argos.services.analysis.model.*;
-import com.dokor.argos.services.analysis.lighthouse.*;
+import com.dokor.argos.services.analysis.modules.lighthouse.*;
 import com.dokor.argos.services.domain.report.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;

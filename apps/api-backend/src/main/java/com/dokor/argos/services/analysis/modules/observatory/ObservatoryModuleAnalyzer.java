@@ -1,5 +1,7 @@
 package com.dokor.argos.services.analysis.modules.observatory;
 
+import com.dokor.argos.util.Urls;
+import com.dokor.argos.util.JsonNodes;
 import com.dokor.argos.services.analysis.model.AuditCheckResult;
 import com.dokor.argos.services.analysis.model.AuditContext;
 import com.dokor.argos.services.analysis.model.AuditModuleAnalyzer;
@@ -12,7 +14,6 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -42,7 +43,7 @@ public class ObservatoryModuleAnalyzer implements AuditModuleAnalyzer {
     @Override
     public AuditModuleResult analyze(AuditContext context, Logger logger) {
         String url = context.finalUrl() != null ? context.finalUrl() : context.normalizedUrl();
-        String hostname = extractHostname(url);
+        String hostname = Urls.host(url);
 
         if (hostname == null) {
             logger.warn("Observatory module: could not extract hostname from url={}", url);
@@ -60,11 +61,11 @@ public class ObservatoryModuleAnalyzer implements AuditModuleAnalyzer {
         }
 
         // Parse score
-        int score = nodeInt(result, "score", -1);
-        String grade = nodeText(result, "grade");
-        int testsPassed = nodeInt(result, "tests_passed", -1);
-        int testsFailed = nodeInt(result, "tests_failed", -1);
-        int testsQuantity = nodeInt(result, "tests_quantity", -1);
+        int score = JsonNodes.intValue(result, "score", -1);
+        String grade = JsonNodes.text(result, "grade");
+        int testsPassed = JsonNodes.intValue(result, "tests_passed", -1);
+        int testsFailed = JsonNodes.intValue(result, "tests_failed", -1);
+        int testsQuantity = JsonNodes.intValue(result, "tests_quantity", -1);
 
         List<AuditCheckResult> checks = new ArrayList<>();
 
@@ -92,10 +93,10 @@ public class ObservatoryModuleAnalyzer implements AuditModuleAnalyzer {
         // (< 75) : inutile de solliciter l'API /tests quand tout va bien. Toute erreur
         // de cet appel secondaire est absorbée (repli sur la reco générique) : elle ne
         // doit jamais faire échouer le module ni dégrader le score.
-        String detailsUrl = nodeText(result, "details_url");
+        String detailsUrl = JsonNodes.text(result, "details_url");
         List<FailedTest> failedTests = List.of();
         if (score >= 0 && score < 75) {
-            int scanId = firstInt(result, -1, "scan_id", "id");
+            int scanId = JsonNodes.firstInt(result, -1, "scan_id", "id");
             if (scanId >= 0) {
                 try {
                     failedTests = parseFailedTests(client.tests(scanId));
@@ -204,26 +205,6 @@ public class ObservatoryModuleAnalyzer implements AuditModuleAnalyzer {
             Map.of("available", false, "reason", reason), checks);
     }
 
-    private static String extractHostname(String url) {
-        if (url == null || url.isBlank()) return null;
-        try {
-            return URI.create(url).getHost();
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    private static int nodeInt(JsonNode node, String field, int defaultValue) {
-        if (node == null || !node.has(field) || node.get(field).isNull()) return defaultValue;
-        return node.get(field).asInt(defaultValue);
-    }
-
-    private static String nodeText(JsonNode node, String field) {
-        if (node == null || !node.has(field) || node.get(field).isNull()) return null;
-        String s = node.get(field).asText();
-        return (s == null || s.isBlank() || "null".equals(s)) ? null : s;
-    }
-
     private static Map<String, Object> buildTestsDetails(int passed, int failed, int quantity) {
         Map<String, Object> m = new LinkedHashMap<>();
         if (passed >= 0) m.put("passed", passed);
@@ -279,32 +260,12 @@ public class ObservatoryModuleAnalyzer implements AuditModuleAnalyzer {
         // Champ pass absent/null => on ne présume pas l'échec (prudence).
         boolean failed = passNode != null && !passNode.isNull() && !passNode.asBoolean(true);
         if (!failed) return;
-        String name = firstText(test, "name");
+        String name = JsonNodes.firstText(test, "name");
         if (name == null) name = keyName;
         if (name == null) name = "test";
-        String desc = firstText(test, "score_description", "description", "result");
+        String desc = JsonNodes.firstText(test, "score_description", "description", "result");
         if (desc == null) desc = name;
         out.add(new FailedTest(name, desc));
     }
 
-    /** Premier champ textuel non vide parmi {@code fields}, ou {@code null}. */
-    private static String firstText(JsonNode node, String... fields) {
-        if (node == null) return null;
-        for (String f : fields) {
-            String v = nodeText(node, f);
-            if (v != null) return v;
-        }
-        return null;
-    }
-
-    /** Premier champ entier présent parmi {@code fields}, ou {@code defaultValue}. */
-    private static int firstInt(JsonNode node, int defaultValue, String... fields) {
-        if (node == null) return defaultValue;
-        for (String f : fields) {
-            if (node.has(f) && !node.get(f).isNull() && node.get(f).canConvertToInt()) {
-                return node.get(f).asInt(defaultValue);
-            }
-        }
-        return defaultValue;
-    }
 }

@@ -2,7 +2,7 @@ package com.dokor.argos.guice;
 
 import com.coreoz.plume.db.querydsl.guice.GuiceQuerydslModule;
 import com.dokor.argos.services.analysis.DomainAnalysisService;
-import com.dokor.argos.services.analysis.lighthouse.LighthouseModuleAnalyzer;
+import com.dokor.argos.services.analysis.modules.lighthouse.LighthouseModuleAnalyzer;
 import com.dokor.argos.services.analysis.model.AuditModuleAnalyzer;
 import com.dokor.argos.services.analysis.modules.html.HtmlModuleAnalyzer;
 import com.dokor.argos.services.analysis.modules.http.HttpModuleAnalyzer;

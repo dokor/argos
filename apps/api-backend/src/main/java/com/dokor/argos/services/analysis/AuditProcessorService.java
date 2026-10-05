@@ -2,7 +2,7 @@ package com.dokor.argos.services.analysis;
 
 import com.dokor.argos.db.dao.AuditDao;
 import com.dokor.argos.db.generated.Audit;
-import com.dokor.argos.services.analysis.lighthouse.LighthouseModuleAnalyzer;
+import com.dokor.argos.services.analysis.modules.lighthouse.LighthouseModuleAnalyzer;
 import com.dokor.argos.services.analysis.accessibility.LighthouseAccessibilityNormalizer;
 import com.dokor.argos.services.analysis.accessibility.AccessibilityEvidence;
 import com.dokor.argos.services.analysis.accessibility.AccessibilityRegulatoryScopeService;

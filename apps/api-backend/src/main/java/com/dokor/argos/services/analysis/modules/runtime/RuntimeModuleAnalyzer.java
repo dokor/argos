@@ -3,7 +3,6 @@ package com.dokor.argos.services.analysis.modules.runtime;
 import com.dokor.argos.services.analysis.model.*;
 import com.dokor.argos.services.analysis.model.enums.AuditSeverity;
 import com.dokor.argos.services.analysis.model.enums.AuditStatus;
-import com.dokor.argos.services.analysis.playwright.PlaywrightRuntimeClient;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.slf4j.Logger;

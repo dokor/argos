@@ -1,13 +1,13 @@
 package com.dokor.argos.services.domain.report;
 
-import java.util.*;
-import static java.util.Collections.emptyList;
+import java.util.List;
+import java.util.Map;
+import static com.dokor.argos.services.domain.report.TechReportValues.*;
 
 public final class TechReportMapper {
 
     private TechReportMapper() {}
 
-    @SuppressWarnings("unchecked")
     public static ReportDto.Tech fromTechModuleData(Map<String, Object> techData) {
         if (techData == null || techData.isEmpty()) return null;
 
@@ -55,47 +55,5 @@ public final class TechReportMapper {
         if (cms == null && ff == null && next == null) return null;
 
         return new ReportDto.Tech(cms, ff, next);
-    }
-
-    private static Map<String, Object> asMap(Object o) {
-        if (o instanceof Map<?, ?> m) {
-            Map<String, Object> out = new LinkedHashMap<>();
-            m.forEach((k, v) -> out.put(String.valueOf(k), v));
-            return out;
-        }
-        return null;
-    }
-
-    private static String asString(Object o) {
-        return o == null ? null : String.valueOf(o);
-    }
-
-    private static Double asDouble(Object o) {
-        if (o == null) return null;
-        if (o instanceof Number n) return n.doubleValue();
-        try { return Double.parseDouble(String.valueOf(o)); }
-        catch (Exception e) { return null; }
-    }
-
-    private static Boolean asBoolean(Object o) {
-        if (o == null) return null;
-        if (o instanceof Boolean b) return b;
-        String s = String.valueOf(o).trim().toLowerCase(Locale.ROOT);
-        if (s.equals("true")) return true;
-        if (s.equals("false")) return false;
-        return null;
-    }
-
-    @SuppressWarnings("unchecked")
-    private static List<String> asStringList(Object o) {
-        if (o == null) return emptyList();
-        if (o instanceof List<?> list) {
-            List<String> out = new ArrayList<>();
-            for (Object item : list) {
-                if (item != null) out.add(String.valueOf(item));
-            }
-            return out;
-        }
-        return emptyList();
     }
 }
