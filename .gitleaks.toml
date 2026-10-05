@@ -1,0 +1,14 @@
+title = "Argos secret scanning"
+[extend]
+useDefault = true
+
+[[rules]]
+id = "argos-hocon-password"
+description = "Literal passwords in HOCON configuration"
+regex = '''(?m)(?:internal-api\.auth-password|dataSource\.password[\"']?)\s*=\s*[\"']?([^\s\"'\r\n]+)'''
+secretGroup = 1
+keywords = ["auth-password", "dataSource.password"]
+[[rules.allowlists]]
+description = "External substitutions and exact non-production test credentials"
+regexTarget = "secret"
+regexes = ['''^\$\{\?(?:DB_PASSWORD|INTERNAL_API_PASSWORD)\}$''', '''^(?:sa|synthetic-test-internal|synthetic-test-value|synthetic-db-fixture)$''']

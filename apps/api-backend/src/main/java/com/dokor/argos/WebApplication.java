@@ -35,6 +35,7 @@ public class WebApplication {
     public static void main(String[] args) {
         try {
             long startTimestamp = System.currentTimeMillis();
+            new ConfigurationService(com.typesafe.config.ConfigFactory.load()).validateRequiredSecrets();
 
             // Initialize all application objects with Guice
             Injector injector = Guice.createInjector(Stage.PRODUCTION, new ApplicationModule());
@@ -57,7 +58,8 @@ public class WebApplication {
 
             injector.getInstance(SchedulerJobs.class).scheduleJobs();
 
-            addShutDownListener(httpServer, injector.getInstance(Scheduler.class), injector.getInstance(RemoteModuleExecutor.class));
+            addShutDownListener(httpServer, injector.getInstance(Scheduler.class), injector.getInstance(RemoteModuleExecutor.class),
+                injector.getInstance(com.dokor.argos.services.analysis.AuditModuleExecutor.class));
 
             logger.info("Server started in {} ms", System.currentTimeMillis() - startTimestamp);
         } catch (Throwable e) {
@@ -69,7 +71,8 @@ public class WebApplication {
         }
     }
 
-    private static void addShutDownListener(HttpServer httpServer, Scheduler scheduler, RemoteModuleExecutor remoteModules) {
+    private static void addShutDownListener(HttpServer httpServer, Scheduler scheduler, RemoteModuleExecutor remoteModules,
+                                           com.dokor.argos.services.analysis.AuditModuleExecutor localModules) {
         Runtime.getRuntime().addShutdownHook(new Thread(
             () -> {
                 logger.info("Stopping signal received, shutting down server and scheduler...");
@@ -86,6 +89,7 @@ public class WebApplication {
                     Thread.currentThread().interrupt();
                 } finally {
                     remoteModules.close();
+                    localModules.close();
                 }
             },
             "shutdownHook"

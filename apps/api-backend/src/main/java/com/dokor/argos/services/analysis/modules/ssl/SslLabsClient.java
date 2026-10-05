@@ -21,8 +21,8 @@ public class SslLabsClient {
     private static final Logger logger = LoggerFactory.getLogger(SslLabsClient.class);
 
     private static final String API_BASE = "https://api.ssllabs.com/api/v3";
-    private static final int MAX_POLLS = 10;
-    private static final long POLL_INTERVAL_MS = 6_000L;
+    private static final int MAX_POLLS = 5;
+    private static final long POLL_INTERVAL_MS = 2_000L;
 
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
@@ -40,28 +40,32 @@ public class SslLabsClient {
      * Throws if the API is unavailable or times out.
      */
     public JsonNode analyze(String host) throws Exception {
+        var current=com.dokor.argos.services.analysis.AuditDeadline.current();
+        var deadline=current==null?new com.dokor.argos.services.analysis.AuditDeadline(Duration.ofSeconds(30)):current.child(Duration.ofSeconds(30));
+        try(var scope=deadline.enter()) {
         return ExternalServiceCall.timed(logger, "ssllabs", host, () -> {
             // Start the analysis
-            JsonNode result = get(API_BASE + "/analyze?host=" + host + "&startNew=on&all=done");
+            JsonNode result = get(API_BASE + "/analyze?host=" + host + "&fromCache=on&all=done");
 
             for (int i = 0; i < MAX_POLLS; i++) {
                 String status = result.path("status").asText("");
                 if ("READY".equals(status) || "ERROR".equals(status)) {
                     return result;
                 }
-                Thread.sleep(POLL_INTERVAL_MS);
+                Thread.sleep(Math.max(1,deadline.remaining(Duration.ofMillis(POLL_INTERVAL_MS)).toMillis()));
                 result = get(API_BASE + "/analyze?host=" + host + "&all=done");
             }
 
             // Return whatever we have after timeout (may be partial)
-            return result;
+            throw new java.net.http.HttpTimeoutException("SSL Labs result unavailable within its reduced budget (timeout)");
         });
+        }
     }
 
     private JsonNode get(String url) throws Exception {
         HttpRequest request = HttpRequest.newBuilder()
             .uri(URI.create(url))
-            .timeout(Duration.ofSeconds(30))
+            .timeout(com.dokor.argos.services.analysis.AuditDeadline.requestTimeout(Duration.ofSeconds(30)))
             .header("User-Agent", "argos-auditor/1.0")
             .GET()
             .build();

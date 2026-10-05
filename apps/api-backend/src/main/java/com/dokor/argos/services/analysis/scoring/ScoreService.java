@@ -34,6 +34,9 @@ import java.util.*;
  */
 @Singleton
 public class ScoreService {
+    private final ScorePolicy policy;
+    public ScoreService() { this(new DefaultScorePolicy()); }
+    @jakarta.inject.Inject public ScoreService(ScorePolicy policy) { this.policy=policy; }
 
     private static final Logger logger = LoggerFactory.getLogger(ScoreService.class);
     /** Décision produit #249 : quatre domaines égaux, puis renormalisation des mesurables. */
@@ -143,7 +146,10 @@ public class ScoreService {
             tagAgg,
             domainAgg,
             effectiveDomainWeights,
-            scoredChecks
+            scoredChecks,
+            scoringVersion == policy.version() && Objects.equals(scoringFingerprint,policy.fingerprint())
+                ? MeasurementCoverageService.compute(policy,modules) : null,
+            CONFIGURED_DOMAIN_WEIGHTS.entrySet().stream().collect(java.util.stream.Collectors.toMap(e -> e.getKey().id(),Map.Entry::getValue))
         );
     }
 

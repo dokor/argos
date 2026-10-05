@@ -1,14 +1,14 @@
 # Le Chromium Debian ARM64 crashait en SIGTRAP avant l'ouverture de DevTools.
 # On utilise le même runtime Chromium que le playwright-service, déjà déployé
 # sur le Raspberry et adapté aux navigateurs headless en conteneur.
-FROM mcr.microsoft.com/playwright:v1.58.2-jammy
+FROM mcr.microsoft.com/playwright:v1.63.0-noble
 
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
 RUN npm ci --omit=dev
 
-COPY server.mjs app.mjs .
+COPY server.mjs app.mjs collector.mjs .
 
 # L'image Playwright embarque Chromium dans /ms-playwright. On crée un chemin
 # stable afin que chrome-launcher puisse le lancer explicitement.

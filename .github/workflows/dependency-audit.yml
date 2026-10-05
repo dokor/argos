@@ -1,0 +1,25 @@
+name: Production dependency audit
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  audit:
+    name: Production dependency audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    strategy:
+      matrix:
+        app: [console-web, playwright-service, lighthouse-service]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.21.0'
+      - name: Check locked production dependencies
+        working-directory: apps/${{ matrix.app }}
+        run: npm audit --omit=dev --audit-level=high

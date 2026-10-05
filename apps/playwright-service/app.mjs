@@ -31,6 +31,14 @@ export function createRuntimeApp({ chromium, log = () => {} }) {
     const { url } = req.body ?? {};
     if (!isValidAnalysisUrl(url)) return res.status(400).json({ error: 'Invalid URL' });
     let browser;
+    const timeoutMs = Number.isFinite(req.body?.timeoutMs) && req.body.timeoutMs > 0 ? Math.min(45000, req.body.timeoutMs) : 45000;
+    const deadline = performance.now() + timeoutMs;
+    let cancelled = false;
+    const cancel = () => { cancelled = true; void browser?.close().catch(() => {}); };
+    const timer = setTimeout(cancel, timeoutMs);
+    const disconnected = () => { if (!res.writableEnded) cancel(); };
+    res.once('close', disconnected);
+    const remaining = () => Math.max(1, Math.ceil(deadline - performance.now()));
     try {
 
       const safeUrl = sanitizeUrlForLog(url);
@@ -39,7 +47,8 @@ export function createRuntimeApp({ chromium, log = () => {} }) {
 
       const pageDomain = registrableDomainForUrl(url);
 
-      browser = await chromium.launch({ args: ['--no-sandbox'] });
+      browser = await chromium.launch({ args: ['--no-sandbox'], timeout: remaining() });
+      if (cancelled) throw new Error('Analysis timeout');
       const context = await browser.newContext();
       const page = await context.newPage();
 
@@ -134,20 +143,20 @@ export function createRuntimeApp({ chromium, log = () => {} }) {
       let loadMs = null;
 
       try {
-        const response = await page.goto(url, { waitUntil: 'load', timeout: 45000 });
+        const response = await page.goto(url, { waitUntil: 'load', timeout: remaining() });
         finalUrl = page.url();
 
         // timings best effort
         // on mesure depuis t0
         // DCL: on peut l'obtenir via waitForLoadState
-        await page.waitForLoadState('domcontentloaded', { timeout: 45000 });
+        await page.waitForLoadState('domcontentloaded', { timeout: remaining() });
         domContentLoadedMs = Date.now() - t0;
 
         // déjà waitUntil=load, donc loadMs ~ now - t0
         loadMs = Date.now() - t0;
 
         // petit idle pour capturer XHR tardifs (MVP)
-        await page.waitForTimeout(1500);
+        await page.waitForTimeout(Math.min(1500, remaining()));
       } catch (e) {
         // si le site bloque, on renvoie ce qu’on a
         log('analyze.navigation_error', { url: safeUrl, error: String(e?.message ?? e).slice(0, 300) });
@@ -160,6 +169,8 @@ export function createRuntimeApp({ chromium, log = () => {} }) {
         browser = null;
         await completedBrowser.close();
       }
+
+      if (cancelled) throw new Error('Analysis timeout');
 
       const networkOwnership = partitionNetworkErrors({ failedRequestUrls, status5xxUrls }, finalUrl);
 
@@ -201,8 +212,10 @@ export function createRuntimeApp({ chromium, log = () => {} }) {
       });
     } catch {
       log('analyze.error', { error: 'Collector failure' });
-      res.status(500).json({ error: 'Internal Error' });
+      if (!res.destroyed) res.status(cancelled ? 504 : 500).json({ error: cancelled ? 'Analysis timeout' : 'Internal Error' });
     } finally {
+      clearTimeout(timer);
+      res.removeListener('close', disconnected);
       if (browser) {
         try { await browser.close(); }
         catch { log('analyze.cleanup_error', { error: 'Browser cleanup failed' }); }

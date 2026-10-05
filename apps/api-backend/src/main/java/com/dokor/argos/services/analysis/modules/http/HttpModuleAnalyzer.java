@@ -59,6 +59,8 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
     @Override
     public AuditModuleResult analyze(AuditContext context, Logger logger) {
         long start = System.currentTimeMillis();
+        var global=com.dokor.argos.services.analysis.AuditDeadline.current();
+        var redirects=(global==null?new com.dokor.argos.services.analysis.AuditDeadline(Duration.ofSeconds(30)):global.child(Duration.ofSeconds(30)));
 
         String inputUrl = context.inputUrl();
         String normalizedUrl = context.normalizedUrl();
@@ -89,7 +91,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
 
                 HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(currentUrl))
-                    .timeout(Duration.ofSeconds(20))
+                    .timeout(redirects.remaining(Duration.ofSeconds(20)))
                     .header("User-Agent", "argos-auditor/1.0")
                     .header("Accept", "*/*")
                     .GET()
@@ -122,6 +124,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
                 break;
             }
         } catch (Exception e) {
+            if (e instanceof InterruptedException) Thread.currentThread().interrupt();
             logger.warn("HTTP module: request failed url={} error={}", currentUrl, e.toString());
             errors.add(e.getClass().getSimpleName() + ": " + e.getMessage());
         }
@@ -797,7 +800,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
         UrlNormalizer.validatePublicUrl(url);
         HttpRequest req = HttpRequest.newBuilder()
             .uri(URI.create(url))
-            .timeout(Duration.ofSeconds(10))
+            .timeout(com.dokor.argos.services.analysis.AuditDeadline.requestTimeout(Duration.ofSeconds(10)))
             .header("User-Agent", "argos-auditor/1.0")
             .header("Accept", "*/*")
             .GET()

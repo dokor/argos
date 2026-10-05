@@ -43,7 +43,7 @@ public class ObservatoryClient {
 
             HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
-                .timeout(Duration.ofSeconds(30))
+                .timeout(com.dokor.argos.services.analysis.AuditDeadline.requestTimeout(Duration.ofSeconds(30)))
                 .header("User-Agent", "argos-auditor/1.0")
                 .header("Content-Type", "application/x-www-form-urlencoded")
                 .POST(HttpRequest.BodyPublishers.noBody())
@@ -70,7 +70,7 @@ public class ObservatoryClient {
 
             HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
-                .timeout(Duration.ofSeconds(30))
+                .timeout(com.dokor.argos.services.analysis.AuditDeadline.requestTimeout(Duration.ofSeconds(30)))
                 .header("User-Agent", "argos-auditor/1.0")
                 .GET()
                 .build();

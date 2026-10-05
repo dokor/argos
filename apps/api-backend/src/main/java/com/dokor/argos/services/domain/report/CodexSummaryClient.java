@@ -50,7 +50,7 @@ public class CodexSummaryClient {
 
             HttpRequest httpRequest = HttpRequest.newBuilder()
                 .uri(URI.create(configuration.codexSummaryServiceUrl() + "/run"))
-                .timeout(configuration.codexSummaryTimeout())
+                .timeout(com.dokor.argos.services.analysis.AuditDeadline.requestTimeout(configuration.codexSummaryTimeout()))
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(request)))
                 .build();

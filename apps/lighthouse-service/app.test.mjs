@@ -81,3 +81,25 @@ test('concurrency slots are released after rejection and queued work is FIFO', a
   assert.deepEqual(started, [1, 2, 3]);
   assert.throws(() => createConcurrencyLimiter(0), /Invalid concurrency/);
 });
+test('timeout aborts the running collector and the next request can run', async t => {
+  let aborted = 0;
+  const base = await serverFor(t, async (url, { signal }) => {
+    if (url.endsWith('/slow')) return new Promise((_resolve, reject) => {
+      signal.addEventListener('abort', () => { aborted++; reject(new Error('stopped')); }, { once: true });
+    });
+    return { lhr: { categories: {} } };
+  });
+  const response = await fetch(base + '/analyze', { method: 'POST', body: JSON.stringify({ url: 'https://example.test/slow', timeoutMs: 100 }) });
+  assert.equal(response.status, 504); assert.equal(aborted, 1);
+  assert.equal((await fetch(base + '/analyze', { method: 'POST', body: '{"url":"https://example.test"}' })).status, 200);
+});
+test('cancelling queued work removes it without consuming a concurrency slot', async () => {
+  const limited = createConcurrencyLimiter(1); let release;
+  const first = limited(() => new Promise(resolve => { release = resolve; }));
+  await Promise.resolve();
+  const controller = new AbortController();
+  const queued = limited(() => assert.fail('Cancelled queued task started'), { signal: controller.signal });
+  controller.abort(); await assert.rejects(queued, /timeout/);
+  release(); await first;
+  assert.equal(await limited(async () => 'next'), 'next');
+});

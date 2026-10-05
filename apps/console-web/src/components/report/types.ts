@@ -9,12 +9,15 @@ export type Report = {
   scores: {
     global: number;
     globalAvailable?: boolean | null;
+    coverage?: Coverage | null;
     calculation?: {
       scoringVersion: number;
       scoringFingerprint?: string | null;
       domains: {
         key: string; score: number; maxScore: number; ratio: number; effectiveWeight: number;
       }[];
+      configuredDomainWeights?: Record<string, number> | null;
+      checks?: Array<{ key: string; module: string; domain: string; weight: number; score: number }> | null;
     } | null;
     /** Part des modules réellement évalués (0-100). Analyse partielle si < 100. */
     completeness?: number | null;
@@ -60,6 +63,13 @@ export type AccessibilityEvidence = {
     wcagCriteria: string[];
   }>;
 };
+
+export type Coverage = {
+  version: string; threshold: number; provisional: boolean;
+  global: CoverageAggregate; domains: CoverageAggregate[];
+  checks: Array<{ key: string; domain: string; module: string; weight: number; state: "MEASURED" | "UNAVAILABLE" | "BLOCKED_BY_ANTIBOT" | "NOT_APPLICABLE"; reason: string; confidence: string }>;
+};
+export type CoverageAggregate = { key: string; measuredWeight: number; expectedWeight: number; ratio: number; available: boolean; sufficient: boolean };
 
 export type AccessibilityCompliance = {
   accessibilityComplianceVersion: string;
@@ -129,6 +139,7 @@ export type PriorityItem = {
 };
 
 export type Issue = {
+  confidence?: "HIGH" | "MEDIUM" | "LOW" | "UNKNOWN" | null;
   id: string;
   categoryKey: string;
   /** Toutes les catégories métier auxquelles le point appartient (ex. ["security","ssl"]). */

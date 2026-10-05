@@ -18,8 +18,20 @@ public record AuditScoreReport(
     List<ScoreAggregate> byDomain,    // id=business domain, normalized independently
     Map<String, Double> domainWeights, // effective weights after unavailable-domain renormalization
 
-    List<ScoredCheck> checks          // traçabilité check par check
+    List<ScoredCheck> checks,          // traçabilité check par check
+    MeasurementCoverage coverage,
+    Map<String,Double> configuredDomainWeights
 ) {
+    public AuditScoreReport(int version, String fingerprint, ScoreAggregate global,
+        List<ScoreAggregate> modules, List<ScoreAggregate> tags, List<ScoreAggregate> domains,
+        Map<String,Double> weights, List<ScoredCheck> checks, MeasurementCoverage coverage) {
+        this(version,fingerprint,global,modules,tags,domains,weights,checks,coverage,null);
+    }
+    public AuditScoreReport(int version, String fingerprint, ScoreAggregate global,
+        List<ScoreAggregate> modules, List<ScoreAggregate> tags, List<ScoreAggregate> domains,
+        Map<String,Double> weights, List<ScoredCheck> checks) {
+        this(version,fingerprint,global,modules,tags,domains,weights,checks,null);
+    }
     /** Compatibilité source pour les consommateurs qui ne portent ni empreinte ni domaines. */
     public AuditScoreReport(
         int scoringVersion,

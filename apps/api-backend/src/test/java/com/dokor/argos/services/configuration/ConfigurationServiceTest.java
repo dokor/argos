@@ -13,6 +13,21 @@ class ConfigurationServiceTest {
     private ConfigurationService service(String config, Map<String, String> environment) {
         return new ConfigurationService(ConfigFactory.parseString(config), environment);
     }
+    @Test void requiredSecretsFailBeforeStartupWithoutEchoingValues() {
+        assertThrows(IllegalStateException.class, () -> service("", Map.of()).validateRequiredSecrets());
+        var valid = service("""
+            internal-api.auth-password="synthetic-test-internal"
+            db.hikari."dataSource.password"="synthetic-db-fixture"
+            """, Map.of());
+        assertDoesNotThrow(valid::validateRequiredSecrets);
+        var blank = service("""
+            internal-api.auth-password=""
+            db.hikari."dataSource.password"="synthetic-db-fixture"
+            """, Map.of());
+        var error = assertThrows(IllegalStateException.class, blank::validateRequiredSecrets);
+        assertFalse(error.getMessage().contains("synthetic-db-fixture"));
+        assertEquals("synthetic-env-value", service("", Map.of("INTERNAL_API_PASSWORD","synthetic-env-value")).internalApiAuthPassword());
+    }
     @Test void optionalSettingsHaveDefaultsAndRequiredSettingsRemainRequired() {
         var service = service("", Map.of());
         assertNull(service.httpGrizzlyWorkerThreadsPoolSize());

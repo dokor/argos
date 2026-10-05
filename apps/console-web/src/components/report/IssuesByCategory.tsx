@@ -133,6 +133,7 @@ export default function IssuesByCategory({ report }: { report: Report }) {
                       </summary>
 
                       <div className={s.issueDetail}>
+                          {issue.confidence && <p>{t.report.priorityCards.confidenceLabel}: {t.report.priorityCards.confidence[issue.confidence]}</p>}
                         {issue.impact && (
                           <div className={s.detailBlock}>
                             <p className={s.detailBlockLabel}>Impact</p>
