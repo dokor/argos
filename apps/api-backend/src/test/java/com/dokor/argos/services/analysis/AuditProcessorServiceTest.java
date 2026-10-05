@@ -167,6 +167,8 @@ class AuditProcessorServiceTest {
         when(http.analyze(any(AuditContext.class), any())).thenReturn(httpModule);
         when(html.analyze(any(AuditContext.class), any())).thenReturn(new AuditModuleResult("html", "HTML", "ok", Map.of(), List.of()));
         when(runtime.analyze(any(AuditContext.class), any())).thenReturn(new AuditModuleResult("runtime", "RUNTIME", "ok", Map.of(), List.of()));
+        when(merger.merge(anyList())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(enricher.enrich(anyList())).thenAnswer(invocation -> invocation.getArgument(0));
 
         AuditProcessorService svc = new AuditProcessorService(
             runService,
@@ -190,7 +192,11 @@ class AuditProcessorServiceTest {
         svc.process(1L);
 
         verify(normalizer).normalize("http://example.com");
-        verify(runService).complete(eq(1L), anyString());
+        ArgumentCaptor<String> completedJson = ArgumentCaptor.forClass(String.class);
+        verify(runService).complete(eq(1L), completedJson.capture());
+        assertTrue(completedJson.getValue().contains("accessibility-compliance-proposal-v1"));
+        assertTrue(completedJson.getValue().contains("RULES_PENDING"));
+        assertFalse(completedJson.getValue().contains("<html>"));
         verify(runService, never()).fail(eq(1L), anyString());
     }
 
