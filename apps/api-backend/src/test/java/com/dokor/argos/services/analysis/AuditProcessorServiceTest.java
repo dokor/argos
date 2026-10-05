@@ -362,12 +362,19 @@ class AuditProcessorServiceTest {
             } finally { release.countDown(); }
         }
         @Test void remoteDeadlineProducesPartialReportAndNeverWritesProgressFromCancelledWorker() throws Exception {
+            var started = new CountDownLatch(1);
             var stopped = new CountDownLatch(1);
-            try (var remote = new RemoteModuleExecutor(Duration.ofMillis(100))) {
+            // Allow initial Mockito/JaCoCo class loading, then prove cancellation of an active call.
+            try (var remote = new RemoteModuleExecutor(Duration.ofSeconds(2))) {
                 var processor = processor(remote);
                 when(ssl.analyze(any(), any())).thenAnswer(call -> {
+                    started.countDown();
                     try { new CountDownLatch(1).await(); return result("ssl"); }
                     finally { stopped.countDown(); }
+                });
+                when(html.analyze(any(), any())).thenAnswer(call -> {
+                    assertTrue(started.await(5, TimeUnit.SECONDS));
+                    return result("html");
                 });
                 processor.process(1);
                 assertTrue(stopped.await(2, TimeUnit.SECONDS));
