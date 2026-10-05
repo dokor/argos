@@ -1,5 +1,7 @@
 # Accessibility contract — #261–#263
 
+The documentary [rules matrix v1](accessibility-rules-v1.md) and qualification fixtures track #260. They remain proposed; no legal approval or runtime activation is inferred from a merge.
+
 Three dependent PRs deliver normalized Lighthouse evidence, persisted qualification and FR/EN rendering. No new network collection, score category or database migration.
 
 ## Technical evidence v1
