@@ -1,9 +1,18 @@
 # Dossier go/no-go V1 — #259
 
 Évaluation du **5 octobre 2026 : NO-GO de sortie**, décision humaine en attente.
-Les corrections restantes sont proposées dans les **PR #282–#289**, vérifiées
-ensemble dans [#290](https://github.com/dokor/argos/pull/290), pas encore fusionnées.
+Les corrections des **PR #282–#289** sont vérifiées ensemble dans
+[#290](https://github.com/dokor/argos/pull/290). Les PR #282/#283/#284/#286/#287/#288/#289
+sont désormais fusionnées ; #285 et ce dossier #290 restent à fusionner sur `main`.
 Aucun déploiement, renouvellement de secret, enforcement GitHub ou GO n'est exécuté.
+
+Actualisation après fusions : `main` observé à
+`b8fdb09e17c4b5dc50104f8d7c8c627bde5a9ea5`. Les deux branches restantes sont
+synchronisées avec cette révision ; la résolution de #285 conserve les quatre
+classes IT (migration, publication, claims, newsletter). Le code combiné est
+identique au candidat déjà validé : seuls les états documentaires sont actualisés.
+Les SHA/preuves ci-dessous et les états OPEN du JSON restent le snapshot historique
+antérieur aux fusions. Les checks des nouveaux heads sont à revoir dans les PR.
 
 ## Révisions et preuves
 
@@ -156,7 +165,7 @@ et charge avant acceptation. Le [runbook](../../infra/RUNBOOK.md) aide au diagno
 
 | Champ de décision #259 | Valeur actuelle |
 |---|---|
-| Sortie | NO-GO : PR non fusionnées et validations humaines/opérationnelles manquantes |
+| Sortie | NO-GO : #285/#290 à fusionner et validations humaines/opérationnelles manquantes |
 | Décideur / date GO | en attente ; @dokor proposé, pas attesté |
 | SHA/tag release / environnement / SHA déployé | non désignés / inconnu / inconnu |
 | Exclusions acceptées | aucune |
