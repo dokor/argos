@@ -8,8 +8,13 @@ dans son propre `docker compose` (cf. `infra/compose/<service>/`).
 
 | Service | Port | Rôle | Image / version critique |
 |---|---|---|---|
-| `playwright-service` | 3016 | Métriques runtime (console, réseau, timings) via Chromium headless | `mcr.microsoft.com/playwright:v1.58.2-jammy` · `playwright ^1.49` · Node 20 |
-| `lighthouse-service` | 3017 | Scores Lighthouse (perf, a11y, best-practices, SEO) via Chrome headless | `node:20-slim` · `lighthouse ^13.0.3` · `chrome-launcher ^1.2.1` |
+| `playwright-service` | 3016 | Métriques runtime (console, réseau, timings) via Chromium headless | `mcr.microsoft.com/playwright:v1.63.0-noble` · `playwright 1.63.0` |
+| `lighthouse-service` | 3017 | Scores Lighthouse (perf, a11y, best-practices, SEO) via Chrome headless | `mcr.microsoft.com/playwright:v1.63.0-noble` · `lighthouse 13.5.0` · `chrome-launcher ^1.2.1` |
+
+Versions proposées par #284/#289 ; relever Node et digests effectivement actifs
+avant acceptation Raspberry. Services : Node ≥22.19 ; CI : Node 24.21.0.
+Image multi-architecture ne remplace pas les tests ARM64/ressources. Voir le
+[dossier V1](../docs/release/v1-readiness-2026-10-05.md) pour migration et rollback V7.
 
 Réseau interne partagé : `argos_internal` (externe). `api-backend` les joint via
 `PLAYWRIGHT_SERVICE_URL` / `LIGHTHOUSE_SERVICE_URL`.
@@ -97,6 +102,6 @@ pendant une analyse). À ajuster selon les specs du Pi et `docker stats`.
 
 ## Versions critiques (reproductibilité)
 
-- Playwright : image `mcr.microsoft.com/playwright:v1.58.2-jammy` (Chromium fourni par l'image ; ne pas mélanger avec un `playwright` npm de version incompatible).
-- Lighthouse : `lighthouse ^13.0.3` + `chrome-launcher ^1.2.1` sur `node:20-slim`.
+- Playwright : image `mcr.microsoft.com/playwright:v1.63.0-noble` alignée sur `playwright 1.63.0` (Chromium fourni ; ne pas mélanger les versions).
+- Lighthouse : `lighthouse 13.5.0` + `chrome-launcher ^1.2.1` sur la même image Chromium ; Node embarqué ≥22.19 à vérifier.
 - Toute montée de version navigateur/Playwright/Lighthouse doit être testée sur le Pi (compatibilité + ressources) avant déploiement.

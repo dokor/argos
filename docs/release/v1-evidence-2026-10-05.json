@@ -1,32 +1,424 @@
 {
   "schemaVersion": 1,
   "checkedAt": "2026-10-05",
-  "candidateSha": "4286079b3d28bf035fdd1bd1c220f1f72d423d81",
+  "candidateSha": "5ecdb81b477d87f61354d34306642ebca8cbb37c",
   "environment": null,
   "deployedSha": null,
   "ciChecks": [
-    { "name": "API backend tests", "sha": "4286079b3d28bf035fdd1bd1c220f1f72d423d81", "conclusion": "success", "url": "https://github.com/dokor/argos/actions/runs/37314482118/job/111777653563" },
-    { "name": "Frontend checks", "sha": "4286079b3d28bf035fdd1bd1c220f1f72d423d81", "conclusion": "success", "url": "https://github.com/dokor/argos/actions/runs/37314482118/job/111777653522" },
-    { "name": "Lighthouse checks", "sha": "4286079b3d28bf035fdd1bd1c220f1f72d423d81", "conclusion": "success", "url": "https://github.com/dokor/argos/actions/runs/37314482118/job/111777652951" },
-    { "name": "Playwright checks", "sha": "4286079b3d28bf035fdd1bd1c220f1f72d423d81", "conclusion": "success", "url": "https://github.com/dokor/argos/actions/runs/37314482118/job/111777653519" }
+    {
+      "name": "API backend tests",
+      "sha": "5ecdb81b477d87f61354d34306642ebca8cbb37c",
+      "headSha": "67dfb7a636b7d7d6bd68825a9695c098b1d62b2c",
+      "conclusion": "success",
+      "url": "https://github.com/dokor/argos/actions/runs/37352222387/job/111905621971"
+    },
+    {
+      "name": "Controlled audit E2E",
+      "sha": "5ecdb81b477d87f61354d34306642ebca8cbb37c",
+      "headSha": "67dfb7a636b7d7d6bd68825a9695c098b1d62b2c",
+      "conclusion": "success",
+      "url": "https://github.com/dokor/argos/actions/runs/37352222332/job/111905620795"
+    },
+    {
+      "name": "MariaDB credentials (10.11)",
+      "sha": "5ecdb81b477d87f61354d34306642ebca8cbb37c",
+      "headSha": "67dfb7a636b7d7d6bd68825a9695c098b1d62b2c",
+      "conclusion": "success",
+      "url": "https://github.com/dokor/argos/actions/runs/37352222274/job/111905620653"
+    },
+    {
+      "name": "MariaDB progress (10.11)",
+      "sha": "5ecdb81b477d87f61354d34306642ebca8cbb37c",
+      "headSha": "67dfb7a636b7d7d6bd68825a9695c098b1d62b2c",
+      "conclusion": "success",
+      "url": "https://github.com/dokor/argos/actions/runs/37352222279/job/111905620497"
+    },
+    {
+      "name": "Production dependency audit (console-web)",
+      "sha": "5ecdb81b477d87f61354d34306642ebca8cbb37c",
+      "headSha": "67dfb7a636b7d7d6bd68825a9695c098b1d62b2c",
+      "conclusion": "success",
+      "url": "https://github.com/dokor/argos/actions/runs/37352222382/job/111905620983"
+    },
+    {
+      "name": "Secret scan",
+      "sha": "5ecdb81b477d87f61354d34306642ebca8cbb37c",
+      "headSha": "67dfb7a636b7d7d6bd68825a9695c098b1d62b2c",
+      "conclusion": "success",
+      "url": "https://github.com/dokor/argos/actions/runs/37352222203/job/111905620148"
+    },
+    {
+      "name": "MariaDB credentials (11.4)",
+      "sha": "5ecdb81b477d87f61354d34306642ebca8cbb37c",
+      "headSha": "67dfb7a636b7d7d6bd68825a9695c098b1d62b2c",
+      "conclusion": "success",
+      "url": "https://github.com/dokor/argos/actions/runs/37352222274/job/111905620031"
+    },
+    {
+      "name": "MariaDB progress (11.4)",
+      "sha": "5ecdb81b477d87f61354d34306642ebca8cbb37c",
+      "headSha": "67dfb7a636b7d7d6bd68825a9695c098b1d62b2c",
+      "conclusion": "success",
+      "url": "https://github.com/dokor/argos/actions/runs/37352222279/job/111905620678"
+    },
+    {
+      "name": "Production dependency audit (playwright-service)",
+      "sha": "5ecdb81b477d87f61354d34306642ebca8cbb37c",
+      "headSha": "67dfb7a636b7d7d6bd68825a9695c098b1d62b2c",
+      "conclusion": "success",
+      "url": "https://github.com/dokor/argos/actions/runs/37352222382/job/111905621145"
+    },
+    {
+      "name": "Production dependency audit (lighthouse-service)",
+      "sha": "5ecdb81b477d87f61354d34306642ebca8cbb37c",
+      "headSha": "67dfb7a636b7d7d6bd68825a9695c098b1d62b2c",
+      "conclusion": "success",
+      "url": "https://github.com/dokor/argos/actions/runs/37352222382/job/111905621245"
+    },
+    {
+      "name": "Frontend checks",
+      "sha": "5ecdb81b477d87f61354d34306642ebca8cbb37c",
+      "headSha": "67dfb7a636b7d7d6bd68825a9695c098b1d62b2c",
+      "conclusion": "success",
+      "url": "https://github.com/dokor/argos/actions/runs/37352222387/job/111905621796"
+    },
+    {
+      "name": "Lighthouse checks",
+      "sha": "5ecdb81b477d87f61354d34306642ebca8cbb37c",
+      "headSha": "67dfb7a636b7d7d6bd68825a9695c098b1d62b2c",
+      "conclusion": "success",
+      "url": "https://github.com/dokor/argos/actions/runs/37352222387/job/111905621583"
+    },
+    {
+      "name": "Playwright checks",
+      "sha": "5ecdb81b477d87f61354d34306642ebca8cbb37c",
+      "headSha": "67dfb7a636b7d7d6bd68825a9695c098b1d62b2c",
+      "conclusion": "success",
+      "url": "https://github.com/dokor/argos/actions/runs/37352222387/job/111905621909"
+    }
   ],
   "gates": [
-    { "id": "private-api", "issue": 218, "status": "BLOCKED" },
-    { "id": "secrets", "issue": 219, "status": "UNVERIFIED" },
-    { "id": "audit-budget", "issue": 223, "status": "UNVERIFIED" },
-    { "id": "token-storage", "issue": 226, "status": "BLOCKED" },
-    { "id": "public-write-limits", "issue": 227, "status": "UNVERIFIED" },
-    { "id": "publication-atomicity", "issue": 228, "status": "BLOCKED" },
-    { "id": "score-comparability", "issue": 44, "status": "UNVERIFIED" },
-    { "id": "score-coverage", "issue": 48, "status": "UNVERIFIED" },
-    { "id": "score-global", "issue": 249, "status": "VERIFIED", "kind": "CODE", "sha": "4286079b3d28bf035fdd1bd1c220f1f72d423d81", "checkedBy": "Codex (code and CI review)", "checkedAt": "2026-10-05", "url": "https://github.com/dokor/argos/pull/270" },
-    { "id": "score-priorities", "issue": 250, "status": "VERIFIED", "kind": "CODE", "sha": "4286079b3d28bf035fdd1bd1c220f1f72d423d81", "checkedBy": "Codex (code and CI review)", "checkedAt": "2026-10-05", "url": "https://github.com/dokor/argos/pull/271" },
-    { "id": "backend-audit", "issue": 128, "status": "UNVERIFIED" },
-    { "id": "accessibility-rules", "issue": 260, "status": "BLOCKED" },
-    { "id": "required-checks", "issue": 258, "status": "BLOCKED" },
-    { "id": "e2e-modules-concurrency", "issue": 64, "status": "UNVERIFIED" },
-    { "id": "dependency-risk", "issue": 259, "status": "UNVERIFIED" },
-    { "id": "backup-restore", "issue": 259, "status": "UNVERIFIED" },
-    { "id": "raspberry-post-deploy", "issue": 259, "status": "UNVERIFIED" }
-  ]
+    {
+      "id": "private-api",
+      "issue": 218,
+      "status": "UNVERIFIED",
+      "pending": "Code and HTTP/CI verified by #279; deployment configuration and real transport validation pending."
+    },
+    {
+      "id": "secrets",
+      "issue": 219,
+      "status": "UNVERIFIED",
+      "pending": "Code removal and secret scan #282 verified; rotation/revocation and historical exposure decision pending."
+    },
+    {
+      "id": "audit-budget",
+      "issue": 223,
+      "status": "UNVERIFIED",
+      "pending": "Deadline/cancellation tests #284 verified; Raspberry execution/queue/resources acceptance pending."
+    },
+    {
+      "id": "token-storage",
+      "issue": 226,
+      "status": "UNVERIFIED",
+      "pending": "V7 real MariaDB migration/read tests #280 verified; security review pending."
+    },
+    {
+      "id": "public-write-limits",
+      "issue": 227,
+      "status": "UNVERIFIED",
+      "pending": "Transport HTTP, quota and concurrent newsletter tests #285 verified; deployed proxy/trust configuration pending."
+    },
+    {
+      "id": "publication-atomicity",
+      "issue": 228,
+      "status": "UNVERIFIED",
+      "pending": "V8 and transaction/publication/claim tests #281/#283 verified on both MariaDB versions; deployment acceptance pending."
+    },
+    {
+      "id": "score-comparability",
+      "issue": 44,
+      "status": "UNVERIFIED",
+      "pending": "Frozen method/coverage comparison #287 verified; product review pending."
+    },
+    {
+      "id": "score-coverage",
+      "issue": 48,
+      "status": "UNVERIFIED",
+      "pending": "Weighted coverage #286 verified; 80% product threshold acceptance pending."
+    },
+    {
+      "id": "score-global",
+      "issue": 249,
+      "status": "VERIFIED",
+      "kind": "CODE",
+      "sha": "5ecdb81b477d87f61354d34306642ebca8cbb37c",
+      "checkedBy": "Codex (code and CI review)",
+      "checkedAt": "2026-10-05",
+      "url": "https://github.com/dokor/argos/actions/runs/37352222387/job/111905621971"
+    },
+    {
+      "id": "score-priorities",
+      "issue": 250,
+      "status": "VERIFIED",
+      "kind": "CODE",
+      "sha": "5ecdb81b477d87f61354d34306642ebca8cbb37c",
+      "checkedBy": "Codex (code and CI review)",
+      "checkedAt": "2026-10-05",
+      "url": "https://github.com/dokor/argos/actions/runs/37352222387/job/111905621971"
+    },
+    {
+      "id": "backend-audit",
+      "issue": 128,
+      "status": "UNVERIFIED",
+      "pending": "Historical #128 deliverable recovered with archive provenance; current review pending."
+    },
+    {
+      "id": "accessibility-rules",
+      "issue": 260,
+      "status": "BLOCKED",
+      "pending": "Technical lots merged; #260 rules remain PROPOSED/RULES_PENDING with no named human approval."
+    },
+    {
+      "id": "required-checks",
+      "issue": 258,
+      "status": "BLOCKED",
+      "pending": "Effective main rules [] and classic protection 404 on 2026-10-05. No enforcement applied."
+    },
+    {
+      "id": "e2e-modules-concurrency",
+      "issue": 64,
+      "status": "UNVERIFIED",
+      "pending": "Eight controlled Chromium/MariaDB cases #288 pass; live upstreams, Guice/Traefik and Raspberry checks remain separate."
+    },
+    {
+      "id": "dependency-risk",
+      "issue": 259,
+      "status": "UNVERIFIED",
+      "pending": "Production npm scans clean #289; unresolved development-only braces risk needs named human review."
+    },
+    {
+      "id": "backup-restore",
+      "issue": 259,
+      "status": "UNVERIFIED",
+      "pending": "Current-schema isolated CI fixture restore passes; production pre-migration backup and previous binary restore rehearsal pending."
+    },
+    {
+      "id": "raspberry-post-deploy",
+      "issue": 259,
+      "status": "UNVERIFIED",
+      "pending": "No authorized production deployment, deployed revision, health or CPU/RAM/OOM evidence collected."
+    }
+  ],
+  "candidateKind": "controlled-ci-code-snapshot-not-approved-release",
+  "provenance": {
+    "pullRequest": 290,
+    "headSha": "67dfb7a636b7d7d6bd68825a9695c098b1d62b2c",
+    "testedMergeSha": "5ecdb81b477d87f61354d34306642ebca8cbb37c",
+    "baseSha": "643362383dcedab78752270b7511452fc1ea13dc",
+    "mainInspectedSha": "f72c1e458a63c5271fd7d3ceda31f2dafcd7dd4c",
+    "note": "Actions checkout the synthetic PR merge. git diff --quiet head merge returned 0: identical tracked trees. Documentation added afterwards; select and revalidate final main after merges."
+  },
+  "pullRequests": [
+    {
+      "issue": 259,
+      "number": 289,
+      "url": "https://github.com/dokor/argos/pull/289",
+      "headSha": "6d1c642b86fc55b278d2f582c18452b715b6b5ee",
+      "base": "main",
+      "state": "OPEN",
+      "codeResult": "CI_VERIFIED",
+      "checkCount": 11,
+      "proof": "https://github.com/dokor/argos/actions/runs/37352198579/job/111905535993",
+      "reviewDecision": "PENDING"
+    },
+    {
+      "issue": 64,
+      "number": 288,
+      "url": "https://github.com/dokor/argos/pull/288",
+      "headSha": "643362383dcedab78752270b7511452fc1ea13dc",
+      "base": "codex/issue-44-compatible-history",
+      "state": "OPEN",
+      "codeResult": "CI_VERIFIED",
+      "checkCount": 9,
+      "proof": "https://github.com/dokor/argos/actions/runs/37351304270/job/111902534084",
+      "reviewDecision": "PENDING"
+    },
+    {
+      "issue": 44,
+      "number": 287,
+      "url": "https://github.com/dokor/argos/pull/287",
+      "headSha": "510c07948bd211592dc9759f3a5a9defab7b6e0e",
+      "base": "codex/issue-48-weighted-coverage",
+      "state": "OPEN",
+      "codeResult": "CI_VERIFIED",
+      "checkCount": 8,
+      "proof": "https://github.com/dokor/argos/actions/runs/37349925207/job/111897896828",
+      "reviewDecision": "PENDING"
+    },
+    {
+      "issue": 48,
+      "number": 286,
+      "url": "https://github.com/dokor/argos/pull/286",
+      "headSha": "5bcdd41b94f815e9ac7fa787a64bb6082054b2b4",
+      "base": "main",
+      "state": "OPEN",
+      "codeResult": "CI_VERIFIED",
+      "checkCount": 8,
+      "proof": "https://github.com/dokor/argos/actions/runs/37349916093/job/111897865178",
+      "reviewDecision": "PENDING"
+    },
+    {
+      "issue": 227,
+      "number": 285,
+      "url": "https://github.com/dokor/argos/pull/285",
+      "headSha": "13d36e1a541710285a61adf4bdefbbd96f8c08fd",
+      "base": "main",
+      "state": "OPEN",
+      "codeResult": "CI_VERIFIED",
+      "checkCount": 8,
+      "proof": "https://github.com/dokor/argos/actions/runs/37347296099/job/111888969383",
+      "reviewDecision": "PENDING"
+    },
+    {
+      "issue": 223,
+      "number": 284,
+      "url": "https://github.com/dokor/argos/pull/284",
+      "headSha": "6612d1217fb54e128899cf4219818c0b545b7a9f",
+      "base": "main",
+      "state": "OPEN",
+      "codeResult": "CI_VERIFIED",
+      "checkCount": 8,
+      "proof": "https://github.com/dokor/argos/actions/runs/37351322494/job/111902597222",
+      "reviewDecision": "PENDING"
+    },
+    {
+      "issue": 224,
+      "number": 283,
+      "url": "https://github.com/dokor/argos/pull/283",
+      "headSha": "0939c41759eb660b82f80c568c078158270aa8fe",
+      "base": "main",
+      "state": "OPEN",
+      "codeResult": "CI_VERIFIED",
+      "checkCount": 8,
+      "proof": "https://github.com/dokor/argos/actions/runs/37341553751/job/111869607764",
+      "reviewDecision": "PENDING"
+    },
+    {
+      "issue": 219,
+      "number": 282,
+      "url": "https://github.com/dokor/argos/pull/282",
+      "headSha": "cb84e3bb846c656508f58872fc4c1ae81b3a173d",
+      "base": "main",
+      "state": "OPEN",
+      "codeResult": "CI_VERIFIED",
+      "checkCount": 9,
+      "proof": "https://github.com/dokor/argos/actions/runs/37342769616/job/111873718722",
+      "reviewDecision": "PENDING"
+    }
+  ],
+  "controlledFixture": {
+    "sha": "5ecdb81b477d87f61354d34306642ebca8cbb37c",
+    "headSha": "67dfb7a636b7d7d6bd68825a9695c098b1d62b2c",
+    "environment": "GitHub Actions Linux amd64, isolated MariaDB 11.4 and Chromium",
+    "proof": "https://github.com/dokor/argos/actions/runs/37352222332/job/111905620795",
+    "artifactName": "controlled-e2e-5ecdb81b477d87f61354d34306642ebca8cbb37c",
+    "version": "controlled-e2e-v1",
+    "scenarios": [
+      {
+        "scenario": "healthy",
+        "states": [
+          "QUEUED",
+          "RUNNING",
+          "COMPLETED"
+        ],
+        "terminal": "COMPLETED",
+        "coverage": 0.9817351598173516,
+        "provisional": false
+      },
+      {
+        "scenario": "errors",
+        "states": [
+          "QUEUED",
+          "RUNNING",
+          "COMPLETED"
+        ],
+        "terminal": "COMPLETED",
+        "coverage": 0.9817351598173516,
+        "provisional": false
+      },
+      {
+        "scenario": "redirect",
+        "states": [
+          "QUEUED",
+          "RUNNING",
+          "COMPLETED"
+        ],
+        "terminal": "COMPLETED",
+        "coverage": 0.9817351598173516,
+        "provisional": false
+      },
+      {
+        "scenario": "partial",
+        "states": [
+          "QUEUED",
+          "RUNNING",
+          "COMPLETED"
+        ],
+        "terminal": "COMPLETED",
+        "coverage": 0.8721461187214612,
+        "provisional": true
+      },
+      {
+        "scenario": "empty",
+        "states": [
+          "QUEUED",
+          "RUNNING",
+          "COMPLETED"
+        ],
+        "terminal": "COMPLETED",
+        "coverage": 0.771689497716895,
+        "provisional": true
+      },
+      {
+        "scenario": "unavailable",
+        "states": [
+          "QUEUED",
+          "RUNNING",
+          "COMPLETED"
+        ],
+        "terminal": "COMPLETED",
+        "coverage": 0.6118721461187214,
+        "provisional": true
+      },
+      {
+        "scenario": "antibot",
+        "states": [
+          "QUEUED",
+          "RUNNING",
+          "COMPLETED"
+        ],
+        "terminal": "COMPLETED",
+        "coverage": 0.17937219730941703,
+        "provisional": true
+      },
+      {
+        "scenario": "timeout",
+        "states": [
+          "QUEUED",
+          "RUNNING",
+          "COMPLETED"
+        ],
+        "terminal": "COMPLETED",
+        "coverage": 0.16591928251121077,
+        "provisional": true
+      }
+    ],
+    "restore": {
+      "fixture": "isolated-mariadb-11.4",
+      "backup": "single-transaction-hex-blob",
+      "restore": "PASS",
+      "reportCountAndHashDigestEqual": true
+    },
+    "limitations": "Synthetic upstream SSL/Observatory/ZAP; pass-through AI; test HTTP transport to local fixture; direct dependency injection. Not a production/ARM64 acceptance."
+  }
 }

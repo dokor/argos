@@ -1,213 +1,189 @@
 # Dossier go/no-go V1 — #259
 
-Évaluation du **5 octobre 2026** : **NO-GO technique**, décision finale humaine
-**en attente**. Décideur proposé : @dokor, à confirmer. Aucun déploiement exécuté.
-La clôture de #259 exige un GO humain explicite et les preuves de sortie demandées.
+Évaluation du **5 octobre 2026 : NO-GO de sortie**, décision humaine en attente.
+Les corrections des **PR #282–#289** sont vérifiées ensemble dans
+[#290](https://github.com/dokor/argos/pull/290). Les PR #282/#283/#284/#286/#287/#288/#289
+sont désormais fusionnées ; #285 et ce dossier #290 restent à fusionner sur `main`.
+Aucun déploiement, renouvellement de secret, enforcement GitHub ou GO n'est exécuté.
 
-## Révision et portée des preuves
+Actualisation après fusions : `main` observé à
+`b8fdb09e17c4b5dc50104f8d7c8c627bde5a9ea5`. Les deux branches restantes sont
+synchronisées avec cette révision ; la résolution de #285 conserve les quatre
+classes IT (migration, publication, claims, newsletter). Le code combiné est
+identique au candidat déjà validé : seuls les états documentaires sont actualisés.
+Les SHA/preuves ci-dessous et les états OPEN du JSON restent le snapshot historique
+antérieur aux fusions. Les checks des nouveaux heads sont à revoir dans les PR.
 
-- Main inspecté : `4286079b3d28bf035fdd1bd1c220f1f72d423d81`, après PR #270–#272.
-- Candidat de **code CI**, non candidat de release approuvé :
-  `4286079b3d28bf035fdd1bd1c220f1f72d423d81`.
-- [Run CI quatre applications sur ce main](https://github.com/dokor/argos/actions/runs/37314482118) :
-  API backend tests, Frontend checks, Lighthouse checks, Playwright checks réussis ;
-  les trois probes de régression sont réussies, leurs commandes test ont échoué comme attendu.
-- Règles documentaires proposées : [PR #267](https://github.com/dokor/argos/pull/267)
-  fusionnée et présente dans le candidat, complétée par #272. La matrice reste
-  PROPOSED ; son inclusion ne constitue pas une approbation juridique.
-- Les validations combinées consignées lors de #270–#272 indiquent 331 tests Java
-  et 127 frontend, lint/build réussis. Le run CI ci-dessus est la preuve actuelle
-  des quatre jobs ; ces décomptes historiques ne sont pas des tests opérationnels.
-- [Déploiement backend](https://github.com/dokor/argos/actions/runs/37314482173)
-  et [frontend](https://github.com/dokor/argos/actions/runs/37314482023) : workflows
-  réussis sur le même SHA. Ni leur succès ni le head_sha GitHub n'attestent le SHA
-  effectivement actif dans les quatre conteneurs, les ressources ou l'audit de contrôle.
-- Ce dossier s'appuie sur un snapshot GitHub des issues/PR et une lecture du code.
-  Aucun test de production, de navigateur réel ou de transaction MariaDB concurrente
-  n'est revendiqué. Unitaire, état GitHub, CI et validation Raspberry sont distincts.
+## Révisions et preuves
 
-Une modification du code, configuration, lockfile, image ou migration invalide les
-preuves affectées. Après fusion, choisir le SHA final de main et rejouer les quatre
-checks et le parcours contrôlé. Le SHA de cette PR documentaire n'est pas un SHA
-déployé. Aucun tag de release n'est créé.
+- Main inspecté : `f72c1e458a63c5271fd7d3ceda31f2dafcd7dd4c`, incluant les
+  PR #279/#280/#281 pour #218/#226/#228, désormais fusionnées.
+- Head combiné : `67dfb7a636b7d7d6bd68825a9695c098b1d62b2c`.
+- **Révision exécutée par Actions** : `5ecdb81b477d87f61354d34306642ebca8cbb37c`,
+  fusion synthétique de #290 sur `643362383dcedab78752270b7511452fc1ea13dc` (#288).
+  Les logs checkout le consignent ; `git diff --quiet` entre merge et head retourne
+  0 : arbres suivis identiques. **S** désigne cette révision exécutée ci-dessous.
+  Les runs GitHub déclarent le head ; les artefacts déclarent le merge.
+- Le snapshot fige le **code avant actualisation documentaire**. Aucun SHA/tag
+  de release approuvé ni SHA déployé n'est désigné. Après fusion, choisir le SHA
+  final de main et renouveler les preuves affectées. Configuration/image/migration
+  modifiée exige aussi réévaluation.
 
-## Matrice de prérequis
+| Vérification sur S | Preuve CI | Résultat |
+|---|---|---|
+| Quatre apps | [CI 37352222387](https://github.com/dokor/argos/actions/runs/37352222387) | PASS : 428 tests Java, 149 frontend, lint/build Next ; 10 runtime, 9 Lighthouse ; validateur de dossier |
+| Migrations/publication/claims/newsletter | [MariaDB credentials](https://github.com/dokor/argos/actions/runs/37352222274) | PASS : 15 IT réellement exécutés par version (10.11 et 11.4), 12 concurrents sur un claim |
+| Progression concurrente | [MariaDB progress](https://github.com/dokor/argos/actions/runs/37352222279) | PASS sur MariaDB 10.11 et 11.4 |
+| Navigateur et restauration | [Controlled audit E2E](https://github.com/dokor/argos/actions/runs/37352222332/job/111905620795) | PASS : huit parcours Q→R→C, deux workers, un claim/rapport par run ; restore fixture |
+| Secrets | [Secret scan](https://github.com/dokor/argos/actions/runs/37352222203/job/111905620148) | PASS : arbre courant, nouveaux commits et probe négative ; rotation non attestée |
+| Dépendances npm de production | [Production dependency audit](https://github.com/dokor/argos/actions/runs/37352222382) | PASS : zéro vulnérabilité npm de production dans les trois apps JS |
 
-Toutes les lignes sont rattachées au candidat de code ci-dessus ; les états GitHub
-ont été relevés le 5 octobre 2026. Aucun prérequis n'a été exclu par le mainteneur.
-CODE_VERIFIED signifie code/PR et tests locaux ou CI, pas validation opérationnelle.
+Les **13 liens de jobs exacts**, SHA des PR et résultats expurgés sont conservés
+dans le [snapshot JSON](v1-evidence-2026-10-05.json). Les artefacts CI ont une
+rétention de 14 jours : sauvegarder les preuves expurgées ou les rejouer avant
+expiration. Aucun dump, secret ou lien privé de production ne doit être publié.
 
-| Exigence | Issue / PR | Résultat | Preuve / limite | Responsable proposé |
-|---|---|---|---|---|
-| Accès privés et tokens | #218 / PR #239 ne traite que #217 | BLOCKED | #218 ouvert ; @PublicApi et DTO contenant tokens/resultJson encore présents | Security + mainteneur |
-| Secrets et rotation | #219 | UNVERIFIED | Ouvert ; aucune attestation de rotation/scan ni preuve de purge | Security + exploitant |
-| Budget et disponibilité | #223 | UNVERIFIED | Ouvert ; aucune mesure Raspberry/deadline globale validée | Backend + DevOps |
-| Stockage tokens | #226 | BLOCKED | Ouvert ; champs reportToken/publicToken encore utilisés | Security + Backend |
-| Écritures/rate-limit | #227 | UNVERIFIED | Ouvert ; pas de preuve de limites d’usage ni newsletter uniforme | Security + Backend |
-| Publication atomique | #228 | BLOCKED | Ouvert ; complete puis publishIfAbsent séparés ; pas de preuve DB concurrente | Backend + QA |
-| Comparabilité | #44 | UNVERIFIED | Ouvert ; preuve de méthode compatible dans l’historique absente | Produit + Backend |
-| Confiance/couverture | #48 | UNVERIFIED | Ouvert ; qualification accessibilité distincte de couverture pondérée des scores | Produit + QA |
-| Global par domaine | #249 / PR #254 | CODE_VERIFIED | PR fusionnée ; 25 % par domaine, renormalisation et tests ScoreService présents et CI verte | Produit + Tech Lead |
-| Priorités gain/cause | #250 / PR #271 | CODE_VERIFIED | Issue fermée et PR fusionnée ; causes distinctes, gain explicable et tests présents ; pas de validation opérationnelle | Produit + QA |
-| Audit technique | #128 / PR #238 | UNMERGED_DOCUMENT | PR fermée sans fusion ; document retrouvé à 3c959ebe ; absent sur main | Mainteneur + Tech Lead |
-| Accessibilité | #257 / #260–#263 / PR #264–#267 + #272 | PARTIAL | Lots techniques fusionnés ; #261–#263 fermées ; #260 reste ouverte et règles runtime pending | Juridique/Produit + QA |
-| CI quatre apps | #258 / PR #268 | CI_VERIFIED | Issue fermée ; 4 jobs verts sur 4286079, run 37314482118 | DevOps + QA |
-| Required checks | #258 | BLOCKED | API protection classique : 404 Branch not protected ; API règles effectives main : liste vide | Administrateur dépôt |
-| Modules HTTP/HTML | #151/#152 / PR #162/#161 | CODE_VERIFIED | Issues fermées, PR fusionnées ; tests unitaires CI verts, pas de parcours réel courant | Backend + QA |
-| Runtime/Lighthouse | #153/#154 / PR #160/#164 | CODE_VERIFIED | PR fusionnées ; contrats Node et Java testés, pas de preuve Chromium ARM64 courante | Backend + QA |
-| SSL/Observatory | #155/#156 / PR #163/#165 | CODE_VERIFIED | PR fusionnées ; mocks unitaires, services externes non audités dans ce lot | Backend + QA |
-| ZAP/Tech | #157/#158 / PR #166/#159 | CODE_VERIFIED | PR fusionnées ; tests unitaires, pas de validation de tous les modules sur site contrôlé | Security + QA |
-| Parcours réel et concurrence | #64 / #228 | UNVERIFIED | Issue #64 ouverte ; absence d’environnement MariaDB + 4 services contrôlé et de preuve E2E | QA + Backend |
-| Dépendances JS | #259 constat daté | UNREVIEWED_RISK | npm audit : Lighthouse 25 alertes dont 9 high ; Playwright 3 dont 1 high ; exploitabilité non analysée | Security + mainteneur |
-| Sauvegarde/restauration | #259 / infra/RUNBOOK.md | UNVERIFIED | Runbook diagnostic présent ; restauration MariaDB et retour après migration non démontrés | DevOps + exploitant |
-| Raspberry / SHA déployé | #259 / deploy-*.yml | UNVERIFIED | Workflows backend/frontend réussis sur 4286079 ; pas de connexion au Pi ni preuve des 4 révisions actives/santé/ressources | Exploitant |
-| Décision de sortie | #259 | NO_GO | Aucune exclusion de prérequis acceptée ; GO humain absent | @dokor, à confirmer |
+## Matrice actualisée
 
-Liens vers les [issues](https://github.com/dokor/argos/issues) et
-[PR](https://github.com/dokor/argos/pulls) du dépôt. Les responsables ci-dessus
-sont des rôles proposés, pas des assignations ou validations acquises.
+Tous les résultats ci-dessous concernent **S**. CI_VERIFIED concerne le périmètre
+testé, pas une revue humaine ou une validation d'exploitation. Les responsables
+sont des rôles proposés ; aucune acceptation nominative ou exclusion n'est acquise.
 
-## Réconciliation sans doublons
+| Exigence | Issue / PR | SHA / preuve | Résultat | Responsable | Décision / risque restant |
+|---|---|---|---|---|---|
+| Accès privés | #218 / [#279](https://github.com/dokor/argos/pull/279) fusionnée | S / HTTP + E2E | CI_VERIFIED | Security, exploitant | Vérifier cookie/Bearer et refus sur déploiement réel |
+| Secrets | #219 / [#282](https://github.com/dokor/argos/pull/282) | S / scan | CODE_VERIFIED | Security, exploitant | Rotation/révocation et décision sur historique attendues ; #219 reste partielle |
+| Budget d'audit | #223 / [#284](https://github.com/dokor/argos/pull/284) | S / Java, Node, E2E timeout | CI_VERIFIED | Backend, DevOps | Collecte 115 s + réserve publication 5 s ; attente scheduler séparée, DB/RAM Pi à mesurer |
+| Tokens hachés | #226 / [#280](https://github.com/dokor/argos/pull/280) fusionnée | S / migration/lecture MariaDB | CI_VERIFIED | Security, Backend | Revue sécurité ; V7 irréversible par simple rollback d'image |
+| Écritures publiques | #227 / [#285](https://github.com/dokor/argos/pull/285) | S / HTTP quotas + newsletter concurrente | CI_VERIFIED | Security, exploitant | Config Traefik/proxies de confiance ; quotas par instance, reset au redémarrage |
+| Publication atomique | #228 / [#281](https://github.com/dokor/argos/pull/281) fusionnée | S / AuditPublicationIT | CI_VERIFIED | Backend, QA | Vérifier déploiement ; ancien run orphelin réconcilié FAILED |
+| Claims/contraintes DAO | #224 / [#283](https://github.com/dokor/argos/pull/283) | S / AuditClaimIT, deux MariaDB | CI_VERIFIED | Backend, QA | Fixture isolée, pas mesure de production |
+| Comparabilité historique | #44 / [#287](https://github.com/dokor/argos/pull/287) | S / Java/frontend | CI_VERIFIED | Produit, Backend | Revue produit ; anciens scores jamais recomposés avec la policy active |
+| Couverture/confiance | #48 / [#286](https://github.com/dokor/argos/pull/286) | S / catalogue, E2E dégradé | CI_VERIFIED | Produit, QA | Seuil 80 % par domaine à accepter ; scoring version 11 |
+| Global/priorités | #249/#250 / #254/#270/#271 fusionnées | S / score/priorités | CI_VERIFIED | Produit, QA | Pas de doublon d'implémentation ; calibration produit distincte |
+| Audit technique | #128 / #238 fermée sans fusion ; récupéré dans #290 | [Archive sourcée](../audits/2026-07-backend-audit.md) | DOCUMENT_RECOVERED | Mainteneur, Tech Lead | Constats de juillet historiques, revue actuelle attendue |
+| Accessibilité | #257/#260–#263 / #264–#267/#272 fusionnées | S / acceptation technique | TECHNICAL_PARTIAL | Produit/juridique, QA | #260 reste PROPOSED/RULES_PENDING, sans approbation réglementaire |
+| CI quatre apps | #258 / #268 fusionnée | S / quatre jobs verts | CI_VERIFIED | DevOps, QA | Choisir/rejouer SHA final après fusion |
+| Required checks | #258 | API main : 404 protection, règles [] | BLOCKED | Admin dépôt | Enforcement absent ; contextes proposés ci-dessous |
+| HTTP/HTML/runtime/Lighthouse | #151–#154 / #161/#162/#160/#164 fusionnées | S / unitaires + Chromium | CI_VERIFIED | Backend, QA | amd64 ; ARM64 et ressources non démontrés |
+| SSL/Observatory/ZAP/Tech | #155–#158 / #163/#165/#166/#159 fusionnées | S / analyseurs réels, JSON contrôlé, DAO Tech | FIXTURE_VERIFIED | Security, Backend | Disponibilité upstreams live et AI hors suite |
+| Parcours/concurrence | #64 / [#288](https://github.com/dokor/argos/pull/288) | S / E2E, MariaDB | CI_VERIFIED | QA, Backend | Injection directe ; Guice, Traefik et Pi hors preuve |
+| Dépendances | #259 / [#289](https://github.com/dokor/argos/pull/289) | S / audit npm + tests | PRODUCTION_SCAN_PASS | Security, mainteneur | Advisory braces développeur sans correctif : acceptation nominative attendue ; pas scan OS |
+| Backup/restore | #259 / #288 | S / controlled-restore.json PASS | FIXTURE_VERIFIED | DevOps, exploitant | Restore pré-migration et ancien binaire sur clone représentatif à prouver |
+| Raspberry post-déploiement | #259 | Aucun déploiement effectué | UNVERIFIED | Exploitant | SHA/images/config, santé, audit, CPU/RAM/OOM manquants |
+| Décision finale | #259 | Aucun GO humain | NO_GO | @dokor, à confirmer | Aucun risque accepté/exclu ; décision datée et nominative requise |
 
-**#249** : issue fermée ; [PR #254 fusionnée](https://github.com/dokor/argos/pull/254), merge
-`59e3a44f2fcfeac19f89948747372270b4ee469b`. ScoreService sur le candidat a
-quatre poids 0,25, renormalise sur les domaines mesurables et produit un global
-indisponible 0/0 sans mesure. Les tests ScoreService passent dans la CI candidate.
-La [PR #270](https://github.com/dokor/argos/pull/270), fusion `e458ba89b051562a0af4da783bd155dc47bafcac`,
-ajoute la décomposition publique et le score indisponible distinct de zéro.
-La comparabilité historique (#44), la couverture (#48) et la calibration produit
-restent des sujets distincts. Aucune réimplémentation de #249.
+## Parcours contrôlé et limites
 
-**#250** : issue fermée ; [PR #271](https://github.com/dokor/argos/pull/271),
-fusion `3668fedde59c2b54d851ff427ab2d610c34c2447`. `ReportPriorityService`
-classe six causes distinctes par contribution, déduplique les corroborations et
-ne fabrique pas d'effort. Tests et code présents sur le candidat, CI verte.
+La [suite #64](../testing/controlled-e2e.md) démarre Next en build de production,
+Jersey, MariaDB 11.4, deux workers et Chromium. Le navigateur soumet le formulaire,
+observe QUEUED, RUNNING et le rapport COMPLETED. Huit runs ont chacun une tentative
+de claim et un rapport ; les lectures privées anonymes sont refusées. Les courses
+de claims/publication et migrations sont aussi testées sur MariaDB 10.11/11.4.
 
-**#258** : issue fermée et quatre checks CI verts. L'enforcement de main est un
-gate d'exploitation distinct : les lectures authentifiées `branches/main/protection`
-et `rules/branches/main` du 5 octobre retournent respectivement 404 et une liste
-vide. Aucune protection ni configuration de dépôt n'a été modifiée dans ce lot.
+| Fixture | Couverture pondérée | Score provisoire | Parcours |
+|---|---:|---|---|
+| Saine, erreurs, redirection | 98,17 % | non | QUEUED → RUNNING → COMPLETED |
+| Lighthouse partiel | 87,21 % | oui, domaine insuffisant | idem |
+| Lighthouse vide | 77,17 % | oui | idem |
+| Runtime/Lighthouse indisponibles | 61,19 % | oui | idem |
+| Anti-bot | 17,94 % | oui | idem |
+| Timeout HTTP | 16,59 % | oui | idem |
 
-**#128** : [PR #238](https://github.com/dokor/argos/pull/238) fermée **non fusionnée**.
-Le document existe dans
-[la révision 3c959ebe](https://github.com/dokor/argos/blob/3c959ebe963f1a68cfa5d325de0865e909c3d49a/docs/audits/2026-07-backend-audit.md)
-et les chantiers #217–#237 existent. Il est absent sur main ; le mainteneur doit
-décider de récupérer ce livrable ou de consigner son acceptation externe. Les
-constats de juillet ne sont pas tous revérifiés ici. Aucune nouvelle roadmap créée.
+Ces chiffres décrivent les fixtures, pas une calibration de production. Les
+mesures indépendantes sont préservées ; panne HTTP/anti-bot ne deviennent pas
+des défauts de contenu. Couverture et qualité sont distinctes, sans verdict de
+conformité dérivé. SSL/Observatory/ZAP utilisent des JSON contrôlés, AI pass-through,
+origine documentaire remappée vers loopback dans le transport de test uniquement.
+Pas d'exception SSRF de production. La suite ne prouve ni Guice de production,
+ni Traefik, ni disponibilité live des tiers, ni ARM64.
 
-**#218** : [PR #239](https://github.com/dokor/argos/pull/239) indique explicitement
-que le contrôle d'accès a été sorti de son périmètre. Sa fusion prouve le
-durcissement SSRF #217, pas la protection des tokens. La lecture actuelle trouve
-AuditsWs @PublicApi et AuditService exposant encore des champs sensibles.
-Il s'agit d'un constat statique ; aucun token réel n'a été récupéré.
+## Sécurité et dépendances
 
-**#228** : AuditProcessorService appelle complete puis publishIfAbsent. Les mocks
-de succès/erreur ne prouvent pas l'atomicité de transactions concurrentes MariaDB.
-Une CI unitaire verte ne résout pas cette exigence.
+Le [relevé détaillé](../security/dependency-remediation-2026-10-05.md) décrit les
+upgrades Next 16.3.8, Vitest 4.1.11, Lighthouse 13.5.0, Playwright 1.63.0 et
+Node 24.21.0. Images headless alignées sur `v1.63.0-noble`. Les trois arbres npm
+de production n'ont plus de vulnérabilité déclarée au scan. Le frontend conserve
+cinq entrées high, propagation d'un seul advisory braces dans ESLint : outil retiré
+du runtime, motifs du dépôt en lint/build. Cette analyse d'exposition ne vaut pas
+acceptation ; consigner décideur, date, justification et risque avant sortie.
 
-## Risque dépendances observé
+Le [lot secrets](../security/secret-remediation.md) retire les littéraux, valide
+la config au démarrage et ajoute Gitleaks. Il n'invalide pas les credentials
+anciennement publiés. Attester renouvellement/révocation et décision sur historique
+sans communiquer de valeurs. L'[archive #128](../audits/2026-07-backend-audit.md)
+restaure le livrable de #238 sans nouvelle roadmap ni validation rétrospective.
 
-npm audit consulté dans le dossier initial le 5 octobre 2026 sur les lockfiles de
-`4fa53e332fb88b4eacc837ca8aa004af211b5a55`, sans mise à jour :
-Lighthouse : 16 moderate + 9 high ; Playwright : 1 low + 1 moderate + 1 high.
-Ce sont des alertes de dépendances, incluant propagation transitive, pas autant
-d'exploitations démontrées. Exemples :
-[ws](https://github.com/advisories/GHSA-58qx-3vcg-4xpx),
-[extract-zip](https://github.com/advisories/GHSA-jmr9-qjv8-65gv),
-[path-to-regexp](https://github.com/advisories/GHSA-37ch-88jc-xwx2).
-La CI #258 n'est pas un scan de sécurité bloquant. Il faut une analyse
-d'exploitabilité et une correction ou acceptation de risque nominative avant GO.
-Aucun nouveau scan npm audit, npm audit fix ni upgrade navigateur n'a été exécuté
-dans cette actualisation. Ces nombres sont un relevé historique, pas une preuve
-fraîche de sécurité du candidat 4286079.
+## Required checks à proposer à l'administrateur
 
-## Protocole de validation restant
+Lectures authentifiées du 5 octobre : `branches/main/protection` = 404 Branch not
+protected ; `rules/branches/main` = []. Après fusion de tous les workflows,
+proposer les **13 contextes exacts de ciChecks dans le JSON**, PR obligatoire et
+branche à jour. Vérifier l'application avec une PR témoin et refus d'un check
+rouge/absent. Ne pas activer un contexte absent d'une branche encore à revoir.
+Ce dossier n'applique aucun réglage GitHub et n'atteste aucun administrateur.
 
-Sur un environnement représentatif **autorisé** (MariaDB isolée, quatre services,
-versions/images identifiées), choisir des fixtures web sous contrôle du projet :
-page saine, erreurs connues, redirection, timeout, anti-bot simulé et LHR vide/partiel.
-Ne pas utiliser un site tiers comme substitut de preuve sans autorisation.
+## Migrations, sauvegarde et retour arrière
 
-1. Consigner SHA candidat, SHA/config des quatre services, architecture, versions
-   Node/Java/Chromium, policy/fingerprint, migrations et identifiant de fixture.
-2. Soumettre un audit et constater QUEUED → RUNNING → COMPLETED, progression et
-   exactement un rapport accessible par son lien privé ; interroger aussi la DB.
-3. Pour chaque panne, vérifier couverture, états indisponibles, données partielles
-   et absence de note zéro fabriquée/verdict de conformité. Comparer FR/EN.
-4. Deux workers/POST concurrents : barrières de départ et DB réelle ; un claim par
-   run, aucune publication dupliquée/orpheline, reprise et idempotence vérifiées.
-5. Vérifier anonymement/admin les listes, historique, runs/statut et écriture :
-   refus attendu, absence de token/resultJson/erreur interne, quota atteint et
-   newsletter uniforme. Preuves privées expurgées, jamais un vrai token public.
-6. Mesurer séparément attente en file et exécution, pic RAM des services/DB, taux
-   d'échec et traces OOM. Seuils proposés pour discussion : cible fonctionnelle
-   annoncée ~20 s d'exécution, plafond d'audit à définir dans #223 ; aucun seuil
-   RAM chiffré accepté sans connaître le Pi et les autres charges.
-7. Vérifier restoration d'une sauvegarde MariaDB en environnement isolé, cohérence
-   Flyway et rapport. Préserver l'ancienne image/config. Une migration non
-   réversible exige restauration compatible ou correction avant, pas seulement
-   docker compose sur l'ancienne image.
-8. Après autorisation et déploiement par l'exploitant : relever le SHA réellement
-   déployé, health des quatre services, un audit de contrôle, RAM/CPU/OOM et la
-   cohérence des migrations ; compléter les preuves liées à ce SHA.
+V7 remplace les tokens en clair par SHA-256, préserve les liens migrables et
+réconcilie certains runs sans credential en FAILED. V8 passe les anciens COMPLETED
+sans rapport en FAILED. Les IT prouvent lecture/expiration, rollback transactionnel,
+retry et fencing. L'E2E restaure le **schéma courant** sur une autre DB et compare
+comptes/digest d'IDs, run IDs, hashes et JSON figés : PASS.
 
-Le [runbook existant](../../infra/RUNBOOK.md) couvre les services locaux.
-Ses mentions historiques Node20/node:20-slim ne décrivent pas les Dockerfiles
-actuels (image Playwright 1.58.2-jammy). Relever réellement node --version dans
-l'image Raspberry et vérifier ≥22.19 pour Lighthouse ; le succès de CI Node24
-n'atteste pas cette compatibilité ARM64.
+Avant déploiement, l'exploitant doit exécuter sur clones autorisés et consigner :
 
-Les workflows deploy-*.yml réagissent déjà aux pushes main sur un runner
-auto-hébergé. Cette PR ne modifie pas leur ordonnancement et ne vaut pas
-autorisation de production ; le mainteneur doit prendre en compte ces déclencheurs
-avant fusion des PR applicatives, car CI et déploiement ne sont pas séquencés.
+1. Ancien SHA, quatre images par digest, config expurgée, MariaDB, état/checksums
+   Flyway et nouveau candidat. Geler scheduler et ingress d'écriture pour la
+   sauvegarde de référence et attendre les runs actifs.
+2. Backup cohérent (`mariadb-dump --single-transaction --hex-blob`, tables
+   transactionnelles, pas de DDL concurrent) plus configs compatibles. Stockage
+   privé chiffré, accès/restauration contrôlés ; aucun dump de production en CI.
+3. Restaurer vers une DB/stack isolées, vérifier Flyway, comptes, rapports/liens
+   privés, expiration et refus anonymes. Démarrer l'ancien binaire sur ce clone
+   pré-migration et prouver un audit de contrôle, preuves expurgées.
+4. Appliquer V7/V8 sur un second clone avec le nouveau binaire et rejouer audit,
+   liens migrés, réconciliation des statuts et absence d'orphelins ; relever durée.
+5. Après V7, **ne pas lancer l'ancien binaire sur le schéma haché** : tokens non
+   reconstructibles. Restaurer backup pré-migration et anciennes images/configs,
+   ou valider une correction en avant. Réconcilier les écritures depuis le backup,
+   fixer RPO/RTO et point de gel ; aucune perte implicite acceptée.
+6. Consigner opérateur/date, SHA/digests, résultats, RPO/RTO et anomalies. Réactiver
+   les écritures après santé/audit acceptés. Le restore fixture ne remplit pas ce gate.
 
-## Décision à consigner dans #259
+## Acceptation Raspberry et décision
 
-Copier ce tableau dans l'issue et joindre des preuves expurgées après validation :
+Les workflows deploy réagissent déjà à main et ne séquencent pas tous les services
+derrière la CI. Avant fusion, l'exploitant doit maîtriser ces déclencheurs et la
+fenêtre de migration ; leur présence ne vaut pas autorisation de production.
+Après déploiement autorisé seulement : relever révision **effectivement active**,
+digest/config/architecture des quatre services, versions Node/Java/Chromium,
+santé et audit contrôlé complet/dégradé, tiers, attente scheduler séparée de
+l'exécution, pics CPU/RAM/DB, OOM et nettoyage navigateurs. Une image ARM64
+disponible ne prouve pas son fonctionnement sur Pi. Fixer les seuils avec matériel
+et charge avant acceptation. Le [runbook](../../infra/RUNBOOK.md) aide au diagnostic.
 
-| Champ | Valeur actuelle |
+| Champ de décision #259 | Valeur actuelle |
 |---|---|
-| Évaluation technique | NO-GO — prérequis bloquants et preuves opérationnelles manquants |
-| Décision humaine finale / décideur / date | en attente / proposé @dokor / non renseignée |
-| SHA/tag candidat de release | non désigné ; 4286079 est uniquement le candidat de code CI |
-| SHA déployé | inconnu |
-| Exclusions acceptées / justification / risque | aucune |
-| Sites et seuils de référence validés | à valider |
-| Santé, audit de contrôle, backup/restore Raspberry | non exécutés |
-| Conditions de réévaluation | résoudre ou faire accepter explicitement les écarts, choisir le SHA final, rejouer les preuves |
+| Sortie | NO-GO : #285/#290 à fusionner et validations humaines/opérationnelles manquantes |
+| Décideur / date GO | en attente ; @dokor proposé, pas attesté |
+| SHA/tag release / environnement / SHA déployé | non désignés / inconnu / inconnu |
+| Exclusions acceptées | aucune |
+| Preuves automatiques | S : 13 jobs verts, huit E2E, transactions MariaDB, restore fixture |
+| Clôture | fusions + preuves renouvelées sur SHA final + gates vérifiés/acceptés + GO humain |
 
-Une fusion documentaire ne convertit jamais NO-GO en GO. #259 reste ouverte
-jusqu'à la décision GO humaine et aux preuves exigées. Revue ADE 1.2.1 :
-Tech Lead/QA/DevOps/Security, sans prétendre approuver la sortie V1.
-
-## Contrôle reproductible des preuves
-
-Le [snapshot JSON](v1-evidence-2026-10-05.json) fixe le SHA, les quatre liens CI
-et les 17 gates. Les deux gates CODE de #249/#250 sont vérifiés ; les preuves
-opérationnelles, réglementaires et les exclusions humaines restent absentes.
-
-Depuis la racine du dépôt :
+## Contrôle du dossier
 
 ```sh
 node --test scripts/check-release-evidence.test.mjs
-node scripts/check-release-evidence.mjs docs/release/v1-evidence-2026-10-05.json --sha 4286079b3d28bf035fdd1bd1c220f1f72d423d81
+node scripts/check-release-evidence.mjs docs/release/v1-evidence-2026-10-05.json --sha 5ecdb81b477d87f61354d34306642ebca8cbb37c
 ```
 
-Le second appel retourne **NO_GO, exit 1**, comme attendu sur ce snapshot.
-Un dossier entièrement renseigné retourne READY_FOR_HUMAN_REVIEW, jamais GO.
-Une erreur de fichier/JSON/arguments donne exit 2. Les tests du validateur tournent
-dans le job Frontend checks ; le NO-GO courant ne rend pas la CI applicative rouge.
-
-Chaque gate VERIFIED exige `kind`, `sha`, `url`, `checkedBy`, `checkedAt` :
-CODE, REVIEW et OPERATIONS ne sont pas interchangeables. Un gate EXCLUDED exige
-une `decision` avec `sha`, `decidedBy`, `decidedAt`, `url`, `justification` et
-`residualRisk`. Le JSON n'atteste pas l'identité du signataire ni le contenu d'un
-lien : le mainteneur doit les vérifier. Le validateur ne contacte aucun service,
-ne déploie rien et ne remplace ni le parcours contrôlé ni le GO humain.
-
-Pour un nouveau candidat, copier le snapshot, fixer un SHA complet et renouveler
-les preuves affectées. Fournir l'identifiant d'environnement et le SHA actif après
-contrôle des quatre services. Même un job réussi sur un autre SHA bloque la revue.
-Un changement de configuration/image/migration exige également une réévaluation
-documentée par l'exploitant ; le SHA seul ne prouve pas leur équivalence.
+Le validateur exige les **13 checks**. Le second appel donne **NO_GO, exit 1**,
+attendu : les preuves de code/fixture ne sont pas promues en REVIEW/OPERATIONS.
+Seuls les gates CODE #249/#250 sont VERIFIED. Un dossier complet donne
+READY_FOR_HUMAN_REVIEW, jamais GO. Une preuve VERIFIED exige kind approprié,
+SHA, URL, auteur/date ; EXCLUDED exige décision humaine datée, SHA, justification
+et risque résiduel. Le mainteneur doit vérifier identité et contenu des liens.
+Pour la release finale, créer un nouveau snapshot SHA/environnement réel et
+renouveler les preuves, conserver cette provenance. Le dossier seul ne clôture pas #259.
