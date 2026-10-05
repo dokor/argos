@@ -475,6 +475,7 @@
     },
     "hero": {
       "locale": "fr-FR",
+      "scoreUnavailable": "Score indisponible",
       "scoreLabels": {
         "excellent": "Excellent",
         "good": "Bon",

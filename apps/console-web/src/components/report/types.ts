@@ -8,6 +8,14 @@ export type Report = {
   };
   scores: {
     global: number;
+    globalAvailable?: boolean | null;
+    calculation?: {
+      scoringVersion: number;
+      scoringFingerprint?: string | null;
+      domains: {
+        key: string; score: number; maxScore: number; ratio: number; effectiveWeight: number;
+      }[];
+    } | null;
     /** Part des modules réellement évalués (0-100). Analyse partielle si < 100. */
     completeness?: number | null;
     byCategory: CategoryScore[];

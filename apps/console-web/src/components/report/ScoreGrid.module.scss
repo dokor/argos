@@ -62,6 +62,14 @@
   gap: t.$space-4;
 }
 
+.unavailable {
+  max-width: 100%;
+  white-space: normal;
+  flex-wrap: wrap;
+
+  .globalValue { font-size: t.$text-base; }
+}
+
 .card {
   border: 1px solid t.$border-subtle;
   border-radius: t.$radius-xl;

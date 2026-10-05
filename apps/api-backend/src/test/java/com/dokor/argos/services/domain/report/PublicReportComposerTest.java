@@ -369,6 +369,41 @@ class PublicReportComposerTest {
             .score();
     }
 
+    @Test
+    void publicCalculationExplainsGlobalAndSurvivesPersistence() throws Exception {
+        var modules = List.of(module("m", Map.of(),
+            checkWithTags("perf", AuditStatus.PASS, List.of("performance")),
+            checkWithTags("sec", AuditStatus.FAIL, List.of("security"))));
+        var score = new com.dokor.argos.services.analysis.scoring.ScoreService().compute(10, "reference-v10", modules);
+        var dto = composer.compose(report(modules, score));
+
+        assertTrue(dto.scores().globalAvailable());
+        assertEquals(10, dto.scores().calculation().scoringVersion());
+        assertEquals("reference-v10", dto.scores().calculation().scoringFingerprint());
+        assertEquals(4, dto.scores().calculation().domains().size());
+        double explained = dto.scores().calculation().domains().stream()
+            .mapToDouble(d -> d.ratio() * d.effectiveWeight() * 100).sum();
+        assertEquals(dto.scores().global(), Math.round(explained));
+        var mapper = new com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules();
+        assertEquals(dto, mapper.readValue(mapper.writeValueAsString(dto), ReportDto.class));
+    }
+
+    @Test
+    void noMeasurementIsExplicitAndHistoricalFieldsRemainAbsent() throws Exception {
+        var modules = List.of(module("m", Map.of()));
+        var emptyScore = new com.dokor.argos.services.analysis.scoring.ScoreService().compute(10, modules);
+        var unavailable = composer.compose(report(modules, emptyScore));
+        assertFalse(unavailable.scores().globalAvailable());
+        assertTrue(unavailable.scores().calculation().domains().stream().allMatch(d -> d.effectiveWeight() == 0));
+        assertNull(composer.compose(report(modules, scoreOf(0.75))).scores().calculation());
+
+        var mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        var historical = mapper.readValue("{\"global\":75,\"completeness\":null,\"byCategory\":[]}", ReportDto.Scores.class);
+        assertEquals(75, historical.global());
+        assertNull(historical.globalAvailable());
+        assertNull(historical.calculation());
+    }
+
     // ------------------------------------------------------------------ domain
 
     @Test

@@ -116,7 +116,8 @@ public class PublicReportComposer {
             domain,
             url,
             new ReportDto.Site(siteTitle, null),
-            new ReportDto.Scores(global100, completeness, byCategoryWithCounts),
+            new ReportDto.Scores(global100, completeness, byCategoryWithCounts,
+                score != null && score.global().maxScore() > 0.0, calculation(score)),
             new ReportDto.Summary(oneLiner, priorities, null),
             issues,
             tech,
@@ -124,6 +125,16 @@ public class PublicReportComposer {
             accessibilityEvidence(internalReport),
             accessibilityCompliance(internalReport)
         );
+    }
+
+    private static ReportDto.ScoreCalculation calculation(AuditScoreReport score) {
+        // Un ancien barème n'a pas de composition par domaine : ne pas l'inventer.
+        if (score == null || score.byDomain() == null || score.byDomain().isEmpty()
+            || score.domainWeights() == null) return null;
+        return new ReportDto.ScoreCalculation(score.scoringVersion(), score.scoringFingerprint(),
+            score.byDomain().stream().map(domain -> new ReportDto.DomainCalculation(
+                domain.id(), domain.score(), domain.maxScore(), domain.ratio(),
+                score.domainWeights().getOrDefault(domain.id(), 0.0))).toList());
     }
 
     private static AccessibilityEvidence accessibilityEvidence(AuditReportJson report) {

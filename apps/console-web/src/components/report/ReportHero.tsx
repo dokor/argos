@@ -54,6 +54,7 @@ export default function ReportHero({ report }: { report: Report }) {
   const th = t.report.hero;
 
   const score = Math.max(0, Math.min(100, report.scores.global));
+  const available = report.scores.globalAvailable !== false;
   const color = scoreColor(score);
   const allIssues = report.issues ?? [];
   const issuesCount = allIssues.length;
@@ -76,7 +77,7 @@ export default function ReportHero({ report }: { report: Report }) {
   return (
     <section className={s.hero}>
       {/* Dynamic accent bar */}
-      <div className={s.accentBar} style={{ background: scoreGradient(score) }} />
+      <div className={s.accentBar} style={{ background: available ? scoreGradient(score) : "var(--argos-border)" }} />
 
       <div className={s.heroInner}>
         <div className={s.topRow}>
@@ -102,7 +103,7 @@ export default function ReportHero({ report }: { report: Report }) {
               ))}
             </div>
 
-            {report.summary?.oneLiner && (
+            {available && report.summary?.oneLiner && (
               <p className={s.oneLiner}>
                 {(th.oneLiner as Record<string, string>)[report.summary.oneLiner] ?? report.summary.oneLiner}
               </p>
@@ -111,20 +112,22 @@ export default function ReportHero({ report }: { report: Report }) {
 
           {/* Score ring */}
           <div className={s.scoreBlock}>
-            <ScoreRing score={score}>
+            {available ? <ScoreRing score={score}>
               <text x={70} y={64} textAnchor="middle" fontSize={38} fontWeight={800} className={s.ringScore} fontFamily="Inter,system-ui,sans-serif">
                 {score}
               </text>
               <text x={70} y={86} textAnchor="middle" fontSize={13} className={s.ringUnit} fontFamily="Inter,system-ui,sans-serif">
                 /100
               </text>
-            </ScoreRing>
+            </ScoreRing> : <p className={s.scoreLabel}>{th.scoreUnavailable}</p>}
+            {available && (
             <span
               className={s.scoreLabel}
               style={{ color, background: scoreBg(score) }}
             >
               {scoreUiLabel}
             </span>
+            )}
             <RelaunchButton url={report.url} />
           </div>
         </div>

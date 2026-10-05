@@ -11,10 +11,12 @@ function clamp(n: number) { return Math.max(0, Math.min(100, n ?? 0)); }
 export default function ScoreGrid({
   categories,
   globalScore,
+  globalAvailable,
   completeness,
 }: {
   categories: CategoryScore[];
   globalScore: number;
+  globalAvailable?: boolean | null;
   completeness?: number | null;
 }) {
   const { t } = useLang();
@@ -37,12 +39,14 @@ export default function ScoreGrid({
             </p>
           )}
         </div>
-        <div className={s.globalChip}>
+        <div className={`${s.globalChip} ${globalAvailable === false ? s.unavailable : ""}`}>
           {ts.globalLabel}
-          <span className={s.globalValue} style={{ color: scoreColor(global) }}>
-            {global}
-          </span>
-          /100
+          {globalAvailable !== false ? (
+            <>
+              <span className={s.globalValue} style={{ color: scoreColor(global) }}>{global}</span>
+              /100
+            </>
+          ) : <span className={s.globalValue}>{t.report.hero.scoreUnavailable}</span>}
         </div>
       </div>
 
