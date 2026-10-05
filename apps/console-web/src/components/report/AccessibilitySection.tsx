@@ -26,6 +26,9 @@ export default function AccessibilitySection({ report }: { report: Report }) {
   if (!evidence && !qualification) return null;
   const score = report.scores.byCategory.find(c => c.key === "a11y")?.score;
   const coverage = evidence?.coverage ?? "UNAVAILABLE";
+  const lighthouseScore = coverage !== "UNAVAILABLE" && typeof evidence?.lighthouseScore === "number"
+    && Number.isFinite(evidence.lighthouseScore) && evidence.lighthouseScore >= 0 && evidence.lighthouseScore <= 100
+    ? evidence.lighthouseScore : null;
   const unknown = copy.unknown;
   const findings = evidence?.findings ?? [];
   const references = (qualification?.references ?? []).flatMap(ref => {
@@ -39,6 +42,7 @@ export default function AccessibilitySection({ report }: { report: Report }) {
       <p className={s.note}>{copy.limit}</p>
       <dl className={s.facts}>
         <div><dt>{copy.technicalScore}</dt><dd>{score == null ? unknown : `${score}/100`}</dd></div>
+        <div><dt>{copy.lighthouseScore}</dt><dd>{lighthouseScore == null ? unknown : `${lighthouseScore}/100`}</dd></div>
         <div><dt>{copy.coverageTitle}</dt><dd>{translated(copy.coverage, coverage, unknown)}</dd></div>
         <div><dt>{copy.scopeTitle}</dt><dd>{(qualification?.scopes ?? ["UNKNOWN"]).map(scope =>
           translated(copy.scopes, scope, unknown)).join(" · ")}</dd></div>

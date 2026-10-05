@@ -65,14 +65,16 @@ public final class LighthouseAccessibilityNormalizer {
         boolean truncated = findings.size() > MAX_FINDINGS;
         List<Finding> surfaced = List.copyOf(findings.subList(0, Math.min(findings.size(), MAX_FINDINGS)));
         JsonNode catScore = lhr.at("/categories/accessibility/score");
-        boolean partial = malformed || !catScore.isNumber()
+        boolean validScore = catScore.isNumber() && Double.isFinite(catScore.doubleValue())
+            && catScore.doubleValue() >= 0 && catScore.doubleValue() <= 1;
+        boolean partial = malformed || !validScore
             || counts.getOrDefault(Status.ERROR, 0) > 0 || counts.getOrDefault(Status.NOT_TESTED, 0) > 0;
         String sourceVersion = lhr.path("lighthouseVersion").asText("");
         if (!sourceVersion.matches("[0-9]+\\.[0-9]+\\.[0-9]+(?:-[a-zA-Z0-9.-]+)?")) sourceVersion = null;
         return new AccessibilityEvidence(VERSION, MAPPING_VERSION, sourceVersion,
             seen.isEmpty() ? Coverage.UNAVAILABLE : partial ? Coverage.PARTIAL : Coverage.COMPLETE,
             seen.size(), Map.copyOf(counts), failed, elements, completeElements,
-            surfaced.size(), truncated, surfaced);
+            surfaced.size(), truncated, surfaced, validScore && !seen.isEmpty() ? catScore.doubleValue() * 100 : null);
     }
 
     private static Status status(JsonNode audit) {

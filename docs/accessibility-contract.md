@@ -1,8 +1,15 @@
 # Accessibility contract — #261–#263
 
+The [epic acceptance matrix](accessibility-acceptance-v1.md) reconciles #257
+with the merged lots and remaining human validation. The optional
+`accessibilityEvidence.lighthouseScore` stores the raw Lighthouse category
+score (0–100), independently of the Argos accessibility domain score.
+Historical evidence without it remains unknown. Invalid category scores
+produce PARTIAL evidence without discarding available findings.
+
 The documentary [rules matrix v1](accessibility-rules-v1.md) and qualification fixtures track #260. They remain proposed; no legal approval or runtime activation is inferred from a merge.
 
-Three dependent PRs deliver normalized Lighthouse evidence, persisted qualification and FR/EN rendering. No new network collection, score category or database migration.
+The merged #261–#263 lots deliver normalized Lighthouse evidence, persisted qualification and FR/EN rendering. No new network collection, score category or database migration.
 
 ## Technical evidence v1
 
@@ -12,7 +19,7 @@ No DOM snippets, selectors, node attributes, external text or URLs are persisted
 
 ## Admission and sequencing
 
-The human request admits implementation and PR preparation. #260 has not approved the legal matrix or final wording. #262/#263 will remain draft pending that review. Runtime rules must report that pending state and retain UNKNOWN regulatory risk. Passive indicators are hypotheses; absence is never OUT_OF_SCOPE. No sanction amounts are published.
+The human request admits implementation and PR preparation. #260 has not approved the legal matrix or final wording. #262/#263 have been merged, but the persisted and runtime review state remains pending. Runtime rules must report that pending state and retain UNKNOWN regulatory risk. Passive indicators are hypotheses; absence is never OUT_OF_SCOPE. No sanction amounts are published.
 
 ## Qualification policy v1 (proposed, not approved)
 
