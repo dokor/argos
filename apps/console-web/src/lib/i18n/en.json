@@ -307,6 +307,13 @@
     }
   },
   "report": {
+    "measurementCoverage": {
+      "title": "Measurement coverage", "provisional": "Provisional score", "sufficient": "Sufficient coverage", "unavailable": "Measurement unavailable", "notApplicable": "Not applicable",
+      "explanation": "Weighted share of the scoring catalogue actually measured. Below 80% overall or in an applicable domain, the score remains provisional and must not be compared with a complete audit.",
+      "statesTitle": "Measurement states", "confidenceExplanation": "Unavailable or blocked measurements are not site defects. Finding confidence remains separate from score coverage.",
+      "domains": { "performance": "Performance", "security": "Security", "seo": "SEO", "a11y": "Accessibility" },
+      "states": { "MEASURED": "Measured", "UNAVAILABLE": "Unavailable", "BLOCKED_BY_ANTIBOT": "Blocked by anti-bot protection", "NOT_APPLICABLE": "Not applicable" }
+    },
     "accessibility": {
       "title": "Accessibility: findings and potential scope",
       "limit": "This automated analysis identifies potential technical and regulatory risks. It is neither a complete RGAA/WCAG audit nor legal advice.",

@@ -4,6 +4,7 @@ import { Report, TechSummary } from "./types";
 import { useLang } from "@/lib/i18n/LangContext";
 import { scoreColor, scoreBg, SEVERITY_COLORS } from "./reportColors";
 import ScoreRing from "./ScoreRing";
+import MeasurementCoverage from "./MeasurementCoverage";
 import RelaunchButton from "./RelaunchButton";
 import s from "./ReportHero.module.scss";
 
@@ -103,7 +104,7 @@ export default function ReportHero({ report }: { report: Report }) {
               ))}
             </div>
 
-            {available && report.summary?.oneLiner && (
+            {available && !report.scores.coverage?.provisional && report.summary?.oneLiner && (
               <p className={s.oneLiner}>
                 {(th.oneLiner as Record<string, string>)[report.summary.oneLiner] ?? report.summary.oneLiner}
               </p>
@@ -125,13 +126,14 @@ export default function ReportHero({ report }: { report: Report }) {
               className={s.scoreLabel}
               style={{ color, background: scoreBg(score) }}
             >
-              {scoreUiLabel}
+              {report.scores.coverage?.provisional ? t.report.measurementCoverage.provisional : scoreUiLabel}
             </span>
             )}
             <RelaunchButton url={report.url} />
           </div>
         </div>
 
+        <MeasurementCoverage coverage={report.scores.coverage} />
         {/* Stats bar */}
         <div className={s.statsRow}>
           {SEV_CONFIG.map(({ key, color: c }) => (

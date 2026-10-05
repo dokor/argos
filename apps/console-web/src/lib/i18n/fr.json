@@ -307,6 +307,13 @@
     }
   },
   "report": {
+    "measurementCoverage": {
+      "title": "Couverture de mesure", "provisional": "Score provisoire", "sufficient": "Couverture suffisante", "unavailable": "Mesure indisponible", "notApplicable": "Non applicable",
+      "explanation": "Part pondérée du barème réellement mesurée. Sous 80 % au global ou dans un domaine applicable, le score reste provisoire et ne doit pas être comparé à un audit complet.",
+      "statesTitle": "État des mesures", "confidenceExplanation": "Une mesure indisponible ou bloquée ne constitue pas un défaut du site. La confiance d’un finding reste distincte de la couverture du score.",
+      "domains": { "performance": "Performance", "security": "Sécurité", "seo": "SEO", "a11y": "Accessibilité" },
+      "states": { "MEASURED": "Mesuré", "UNAVAILABLE": "Indisponible", "BLOCKED_BY_ANTIBOT": "Bloqué par une protection anti-bot", "NOT_APPLICABLE": "Non applicable" }
+    },
     "accessibility": {
       "title": "Accessibilité : constats et périmètre potentiel",
       "limit": "Cette analyse automatisée identifie des risques techniques et réglementaires potentiels. Elle ne constitue ni un audit RGAA/WCAG complet ni un avis juridique.",
