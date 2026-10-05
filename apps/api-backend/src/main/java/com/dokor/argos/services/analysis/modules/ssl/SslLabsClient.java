@@ -90,7 +90,17 @@ public class SslLabsClient {
         HttpRequest request = HttpRequest.newBuilder(URI.create(url))
             .timeout(AuditDeadline.requestTimeout(Duration.ofSeconds(30)))
             .header("User-Agent", "argos-auditor/1.0").GET().build();
-        var response = httpClient.send(request, BoundedBodyHandlers.ofString(BoundedBodyHandlers.MAX_PAGE_BYTES));
+        java.net.http.HttpResponse<String> response;
+        try {
+            response = httpClient.send(request, BoundedBodyHandlers.ofString(BoundedBodyHandlers.MAX_PAGE_BYTES));
+        } catch (java.io.IOException transport) {
+            // The bounded streaming body handler can wrap an HTTP timeout in IOException.
+            Throwable cause = transport;
+            for (int depth = 0; cause != null && depth < 16; depth++, cause = cause.getCause()) {
+                if (cause instanceof HttpTimeoutException timeout) throw timeout;
+            }
+            throw transport;
+        }
         if (response.statusCode() == 429) throw new IllegalStateException("SSL Labs API rate limit exceeded (HTTP 429)");
         if (response.statusCode() < 200 || response.statusCode() >= 300) {
             throw new IllegalStateException("SSL Labs API returned HTTP " + response.statusCode());
