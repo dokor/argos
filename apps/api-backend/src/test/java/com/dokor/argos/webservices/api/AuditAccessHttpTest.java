@@ -38,7 +38,7 @@ class AuditAccessHttpTest {
         when(settings.adminApiToken()).thenReturn("synthetic-server-credential");
         var json = new WsJacksonJsonProvider(); json.setMapper(MAPPER);
         var config = new ResourceConfig().register(json)
-            .register(new AuditsWs(AUDITS, new AdminReadAccess(settings)))
+            .register(new AuditsWs(AUDITS, new AdminReadAccess(settings), mock(ReportReadService.class)))
             .register(new ReportsWs(mock(ReportReadService.class), RUNS));
         server = GrizzlyHttpServerFactory.createHttpServer(URI.create("http://127.0.0.1:0/"), config, false);
         for (var listener : server.getListeners()) {
@@ -54,7 +54,7 @@ class AuditAccessHttpTest {
         if (header != null) request.header(header, value);
         return CLIENT.send(request.GET().build(), HttpResponse.BodyHandlers.ofString());
     }
-    @ParameterizedTest @ValueSource(strings = {"/audits", "/audits/1/history", "/audits/runs/1"})
+    @ParameterizedTest @ValueSource(strings = {"/audits", "/audits/1/history", "/audits/runs/1", "/audits/runs/1/report"})
     void privateRoutesRejectAbsentInvalidCookieAndBearer(String path) throws Exception {
         assertEquals(401, get(path, null, null).statusCode());
         assertEquals(401, get(path, "Cookie", "argos_admin=synthetic-server-credential").statusCode());
@@ -79,7 +79,7 @@ class AuditAccessHttpTest {
         when(RUNS.findByReportToken("unknown")).thenReturn(Optional.empty());
         assertEquals(404,get("/reports/unknown/status",null,null).statusCode());
         var run = new AuditRun(); run.setId(1L); run.setAuditId(2L); run.setStatus("RUNNING");
-        run.setReportToken("synthetic-private-token"); run.setResultJson("private-result"); run.setLastError("private-error");
+        run.setReportTokenHash(new byte[32]); run.setResultJson("private-result"); run.setLastError("private-error");
         run.setModuleStatuses("[]");
         when(RUNS.findByReportToken("known")).thenReturn(Optional.of(run));
         var response = get("/reports/known/status",null,null);

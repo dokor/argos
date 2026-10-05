@@ -17,8 +17,8 @@ public class AuditRun extends com.coreoz.plume.db.querydsl.crud.CrudEntityQueryd
     @Column("claim_token")
     private String claimToken;
 
-    @Column("report_token")
-    private String reportToken;
+    @Column("report_token_hash")
+    private byte[] reportTokenHash;
 
     @Column("module_statuses")
     private String moduleStatuses;
@@ -64,12 +64,12 @@ public class AuditRun extends com.coreoz.plume.db.querydsl.crud.CrudEntityQueryd
         this.claimToken = claimToken;
     }
 
-    public String getReportToken() {
-        return reportToken;
+    public byte[] getReportTokenHash() {
+        return reportTokenHash;
     }
 
-    public void setReportToken(String reportToken) {
-        this.reportToken = reportToken;
+    public void setReportTokenHash(byte[] reportTokenHash) {
+        this.reportTokenHash = reportTokenHash;
     }
 
     public String getModuleStatuses() {

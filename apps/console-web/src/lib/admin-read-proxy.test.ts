@@ -27,9 +27,16 @@ it("injects only the server credential for a valid cookie and disables caching",
     headers: { Authorization: "Bearer synthetic-server-secret", Accept: "application/json" }, cache: "no-store", redirect: "error",
   }));
 });
-it.each([["runs","1"], ["1","history"]])("protects numeric route %j", async (...path) => {
+it.each([["runs","1"], ["1","history"], ["runs","1","report"]])("protects numeric route %j", async (...path) => {
   expect((await detail(request(), { params: Promise.resolve({ path }) })).status).toBe(401);
   expect(fetchMock).not.toHaveBeenCalled();
+});
+it("serves the admin report by run ID without reconstructing a public credential", async () => {
+  fetchMock.mockResolvedValue(new Response('{"domain":"example.com"}', { status: 200 }));
+  const response = await detail(request("synthetic-cookie"), { params: Promise.resolve({ path: ["runs", "1", "report"] }) });
+  expect(response.status).toBe(200);
+  expect(fetchMock.mock.calls[0][0]).toBe("http://backend-fixture/api/audits/runs/1/report");
+  expect(await response.json()).toEqual({ domain: "example.com" });
 });
 it("fails closed if server credential is absent", async () => {
   vi.stubEnv("ADMIN_API_TOKEN", "");

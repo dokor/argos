@@ -67,7 +67,7 @@ export default function AuditCard({
 }: Props) {
   const score: AuditScoreReport | undefined = report?.score;
   const techs = extractTechs(report);
-  const reportHref = item.reportToken ? "/report/" + item.reportToken : null;
+  const reportHref = item.reportUrl ?? null;
 
   const th = tl.history;
   const [history, setHistory] = useState<AuditHistoryItem[] | null>(null);
@@ -229,7 +229,7 @@ export default function AuditCard({
           <ul className={styles.historyList}>
             {history.map((h) => {
               const isCurrent = h.runId === item.runId;
-              const href = h.reportToken ? "/report/" + h.reportToken : null;
+              const href = h.reportUrl ?? null;
               return (
                 <li key={h.runId} className={styles.historyRow}>
                   <span className={styles.historyDate}>{formatDate(h.createdAt)}</span>

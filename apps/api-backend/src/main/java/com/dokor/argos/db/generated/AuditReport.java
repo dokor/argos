@@ -30,9 +30,6 @@ public class AuditReport extends com.coreoz.plume.db.querydsl.crud.CrudEntityQue
     @Column("logo_url")
     private String logoUrl;
 
-    @Column("public_token")
-    private String publicToken;
-
     @Column("report_json")
     private String reportJson;
 
@@ -95,14 +92,6 @@ public class AuditReport extends com.coreoz.plume.db.querydsl.crud.CrudEntityQue
 
     public void setLogoUrl(String logoUrl) {
         this.logoUrl = logoUrl;
-    }
-
-    public String getPublicToken() {
-        return publicToken;
-    }
-
-    public void setPublicToken(String publicToken) {
-        this.publicToken = publicToken;
     }
 
     public String getReportJson() {

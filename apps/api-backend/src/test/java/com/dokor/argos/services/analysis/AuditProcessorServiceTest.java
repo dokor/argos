@@ -314,7 +314,7 @@ class AuditProcessorServiceTest {
             var dao = mock(AuditDao.class); var http = mock(HttpModuleAnalyzer.class);
             var domains = mock(DomainAnalysisService.class); var merger = mock(CheckMergerService.class);
             var enricher = mock(ScoreEnricherService.class); var scorer = mock(ScoreService.class);
-            var run = new AuditRun(); run.setAuditId(10L); run.setId(1L); run.setReportToken("synthetic-fixture-token");
+            var run = new AuditRun(); run.setAuditId(10L); run.setId(1L); run.setReportTokenHash(new byte[32]);
             var audit = new Audit(); audit.setId(10L); audit.setDomainId(1L);
             audit.setInputUrl("https://example.com"); audit.setNormalizedUrl("https://example.com");
             when(runs.getRun(1)).thenReturn(Optional.of(run)); when(dao.findById(10L)).thenReturn(audit);
@@ -359,7 +359,7 @@ class AuditProcessorServiceTest {
                 order.verify(html).analyze(any(), any()); order.verify(runtime).analyze(any(), any());
                 order.verify(lighthouse).analyze(any(), any()); order.verify(zap).analyze(any(), any());
                 var report = ArgumentCaptor.forClass(AuditReportJson.class);
-                verify(publisher).publishIfAbsent(eq(1L), any(), report.capture(), eq("synthetic-fixture-token"));
+                verify(publisher).publishIfAbsent(eq(1L), any(), report.capture(), org.mockito.AdditionalMatchers.aryEq(new byte[32]));
                 assertEquals(List.of("http", "html", "runtime", "lighthouse", "observatory", "ssl", "zap", "tech"),
                     report.getValue().modules().stream().map(AuditModuleResult::id).toList());
                 verify(runs).complete(eq(1L), anyString()); verify(runs, never()).fail(anyLong(), anyString());
@@ -383,7 +383,7 @@ class AuditProcessorServiceTest {
                 processor.process(1);
                 assertTrue(stopped.await(2, TimeUnit.SECONDS));
                 var report = ArgumentCaptor.forClass(AuditReportJson.class);
-                verify(publisher).publishIfAbsent(eq(1L), any(), report.capture(), anyString());
+                verify(publisher).publishIfAbsent(eq(1L), any(), report.capture(), any(byte[].class));
                 assertEquals("true", report.getValue().meta().get("degraded"));
                 assertEquals("TIMEOUT", mapper.readTree(report.getValue().meta().get("moduleStatuses")).path("ssl").asText());
                 verify(runs).updateModuleStatus(1L, "ssl", "RUNNING");
@@ -416,7 +416,7 @@ class AuditProcessorServiceTest {
                 verify(observatory).analyze(any(), any());
                 verify(ssl).analyze(any(), any());
                 verify(runs).complete(eq(1L), anyString());
-                verify(publisher).publishIfAbsent(eq(1L), any(), any(), anyString());
+                verify(publisher).publishIfAbsent(eq(1L), any(), any(), any(byte[].class));
                 System.out.printf("remote_fixture delayPerStageMs=%d serialStagesMs=%d parallelRunMs=%d%n",
                     delayMs, serialMs, parallelMs);
             }

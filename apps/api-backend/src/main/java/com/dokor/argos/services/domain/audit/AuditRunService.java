@@ -4,6 +4,7 @@ import com.dokor.argos.db.dao.AuditRunDao;
 import com.dokor.argos.db.generated.AuditRun;
 import com.dokor.argos.services.domain.audit.enums.AuditRunStatus;
 import com.dokor.argos.services.domain.audit.model.ModuleStatus;
+import com.dokor.argos.services.domain.audit.model.QueuedRun;
 import com.dokor.argos.services.token.TokenService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
@@ -69,7 +70,7 @@ public class AuditRunService {
      * Crée un AuditRun en statut QUEUED avec un reportToken pré-généré
      * et les statuts de modules initialisés à PENDING.
      */
-    public AuditRun createQueuedRun(long auditId, Instant now) {
+    public QueuedRun createQueuedRun(long auditId, Instant now) {
         logger.info("Creating QUEUED run for auditId={}", auditId);
 
         String reportToken = tokenService.generateToken();
@@ -79,12 +80,12 @@ public class AuditRunService {
         run.setAuditId(auditId);
         run.setStatus(AuditRunStatus.QUEUED.name());
         run.setCreatedAt(now);
-        run.setReportToken(reportToken);
+        run.setReportTokenHash(tokenService.sha256(reportToken));
         run.setModuleStatuses(moduleStatusesJson);
 
         AuditRun saved = auditRunDao.save(run);
-        logger.debug("Run persisted: runId={} reportToken={}", saved.getId(), safeToken(reportToken));
-        return saved;
+        logger.debug("Run persisted: runId={}", saved.getId());
+        return new QueuedRun(saved, reportToken);
     }
 
     public Optional<AuditRun> getRun(long runId) {
@@ -92,7 +93,10 @@ public class AuditRunService {
     }
 
     public Optional<AuditRun> findByReportToken(String reportToken) {
-        return auditRunDao.findByReportToken(reportToken);
+        if (reportToken == null || reportToken.isBlank() || reportToken.length() > 512) return Optional.empty();
+        byte[] hash = tokenService.sha256(reportToken);
+        return auditRunDao.findByReportTokenHash(hash)
+            .filter(run -> run.getReportTokenHash() != null && java.security.MessageDigest.isEqual(hash, run.getReportTokenHash()));
     }
 
     /**
@@ -171,8 +175,4 @@ public class AuditRunService {
         }
     }
 
-    private static String safeToken(String token) {
-        if (token == null) return "null";
-        return token.length() <= 8 ? "****" : token.substring(0, 4) + "…";
-    }
 }

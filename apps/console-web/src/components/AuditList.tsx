@@ -118,7 +118,7 @@ export default function AuditList({ items, setItems }: Props) {
               status: u.r.status,
               resultJson:  u.r.resultJson  ?? existing.resultJson  ?? null,
               finishedAt:  u.r.finishedAt  ?? existing.finishedAt  ?? null,
-              reportToken: u.r.reportToken ?? existing.reportToken ?? null,
+              reportUrl: u.r.status === "COMPLETED" ? `/dashboard/report/${u.runId}` : existing.reportUrl,
             });
           }
           return Array.from(byRun.values());

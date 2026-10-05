@@ -221,12 +221,12 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
      * Utilisé pour résoudre le statut d'un run depuis la page rapport,
      * avant même que le rapport public soit publié.
      */
-    public Optional<AuditRun> findByReportToken(String reportToken) {
+    public Optional<AuditRun> findByReportTokenHash(byte[] reportTokenHash) {
         return Optional.ofNullable(
             transactionManager.selectQuery()
                 .select(RUN)
                 .from(RUN)
-                .where(RUN.reportToken.eq(reportToken))
+                .where(RUN.reportTokenHash.eq(reportTokenHash))
                 .fetchOne()
         );
     }

@@ -57,7 +57,7 @@ public class ReportsWs {
     public Response getReportStatus(@PathParam("token") String token) {
 
         var runOpt = auditRunService.findByReportToken(token);
-        if (runOpt.isEmpty()) {
+        if (runOpt.isEmpty() || reportReadService.isExpired(runOpt.get().getId())) {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
 

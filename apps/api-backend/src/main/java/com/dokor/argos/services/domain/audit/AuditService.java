@@ -27,7 +27,7 @@ import java.util.List;
 @Singleton
 public class AuditService {
     private static final Logger logger = LoggerFactory.getLogger(AuditService.class);
-    private static final String REPORTS_BASE_PATH = "/reports/";
+    private static final String REPORTS_BASE_PATH = "/dashboard/report/";
 
     private final AuditDao auditDao;
     private final AuditRunService auditRunService;
@@ -82,13 +82,11 @@ public class AuditService {
                     audit.getCreatedAt(),
                     null,
                     null,
-                    null,
                     null
                 );
             }
 
-            String token = report != null ? report.getPublicToken() : null;
-            String reportUrl = token != null ? REPORTS_BASE_PATH + token : null;
+            String reportUrl = report != null ? REPORTS_BASE_PATH + run.getId() : null;
 
             return new AuditListItemResponse(
                 audit.getId(),
@@ -99,7 +97,6 @@ public class AuditService {
                 run.getStatus(),
                 run.getCreatedAt(),
                 run.getFinishedAt(),
-                token,
                 reportUrl,
                 run.getResultJson()
             );
@@ -122,9 +119,8 @@ public class AuditService {
             AuditRun run = row.get(0, AuditRun.class);
             AuditReport report = row.get(1, AuditReport.class);
 
-            // Token depuis le rapport publié si présent, sinon le token pré-généré du run.
-            String token = report != null ? report.getPublicToken() : run.getReportToken();
-            String reportUrl = token != null ? REPORTS_BASE_PATH + token : null;
+            // Authenticated admin link: no public credential is recoverable from storage.
+            String reportUrl = report != null ? REPORTS_BASE_PATH + run.getId() : null;
             Integer globalScore = report != null
                 ? extractGlobalScore(objectMapper, report.getReportJson())
                 : null;
@@ -134,7 +130,6 @@ public class AuditService {
                 run.getStatus(),
                 run.getCreatedAt(),
                 run.getFinishedAt(),
-                token,
                 reportUrl,
                 globalScore
             );
@@ -204,7 +199,8 @@ public class AuditService {
                 return auditDao.save(a);
             });
 
-        AuditRun run = auditRunService.createQueuedRun(audit.getId(), now);
+        var created = auditRunService.createQueuedRun(audit.getId(), now);
+        AuditRun run = created.run();
 
         logger.info("Run created: auditId={}, runId={}, status={}", audit.getId(), run.getId(), run.getStatus());
 
@@ -213,7 +209,7 @@ public class AuditService {
             run.getAuditId(),
             run.getStatus(),
             run.getCreatedAt(),
-            run.getReportToken()
+            created.reportToken()
         );
     }
 
@@ -232,7 +228,6 @@ public class AuditService {
             run.getFinishedAt(),
             run.getLastError(),
             run.getResultJson(),
-            run.getReportToken(),
             run.getModuleStatuses()
         );
     }

@@ -28,8 +28,6 @@ public record AuditListItemResponse(
     Instant finishedAt,
 
     @Schema(example = "https://example.com/")
-    String reportToken,
-    @Schema(example = "https://example.com/")
     String reportUrl,
 
     /**
