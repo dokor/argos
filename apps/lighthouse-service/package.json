@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "chrome-launcher": "^1.2.1",
-    "lighthouse": "^13.0.3"
+    "lighthouse": "13.5.0"
   },
   "engines": {
     "node": ">=22.19.0"
