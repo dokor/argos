@@ -124,7 +124,10 @@ public class PublicReportComposer {
         return new ReportDto.ScoreCalculation(score.scoringVersion(), score.scoringFingerprint(),
             score.byDomain().stream().map(domain -> new ReportDto.DomainCalculation(
                 domain.id(), domain.score(), domain.maxScore(), domain.ratio(),
-                score.domainWeights().getOrDefault(domain.id(), 0.0))).toList());
+                score.domainWeights().getOrDefault(domain.id(), 0.0))).toList(),
+            score.configuredDomainWeights(),
+            score.checks().stream().filter(check -> check.weight()>0).map(check -> new ReportDto.CheckCalculation(
+                check.key(),check.moduleId(),pickCategoryKey(check.moduleId(),check.tags()),check.weight(),check.score())).toList());
     }
 
     private static AccessibilityEvidence accessibilityEvidence(AuditReportJson report) {

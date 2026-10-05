@@ -16,6 +16,8 @@ export type Report = {
       domains: {
         key: string; score: number; maxScore: number; ratio: number; effectiveWeight: number;
       }[];
+      configuredDomainWeights?: Record<string, number> | null;
+      checks?: Array<{ key: string; module: string; domain: string; weight: number; score: number }> | null;
     } | null;
     /** Part des modules réellement évalués (0-100). Analyse partielle si < 100. */
     completeness?: number | null;

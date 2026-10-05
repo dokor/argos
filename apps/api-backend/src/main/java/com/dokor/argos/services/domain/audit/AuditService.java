@@ -115,7 +115,8 @@ public class AuditService {
 
         List<Tuple> rows = auditDao.listRunsWithReportByAuditId(auditId, limit);
 
-        return rows.stream().map(row -> {
+        return java.util.stream.IntStream.range(0,rows.size()).mapToObj(index -> {
+            var row = rows.get(index);
             AuditRun run = row.get(0, AuditRun.class);
             AuditReport report = row.get(1, AuditReport.class);
 
@@ -124,6 +125,10 @@ public class AuditService {
             Integer globalScore = report != null
                 ? extractGlobalScore(objectMapper, report.getReportJson())
                 : null;
+            var current = publishedReport(report);
+            com.dokor.argos.services.domain.report.ReportDto previous = null;
+            for(int earlier=index+1;earlier<rows.size() && previous==null;earlier++) previous=publishedReport(rows.get(earlier).get(1,AuditReport.class));
+            var scores=current == null ? null : current.scores();
 
             return new AuditHistoryItemResponse(
                 run.getId(),
@@ -131,9 +136,18 @@ public class AuditService {
                 run.getCreatedAt(),
                 run.getFinishedAt(),
                 reportUrl,
-                globalScore
+                globalScore,
+                scores == null ? null : scores.calculation(),
+                scores == null ? null : scores.coverage(),
+                report == null ? null : com.dokor.argos.services.domain.report.AuditComparisonService.compare(previous,current)
             );
         }).toList();
+    }
+
+    private com.dokor.argos.services.domain.report.ReportDto publishedReport(AuditReport report) {
+        if(report==null || report.getReportJson()==null) return null;
+        try {return objectMapper.readValue(report.getReportJson(),com.dokor.argos.services.domain.report.ReportDto.class);}
+        catch(java.io.IOException malformed) {return null;}
     }
 
     /**
@@ -145,7 +159,9 @@ public class AuditService {
             return null;
         }
         try {
-            JsonNode node = objectMapper.readTree(reportJson).path("scores").path("global");
+            JsonNode scores = objectMapper.readTree(reportJson).path("scores");
+            if(scores.has("globalAvailable") && scores.path("globalAvailable").isBoolean() && !scores.path("globalAvailable").asBoolean()) return null;
+            JsonNode node = scores.path("global");
             return node.isMissingNode() || node.isNull() ? null : node.asInt();
         } catch (Exception e) {
             return null;

@@ -91,8 +91,15 @@ public record ReportDto(
     public record ScoreCalculation(
         int scoringVersion,
         String scoringFingerprint,
-        List<DomainCalculation> domains
-    ) {}
+        List<DomainCalculation> domains,
+        java.util.Map<String,Double> configuredDomainWeights,
+        List<CheckCalculation> checks
+    ) {
+        public ScoreCalculation(int version,String fingerprint,List<DomainCalculation> domains) {
+            this(version,fingerprint,domains,null,null);
+        }
+    }
+    public record CheckCalculation(String key,String module,String domain,double weight,double score) {}
 
     public record DomainCalculation(
         String key, double score, double maxScore, double ratio, double effectiveWeight

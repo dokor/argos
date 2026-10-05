@@ -1,0 +1,13 @@
+# Frozen audit comparisons V1 (#44)
+
+The authenticated history exposes each published report's scoring version/fingerprint, configured and effective domain coefficients, measurement coverage, and positive-weight check contributions. All fields are copied from the stored published JSON. Historical reports are never enriched by today's catalogue or recomputed. Missing evidence means comparison unavailable.
+
+Each report is compared to the next older published report in the requested history window. Failed/queued runs without a report are skipped. No older item in that window means no previous report, not no report anywhere in the database.
+
+Direct comparison requires the same audited URL; scoring version and nonempty fingerprint; configured domain coefficients; coverage algorithm and threshold; identical catalogue keys, weights, provenance, domains, measurement states and reasons; sufficient coverage in both reports (global and every applicable domain at least 80%); available global quality; identical domain score denominators and effective coefficients; and identical scored check identities and weights. No tolerable coverage drift is assumed in V1. Thus equal percentages alone cannot hide different missing measurements. Two identical incomplete-but-sufficient scopes can be comparable; two provisional scopes cannot.
+
+Different methods/scopes or usable measurements return a reason with no global/domain/contribution delta. A coverage change is also signalled separately from site quality. Both languages explain the reason and offer a new audit with the current policy. Existing reports without metadata remain readable, but cannot be compared safely.
+
+For compatible reports, global delta is the difference between displayed frozen integer scores; domain delta is 100 × difference in frozen domain ratios. A check's domain contribution is 100 × change in earned points / unchanged domain denominator, then multiplied by the unchanged effective coefficient for global contribution. The six largest improvements and six largest regressions are shown. This is an explanation within the scoring model, not proof of causal performance improvement. Global rounding and omitted minor contributions may create a residual.
+
+Java fixtures verify compatibility, version/fingerprint/coefficients changes, different scope and denominator, missing historical metadata, module unavailability, anti-bot and explicit non-applicability. DOM tests verify deltas, separate coverage explanations and relaunch, with complete FR/EN reason labels. Existing access controls protect history and internal report data.
