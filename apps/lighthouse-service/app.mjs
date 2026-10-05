@@ -13,15 +13,20 @@ export function createConcurrencyLimiter(limit) {
   if (!Number.isInteger(limit) || limit < 1) throw new TypeError('Invalid concurrency limit');
   let active = 0;
   const waiting = [];
-  return async (task) => {
-    await new Promise(resolve => {
+  return async (task, { signal } = {}) => {
+    await new Promise((resolve, reject) => {
+      if (signal?.aborted) { reject(new Error('Analysis timeout')); return; }
       if (active < limit) { active++; resolve(); }
-      else waiting.push(resolve);
+      else {
+        const entry = { resolve: () => { signal?.removeEventListener('abort', abort); resolve(); } };
+        const abort = () => { const index = waiting.indexOf(entry); if (index >= 0) waiting.splice(index, 1); reject(new Error('Analysis timeout')); };
+        waiting.push(entry); signal?.addEventListener('abort', abort, { once: true });
+      }
     });
-    try { return await task(); }
+    try { if (signal?.aborted) throw new Error('Analysis timeout'); return await task(); }
     finally {
       const next = waiting.shift();
-      if (next) next();
+      if (next) next.resolve();
       else active--;
     }
   };
@@ -55,6 +60,10 @@ export function createLighthouseServer({ analyze, log = () => {}, maxConcurrency
     }
     let safeUrl = '';
     const startedAt = Date.now();
+    const controller = new AbortController();
+    let timer;
+    const disconnected = () => { if (!res.writableEnded) controller.abort(); };
+    res.once('close', disconnected);
     try {
       const input = await readJson(req);
       if (input.error) { res.writeHead(input.error).end('Invalid request'); return; }
@@ -62,7 +71,10 @@ export function createLighthouseServer({ analyze, log = () => {}, maxConcurrency
       if (!isValidAnalysisUrl(url)) { res.writeHead(400).end('Invalid URL'); return; }
       safeUrl = url.replace(/[\r\n]+/g, ' ').slice(0, 200);
       log('analyze.start', { url: safeUrl });
-      const result = await limited(() => analyze(url));
+      const timeoutMs = Number.isFinite(input.body?.timeoutMs) && input.body.timeoutMs > 0 ? Math.min(60000, input.body.timeoutMs) : 60000;
+      timer = setTimeout(() => controller.abort(), timeoutMs);
+      const result = await limited(() => analyze(url, { signal: controller.signal, timeoutMs }), { signal: controller.signal });
+      if (controller.signal.aborted) throw new Error('Analysis timeout');
       // Empty results remain a collector failure, never a fabricated score.
       if (!result?.lhr || typeof result.lhr !== 'object' || Array.isArray(result.lhr)) {
         throw new Error('Missing LHR');
@@ -72,7 +84,9 @@ export function createLighthouseServer({ analyze, log = () => {}, maxConcurrency
       res.end(JSON.stringify(result.lhr));
     } catch {
       log('analyze.error', { url: safeUrl, durationMs: Date.now() - startedAt, error: 'Collector failure' });
-      if (!res.headersSent) res.writeHead(500).end('Internal Error');
+      if (!res.headersSent && !res.destroyed) res.writeHead(controller.signal.aborted ? 504 : 500).end(controller.signal.aborted ? 'Analysis timeout' : 'Internal Error');
+    } finally {
+      clearTimeout(timer); res.removeListener('close', disconnected);
     }
   });
 }

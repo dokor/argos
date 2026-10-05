@@ -1,6 +1,7 @@
 import { createLighthouseServer } from "./app.mjs";
 import lighthouse from "lighthouse";
 import { launch } from "chrome-launcher";
+import { createLighthouseCollector } from "./collector.mjs";
 
 const PORT = 3017;
 const SERVICE = "lighthouse-service";
@@ -25,27 +26,8 @@ function parsePositiveInteger(value, fallback) {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
 }
 
-async function runLighthouse(url) {
-  let chrome;
-
-  try {
-    chrome = await launch({
-      chromePath: process.env.CHROME_PATH,
-      chromeFlags: CHROME_FLAGS,
-    });
-
-    return await lighthouse(url, {
-      port: chrome.port,
-      output: "json",
-      logLevel: "error",
-      // Titres et descriptions d'audits renvoyés en français (issue #154) : Argos
-      // remonte désormais les audits individuels, dont le libellé doit être FR.
-      locale: "fr",
-    });
-  } finally {
-    await chrome?.kill();
-  }
-}
+const runLighthouse = createLighthouseCollector({ launch, lighthouse,
+  chromeFlags: CHROME_FLAGS, chromePath: process.env.CHROME_PATH });
 
 const server = createLighthouseServer({ analyze: runLighthouse, log, maxConcurrency: MAX_CONCURRENCY });
 

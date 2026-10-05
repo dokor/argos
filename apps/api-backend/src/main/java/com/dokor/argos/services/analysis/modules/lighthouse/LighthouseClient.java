@@ -22,7 +22,7 @@ public class LighthouseClient {
     private static final Logger logger = LoggerFactory.getLogger(LighthouseClient.class);
 
     /** Timeout par défaut alloué à une analyse Lighthouse (surchargeable via LIGHTHOUSE_TIMEOUT_SECONDS). */
-    private static final int DEFAULT_LIGHTHOUSE_TIMEOUT_SECONDS = 240;
+    private static final int DEFAULT_LIGHTHOUSE_TIMEOUT_SECONDS = 60;
     private static final String DEFAULT_URL_LIGHTHOUSE_SERVICE = "http://lighthouse-service:3017";
 
     private final HttpClient http;
@@ -46,10 +46,11 @@ public class LighthouseClient {
     public JsonNode analyze(String url) throws Exception {
         return ExternalServiceCall.timed(logger, "lighthouse", url, () -> {
             URI endpoint = URI.create(baseUrl + "/analyze");
-            String payload = objectMapper.writeValueAsString(Map.of("url", url));
+            String payload = objectMapper.writeValueAsString(Map.of("url", url, "timeoutMs",
+                Math.max(1,com.dokor.argos.services.analysis.AuditDeadline.requestTimeout(requestTimeout).toMillis())));
 
             HttpRequest req = HttpRequest.newBuilder(endpoint)
-                .timeout(requestTimeout)
+                .timeout(com.dokor.argos.services.analysis.AuditDeadline.requestTimeout(requestTimeout))
                 .header("content-type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(payload))
                 .build();

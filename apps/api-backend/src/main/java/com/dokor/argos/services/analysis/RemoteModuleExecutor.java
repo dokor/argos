@@ -36,6 +36,7 @@ public class RemoteModuleExecutor implements AutoCloseable {
     public <T> Task<T> submit(String module, Callable<T> call) {
         if (!"ssl".equals(module) && !"observatory".equals(module)) throw new IllegalArgumentException("Not a remote module");
         long submitted = System.nanoTime();
+        long effectiveBudget = AuditDeadline.current()==null ? budgetNanos : Math.min(budgetNanos,AuditDeadline.current().remainingNanos());
         long startedAtMillis = System.currentTimeMillis();
         Map<String, String> context = MDC.getCopyOfContextMap();
         Callable<T> contextual = () -> {
@@ -43,9 +44,9 @@ public class RemoteModuleExecutor implements AutoCloseable {
             try {
                 if (context == null) MDC.clear(); else MDC.setContextMap(context);
                 MDC.put("module", module);
-                if (System.nanoTime() - submitted >= budgetNanos) throw timeout();
+                if (System.nanoTime() - submitted >= effectiveBudget) throw timeout();
                 T result = call.call();
-                if (System.nanoTime() - submitted >= budgetNanos) throw timeout();
+                if (System.nanoTime() - submitted >= effectiveBudget) throw timeout();
                 return result;
             } finally {
                 if (previous == null) MDC.clear(); else MDC.setContextMap(previous);
@@ -59,7 +60,7 @@ public class RemoteModuleExecutor implements AutoCloseable {
             failed.completeExceptionally(rejected);
             future = failed;
         }
-        return new Task<>(future, submitted, startedAtMillis, budgetNanos);
+        return new Task<>(future, submitted, startedAtMillis, effectiveBudget);
     }
 
     private static HttpTimeoutException timeout() { return new HttpTimeoutException("Remote module deadline exceeded (timeout)"); }

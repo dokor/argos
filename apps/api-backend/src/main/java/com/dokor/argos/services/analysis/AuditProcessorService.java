@@ -67,6 +67,9 @@ public class AuditProcessorService {
     private final AccessibilityRegulatoryScopeService accessibilityScopeService;
     private final AccessibilityComplianceRiskService accessibilityRiskService;
     private RemoteModuleExecutor remoteModuleExecutor;
+    private AuditModuleExecutor auditModuleExecutor;
+
+    @Inject void configureAuditModuleExecutor(AuditModuleExecutor executor) { auditModuleExecutor=executor; }
 
     @Inject
     void configureRemoteModuleExecutor(RemoteModuleExecutor executor) {
@@ -130,14 +133,19 @@ public class AuditProcessorService {
         // Direct-constructor callers (unit fixtures) own a short-lived pool; Guice injects the shared pool.
         boolean ownedExecutor = remoteModuleExecutor == null;
         RemoteModuleExecutor remote = ownedExecutor ? new RemoteModuleExecutor(java.time.Duration.ofMinutes(2)) : remoteModuleExecutor;
+        boolean ownedLocal = auditModuleExecutor == null;
+        AuditModuleExecutor local = ownedLocal ? new AuditModuleExecutor(java.time.Duration.ofSeconds(120)) : auditModuleExecutor;
+        if (ownedLocal) auditModuleExecutor=local;
+        AuditDeadline deadline=local.deadline();
         // Corrélation : toutes les lignes de log de ce run portent runId (MDC).
         MDC.put("runId", String.valueOf(runId));
         long auditStart = System.currentTimeMillis();
         logger.info("audit_start runId={}", runId);
-        try {
+        try (var scope=deadline.child(local.collectionBudget()).enter()) {
             processInternal(runId, remote);
         } finally {
             if (ownedExecutor) remote.close();
+            if (ownedLocal) { local.close(); auditModuleExecutor=null; }
             logger.info("audit_end runId={} durationMs={}", runId, System.currentTimeMillis() - auditStart);
             MDC.remove("runId");
             MDC.remove("module");
@@ -204,8 +212,9 @@ public class AuditProcessorService {
             // HTTP has supplied the immutable context. Only these two distant APIs overlap local work.
             logger.info("module_start module=observatory runId={}", runId);
             logger.info("module_start module=ssl runId={}", runId);
-            try (var observatory = remote.submit("observatory", () -> observatoryModuleAnalyzer.analyze(ctx, logger));
-                 var ssl = remote.submit("ssl", () -> sslLabsModuleAnalyzer.analyze(ctx, logger))) {
+            AuditDeadline collectionDeadline=AuditDeadline.current();
+            try (var observatory = remote.submit("observatory", () -> collectionDeadline.call(() -> observatoryModuleAnalyzer.analyze(ctx, logger)));
+                 var ssl = remote.submit("ssl", () -> collectionDeadline.call(() -> sslLabsModuleAnalyzer.analyze(ctx, logger)))) {
                 auditRunService.updateModuleStatus(runId, "observatory", "RUNNING");
                 auditRunService.updateModuleStatus(runId, "ssl", "RUNNING");
 
@@ -326,7 +335,9 @@ public class AuditProcessorService {
 
                 String json = objectMapper.writeValueAsString(report);
 
-                reportPublishService.completeAndPublish(runId, audit, report, json, run.getClaimToken());
+                try (var publicationBudget=AuditDeadline.current().publication().enter()) {
+                    reportPublishService.completeAndPublish(runId, audit, report, json, run.getClaimToken());
+                }
                 logger.info(
                     "Run completed runId={} globalScoreRatio={}",
                     runId,
@@ -404,7 +415,9 @@ public class AuditProcessorService {
             auditRunService.updateModuleStatus(runId, moduleId, "RUNNING");
         }
         try {
-            AuditModuleResult raw = call.run();
+            // Remote work already has its bounded future. Read finished results even after
+            // collection expiry; awaiting unfinished work consumes only the shared deadline.
+            AuditModuleResult raw = started ? call.run() : auditModuleExecutor.execute(AuditDeadline.current(), call::run);
             if (raw == null) {
                 statuses.put(moduleId, "FAILED");
                 auditRunService.updateModuleStatus(runId, moduleId, "FAILED");
