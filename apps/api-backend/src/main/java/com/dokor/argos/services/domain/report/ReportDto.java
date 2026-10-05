@@ -77,8 +77,12 @@ public record ReportDto(
         Integer completeness, // 0..100 : part des modules évalués (null si inconnu). Voir issue #101.
         List<CategoryScore> byCategory,
         Boolean globalAvailable, // null pour les rapports historiques
-        ScoreCalculation calculation
+        ScoreCalculation calculation,
+        com.dokor.argos.services.analysis.scoring.MeasurementCoverage coverage
     ) {
+        public Scores(int global,Integer completeness,List<CategoryScore> categories,Boolean available,ScoreCalculation calculation) {
+            this(global,completeness,categories,available,calculation,null);
+        }
         public Scores(int global, Integer completeness, List<CategoryScore> byCategory) {
             this(global, completeness, byCategory, null, null);
         }
@@ -156,8 +160,13 @@ public record ReportDto(
         String impact,
         String evidence,
         String recommendation,
-        Effort effort
+        Effort effort,
+        String confidence
     ) {
+        public Issue(String id,String category,List<String> categories,String module,IssueSeverity severity,
+            String title,String impact,String evidence,String recommendation,Effort effort) {
+            this(id,category,categories,module,severity,title,impact,evidence,recommendation,effort,"UNKNOWN");
+        }
     }
 
     public enum Severity {critical, important, opportunity}

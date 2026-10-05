@@ -21,7 +21,7 @@ import java.util.*;
  * l'ensemble des deltas jusqu'à V8 inclus. La V9 introduit le catalogue explicite
  * et son empreinte déterministe ; la V10 versionne son calcul global par domaine.
  * <p>
- * {@link #version()} est fixé à <b>10</b> pour identifier les rapports utilisant
+ * {@link #version()} est fixé à <b>11</b> pour identifier les rapports utilisant
  * ce catalogue explicite avec pondération globale par domaine.
  *
  * <h3>Principes</h3>
@@ -60,8 +60,8 @@ public class DefaultScorePolicy implements ScorePolicy {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultScorePolicy.class);
 
-    /** V10 conserve le catalogue V9 et versionne les poids globaux par domaine (#249). */
-    private static final int VERSION = 10;
+    /** V11 ajoute la couverture et exclut les mesures d'une page de challenge (#48). */
+    private static final int VERSION = 11;
 
     private final Map<String, ScoreRule> catalogue;
     private final String fingerprint;

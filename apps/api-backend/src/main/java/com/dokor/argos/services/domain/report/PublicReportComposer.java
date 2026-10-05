@@ -107,7 +107,7 @@ public class PublicReportComposer {
             url,
             new ReportDto.Site(siteTitle, null),
             new ReportDto.Scores(global100, completeness, byCategoryWithCounts,
-                score != null && score.global().maxScore() > 0.0, calculation(score)),
+                score != null && score.global().maxScore() > 0.0, calculation(score), score == null ? null : score.coverage()),
             new ReportDto.Summary(oneLiner, priorities, null),
             issues,
             tech,
@@ -171,7 +171,8 @@ public class PublicReportComposer {
                     check.message() != null ? check.message() : "Point à améliorer détecté.",
                     evidenceFrom(check),
                     check.recommendation() != null ? check.recommendation() : "Corriger selon les bonnes pratiques.",
-                    ReportPriorityService.explicitEffort(check)
+                    ReportPriorityService.explicitEffort(check),
+                    ReportPriorityService.explicitConfidence(check)
                 ));
             }
         }

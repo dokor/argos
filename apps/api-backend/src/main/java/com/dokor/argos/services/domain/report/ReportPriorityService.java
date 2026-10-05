@@ -133,7 +133,7 @@ public final class ReportPriorityService {
         try { return ReportDto.Effort.valueOf(text); } catch (IllegalArgumentException e) { return null; }
     }
 
-    private static String explicitConfidence(AuditCheckResult check) {
+    static String explicitConfidence(AuditCheckResult check) {
         Object value = check == null || check.details() == null ? null : check.details().get("measurementConfidence");
         return value instanceof String text && Set.of("HIGH", "MEDIUM", "LOW").contains(text) ? text : "UNKNOWN";
     }

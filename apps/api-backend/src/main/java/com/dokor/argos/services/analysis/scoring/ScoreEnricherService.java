@@ -37,16 +37,20 @@ public class ScoreEnricherService {
     public List<AuditModuleResult> enrich(List<AuditModuleResult> modules) {
         logger.info("Enriching checks with scoring metadata modules={}", modules.size());
 
+        boolean antiBot = MeasurementCoverageService.antiBot(modules);
         return modules.stream()
-            .map(this::enrichModule)
+            .map(module -> enrichModule(module, antiBot))
             .toList();
     }
 
-    private AuditModuleResult enrichModule(AuditModuleResult module) {
+    private AuditModuleResult enrichModule(AuditModuleResult module, boolean antiBot) {
         String moduleId = module.id();
+        boolean outsideScope = module.data()!=null && "NOT_APPLICABLE".equals(module.data().get("measurementState"))
+            && module.data().get("measurementReason") instanceof String reason && !reason.isBlank();
 
         List<AuditCheckResult> enriched = module.checks().stream()
-            .map(check -> enrichCheck(moduleId, check))
+            .map(check -> outsideScope || notApplicable(check) || MeasurementCoverageService.blocked(moduleId,check.key(),antiBot)
+                ? withScore(check,false,0.0,check.tags()) : enrichCheck(moduleId, check))
             .toList();
 
         return new AuditModuleResult(
@@ -56,6 +60,11 @@ public class ScoreEnricherService {
             module.data(),
             enriched
         );
+    }
+
+    private static boolean notApplicable(AuditCheckResult check) {
+        return check.details()!=null && "NOT_APPLICABLE".equals(check.details().get("measurementState"))
+            && check.details().get("measurementReason") instanceof String reason && !reason.isBlank();
     }
 
     private AuditCheckResult enrichCheck(String moduleId, AuditCheckResult check) {
