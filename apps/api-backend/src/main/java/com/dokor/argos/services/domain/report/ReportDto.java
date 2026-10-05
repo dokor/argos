@@ -1,5 +1,6 @@
 package com.dokor.argos.services.domain.report;
 
+import com.dokor.argos.services.analysis.accessibility.AccessibilityEvidence;
 import java.util.List;
 
 public record ReportDto(
@@ -11,8 +12,13 @@ public record ReportDto(
     Summary summary,
     List<Issue> issues,
     Tech tech,
-    AntiBot antiBot   // non nul uniquement si une protection anti-bot a été détectée (#195)
+    AntiBot antiBot,   // non nul uniquement si une protection anti-bot a été détectée (#195)
+    AccessibilityEvidence accessibilityEvidence
 ) {
+    public ReportDto(String generatedAt, String domain, String url, Site site, Scores scores,
+                     Summary summary, List<Issue> issues, Tech tech, AntiBot antiBot) {
+        this(generatedAt, domain, url, site, scores, summary, issues, tech, antiBot, null);
+    }
     public record Site(String title, String logoUrl) {
     }
 

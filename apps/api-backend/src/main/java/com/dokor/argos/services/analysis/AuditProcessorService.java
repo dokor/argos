@@ -3,6 +3,7 @@ package com.dokor.argos.services.analysis;
 import com.dokor.argos.db.dao.AuditDao;
 import com.dokor.argos.db.generated.Audit;
 import com.dokor.argos.services.analysis.lighthouse.LighthouseModuleAnalyzer;
+import com.dokor.argos.services.analysis.accessibility.LighthouseAccessibilityNormalizer;
 import com.dokor.argos.services.analysis.model.AuditCheckResult;
 import com.dokor.argos.services.analysis.model.AuditContext;
 import com.dokor.argos.services.analysis.model.AuditModuleResult;
@@ -180,6 +181,13 @@ public class AuditProcessorService {
             AuditModuleResult lighthouseModule = runModule(
                 runId, "lighthouse", "Lighthouse", moduleStatuses,
                 () -> lighthouseModuleAnalyzer.analyze(ctx, logger));
+            if (httpModule.data() != null && Boolean.TRUE.equals(httpModule.data().get("antiBotDetected"))) {
+                Map<String, Object> data = new LinkedHashMap<>(
+                    lighthouseModule.data() == null ? Map.of() : lighthouseModule.data());
+                data.put("accessibilityEvidence", LighthouseAccessibilityNormalizer.unavailable());
+                lighthouseModule = new AuditModuleResult(lighthouseModule.id(), lighthouseModule.title(),
+                    lighthouseModule.summary(), data, lighthouseModule.checks());
+            }
 
             // --- Modules DOMAIN ---
 

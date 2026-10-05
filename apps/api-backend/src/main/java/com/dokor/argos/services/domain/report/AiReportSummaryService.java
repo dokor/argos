@@ -28,7 +28,8 @@ public class AiReportSummaryService {
                 ),
                 report.issues(),
                 report.tech(),
-                report.antiBot()
+                report.antiBot(),
+                report.accessibilityEvidence()
             ))
             .orElse(report);
     }
