@@ -522,7 +522,19 @@
     },
     "priorityCards": {
       "title": "Recommended priorities",
-      "desc": "High-impact quick wins (performance / security / quality) with reasonable effort.",
+      "desc": "Six distinct actions ranked by score contribution, then severity and available information.",
+      "domains": { "performance": "Performance", "security": "Security", "seo": "SEO", "a11y": "Accessibility" },
+      "gainLabel": "Maximum modelled gain:",
+      "gainUnit": "global points",
+      "modelLimit": "Rubric estimate with constant measurements and denominators. Actual improvement depends on the fix and a new audit.",
+      "groupedLabel": "Grouped findings:",
+      "confidenceLabel": "Measurement confidence:",
+      "confidence": { "HIGH": "high", "MEDIUM": "medium", "LOW": "low", "UNKNOWN": "unknown" },
+      "rankReasons": {
+        "MODELLED_SCORE_GAIN": "Ranked by avoidable score loss in its domain.",
+        "NO_DIRECT_SCORE_GAIN": "Explanatory action without a direct score gain.",
+        "SCORE_UNAVAILABLE": "Score contribution unavailable; ranked by severity."
+      },
       "empty": "No priorities detected.",
       "effortLabel": "Effort",
       "effortTooltip": "Indicative estimate (XS → L). Adjust based on project context.",

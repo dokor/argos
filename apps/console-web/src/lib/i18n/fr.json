@@ -522,7 +522,19 @@
     },
     "priorityCards": {
       "title": "Priorités recommandées",
-      "desc": "Les quick wins à fort impact (performance / sécurité / qualité) avec un effort raisonnable.",
+      "desc": "Six actions distinctes classées selon leur contribution au score, puis leur gravité et les informations disponibles.",
+      "gainLabel": "Gain maximal théorique :",
+      "domains": { "performance": "Performance", "security": "Sécurité", "seo": "SEO", "a11y": "Accessibilité" },
+      "gainUnit": "points globaux",
+      "modelLimit": "Estimation du barème à mesures et dénominateurs constants. Le gain réel dépend de la correction et d’un nouvel audit.",
+      "groupedLabel": "Constats regroupés :",
+      "confidenceLabel": "Confiance de mesure :",
+      "confidence": { "HIGH": "élevée", "MEDIUM": "moyenne", "LOW": "faible", "UNKNOWN": "inconnue" },
+      "rankReasons": {
+        "MODELLED_SCORE_GAIN": "Classée selon la perte de score évitable dans son domaine.",
+        "NO_DIRECT_SCORE_GAIN": "Action explicative sans gain direct de score.",
+        "SCORE_UNAVAILABLE": "Contribution au score indisponible ; classement par gravité."
+      },
       "empty": "Aucune priorité détectée.",
       "effortLabel": "Effort",
       "effortTooltip": "Estimation indicative (XS → L). À affiner en fonction du contexte projet.",

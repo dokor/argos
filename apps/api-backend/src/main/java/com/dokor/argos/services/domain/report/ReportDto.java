@@ -126,8 +126,24 @@ public record ReportDto(
         Severity severity, // critical|important|opportunity
         String title,
         String impact,
-        Effort effort
+        Effort effort,
+        String findingKey,
+        String categoryKey,
+        List<String> sources,
+        String rootCauseKey,
+        List<String> relatedFindingKeys,
+        int rank,
+        String rankingVersion,
+        String rankReason,
+        String confidence,
+        Double scoreLoss,
+        Double domainScoreGain,
+        Double globalScoreGain
     ) {
+        public Priority(Severity severity, String title, String impact, Effort effort) {
+            this(severity, title, impact, effort, null, null, null, null, null,
+                0, null, null, null, null, null, null);
+        }
     }
 
     public record Issue(
