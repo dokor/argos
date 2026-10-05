@@ -17,6 +17,9 @@ public final class MeasurementCoverageService {
         return antiBot && (Set.of("html", "runtime", "lighthouse", "tech").contains(module)
             || ("http".equals(module) && !Set.of("http.final_url.https", "http.redirect.count", "http.redirect.to_https").contains(key)));
     }
+    public static boolean transportUnavailable(AuditModuleResult module) {
+        return "http".equals(module.id()) && module.data()!=null && module.data().get("statusCode") instanceof Number status && status.intValue()<=0;
+    }
     public static MeasurementCoverage compute(ScorePolicy policy, List<AuditModuleResult> modules) {
         Map<String, AuditModuleResult> byModule = new HashMap<>();
         Map<String, AuditCheckResult> observed = new HashMap<>();
@@ -34,6 +37,7 @@ public final class MeasurementCoverageService {
             Object moduleReason = module != null && module.data()!=null ? module.data().get("measurementReason") : null;
             if ("NOT_APPLICABLE".equals(explicit) && explicitReason instanceof String r && !r.isBlank()) { state=State.NOT_APPLICABLE; reason=r; }
             else if ("NOT_APPLICABLE".equals(moduleState) && moduleReason instanceof String r && !r.isBlank()) {state=State.NOT_APPLICABLE;reason=r;}
+            else if(module!=null && transportUnavailable(module)) {state=State.UNAVAILABLE;reason="HTTP_TRANSPORT_UNAVAILABLE";}
             else if ("http.redirect.to_https".equals(key) && check != null && check.value() instanceof Map<?,?> value && Boolean.FALSE.equals(value.get("inputIsHttp"))) {state=State.NOT_APPLICABLE;reason="INPUT_ALREADY_HTTPS";}
             else if(blocked(moduleId,key,antiBot)) {state=State.BLOCKED_BY_ANTIBOT;reason="HTTP_CHALLENGE_OBSERVED";}
             else if(check!=null && (check.status()!=AuditStatus.INFO || check.value()!=null)) {state=State.MEASURED;reason="CHECK_OBSERVED";}

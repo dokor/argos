@@ -30,6 +30,13 @@ class MeasurementCoverageTest {
         var result=coverage(partial);assertTrue(result.provisional());assertTrue(result.checks().stream().filter(c -> c.module().equals("lighthouse")).allMatch(c -> c.state()==MeasurementCoverage.State.UNAVAILABLE));
         var score=new ScoreService(policy).compute(policy.version(),policy.fingerprint(),new ScoreEnricherService(policy).enrich(partial));assertEquals(1,score.global().ratio());
     }
+    @Test void transportWithoutAnyResponseDoesNotFabricateSiteFailures() {
+        var failed=AuditCheckResult.of("http.status_code","HTTP",AuditStatus.FAIL,AuditSeverity.HIGH,true,2,List.of("performance"),0,Map.of(),"Synthetic transport timeout",null);
+        var module=new AuditModuleResult("http","HTTP",null,Map.of("statusCode",0),List.of(failed));
+        assertTrue(coverage(List.of(module)).checks().stream().filter(c -> c.module().equals("http")).allMatch(c -> c.state()==MeasurementCoverage.State.UNAVAILABLE));
+        var enriched=new ScoreEnricherService(policy).enrich(List.of(module));assertFalse(enriched.getFirst().checks().getFirst().scorable());
+        assertEquals(0,new ScoreService(policy).compute(policy.version(),policy.fingerprint(),enriched).global().maxScore());
+    }
     @Test void antibotNeverScoresTheChallengePageAsTheSite() {
         var raw=complete().stream().map(m -> new AuditModuleResult(m.id(),m.title(),m.summary(),"http".equals(m.id())?Map.of("antiBotDetected",true):m.data(),m.checks())).toList();
         var result=coverage(raw);assertTrue(result.provisional());assertTrue(result.checks().stream().filter(c -> c.module().equals("html")).allMatch(c -> c.state()==MeasurementCoverage.State.BLOCKED_BY_ANTIBOT));
