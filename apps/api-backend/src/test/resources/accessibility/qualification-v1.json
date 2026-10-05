@@ -1,0 +1,393 @@
+{
+  "accessibilityComplianceVersion": 1,
+  "reviewStatus": "PROPOSED",
+  "consultedAt": "2026-10-05",
+  "jurisdiction": "FR",
+  "runtimeVersion": "accessibility-compliance-proposal-v1",
+  "cases": [
+    {
+      "id": "vitrine-pme",
+      "legalReview": {
+        "inputs": {
+          "service": "vitrine",
+          "b2c": null
+        },
+        "expected": "UNKNOWN",
+        "approved": false
+      },
+      "runtime": {
+        "html": null,
+        "blocked": false,
+        "facts": {},
+        "scopes": [
+          "UNKNOWN"
+        ],
+        "confidence": "UNKNOWN",
+        "risk": "UNKNOWN",
+        "riskReason": "RULES_PENDING"
+      }
+    },
+    {
+      "id": "commerce-observe",
+      "legalReview": {
+        "inputs": {
+          "service": "commerce",
+          "b2c": null
+        },
+        "expected": "UNKNOWN",
+        "approved": false
+      },
+      "runtime": {
+        "html": "<p>20€</p><button>Ajouter au panier</button>",
+        "blocked": false,
+        "facts": {},
+        "scopes": [
+          "POTENTIALLY_EAA"
+        ],
+        "confidence": "LOW",
+        "risk": "UNKNOWN",
+        "riskReason": "RULES_PENDING"
+      }
+    },
+    {
+      "id": "b2b-verifie",
+      "legalReview": {
+        "inputs": {
+          "service": "commerce",
+          "b2c": false,
+          "article47": false
+        },
+        "expected": "EAA_NOT_APPLICABLE_ONLY",
+        "approved": false
+      },
+      "runtime": {
+        "html": null,
+        "blocked": false,
+        "facts": {},
+        "scopes": [
+          "UNKNOWN"
+        ],
+        "confidence": "UNKNOWN",
+        "risk": "UNKNOWN",
+        "riskReason": "RULES_PENDING"
+      }
+    },
+    {
+      "id": "micro-ca-frontiere",
+      "legalReview": {
+        "inputs": {
+          "employees": 9,
+          "turnover": 2000000,
+          "balance": 3000000,
+          "b2c": true
+        },
+        "expected": "EAA_EXEMPT_ONLY",
+        "approved": false
+      },
+      "runtime": {
+        "html": "20€ panier",
+        "blocked": false,
+        "facts": {
+          "exemption": {
+            "value": true,
+            "provenance": "DECLARED"
+          }
+        },
+        "scopes": [
+          "POTENTIALLY_EAA"
+        ],
+        "confidence": "LOW",
+        "risk": "UNKNOWN",
+        "riskReason": "RULES_PENDING"
+      }
+    },
+    {
+      "id": "micro-bilan-ou",
+      "legalReview": {
+        "inputs": {
+          "employees": 9,
+          "turnover": 3000000,
+          "balance": 2000000,
+          "b2c": true
+        },
+        "expected": "EAA_EXEMPT_ONLY",
+        "approved": false
+      },
+      "runtime": {
+        "html": "20€ panier",
+        "blocked": false,
+        "facts": {
+          "exemption": {
+            "value": true,
+            "provenance": "DECLARED"
+          }
+        },
+        "scopes": [
+          "POTENTIALLY_EAA"
+        ],
+        "confidence": "LOW",
+        "risk": "UNKNOWN",
+        "riskReason": "RULES_PENDING"
+      }
+    },
+    {
+      "id": "dix-personnes",
+      "legalReview": {
+        "inputs": {
+          "employees": 10,
+          "turnover": 2000000,
+          "balance": 2000000,
+          "b2c": true
+        },
+        "expected": "EAA_POTENTIAL",
+        "approved": false
+      },
+      "runtime": {
+        "html": "20€ panier",
+        "blocked": false,
+        "facts": {},
+        "scopes": [
+          "POTENTIALLY_EAA"
+        ],
+        "confidence": "LOW",
+        "risk": "UNKNOWN",
+        "riskReason": "RULES_PENDING"
+      }
+    },
+    {
+      "id": "public",
+      "legalReview": {
+        "inputs": {
+          "operator": "PUBLIC"
+        },
+        "expected": "ARTICLE47_POTENTIAL",
+        "approved": false
+      },
+      "runtime": {
+        "html": null,
+        "blocked": false,
+        "facts": {
+          "article47Operator": {
+            "value": true,
+            "provenance": "VERIFIED"
+          },
+          "scopeReviewed": {
+            "value": true,
+            "provenance": "VERIFIED"
+          }
+        },
+        "scopes": [
+          "POTENTIALLY_ARTICLE_47"
+        ],
+        "confidence": "HIGH",
+        "risk": "UNKNOWN",
+        "riskReason": "RULES_PENDING"
+      }
+    },
+    {
+      "id": "grande-entreprise",
+      "legalReview": {
+        "inputs": {
+          "operator": "ENTERPRISE",
+          "franceTurnovers": [
+            260000000,
+            250000000,
+            260000000
+          ]
+        },
+        "expected": "ARTICLE47_POTENTIAL",
+        "approved": false
+      },
+      "runtime": {
+        "html": null,
+        "blocked": false,
+        "facts": {
+          "article47Operator": {
+            "value": true,
+            "provenance": "VERIFIED"
+          },
+          "scopeReviewed": {
+            "value": true,
+            "provenance": "VERIFIED"
+          }
+        },
+        "scopes": [
+          "POTENTIALLY_ARTICLE_47"
+        ],
+        "confidence": "HIGH",
+        "risk": "UNKNOWN",
+        "riskReason": "RULES_PENDING"
+      }
+    },
+    {
+      "id": "ca-frontiere",
+      "legalReview": {
+        "inputs": {
+          "operator": "ENTERPRISE",
+          "franceTurnovers": [
+            250000000,
+            250000000,
+            250000000
+          ]
+        },
+        "expected": "THRESHOLD_ALONE_NOT_SUFFICIENT",
+        "approved": false
+      },
+      "runtime": {
+        "html": null,
+        "blocked": false,
+        "facts": {},
+        "scopes": [
+          "UNKNOWN"
+        ],
+        "confidence": "UNKNOWN",
+        "risk": "UNKNOWN",
+        "riskReason": "RULES_PENDING"
+      }
+    },
+    {
+      "id": "cumul",
+      "legalReview": {
+        "inputs": {
+          "operator": "ENTERPRISE",
+          "b2c": true,
+          "franceTurnovers": [
+            300000000,
+            300000000,
+            300000000
+          ]
+        },
+        "expected": "BOTH_POTENTIAL",
+        "approved": false
+      },
+      "runtime": {
+        "html": null,
+        "blocked": false,
+        "facts": {
+          "b2cService": {
+            "value": true,
+            "provenance": "VERIFIED"
+          },
+          "article47Operator": {
+            "value": true,
+            "provenance": "VERIFIED"
+          },
+          "scopeReviewed": {
+            "value": true,
+            "provenance": "VERIFIED"
+          }
+        },
+        "scopes": [
+          "POTENTIALLY_EAA",
+          "POTENTIALLY_ARTICLE_47"
+        ],
+        "confidence": "HIGH",
+        "risk": "UNKNOWN",
+        "riskReason": "RULES_PENDING"
+      }
+    },
+    {
+      "id": "exemption-inconnue",
+      "legalReview": {
+        "inputs": {
+          "employees": null,
+          "turnover": null,
+          "balance": null
+        },
+        "expected": "UNKNOWN",
+        "approved": false
+      },
+      "runtime": {
+        "html": "20€ panier",
+        "blocked": false,
+        "facts": {
+          "exemption": {
+            "value": true,
+            "provenance": "DECLARED"
+          }
+        },
+        "scopes": [
+          "POTENTIALLY_EAA"
+        ],
+        "confidence": "LOW",
+        "risk": "UNKNOWN",
+        "riskReason": "RULES_PENDING"
+      }
+    },
+    {
+      "id": "hors-champ-borne",
+      "legalReview": {
+        "inputs": {
+          "humanReview": true,
+          "perimeter": "EAA + article47, France, service/date contrôlés"
+        },
+        "expected": "OUT_OF_SCOPE_LIMITED",
+        "approved": false
+      },
+      "runtime": {
+        "html": null,
+        "blocked": false,
+        "facts": {
+          "outsideScope": {
+            "value": true,
+            "provenance": "VERIFIED"
+          }
+        },
+        "scopes": [
+          "OUT_OF_SCOPE"
+        ],
+        "confidence": "HIGH",
+        "risk": "UNKNOWN",
+        "riskReason": "RULES_PENDING"
+      }
+    },
+    {
+      "id": "conflit",
+      "legalReview": {
+        "inputs": {
+          "conflict": true
+        },
+        "expected": "UNKNOWN",
+        "approved": false
+      },
+      "runtime": {
+        "html": "20€ panier",
+        "blocked": false,
+        "facts": {
+          "outsideScope": {
+            "value": true,
+            "provenance": "VERIFIED"
+          }
+        },
+        "scopes": [
+          "POTENTIALLY_EAA"
+        ],
+        "confidence": "LOW",
+        "risk": "UNKNOWN",
+        "riskReason": "RULES_PENDING"
+      }
+    },
+    {
+      "id": "ancien-site",
+      "legalReview": {
+        "inputs": {
+          "websiteBefore2025": true,
+          "contractDate": null
+        },
+        "expected": "UNKNOWN",
+        "approved": false
+      },
+      "runtime": {
+        "html": "20€ panier",
+        "blocked": false,
+        "facts": {},
+        "scopes": [
+          "POTENTIALLY_EAA"
+        ],
+        "confidence": "LOW",
+        "risk": "UNKNOWN",
+        "riskReason": "RULES_PENDING"
+      }
+    }
+  ]
+}
