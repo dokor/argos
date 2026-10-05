@@ -21,3 +21,9 @@ Verified operator facts can propose article 47 or EAA. Declared facts never rece
 Risk UNKNOWN if rules are unapproved, scope has insufficient confidence, or evidence is PARTIAL/UNAVAILABLE. With approved rules and verified candidate scope, the indicative proposal is LOW for 0 failed automatic audits, MEDIUM for 1–2, HIGH for 3–9 and CRITICAL for 10+. These are counts of failed audits, not legal infringements or fine calculations. OUT_OF_SCOPE gives UNKNOWN risk (not a technical pass). A good score never determines risk. This proposal needs owner review in #260.
 
 Runtime uses the immutable unapproved ruleset `accessibility-compliance-proposal-v1`. There is no endpoint to submit verified facts or activate the rules. Reports persist both the proposal version and its review state, and are never requalified on reads.
+
+## Report presentation
+
+The FR/EN section is optional for historical reports. It labels the existing Argos accessibility domain score as technical, independently of the regulatory qualification. The new evidence list does not mutate `issues` or `summary.priorities`; global counters therefore keep their original sources. Curated finding descriptions use the normalized kind code, not page text. Source links accept HTTPS only on W3C, EUR-Lex and Légifrance without credentials or a custom port.
+
+The two native disclosures start collapsed and retain visible keyboard focus. Mobile and desktop checks on local fixtures cover long/truncated lists, partial collection, unknown qualification and locale switching. Final legal wording and risk-rule approval remain part of #260.

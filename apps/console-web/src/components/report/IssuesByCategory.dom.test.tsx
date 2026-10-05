@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { render, within } from "@testing-library/react";
 import IssuesByCategory from "./IssuesByCategory";
 import type { Report } from "./types";
 
@@ -22,7 +22,7 @@ const report = {
   issues: [
     { id: "http.status_code", categoryKey: "performance", categoryKeys: ["performance"], severity: "critical", title: "HTTP status", impact: "HTTP failed", recommendation: "Fix it" },
     { id: "lighthouse.audit.color-contrast", categoryKey: "a11y", categoryKeys: ["a11y"], severity: "important", title: "Color contrast", impact: "Contrast", recommendation: "Fix it" },
-    { id: "lighthouse.audit.no-vulnerable-libraries", categoryKey: "security", categoryKeys: ["security"], severity: "important", title: "Libraries", impact: "Libraries", recommendation: "Fix it" },
+    { id: "lighthouse.audit.no-vulnerable-libraries", categoryKey: "security", categoryKeys: ["security"], severity: "important", title: "Libraries", impact: "Known vulnerable dependency", recommendation: "Fix it" },
   ],
 } satisfies Report;
 

@@ -1,0 +1,36 @@
+@use '../../styles/tokens' as t;
+
+.section {
+  color: t.$text;
+  background: t.$surface;
+  border: 1px solid t.$border;
+  border-radius: t.$radius-2xl;
+  padding: t.$space-6;
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+}
+.title { margin: 0 0 t.$space-3; font-size: t.$text-2xl; }
+.note { color: t.$text-muted; font-size: t.$text-sm; }
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  gap: t.$space-4;
+  margin: t.$space-5 0;
+  dt { color: t.$text-muted; font-size: t.$text-sm; }
+  dd { margin: 0; font-weight: 700; }
+}
+.statuses { display: flex; flex-wrap: wrap; gap: t.$space-4; list-style: none; padding: 0; }
+.details {
+  margin-top: t.$space-4;
+  border-top: 1px solid t.$border;
+  padding-top: t.$space-3;
+  summary { cursor: pointer; font-weight: 700; }
+  summary:focus-visible, a:focus-visible { outline: 2px solid t.$text; outline-offset: 4px; }
+}
+.findings {
+  padding-left: t.$space-5;
+  li + li { margin-top: t.$space-5; }
+  h3 { font-size: t.$text-lg; margin-bottom: t.$space-2; }
+  p { margin: t.$space-1 0; }
+}
+@media (max-width: 480px) { .section { padding: t.$space-4; } }

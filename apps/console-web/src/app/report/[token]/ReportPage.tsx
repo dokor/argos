@@ -3,6 +3,7 @@
 import ReportHeader from "@/components/report/ReportHeader";
 import ReportHero from "@/components/report/ReportHero";
 import AntiBotNotice from "@/components/report/AntiBotNotice";
+import AccessibilitySection from "@/components/report/AccessibilitySection";
 import AiSummary from "@/components/report/AiSummary";
 import ScoreGrid from "@/components/report/ScoreGrid";
 import PriorityCards from "@/components/report/PriorityCards";
@@ -31,6 +32,7 @@ export default function ReportPage({ params }: Readonly<Params>) {
         <AiSummary summary={report.summary.ai} />
         <PriorityCards priorities={report.summary.priorities} />
         <ScoreGrid categories={report.scores.byCategory} globalScore={report.scores.global} completeness={report.scores.completeness} />
+        <AccessibilitySection report={report} />
         <IssuesByCategory report={report} />
 
         {/* Raw JSON - admin only */}
