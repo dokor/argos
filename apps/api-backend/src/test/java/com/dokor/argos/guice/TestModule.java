@@ -1,6 +1,5 @@
 package com.dokor.argos.guice;
 
-import com.coreoz.plume.db.guice.GuiceDbTestModule;
 import com.coreoz.plume.mocks.MockedClock;
 import com.google.inject.AbstractModule;
 import com.google.inject.util.Modules;
@@ -21,7 +20,7 @@ public class TestModule extends AbstractModule {
 				bind(Clock.class).to(MockedClock.class);
 			}
 		}));
-        // To run database Flyway scripts before running tests
-//         install(new GuiceDbTestModule()); //todo: a decommenter
+        // Dialect/concurrency integration uses migrated, isolated MariaDB fixtures
+        // under the mariadb-integration Maven profile; H2 is not a concurrency proof.
 	}
 }
