@@ -29,7 +29,7 @@ class ZapModuleAnalyzerTest {
 
     private static AuditModuleResult analyze(String json) throws Exception {
         ZapClient client = mock(ZapClient.class);
-        when(client.getAlerts(anyString())).thenReturn(MAPPER.readTree(json));
+        when(client.analyze(org.mockito.ArgumentMatchers.any(AuditContext.class))).thenReturn(MAPPER.readTree(json));
         return new ZapModuleAnalyzer(client).analyze(ctx(), LoggerFactory.getLogger("test"));
     }
 

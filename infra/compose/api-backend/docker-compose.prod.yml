@@ -15,15 +15,20 @@ services:
       - mariadb-public
       - argos_internal
       - argos_ai
+      - argos_zap
     environment:
       - JAVA_OPTS=-Xms256m -Xmx512m
       - NODE_ENV=production
       - JAVA_TOOL_OPTIONS=-Dconfig.file=/config/prod.conf
       - PLAYWRIGHT_SERVICE_URL=http://playwright-service:3016
       - LIGHTHOUSE_SERVICE_URL=http://lighthouse-service:3017
+      - ZAP_API_URL=http://zap:8080
       - CODEX_SUMMARY_ENABLED=${CODEX_SUMMARY_ENABLED:-true}
       - CODEX_SUMMARY_SERVICE_URL=http://codex-summary:3010
       - CODEX_SUMMARY_TIMEOUT_SECONDS=${CODEX_SUMMARY_TIMEOUT_SECONDS:-45}
+    depends_on:
+      zap:
+        condition: service_healthy
     labels:
       - traefik.enable=true
       - traefik.docker.network=proxy
@@ -32,6 +37,44 @@ services:
       - traefik.http.routers.api-backend.tls=true
       - traefik.http.routers.api-backend.priority=100
       - traefik.http.services.api-backend.loadbalancer.server.port=8081
+
+  # Offline passive scanner: only this backend can reach its API; no host ports or egress.
+  # Both amd64 and arm64 manifests are available for this official version.
+  zap:
+    image: ghcr.io/zaproxy/zaproxy:2.17.0
+    container_name: argos-zap
+    restart: unless-stopped
+    command:
+      - zap.sh
+      - -Xmx512m
+      - -daemon
+      - -silent
+      - -host
+      - 0.0.0.0
+      - -port
+      - "8080"
+      - -config
+      - api.disablekey=true
+      - -config
+      - api.addrs.addr.name=.*
+      - -config
+      - api.addrs.addr.regex=true
+      - -config
+      - pscans.maxBodySizeInBytes=5242880
+      - -config
+      - pscans.maxAlertsPerRule=100
+    networks:
+      - argos_zap
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/JSON/core/view/version/', timeout=5).read()"]
+      interval: 10s
+      timeout: 6s
+      retries: 12
+      start_period: 60s
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
 
   codex-summary:
     build:
@@ -77,6 +120,8 @@ networks:
   argos_internal:
     external: true
   argos_ai:
+    internal: true
+  argos_zap:
     internal: true
   argos_ai_egress:
 
