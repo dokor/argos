@@ -8,7 +8,7 @@ import s from "./PriorityCards.module.scss";
 type SevKey = "critical" | "important" | "opportunity";
 
 export default function PriorityCards({ priorities }: { priorities: PriorityItem[] }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const tp = t.report.priorityCards;
   const list = (priorities || []).slice(0, 6);
 
@@ -27,7 +27,7 @@ export default function PriorityCards({ priorities }: { priorities: PriorityItem
             const sev = SEVERITY_COLORS[p.severity as SevKey] ?? SEVERITY_COLORS.opportunity;
             return (
               <div
-                key={`${p.title}-${i}`}
+                key={p.findingKey ?? `${p.title}-${i}`}
                 className={s.card}
                 style={{ ["--accent" as string]: sev.color }}
               >
@@ -35,7 +35,7 @@ export default function PriorityCards({ priorities }: { priorities: PriorityItem
                 <span style={{
                   position: "absolute", left: 0, top: 0, bottom: 0, width: 3,
                   background: sev.color, borderRadius: "3px 0 0 3px",
-                }} />
+                }} aria-hidden="true" />
 
                 <div className={s.cardTop}>
                   <span
@@ -53,6 +53,20 @@ export default function PriorityCards({ priorities }: { priorities: PriorityItem
 
                 <p className={s.cardTitle}>{p.title}</p>
                 <p className={s.cardImpact}>{p.impact}</p>
+                {p.rankReason && (
+                  <div className={s.explanation}>
+                    {p.categoryKey && <p>{(tp.domains as Record<string, string>)[p.categoryKey] ?? p.categoryKey}</p>}
+                    <p>{tp.rankReasons[p.rankReason]}</p>
+                    {p.rankReason === "MODELLED_SCORE_GAIN" && typeof p.globalScoreGain === "number" && Number.isFinite(p.globalScoreGain) && (
+                      <p>{tp.gainLabel} {p.globalScoreGain.toLocaleString(lang === "en" ? "en-US" : "fr-FR", { maximumFractionDigits: 2 })} {tp.gainUnit}</p>
+                    )}
+                    {p.confidence && <p>{tp.confidenceLabel} {tp.confidence[p.confidence]}</p>}
+                    {p.relatedFindingKeys && p.relatedFindingKeys.length > 1 && (
+                      <p>{tp.groupedLabel} {p.relatedFindingKeys.length}</p>
+                    )}
+                    <p className={s.modelLimit}>{tp.modelLimit}</p>
+                  </div>
+                )}
               </div>
             );
           })}

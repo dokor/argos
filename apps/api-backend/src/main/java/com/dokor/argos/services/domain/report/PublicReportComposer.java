@@ -82,17 +82,7 @@ public class PublicReportComposer {
 
         String oneLiner = buildOneLiner(global100, byCategoryWithCounts);
 
-        List<ReportDto.Priority> priorities = issues.stream()
-            .sorted(Comparator.comparingInt(i -> severityRank(i.severity())))
-            .limit(6)
-            .map(i -> new ReportDto.Priority(
-                i.severity() == ReportDto.IssueSeverity.critical ? ReportDto.Severity.critical :
-                    (i.severity() == ReportDto.IssueSeverity.important ? ReportDto.Severity.important : ReportDto.Severity.opportunity),
-                i.title(),
-                i.impact(),
-                i.effort()
-            ))
-            .toList();
+        List<ReportDto.Priority> priorities = new ReportPriorityService().rank(internalReport, issues);
 
         ReportDto.Tech tech = internalReport.modules().stream()
             .filter(m -> "tech".equals(m.id()))
@@ -170,7 +160,7 @@ public class PublicReportComposer {
                     check.message() != null ? check.message() : "Point à améliorer détecté.",
                     evidenceFrom(check),
                     check.recommendation() != null ? check.recommendation() : "Corriger selon les bonnes pratiques.",
-                    effortFrom(sev)
+                    ReportPriorityService.explicitEffort(check)
                 ));
             }
         }
@@ -184,14 +174,6 @@ public class PublicReportComposer {
         if (check.details() == null || check.details().isEmpty()) return null;
         // MVP : stringify court
         return check.details().toString();
-    }
-
-    private static ReportDto.Effort effortFrom(ReportDto.IssueSeverity sev) {
-        return switch (sev) {
-            case critical -> ReportDto.Effort.M;
-            case important -> ReportDto.Effort.S;
-            case info -> ReportDto.Effort.XS;
-        };
     }
 
     private static int severityRank(ReportDto.IssueSeverity s) {

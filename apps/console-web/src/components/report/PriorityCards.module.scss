@@ -27,7 +27,7 @@
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
   gap: t.$space-4;
 }
 
@@ -98,4 +98,18 @@
   font-size: t.$text-base;
   color: t.$text-subtle;
   padding: t.$space-4 0;
+}
+
+.explanation {
+  border-top: 1px solid t.$border;
+  padding-top: t.$space-3;
+  color: t.$text-muted;
+  font-size: t.$text-sm;
+  overflow-wrap: anywhere;
+
+  p { margin: 0 0 t.$space-1; }
+}
+
+.modelLimit {
+  font-size: t.$text-xs;
 }

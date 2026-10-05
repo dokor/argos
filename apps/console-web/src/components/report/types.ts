@@ -103,7 +103,19 @@ export type PriorityItem = {
   severity: "critical" | "important" | "opportunity";
   title: string;
   impact: string;
-  effort?: Effort;
+  effort?: Effort | null;
+  findingKey?: string | null;
+  categoryKey?: string | null;
+  sources?: string[] | null;
+  rootCauseKey?: string | null;
+  relatedFindingKeys?: string[] | null;
+  rank?: number;
+  rankingVersion?: string | null;
+  rankReason?: "MODELLED_SCORE_GAIN" | "NO_DIRECT_SCORE_GAIN" | "SCORE_UNAVAILABLE" | null;
+  confidence?: "HIGH" | "MEDIUM" | "LOW" | "UNKNOWN" | null;
+  scoreLoss?: number | null;
+  domainScoreGain?: number | null;
+  globalScoreGain?: number | null;
 };
 
 export type Issue = {
@@ -117,7 +129,7 @@ export type Issue = {
   impact: string;
   evidence?: string;
   recommendation: string;
-  effort?: Effort;
+  effort?: Effort | null;
 };
 
 
