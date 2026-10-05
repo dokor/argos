@@ -1,7 +1,8 @@
 # Réconciliation de l'épic accessibilité #257
 
 État vérifié le 5 octobre 2026 sur `main`
-`16a64484cea4afb52982484f1ba5f2e27d410e59`, avec le complément de cette PR.
+`4286079b3d28bf035fdd1bd1c220f1f72d423d81`, avec le complément de restitution
+de l'état de revue des règles décrit ci-dessous.
 La livraison technique permet de présenter des constats et hypothèses ;
 la publication de règles réglementaires validées reste **en attente**.
 Cette note ne ferme pas l'épic et n'autorise pas une sortie V1.
@@ -11,9 +12,9 @@ Cette note ne ferme pas l'épic et n'autorise pas une sortie V1.
 | Lot | PR fusionnée | Commit de fusion | État restant |
 |---|---|---|---|
 | #260 matrice réglementaire | [#267](https://github.com/dokor/argos/pull/267) | `68e1243f0dccee837977501b8e1102612d73fb81` | Validation juridique/produit et publication des règles |
-| #261 constats Lighthouse | [#264](https://github.com/dokor/argos/pull/264) | `adf2f028de62eaa09beea4f158f9bbc2e6fe2474` | Complément score brut et tests transversaux ici |
-| #262 qualification et risque | [#265](https://github.com/dokor/argos/pull/265) | `c0288ee2d22732b19174f4101cd1211af983a978` | Risque runtime UNKNOWN / RULES_PENDING |
-| #263 rapport FR/EN | [#266](https://github.com/dokor/argos/pull/266) | `86625b6156f53ad048e087138be8e01d05a9c0be` | Wording final à valider avec #260 |
+| #261 constats Lighthouse | [#264](https://github.com/dokor/argos/pull/264) | `adf2f028de62eaa09beea4f158f9bbc2e6fe2474` | Issue fermée ; complément score brut et tests transversaux #272 fusionné |
+| #262 qualification et risque | [#265](https://github.com/dokor/argos/pull/265) | `c0288ee2d22732b19174f4101cd1211af983a978` | Issue fermée ; risque runtime UNKNOWN / RULES_PENDING |
+| #263 rapport FR/EN | [#266](https://github.com/dokor/argos/pull/266) | `86625b6156f53ad048e087138be8e01d05a9c0be` | Issue fermée ; wording final à valider avec #260 |
 
 La fusion ne modifie pas `reviewStatus=PROPOSED` ni `Rules.pending()`.
 L'épic conserve ces quatre subdivisions ; aucun lot duplicatif n'est créé.
@@ -56,6 +57,21 @@ ces 42 scénarios. Les tests DOM vérifient aussi les champs historiques et
 les valeurs invalides. Ce sont des tests de contrat sans DB ni navigateur
 réel, pas un audit RGAA manuel, un test opérationnel de production ou un
 avis juridique.
+
+## État de revue restitué avec le snapshot
+
+Le rapport expose désormais séparément la validation des règles : validation
+enregistrée, validation humaine en attente, ou validation non renseignée pour
+un ancien snapshot incomplet. Ces libellés existent en FR/EN et sont dérivés
+uniquement de `rulesValidated` persisté ; aucune approbation n'est inférée du
+score, du risque, de la version ou de l'état GitHub d'une PR. Sans bloc de
+qualification, aucun état de revue n'est inventé.
+
+L'avertissement indique que la validation des règles ne certifie pas le site et
+que les versions historiques ne sont pas requalifiées. Les tests DOM couvrent
+les trois états dans les deux langues, un snapshot historiquement validé avec
+un risque UNKNOWN, et les données techniques seules. Compteurs, priorités et
+snapshots restent inchangés. Le statut courant des règles demeure pending.
 
 ## Admission finale et lien avec #259
 

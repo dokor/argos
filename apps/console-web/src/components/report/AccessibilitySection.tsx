@@ -30,6 +30,8 @@ export default function AccessibilitySection({ report }: { report: Report }) {
     && Number.isFinite(evidence.lighthouseScore) && evidence.lighthouseScore >= 0 && evidence.lighthouseScore <= 100
     ? evidence.lighthouseScore : null;
   const unknown = copy.unknown;
+  const rulesReview = qualification?.rulesValidated === true ? "VALIDATED"
+    : qualification?.rulesValidated === false ? "PENDING" : "UNKNOWN";
   const findings = evidence?.findings ?? [];
   const references = (qualification?.references ?? []).flatMap(ref => {
     const href = safeAccessibilitySource(ref.url);
@@ -48,8 +50,10 @@ export default function AccessibilitySection({ report }: { report: Report }) {
           translated(copy.scopes, scope, unknown)).join(" · ")}</dd></div>
         <div><dt>{copy.confidenceTitle}</dt><dd>{translated(copy.confidence, qualification?.confidence ?? "UNKNOWN", unknown)}</dd></div>
         <div><dt>{copy.riskTitle}</dt><dd>{translated(copy.risk, qualification?.risk ?? "UNKNOWN", unknown)}</dd></div>
+        {qualification && <div><dt>{copy.rulesReviewTitle}</dt><dd>{copy.rulesReview[rulesReview]}</dd></div>}
       </dl>
       {qualification && <p className={s.note}>{translated(copy.riskReasons, qualification.riskReason, unknown)}</p>}
+      {qualification && <p className={s.note}>{copy.rulesSnapshot}</p>}
       {evidence && coverage !== "UNAVAILABLE" && (
         <>
           <p>{copy.counts.replace("{audits}", String(evidence.referencedAudits))

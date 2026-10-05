@@ -317,6 +317,13 @@
       "scopeTitle": "Périmètre potentiel",
       "confidenceTitle": "Confiance dans le périmètre",
       "riskTitle": "Risque réglementaire indicatif",
+      "rulesReviewTitle": "Validation des règles du rapport",
+      "rulesReview": {
+        "VALIDATED": "Validation enregistrée pour les règles utilisées",
+        "PENDING": "Validation humaine en attente",
+        "UNKNOWN": "Validation non renseignée"
+      },
+      "rulesSnapshot": "Cet état et la version des règles sont conservés à la date du rapport. Leur validation ne certifie pas la conformité du site ; une évolution des règles ne modifie pas ce rapport.",
       "coverage": {
         "COMPLETE": "Résultats automatisés référencés disponibles",
         "PARTIAL": "Collecte partielle",
