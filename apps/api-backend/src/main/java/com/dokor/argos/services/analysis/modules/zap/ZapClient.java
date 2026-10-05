@@ -67,8 +67,9 @@ public class ZapClient {
                     requireOk(call("core/action/newSession/", Map.of("overwrite", "true")));
                     requireOk(call("exim/action/importHar/", Map.of(
                         "data", har(context, body.length), "sendRequests", "false", "maxMessages", "1")));
-                    if (call("core/view/numberOfMessages/", Map.of()).path("numberOfMessages").asInt(-1) != 1) {
-                        throw new IllegalStateException("ZAP did not import the HTTP snapshot");
+                    int imported = call("core/view/numberOfMessages/", Map.of()).path("numberOfMessages").asInt(-1);
+                    if (imported != 1) {
+                        throw new IllegalStateException("ZAP did not import the HTTP snapshot (messages=" + imported + ")");
                     }
                     awaitPassiveScan(deadline);
                     JsonNode result = call("core/view/alerts/", Map.of(

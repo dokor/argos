@@ -54,6 +54,9 @@ jobs:
           exit 1
       - name: Run Maven tests and coverage report
         run: mvn --batch-mode verify
+      - name: Diagnose integration daemon failure
+        if: failure()
+        run: docker logs --tail 200 argos-zap-test
       - name: Stop integration daemon
         if: always()
         run: docker rm -f argos-zap-test || true
