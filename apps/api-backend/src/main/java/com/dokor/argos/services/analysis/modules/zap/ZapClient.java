@@ -46,7 +46,7 @@ public class ZapClient {
 
             HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
-                .timeout(Duration.ofSeconds(15))
+                .timeout(com.dokor.argos.services.analysis.AuditDeadline.requestTimeout(Duration.ofSeconds(15)))
                 .header("User-Agent", "argos-auditor/1.0")
                 .GET()
                 .build();

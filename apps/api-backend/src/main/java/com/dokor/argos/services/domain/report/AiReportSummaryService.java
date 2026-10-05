@@ -14,6 +14,8 @@ public class AiReportSummaryService {
     }
 
     public ReportDto enrich(ReportDto report) {
+        var deadline=com.dokor.argos.services.analysis.AuditDeadline.current();
+        if(deadline!=null && deadline.remainingNanos()<java.time.Duration.ofSeconds(2).toNanos()) return report;
         return codexSummaryClient.summarize(report)
             .map(ai -> new ReportDto(
                 report.generatedAt(),
