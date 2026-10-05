@@ -39,11 +39,13 @@ jobs:
         run: |
           docker network create --internal argos-zap-test
           docker run -d --name argos-zap-test --network argos-zap-test \
-            -p 127.0.0.1:18080:8080 \
             ghcr.io/zaproxy/zaproxy:2.17.0 zap.sh -Xmx512m -daemon -silent -host 0.0.0.0 -port 8080 \
             -config api.disablekey=true -config api.addrs.addr.name=.* -config api.addrs.addr.regex=true
+          # The Linux host can reach its bridge directly; internal networks do not publish ports.
+          ZAP_TEST_URL="http://$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' argos-zap-test):8080"
+          echo "ZAP_TEST_URL=$ZAP_TEST_URL" >> "$GITHUB_ENV"
           for attempt in $(seq 1 120); do
-            if curl --fail --silent --max-time 2 http://127.0.0.1:18080/JSON/core/view/version/ >/dev/null; then
+            if curl --fail --silent --max-time 2 "$ZAP_TEST_URL/JSON/core/view/version/" >/dev/null; then
               exit 0
             fi
             sleep 1
@@ -51,8 +53,6 @@ jobs:
           docker logs --tail 100 argos-zap-test
           exit 1
       - name: Run Maven tests and coverage report
-        env:
-          ZAP_TEST_URL: http://127.0.0.1:18080
         run: mvn --batch-mode verify
       - name: Stop integration daemon
         if: always()
