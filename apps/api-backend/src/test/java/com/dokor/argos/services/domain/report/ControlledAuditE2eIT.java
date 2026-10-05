@@ -51,6 +51,10 @@ class ControlledAuditE2eIT extends MariaDbReportFixture {
             String path=exchange.getRequestURI().getPath();
             if(path.equals("/redirect")) {exchange.getResponseHeaders().set("Location",PUBLIC_FIXTURE+"/healthy");exchange.sendResponseHeaders(302,-1);exchange.close();return;}
             if(path.equals("/timeout")) {try{Thread.sleep(35000);}catch(InterruptedException interrupted){Thread.currentThread().interrupt();} }
+            else if(!Set.of("/robots.txt","/sitemap.xml","/favicon.ico","/missing.png").contains(path)) {
+                // Keep the RUNNING UI observable even when both collectors fail immediately.
+                try {Thread.sleep(1800);}catch(InterruptedException interrupted){Thread.currentThread().interrupt();}
+            }
             int status=path.equals("/antibot")?403:200;
             exchange.getResponseHeaders().set("Content-Type","text/html; charset=utf-8");
             exchange.getResponseHeaders().set("X-Content-Type-Options","nosniff");

@@ -4,8 +4,10 @@ const base='http://127.0.0.1:3000';
 const browser=await chromium.launch({args:['--no-sandbox']});
 const cases=['healthy','errors','redirect','partial','empty','unavailable','antibot','timeout'];
 const evidence=[];
+let activeScenario='startup';let activeToken='';
 try {
   for(const scenario of cases) {
+    activeScenario=scenario;
     const page=await browser.newPage();
     const states=new Set(); let token; let creation;
     page.on('response',async response=>{
@@ -20,7 +22,7 @@ try {
     await input.press('Enter');
     const response=await submitted;
     assert.equal(response.status(),200,'Controlled fixture submission must succeed');
-    creation=await response.json();token=creation.reportToken;assert.equal(creation.status,'QUEUED');states.add('QUEUED');
+    creation=await response.json();token=creation.reportToken;activeToken=token;assert.equal(creation.status,'QUEUED');states.add('QUEUED');
     assert.equal(typeof token,'string');
     await page.goto(`${base}/report/${token}`);
     await page.getByRole('heading',{name:/Analyse en (attente|cours)/}).waitFor({timeout:15000});
@@ -67,5 +69,7 @@ try {
   console.log(JSON.stringify({version:'controlled-e2e-v1',scenarios:evidence}));
 } catch(error) {
   // No browser URLs, tokens, screenshots, traces or raw report JSON in failure artefacts.
-  console.error(`Controlled browser fixture failed: ${error.name}`);process.exitCode=1;
+  const safeMessage=String(error.message).replace(/https?:\/\/[^\s]+/g,'[fixture URL]').split(activeToken || 'never-a-token').join('[fixture token]');
+  console.error(`Controlled browser fixture ${activeScenario} failed: ${error.name}: ${safeMessage}`);
+  console.log(JSON.stringify({version:'controlled-e2e-v1',completed:false,scenarios:evidence}));process.exitCode=1;
 } finally {await browser.close();}
