@@ -53,3 +53,17 @@ imprime les nombres de statements et durées avant/après sur la fixture MariaDB
 Ces timings comprennent les connexions de test ; ils ne mesurent ni le Raspberry
 ni le parcours réseau réel. La version de MariaDB en production reste à relever
 avant déploiement ; les deux versions CI bornent la compatibilité vérifiée.
+
+Première exécution CI (commit `865ea0c`) : les huit tests d'intégration réussissent
+sur les deux versions. La fixture mesure 57 → 87 ms sur 10.11 et 74 → 84 ms sur
+11.4. Elle démontre la réduction de statements et la correction concurrente,
+pas un gain de latence SQL sur une base locale ; l'expression JSON a un coût.
+
+`syntheticLatencyFixtureMeasuresSerialStagesAndParallelRun` mesure aussi trois
+étapes de 200 ms (HTML et deux appels distants mockés), d'abord en séquence puis
+dans le vrai processeur parallèle, avec publication du rapport. Il imprime
+`remote_fixture` dans les résultats Surefire. Ces durées ne sont pas des seuils
+de test et ne représentent pas un audit réseau réel ; les tests par latch
+vérifient séparément que le chevauchement a effectivement lieu.
+Exécution locale Java 21 : 610 ms pour les trois étapes séquentielles, 232 ms
+pour le traitement parallèle avec composition/publication mockée du rapport.
