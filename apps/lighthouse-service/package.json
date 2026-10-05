@@ -4,10 +4,15 @@
   "license": "BUSL-1.1",
   "type": "module",
   "scripts": {
-	"start": "node server.mjs"
+    "start": "node server.mjs",
+    "check": "node --check server.mjs && node --check app.mjs",
+    "test": "node --test"
   },
   "dependencies": {
-	"chrome-launcher": "^1.2.1",
-	"lighthouse": "^13.0.3"
+    "chrome-launcher": "^1.2.1",
+    "lighthouse": "^13.0.3"
+  },
+  "engines": {
+    "node": ">=22.19.0"
   }
 }
