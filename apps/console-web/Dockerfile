@@ -14,6 +14,9 @@ RUN npm prune --omit=dev
 
 # ---- run ----
 FROM node:24.21.0-alpine AS run
+ARG ARGOS_REVISION=unknown
+LABEL org.opencontainers.image.revision=$ARGOS_REVISION \
+      org.opencontainers.image.source="https://github.com/dokor/argos"
 WORKDIR /app
 ENV NODE_ENV=production
 

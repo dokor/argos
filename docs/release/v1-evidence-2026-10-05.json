@@ -420,5 +420,34 @@
       "reportCountAndHashDigestEqual": true
     },
     "limitations": "Synthetic upstream SSL/Observatory/ZAP; pass-through AI; test HTTP transport to local fixture; direct dependency injection. Not a production/ARM64 acceptance."
+  },
+  "coordinationDecision": {
+    "status": "CLOSED_WITH_DEFERRED_VALIDATION",
+    "requestedBy": "Mainteneur, instruction explicite dans la conversation Codex",
+    "recordedAt": "2026-10-05T20:13:28.683Z",
+    "url": "https://github.com/dokor/argos/issues/259",
+    "reason": "Finaliser la coordination sans attendre les validations ; corrections ultérieures acceptées.",
+    "technicalReadiness": "UNVERIFIED",
+    "releaseGo": null,
+    "productionDeploymentAuthorized": false,
+    "deferredGates": [
+      "private-api",
+      "secrets",
+      "audit-budget",
+      "token-storage",
+      "public-write-limits",
+      "publication-atomicity",
+      "score-comparability",
+      "score-coverage",
+      "backend-audit",
+      "accessibility-rules",
+      "required-checks",
+      "e2e-modules-concurrency",
+      "dependency-risk",
+      "backup-restore",
+      "raspberry-post-deploy"
+    ],
+    "mainObservedSha": "6ce6c73e04b52df816593b79116f57b10b222f61",
+    "mainCiStatus": "QUEUED"
   }
 }

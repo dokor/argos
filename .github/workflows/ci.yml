@@ -61,7 +61,7 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - name: Test release evidence gate
-        run: node --test ../../scripts/check-release-evidence.test.mjs
+        run: node --test ../../scripts/check-release-evidence.test.mjs ../../scripts/release/inspect-runtime.test.mjs
       - run: npm run test
       - run: npm run build
       - name: Verify test failure propagates

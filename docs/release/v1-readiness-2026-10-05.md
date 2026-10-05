@@ -1,18 +1,43 @@
 # Dossier go/no-go V1 — #259
 
-Évaluation du **5 octobre 2026 : NO-GO de sortie**, décision humaine en attente.
+Décision du mainteneur du **5 octobre 2026 : clôture de coordination avec
+validations différées**. L'évaluation technique du snapshot reste NO_GO ; aucun
+GO technique, contrôle Raspberry ou approbation réglementaire n'est attesté.
 Les corrections des **PR #282–#289** sont vérifiées ensemble dans
-[#290](https://github.com/dokor/argos/pull/290). Les PR #282/#283/#284/#286/#287/#288/#289
-sont désormais fusionnées ; #285 et ce dossier #290 restent à fusionner sur `main`.
+[#290](https://github.com/dokor/argos/pull/290). Les PR #282 à #290 sont désormais
+toutes fusionnées sur `main`.
 Aucun déploiement, renouvellement de secret, enforcement GitHub ou GO n'est exécuté.
 
 Actualisation après fusions : `main` observé à
-`b8fdb09e17c4b5dc50104f8d7c8c627bde5a9ea5`. Les deux branches restantes sont
-synchronisées avec cette révision ; la résolution de #285 conserve les quatre
-classes IT (migration, publication, claims, newsletter). Le code combiné est
-identique au candidat déjà validé : seuls les états documentaires sont actualisés.
+`6ce6c73e04b52df816593b79116f57b10b222f61`. La résolution de #285 conserve les
+quatre classes IT (migration, publication, claims, newsletter). Les nouveaux
+checks main sont encore en attente d'exécution lors de cette décision ; aucun
+succès sur ce SHA n'est revendiqué. Le code combiné précédent a ses preuves ci-dessous.
 Les SHA/preuves ci-dessous et les états OPEN du JSON restent le snapshot historique
-antérieur aux fusions. Les checks des nouveaux heads sont à revoir dans les PR.
+antérieur aux fusions. La présente PR ajoute la [traçabilité des images et le
+collecteur de révision](runtime-provenance.md), testés sur fixtures uniquement.
+
+## Décision de clôture et validations différées
+
+Le mainteneur a indiqué dans la conversation Codex : « on peut quand meme
+concidéré la 259 finalisé sans validation. Au pire on corrigera par la suite ».
+Cette instruction remplace la condition de clôture initiale du ticket de coordination.
+La décision et cette citation sont consignées dans [#259](https://github.com/dokor/argos/issues/259).
+
+Les validations non faites sont **différées**, pas VERIFIED et pas approuvées :
+rotation/révocation #219, règles #260 et parent #257, seuils produit/revue du score,
+risque développeur braces, revue du backend #128, enforcement main, contrôles
+Guice/Traefik/tiers réels, restauration pré-migration/ancien binaire, SHA réellement
+déployé, santé/ressources Raspberry et CI sur le main final. Le risque résiduel est
+celui de publier avant détection d'une régression, d'un problème de sécurité,
+de conformité ou d'exploitation ; aucun impact ni probabilité n'est quantifié.
+La clôture ne fournit pas de preuve de révocation ou d'avis juridique et ne ferme
+pas ces tickets distincts. Elle n'autorise pas un déploiement de production.
+
+Le validateur automatique conserve ses critères techniques : sa sortie NO_GO
+signale les preuves absentes, même si le ticket de coordination est clos sur
+décision humaine. Le JSON conserve les gates non vérifiés et ajoute la décision
+séparée `coordinationDecision`. Aucun faux passage au vert n'est créé.
 
 ## Révisions et preuves
 
@@ -71,7 +96,7 @@ sont des rôles proposés ; aucune acceptation nominative ou exclusion n'est acq
 | Dépendances | #259 / [#289](https://github.com/dokor/argos/pull/289) | S / audit npm + tests | PRODUCTION_SCAN_PASS | Security, mainteneur | Advisory braces développeur sans correctif : acceptation nominative attendue ; pas scan OS |
 | Backup/restore | #259 / #288 | S / controlled-restore.json PASS | FIXTURE_VERIFIED | DevOps, exploitant | Restore pré-migration et ancien binaire sur clone représentatif à prouver |
 | Raspberry post-déploiement | #259 | Aucun déploiement effectué | UNVERIFIED | Exploitant | SHA/images/config, santé, audit, CPU/RAM/OOM manquants |
-| Décision finale | #259 | Aucun GO humain | NO_GO | @dokor, à confirmer | Aucun risque accepté/exclu ; décision datée et nominative requise |
+| Décision de coordination | #259 | Instruction du mainteneur, 5 octobre 2026 | CLOSED_WITH_DEFERRED_VALIDATION | Mainteneur | Clôture autorisée, preuves techniques toujours manquantes |
 
 ## Parcours contrôlé et limites
 
@@ -165,12 +190,14 @@ et charge avant acceptation. Le [runbook](../../infra/RUNBOOK.md) aide au diagno
 
 | Champ de décision #259 | Valeur actuelle |
 |---|---|
-| Sortie | NO-GO : #285/#290 à fusionner et validations humaines/opérationnelles manquantes |
-| Décideur / date GO | en attente ; @dokor proposé, pas attesté |
+| Coordination | Clôture demandée avec validations différées ; #282–#290 fusionnées |
+| Évaluation technique | NO_GO du snapshot, validations humaines/opérationnelles manquantes |
+| Décideur / date clôture | mainteneur dans la conversation Codex / 5 octobre 2026 |
+| GO technique ou réglementaire | non attesté |
 | SHA/tag release / environnement / SHA déployé | non désignés / inconnu / inconnu |
-| Exclusions acceptées | aucune |
+| Validations différées | liste ci-dessus ; aucun gate déclaré VERIFIED ou EXCLUDED artificiellement |
 | Preuves automatiques | S : 13 jobs verts, huit E2E, transactions MariaDB, restore fixture |
-| Clôture | fusions + preuves renouvelées sur SHA final + gates vérifiés/acceptés + GO humain |
+| Clôture | décision explicite du mainteneur de finaliser sans attendre les validations |
 
 ## Contrôle du dossier
 
@@ -185,5 +212,6 @@ Seuls les gates CODE #249/#250 sont VERIFIED. Un dossier complet donne
 READY_FOR_HUMAN_REVIEW, jamais GO. Une preuve VERIFIED exige kind approprié,
 SHA, URL, auteur/date ; EXCLUDED exige décision humaine datée, SHA, justification
 et risque résiduel. Le mainteneur doit vérifier identité et contenu des liens.
-Pour la release finale, créer un nouveau snapshot SHA/environnement réel et
-renouveler les preuves, conserver cette provenance. Le dossier seul ne clôture pas #259.
+Pour une validation technique ultérieure, créer un nouveau snapshot SHA/environnement
+réel et renouveler les preuves, conserver cette provenance. La clôture de coordination
+est la décision humaine consignée séparément ; elle ne change pas ces résultats.
