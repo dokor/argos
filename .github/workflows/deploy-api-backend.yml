@@ -12,6 +12,10 @@ permissions:
   contents: read
   packages: read
 
+concurrency:
+  group: deploy-${{ github.workflow }}
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: self-hosted
