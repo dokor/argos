@@ -355,7 +355,7 @@ class AuditProcessorServiceTest {
                     started.countDown(); assertTrue(release.await(2, TimeUnit.SECONDS)); return result("ssl");
                 });
                 when(html.analyze(any(), any())).thenAnswer(call -> {
-                    assertSame(localThread, Thread.currentThread()); assertTrue(started.await(2, TimeUnit.SECONDS));
+                    assertNotSame(localThread, Thread.currentThread()); assertTrue(started.await(2, TimeUnit.SECONDS));
                     release.countDown(); return result("html");
                 });
                 processor.process(1);
@@ -378,6 +378,27 @@ class AuditProcessorServiceTest {
                 processor.process(1);
                 verify(runs).fail(1L,"AUDIT_PROCESSING_FAILED","synthetic-worker");
                 verify(runs).failRunningModules(1L);
+            }
+        }
+        @Test void globalDeadlinePublishesObtainedResultsSkipsRemainingWorkAndLeavesNoRunningModule() throws Exception {
+            var stopped=new CountDownLatch(1);
+            try(var remote=new RemoteModuleExecutor(Duration.ofSeconds(5)); var local=new AuditModuleExecutor(Duration.ofSeconds(2))) {
+                var processor=processor(remote); processor.configureAuditModuleExecutor(local);
+                when(html.analyze(any(),any())).thenAnswer(call -> {
+                    try { new CountDownLatch(1).await(); return result("html"); }
+                    finally { stopped.countDown(); }
+                });
+                processor.process(1);
+                assertTrue(stopped.await(2,TimeUnit.SECONDS));
+                verify(runtime,never()).analyze(any(),any());
+                var report=ArgumentCaptor.forClass(AuditReportJson.class);
+                verify(publisher).completeAndPublish(eq(1L),any(),report.capture(),anyString(),eq("synthetic-worker"));
+                var statuses=mapper.readTree(report.getValue().meta().get("moduleStatuses"));
+                assertEquals("COMPLETED",statuses.path("http").asText());
+                assertEquals("TIMEOUT",statuses.path("html").asText());
+                assertEquals("TIMEOUT",statuses.path("runtime").asText());
+                assertEquals("true",report.getValue().meta().get("degraded"));
+                statuses.forEach(value -> assertNotEquals("RUNNING",value.asText()));
             }
         }
         @Test void remoteDeadlineProducesPartialReportAndNeverWritesProgressFromCancelledWorker() throws Exception {

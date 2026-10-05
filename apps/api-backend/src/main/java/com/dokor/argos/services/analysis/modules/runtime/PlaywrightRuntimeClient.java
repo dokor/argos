@@ -48,10 +48,11 @@ public class PlaywrightRuntimeClient {
         return ExternalServiceCall.timed(logger, "playwright", url, () -> {
             URI endpoint = URI.create(baseUrl + "/analyze/runtime");
 
-            String body = objectMapper.writeValueAsString(Map.of("url", url));
+            String body = objectMapper.writeValueAsString(Map.of("url", url, "timeoutMs",
+                Math.max(1,com.dokor.argos.services.analysis.AuditDeadline.requestTimeout(requestTimeout).toMillis())));
 
             HttpRequest req = HttpRequest.newBuilder(endpoint)
-                .timeout(requestTimeout)
+                .timeout(com.dokor.argos.services.analysis.AuditDeadline.requestTimeout(requestTimeout))
                 .header("content-type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(body))
                 .build();

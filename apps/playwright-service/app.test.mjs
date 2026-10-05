@@ -102,3 +102,15 @@ test('context and launch failures return a generic error and release acquired br
   assert.equal(failed.status, 500);
   assert.deepEqual(await failed.json(), { error: 'Internal Error' });
 });
+test('global request timeout closes the active browser rather than leaving navigation running', async t => {
+  let rejectNavigation, closed = 0;
+  const page = { on: () => {}, url: () => 'https://example.test',
+    goto: () => new Promise((_resolve, reject) => { rejectNavigation = reject; }) };
+  const base = await serverFor(t, { launch: async () => ({
+    newContext: async () => ({ newPage: async () => page }),
+    close: async () => { closed++; rejectNavigation?.(new Error('Browser closed')); }
+  }) });
+  const response = await fetch(base + '/analyze/runtime', { method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ url: 'https://example.test', timeoutMs: 100 }) });
+  assert.equal(response.status, 504); assert.ok(closed >= 1);
+});
