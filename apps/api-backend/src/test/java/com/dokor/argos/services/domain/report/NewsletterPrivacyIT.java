@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import java.util.concurrent.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+@org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable(named="ARGOS_TEST_CREDENTIALS_URL",matches=".+")
 class NewsletterPrivacyIT extends MariaDbReportFixture {
     @Test void concurrentNewAndDuplicateSubscriptionsFollowSameSqlPathAndKeepOneRow() throws Exception {
         var service = new NewsletterService(new NewsletterDao(new TransactionManagerQuerydsl(source,new Configuration(MySQLTemplates.DEFAULT))));
