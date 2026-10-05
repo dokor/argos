@@ -39,7 +39,17 @@ public class ConfigurationService {
     }
 
     public String internalApiAuthPassword() {
+        if (environment.containsKey("INTERNAL_API_PASSWORD")) return environment.get("INTERNAL_API_PASSWORD");
         return config.getString("internal-api.auth-password");
+    }
+
+    /** Validate before opening the DB or serving HTTP; error messages never contain values. */
+    public void validateRequiredSecrets() {
+        for (String path : java.util.List.of("internal-api.auth-password", "db.hikari.\"dataSource.password\"")) {
+            if (!config.hasPath(path) || config.getString(path).isBlank()) {
+                throw new IllegalStateException("Required external secret missing: " + path);
+            }
+        }
     }
 
     public Integer httpGrizzlyWorkerThreadsPoolSize() {
