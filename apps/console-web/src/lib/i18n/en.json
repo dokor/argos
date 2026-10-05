@@ -312,6 +312,7 @@
       "limit": "This automated analysis identifies potential technical and regulatory risks. It is neither a complete RGAA/WCAG audit nor legal advice.",
       "unknown": "Unknown",
       "technicalScore": "Argos technical accessibility score",
+      "lighthouseScore": "Lighthouse Accessibility technical score",
       "coverageTitle": "Automated coverage",
       "scopeTitle": "Potential scope",
       "confidenceTitle": "Scope confidence",

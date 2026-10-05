@@ -16,6 +16,7 @@ function fixture(): Report {
     scores: { global: 100, byCategory: [{ key: "a11y", label: "A11y", score: 100, issues: 0 }] },
     summary: { oneLiner: "high", priorities: [] }, issues: [],
     accessibilityEvidence: {
+      lighthouseScore: 93,
       version: "lighthouse-accessibility-v1", mappingVersion: "wcag-2.2-partial-v1", sourceVersion: "13.0.0",
       coverage: "COMPLETE", referencedAudits: 8, statusCounts: { FAIL: 1, PASS: 4, MANUAL: 2, NOT_APPLICABLE: 1 },
       failedAudits: 1, reportedElements: 3, elementCountComplete: false, surfacedFindings: 1, truncated: false,
@@ -47,11 +48,27 @@ describe("AccessibilitySection (#263)", () => {
     render(<AccessibilitySection report={report} />);
     expect(screen.getByRole("region", { name: fr.report.accessibility.title })).toBeInTheDocument();
     expect(screen.getByText("100/100")).toBeInTheDocument();
+    expect(screen.getByText("93/100")).toBeInTheDocument();
     expect(screen.getByText(fr.report.accessibility.riskReasons.RULES_PENDING)).toBeInTheDocument();
     expect(screen.getByText(/EAA potentiellement concerné · Article 47/)).toBeInTheDocument();
     expect(screen.getByText(/2$/)).toHaveTextContent("À contrôler manuellement : 2");
     expect(report.issues).toEqual([]);
     expect(report.summary.priorities).toEqual([]);
+  });
+  it("does not substitute the Argos score for missing historical Lighthouse data", () => {
+    const report = fixture();
+    delete report.accessibilityEvidence!.lighthouseScore;
+    render(<AccessibilitySection report={report} />);
+    expect(screen.getAllByText("100/100")).toHaveLength(1);
+    const label = screen.getByText(fr.report.accessibility.lighthouseScore);
+    expect(label.nextElementSibling).toHaveTextContent(fr.report.accessibility.unknown);
+  });
+  it.each([null, -1, 101, NaN, Infinity])("does not present an invalid raw Lighthouse score: %s", score => {
+    const report = fixture();
+    report.accessibilityEvidence!.lighthouseScore = score;
+    render(<AccessibilitySection report={report} />);
+    expect(screen.getByText(fr.report.accessibility.lighthouseScore).nextElementSibling)
+      .toHaveTextContent(fr.report.accessibility.unknown);
   });
   it.each(["COMPLETE", "PARTIAL", "UNAVAILABLE"] as const)("states collection coverage explicitly: %s", coverage => {
     const report = fixture();

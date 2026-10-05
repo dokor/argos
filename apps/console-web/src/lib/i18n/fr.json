@@ -312,6 +312,7 @@
       "limit": "Cette analyse automatisée identifie des risques techniques et réglementaires potentiels. Elle ne constitue ni un audit RGAA/WCAG complet ni un avis juridique.",
       "unknown": "Indéterminé",
       "technicalScore": "Score technique d’accessibilité Argos",
+      "lighthouseScore": "Score technique Lighthouse Accessibility",
       "coverageTitle": "Couverture automatisée",
       "scopeTitle": "Périmètre potentiel",
       "confidenceTitle": "Confiance dans le périmètre",

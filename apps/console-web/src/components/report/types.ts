@@ -29,6 +29,8 @@ export type Report = {
 };
 
 export type AccessibilityEvidence = {
+  /** Raw Lighthouse accessibility category score, independently of the Argos domain score. */
+  lighthouseScore?: number | null;
   version: string;
   mappingVersion: string;
   sourceVersion?: string | null;

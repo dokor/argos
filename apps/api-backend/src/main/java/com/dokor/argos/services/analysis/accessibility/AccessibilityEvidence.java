@@ -8,8 +8,14 @@ public record AccessibilityEvidence(
     String version, String mappingVersion, String sourceVersion, Coverage coverage,
     int referencedAudits, Map<Status, Integer> statusCounts, int failedAudits,
     int reportedElements, boolean elementCountComplete, int surfacedFindings,
-    boolean truncated, List<Finding> findings
+    boolean truncated, List<Finding> findings, Double lighthouseScore
 ) {
+    public AccessibilityEvidence(String version, String mappingVersion, String sourceVersion, Coverage coverage,
+        int referencedAudits, Map<Status, Integer> statusCounts, int failedAudits, int reportedElements,
+        boolean elementCountComplete, int surfacedFindings, boolean truncated, List<Finding> findings) {
+        this(version, mappingVersion, sourceVersion, coverage, referencedAudits, statusCounts, failedAudits,
+            reportedElements, elementCountComplete, surfacedFindings, truncated, findings, null);
+    }
     public enum Coverage { COMPLETE, PARTIAL, UNAVAILABLE }
     public enum Status { PASS, FAIL, MANUAL, NOT_APPLICABLE, NOT_TESTED, ERROR }
     public enum Kind { IMAGE_ALTERNATIVE, CONTRAST, ACCESSIBLE_NAME, LANGUAGE, OTHER }
