@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-10-05",
+  "candidateSha": "4286079b3d28bf035fdd1bd1c220f1f72d423d81",
+  "environment": null,
+  "deployedSha": null,
+  "ciChecks": [
+    { "name": "API backend tests", "sha": "4286079b3d28bf035fdd1bd1c220f1f72d423d81", "conclusion": "success", "url": "https://github.com/dokor/argos/actions/runs/37314482118/job/111777653563" },
+    { "name": "Frontend checks", "sha": "4286079b3d28bf035fdd1bd1c220f1f72d423d81", "conclusion": "success", "url": "https://github.com/dokor/argos/actions/runs/37314482118/job/111777653522" },
+    { "name": "Lighthouse checks", "sha": "4286079b3d28bf035fdd1bd1c220f1f72d423d81", "conclusion": "success", "url": "https://github.com/dokor/argos/actions/runs/37314482118/job/111777652951" },
+    { "name": "Playwright checks", "sha": "4286079b3d28bf035fdd1bd1c220f1f72d423d81", "conclusion": "success", "url": "https://github.com/dokor/argos/actions/runs/37314482118/job/111777653519" }
+  ],
+  "gates": [
+    { "id": "private-api", "issue": 218, "status": "BLOCKED" },
+    { "id": "secrets", "issue": 219, "status": "UNVERIFIED" },
+    { "id": "audit-budget", "issue": 223, "status": "UNVERIFIED" },
+    { "id": "token-storage", "issue": 226, "status": "BLOCKED" },
+    { "id": "public-write-limits", "issue": 227, "status": "UNVERIFIED" },
+    { "id": "publication-atomicity", "issue": 228, "status": "BLOCKED" },
+    { "id": "score-comparability", "issue": 44, "status": "UNVERIFIED" },
+    { "id": "score-coverage", "issue": 48, "status": "UNVERIFIED" },
+    { "id": "score-global", "issue": 249, "status": "VERIFIED", "kind": "CODE", "sha": "4286079b3d28bf035fdd1bd1c220f1f72d423d81", "checkedBy": "Codex (code and CI review)", "checkedAt": "2026-10-05", "url": "https://github.com/dokor/argos/pull/270" },
+    { "id": "score-priorities", "issue": 250, "status": "VERIFIED", "kind": "CODE", "sha": "4286079b3d28bf035fdd1bd1c220f1f72d423d81", "checkedBy": "Codex (code and CI review)", "checkedAt": "2026-10-05", "url": "https://github.com/dokor/argos/pull/271" },
+    { "id": "backend-audit", "issue": 128, "status": "UNVERIFIED" },
+    { "id": "accessibility-rules", "issue": 260, "status": "BLOCKED" },
+    { "id": "required-checks", "issue": 258, "status": "BLOCKED" },
+    { "id": "e2e-modules-concurrency", "issue": 64, "status": "UNVERIFIED" },
+    { "id": "dependency-risk", "issue": 259, "status": "UNVERIFIED" },
+    { "id": "backup-restore", "issue": 259, "status": "UNVERIFIED" },
+    { "id": "raspberry-post-deploy", "issue": 259, "status": "UNVERIFIED" }
+  ]
+}

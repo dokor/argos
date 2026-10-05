@@ -6,17 +6,22 @@ La clôture de #259 exige un GO humain explicite et les preuves de sortie demand
 
 ## Révision et portée des preuves
 
-- Main inspecté : `86625b6156f53ad048e087138be8e01d05a9c0be`, après PR #264–#266.
+- Main inspecté : `4286079b3d28bf035fdd1bd1c220f1f72d423d81`, après PR #270–#272.
 - Candidat de **code CI**, non candidat de release approuvé :
-  `4fa53e332fb88b4eacc837ca8aa004af211b5a55` ([PR #268](https://github.com/dokor/argos/pull/268)).
-- [Run CI quatre applications](https://github.com/dokor/argos/actions/runs/37307710975) :
+  `4286079b3d28bf035fdd1bd1c220f1f72d423d81`.
+- [Run CI quatre applications sur ce main](https://github.com/dokor/argos/actions/runs/37314482118) :
   API backend tests, Frontend checks, Lighthouse checks, Playwright checks réussis ;
   les trois probes de régression sont réussies, leurs commandes test ont échoué comme attendu.
-- Règles documentaires proposées : [PR #267](https://github.com/dokor/argos/pull/267),
-  tête `102bc6b` ; tests Java locaux 270 réussis dont 14 fixtures dans un test de contrat.
-  Cette branche indépendante **n'est pas dans le candidat 4fa53e3**.
-- Contrôles locaux du candidat JS : Node 24.13.0, frontend 109 tests + lint/build,
-  Lighthouse 6 tests, Playwright 9 tests, syntaxe et health des points d'entrée.
+- Règles documentaires proposées : [PR #267](https://github.com/dokor/argos/pull/267)
+  fusionnée et présente dans le candidat, complétée par #272. La matrice reste
+  PROPOSED ; son inclusion ne constitue pas une approbation juridique.
+- Les validations combinées consignées lors de #270–#272 indiquent 331 tests Java
+  et 127 frontend, lint/build réussis. Le run CI ci-dessus est la preuve actuelle
+  des quatre jobs ; ces décomptes historiques ne sont pas des tests opérationnels.
+- [Déploiement backend](https://github.com/dokor/argos/actions/runs/37314482173)
+  et [frontend](https://github.com/dokor/argos/actions/runs/37314482023) : workflows
+  réussis sur le même SHA. Ni leur succès ni le head_sha GitHub n'attestent le SHA
+  effectivement actif dans les quatre conteneurs, les ressources ou l'audit de contrôle.
 - Ce dossier s'appuie sur un snapshot GitHub des issues/PR et une lecture du code.
   Aucun test de production, de navigateur réel ou de transaction MariaDB concurrente
   n'est revendiqué. Unitaire, état GitHub, CI et validation Raspberry sont distincts.
@@ -43,11 +48,11 @@ CODE_VERIFIED signifie code/PR et tests locaux ou CI, pas validation opérationn
 | Comparabilité | #44 | UNVERIFIED | Ouvert ; preuve de méthode compatible dans l’historique absente | Produit + Backend |
 | Confiance/couverture | #48 | UNVERIFIED | Ouvert ; qualification accessibilité distincte de couverture pondérée des scores | Produit + QA |
 | Global par domaine | #249 / PR #254 | CODE_VERIFIED | PR fusionnée ; 25 % par domaine, renormalisation et tests ScoreService présents et CI verte | Produit + Tech Lead |
-| Priorités gain/cause | #250 | UNVERIFIED | Ouvert ; aucune preuve de calibration/déduplication des causes | Produit + QA |
+| Priorités gain/cause | #250 / PR #271 | CODE_VERIFIED | Issue fermée et PR fusionnée ; causes distinctes, gain explicable et tests présents ; pas de validation opérationnelle | Produit + QA |
 | Audit technique | #128 / PR #238 | UNMERGED_DOCUMENT | PR fermée sans fusion ; document retrouvé à 3c959ebe ; absent sur main | Mainteneur + Tech Lead |
-| Accessibilité | #257 / #260–#263 / PR #264–#267 | PARTIAL | Trois PR fusionnées ; règles runtime pending ; matrice #267 en revue | Juridique/Produit + QA |
-| CI quatre apps | #258 / PR #268 | CI_VERIFIED | 4 jobs + 3 probes négatives verts sur 4fa53e3, run 37307710975 | DevOps + QA |
-| Required checks | #258 | UNVERIFIED | 403 connecteur ; procédure disponible, enforcement non vérifié | Administrateur dépôt |
+| Accessibilité | #257 / #260–#263 / PR #264–#267 + #272 | PARTIAL | Lots techniques fusionnés ; #261–#263 fermées ; #260 reste ouverte et règles runtime pending | Juridique/Produit + QA |
+| CI quatre apps | #258 / PR #268 | CI_VERIFIED | Issue fermée ; 4 jobs verts sur 4286079, run 37314482118 | DevOps + QA |
+| Required checks | #258 | BLOCKED | API protection classique : 404 Branch not protected ; API règles effectives main : liste vide | Administrateur dépôt |
 | Modules HTTP/HTML | #151/#152 / PR #162/#161 | CODE_VERIFIED | Issues fermées, PR fusionnées ; tests unitaires CI verts, pas de parcours réel courant | Backend + QA |
 | Runtime/Lighthouse | #153/#154 / PR #160/#164 | CODE_VERIFIED | PR fusionnées ; contrats Node et Java testés, pas de preuve Chromium ARM64 courante | Backend + QA |
 | SSL/Observatory | #155/#156 / PR #163/#165 | CODE_VERIFIED | PR fusionnées ; mocks unitaires, services externes non audités dans ce lot | Backend + QA |
@@ -55,7 +60,7 @@ CODE_VERIFIED signifie code/PR et tests locaux ou CI, pas validation opérationn
 | Parcours réel et concurrence | #64 / #228 | UNVERIFIED | Issue #64 ouverte ; absence d’environnement MariaDB + 4 services contrôlé et de preuve E2E | QA + Backend |
 | Dépendances JS | #259 constat daté | UNREVIEWED_RISK | npm audit : Lighthouse 25 alertes dont 9 high ; Playwright 3 dont 1 high ; exploitabilité non analysée | Security + mainteneur |
 | Sauvegarde/restauration | #259 / infra/RUNBOOK.md | UNVERIFIED | Runbook diagnostic présent ; restauration MariaDB et retour après migration non démontrés | DevOps + exploitant |
-| Raspberry / SHA déployé | #259 / deploy-*.yml | UNVERIFIED | Workflows auto push main présents ; pas de connexion au Pi ni preuve de révision/santé/ressources | Exploitant |
+| Raspberry / SHA déployé | #259 / deploy-*.yml | UNVERIFIED | Workflows backend/frontend réussis sur 4286079 ; pas de connexion au Pi ni preuve des 4 révisions actives/santé/ressources | Exploitant |
 | Décision de sortie | #259 | NO_GO | Aucune exclusion de prérequis acceptée ; GO humain absent | @dokor, à confirmer |
 
 Liens vers les [issues](https://github.com/dokor/argos/issues) et
@@ -64,13 +69,24 @@ sont des rôles proposés, pas des assignations ou validations acquises.
 
 ## Réconciliation sans doublons
 
-**#249** : [PR #254 fusionnée](https://github.com/dokor/argos/pull/254), merge
+**#249** : issue fermée ; [PR #254 fusionnée](https://github.com/dokor/argos/pull/254), merge
 `59e3a44f2fcfeac19f89948747372270b4ee469b`. ScoreService sur le candidat a
 quatre poids 0,25, renormalise sur les domaines mesurables et produit un global
 indisponible 0/0 sans mesure. Les tests ScoreService passent dans la CI candidate.
+La [PR #270](https://github.com/dokor/argos/pull/270), fusion `e458ba89b051562a0af4da783bd155dc47bafcac`,
+ajoute la décomposition publique et le score indisponible distinct de zéro.
 La comparabilité historique (#44), la couverture (#48) et la calibration produit
-restent des sujets distincts. Proposer la clôture/réconciliation au mainteneur,
-sans réimplémentation ni clôture automatique.
+restent des sujets distincts. Aucune réimplémentation de #249.
+
+**#250** : issue fermée ; [PR #271](https://github.com/dokor/argos/pull/271),
+fusion `3668fedde59c2b54d851ff427ab2d610c34c2447`. `ReportPriorityService`
+classe six causes distinctes par contribution, déduplique les corroborations et
+ne fabrique pas d'effort. Tests et code présents sur le candidat, CI verte.
+
+**#258** : issue fermée et quatre checks CI verts. L'enforcement de main est un
+gate d'exploitation distinct : les lectures authentifiées `branches/main/protection`
+et `rules/branches/main` du 5 octobre retournent respectivement 404 et une liste
+vide. Aucune protection ni configuration de dépôt n'a été modifiée dans ce lot.
 
 **#128** : [PR #238](https://github.com/dokor/argos/pull/238) fermée **non fusionnée**.
 Le document existe dans
@@ -91,7 +107,8 @@ Une CI unitaire verte ne résout pas cette exigence.
 
 ## Risque dépendances observé
 
-npm audit consulté le 5 octobre 2026, lockfiles du candidat, sans mise à jour :
+npm audit consulté dans le dossier initial le 5 octobre 2026 sur les lockfiles de
+`4fa53e332fb88b4eacc837ca8aa004af211b5a55`, sans mise à jour :
 Lighthouse : 16 moderate + 9 high ; Playwright : 1 low + 1 moderate + 1 high.
 Ce sont des alertes de dépendances, incluant propagation transitive, pas autant
 d'exploitations démontrées. Exemples :
@@ -100,7 +117,9 @@ d'exploitations démontrées. Exemples :
 [path-to-regexp](https://github.com/advisories/GHSA-37ch-88jc-xwx2).
 La CI #258 n'est pas un scan de sécurité bloquant. Il faut une analyse
 d'exploitabilité et une correction ou acceptation de risque nominative avant GO.
-Aucun npm audit fix ni upgrade navigateur n'a été exécuté dans ces trois lots.
+Aucun nouveau scan npm audit, npm audit fix ni upgrade navigateur n'a été exécuté
+dans cette actualisation. Ces nombres sont un relevé historique, pas une preuve
+fraîche de sécurité du candidat 4286079.
 
 ## Protocole de validation restant
 
@@ -151,7 +170,7 @@ Copier ce tableau dans l'issue et joindre des preuves expurgées après validati
 |---|---|
 | Évaluation technique | NO-GO — prérequis bloquants et preuves opérationnelles manquants |
 | Décision humaine finale / décideur / date | en attente / proposé @dokor / non renseignée |
-| SHA/tag candidat de release | non désigné ; 4fa53e3 est uniquement le candidat de code CI |
+| SHA/tag candidat de release | non désigné ; 4286079 est uniquement le candidat de code CI |
 | SHA déployé | inconnu |
 | Exclusions acceptées / justification / risque | aucune |
 | Sites et seuils de référence validés | à valider |
@@ -161,3 +180,34 @@ Copier ce tableau dans l'issue et joindre des preuves expurgées après validati
 Une fusion documentaire ne convertit jamais NO-GO en GO. #259 reste ouverte
 jusqu'à la décision GO humaine et aux preuves exigées. Revue ADE 1.2.1 :
 Tech Lead/QA/DevOps/Security, sans prétendre approuver la sortie V1.
+
+## Contrôle reproductible des preuves
+
+Le [snapshot JSON](v1-evidence-2026-10-05.json) fixe le SHA, les quatre liens CI
+et les 17 gates. Les deux gates CODE de #249/#250 sont vérifiés ; les preuves
+opérationnelles, réglementaires et les exclusions humaines restent absentes.
+
+Depuis la racine du dépôt :
+
+```sh
+node --test scripts/check-release-evidence.test.mjs
+node scripts/check-release-evidence.mjs docs/release/v1-evidence-2026-10-05.json --sha 4286079b3d28bf035fdd1bd1c220f1f72d423d81
+```
+
+Le second appel retourne **NO_GO, exit 1**, comme attendu sur ce snapshot.
+Un dossier entièrement renseigné retourne READY_FOR_HUMAN_REVIEW, jamais GO.
+Une erreur de fichier/JSON/arguments donne exit 2. Les tests du validateur tournent
+dans le job Frontend checks ; le NO-GO courant ne rend pas la CI applicative rouge.
+
+Chaque gate VERIFIED exige `kind`, `sha`, `url`, `checkedBy`, `checkedAt` :
+CODE, REVIEW et OPERATIONS ne sont pas interchangeables. Un gate EXCLUDED exige
+une `decision` avec `sha`, `decidedBy`, `decidedAt`, `url`, `justification` et
+`residualRisk`. Le JSON n'atteste pas l'identité du signataire ni le contenu d'un
+lien : le mainteneur doit les vérifier. Le validateur ne contacte aucun service,
+ne déploie rien et ne remplace ni le parcours contrôlé ni le GO humain.
+
+Pour un nouveau candidat, copier le snapshot, fixer un SHA complet et renouveler
+les preuves affectées. Fournir l'identifiant d'environnement et le SHA actif après
+contrôle des quatre services. Même un job réussi sur un autre SHA bloque la revue.
+Un changement de configuration/image/migration exige également une réévaluation
+documentée par l'exploitant ; le SHA seul ne prouve pas leur équivalence.
