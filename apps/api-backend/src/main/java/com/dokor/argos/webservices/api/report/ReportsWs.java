@@ -3,7 +3,7 @@ package com.dokor.argos.webservices.api.report;
 import com.coreoz.plume.jersey.security.permission.PublicApi;
 import com.dokor.argos.services.domain.audit.AuditRunService;
 import com.dokor.argos.services.domain.report.ReportReadService;
-import com.dokor.argos.webservices.api.audits.data.AuditRunStatusResponse;
+import com.dokor.argos.webservices.api.audits.data.ReportStatusResponse;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.Consumes;
@@ -36,7 +36,6 @@ public class ReportsWs {
     @GET
     @Path("/{token}")
     public Response getReport(@PathParam("token") String token) {
-        logger.debug("Get report token={}", maskToken(token));
         var reportOpt = reportReadService.getByToken(token);
         if (reportOpt.isEmpty()) {
             return Response.status(Response.Status.NOT_FOUND).build();
@@ -56,7 +55,6 @@ public class ReportsWs {
     @GET
     @Path("/{token}/status")
     public Response getReportStatus(@PathParam("token") String token) {
-        logger.debug("Get report status token={}", maskToken(token));
 
         var runOpt = auditRunService.findByReportToken(token);
         if (runOpt.isEmpty()) {
@@ -64,18 +62,11 @@ public class ReportsWs {
         }
 
         var run = runOpt.get();
-        var statusResponse = new AuditRunStatusResponse(
-            run.getId(),
-            run.getAuditId(),
+        var statusResponse = new ReportStatusResponse(
             run.getStatus(),
             run.getCreatedAt(),
             run.getStartedAt(),
             run.getFinishedAt(),
-            // lastError volontairement non exposé : endpoint public, éviter toute
-            // fuite de détails internes. Le front affiche un message générique.
-            null,
-            null, // resultJson not exposed here (large payload)
-            run.getReportToken(),
             run.getModuleStatuses()
         );
 
@@ -84,12 +75,4 @@ public class ReportsWs {
             .build();
     }
 
-    /**
-     * Masque un token pour le log : ne conserve que les 4 premiers caractères.
-     * Un token de rapport est un credential d'accès - jamais logué en clair.
-     */
-    private static String maskToken(String token) {
-        if (token == null) return "null";
-        return token.length() <= 8 ? "****" : token.substring(0, 4) + "…";
-    }
 }

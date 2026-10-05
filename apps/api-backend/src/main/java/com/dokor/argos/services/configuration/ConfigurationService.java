@@ -32,6 +32,12 @@ public class ConfigurationService {
         return config.getString("internal-api.auth-username");
     }
 
+    /** No development/default credential: admin reads fail closed when unset. */
+    public String adminApiToken() {
+        return environment.getOrDefault("ADMIN_API_TOKEN",
+            config.hasPath("admin-api.token") ? config.getString("admin-api.token") : "");
+    }
+
     public String internalApiAuthPassword() {
         return config.getString("internal-api.auth-password");
     }

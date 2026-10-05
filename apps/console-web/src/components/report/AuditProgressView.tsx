@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { argosApi, AuditRunStatusResponse, ModuleStatus } from "@/lib/ArgosApi";
+import { argosApi, PublicReportStatusResponse, ModuleStatus } from "@/lib/ArgosApi";
 import { createLogger, safeError, maskToken } from "@/lib/logger";
 import { useLang } from "@/lib/i18n/LangContext";
 import s from "./AuditProgressView.module.scss";
@@ -54,7 +54,7 @@ export default function AuditProgressView({ token }: Props) {
   const { t } = useLang();
   const tp = t.report.progress;
 
-  const [runStatus, setRunStatus] = useState<AuditRunStatusResponse | null>(null);
+  const [runStatus, setRunStatus] = useState<PublicReportStatusResponse | null>(null);
   const [errorKind, setErrorKind] = useState<ErrorKind | null>(null);
   const loggerRef = useRef(
     createLogger("report", {
@@ -62,7 +62,7 @@ export default function AuditProgressView({ token }: Props) {
       details: { reportToken: maskToken(token) },
     })
   );
-  const lastStatusRef = useRef<AuditRunStatusResponse["status"] | null>(null);
+  const lastStatusRef = useRef<PublicReportStatusResponse["status"] | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -106,7 +106,6 @@ export default function AuditProgressView({ token }: Props) {
             details: {
               progressStatus: status.status,
               reportToken: maskToken(token),
-              runId: status.runId,
             },
           });
           lastStatusRef.current = status.status;
@@ -127,7 +126,7 @@ export default function AuditProgressView({ token }: Props) {
           if (cancelled) return;
           loggerRef.current.info("report_progress_completed", {
             action: "refresh_report_page",
-            details: { reportToken: maskToken(token), runId: status.runId },
+            details: { reportToken: maskToken(token) },
           });
           router.refresh();
           return;
@@ -138,7 +137,6 @@ export default function AuditProgressView({ token }: Props) {
             action: "refresh_report_page",
             details: {
               reportToken: maskToken(token),
-              runId: status.runId,
             },
           });
           // Le run a échoué : on recharge le server component, qui affichera la

@@ -3,9 +3,6 @@ package com.dokor.argos.webservices.api.audits;
 import com.coreoz.plume.jersey.security.permission.PublicApi;
 import com.dokor.argos.services.domain.audit.AuditService;
 import com.dokor.argos.services.domain.audit.UrlNormalizer;
-import com.dokor.argos.webservices.api.audits.data.AuditHistoryItemResponse;
-import com.dokor.argos.webservices.api.audits.data.AuditListItemResponse;
-import com.dokor.argos.webservices.api.audits.data.AuditRunStatusResponse;
 import com.dokor.argos.webservices.api.audits.data.CreateAuditRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -17,6 +14,7 @@ import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -27,29 +25,30 @@ import jakarta.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
 import java.util.Map;
 
 /**
  * Endpoints REST pour la gestion des audits.
  * <p>
- * TODO: sécuriser avec OAuth/JWT (actuellement @PublicApi).
+ * Creation is public; every read requires the BFF's server credential.
  */
 @Path("/audits")
 @Tag(name = "audits", description = "Manage audits")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-@PublicApi // todo: passer en privée avec oAuth
+@PublicApi // Per-method admin checks below; POST remains public.
 @Singleton
 public class AuditsWs {
 
     private static final Logger logger = LoggerFactory.getLogger(AuditsWs.class);
 
     private final AuditService auditService;
+    private final AdminReadAccess adminReadAccess;
 
     @Inject
-    public AuditsWs(AuditService auditService) {
+    public AuditsWs(AuditService auditService, AdminReadAccess adminReadAccess) {
         this.auditService = auditService;
+        this.adminReadAccess = adminReadAccess;
     }
 
     /**
@@ -98,11 +97,13 @@ public class AuditsWs {
     @GET
     @Path("/runs/{runId}")
     @Operation(description = "Récupère le statut d'un run.")
-    public AuditRunStatusResponse getRunStatus(
-        @Parameter(required = true) @PathParam("runId") Long runId
+    public Response getRunStatus(
+        @Parameter(required = true) @PathParam("runId") Long runId,
+        @HeaderParam("Authorization") String authorization
     ) {
+        adminReadAccess.require(authorization);
         logger.debug("Get run status requested: runId={}", runId);
-        return auditService.getRunStatus(runId);
+        return privateRead(auditService.getRunStatus(runId));
     }
 
     /**
@@ -112,12 +113,14 @@ public class AuditsWs {
      */
     @GET
     @Operation(description = "Liste des audits et dernier run associé")
-    public List<AuditListItemResponse> listAudits(
-        @QueryParam("limit") @DefaultValue("50") int limit
+    public Response listAudits(
+        @QueryParam("limit") @DefaultValue("50") int limit,
+        @HeaderParam("Authorization") String authorization
     ) {
+        adminReadAccess.require(authorization);
         int safeLimit = Math.max(1, Math.min(limit, 200));
         logger.info("List audits limit={}", safeLimit);
-        return auditService.listAudits(safeLimit);
+        return privateRead(auditService.listAudits(safeLimit));
     }
 
     /**
@@ -130,12 +133,18 @@ public class AuditsWs {
     @GET
     @Path("/{auditId}/history")
     @Operation(description = "Historique des analyses (runs) d'un audit")
-    public List<AuditHistoryItemResponse> getAuditHistory(
+    public Response getAuditHistory(
         @Parameter(required = true) @PathParam("auditId") Long auditId,
-        @QueryParam("limit") @DefaultValue("20") int limit
+        @QueryParam("limit") @DefaultValue("20") int limit,
+        @HeaderParam("Authorization") String authorization
     ) {
+        adminReadAccess.require(authorization);
         int safeLimit = Math.max(1, Math.min(limit, 100));
         logger.info("Get audit history auditId={} limit={}", auditId, safeLimit);
-        return auditService.getAuditHistory(auditId, safeLimit);
+        return privateRead(auditService.getAuditHistory(auditId, safeLimit));
+    }
+
+    private Response privateRead(Object body) {
+        return Response.ok(body).header("Cache-Control", "private, no-store").build();
     }
 }
