@@ -45,10 +45,8 @@ public class DomainDao extends CrudDaoQuerydsl<Domain> {
     /**
      * Trouve ou crée un domaine pour un hostname donné.
      * <p>
-     * Cette méthode n'est pas atomique (pas de INSERT OR IGNORE).
-     * En environnement multi-worker, la contrainte unique sur hostname garantit
-     * l'unicité - une éventuelle race condition produira une exception SQL
-     * qui sera rattrapée par l'appelant si nécessaire.
+     * L'index unique arbitre les insertions concurrentes. Après rollback d'une
+     * insertion perdante, une nouvelle connexion relit le domaine gagnant.
      *
      * @param hostname  hostname normalisé (ex: {@code example.com})
      * @param createdAt timestamp de création si insertion nécessaire
@@ -59,7 +57,11 @@ public class DomainDao extends CrudDaoQuerydsl<Domain> {
             Domain d = new Domain();
             d.setHostname(hostname);
             d.setCreatedAt(createdAt);
-            return save(d);
+            try { return save(d); }
+            catch (RuntimeException conflict) {
+                if (!UniqueInsertConflict.isDuplicate(conflict)) throw conflict;
+                return findByHostname(hostname).orElseThrow(() -> conflict);
+            }
         });
     }
 }

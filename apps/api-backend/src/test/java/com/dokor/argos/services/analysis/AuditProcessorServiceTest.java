@@ -65,6 +65,7 @@ class AuditProcessorServiceTest {
         AuditRunService runService = mock(AuditRunService.class);
         when(runService.getRun(1L)).thenReturn(Optional.empty());
 
+        ReportPublishService publication = mock(ReportPublishService.class);
         AuditProcessorService svc = new AuditProcessorService(
             runService,
             mock(AuditDao.class),
@@ -81,13 +82,13 @@ class AuditProcessorServiceTest {
             mock(ScoreEnricherService.class),
             mock(ScoreService.class),
             objectMapper(),
-            mock(ReportPublishService.class)
+            publication
         );
 
         svc.process(1L);
 
-        verify(runService, never()).complete(anyLong(), anyString());
-        verify(runService, never()).fail(anyLong(), anyString());
+        verifyNoInteractions(publication);
+        verify(runService, never()).fail(anyLong(), anyString(), nullable(String.class));
     }
 
     @Test
@@ -102,6 +103,7 @@ class AuditProcessorServiceTest {
         when(runService.getRun(1L)).thenReturn(Optional.of(run));
         when(auditDao.findById(10L)).thenReturn(null);
 
+        ReportPublishService publication = mock(ReportPublishService.class);
         AuditProcessorService svc = new AuditProcessorService(
             runService,
             auditDao,
@@ -118,12 +120,12 @@ class AuditProcessorServiceTest {
             mock(ScoreEnricherService.class),
             mock(ScoreService.class),
             objectMapper(),
-            mock(ReportPublishService.class)
+            publication
         );
 
         svc.process(1L);
 
-        verify(runService).fail(eq(1L), anyString());
+        verify(runService).fail(eq(1L), anyString(), nullable(String.class));
     }
 
     @Test
@@ -176,6 +178,7 @@ class AuditProcessorServiceTest {
         when(merger.merge(anyList())).thenAnswer(invocation -> invocation.getArgument(0));
         when(enricher.enrich(anyList())).thenAnswer(invocation -> invocation.getArgument(0));
 
+        ReportPublishService publication = mock(ReportPublishService.class);
         AuditProcessorService svc = new AuditProcessorService(
             runService,
             auditDao,
@@ -192,14 +195,14 @@ class AuditProcessorServiceTest {
             enricher,
             scorer,
             objectMapper(),
-            mock(ReportPublishService.class)
+            publication
         );
 
         svc.process(1L);
 
         verify(normalizer).normalize("http://example.com");
         ArgumentCaptor<String> completedJson = ArgumentCaptor.forClass(String.class);
-        verify(runService).complete(eq(1L), completedJson.capture());
+        verify(publication).completeAndPublish(eq(1L), any(), any(), completedJson.capture(), nullable(String.class));
         var moduleIds = new java.util.ArrayList<String>();
         objectMapper().readTree(completedJson.getValue()).path("modules")
             .forEach(module -> moduleIds.add(module.path("id").asText()));
@@ -207,7 +210,7 @@ class AuditProcessorServiceTest {
         assertTrue(completedJson.getValue().contains("accessibility-compliance-proposal-v1"));
         assertTrue(completedJson.getValue().contains("RULES_PENDING"));
         assertFalse(completedJson.getValue().contains("<html>"));
-        verify(runService, never()).fail(eq(1L), anyString());
+        verify(runService, never()).fail(eq(1L), anyString(), nullable(String.class));
     }
 
     /**
@@ -242,6 +245,7 @@ class AuditProcessorServiceTest {
         ScoreService scorer = mock(ScoreService.class);
         stubScorePipeline(enricher, scorer);
 
+        ReportPublishService publication = mock(ReportPublishService.class);
         AuditProcessorService svc = new AuditProcessorService(
             runService,
             auditDao,
@@ -258,14 +262,14 @@ class AuditProcessorServiceTest {
             enricher,
             scorer,
             objectMapper(),
-            mock(ReportPublishService.class)
+            publication
         );
 
         svc.process(1L);
 
         ArgumentCaptor<String> jsonCaptor = ArgumentCaptor.forClass(String.class);
-        verify(runService).complete(eq(1L), jsonCaptor.capture());
-        verify(runService, never()).fail(eq(1L), anyString());
+        verify(publication).completeAndPublish(eq(1L), any(), any(), jsonCaptor.capture(), nullable(String.class));
+        verify(runService, never()).fail(eq(1L), anyString(), nullable(String.class));
 
         String json = jsonCaptor.getValue();
         assertTrue(json.contains("\"degraded\":\"true\""), "report meta should flag degraded=true");
@@ -314,7 +318,7 @@ class AuditProcessorServiceTest {
             var dao = mock(AuditDao.class); var http = mock(HttpModuleAnalyzer.class);
             var domains = mock(DomainAnalysisService.class); var merger = mock(CheckMergerService.class);
             var enricher = mock(ScoreEnricherService.class); var scorer = mock(ScoreService.class);
-            var run = new AuditRun(); run.setAuditId(10L); run.setId(1L); run.setReportTokenHash(new byte[32]);
+            var run = new AuditRun(); run.setAuditId(10L); run.setId(1L); run.setReportTokenHash(new byte[32]); run.setClaimToken("synthetic-worker");
             var audit = new Audit(); audit.setId(10L); audit.setDomainId(1L);
             audit.setInputUrl("https://example.com"); audit.setNormalizedUrl("https://example.com");
             when(runs.getRun(1)).thenReturn(Optional.of(run)); when(dao.findById(10L)).thenReturn(audit);
@@ -359,11 +363,22 @@ class AuditProcessorServiceTest {
                 order.verify(html).analyze(any(), any()); order.verify(runtime).analyze(any(), any());
                 order.verify(lighthouse).analyze(any(), any()); order.verify(zap).analyze(any(), any());
                 var report = ArgumentCaptor.forClass(AuditReportJson.class);
-                verify(publisher).publishIfAbsent(eq(1L), any(), report.capture(), org.mockito.AdditionalMatchers.aryEq(new byte[32]));
+                verify(publisher).completeAndPublish(eq(1L), any(), report.capture(), anyString(), nullable(String.class));
                 assertEquals(List.of("http", "html", "runtime", "lighthouse", "observatory", "ssl", "zap", "tech"),
                     report.getValue().modules().stream().map(AuditModuleResult::id).toList());
-                verify(runs).complete(eq(1L), anyString()); verify(runs, never()).fail(anyLong(), anyString());
+                 verify(runs, never()).fail(anyLong(), anyString(), nullable(String.class));
             } finally { release.countDown(); }
+        }
+        @Test void publicationFailureIsTerminalInsteadOfSilentlyCompleting() throws Exception {
+            try (var remote = new RemoteModuleExecutor(Duration.ofSeconds(5))) {
+                var processor = processor(remote);
+                when(publisher.completeAndPublish(eq(1L), any(), any(), anyString(), eq("synthetic-worker")))
+                    .thenThrow(new IllegalStateException("Synthetic publication failure"));
+                when(runs.fail(1L,"AUDIT_PROCESSING_FAILED","synthetic-worker")).thenReturn(true);
+                processor.process(1);
+                verify(runs).fail(1L,"AUDIT_PROCESSING_FAILED","synthetic-worker");
+                verify(runs).failRunningModules(1L);
+            }
         }
         @Test void remoteDeadlineProducesPartialReportAndNeverWritesProgressFromCancelledWorker() throws Exception {
             var started = new CountDownLatch(1);
@@ -383,7 +398,7 @@ class AuditProcessorServiceTest {
                 processor.process(1);
                 assertTrue(stopped.await(2, TimeUnit.SECONDS));
                 var report = ArgumentCaptor.forClass(AuditReportJson.class);
-                verify(publisher).publishIfAbsent(eq(1L), any(), report.capture(), any(byte[].class));
+                verify(publisher).completeAndPublish(eq(1L), any(), report.capture(), anyString(), nullable(String.class));
                 assertEquals("true", report.getValue().meta().get("degraded"));
                 assertEquals("TIMEOUT", mapper.readTree(report.getValue().meta().get("moduleStatuses")).path("ssl").asText());
                 verify(runs).updateModuleStatus(1L, "ssl", "RUNNING");
@@ -415,8 +430,8 @@ class AuditProcessorServiceTest {
                 verify(html).analyze(any(), any());
                 verify(observatory).analyze(any(), any());
                 verify(ssl).analyze(any(), any());
-                verify(runs).complete(eq(1L), anyString());
-                verify(publisher).publishIfAbsent(eq(1L), any(), any(), any(byte[].class));
+
+                verify(publisher).completeAndPublish(eq(1L), any(), any(), anyString(), nullable(String.class));
                 System.out.printf("remote_fixture delayPerStageMs=%d serialStagesMs=%d parallelRunMs=%d%n",
                     delayMs, serialMs, parallelMs);
             }

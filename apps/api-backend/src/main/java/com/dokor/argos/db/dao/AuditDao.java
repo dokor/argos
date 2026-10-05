@@ -68,6 +68,17 @@ public class AuditDao extends CrudDaoQuerydsl<Audit> {
         );
     }
 
+    /** A losing insert is rolled back before a fresh connection reads the winner. */
+    public Audit findOrCreate(Audit candidate) {
+        return findByNormalizedUrl(candidate.getNormalizedUrl()).orElseGet(() -> {
+            try { return save(candidate); }
+            catch (RuntimeException conflict) {
+                if (!UniqueInsertConflict.isDuplicate(conflict)) throw conflict;
+                return findByNormalizedUrl(candidate.getNormalizedUrl()).orElseThrow(() -> conflict);
+            }
+        });
+    }
+
     /**
      * Vérifie l’existence d’un audit à partir de son URL normalisée.
      * <p>

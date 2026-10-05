@@ -154,14 +154,9 @@ public class AuditRunService {
         return Optional.empty();
     }
 
-    public void complete(long runId, String resultJson) {
-        logger.info("Marking run as COMPLETED: runId={}", runId);
-        auditRunDao.markCompleted(runId, Instant.now(), resultJson);
-    }
-
-    public void fail(long runId, String errorMessage) {
+    public boolean fail(long runId, String errorMessage, String claimToken) {
         logger.warn("Marking run as FAILED: runId={}, error={}", runId, errorMessage);
-        auditRunDao.markFailed(runId, Instant.now(), errorMessage);
+        return auditRunDao.markFailed(runId, Instant.now(), errorMessage, claimToken);
     }
 
     // ─── Helpers ─────────────────────────────────────────────────────────────────

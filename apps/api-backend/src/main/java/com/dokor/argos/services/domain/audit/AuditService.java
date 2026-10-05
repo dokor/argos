@@ -179,7 +179,7 @@ public class AuditService {
      */
     public CreateAuditResponse createAudit(CreateAuditRequest request) {
         String inputUrl = request.url();
-        logger.info("AuditService.createAudit inputUrl={}", inputUrl);
+        logger.info("AuditService.createAudit inputUrl={}", UrlNormalizer.sanitizeForLog(inputUrl));
 
         String normalizedUrl = urlNormalizer.normalize(inputUrl);
         String hostname = urlNormalizer.extractHostname(normalizedUrl);
@@ -188,16 +188,10 @@ public class AuditService {
         // Trouver ou créer le domaine (one per hostname)
         Domain domain = domainService.findOrCreate(hostname);
 
-        Audit audit = auditDao.findByNormalizedUrl(normalizedUrl)
-            .orElseGet(() -> {
-                logger.info("Creating new Audit for normalizedUrl={} domainId={}", normalizedUrl, domain.getId());
-                Audit a = new Audit();
-                a.setDomainId(domain.getId());
-                a.setInputUrl(inputUrl);
-                a.setNormalizedUrl(normalizedUrl);
-                a.setCreatedAt(now);
-                return auditDao.save(a);
-            });
+        Audit candidate = new Audit();
+        candidate.setDomainId(domain.getId()); candidate.setInputUrl(inputUrl);
+        candidate.setNormalizedUrl(normalizedUrl); candidate.setCreatedAt(now);
+        Audit audit = auditDao.findOrCreate(candidate);
 
         var created = auditRunService.createQueuedRun(audit.getId(), now);
         AuditRun run = created.run();

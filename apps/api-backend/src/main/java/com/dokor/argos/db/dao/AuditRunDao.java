@@ -14,6 +14,7 @@ import com.querydsl.core.types.dsl.StringExpression;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.sql.Connection;
 
 
 @Singleton
@@ -100,23 +101,21 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
         return updated == 1;
     }
 
-    /**
-     * Marque un run comme terminé avec succès.
-     * <p>
-     * Cette méthode est appelée lorsque le traitement
-     * de l'audit s'est bien déroulé.
-     *
-     * @param runId      identifiant du run
-     * @param finishedAt date de fin de traitement
-     * @param resultJson résultat du traitement (JSON sérialisé)
-     */
-    public void markCompleted(long runId, Instant finishedAt, String resultJson) {
-        transactionManager.update(RUN)
+    /** Lock on the caller's transaction connection; no autonomous connection is opened. */
+    public Optional<AuditRun> lockForPublication(long runId, Connection connection) {
+        return Optional.ofNullable(transactionManager.selectQuery(connection).select(RUN)
+            .from(RUN).where(RUN.id.eq(runId)).forUpdate().fetchOne());
+    }
+
+    /** Must execute in the transaction that inserts the report, with the same connection. */
+    public boolean markCompleted(long runId, String claimToken, Instant finishedAt, String resultJson, Connection connection) {
+        return transactionManager.update(RUN, connection)
             .set(RUN.status, AuditRunStatus.COMPLETED.name())
             .set(RUN.finishedAt, finishedAt)
             .set(RUN.resultJson, resultJson)
-            .where(RUN.id.eq(runId))
-            .execute();
+            .setNull(RUN.lastError)
+            .where(RUN.id.eq(runId), RUN.status.eq("RUNNING"), RUN.claimToken.eq(claimToken))
+            .execute() == 1;
     }
 
     /**
@@ -129,13 +128,14 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
      * @param finishedAt date de fin (échec)
      * @param lastError  message d'erreur à conserver en base
      */
-    public void markFailed(long runId, Instant finishedAt, String lastError) {
-        transactionManager.update(RUN)
+    public boolean markFailed(long runId, Instant finishedAt, String lastError, String claimToken) {
+        if (claimToken == null) return false;
+        return transactionManager.update(RUN)
             .set(RUN.status, AuditRunStatus.FAILED.name())
             .set(RUN.finishedAt, finishedAt)
             .set(RUN.lastError, lastError)
-            .where(RUN.id.eq(runId))
-            .execute();
+            .where(RUN.id.eq(runId), RUN.status.eq("RUNNING"), RUN.claimToken.eq(claimToken))
+            .execute() == 1;
     }
 
     /**
