@@ -645,6 +645,11 @@
     "errorUnknown": "Erreur inconnue"
   },
   "auditList": {
+    "comparison": {
+      "method": "Barème figé", "coverage": "Couverture", "unknown": "Inconnue", "coverageChanged": "La couverture de mesure a changé ; ce changement n’est pas une régression du site.",
+      "delta": "Évolution depuis le rapport précédent", "points": "points", "globalPoints": "points globaux", "domainPoints": "points du domaine", "contributions": "Principales améliorations et dégradations",
+      "reasons": { "COMPARABLE": "Audits comparables", "NO_PREVIOUS_REPORT": "Aucun rapport précédent dans cet historique.", "EVIDENCE_MISSING": "Comparaison indisponible : preuves historiques insuffisantes. Relancez une analyse au barème courant.", "SCOPE_CHANGED": "Comparaison indisponible : périmètre différent.", "METHODOLOGY_CHANGED": "Comparaison indisponible : barème ou coefficients différents.", "COVERAGE_CHANGED": "Comparaison indisponible : mesures utilisables différentes.", "INSUFFICIENT_COVERAGE": "Comparaison indisponible : couverture insuffisante ou anti-bot.", "SCORE_UNAVAILABLE": "Comparaison indisponible : score non mesuré." }
+    },
     "title": "Audits",
     "loading": "Chargement…",
     "empty": "Aucun audit pour le moment.",

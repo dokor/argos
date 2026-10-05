@@ -645,6 +645,11 @@
     "errorUnknown": "Unknown error"
   },
   "auditList": {
+    "comparison": {
+      "method": "Frozen scoring policy", "coverage": "Coverage", "unknown": "Unknown", "coverageChanged": "Measurement coverage changed; this change is not a site regression.",
+      "delta": "Change since the previous report", "points": "points", "globalPoints": "global points", "domainPoints": "domain points", "contributions": "Main improvements and regressions",
+      "reasons": { "COMPARABLE": "Comparable audits", "NO_PREVIOUS_REPORT": "No previous report in this history.", "EVIDENCE_MISSING": "Comparison unavailable: insufficient historical evidence. Run a new audit with the current policy.", "SCOPE_CHANGED": "Comparison unavailable: different scope.", "METHODOLOGY_CHANGED": "Comparison unavailable: different policy or coefficients.", "COVERAGE_CHANGED": "Comparison unavailable: different usable measurements.", "INSUFFICIENT_COVERAGE": "Comparison unavailable: insufficient coverage or anti-bot protection.", "SCORE_UNAVAILABLE": "Comparison unavailable: score not measured." }
+    },
     "title": "Audits",
     "loading": "Loading…",
     "empty": "No audits yet.",

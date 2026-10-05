@@ -148,7 +148,8 @@ public class ScoreService {
             effectiveDomainWeights,
             scoredChecks,
             scoringVersion == policy.version() && Objects.equals(scoringFingerprint,policy.fingerprint())
-                ? MeasurementCoverageService.compute(policy,modules) : null
+                ? MeasurementCoverageService.compute(policy,modules) : null,
+            CONFIGURED_DOMAIN_WEIGHTS.entrySet().stream().collect(java.util.stream.Collectors.toMap(e -> e.getKey().id(),Map.Entry::getValue))
         );
     }
 

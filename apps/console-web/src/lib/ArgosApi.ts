@@ -65,6 +65,15 @@ export type AuditListItem = {
 };
 
 export type AuditHistoryItem = {
+  calculation?: import("@/components/report/types").Report["scores"]["calculation"];
+  coverage?: import("@/components/report/types").Coverage | null;
+  comparison?: {
+    reason: "COMPARABLE" | "NO_PREVIOUS_REPORT" | "EVIDENCE_MISSING" | "SCOPE_CHANGED" | "METHODOLOGY_CHANGED" | "COVERAGE_CHANGED" | "INSUFFICIENT_COVERAGE" | "SCORE_UNAVAILABLE";
+    globalDelta?: number | null;
+    domains: Array<{ domain: string; points: number }>;
+    contributions: Array<{ key: string; module: string; domain: string; domainPoints: number; globalPoints: number }>;
+    coverageChanged: boolean;
+  } | null;
   runId: number;
   status: "QUEUED" | "RUNNING" | "FAILED" | "COMPLETED";
   createdAt?: string;

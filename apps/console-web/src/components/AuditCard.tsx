@@ -8,6 +8,7 @@ import { AuditReportV2, AuditScoreReport, extractTechs, formatPct, prettyJson } 
 import { createLogger, safeError } from "@/lib/logger";
 import { ScoreChip, ScoreBubbles } from "./ScoreChip";
 import StatusBadge from "./StatusBadge";
+import AuditComparison from "./AuditComparison";
 import { scoreColor } from "./report/reportColors";
 
 function isFinal(status: AuditListItem["status"]) {
@@ -248,6 +249,7 @@ export default function AuditCard({
                   {href && !isCurrent && (
                     <Link href={href} className={styles.historyLink}>{th.view}</Link>
                   )}
+                  {h.status === "COMPLETED" && <AuditComparison item={h} url={item.inputUrl}/>}
                 </li>
               );
             })}

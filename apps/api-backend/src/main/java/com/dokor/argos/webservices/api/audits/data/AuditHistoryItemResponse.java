@@ -29,6 +29,12 @@ public record AuditHistoryItemResponse(
 
     /** Score global 0..100 issu du rapport publié, ou {@code null} si indisponible. */
     @Schema(example = "68")
-    Integer globalScore
+    Integer globalScore,
+    com.dokor.argos.services.domain.report.ReportDto.ScoreCalculation calculation,
+    com.dokor.argos.services.analysis.scoring.MeasurementCoverage coverage,
+    com.dokor.argos.services.domain.report.AuditComparisonService.Comparison comparison
 ) {
+    public AuditHistoryItemResponse(long runId,String status,Instant createdAt,Instant finishedAt,String reportUrl,Integer globalScore) {
+        this(runId,status,createdAt,finishedAt,reportUrl,globalScore,null,null,null);
+    }
 }
