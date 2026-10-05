@@ -20,9 +20,9 @@ function complete() {
 test('a complete synthetic dossier only becomes ready for human review, never GO', () => {
   assert.deepEqual(assessReleaseEvidence(complete(), SHA), { status: 'READY_FOR_HUMAN_REVIEW', blockers: [] });
 });
-test('the committed snapshot stays NO_GO with four successful CI checks', () => {
+test('the committed snapshot stays NO_GO with all successful candidate CI checks', () => {
   const snapshot = JSON.parse(readFileSync(new URL('../docs/release/v1-evidence-2026-10-05.json', import.meta.url)));
-  const result = assessReleaseEvidence(snapshot, SHA);
+  const result = assessReleaseEvidence(snapshot, snapshot.candidateSha);
   assert.equal(result.status, 'NO_GO');
   assert.ok(result.blockers.includes('gate:private-api:unverified'));
   assert.ok(result.blockers.includes('gate:accessibility-rules:unverified'));
