@@ -38,6 +38,24 @@ Documentation about initial database configuration is available in the [Plume Ma
 
 Configuring CI
 --------------
+
+Java coverage (#237): run `mvn clean verify` with Java 21. JaCoCo generates
+`target/site/jacoco/index.html`, `jacoco.xml` and `jacoco.csv`; GitHub CI runs
+`verify` and retains this directory as a SHA-labelled artifact for 14 days.
+`mvn test` runs the tests with instrumentation but does not generate the report.
+Only `com/dokor/argos/db/generated/**` is excluded from the report (generated
+QueryDSL beans and metamodels). DAOs, webservices, configuration, scheduler and
+business services remain included, even when untested. This first measurement
+is a baseline; no arbitrary coverage threshold blocks the build. The historical
+40% estimate is not a measured baseline. Always compare reports from clean builds
+with the same exclusions and tests; unit coverage does not prove DB concurrency
+or production behavior.
+
+First local baseline (2026-10-05, #237, Java 21, 346 tests): 2,828 / 4,071 lines
+(69.5%), 1,471 / 2,189 branches (67.2%). SchedulerJobs: 28 / 28 lines and 4 / 4
+branches; ConfigurationService: 27 / 29 lines and 8 / 8 branches. Use the CI
+artifact for the exact revision under review, rather than treating these figures
+as a permanent percentage.
 - Gitlab CI configuration is made in the `.gitlab-ci.yml` file
 - Sonar configuration is made in the `sonar-project.properties` file
 - Github CI configuration is made in the `.github` folder

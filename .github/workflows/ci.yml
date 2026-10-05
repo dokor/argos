@@ -30,8 +30,15 @@ jobs:
           cache: maven
           cache-dependency-path: apps/api-backend/pom.xml
 
-      - name: Run Maven tests
-        run: mvn --batch-mode test
+      - name: Run Maven tests and coverage report
+        run: mvn --batch-mode verify
+      - name: Upload Java coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: java-coverage-${{ github.sha }}
+          path: apps/api-backend/target/site/jacoco/
+          if-no-files-found: error
+          retention-days: 14
 
   frontend:
     name: Frontend checks
