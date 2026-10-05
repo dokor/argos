@@ -155,7 +155,7 @@ public class AuditProcessorService {
 
         Audit audit = auditDao.findById(run.getAuditId());
         if (audit == null) {
-            auditRunService.fail(runId, "Audit not found: " + run.getAuditId());
+            auditRunService.fail(runId, "AUDIT_NOT_FOUND", run.getClaimToken());
             logger.warn("Run failed (audit not found) runId={} auditId={}", runId, run.getAuditId());
             return;
         }
@@ -168,7 +168,7 @@ public class AuditProcessorService {
                 normalizedUrl = urlNormalizer.normalize(inputUrl);
                 logger.info("Normalized URL computed inputUrl={} normalizedUrl={}", inputUrl, normalizedUrl);
             } catch (Exception e) {
-                auditRunService.fail(runId, "URL normalization failed: " + e.getMessage());
+                auditRunService.fail(runId, "URL_NORMALIZATION_FAILED", run.getClaimToken());
                 logger.warn("Run failed (normalization) runId={} error={}", runId, e.getMessage(), e);
                 return;
             }
@@ -326,13 +326,7 @@ public class AuditProcessorService {
 
                 String json = objectMapper.writeValueAsString(report);
 
-                auditRunService.complete(runId, json);
-                // Publish public report (tokenized) for /report/[token]
-                reportPublishService.publishIfAbsent(runId, audit, report, run.getReportTokenHash())
-                    .ifPresentOrElse(
-                        token -> logger.info("Public report ready runId={}", runId),
-                        () -> logger.warn("Public report not published runId={}", runId)
-                    );
+                reportPublishService.completeAndPublish(runId, audit, report, json, run.getClaimToken());
                 logger.info(
                     "Run completed runId={} globalScoreRatio={}",
                     runId,
@@ -342,8 +336,9 @@ public class AuditProcessorService {
         } catch (Exception e) {
             // Marque le(s) module(s) resté(s) en RUNNING comme FAILED pour que la
             // vue de progression n'affiche pas un spinner infini sur ce module.
-            auditRunService.failRunningModules(runId);
-            auditRunService.fail(runId, e.getMessage());
+            if (auditRunService.fail(runId, "AUDIT_PROCESSING_FAILED", run.getClaimToken())) {
+                auditRunService.failRunningModules(runId);
+            }
             logger.warn("Run failed runId={} error={}", runId, e.getMessage(), e);
         }
     }

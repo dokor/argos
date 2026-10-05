@@ -8,6 +8,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
 import java.util.Optional;
+import java.sql.Connection;
 
 @Singleton
 public class AuditReportDao extends CrudDaoQuerydsl<AuditReport> {
@@ -36,5 +37,10 @@ public class AuditReportDao extends CrudDaoQuerydsl<AuditReport> {
                 .where(REPORT.runId.eq(runId))
                 .fetchOne()
         );
+    }
+
+    public Optional<AuditReport> findByRunId(long runId, Connection connection) {
+        return Optional.ofNullable(transactionManager.selectQuery(connection).select(REPORT)
+            .from(REPORT).where(REPORT.runId.eq(runId)).fetchOne());
     }
 }
