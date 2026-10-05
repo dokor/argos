@@ -25,6 +25,19 @@ const report = {
 } as unknown as Report;
 
 describe("ReportHero (rendu du rapport)", () => {
+  it("distingue un score indisponible d'un zéro mesuré", () => {
+    render(<ReportHero report={{ ...report, scores: { ...report.scores, global: 0, globalAvailable: false } }} />);
+    expect(screen.getByText("Score indisponible")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Score 0/100")).not.toBeInTheDocument();
+    expect(screen.queryByText("/100")).not.toBeInTheDocument();
+    expect(screen.queryByText("À traiter en priorité")).not.toBeInTheDocument();
+  });
+
+  it("conserve une note zéro lorsqu'elle est mesurée", () => {
+    render(<ReportHero report={{ ...report, scores: { ...report.scores, global: 0, globalAvailable: true } }} />);
+    expect(screen.getByLabelText("Score 0/100")).toBeInTheDocument();
+    expect(screen.queryByText("Score indisponible")).not.toBeInTheDocument();
+  });
   it("affiche le score global dans l'anneau", () => {
     render(<ReportHero report={report} />);
     expect(screen.getByLabelText("Score 93/100")).toBeInTheDocument();

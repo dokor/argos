@@ -75,9 +75,24 @@ public record ReportDto(
     public record Scores(
         int global, // 0..100
         Integer completeness, // 0..100 : part des modules évalués (null si inconnu). Voir issue #101.
-        List<CategoryScore> byCategory
+        List<CategoryScore> byCategory,
+        Boolean globalAvailable, // null pour les rapports historiques
+        ScoreCalculation calculation
     ) {
+        public Scores(int global, Integer completeness, List<CategoryScore> byCategory) {
+            this(global, completeness, byCategory, null, null);
+        }
     }
+
+    public record ScoreCalculation(
+        int scoringVersion,
+        String scoringFingerprint,
+        List<DomainCalculation> domains
+    ) {}
+
+    public record DomainCalculation(
+        String key, double score, double maxScore, double ratio, double effectiveWeight
+    ) {}
 
     public record CategoryScore(
         String key,

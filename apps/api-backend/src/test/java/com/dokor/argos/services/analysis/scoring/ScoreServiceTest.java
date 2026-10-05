@@ -269,6 +269,30 @@ class ScoreServiceTest {
     // -------------------------
 
     @Test
+    void referenceDatasetsExposeNormalizedWeightsAndIgnoreZeroWeightFindings() {
+        var performance = check("perf", AuditStatus.PASS, true, 100, "performance");
+        var security = check("sec", AuditStatus.FAIL, true, 1, "security");
+        var seo = check("seo", AuditStatus.WARN, true, 5, "seo");
+        var a11y = check("a11y", AuditStatus.WARN, true, 18, "a11y").withScoreRatio(0.8);
+        var zero = check("detail", AuditStatus.FAIL, true, 0, "security");
+        var baseline = service.compute(10, "reference-v10", List.of(module("m", performance, security, seo, a11y)));
+        var reordered = service.compute(10, "reference-v10", List.of(module("m", a11y, zero, seo, security, performance)));
+
+        // (100 + 0 + 50 + 80) / 4 = 57.5, indépendamment des dénominateurs locaux.
+        assertEquals(57.5, baseline.global().score(), 1e-9);
+        assertEquals(baseline.byDomain(), reordered.byDomain());
+        assertEquals(baseline.domainWeights(), reordered.domainWeights());
+        assertEquals(baseline.global(), reordered.global());
+        assertEquals(1.0, baseline.domainWeights().values().stream().mapToDouble(Double::doubleValue).sum(), 1e-9);
+        assertTrue(baseline.domainWeights().values().stream().allMatch(weight -> weight == 0.25));
+
+        var three = service.compute(10, List.of(module("m", performance, security, seo)));
+        assertEquals(50.0, three.global().score(), 1e-9);
+        assertEquals(1.0 / 3, three.domainWeights().get("seo"), 1e-9);
+        assertEquals(0.0, three.domainWeights().get("a11y"));
+    }
+
+    @Test
     void shouldHandleEmptyModuleList() {
         AuditScoreReport report = service.compute(1, List.of());
 

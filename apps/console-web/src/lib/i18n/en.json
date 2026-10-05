@@ -475,6 +475,7 @@
     },
     "hero": {
       "locale": "en-US",
+      "scoreUnavailable": "Score unavailable",
       "scoreLabels": {
         "excellent": "Excellent",
         "good": "Good",
