@@ -44,25 +44,17 @@ public class NewsletterService {
             return SubscribeResult.INVALID_EMAIL;
         }
 
-        String normalizedEmail = email.trim().toLowerCase();
+        String normalizedEmail = email.trim().toLowerCase(java.util.Locale.ROOT);
 
-        if (!EMAIL_PATTERN.matcher(normalizedEmail).matches()) {
-            logger.warn("Newsletter subscribe: invalid email={}", normalizedEmail);
+        if (normalizedEmail.length() > 255 || !EMAIL_PATTERN.matcher(normalizedEmail).matches()) {
             return SubscribeResult.INVALID_EMAIL;
-        }
-
-        if (newsletterDao.existsByEmail(normalizedEmail)) {
-            logger.info("Newsletter subscribe: already subscribed email={}", normalizedEmail);
-            return SubscribeResult.ALREADY_SUBSCRIBED;
         }
 
         NewsletterSubscriber subscriber = new NewsletterSubscriber();
         subscriber.setEmail(normalizedEmail);
         subscriber.setCreatedAt(Instant.now());
         subscriber.setIpHint(ipHint);
-        newsletterDao.save(subscriber);
-
-        logger.info("Newsletter subscribe: new subscriber email={}", normalizedEmail);
+        newsletterDao.subscribeIfAbsent(subscriber);
         return SubscribeResult.SUBSCRIBED;
     }
 }

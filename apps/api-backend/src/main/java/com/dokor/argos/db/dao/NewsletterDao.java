@@ -41,4 +41,20 @@ public class NewsletterDao extends CrudDaoQuerydsl<NewsletterSubscriber> {
             .where(SUBSCRIBER.email.equalsIgnoreCase(email))
             .fetchFirst() != null;
     }
+
+    /** One SQL path for new and existing subscriptions, without an existence oracle. */
+    public void subscribeIfAbsent(NewsletterSubscriber subscriber) {
+        transactionManager.executeAndReturn(connection -> {
+            try (var statement = connection.prepareStatement("INSERT INTO ARG_NEWSLETTER_SUBSCRIBER (id,email,created_at,ip_hint) VALUES (?,?,?,?) ON DUPLICATE KEY UPDATE id=id")) {
+                statement.setLong(1, generateIdentifier());
+                statement.setString(2, subscriber.getEmail());
+                statement.setTimestamp(3, java.sql.Timestamp.from(subscriber.getCreatedAt()));
+                statement.setString(4, subscriber.getIpHint());
+                statement.executeUpdate();
+                return null;
+            } catch (java.sql.SQLException error) {
+                throw new IllegalStateException("Newsletter storage unavailable", error);
+            }
+        });
+    }
 }

@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ status: "error", message: "Invalid JSON" }, { status: 400 });
   }
 
-  if (!body.email) {
+  if (!body || typeof body.email !== "string" || !body.email || body.email.length > 255) {
     logger.warn("newsletter_bff_missing_email", {
       action: "subscribe_newsletter",
       details: {
@@ -31,15 +31,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ status: "error", message: "Email is required" }, { status: 400 });
   }
 
-  // Forward IP hint from the original client (best effort)
-  const ipHint = req.headers.get("x-forwarded-for") ?? req.headers.get("x-real-ip") ?? undefined;
-
   try {
     const res = await fetch(`${JAVA_API_BASE}/api/newsletter/subscribe`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...(ipHint ? { "X-Forwarded-For": ipHint } : {}),
       },
       body: JSON.stringify({ email: body.email }),
       cache: "no-store",
@@ -66,9 +62,13 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    return NextResponse.json(data, { status: res.status });
+    const headers: Record<string, string> = { "Cache-Control": "no-store" };
+    if (res.status === 429 && res.headers.get("retry-after")) headers["Retry-After"] = res.headers.get("retry-after")!;
+    if (res.ok || res.status === 409) {
+      return NextResponse.json({ status: "ok", message: "Subscription request accepted" }, { status: 200, headers });
+    }
+    return NextResponse.json(data, { status: res.status, headers });
   } catch (error) {
-    console.error("[newsletter] BFF error:", error);
     logger.error("newsletter_bff_backend_unreachable", {
       action: "subscribe_newsletter",
       details: {
