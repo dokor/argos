@@ -3,6 +3,8 @@ package com.dokor.argos.services.analysis.modules.zap;
 import com.dokor.argos.logging.ExternalServiceCall;
 import com.dokor.argos.services.analysis.AuditDeadline;
 import com.dokor.argos.services.analysis.BoundedBodyHandlers;
+import com.dokor.argos.services.analysis.ExternalHttpClient;
+import com.dokor.argos.services.configuration.ConfigurationService;
 import com.dokor.argos.services.analysis.model.AuditContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,8 +15,6 @@ import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.net.URLEncoder;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
@@ -26,7 +26,7 @@ import java.util.concurrent.locks.ReentrantLock;
 @Singleton
 public class ZapClient {
     private static final Logger logger = LoggerFactory.getLogger(ZapClient.class);
-    private final HttpClient httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
+    private final ExternalHttpClient http;
     private final ObjectMapper mapper;
     private final String apiUrl;
     private final String apiKey;
@@ -35,13 +35,19 @@ public class ZapClient {
     private final ReentrantLock session = new ReentrantLock();
 
     @Inject
-    public ZapClient(ObjectMapper mapper) {
-        this(mapper, System.getenv().getOrDefault("ZAP_API_URL", "http://zap:8080"),
-            System.getenv().getOrDefault("ZAP_API_KEY", ""), Duration.ofSeconds(30), Duration.ofMillis(250));
+    public ZapClient(ObjectMapper mapper, ExternalHttpClient http, ConfigurationService config) {
+        this(mapper, http, config.zapApiUrl(), config.zapApiKey(),
+            Duration.ofSeconds(30), Duration.ofMillis(250));
     }
 
     ZapClient(ObjectMapper mapper, String apiUrl, String apiKey, Duration budget, Duration pollInterval) {
+        this(mapper, new ExternalHttpClient(mapper), apiUrl, apiKey, budget, pollInterval);
+    }
+
+    private ZapClient(ObjectMapper mapper, ExternalHttpClient http, String apiUrl, String apiKey,
+                      Duration budget, Duration pollInterval) {
         this.mapper = mapper;
+        this.http = http;
         this.apiUrl = apiUrl.replaceAll("/+$", "");
         this.apiKey = apiKey;
         this.budget = budget;
@@ -116,17 +122,11 @@ public class ZapClient {
     private JsonNode call(String operation, Map<String, String> parameters) throws Exception {
         String form = parameters.entrySet().stream().map(e -> encode(e.getKey()) + "=" + encode(e.getValue()))
             .collect(java.util.stream.Collectors.joining("&"));
-        var builder = HttpRequest.newBuilder(URI.create(apiUrl + "/JSON/" + operation))
-            .timeout(AuditDeadline.requestTimeout(Duration.ofSeconds(15)))
-            .header("Content-Type", "application/x-www-form-urlencoded")
-            .POST(HttpRequest.BodyPublishers.ofString(form));
-        if (!apiKey.isBlank()) builder.header("X-ZAP-API-Key", apiKey);
-        var response = httpClient.send(builder.build(), BoundedBodyHandlers.ofString(BoundedBodyHandlers.MAX_PAGE_BYTES));
-        if (response.statusCode() < 200 || response.statusCode() >= 300) {
-            throw new IllegalStateException("ZAP API returned HTTP " + response.statusCode());
-        }
-        JsonNode json = mapper.readTree(response.body());
-        if (json == null || json.has("code")) throw new IllegalStateException("ZAP API rejected " + operation);
+        Map<String, String> headers = apiKey.isBlank() ? Map.of() : Map.of("X-ZAP-API-Key", apiKey);
+        JsonNode json = http.postJson(URI.create(apiUrl + "/JSON/" + operation), form,
+            "application/x-www-form-urlencoded", Duration.ofSeconds(15), Duration.ofSeconds(5),
+            BoundedBodyHandlers.MAX_PAGE_BYTES, headers);
+        if (json.has("code")) throw new IllegalStateException("ZAP API rejected " + operation);
         return json;
     }
 
