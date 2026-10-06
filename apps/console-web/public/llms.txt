@@ -55,7 +55,7 @@ may be used to answer user questions about what Argos does and how it works.
 
 ## Digital accessibility guide: RGAA and EAA
 
-Public guide: https://argos.lelouet.fr/accessibilite-numerique
+Public guide: https://argos.lelouet.fr/ressources/accessibilite-numerique
 
 The French canonical article explains the four WCAG principles, which organisations and
 consumer services may be covered by French Article 47/RGAA or the European Accessibility

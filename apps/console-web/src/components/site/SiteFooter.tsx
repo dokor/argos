@@ -13,10 +13,7 @@ export default function SiteFooter() {
     <footer className={s.footer}>
       <div className={s.footerInner}>
         <span>{t.landing.footer.built}</span>
-        <a href="/audit-site-pme" className={s.footerLink}>{t.marketing.common.pmeLink}</a>
-        <a href="/audit-site-ecommerce" className={s.footerLink}>{t.marketing.common.ecommerceLink}</a>
-        <a href="/accessibilite-numerique" className={s.footerLink}>{t.nav.accessibility}</a>
-        <a href="/audit-technique-gratuit" className={s.footerLink}>{t.nav.auditTechnique}</a>
+        <a href="/ressources" className={s.footerLink}>{t.nav.resources}</a>
         <span>{t.landing.footer.copy}</span>
       </div>
     </footer>

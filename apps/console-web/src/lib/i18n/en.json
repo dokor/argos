@@ -7,7 +7,7 @@
     "logo": "Argos",
     "openConsole": "Open console →",
     "faq": "FAQ",
-    "auditTechnique": "Free technical audit",
+    "resources": "Resources",
     "accessibility": "Accessibility"
   },
   "landing": {
@@ -746,9 +746,6 @@
     "submitting": "Sending…",
     "successPrefix": "Audit created",
     "errorUrlMissing": "URL is missing",
-    "errorInvalidUrl": "Enter a valid public HTTP or HTTPS URL.",
-    "errorRateLimited": "Too many requests right now. Please try again shortly.",
-    "errorSubmit": "The audit could not start. Please try again shortly.",
     "errorUnknown": "Unknown error"
   },
   "auditList": {

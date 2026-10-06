@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://argos.lelouet.fr").replace(/\/+$/, "");
-const pageUrl = `${siteUrl}/audit-technique-gratuit`;
+const pageUrl = `${siteUrl}/ressources/audit-technique-gratuit`;
 const title = "Audit technique gratuit de site web";
 const description = "Analysez une URL publique avec Argos : HTTP, HTML, performance, accessibilité et sécurité. Découvrez la méthode, les limites et recevez un rapport privé.";
 

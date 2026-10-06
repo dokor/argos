@@ -105,7 +105,7 @@ export default function AuditTechniquePage() {
             <p className={s.lead}>{c.lead}</p>
             <div className={s.formPanel} id="audit">
               <h2>{c.formTitle}</h2>
-              <AuditForm mode="public" sourceRoute="/audit-technique-gratuit" />
+              <AuditForm mode="public" sourceRoute="/ressources/audit-technique-gratuit" />
               <p className={s.formHint}>{c.formHint}</p>
             </div>
           </div>
@@ -171,7 +171,7 @@ export default function AuditTechniquePage() {
             <div className={s.links}>
               <Link href="/">{c.homeLink}</Link>
               <Link href="/faq">{c.faqLink}</Link>
-              <Link href="/accessibilite-numerique">{c.accessibilityLink}</Link>
+              <Link href="/ressources/accessibilite-numerique">{c.accessibilityLink}</Link>
             </div>
           </div>
         </section>

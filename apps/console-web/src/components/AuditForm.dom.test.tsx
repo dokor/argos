@@ -53,7 +53,7 @@ describe("AuditForm (soumission d'audit)", () => {
   });
 
   it("refuse une URL publique invalide avec un message accessible", () => {
-    render(<AuditForm mode="public" sourceRoute="/audit-site-pme" />);
+    render(<AuditForm mode="public" sourceRoute="/ressources/audit-site-pme" />);
     const input = screen.getByRole("textbox", { name: "Adresse de la page publique à auditer" });
     fireEvent.change(input, { target: { value: "ftp://example.com" } });
     fireEvent.click(screen.getByRole("button", { name: "Lancer un audit gratuit" }));
@@ -67,7 +67,7 @@ describe("AuditForm (soumission d'audit)", () => {
     vi.mocked(argosApi.createAudit).mockResolvedValue({
       auditId: 1, runId: 2, reportToken: "public-token", status: "QUEUED",
     } as never);
-    render(<AuditForm mode="public" sourceRoute="/audit-site-ecommerce" />);
+    render(<AuditForm mode="public" sourceRoute="/ressources/audit-site-ecommerce" />);
     fireEvent.change(screen.getByRole("textbox"), { target: { value: "shop.example.com" } });
     fireEvent.click(screen.getByRole("button", { name: "Lancer un audit gratuit" }));
 
@@ -79,7 +79,7 @@ describe("AuditForm (soumission d'audit)", () => {
   it("annonce en anglais une erreur de création sans exposer le message serveur", async () => {
     window.localStorage.setItem("argos-lang", "en");
     vi.mocked(argosApi.createAudit).mockRejectedValue(new Error("Service temporarily unavailable"));
-    render(<LangProvider><AuditForm mode="public" sourceRoute="/audit-site-pme" /></LangProvider>);
+    render(<LangProvider><AuditForm mode="public" sourceRoute="/ressources/audit-site-pme" /></LangProvider>);
     await screen.findByRole("button", { name: "Run a free audit" });
     fireEvent.change(screen.getByRole("textbox"), { target: { value: "https://example.com" } });
     fireEvent.click(screen.getByRole("button", { name: "Run a free audit" }));
