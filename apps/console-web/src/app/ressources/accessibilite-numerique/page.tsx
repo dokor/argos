@@ -228,7 +228,7 @@ export default function AccessibilityArticlePage() {
 
   return (
     <div className={s.page}>
-      <SiteNav showFaqLink showAccessibilityLink={false} />
+      <SiteNav showFaqLink />
       <main>
         <header className={s.hero}>
           <div className={s.heroInner}>

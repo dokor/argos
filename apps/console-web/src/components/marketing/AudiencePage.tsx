@@ -14,9 +14,9 @@ export default function AudiencePage({ audience }: { audience: Audience }) {
   const copy = t.marketing[audience];
   const common = t.marketing.common;
   const otherAudience = audience === "pme" ? "ecommerce" : "pme";
-  const otherHref = otherAudience === "pme" ? "/audit-site-pme" : "/audit-site-ecommerce";
+  const otherHref = otherAudience === "pme" ? "/ressources/audit-site-pme" : "/ressources/audit-site-ecommerce";
   const otherLabel = otherAudience === "pme" ? common.pmeLink : common.ecommerceLink;
-  const route = audience === "pme" ? "/audit-site-pme" : "/audit-site-ecommerce";
+  const route = audience === "pme" ? "/ressources/audit-site-pme" : "/ressources/audit-site-ecommerce";
 
   return (
     <div className={s.page}>

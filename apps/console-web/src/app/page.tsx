@@ -285,8 +285,8 @@ export default function LandingPage() {
             <a href="/faq" className={s.navLink}>
               {t.nav.faq}
             </a>
-            <a href="/accessibilite-numerique" className={`${s.navLink} ${s.articleNavLink}`}>
-              {t.nav.accessibility}
+            <a href="/ressources" className={`${s.navLink} ${s.articleNavLink}`}>
+              {t.nav.resources}
             </a>
             <ThemeToggle />
             <LangToggle />
@@ -397,12 +397,12 @@ export default function LandingPage() {
             <p className={s.sectionSub}>{t.marketing.landing.description}</p>
           </div>
           <div className={s.audienceGrid}>
-            <Link href="/audit-site-pme" className={s.audienceCard}>
+            <Link href="/ressources/audit-site-pme" className={s.audienceCard}>
               <h3>{t.marketing.landing.pmeTitle}</h3>
               <p>{t.marketing.landing.pmeDescription}</p>
               <span aria-hidden="true">→</span>
             </Link>
-            <Link href="/audit-site-ecommerce" className={s.audienceCard}>
+            <Link href="/ressources/audit-site-ecommerce" className={s.audienceCard}>
               <h3>{t.marketing.landing.ecommerceTitle}</h3>
               <p>{t.marketing.landing.ecommerceDescription}</p>
               <span aria-hidden="true">→</span>
@@ -428,7 +428,7 @@ export default function LandingPage() {
       <footer className={s.footer}>
         <div className={s.footerInner}>
           <span>{tl.footer.built}</span>
-          <a href="/accessibilite-numerique" className={s.footerLink}>{t.nav.accessibility}</a>
+          <a href="/ressources" className={s.footerLink}>{t.nav.resources}</a>
           <span>{tl.footer.copy}</span>
         </div>
       </footer>
