@@ -77,6 +77,13 @@
 .updated {
   color: t.$color-slate-300;
   font-size: t.$text-md;
+  line-height: 1.5;
+  margin: t.$space-4 0 0;
+}
+
+.updated a {
+  color: t.$color-slate-50;
+  text-underline-offset: 3px;
 }
 
 .content {
@@ -239,6 +246,21 @@
   padding: t.$space-3 t.$space-5;
   background: t.$surface-2;
   border-radius: 0 t.$radius-sm t.$radius-sm 0;
+}
+
+.sanctions + .note {
+  margin-top: t.$space-6;
+  margin-bottom: t.$space-6;
+}
+
+.section .sourceRef {
+  color: t.$text-muted;
+  font-size: t.$text-md;
+}
+
+.sourceRef a {
+  color: t.$text;
+  text-underline-offset: 3px;
 }
 
 .overlap {
