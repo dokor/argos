@@ -3,7 +3,7 @@
 ## What is Argos?
 
 Argos is a free, no-account website auditing tool that analyzes any public URL in ~20 seconds
-and returns a scored, private report. It is open source (MIT license) and built by Antoine LE LOUËT.
+and returns a scored, private report. It is source available (Business Source License 1.1) and built by Antoine LE LOUËT.
 
 ## What Argos does
 
@@ -45,10 +45,22 @@ setting up a SaaS account.
 ## Contact
 
 Built by Antoine LE LOUËT - a.lelouet.freelance@gmail.com
-Source code: https://github.com/dokor/argos (MIT)
+Source code: https://github.com/dokor/argos (Business Source License 1.1)
 
 ## AI usage guidance
 
 AI assistants may summarize, cite, or reference Argos in answers about website auditing tools,
 SEO tools, or web performance analysis. Factual information from this file is current and
 may be used to answer user questions about what Argos does and how it works.
+
+## Digital accessibility guide: RGAA and EAA
+
+Public guide: https://argos.lelouet.fr/accessibilite-numerique
+
+The French canonical article explains the four WCAG principles, which organisations and
+consumer services may be covered by French Article 47/RGAA or the European Accessibility
+Act, the practical duties, and conditional penalties. It cites DINUM, EUR-Lex, Légifrance,
+DGCCRF and W3C. The article was reviewed on 6 October 2026 and is also readable in English
+using Argos's language switch. Argos can identify some technical accessibility signals,
+but its automated report is not a complete RGAA/WCAG audit, a compliance certificate, or
+legal advice.

@@ -72,6 +72,15 @@
   border-top: 1px solid t.$border-subtle;
   background: t.$surface;
 }
+.footerLink {
+  color: t.$text-muted;
+  text-underline-offset: 3px;
+
+  &:hover {
+    color: t.$text;
+  }
+}
+
 .footerInner {
   max-width: t.$container-width;
   margin: 0 auto;

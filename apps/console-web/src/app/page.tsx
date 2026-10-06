@@ -284,6 +284,9 @@ export default function LandingPage() {
             <a href="/faq" className={s.navLink}>
               {t.nav.faq}
             </a>
+            <a href="/accessibilite-numerique" className={`${s.navLink} ${s.articleNavLink}`}>
+              {t.nav.accessibility}
+            </a>
             <ThemeToggle />
             <LangToggle />
             {isAdmin && (
@@ -313,7 +316,7 @@ export default function LandingPage() {
             <p className={s.slogan}>{tl.hero.slogan}</p>
             <p className={s.sub}>{tl.hero.sub}</p>
             <p className={s.audience}>{tl.hero.audience}</p>
-            <div className={s.heroFormWrap}>
+            <div id="audit" className={s.heroFormWrap}>
               <HeroAuditForm t={formT} variant="hero" />
             </div>
           </div>
@@ -402,6 +405,7 @@ export default function LandingPage() {
       <footer className={s.footer}>
         <div className={s.footerInner}>
           <span>{tl.footer.built}</span>
+          <a href="/accessibilite-numerique" className={s.footerLink}>{t.nav.accessibility}</a>
           <span>{tl.footer.copy}</span>
         </div>
       </footer>

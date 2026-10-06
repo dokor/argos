@@ -6,7 +6,8 @@
   "nav": {
     "logo": "Argos",
     "openConsole": "Open console →",
-    "faq": "FAQ"
+    "faq": "FAQ",
+    "accessibility": "Accessibility"
   },
   "landing": {
     "hero": {
