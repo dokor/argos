@@ -79,6 +79,11 @@
   &:hover {
     color: t.$text;
   }
+
+  &:focus-visible {
+    outline: 3px solid t.$color-indigo;
+    outline-offset: 3px;
+  }
 }
 
 .footerInner {
@@ -95,6 +100,25 @@
 }
 
 @media (max-width: 560px) {
+  .navInner {
+    height: auto;
+    min-height: 60px;
+    padding: t.$space-3 t.$space-4;
+    flex-wrap: wrap;
+    gap: t.$space-2;
+  }
+
+  .navRight {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: t.$space-2;
+  }
+
+  .navLink {
+    font-size: t.$text-md;
+  }
+
   .footerInner {
     flex-direction: column;
     text-align: center;
