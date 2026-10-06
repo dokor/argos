@@ -1,6 +1,7 @@
 "use client";
 
 import { useLang } from "@/lib/i18n/LangContext";
+import AuthorCredit from "@/components/AuthorCredit";
 import s from "./SiteChrome.module.scss";
 
 /**
@@ -12,7 +13,7 @@ export default function SiteFooter() {
   return (
     <footer className={s.footer}>
       <div className={s.footerInner}>
-        <span>{t.landing.footer.built}</span>
+        <AuthorCredit className={s.footerLink} />
         <a href="/ressources" className={s.footerLink}>{t.nav.resources}</a>
         <span>{t.landing.footer.copy}</span>
       </div>
