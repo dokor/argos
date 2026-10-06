@@ -85,4 +85,36 @@ class ConfigurationServiceTest {
     void summaryTimeoutHasAMinimumOfFiveSeconds(String value) {
         assertEquals(Duration.ofSeconds(5), service("", Map.of("CODEX_SUMMARY_TIMEOUT_SECONDS", value)).codexSummaryTimeout());
     }
+
+    @Test void externalSettingsPreferHoconThenEnvironmentThenDefaults() {
+        var fallback = service("", Map.of());
+        assertEquals("http://playwright-service:3016", fallback.playwrightServiceUrl());
+        assertEquals(Duration.ofSeconds(60), fallback.lighthouseTimeout());
+        assertEquals("http://zap:8080", fallback.zapApiUrl());
+        assertEquals("https://api.ssllabs.com/api/v3", fallback.sslLabsApiUrl());
+        var legacy = service("", Map.of("PLAYWRIGHT_SERVICE_URL", "http://legacy:3016/",
+            "LIGHTHOUSE_TIMEOUT_SECONDS", "75", "ZAP_API_KEY", "legacy-key"));
+        assertEquals("http://legacy:3016", legacy.playwrightServiceUrl());
+        assertEquals(Duration.ofSeconds(75), legacy.lighthouseTimeout());
+        assertEquals("legacy-key", legacy.zapApiKey());
+        var hocon = service("""
+            external.playwright.url = "http://configured:3016"
+            external.lighthouse.timeout = 80s
+            external.zap.api-key = "configured-key"
+            """, Map.of("PLAYWRIGHT_SERVICE_URL", "http://legacy:3016",
+                "LIGHTHOUSE_TIMEOUT_SECONDS", "75", "ZAP_API_KEY", "legacy-key"));
+        assertEquals("http://configured:3016", hocon.playwrightServiceUrl());
+        assertEquals(Duration.ofSeconds(80), hocon.lighthouseTimeout());
+        assertEquals("configured-key", hocon.zapApiKey());
+    }
+
+    @Test void invalidExternalSettingsFailWithoutEchoingValues() {
+        var badUrl = service("", Map.of("ZAP_API_URL", "synthetic-secret"));
+        var urlError = assertThrows(IllegalArgumentException.class, badUrl::zapApiUrl);
+        assertFalse(urlError.getMessage().contains("synthetic-secret"));
+        assertThrows(IllegalArgumentException.class,
+            () -> service("", Map.of("LIGHTHOUSE_TIMEOUT_SECONDS", "invalid")).lighthouseTimeout());
+        assertThrows(IllegalArgumentException.class,
+            () -> service("external.playwright.timeout = -1s", Map.of()).playwrightTimeout());
+    }
 }
