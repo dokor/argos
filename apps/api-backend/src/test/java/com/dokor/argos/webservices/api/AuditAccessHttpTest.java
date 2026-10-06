@@ -1,12 +1,13 @@
 package com.dokor.argos.webservices.api;
 
 import com.dokor.argos.webservices.api.audits.*;
-import com.dokor.argos.webservices.api.audits.data.CreateAuditResponse;
 import com.dokor.argos.webservices.api.report.ReportsWs;
 import com.dokor.argos.services.configuration.ConfigurationService;
 import com.dokor.argos.services.domain.audit.*;
 import com.dokor.argos.services.domain.report.ReportReadService;
 import com.dokor.argos.db.generated.AuditRun;
+import com.dokor.argos.db.generated.Audit;
+import com.dokor.argos.db.generated.Domain;
 import com.coreoz.plume.jersey.errors.WsJacksonJsonProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
@@ -28,6 +29,7 @@ class AuditAccessHttpTest {
     private static HttpServer server;
     private static String base;
     private static final AuditService AUDITS = mock(AuditService.class);
+    private static final AuditQueryService QUERIES = mock(AuditQueryService.class);
     private static final AuditRunService RUNS = mock(AuditRunService.class);
     private static final HttpClient CLIENT = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1)
         .connectTimeout(java.time.Duration.ofSeconds(5)).build();
@@ -38,7 +40,7 @@ class AuditAccessHttpTest {
         when(settings.adminApiToken()).thenReturn("synthetic-server-credential");
         var json = new WsJacksonJsonProvider(); json.setMapper(MAPPER);
         var config = new ResourceConfig().register(json)
-            .register(new AuditsWs(AUDITS, new AdminReadAccess(settings), mock(ReportReadService.class)))
+            .register(new AuditsWs(AUDITS, QUERIES, new AdminReadAccess(settings), mock(ReportReadService.class)))
             .register(new ReportsWs(mock(ReportReadService.class), RUNS));
         server = GrizzlyHttpServerFactory.createHttpServer(URI.create("http://127.0.0.1:0/"), config, false);
         for (var listener : server.getListeners()) {
@@ -48,7 +50,7 @@ class AuditAccessHttpTest {
         server.start(); base = "http://127.0.0.1:" + server.getListeners().iterator().next().getPort();
     }
     @AfterAll static void stop() { if (server != null) server.shutdownNow(); }
-    @BeforeEach void resetMocks() { reset(AUDITS, RUNS); }
+    @BeforeEach void resetMocks() { reset(AUDITS, QUERIES, RUNS); }
     private HttpResponse<String> get(String path, String header, String value) throws Exception {
         var request = HttpRequest.newBuilder(URI.create(base + path)).timeout(java.time.Duration.ofSeconds(10));
         if (header != null) request.header(header, value);
@@ -60,20 +62,49 @@ class AuditAccessHttpTest {
         assertEquals(401, get(path, "Cookie", "argos_admin=synthetic-server-credential").statusCode());
         assertEquals(401, get(path, "Authorization", "Bearer guessed").statusCode());
         verifyNoInteractions(AUDITS);
+        verifyNoInteractions(QUERIES);
     }
     @Test void validServerCredentialAllowsAdminListAndHistory() throws Exception {
-        when(AUDITS.listAudits(50)).thenReturn(List.of());
-        when(AUDITS.getAuditHistory(1,20)).thenReturn(List.of());
+        when(QUERIES.listAudits(50)).thenReturn(List.of());
+        when(QUERIES.getAuditHistory(1,20)).thenReturn(List.of());
         assertEquals(200, get("/audits", "Authorization", "Bearer synthetic-server-credential").statusCode());
         assertEquals(200, get("/audits/1/history", "Authorization", "Bearer synthetic-server-credential").statusCode());
-        verify(AUDITS).listAudits(50); verify(AUDITS).getAuditHistory(1,20);
+        verify(QUERIES).listAudits(50); verify(QUERIES).getAuditHistory(1,20);
     }
     @Test void publicCreationDoesNotNeedAdminCredential() throws Exception {
-        when(AUDITS.createAudit(any())).thenReturn(new CreateAuditResponse(1L,2L,"QUEUED",Instant.EPOCH,"synthetic-new-token"));
+        when(AUDITS.createAudit(anyString())).thenReturn(
+            new AuditService.CreatedAudit(1L,2L,"QUEUED",Instant.EPOCH,"synthetic-new-token"));
         var request = HttpRequest.newBuilder(URI.create(base + "/audits")).timeout(java.time.Duration.ofSeconds(10)).header("Content-Type","application/json")
             .POST(HttpRequest.BodyPublishers.ofString("{\"url\":\"https://example.com\"}")).build();
         var response = CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals(200,response.statusCode()); assertTrue(response.body().contains("synthetic-new-token"));
+    }
+    @Test void adminRepresentationsKeepFieldsAndPaginationBounds() throws Exception {
+        Audit audit = new Audit();
+        audit.setId(7L); audit.setInputUrl("https://example.com");
+        audit.setNormalizedUrl("https://example.com/"); audit.setCreatedAt(Instant.EPOCH);
+        Domain domain = new Domain(); domain.setHostname("example.com");
+        AuditRun run = new AuditRun();
+        run.setId(42L); run.setAuditId(7L); run.setStatus("COMPLETED");
+        run.setCreatedAt(Instant.EPOCH); run.setResultJson("{}");
+        when(QUERIES.listAudits(200)).thenReturn(List.of(
+            new AuditQueryService.Overview(audit, domain, run, true)));
+        when(QUERIES.getAuditHistory(7, 1)).thenReturn(List.of(
+            new AuditQueryService.History(run, true, 68, null, null, null)));
+        when(QUERIES.getRunStatus(42)).thenReturn(run);
+        String authorization = "Bearer synthetic-server-credential";
+
+        var list = get("/audits?limit=999", "Authorization", authorization);
+        assertEquals(200, list.statusCode());
+        assertEquals("42", MAPPER.readTree(list.body()).get(0).path("runId").asText());
+        assertEquals("/dashboard/report/42",
+            MAPPER.readTree(list.body()).get(0).path("reportUrl").asText());
+        assertTrue(list.headers().firstValue("Cache-Control").orElseThrow().contains("no-store"));
+        var history = get("/audits/7/history?limit=0", "Authorization", authorization);
+        assertEquals(68, MAPPER.readTree(history.body()).get(0).path("globalScore").asInt());
+        assertEquals(200, get("/audits/runs/42", "Authorization", authorization).statusCode());
+        verify(QUERIES).listAudits(200);
+        verify(QUERIES).getAuditHistory(7, 1);
     }
     @Test void unknownTokenIs404AndKnownProgressNeverEchoesCredentialsOrInternals() throws Exception {
         when(RUNS.findByReportToken("unknown")).thenReturn(Optional.empty());

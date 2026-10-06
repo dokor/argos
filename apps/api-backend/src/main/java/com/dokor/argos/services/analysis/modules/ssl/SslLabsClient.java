@@ -3,9 +3,10 @@ package com.dokor.argos.services.analysis.modules.ssl;
 import com.dokor.argos.logging.ExternalServiceCall;
 import com.dokor.argos.services.analysis.AuditDeadline;
 import com.dokor.argos.services.analysis.BoundedBodyHandlers;
+import com.dokor.argos.services.analysis.ExternalHttpClient;
+import com.dokor.argos.services.configuration.ConfigurationService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.typesafe.config.Config;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.slf4j.Logger;
@@ -13,8 +14,6 @@ import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.net.URLEncoder;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
 import java.net.http.HttpTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -23,23 +22,26 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 public class SslLabsClient {
     private static final Logger logger = LoggerFactory.getLogger(SslLabsClient.class);
-    private final HttpClient httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(15)).build();
-    private final ObjectMapper mapper;
+    private final ExternalHttpClient http;
     private final String apiBase;
     private final Duration budget;
     private final Duration initialPoll;
     private final Duration runningPoll;
 
     @Inject
-    public SslLabsClient(ObjectMapper mapper, Config config) {
-        this(mapper, "https://api.ssllabs.com/api/v3",
-            config.hasPath("ssl-labs.timeout") ? config.getDuration("ssl-labs.timeout") : Duration.ofSeconds(90),
+    public SslLabsClient(ExternalHttpClient http, ConfigurationService config) {
+        this(http, config.sslLabsApiUrl(), config.sslLabsTimeout(),
             Duration.ofSeconds(5), Duration.ofSeconds(10));
     }
 
     SslLabsClient(ObjectMapper mapper, String apiBase, Duration budget, Duration initialPoll, Duration runningPoll) {
+        this(new ExternalHttpClient(mapper), apiBase, budget, initialPoll, runningPoll);
+    }
+
+    private SslLabsClient(ExternalHttpClient http, String apiBase, Duration budget,
+                          Duration initialPoll, Duration runningPoll) {
         if (budget.isZero() || budget.isNegative()) throw new IllegalArgumentException("SSL Labs timeout must be positive");
-        this.mapper = mapper;
+        this.http = http;
         this.apiBase = apiBase;
         this.budget = budget;
         this.initialPoll = initialPoll;
@@ -87,26 +89,14 @@ public class SslLabsClient {
     }
 
     private JsonNode get(String url) throws Exception {
-        HttpRequest request = HttpRequest.newBuilder(URI.create(url))
-            .timeout(AuditDeadline.requestTimeout(Duration.ofSeconds(30)))
-            .header("User-Agent", "argos-auditor/1.0").GET().build();
-        java.net.http.HttpResponse<String> response;
         try {
-            response = httpClient.send(request, BoundedBodyHandlers.ofString(BoundedBodyHandlers.MAX_PAGE_BYTES));
-        } catch (java.io.IOException transport) {
-            // The bounded streaming body handler can wrap an HTTP timeout in IOException.
-            Throwable cause = transport;
-            for (int depth = 0; cause != null && depth < 16; depth++, cause = cause.getCause()) {
-                if (cause instanceof HttpTimeoutException timeout) throw timeout;
-            }
-            throw transport;
+            JsonNode result = http.getJson(URI.create(url), Duration.ofSeconds(30), Duration.ofSeconds(15),
+                BoundedBodyHandlers.MAX_PAGE_BYTES, java.util.Map.of());
+            if (result.has("errors")) throw new IllegalStateException("SSL Labs API returned an invalid assessment");
+            return result;
+        } catch (ExternalHttpClient.HttpStatusException status) {
+            if (status.statusCode() == 429) throw new IllegalStateException("SSL Labs API rate limit exceeded (HTTP 429)");
+            throw status;
         }
-        if (response.statusCode() == 429) throw new IllegalStateException("SSL Labs API rate limit exceeded (HTTP 429)");
-        if (response.statusCode() < 200 || response.statusCode() >= 300) {
-            throw new IllegalStateException("SSL Labs API returned HTTP " + response.statusCode());
-        }
-        JsonNode result = mapper.readTree(response.body());
-        if (result == null || result.has("errors")) throw new IllegalStateException("SSL Labs API returned an invalid assessment");
-        return result;
     }
 }

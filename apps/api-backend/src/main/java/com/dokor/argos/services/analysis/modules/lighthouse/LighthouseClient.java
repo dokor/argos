@@ -2,6 +2,9 @@ package com.dokor.argos.services.analysis.modules.lighthouse;
 
 import com.dokor.argos.logging.ExternalServiceCall;
 import com.dokor.argos.services.analysis.BoundedBodyHandlers;
+import com.dokor.argos.services.analysis.ExternalHttpClient;
+import com.dokor.argos.services.analysis.AuditDeadline;
+import com.dokor.argos.services.configuration.ConfigurationService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
@@ -10,9 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.Map;
 
@@ -21,63 +21,31 @@ public class LighthouseClient {
 
     private static final Logger logger = LoggerFactory.getLogger(LighthouseClient.class);
 
-    /** Timeout par défaut alloué à une analyse Lighthouse (surchargeable via LIGHTHOUSE_TIMEOUT_SECONDS). */
-    private static final int DEFAULT_LIGHTHOUSE_TIMEOUT_SECONDS = 60;
-    private static final String DEFAULT_URL_LIGHTHOUSE_SERVICE = "http://lighthouse-service:3017";
-
-    private final HttpClient http;
+    private final ExternalHttpClient http;
     private final ObjectMapper objectMapper;
     private final String baseUrl;
     private final Duration requestTimeout;
 
     @Inject
-    public LighthouseClient(ObjectMapper objectMapper) {
+    public LighthouseClient(ObjectMapper objectMapper, ExternalHttpClient http, ConfigurationService config) {
         this.objectMapper = objectMapper;
-        this.http = HttpClient.newBuilder()
-            .connectTimeout(Duration.ofSeconds(5))
-            .build();
+        this.http = http;
+        this.baseUrl = config.lighthouseServiceUrl();
+        this.requestTimeout = config.lighthouseTimeout();
+    }
 
-        // ex: http://lighthouse-service:3017
-        this.baseUrl = System.getenv().getOrDefault("LIGHTHOUSE_SERVICE_URL", DEFAULT_URL_LIGHTHOUSE_SERVICE);
-        this.requestTimeout = Duration.ofSeconds(
-            parseTimeoutSeconds(System.getenv("LIGHTHOUSE_TIMEOUT_SECONDS"), DEFAULT_LIGHTHOUSE_TIMEOUT_SECONDS));
+    public LighthouseClient(ObjectMapper objectMapper) {
+        this(objectMapper, new ExternalHttpClient(objectMapper),
+            new ConfigurationService(com.typesafe.config.ConfigFactory.empty()));
     }
 
     public JsonNode analyze(String url) throws Exception {
         return ExternalServiceCall.timed(logger, "lighthouse", url, () -> {
             URI endpoint = URI.create(baseUrl + "/analyze");
             String payload = objectMapper.writeValueAsString(Map.of("url", url, "timeoutMs",
-                Math.max(1,com.dokor.argos.services.analysis.AuditDeadline.requestTimeout(requestTimeout).toMillis())));
-
-            HttpRequest req = HttpRequest.newBuilder(endpoint)
-                .timeout(com.dokor.argos.services.analysis.AuditDeadline.requestTimeout(requestTimeout))
-                .header("content-type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(payload))
-                .build();
-
-            HttpResponse<String> res = http.send(req, BoundedBodyHandlers.ofString(BoundedBodyHandlers.MAX_JSON_BYTES));
-
-            if (res.statusCode() < 200 || res.statusCode() >= 300) {
-                throw new IllegalStateException("Lighthouse service error status=" + res.statusCode() + " body=" + truncate(res.body(), 500));
-            }
-
-            return objectMapper.readTree(res.body());
+                Math.max(1, AuditDeadline.requestTimeout(requestTimeout).toMillis())));
+            return http.postJson(endpoint, payload, "application/json", requestTimeout,
+                Duration.ofSeconds(5), BoundedBodyHandlers.MAX_JSON_BYTES, Map.of());
         });
-    }
-
-    private static String truncate(String s, int max) {
-        if (s == null) return null;
-        return s.length() <= max ? s : s.substring(0, max) + "…";
-    }
-
-    /** Parse un timeout (secondes) depuis une variable d'env ; retombe sur la valeur par défaut si absent/invalide. */
-    private static int parseTimeoutSeconds(String value, int defaultSeconds) {
-        if (value == null || value.isBlank()) return defaultSeconds;
-        try {
-            int parsed = Integer.parseInt(value.trim());
-            return parsed > 0 ? parsed : defaultSeconds;
-        } catch (NumberFormatException e) {
-            return defaultSeconds;
-        }
     }
 }

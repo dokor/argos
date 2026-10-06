@@ -11,7 +11,19 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${SITE_URL}/faq`,
     },
     {
-      url: `${SITE_URL}/accessibilite-numerique`,
+      url: `${SITE_URL}/ressources`,
+    },
+    {
+      url: `${SITE_URL}/ressources/audit-site-pme`,
+    },
+    {
+      url: `${SITE_URL}/ressources/audit-site-ecommerce`,
+    },
+    {
+      url: `${SITE_URL}/ressources/accessibilite-numerique`,
+    },
+    {
+      url: `${SITE_URL}/ressources/audit-technique-gratuit`,
     },
   ];
 }

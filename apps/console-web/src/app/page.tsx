@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import Link from "next/link";
 import { useLang } from "@/lib/i18n/LangContext";
 import { createLogger } from "@/lib/logger";
 import { useAuditSubmit } from "@/lib/useAuditSubmit";
@@ -284,8 +285,8 @@ export default function LandingPage() {
             <a href="/faq" className={s.navLink}>
               {t.nav.faq}
             </a>
-            <a href="/accessibilite-numerique" className={`${s.navLink} ${s.articleNavLink}`}>
-              {t.nav.accessibility}
+            <a href="/ressources" className={`${s.navLink} ${s.articleNavLink}`}>
+              {t.nav.resources}
             </a>
             <ThemeToggle />
             <LangToggle />
@@ -388,6 +389,28 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* AUDIENCES */}
+      <section className={s.sectionAlt} aria-labelledby="audiences-title">
+        <div className={s.container}>
+          <div className={s.sectionHeader}>
+            <h2 id="audiences-title" className={s.sectionTitle}>{t.marketing.landing.title}</h2>
+            <p className={s.sectionSub}>{t.marketing.landing.description}</p>
+          </div>
+          <div className={s.audienceGrid}>
+            <Link href="/ressources/audit-site-pme" className={s.audienceCard}>
+              <h3>{t.marketing.landing.pmeTitle}</h3>
+              <p>{t.marketing.landing.pmeDescription}</p>
+              <span aria-hidden="true">→</span>
+            </Link>
+            <Link href="/ressources/audit-site-ecommerce" className={s.audienceCard}>
+              <h3>{t.marketing.landing.ecommerceTitle}</h3>
+              <p>{t.marketing.landing.ecommerceDescription}</p>
+              <span aria-hidden="true">→</span>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* BOTTOM CTA */}
       <section className={s.sectionDark}>
         <div className={s.containerNarrow}>
@@ -405,7 +428,7 @@ export default function LandingPage() {
       <footer className={s.footer}>
         <div className={s.footerInner}>
           <span>{tl.footer.built}</span>
-          <a href="/accessibilite-numerique" className={s.footerLink}>{t.nav.accessibility}</a>
+          <a href="/ressources" className={s.footerLink}>{t.nav.resources}</a>
           <span>{tl.footer.copy}</span>
         </div>
       </footer>
