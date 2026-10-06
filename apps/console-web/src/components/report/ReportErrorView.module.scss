@@ -1,3 +1,5 @@
+@use '../../styles/tokens' as t;
+
 // Page d'erreur dédiée d'un rapport (issue #63), réécrite en SCSS Modules
 // (retrait de Tailwind/shadcn - issue #124). Utilise les tokens sémantiques
 // --argos-* (théma-aware clair/sombre). Rendu identique à la version Tailwind.
@@ -9,7 +11,7 @@
   max-width: 42rem; // max-w-2xl
   flex-direction: column;
   align-items: center;
-  padding: 4rem 1rem; // py-16 px-4
+  padding: t.$section-space t.$page-gutter-mobile;
   text-align: center;
 }
 
@@ -18,7 +20,7 @@
   border: 1px solid var(--argos-border);
   border-radius: 16px; // rounded-2xl
   background: var(--argos-surface);
-  padding: 2rem; // p-8
+  padding: t.$space-8;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04); // shadow-sm
 }
 
@@ -28,22 +30,22 @@
 }
 
 .title {
-  margin-top: 1rem; // mt-4
+  margin-top: t.$space-4;
   font-size: 1.5rem; // text-2xl
   font-weight: 600;
   color: var(--argos-text);
 }
 
 .description {
-  margin-top: 0.5rem; // mt-2
+  margin-top: t.$space-2;
   font-size: 0.875rem; // text-sm
   color: var(--argos-text-muted);
 }
 
 .rerun {
-  margin-top: 2rem; // mt-8
+  margin-top: t.$space-8;
   border-top: 1px solid var(--argos-border);
-  padding-top: 1.5rem; // pt-6
+  padding-top: t.$space-6;
   text-align: left;
 }
 
@@ -54,19 +56,21 @@
 }
 
 .rerunHint {
-  margin-top: 0.25rem; // mt-1
-  margin-bottom: 1rem; // mb-4
+  margin-top: t.$space-1;
+  margin-bottom: t.$space-4;
   font-size: 0.875rem; // text-sm
   color: var(--argos-text-muted);
 }
 
 .backHome {
-  margin-top: 1.5rem; // mt-6
-  display: inline-block;
+  margin-top: t.$space-6;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   border: 1px solid var(--argos-border);
   border-radius: 14px; // rounded-xl
   background: var(--argos-bg);
-  padding: 0.5rem 1rem; // py-2 px-4
+  padding: t.$space-2 t.$space-4;
   font-size: 0.875rem; // text-sm
   font-weight: 600;
   color: var(--argos-text);
@@ -75,4 +79,9 @@
   &:hover {
     background: var(--argos-surface-2); // hover:bg-muted
   }
+}
+
+@media (max-width: 640px) {
+  .wrapper { padding: t.$section-space-mobile t.$page-gutter-mobile; }
+  .card { padding: t.$panel-space-mobile; }
 }

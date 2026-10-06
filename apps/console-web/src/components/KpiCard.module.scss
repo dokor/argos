@@ -4,7 +4,7 @@
   background: t.$surface;
   border: 1px solid var(--card-border, #{t.$border});
   border-radius: t.$radius-2xl;
-  padding: 18px t.$space-5;
+  padding: t.$space-5;
   box-shadow: var(--card-shadow, #{t.$shadow-sm});
   display: grid;
   gap: t.$space-3;

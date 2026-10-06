@@ -113,3 +113,8 @@
 .modelLimit {
   font-size: t.$text-xs;
 }
+
+@media (max-width: 640px) {
+  .section { padding: t.$panel-space-mobile; }
+  .card { padding: t.$panel-space-mobile; }
+}

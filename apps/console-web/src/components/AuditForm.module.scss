@@ -11,7 +11,7 @@
 
 .fieldGroup {
   display: grid;
-  gap: 6px;
+  gap: t.$space-2;
 }
 
 .label {
@@ -21,7 +21,8 @@
 }
 
 .input {
-  padding: 10px;
+  padding: t.$space-3 t.$space-4;
+  min-height: 44px;
   border-radius: t.$radius-md;
   border: 1px solid t.$border;
   background: t.$surface;
@@ -41,7 +42,8 @@
 }
 
 .submitBtn {
-  padding: 10px;
+  padding: t.$space-3 t.$space-4;
+  min-height: 44px;
   border-radius: t.$radius-md;
   border: 1px solid t.$text;
   background: t.$text;
@@ -62,7 +64,7 @@
 }
 
 .successMsg {
-  padding: 10px;
+  padding: t.$space-3;
   border-radius: t.$radius-md;
   background: #eefaf0;
   border: 1px solid #b7e4c7;
@@ -71,7 +73,7 @@
 }
 
 .errorMsg {
-  padding: 10px;
+  padding: t.$space-3;
   border-radius: t.$radius-md;
   background: t.$surface-2;
   border: 1px solid t.$color-red;

@@ -1,17 +1,19 @@
+@use '../../styles/tokens' as t;
+
 .wrapper {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #0f172a;
-  padding: 2rem;
+  padding: t.$space-8;
 }
 
 .card {
   background: #1e293b;
   border: 1px solid #334155;
   border-radius: 16px;
-  padding: 2.5rem 2rem;
+  padding: t.$space-10 t.$space-8;
   max-width: 520px;
   width: 100%;
 }
@@ -21,8 +23,8 @@
 .header {
   display: flex;
   align-items: flex-start;
-  gap: 1rem;
-  margin-bottom: 1.75rem;
+  gap: t.$space-4;
+  margin-bottom: t.$space-7;
 }
 
 .headerIcon {
@@ -36,7 +38,7 @@
   font-size: 1.25rem;
   font-weight: 700;
   color: #f8fafc;
-  margin: 0 0 0.25rem;
+  margin: 0 0 t.$space-1;
 }
 
 .subtitle {
@@ -49,12 +51,12 @@
 .estimate {
   font-size: 0.8125rem;
   color: #64748b;
-  margin: 0.5rem 0 0;
+  margin: t.$space-2 0 0;
 }
 
 .retryLink {
   display: inline-block;
-  margin-top: 0.75rem;
+  margin-top: t.$space-3;
   font-size: 0.875rem;
   font-weight: 600;
   color: #818cf8;
@@ -72,7 +74,7 @@
   background: #334155;
   border-radius: 2px;
   overflow: hidden;
-  margin-bottom: 1.75rem;
+  margin-bottom: t.$space-7;
 }
 
 .progressFill {
@@ -90,14 +92,14 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: t.$space-2;
 }
 
 .moduleRow {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.625rem 0.75rem;
+  gap: t.$space-3;
+  padding: t.$space-3;
   border-radius: 8px;
   background: #0f172a;
   border: 1px solid #1e293b;
@@ -183,7 +185,7 @@
 .placeholder {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: t.$space-2;
 }
 
 .skeletonRow {
@@ -197,4 +199,9 @@
 @keyframes shimmer {
   0%   { background-position: 200% 0; }
   100% { background-position: -200% 0; }
+}
+
+@media (max-width: 640px) {
+  .wrapper { padding: t.$page-gutter-mobile; }
+  .card { padding: t.$panel-space t.$panel-space-mobile; }
 }

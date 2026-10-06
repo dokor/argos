@@ -20,7 +20,7 @@
 .navInner {
   max-width: t.$container-width;
   margin: 0 auto;
-  padding: 0 t.$space-6;
+  padding: 0 t.$page-gutter;
   height: 60px;
   display: flex;
   align-items: center;
@@ -71,7 +71,7 @@
   position: relative;
   background: linear-gradient(135deg, t.$color-navy 0%, t.$color-slate-800 60%, t.$color-navy 100%);
   overflow: hidden;
-  padding: 80px t.$space-6 100px;
+  padding: t.$space-20 t.$page-gutter t.$space-24;
 }
 
 .dotPattern {
@@ -88,9 +88,9 @@
   margin: 0 auto;
   display: flex;
   align-items: flex-start;
-  gap: 48px;
+  gap: t.$space-12;
   flex-wrap: wrap;
-  padding-bottom: 80px;
+  padding-bottom: t.$space-16;
   position: relative;
   z-index: 1;
 }
@@ -199,7 +199,7 @@
   color: t.$color-white;
   border: none;
   border-radius: t.$radius-md;
-  padding: 0 22px;
+  padding: 0 t.$space-6;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
@@ -211,7 +211,7 @@
 }
 
 .hint {
-  margin: 10px 0 0;
+  margin: t.$space-2 0 0;
   font-size: t.$text-base;
   color: t.$color-slate-400;
 }
@@ -229,7 +229,7 @@
   display: flex;
   align-items: center;
   gap: t.$space-3;
-  padding: 14px 18px;
+  padding: t.$space-3 t.$space-4;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: t.$radius-md;
@@ -284,7 +284,7 @@
   justify-content: center;
   flex-wrap: wrap;
   gap: t.$space-2 t.$space-6;
-  padding: 16px t.$space-6;
+  padding: t.$space-4 t.$page-gutter;
   background: t.$surface-2;
   border-bottom: 1px solid t.$border-subtle;
 }
@@ -318,7 +318,7 @@
 .mockHeader {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: t.$space-3;
   margin-bottom: t.$space-4;
 }
 
@@ -365,10 +365,10 @@
 }
 
 .mockChecks {
-  margin-top: 14px;
+  margin-top: t.$space-4;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: t.$space-2;
 }
 
 .mockCheckItem {
@@ -416,16 +416,16 @@
 
 // ─── Sections ─────────────────────────────────────────────────────────────────
 .section {
-  padding: 72px t.$space-6;
+  padding: t.$section-space t.$page-gutter;
 }
 
 .sectionAlt {
-  padding: 72px t.$space-6;
+  padding: t.$section-space t.$page-gutter;
   background: t.$surface-2;
 }
 
 .sectionDark {
-  padding: 72px t.$space-6;
+  padding: t.$section-space t.$page-gutter;
   background: t.$color-navy;
 }
 
@@ -442,7 +442,7 @@
 
 .sectionHeader {
   text-align: center;
-  margin-bottom: 48px;
+  margin-bottom: t.$space-8;
 }
 
 .sectionTitle {
@@ -468,7 +468,7 @@
 
 .sectionSubDark {
   color: t.$color-slate-400;
-  margin-bottom: 28px;
+  margin-bottom: t.$space-7;
   line-height: 1.6;
 }
 
@@ -497,10 +497,10 @@
   background: t.$surface-2;
   border: 1px solid t.$border;
   border-radius: 14px;
-  padding: 22px t.$space-5;
+  padding: t.$panel-space;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: t.$space-3;
 }
 
 .moduleIcon  { font-size: 26px; }
@@ -518,7 +518,7 @@
 
 .stepCard {
   flex: 1 1 200px;
-  padding: 0 t.$space-8;
+  padding: 0 t.$space-6;
   position: relative;
 }
 
@@ -557,7 +557,7 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: t.$space-3;
 }
 
 .whyIcon  { font-size: 24px; }
@@ -612,29 +612,29 @@
 
   // Hero
   .heroSection {
-    padding: 48px t.$space-4 64px;
+    padding: t.$section-space-mobile t.$page-gutter-mobile t.$space-16;
   }
 
   .heroInner {
-    gap: 32px;
-    padding-bottom: 48px;
+    gap: t.$space-8;
+    padding-bottom: t.$space-12;
   }
 
   // Sections
   .section,
   .sectionAlt,
   .sectionDark {
-    padding: 44px t.$space-4;
+    padding: t.$section-space-mobile t.$page-gutter-mobile;
   }
 
   .sectionHeader {
-    margin-bottom: 32px;
+    margin-bottom: t.$space-8;
   }
 
   // Social proof - hide dividers, tighten gap
   .socialProofBar {
     gap: t.$space-2 t.$space-4;
-    padding: 12px t.$space-4;
+    padding: t.$space-3 t.$space-4;
   }
 
   .socialProofDivider {

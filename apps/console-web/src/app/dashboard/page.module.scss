@@ -16,7 +16,7 @@
 .headerInner {
   max-width: t.$dashboard-width;
   margin: 0 auto;
-  padding: 0 t.$space-6;
+  padding: 0 t.$page-gutter;
   height: 56px;
   display: flex;
   align-items: center;
@@ -26,7 +26,7 @@
 .logo {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: t.$space-3;
 }
 
 .logoMark {
@@ -64,15 +64,15 @@
 .main {
   max-width: t.$dashboard-width;
   margin: 0 auto;
-  padding: t.$space-7 t.$space-6;
+  padding: t.$space-8 t.$page-gutter;
   display: grid;
-  gap: t.$space-7;
+  gap: t.$space-8;
 }
 
 .kpiGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
+  gap: t.$space-4;
 }
 
 .sectionLabel {
@@ -85,7 +85,7 @@
 
 .formSection {
   display: grid;
-  gap: 10px;
+  gap: t.$space-3;
 }
 
 // ─── Responsive ───────────────────────────────────────────────────────────────
@@ -97,16 +97,16 @@
 
 @media (max-width: 600px) {
   .headerInner {
-    padding: 0 t.$space-4;
+    padding: 0 t.$page-gutter-mobile;
   }
 
   .main {
-    padding: t.$space-5 t.$space-4;
+    padding: t.$space-5 t.$page-gutter-mobile;
     gap: t.$space-5;
   }
 
   .kpiGrid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    gap: t.$space-3;
   }
 }

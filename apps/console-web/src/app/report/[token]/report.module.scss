@@ -10,9 +10,9 @@
 .main {
   max-width: t.$container-width;
   margin: 0 auto;
-  padding: 40px t.$space-6 64px;
+  padding: t.$space-10 t.$page-gutter t.$space-16;
   display: grid;
-  gap: 28px;
+  gap: t.$space-8;
 }
 
 // ─── Raw data panel ───────────────────────────────────────────────────────────
@@ -20,7 +20,7 @@
   background: t.$surface;
   border: 1px solid t.$border;
   border-radius: t.$radius-2xl;
-  padding: t.$space-6;
+  padding: t.$panel-space;
 
   &[open] .dataChevron { transform: rotate(180deg); }
 }
@@ -66,7 +66,9 @@
 
 @media (max-width: 640px) {
   .main {
-    padding: t.$space-5 t.$space-4 48px;
-    gap: 20px;
+    padding: t.$space-5 t.$page-gutter-mobile t.$space-12;
+    gap: t.$space-5;
   }
+
+  .dataPanel { padding: t.$panel-space-mobile; }
 }

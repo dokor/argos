@@ -140,3 +140,8 @@
   color: t.$text-subtle;
   font-weight: 500;
 }
+
+@media (max-width: 640px) {
+  .section { padding: t.$panel-space-mobile; }
+  .card { padding: t.$panel-space-mobile; }
+}

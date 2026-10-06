@@ -9,7 +9,7 @@
 .hero {
   background: linear-gradient(135deg, t.$color-navy 0%, t.$color-slate-800 100%);
   color: t.$color-slate-50;
-  padding: 76px t.$space-6 80px;
+  padding: t.$section-space t.$page-gutter;
 }
 
 .heroInner {
@@ -57,7 +57,7 @@
   border-radius: t.$radius-sm;
   background: t.$color-slate-50;
   color: t.$color-navy;
-  padding: 13px 20px;
+  padding: t.$space-3 t.$space-5;
   font-size: t.$text-xl;
   font-weight: 700;
   text-decoration: none;
@@ -89,10 +89,10 @@
 .content {
   display: grid;
   grid-template-columns: 215px minmax(0, 1fr);
-  gap: 56px;
+  gap: t.$space-12;
   max-width: t.$container-width;
   margin: 0 auto;
-  padding: 64px t.$space-6 88px;
+  padding: t.$section-space t.$page-gutter t.$space-20;
 }
 
 .toc {
@@ -272,8 +272,8 @@
 }
 
 .ctaBlock {
-  margin: 72px 0;
-  padding: 36px;
+  margin: t.$section-space 0;
+  padding: t.$space-8;
   background: t.$color-navy;
   color: t.$color-slate-50;
   border-radius: t.$radius-xl;
@@ -350,11 +350,11 @@
 
 @media (max-width: 600px) {
   .hero {
-    padding: 52px t.$space-4 60px;
+    padding: t.$section-space-mobile t.$page-gutter-mobile;
   }
 
   .content {
-    padding: 40px t.$space-4 64px;
+    padding: t.$section-space-mobile t.$page-gutter-mobile t.$section-space;
   }
 
   .facts,
@@ -382,7 +382,7 @@
   }
 
   .ctaBlock {
-    margin: 56px 0;
-    padding: t.$space-6;
+    margin: t.$section-space-mobile 0;
+    padding: t.$panel-space-mobile;
   }
 }
