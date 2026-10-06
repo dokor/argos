@@ -4,7 +4,6 @@ import com.coreoz.plume.db.querydsl.transaction.TransactionManagerQuerydsl;
 import com.coreoz.plume.jersey.errors.WsJacksonJsonProvider;
 import com.dokor.argos.db.dao.*;
 import com.dokor.argos.db.generated.*;
-import com.dokor.argos.services.analysis.AuditProcessorService;
 import com.dokor.argos.services.analysis.model.AuditReportJson;
 import com.dokor.argos.services.configuration.ConfigurationService;
 import com.dokor.argos.services.domain.audit.*;
@@ -118,9 +117,10 @@ class AuditPublicationIT extends MariaDbReportFixture {
         var normalizer=mock(UrlNormalizer.class);
         when(normalizer.normalize("https://parallel.example.com")).thenReturn("https://parallel.example.com");
         when(normalizer.extractHostname("https://parallel.example.com")).thenReturn("parallel.example.com");
-        var service=new AuditService(audits,runs,mock(AuditProcessorService.class),normalizer,new DomainService(domains),mapper);
+        var service=new AuditService(audits,runs,normalizer,new DomainService(domains));
         var json=new WsJacksonJsonProvider(); json.setMapper(mapper);
-        var resource=new ResourceConfig().register(json).register(new AuditsWs(service,new AdminReadAccess(mock(ConfigurationService.class)),reader));
+        var resource=new ResourceConfig().register(json).register(new AuditsWs(service,
+            new AuditQueryService(audits,runs,mapper),new AdminReadAccess(mock(ConfigurationService.class)),reader));
         var server=GrizzlyHttpServerFactory.createHttpServer(URI.create("http://127.0.0.1:0/api/"),resource,false);
         for (var listener:server.getListeners()) {
             listener.getTransport().setSelectorRunnersCount(1);

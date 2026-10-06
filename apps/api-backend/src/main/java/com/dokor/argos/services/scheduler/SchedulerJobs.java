@@ -5,7 +5,6 @@ import com.coreoz.wisp.Scheduler;
 import com.coreoz.wisp.schedule.Schedules;
 import com.dokor.argos.services.configuration.ConfigurationService;
 
-import com.dokor.argos.services.domain.audit.AuditService;
 import com.dokor.argos.services.domain.audit.StuckAuditRunReaper;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -21,19 +20,19 @@ public class SchedulerJobs {
 
     private final Scheduler scheduler;
     private final ConfigurationService configurationService;
-    private final AuditService auditService;
+    private final AuditQueueService auditQueueService;
     private final StuckAuditRunReaper stuckAuditRunReaper;
 
     @Inject
     public SchedulerJobs(
         Scheduler scheduler,
         ConfigurationService configurationService,
-        AuditService auditService,
+        AuditQueueService auditQueueService,
         StuckAuditRunReaper stuckAuditRunReaper
     ) {
         this.scheduler = scheduler;
         this.configurationService = configurationService;
-        this.auditService = auditService;
+        this.auditQueueService = auditQueueService;
         this.stuckAuditRunReaper = stuckAuditRunReaper;
     }
 
@@ -60,7 +59,7 @@ public class SchedulerJobs {
 
     private void processAuditQueue() {
         try {
-            boolean processed = auditService.processNextQueuedRun();
+            boolean processed = auditQueueService.processNextQueuedRun();
             if (!processed) {
                 logger.debug("No queued audit run found");
             }

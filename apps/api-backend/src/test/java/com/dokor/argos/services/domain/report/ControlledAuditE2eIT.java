@@ -16,6 +16,7 @@ import com.dokor.argos.services.analysis.scoring.*;
 import com.dokor.argos.services.configuration.ConfigurationService;
 import com.dokor.argos.services.domain.audit.*;
 import com.dokor.argos.services.domain.domain.DomainService;
+import com.dokor.argos.services.scheduler.AuditQueueService;
 import com.dokor.argos.webservices.api.audits.*;
 import com.dokor.argos.webservices.api.report.ReportsWs;
 import com.querydsl.sql.Configuration;
@@ -92,13 +93,14 @@ class ControlledAuditE2eIT extends MariaDbReportFixture {
         var publish=new ReportPublishService(tx,runDao,reports,new PublicReportComposer(),summary,mapper);
         var processor=new AuditProcessorService(runs,auditDao,urls,httpAnalyzer,new HtmlModuleAnalyzer(),new RuntimeModuleAnalyzer(runtime),new LighthouseModuleAnalyzer(lighthouse),new ObservatoryModuleAnalyzer(observatory),new SslLabsModuleAnalyzer(ssl),new ZapModuleAnalyzer(zap),
             new DomainAnalysisService(new DomainAnalysisDao(tx),new TechModuleAnalyzer(new NextJsDetectorService()),mapper),new CheckMergerService(),new ScoreEnricherService(policy),new ScoreService(policy),mapper,publish);
-        var audits=new AuditService(auditDao,runs,processor,urls,new DomainService(new DomainDao(tx)),mapper);
+        var audits=new AuditService(auditDao,runs,urls,new DomainService(new DomainDao(tx)));
+        var queue=new AuditQueueService(runs,processor);
         var settings=mock(ConfigurationService.class);when(settings.adminApiToken()).thenReturn("synthetic-e2e-admin");
         var json=new WsJacksonJsonProvider();json.setMapper(mapper);
-        var api=GrizzlyHttpServerFactory.createHttpServer(URI.create("http://127.0.0.1:8081/api/"),new ResourceConfig().register(json).register(new AuditsWs(audits,new AdminReadAccess(settings),reader)).register(new ReportsWs(reader,runs)),false);
+        var api=GrizzlyHttpServerFactory.createHttpServer(URI.create("http://127.0.0.1:8081/api/"),new ResourceConfig().register(json).register(new AuditsWs(audits,new AuditQueryService(auditDao,runs,mapper),new AdminReadAccess(settings),reader)).register(new ReportsWs(reader,runs)),false);
         for(var listener:api.getListeners()) {listener.getTransport().setSelectorRunnersCount(1);listener.getTransport().setWorkerThreadPoolConfig(ThreadPoolConfig.defaultConfig().setCorePoolSize(4).setMaxPoolSize(8));}api.start();
         var workers=Executors.newScheduledThreadPool(2);var failures=new ConcurrentLinkedQueue<Throwable>();
-        Runnable tick=()->{try{audits.processNextQueuedRun();}catch(Throwable failure){failures.add(failure);}};
+        Runnable tick=()->{try{queue.processNextQueuedRun();}catch(Throwable failure){failures.add(failure);}};
         workers.scheduleWithFixedDelay(tick,3,1,TimeUnit.SECONDS);workers.scheduleWithFixedDelay(tick,3,1,TimeUnit.SECONDS);
         Process browser=null;
         try {
