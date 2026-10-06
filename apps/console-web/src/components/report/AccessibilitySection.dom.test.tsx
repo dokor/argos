@@ -47,11 +47,14 @@ describe("AccessibilitySection (#263)", () => {
     const report = fixture();
     render(<AccessibilitySection report={report} />);
     expect(screen.getByRole("region", { name: fr.report.accessibility.title })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 3, name: fr.report.accessibility.testsTitle })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 3, name: fr.report.accessibility.scopeSectionTitle })).toBeInTheDocument();
     expect(screen.getByText("100/100")).toBeInTheDocument();
     expect(screen.getByText("93/100")).toBeInTheDocument();
     expect(screen.getByText(fr.report.accessibility.riskReasons.RULES_PENDING)).toBeInTheDocument();
     expect(screen.getByText(/EAA potentiellement concerné · Article 47/)).toBeInTheDocument();
-    expect(screen.getByText(/2$/)).toHaveTextContent("À contrôler manuellement : 2");
+    expect(screen.getByRole("group", { name: fr.report.accessibility.resultsTitle })).toHaveTextContent("8contrôles référencés1contrôles en échec1constats affichés");
+    expect(screen.getByText(fr.report.accessibility.statuses.MANUAL).nextElementSibling).toHaveTextContent("2");
     expect(report.issues).toEqual([]);
     expect(report.summary.priorities).toEqual([]);
   });
@@ -87,6 +90,22 @@ describe("AccessibilitySection (#263)", () => {
     render(<AccessibilitySection report={report} />);
     expect(screen.getByText(fr.report.accessibility.scopes.OUT_OF_SCOPE)).toBeInTheDocument();
     expect(screen.getByText(fr.report.accessibility.riskReasons.OUTSIDE_SCOPE)).toBeInTheDocument();
+  });
+  it("shows only persisted evidence, without inventing a regulatory assessment", () => {
+    const report = fixture();
+    delete report.accessibilityCompliance;
+    render(<AccessibilitySection report={report} />);
+    expect(screen.getByRole("heading", { name: fr.report.accessibility.testsTitle })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: fr.report.accessibility.scopeSectionTitle })).not.toBeInTheDocument();
+    expect(screen.queryByText(fr.report.accessibility.riskTitle)).not.toBeInTheDocument();
+  });
+  it("shows a persisted scope without inventing missing technical results", () => {
+    const report = fixture();
+    delete report.accessibilityEvidence;
+    render(<AccessibilitySection report={report} />);
+    expect(screen.getByRole("heading", { name: fr.report.accessibility.scopeSectionTitle })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: fr.report.accessibility.testsTitle })).not.toBeInTheDocument();
+    expect(screen.queryByText(fr.report.accessibility.coverage.UNAVAILABLE)).not.toBeInTheDocument();
   });
   it("supports disclosures, prioritised findings and safe references", async () => {
     const user = userEvent.setup();
@@ -154,7 +173,7 @@ describe("AccessibilitySection (#263)", () => {
     }));
     const { container } = render(<AccessibilitySection report={report} />);
     expect(container.querySelector("img")).toBeNull();
-    expect(container.querySelectorAll("h3").length).toBeGreaterThanOrEqual(50);
+    expect(container.querySelectorAll("h4").length).toBeGreaterThanOrEqual(50);
     expect(report.accessibilityEvidence!.failedAudits).toBe(1);
   });
   it.each(["javascript:alert(1)", "http://www.w3.org/", "https://www.w3.org.evil.test/",

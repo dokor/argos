@@ -7,30 +7,107 @@
   border-radius: t.$radius-2xl;
   padding: t.$space-6;
   overflow-wrap: anywhere;
-  line-height: 1.6;
+  line-height: 1.55;
 }
-.title { margin: 0 0 t.$space-3; font-size: t.$text-2xl; }
-.note { color: t.$text-muted; font-size: t.$text-sm; }
-.facts {
+
+.header {
+  margin-bottom: t.$space-6;
+  p { max-width: 72ch; margin: 0; color: t.$text-muted; }
+}
+.title { margin: 0 0 t.$space-2; font-size: t.$text-2xl; }
+
+.panel {
+  background: t.$surface-2;
+  border: 1px solid t.$border-subtle;
+  border-radius: t.$radius-xl;
+  padding: t.$space-5;
+  & + .panel { margin-top: t.$space-4; }
+}
+.panelHeader {
+  margin-bottom: t.$space-4;
+  h3 { margin: 0 0 t.$space-1; font-size: t.$text-2xl; }
+  p { max-width: 72ch; margin: 0; color: t.$text-muted; font-size: t.$text-md; }
+}
+.facts, .scopeFacts {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
-  gap: t.$space-4;
-  margin: t.$space-5 0;
+  gap: t.$space-3;
+  margin: 0;
+  > div {
+    min-width: 0;
+    padding: t.$space-3 t.$space-4;
+    background: t.$surface;
+    border: 1px solid t.$border;
+    border-radius: t.$radius-md;
+  }
   dt { color: t.$text-muted; font-size: t.$text-sm; }
-  dd { margin: 0; font-weight: 700; }
+  dd { margin: t.$space-1 0 0; font-size: t.$text-lg; font-weight: 700; }
 }
-.statuses { display: flex; flex-wrap: wrap; gap: t.$space-4; list-style: none; padding: 0; }
+.facts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.scopeFacts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.results {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: t.$space-3;
+  margin: t.$space-5 0 t.$space-2;
+  p { margin: 0; display: flex; align-items: baseline; gap: t.$space-2; }
+  strong { font-size: t.$text-3xl; line-height: 1; }
+  span { color: t.$text-muted; font-size: t.$text-sm; }
+}
+.note { color: t.$text-muted; font-size: t.$text-sm; }
+.subheading { margin: t.$space-5 0 t.$space-2; font-size: t.$text-md; }
+.statuses {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: t.$space-2 t.$space-4;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  li { display: flex; justify-content: space-between; gap: t.$space-2; padding: t.$space-2 0; border-bottom: 1px solid t.$border-subtle; font-size: t.$text-md; }
+  strong { white-space: nowrap; }
+}
+.notice {
+  margin: t.$space-4 0 0;
+  padding: t.$space-3 t.$space-4;
+  background: t.$surface;
+  border-left: 3px solid t.$text-muted;
+  border-radius: t.$radius-sm;
+  font-size: t.$text-md;
+}
 .details {
-  margin-top: t.$space-4;
+  margin-top: t.$space-5;
   border-top: 1px solid t.$border;
   padding-top: t.$space-3;
-  summary { cursor: pointer; font-weight: 700; }
+  summary { cursor: pointer; font-weight: 700; font-size: t.$text-md; }
+  summary:hover { text-decoration: underline; text-underline-offset: 3px; }
   summary:focus-visible, a:focus-visible { outline: 2px solid t.$text; outline-offset: 4px; }
+  h4 { margin: t.$space-4 0 t.$space-2; font-size: t.$text-lg; }
+  ul { margin: t.$space-2 0; padding-left: t.$space-5; }
+  li + li { margin-top: t.$space-2; }
 }
 .findings {
-  padding-left: t.$space-5;
-  li + li { margin-top: t.$space-5; }
-  h3 { font-size: t.$text-lg; margin-bottom: t.$space-2; }
+  list-style: none;
+  padding: 0 !important;
+  li { padding: t.$space-4 0; }
+  li + li { border-top: 1px solid t.$border; margin-top: 0; }
+  h4 { margin-top: 0; }
   p { margin: t.$space-1 0; }
 }
-@media (max-width: 480px) { .section { padding: t.$space-4; } }
+.footer {
+  margin-top: t.$space-5;
+  border-top: 1px solid t.$border;
+  padding-top: t.$space-3;
+  color: t.$text-muted;
+  font-size: t.$text-sm;
+  p { margin: t.$space-2 0 0; }
+}
+.versions { color: t.$text-subtle; }
+@media (max-width: 700px) {
+  .facts, .scopeFacts { grid-template-columns: 1fr; }
+  .statuses { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 480px) {
+  .section { padding: t.$space-4; }
+  .panel { padding: t.$space-4; }
+  .results { grid-template-columns: 1fr; gap: t.$space-2; }
+  .statuses { grid-template-columns: 1fr; }
+}
