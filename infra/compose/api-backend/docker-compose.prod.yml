@@ -26,6 +26,7 @@ services:
       - CODEX_SUMMARY_ENABLED=${CODEX_SUMMARY_ENABLED:-true}
       - CODEX_SUMMARY_SERVICE_URL=http://codex-summary:3010
       - CODEX_SUMMARY_TIMEOUT_SECONDS=${CODEX_SUMMARY_TIMEOUT_SECONDS:-45}
+      - AHREFS_API_KEY=${AHREFS_API_KEY:-}
     depends_on:
       zap:
         condition: service_healthy

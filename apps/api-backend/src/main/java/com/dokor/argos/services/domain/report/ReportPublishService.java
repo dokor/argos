@@ -21,20 +21,28 @@ public class ReportPublishService {
     private final AuditReportDao reports;
     private final PublicReportComposer composer;
     private final AiReportSummaryService summaries;
+    private final AhrefsDomainRatingClient domainRatings;
     private final ObjectMapper mapper;
 
     @Inject
     public ReportPublishService(TransactionManagerQuerydsl transactions, AuditRunDao runs,
-        AuditReportDao reports, PublicReportComposer composer, AiReportSummaryService summaries, ObjectMapper mapper) {
+        AuditReportDao reports, PublicReportComposer composer, AiReportSummaryService summaries,
+        AhrefsDomainRatingClient domainRatings, ObjectMapper mapper) {
         this.transactions = transactions; this.runs = runs; this.reports = reports;
-        this.composer = composer; this.summaries = summaries; this.mapper = mapper;
+        this.composer = composer; this.summaries = summaries; this.domainRatings = domainRatings; this.mapper = mapper;
     }
 
     public long completeAndPublish(long runId, Audit audit, AuditReportJson internal,
                                    String resultJson, String claimToken) {
         if (claimToken == null || claimToken.isBlank()) throw new IllegalArgumentException("Missing worker claim");
         // Composition, remote AI enrichment and serialization precede the database lock.
-        ReportDto dto = summaries.enrich(composer.compose(internal));
+        ReportDto composed = summaries.enrich(composer.compose(internal));
+        ReportDto.DomainRating rating = domainRatings.get(composed.domain());
+        ReportDto.Site site = composed.site();
+        ReportDto dto = new ReportDto(composed.generatedAt(), composed.domain(), composed.url(),
+            new ReportDto.Site(site == null ? null : site.title(), site == null ? null : site.logoUrl(), rating),
+            composed.scores(), composed.summary(), composed.issues(), composed.tech(), composed.antiBot(),
+            composed.accessibilityEvidence(), composed.accessibilityCompliance());
         AuditReport entity = new AuditReport();
         entity.setAuditId(audit.getId()); entity.setRunId(runId);
         entity.setDomain(Urls.host(audit.getNormalizedUrl(), audit.getNormalizedUrl()));

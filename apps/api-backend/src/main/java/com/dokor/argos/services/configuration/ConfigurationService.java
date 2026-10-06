@@ -100,6 +100,11 @@ public class ConfigurationService {
         return Boolean.parseBoolean(environment.getOrDefault("CODEX_SUMMARY_ENABLED", "false"));
     }
 
+    /** Optional key for Ahrefs' free Domain Rating endpoint. */
+    public String ahrefsApiKey() {
+        return environment.getOrDefault("AHREFS_API_KEY", "");
+    }
+
     public String codexSummaryServiceUrl() {
         return environment.getOrDefault("CODEX_SUMMARY_SERVICE_URL", "http://codex-summary:3010");
     }

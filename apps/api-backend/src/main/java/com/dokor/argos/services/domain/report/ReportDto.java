@@ -26,7 +26,14 @@ public record ReportDto(
                      AccessibilityEvidence accessibilityEvidence) {
         this(generatedAt, domain, url, site, scores, summary, issues, tech, antiBot, accessibilityEvidence, null);
     }
-    public record Site(String title, String logoUrl) {
+    public record Site(String title, String logoUrl, DomainRating domainRating) {
+        public Site(String title, String logoUrl) {
+            this(title, logoUrl, null);
+        }
+    }
+
+    /** Ahrefs backlink metric, separate from the Argos audit score. */
+    public record DomainRating(double score, String fetchedAt) {
     }
 
     /** Signale une protection anti-bot (Cloudflare…) : l'analyse peut être partielle. */

@@ -519,6 +519,8 @@
         "low": "De grosses opportunités : corriger les points critiques pour améliorer confiance et conversion."
       },
       "analyzedAt": "Analysé",
+      "domainRatingFetchedAt": "mesuré le",
+      "domainRatingTooltip": "Domain Rating d’Ahrefs : popularité relative du profil de liens du domaine, distincte du score d’audit Argos.",
       "relaunch": "Relancer l'analyse",
       "relaunching": "Relance en cours…",
       "relaunchError": "Échec de la relance. Réessayez.",

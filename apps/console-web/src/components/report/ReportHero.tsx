@@ -69,6 +69,9 @@ export default function ReportHero({ report }: { report: Report }) {
   };
 
   const techs = techLabels(report.tech);
+  const domainRating = report.site?.domainRating;
+  const hasDomainRating = domainRating != null && Number.isFinite(domainRating.score)
+    && domainRating.score >= 0 && domainRating.score <= 100;
   const scoreUiLabel =
     score >= 85 ? th.scoreLabels.excellent :
     score >= 70 ? th.scoreLabels.good :
@@ -102,6 +105,17 @@ export default function ReportHero({ report }: { report: Report }) {
               {techs.map((tl) => (
                 <span key={tl} className={s.techPill}>{tl}</span>
               ))}
+              {hasDomainRating && (
+                <span className={s.domainRating} title={th.domainRatingTooltip}>
+                  <strong>DR {Math.round(domainRating.score)}/100</strong>
+                  <span>· {th.domainRatingFetchedAt} <time dateTime={domainRating.fetchedAt}>
+                    {formatDate(domainRating.fetchedAt, th.locale)}
+                  </time></span>
+                  <a href="https://ahrefs.com/" target="_blank" rel="noopener noreferrer">
+                    Domain Rating by Ahrefs
+                  </a>
+                </span>
+              )}
             </div>
 
             {available && !report.scores.coverage?.provisional && report.summary?.oneLiner && (

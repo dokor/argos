@@ -50,7 +50,7 @@ abstract class MariaDbReportFixture {
         var composer = mock(PublicReportComposer.class); var summary = mock(AiReportSummaryService.class);
         var dto = mapper.readValue("{\"domain\":\"example.com\"}",ReportDto.class);
         when(composer.compose(any())).thenReturn(dto); when(summary.enrich(any())).thenAnswer(call -> call.getArgument(0));
-        publisher = new ReportPublishService(transactions,new AuditRunDao(transactions),reports,composer,summary,mapper);
+        publisher = new ReportPublishService(transactions,new AuditRunDao(transactions),reports,composer,summary,org.mockito.Mockito.mock(AhrefsDomainRatingClient.class),mapper);
     }
     protected void sql(String text) throws Exception { try(var connection=source.getConnection();var statement=connection.createStatement()){statement.execute(text);} }
     protected void legacyReport(long id,long run,String token,boolean expired) throws Exception {

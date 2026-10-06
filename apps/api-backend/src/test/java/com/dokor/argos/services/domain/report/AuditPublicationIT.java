@@ -36,7 +36,7 @@ class AuditPublicationIT extends MariaDbReportFixture {
         var composer = mock(PublicReportComposer.class); var summary = mock(AiReportSummaryService.class);
         when(composer.compose(any())).thenReturn(mapper.readValue("{\"domain\":\"example.com\"}", ReportDto.class));
         when(summary.enrich(any())).thenAnswer(call -> call.getArgument(0));
-        return new ReportPublishService(transactions(),runDao,reportDao,composer,summary,mapper);
+        return new ReportPublishService(transactions(),runDao,reportDao,composer,summary,mock(AhrefsDomainRatingClient.class),mapper);
     }
     private Audit audit() { var audit = new Audit(); audit.setId(1L); audit.setNormalizedUrl("https://example.com"); return audit; }
     private com.dokor.argos.services.domain.audit.model.QueuedRun claimedRun() throws Exception {

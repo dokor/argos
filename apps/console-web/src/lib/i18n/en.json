@@ -519,6 +519,8 @@
         "low": "Big opportunities: fixing critical issues will improve trust and conversion."
       },
       "analyzedAt": "Analyzed",
+      "domainRatingFetchedAt": "measured on",
+      "domainRatingTooltip": "Ahrefs Domain Rating: relative strength of the domain’s backlink profile, separate from the Argos audit score.",
       "relaunch": "Re-run analysis",
       "relaunching": "Re-running…",
       "relaunchError": "Re-run failed. Please try again.",
