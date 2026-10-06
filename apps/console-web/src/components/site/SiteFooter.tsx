@@ -13,6 +13,7 @@ export default function SiteFooter() {
     <footer className={s.footer}>
       <div className={s.footerInner}>
         <span>{t.landing.footer.built}</span>
+        <a href="/accessibilite-numerique" className={s.footerLink}>{t.nav.accessibility}</a>
         <span>{t.landing.footer.copy}</span>
       </div>
     </footer>

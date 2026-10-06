@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       {
-        // Standard crawlers: index only the public landing page.
+        // Standard crawlers: index public pages, including FAQ and accessibility guide.
         userAgent: "*",
         allow: "/",
         disallow: [

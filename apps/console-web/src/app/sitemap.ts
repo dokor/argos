@@ -29,5 +29,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
         },
       },
     },
+    {
+      url: `${SITE_URL}/accessibilite-numerique`,
+      lastModified: new Date("2026-10-06"),
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
   ];
 }

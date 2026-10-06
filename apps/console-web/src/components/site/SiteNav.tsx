@@ -11,13 +11,14 @@ import s from "./SiteChrome.module.scss";
 type Props = {
   /** Affiche le lien vers la FAQ (masqué sur la page FAQ elle-même). */
   showFaqLink?: boolean;
+  showAccessibilityLink?: boolean;
 };
 
 /**
  * Barre de navigation partagée des pages marketing (`not-found`, `faq`) — issue #143.
  * La landing conserve sa propre nav (rendu distinct : logo, fond thématisé).
  */
-export default function SiteNav({ showFaqLink = false }: Props) {
+export default function SiteNav({ showFaqLink = false, showAccessibilityLink = true }: Props) {
   const { t } = useLang();
   const isAdmin = useIsAdmin();
 
@@ -32,6 +33,11 @@ export default function SiteNav({ showFaqLink = false }: Props) {
           {showFaqLink && (
             <a href="/faq" className={s.navLink}>
               {t.nav.faq}
+            </a>
+          )}
+          {showAccessibilityLink && (
+            <a href="/accessibilite-numerique" className={s.navLink}>
+              {t.nav.accessibility}
             </a>
           )}
           <ThemeToggle />
