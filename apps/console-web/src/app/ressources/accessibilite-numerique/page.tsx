@@ -44,9 +44,11 @@ const copy = {
     eyebrow: "Guide · Accessibilité numérique",
     title: "RGAA et EAA : comprendre les obligations d’accessibilité numérique",
     lead: "Un site accessible permet à chacun de lire, naviguer et utiliser un service, y compris avec un clavier, un lecteur d’écran ou un affichage agrandi. En France, le RGAA et l’European Accessibility Act (EAA) définissent des obligations distinctes selon l’organisme et le service.",
-    updated: "Par Antoine LE LOUËT · Mis à jour le 6 octobre 2026",
+    byline: "Par",
+    updated: "Mis à jour le 6 octobre 2026",
     jump: "Dans cet article",
     toc: [
+      ["difference", "RGAA ou EAA ?"],
       ["principes", "Les grands principes"],
       ["rgaa", "Qui est concerné par le RGAA ?"],
       ["eaa", "Qui est concerné par l’EAA ?"],
@@ -60,6 +62,13 @@ const copy = {
       { value: "4.1.2", label: "version du RGAA publiée à la date de cet article" },
       { value: "28 juin 2025", label: "application de l’EAA aux services visés fournis aux consommateurs" },
     ],
+    differenceTitle: "RGAA ou EAA : quelle différence ?",
+    differenceText: "Le RGAA sert à contrôler l’accessibilité des services en ligne soumis à l’article 47 en France. L’EAA encadre certains produits et services destinés aux consommateurs dans l’Union européenne, dont le commerce électronique. Un organisme peut relever des deux cadres : il faut examiner son statut et le service proposé.",
+    sourceLabel: "Sources :",
+    rgaaReference: "Champ d’application du RGAA",
+    eaaReference: "Directive (UE) 2019/882",
+    article47Reference: "Article 47-1",
+    dgccrfReference: "Fiche DGCCRF",
     principlesTitle: "Les quatre principes d’un site accessible",
     principlesIntro: "Les règles internationales WCAG organisent l’accessibilité autour de quatre principes. Le RGAA fournit, en France, une méthode de contrôle détaillée ; son édition 4.1.2 compte 106 critères.",
     principles: [
@@ -100,7 +109,7 @@ const copy = {
       { title: "Article 47 / RGAA", text: "Après mise en demeure, l’Arcom peut prononcer jusqu’à 50 000 € pour le non-respect de l’obligation d’accessibilité des organismes visés aux 1° à 3° de l’article 47. Le plafond est de 25 000 € pour les obligations de publication visées aux III et IV, selon le périmètre de l’article 47-1." },
       { title: "EAA / code de la consommation", text: "La DGCCRF peut enjoindre la mise en conformité, parfois avec astreinte et publicité. Les infractions aux obligations d’accessibilité prévues par le code de la consommation peuvent relever de contraventions de 5e classe ; la DGCCRF indique des amendes de 7 500 € pour les personnes morales, cumulables selon les infractions constatées." },
     ],
-    sanctionsNote: "Ces plafonds sont contextuels et ne constituent pas une prédiction de sanction pour votre site. Des règles sectorielles ou situations particulières peuvent aussi s’appliquer.",
+    sanctionsNote: "Une anomalie repérée par Argos ne vaut pas infraction constatée. Les montants ci-dessus sont des plafonds, appliqués selon la procédure propre à chaque régime.",
     actionTitle: "Par où commencer ?",
     actionIntro: "Commencez par identifier l’organisme, le service proposé, les utilisateurs visés et les textes applicables. Réalisez ensuite un audit de conformité sur un échantillon représentatif, corrigez les parcours bloquants et retestez avec des personnes concernées.",
     actionSteps: [
@@ -125,9 +134,11 @@ const copy = {
     eyebrow: "Guide · Digital accessibility",
     title: "RGAA and EAA: understanding digital accessibility obligations",
     lead: "An accessible website lets everyone read, navigate and use a service, including with a keyboard, screen reader or enlarged display. In France, the RGAA and the European Accessibility Act (EAA) create distinct obligations depending on the organisation and service.",
-    updated: "By Antoine LE LOUËT · Updated 6 October 2026",
+    byline: "By",
+    updated: "Updated 6 October 2026",
     jump: "In this article",
     toc: [
+      ["difference", "RGAA or EAA?"],
       ["principes", "The four principles"],
       ["rgaa", "Who is covered by the RGAA?"],
       ["eaa", "Who is covered by the EAA?"],
@@ -141,6 +152,13 @@ const copy = {
       { value: "4.1.2", label: "current published RGAA version at the date of this article" },
       { value: "28 June 2025", label: "EAA application to covered consumer services" },
     ],
+    differenceTitle: "RGAA or EAA: what is the difference?",
+    differenceText: "The RGAA is the French method for checking the accessibility of online services covered by Article 47. The EAA sets requirements for certain consumer products and services across the European Union, including e-commerce. An organisation may fall under both frameworks, so its status and the service it provides need to be assessed.",
+    sourceLabel: "Sources:",
+    rgaaReference: "RGAA scope",
+    eaaReference: "Directive (EU) 2019/882",
+    article47Reference: "Article 47-1",
+    dgccrfReference: "DGCCRF guidance",
     principlesTitle: "The four principles of an accessible site",
     principlesIntro: "The international WCAG guidelines organise accessibility around four principles. In France, the RGAA provides a detailed testing method; version 4.1.2 has 106 criteria.",
     principles: [
@@ -181,7 +199,7 @@ const copy = {
       { title: "Article 47 / RGAA", text: "After formal notice, Arcom may impose up to €50,000 for breaching the accessibility obligation on bodies covered by points 1 to 3 of Article 47. The cap is €25,000 for publication obligations under paragraphs III and IV, within the scope set by Article 47-1." },
       { title: "EAA / French Consumer Code", text: "The DGCCRF can order compliance, sometimes with a daily penalty and publication. Breaches of accessibility duties under the Consumer Code can be class 5 offences; the DGCCRF cites €7,500 fines for legal entities, which may accumulate according to the offences found." },
     ],
-    sanctionsNote: "These figures are contextual ceilings, not a prediction for your site. Sector rules and particular circumstances may also apply.",
+    sanctionsNote: "An issue found by Argos is not a legally established offence. The amounts above are ceilings, applied under the procedure specific to each framework.",
     actionTitle: "Where should you start?",
     actionIntro: "First identify the organisation, the service, its intended users and applicable legislation. Then conduct a conformance audit on a representative sample, fix blocking journeys and retest with affected users.",
     actionSteps: [
@@ -210,16 +228,18 @@ export default function AccessibilityArticlePage() {
 
   return (
     <div className={s.page}>
-      <SiteNav showFaqLink showAccessibilityLink={false} />
+      <SiteNav showFaqLink />
       <main>
         <header className={s.hero}>
           <div className={s.heroInner}>
             <p className={s.eyebrow}>{c.eyebrow}</p>
             <h1>{c.title}</h1>
             <p className={s.lead}>{c.lead}</p>
+            <p className={s.updated}>
+              {c.byline} <a href="https://www.linkedin.com/in/antoinelelouet/">Antoine LE LOUËT</a> · <time dateTime="2026-10-06">{c.updated}</time>
+            </p>
             <div className={s.heroActions}>
               <Link href="/#audit" className={s.primaryCta}>{c.ctaButton} <span aria-hidden="true">→</span></Link>
-              <span className={s.updated}>{c.updated}</span>
             </div>
           </div>
         </header>
@@ -240,6 +260,12 @@ export default function AccessibilityArticlePage() {
               ))}
             </div>
 
+            <section id="difference" className={s.section}>
+              <h2>{c.differenceTitle}</h2>
+              <p>{c.differenceText}</p>
+              <p className={s.sourceRef}>{c.sourceLabel} <a href="https://accessibilite.numerique.gouv.fr/obligations/champ-application/">{c.rgaaReference}</a> · <a href="https://eur-lex.europa.eu/legal-content/FR/TXT/?uri=CELEX:32019L0882">{c.eaaReference}</a></p>
+            </section>
+
             <section id="principes" className={s.section}>
               <h2>{c.principlesTitle}</h2>
               <p>{c.principlesIntro}</p>
@@ -259,6 +285,7 @@ export default function AccessibilityArticlePage() {
               <p>{c.rgaaIntro}</p>
               <ul>{c.rgaaItems.map((item) => <li key={item}>{item}</li>)}</ul>
               <p className={s.note}>{c.rgaaNote}</p>
+              <p className={s.sourceRef}>{c.sourceLabel} <a href="https://accessibilite.numerique.gouv.fr/obligations/champ-application/">{c.rgaaReference}</a></p>
             </section>
 
             <section id="eaa" className={s.section}>
@@ -267,6 +294,7 @@ export default function AccessibilityArticlePage() {
               <ul>{c.eaaItems.map((item) => <li key={item}>{item}</li>)}</ul>
               <p className={s.note}>{c.eaaNote}</p>
               <p className={s.overlap}>{c.overlap}</p>
+              <p className={s.sourceRef}>{c.sourceLabel} <a href="https://eur-lex.europa.eu/legal-content/FR/TXT/?uri=CELEX:32019L0882">{c.eaaReference}</a></p>
             </section>
 
             <section id="obligations" className={s.section}>
@@ -293,6 +321,7 @@ export default function AccessibilityArticlePage() {
                 ))}
               </div>
               <p className={s.note}>{c.sanctionsNote}</p>
+              <p className={s.sourceRef}>{c.sourceLabel} <a href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000048050174">{c.article47Reference}</a> · <a href="https://www.economie.gouv.fr/dgccrf/les-fiches-pratiques/professionnels-vos-produits-et-services-doivent-etre-conformes-la-directive-accessibilite">{c.dgccrfReference}</a></p>
             </section>
 
             <section id="agir" className={s.section}>

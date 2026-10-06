@@ -29,8 +29,10 @@
   font-size: t.$text-lg;
   outline: none;
 
-  &:focus {
+  &:focus-visible {
     border-color: t.$color-indigo;
+    outline: 3px solid t.$color-indigo-muted;
+    outline-offset: 2px;
   }
 
   &:disabled {
@@ -52,6 +54,11 @@
     opacity: 0.6;
     cursor: not-allowed;
   }
+
+  &:focus-visible {
+    outline: 3px solid t.$color-indigo;
+    outline-offset: 3px;
+  }
 }
 
 .successMsg {
@@ -66,8 +73,27 @@
 .errorMsg {
   padding: 10px;
   border-radius: t.$radius-md;
-  background: #fff0f0;
-  border: 1px solid #f2b8b5;
+  background: t.$surface-2;
+  border: 1px solid t.$color-red;
   font-size: t.$text-md;
-  color: t.$color-red;
+  color: t.$text;
+}
+
+.publicForm {
+  max-width: 660px;
+  padding: t.$space-6;
+  box-shadow: t.$shadow-md;
+}
+
+.statusMsg,
+.hint {
+  color: t.$text-muted;
+  font-size: t.$text-base;
+  line-height: 1.5;
+}
+
+@media (max-width: 600px) {
+  .publicForm {
+    padding: t.$space-4;
+  }
 }

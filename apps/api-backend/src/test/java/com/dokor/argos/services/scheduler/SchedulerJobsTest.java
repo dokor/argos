@@ -3,7 +3,6 @@ package com.dokor.argos.services.scheduler;
 import com.coreoz.wisp.Scheduler;
 import com.coreoz.wisp.schedule.Schedule;
 import com.dokor.argos.services.configuration.ConfigurationService;
-import com.dokor.argos.services.domain.audit.AuditService;
 import com.dokor.argos.services.domain.audit.StuckAuditRunReaper;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -14,7 +13,7 @@ import static org.mockito.Mockito.*;
 class SchedulerJobsTest {
     private final Scheduler scheduler = mock(Scheduler.class);
     private final ConfigurationService configuration = mock(ConfigurationService.class);
-    private final AuditService audits = mock(AuditService.class);
+    private final AuditQueueService audits = mock(AuditQueueService.class);
     private final StuckAuditRunReaper reaper = mock(StuckAuditRunReaper.class);
 
     private Runnable job(String name) {

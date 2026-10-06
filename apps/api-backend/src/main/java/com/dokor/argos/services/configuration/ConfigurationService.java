@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.net.URI;
 import java.util.Map;
 
 @Singleton
@@ -111,5 +112,80 @@ public class ConfigurationService {
         } catch (NumberFormatException e) {
             return Duration.ofSeconds(45);
         }
+    }
+
+    // External services: explicit HOCON setting > existing environment variable > default.
+    // An invalid selected value is an error, never a silent fallback.
+    public String playwrightServiceUrl() {
+        return externalUrl("external.playwright.url", "PLAYWRIGHT_SERVICE_URL", "http://playwright-service:3016");
+    }
+
+    public Duration playwrightTimeout() {
+        return externalDuration("external.playwright.timeout", "PLAYWRIGHT_TIMEOUT_SECONDS", Duration.ofSeconds(60));
+    }
+
+    public String lighthouseServiceUrl() {
+        return externalUrl("external.lighthouse.url", "LIGHTHOUSE_SERVICE_URL", "http://lighthouse-service:3017");
+    }
+
+    public Duration lighthouseTimeout() {
+        return externalDuration("external.lighthouse.timeout", "LIGHTHOUSE_TIMEOUT_SECONDS", Duration.ofSeconds(60));
+    }
+
+    public String zapApiUrl() {
+        return externalUrl("external.zap.url", "ZAP_API_URL", "http://zap:8080");
+    }
+
+    public String zapApiKey() {
+        return config.hasPath("external.zap.api-key") ? config.getString("external.zap.api-key")
+            : environment.getOrDefault("ZAP_API_KEY", "");
+    }
+
+    public String sslLabsApiUrl() {
+        return externalUrl("external.ssl-labs.url", null, "https://api.ssllabs.com/api/v3");
+    }
+
+    public Duration sslLabsTimeout() {
+        return externalDuration("external.ssl-labs.timeout", null,
+            config.hasPath("ssl-labs.timeout") ? config.getDuration("ssl-labs.timeout") : Duration.ofSeconds(90));
+    }
+
+    public String observatoryApiUrl() {
+        return externalUrl("external.observatory.url", null, "https://observatory-api.mdn.mozilla.net/api/v2");
+    }
+
+    private String externalUrl(String path, String envKey, String fallback) {
+        String value = config.hasPath(path) ? config.getString(path)
+            : envKey == null ? fallback : environment.getOrDefault(envKey, fallback);
+        try {
+            URI uri = URI.create(value);
+            if (!("http".equalsIgnoreCase(uri.getScheme()) || "https".equalsIgnoreCase(uri.getScheme()))
+                || uri.getHost() == null || uri.getUserInfo() != null
+                || uri.getQuery() != null || uri.getFragment() != null) {
+                throw new IllegalArgumentException();
+            }
+            return value.replaceAll("/+$", "");
+        } catch (IllegalArgumentException invalid) {
+            throw new IllegalArgumentException("Invalid external service URL: " + path, invalid);
+        }
+    }
+
+    private Duration externalDuration(String path, String envKey, Duration fallback) {
+        Duration value;
+        if (config.hasPath(path)) {
+            value = config.getDuration(path);
+        } else if (envKey != null && environment.containsKey(envKey)) {
+            try {
+                value = Duration.ofSeconds(Long.parseLong(environment.get(envKey).trim()));
+            } catch (RuntimeException invalid) {
+                throw new IllegalArgumentException("Invalid external service timeout: " + envKey, invalid);
+            }
+        } else {
+            value = fallback;
+        }
+        if (value.isZero() || value.isNegative()) {
+            throw new IllegalArgumentException("External service timeout must be positive: " + path);
+        }
+        return value;
     }
 }

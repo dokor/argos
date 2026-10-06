@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://argos.lelouet.fr";
-const articleUrl = `${siteUrl}/accessibilite-numerique`;
+const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://argos.lelouet.fr").replace(/\/+$/, "");
+const articleUrl = `${siteUrl}/ressources/accessibilite-numerique`;
 const title = "Accessibilité numérique : RGAA, EAA, obligations et sanctions";
 const description =
-  "RGAA et EAA en France : découvrez les principes de l’accessibilité numérique, les organismes et services concernés, les obligations et les sanctions applicables.";
+  "RGAA ou EAA : qui est concerné en France ? Comprendre les obligations d’accessibilité numérique, les contrôles et les sanctions à partir des textes officiels.";
 
 export const metadata: Metadata = {
   title,
@@ -33,7 +33,7 @@ const articleJsonLd = {
   dateModified: "2026-10-06",
   mainEntityOfPage: articleUrl,
   image: `${siteUrl}/og.png`,
-  author: { "@type": "Person", name: "Antoine LE LOUËT" },
+  author: { "@type": "Person", name: "Antoine LE LOUËT", url: "https://www.linkedin.com/in/antoinelelouet/" },
   publisher: { "@type": "Organization", name: "Argos", url: siteUrl },
   citation: [
     "https://accessibilite.numerique.gouv.fr/",
