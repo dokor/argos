@@ -2,243 +2,55 @@ package com.dokor.argos.services.domain.audit;
 
 import com.dokor.argos.db.dao.AuditDao;
 import com.dokor.argos.db.generated.Audit;
-import com.dokor.argos.db.generated.AuditReport;
 import com.dokor.argos.db.generated.AuditRun;
 import com.dokor.argos.db.generated.Domain;
-import com.dokor.argos.services.analysis.AuditProcessorService;
-import com.dokor.argos.services.domain.audit.errors.NotFoundException;
 import com.dokor.argos.services.domain.domain.DomainService;
-import com.dokor.argos.webservices.api.audits.data.AuditHistoryItemResponse;
-import com.dokor.argos.webservices.api.audits.data.AuditListItemResponse;
-import com.dokor.argos.webservices.api.audits.data.AuditRunStatusResponse;
-import com.dokor.argos.webservices.api.audits.data.CreateAuditRequest;
-import com.dokor.argos.webservices.api.audits.data.CreateAuditResponse;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.querydsl.core.Tuple;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
-import java.util.List;
 
+/** Creates audits and queued runs. Queries and queue processing live in separate services. */
 @Singleton
 public class AuditService {
     private static final Logger logger = LoggerFactory.getLogger(AuditService.class);
-    private static final String REPORTS_BASE_PATH = "/dashboard/report/";
-
     private final AuditDao auditDao;
     private final AuditRunService auditRunService;
-    private final AuditProcessorService auditProcessorService;
     private final UrlNormalizer urlNormalizer;
     private final DomainService domainService;
-    private final ObjectMapper objectMapper;
 
     @Inject
-    public AuditService(
-        AuditDao auditDao,
-        AuditRunService auditRunService,
-        AuditProcessorService auditProcessorService,
-        UrlNormalizer urlNormalizer,
-        DomainService domainService,
-        ObjectMapper objectMapper
-    ) {
+    public AuditService(AuditDao auditDao, AuditRunService auditRunService,
+                        UrlNormalizer urlNormalizer, DomainService domainService) {
         this.auditDao = auditDao;
         this.auditRunService = auditRunService;
-        this.auditProcessorService = auditProcessorService;
         this.urlNormalizer = urlNormalizer;
         this.domainService = domainService;
-        this.objectMapper = objectMapper;
     }
 
-    /**
-     * Liste (MVP) des audits avec dernier run associé.
-     * @param limit nb max d'items (ex: 50)
-     */
-    public List<AuditListItemResponse> listAudits(int limit) {
-        logger.info("Listing audits limit={}", limit);
+    public record CreatedAudit(long runId, long auditId, String status, Instant createdAt, String reportToken) {}
 
-        List<Tuple> rows = auditDao.listAuditsWithLatestRun(limit);
-
-        return rows.stream().map(row -> {
-            Audit audit    = row.get(0, Audit.class);
-            Domain domain  = row.get(1, Domain.class);
-            AuditRun run   = row.get(2, AuditRun.class);
-            AuditReport report = row.get(3, AuditReport.class);
-
-            String hostname = domain != null ? domain.getHostname() : null;
-
-            if (run == null) {
-                // Cas rare : audit créé sans run
-                return new AuditListItemResponse(
-                    audit.getId(),
-                    hostname,
-                    audit.getInputUrl(),
-                    audit.getNormalizedUrl(),
-                    0L,
-                    "NO_RUN",
-                    audit.getCreatedAt(),
-                    null,
-                    null,
-                    null
-                );
-            }
-
-            String reportUrl = report != null ? REPORTS_BASE_PATH + run.getId() : null;
-
-            return new AuditListItemResponse(
-                audit.getId(),
-                hostname,
-                audit.getInputUrl(),
-                audit.getNormalizedUrl(),
-                run.getId(),
-                run.getStatus(),
-                run.getCreatedAt(),
-                run.getFinishedAt(),
-                reportUrl,
-                run.getResultJson()
-            );
-        }).toList();
-    }
-
-    /**
-     * Historique des analyses d'un audit (une URL) : liste des runs passés,
-     * du plus récent au plus ancien, avec lien de rapport et score global.
-     *
-     * @param auditId identifiant de l'audit
-     * @param limit   nombre max de runs
-     */
-    public List<AuditHistoryItemResponse> getAuditHistory(long auditId, int limit) {
-        logger.info("Listing audit history auditId={} limit={}", auditId, limit);
-
-        List<Tuple> rows = auditDao.listRunsWithReportByAuditId(auditId, limit);
-
-        return java.util.stream.IntStream.range(0,rows.size()).mapToObj(index -> {
-            var row = rows.get(index);
-            AuditRun run = row.get(0, AuditRun.class);
-            AuditReport report = row.get(1, AuditReport.class);
-
-            // Authenticated admin link: no public credential is recoverable from storage.
-            String reportUrl = report != null ? REPORTS_BASE_PATH + run.getId() : null;
-            Integer globalScore = report != null
-                ? extractGlobalScore(objectMapper, report.getReportJson())
-                : null;
-            var current = publishedReport(report);
-            com.dokor.argos.services.domain.report.ReportDto previous = null;
-            for(int earlier=index+1;earlier<rows.size() && previous==null;earlier++) previous=publishedReport(rows.get(earlier).get(1,AuditReport.class));
-            var scores=current == null ? null : current.scores();
-
-            return new AuditHistoryItemResponse(
-                run.getId(),
-                run.getStatus(),
-                run.getCreatedAt(),
-                run.getFinishedAt(),
-                reportUrl,
-                globalScore,
-                scores == null ? null : scores.calculation(),
-                scores == null ? null : scores.coverage(),
-                report == null ? null : com.dokor.argos.services.domain.report.AuditComparisonService.compare(previous,current)
-            );
-        }).toList();
-    }
-
-    private com.dokor.argos.services.domain.report.ReportDto publishedReport(AuditReport report) {
-        if(report==null || report.getReportJson()==null) return null;
-        try {return objectMapper.readValue(report.getReportJson(),com.dokor.argos.services.domain.report.ReportDto.class);}
-        catch(java.io.IOException malformed) {return null;}
-    }
-
-    /**
-     * Extrait le score global (0..100) du JSON d'un rapport publié (champ {@code scores.global}).
-     * Robuste : retourne {@code null} si le JSON est absent, vide ou illisible.
-     */
-    static Integer extractGlobalScore(ObjectMapper objectMapper, String reportJson) {
-        if (reportJson == null || reportJson.isBlank()) {
-            return null;
-        }
-        try {
-            JsonNode scores = objectMapper.readTree(reportJson).path("scores");
-            if(scores.has("globalAvailable") && scores.path("globalAvailable").isBoolean() && !scores.path("globalAvailable").asBoolean()) return null;
-            JsonNode node = scores.path("global");
-            return node.isMissingNode() || node.isNull() ? null : node.asInt();
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    /**
-     * Méthode appelée par le scheduler.
-     * Elle :
-     * - tente de récupérer un run QUEUED
-     * - le claim
-     * - lance le traitement
-     */
-    public boolean processNextQueuedRun() {
-        logger.debug("Scheduler tick: looking for queued audit run");
-
-        return auditRunService.claimNextQueuedRun()
-            .map(run -> {
-                logger.info("Processing queued runId={}", run.getId());
-                auditProcessorService.process(run.getId());
-                return true;
-            })
-            .orElse(false);
-    }
-
-    /**
-     * Point d’entrée métier typique quand un utilisateur soumet une URL :
-     * - normalise l’URL
-     * - récupère ou crée l’Audit (idempotent)
-     * - crée un AuditRun en QUEUED
-     */
-    public CreateAuditResponse createAudit(CreateAuditRequest request) {
-        String inputUrl = request.url();
+    /** Normalizes the URL, reuses its audit and creates an independent queued run. */
+    public CreatedAudit createAudit(String inputUrl) {
         logger.info("AuditService.createAudit inputUrl={}", UrlNormalizer.sanitizeForLog(inputUrl));
-
         String normalizedUrl = urlNormalizer.normalize(inputUrl);
         String hostname = urlNormalizer.extractHostname(normalizedUrl);
         Instant now = Instant.now();
 
-        // Trouver ou créer le domaine (one per hostname)
         Domain domain = domainService.findOrCreate(hostname);
-
         Audit candidate = new Audit();
-        candidate.setDomainId(domain.getId()); candidate.setInputUrl(inputUrl);
-        candidate.setNormalizedUrl(normalizedUrl); candidate.setCreatedAt(now);
+        candidate.setDomainId(domain.getId());
+        candidate.setInputUrl(inputUrl);
+        candidate.setNormalizedUrl(normalizedUrl);
+        candidate.setCreatedAt(now);
         Audit audit = auditDao.findOrCreate(candidate);
 
         var created = auditRunService.createQueuedRun(audit.getId(), now);
         AuditRun run = created.run();
-
         logger.info("Run created: auditId={}, runId={}, status={}", audit.getId(), run.getId(), run.getStatus());
-
-        return new CreateAuditResponse(
-            run.getId(),
-            run.getAuditId(),
-            run.getStatus(),
-            run.getCreatedAt(),
-            created.reportToken()
-        );
-    }
-
-    public AuditRunStatusResponse getRunStatus(long runId) {
-        logger.debug("AuditService.getRunStatus runId={}", runId);
-
-        AuditRun run = auditRunService.getRun(runId)
-            .orElseThrow(() -> new NotFoundException("AuditRun not found: " + runId));
-
-        return new AuditRunStatusResponse(
-            run.getId(),
-            run.getAuditId(),
-            run.getStatus(),
-            run.getCreatedAt(),
-            run.getStartedAt(),
-            run.getFinishedAt(),
-            run.getLastError(),
-            run.getResultJson(),
-            run.getModuleStatuses()
-        );
+        return new CreatedAudit(run.getId(), run.getAuditId(), run.getStatus(),
+            run.getCreatedAt(), created.reportToken());
     }
 }
