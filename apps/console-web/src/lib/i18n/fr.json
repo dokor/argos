@@ -645,6 +645,99 @@
       "note": "Synthèse générée par Codex à partir des résultats mesurés par Argos."
     }
   },
+  "marketing": {
+    "common": {
+      "measuresTitle": "Ce que l'audit peut mesurer",
+      "benefitsTitle": "Ce que vous pouvez en faire",
+      "exampleLabel": "Exemple fictif",
+      "stepsTitle": "Un parcours en trois étapes",
+      "steps": [
+        { "title": "Choisissez une page", "description": "Collez l'adresse d'une page publique importante pour votre activité." },
+        { "title": "Consultez le diagnostic", "description": "Argos lance ses vérifications et prépare un rapport privé, accessible par lien." },
+        { "title": "Décidez quoi corriger", "description": "Parcourez les constats et les priorités, puis faites valider les changements utiles." }
+      ],
+      "limitsTitle": "Le périmètre à connaître",
+      "ctaLabel": "Passer à l'action",
+      "otherPages": "À découvrir aussi",
+      "homeLink": "Comprendre Argos",
+      "faqLink": "Questions fréquentes",
+      "pmeLink": "Audit pour PME",
+      "ecommerceLink": "Audit e-commerce"
+    },
+    "form": {
+      "urlLabel": "Adresse de la page publique à auditer",
+      "urlPlaceholder": "https://exemple.fr",
+      "submit": "Lancer un audit gratuit",
+      "submitting": "Envoi de la demande…",
+      "analysing": "Ouverture du rapport et de sa progression…",
+      "errorUrlMissing": "Saisissez l'adresse d'une page publique.",
+      "errorInvalidUrl": "Saisissez une URL HTTP ou HTTPS valide.",
+      "errorRequest": "L'audit n'a pas pu démarrer. Vérifiez l'adresse ou réessayez.",
+      "hint": "Une seule URL publique est analysée. Le rapport reste privé et non indexé."
+    },
+    "landing": {
+      "title": "Un audit adapté à votre site",
+      "description": "Choisissez le contexte de votre activité pour comprendre les mesures disponibles et leurs limites.",
+      "pmeTitle": "Site de PME",
+      "pmeDescription": "Repérez les points qui peuvent freiner la visibilité, l'accès et la confiance sur une page clé.",
+      "ecommerceTitle": "Site e-commerce",
+      "ecommerceDescription": "Examinez une page publique de votre boutique sans confondre cet audit avec un test du paiement."
+    },
+    "pme": {
+      "meta": { "title": "Audit site web PME : priorisez les corrections", "description": "Analysez une page publique de votre site PME : SEO, performance, sécurité et accessibilité. Un rapport privé pour prioriser les corrections, sans promesse de conversion." },
+      "eyebrow": "Pour les PME",
+      "title": "Un audit de site web pour décider quoi améliorer en premier",
+      "lead": "Votre site présente votre activité avant même le premier échange. Argos examine une page publique et rassemble des constats techniques pour aider votre équipe ou votre prestataire à fixer des priorités.",
+      "heroNote": "Un diagnostic de page, pas une prévision de chiffre d'affaires.",
+      "measures": [
+        { "title": "Visibilité dans les résultats", "description": "Titres, description, balise canonique et structure des titres HTML de la page." },
+        { "title": "Performance ressentie", "description": "Scores et mesures de chargement via Lighthouse et navigateur, lorsque la page est accessible." },
+        { "title": "Confiance technique", "description": "HTTPS, redirections et en-têtes de sécurité observables depuis l'extérieur." },
+        { "title": "Accessibilité détectable", "description": "Contrôles automatiques et score Lighthouse ; les usages réels demandent une vérification humaine." }
+      ],
+      "benefits": [
+        { "title": "Cadrer une intervention", "description": "Partager des constats précis avec votre agence ou votre équipe, plutôt qu'une demande vague d'optimisation." },
+        { "title": "Prioriser les corrections", "description": "Commencer par les problèmes visibles dans le rapport et vérifier ensuite leur effet sur vos propres indicateurs." },
+        { "title": "Préparer la confiance", "description": "Repérer des signaux techniques qui peuvent gêner la navigation ou la crédibilité, sans garantir une hausse des contacts." }
+      ],
+      "exampleTitle": "Une page de service qui mérite une revue",
+      "exampleText": "Si une page de présentation a un titre peu descriptif, une image lourde et une politique de sécurité absente, le rapport peut faire remonter ces constats. Votre équipe décide ensuite des corrections et vérifie leur effet.",
+      "limits": [
+        "L'audit porte sur l'URL soumise, pas sur toutes les pages du site ni sur votre référencement global.",
+        "Argos n'observe ni vos ventes, ni vos formulaires envoyés, ni vos données de conversion.",
+        "Certains contrôles peuvent être indisponibles si la page bloque les robots ; les résultats automatiques ne remplacent pas un audit humain."
+      ],
+      "ctaTitle": "Commencez par une page importante",
+      "ctaText": "Accueil ou page de service : lancez un audit et utilisez les constats comme point de départ d'une décision."
+    },
+    "ecommerce": {
+      "meta": { "title": "Audit site e-commerce : SEO, vitesse et confiance", "description": "Auditez une page publique de boutique : SEO, performance, sécurité et accessibilité. Comprenez les limites : panier, commande et paiement ne sont pas testés." },
+      "eyebrow": "Pour les sites e-commerce",
+      "title": "Analysez une page clé de votre boutique avant le parcours d'achat",
+      "lead": "Une fiche produit, une catégorie ou l'accueil peut révéler des problèmes de visibilité, de chargement et de confiance. Argos mesure ce qui est accessible sur l'URL fournie et aide à prioriser les corrections.",
+      "heroNote": "Le panier, la commande et le paiement ne sont pas parcourus.",
+      "measures": [
+        { "title": "SEO d'une page publique", "description": "Titre, description, balise canonique et titres HTML de la fiche ou catégorie soumise." },
+        { "title": "Vitesse de chargement", "description": "Lighthouse et mesures navigateur sur cette page, lorsque le site permet l'analyse." },
+        { "title": "Sécurité visible", "description": "HTTPS, redirections et en-têtes HTTP ; aucune transaction n'est réalisée." },
+        { "title": "Accessibilité automatique", "description": "Signaux détectables et score Lighthouse, à compléter par des tests utilisateurs." }
+      ],
+      "benefits": [
+        { "title": "Choisir une page à corriger", "description": "Repérer des freins techniques sur une page qui compte dans votre catalogue." },
+        { "title": "Briefer votre équipe", "description": "Transmettre des constats exploitables sur le chargement, les balises ou les en-têtes." },
+        { "title": "Évaluer ensuite l'impact", "description": "Comparer vos propres mesures après correction ; l'audit ne prédit pas les ventes." }
+      ],
+      "exampleTitle": "Une fiche produit publique",
+      "exampleText": "Une fiche avec une description absente, un chargement lent et des images sans texte alternatif peut générer des points à examiner. Ce scénario illustre un seul URL ; il ne représente aucun rapport client.",
+      "limits": [
+        "L'audit examine uniquement la page publique soumise ; il ne suit pas toutes les fiches et catégories.",
+        "Aucun produit n'est ajouté au panier ; aucune commande, connexion ou étape de paiement n'est testée.",
+        "Argos ne mesure pas le taux de conversion ni les revenus. Les protections anti-bot peuvent rendre des contrôles indisponibles."
+      ],
+      "ctaTitle": "Testez une page de votre boutique",
+      "ctaText": "Soumettez une fiche produit ou une catégorie publique pour obtenir un point de départ concret."
+    }
+  },
   "auditForm": {
     "urlLabel": "URL à analyser",
     "urlPlaceholder": "https://example.com",

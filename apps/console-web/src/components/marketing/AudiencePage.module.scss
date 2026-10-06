@@ -1,0 +1,231 @@
+@use '../../styles/tokens' as t;
+
+.page {
+  min-height: 100vh;
+  background: t.$bg;
+  color: t.$text;
+}
+
+.container {
+  width: min(100% - 2 * t.$space-6, t.$container-width);
+  margin: 0 auto;
+}
+
+.hero {
+  padding: clamp(56px, 8vw, 104px) 0 72px;
+  background: t.$canvas;
+  border-bottom: 1px solid t.$border;
+}
+
+.eyebrow {
+  margin-bottom: t.$space-4;
+  font-size: t.$text-base;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: t.$text-muted;
+}
+
+.title {
+  max-width: 780px;
+  font-size: clamp(2.25rem, 5vw, 4rem);
+  font-weight: 750;
+  line-height: 1.12;
+  letter-spacing: -.04em;
+}
+
+.lead {
+  max-width: 740px;
+  margin-top: t.$space-6;
+  color: t.$text-muted;
+  font-size: clamp(1.05rem, 2vw, 1.25rem);
+  line-height: 1.7;
+}
+
+.heroCta {
+  display: inline-flex;
+  align-items: center;
+  gap: t.$space-2;
+  margin-top: t.$space-8;
+  padding: t.$space-3 t.$space-5;
+  border-radius: t.$radius-md;
+  background: t.$text;
+  color: t.$bg;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.heroCta:hover {
+  opacity: .85;
+}
+
+.heroCta:focus-visible,
+.relatedLinks a:focus-visible {
+  outline: 3px solid t.$color-indigo;
+  outline-offset: 3px;
+}
+
+.heroNote {
+  margin-top: t.$space-4;
+  color: t.$text-muted;
+  font-size: t.$text-md;
+}
+
+.section {
+  padding: 72px 0;
+}
+
+.alternate,
+.ctaSection {
+  background: t.$canvas;
+}
+
+.sectionTitle {
+  max-width: 800px;
+  margin-bottom: t.$space-7;
+  font-size: clamp(1.65rem, 3vw, 2.25rem);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -.025em;
+}
+
+.measureGrid,
+.benefitGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: t.$space-4;
+}
+
+.benefitGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.card {
+  padding: t.$space-6;
+  border: 1px solid t.$border;
+  border-radius: t.$radius-lg;
+  background: t.$surface;
+}
+
+.cardTitle {
+  margin-bottom: t.$space-2;
+  font-size: 1.08rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.cardText,
+.paragraph {
+  color: t.$text-muted;
+  line-height: 1.7;
+}
+
+.paragraph {
+  max-width: 770px;
+  font-size: 1.05rem;
+}
+
+.example {
+  max-width: 840px;
+  padding: t.$space-8;
+  border-left: 4px solid t.$color-indigo;
+  border-radius: 0 t.$radius-lg t.$radius-lg 0;
+  background: t.$surface-2;
+}
+
+.example .sectionTitle {
+  margin-bottom: t.$space-4;
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: t.$space-5;
+}
+
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: t.$space-4;
+}
+
+.stepNumber {
+  display: grid;
+  flex: 0 0 34px;
+  place-items: center;
+  height: 34px;
+  border: 1px solid t.$border;
+  border-radius: 50%;
+  font-weight: 700;
+}
+
+.limits {
+  display: grid;
+  gap: t.$space-4;
+  max-width: 860px;
+  list-style: disc;
+  padding-left: t.$space-6;
+  color: t.$text-muted;
+  line-height: 1.7;
+}
+
+.ctaSection {
+  scroll-margin-top: 76px;
+}
+
+.ctaSection .sectionTitle {
+  margin-bottom: t.$space-3;
+}
+
+.ctaSection .paragraph {
+  margin-bottom: t.$space-6;
+}
+
+.related {
+  padding: t.$space-8 0;
+  border-top: 1px solid t.$border;
+}
+
+.relatedLabel {
+  margin-bottom: t.$space-3;
+  font-weight: 700;
+}
+
+.relatedLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: t.$space-4 t.$space-6;
+}
+
+.relatedLinks a {
+  color: t.$text;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 760px) {
+  .benefitGrid,
+  .steps {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .container {
+    width: min(100% - 2 * t.$space-4, t.$container-width);
+  }
+
+  .hero,
+  .section {
+    padding: 48px 0;
+  }
+
+  .measureGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .card,
+  .example {
+    padding: t.$space-5;
+  }
+}

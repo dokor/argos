@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import Link from "next/link";
 import { useLang } from "@/lib/i18n/LangContext";
 import { createLogger } from "@/lib/logger";
 import { useAuditSubmit } from "@/lib/useAuditSubmit";
@@ -384,6 +385,28 @@ export default function LandingPage() {
                 <p className={s.whyDesc}>{item.desc}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* AUDIENCES */}
+      <section className={s.sectionAlt} aria-labelledby="audiences-title">
+        <div className={s.container}>
+          <div className={s.sectionHeader}>
+            <h2 id="audiences-title" className={s.sectionTitle}>{t.marketing.landing.title}</h2>
+            <p className={s.sectionSub}>{t.marketing.landing.description}</p>
+          </div>
+          <div className={s.audienceGrid}>
+            <Link href="/audit-site-pme" className={s.audienceCard}>
+              <h3>{t.marketing.landing.pmeTitle}</h3>
+              <p>{t.marketing.landing.pmeDescription}</p>
+              <span aria-hidden="true">→</span>
+            </Link>
+            <Link href="/audit-site-ecommerce" className={s.audienceCard}>
+              <h3>{t.marketing.landing.ecommerceTitle}</h3>
+              <p>{t.marketing.landing.ecommerceDescription}</p>
+              <span aria-hidden="true">→</span>
+            </Link>
           </div>
         </div>
       </section>
