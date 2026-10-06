@@ -285,6 +285,9 @@ export default function LandingPage() {
             <a href="/faq" className={s.navLink}>
               {t.nav.faq}
             </a>
+            <a href="/audit-technique-gratuit" className={`${s.navLink} ${s.articleNavLink}`}>
+              {t.nav.auditTechnique}
+            </a>
             <a href="/accessibilite-numerique" className={`${s.navLink} ${s.articleNavLink}`}>
               {t.nav.accessibility}
             </a>
@@ -429,6 +432,7 @@ export default function LandingPage() {
         <div className={s.footerInner}>
           <span>{tl.footer.built}</span>
           <a href="/accessibilite-numerique" className={s.footerLink}>{t.nav.accessibility}</a>
+          <a href="/audit-technique-gratuit" className={s.footerLink}>{t.nav.auditTechnique}</a>
           <span>{tl.footer.copy}</span>
         </div>
       </footer>

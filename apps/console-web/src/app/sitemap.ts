@@ -25,5 +25,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     {
       url: `${SITE_URL}/accessibilite-numerique`,
     },
+    {
+      url: `${SITE_URL}/audit-technique-gratuit`,
+    },
   ];
 }

@@ -47,6 +47,20 @@
   align-items: center;
   gap: t.$space-3;
 }
+
+@media (max-width: 620px) {
+  .navInner {
+    padding-inline: t.$space-4;
+  }
+
+  .navRight {
+    gap: t.$space-2;
+  }
+
+  .navLink {
+    display: none;
+  }
+}
 .navLink {
   color: t.$text-muted;
   text-decoration: none;
