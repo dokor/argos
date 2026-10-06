@@ -8,6 +8,7 @@ import { useIsAdmin } from "@/lib/useIsAdmin";
 import ArgosIcon from "@/components/ArgosIcon";
 import LangToggle from "@/components/LangToggle";
 import ThemeToggle from "@/components/ThemeToggle";
+import AuthorCredit from "@/components/AuthorCredit";
 import ScoreRingSvg from "@/components/report/ScoreRing";
 import s from "./page.module.scss";
 
@@ -404,7 +405,7 @@ export default function LandingPage() {
       {/* FOOTER */}
       <footer className={s.footer}>
         <div className={s.footerInner}>
-          <span>{tl.footer.built}</span>
+          <AuthorCredit className={s.footerLink} />
           <a href="/accessibilite-numerique" className={s.footerLink}>{t.nav.accessibility}</a>
           <span>{tl.footer.copy}</span>
         </div>

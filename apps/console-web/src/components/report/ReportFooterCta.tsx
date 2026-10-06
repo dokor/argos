@@ -1,6 +1,7 @@
 "use client";
 
 import { useLang } from "@/lib/i18n/LangContext";
+import AuthorCredit from "@/components/AuthorCredit";
 import s from "./ReportFooterCta.module.scss";
 
 export default function ReportFooterCta() {
@@ -36,6 +37,7 @@ export default function ReportFooterCta() {
         </div>
 
         <p className={s.note}>{tf.footerNote}</p>
+        <p className={s.author}><AuthorCredit className={s.authorLink} /></p>
 
         <p className={s.ciNote}>
           Vous voulez intégrer cette analyse dans votre CI ?{" "}

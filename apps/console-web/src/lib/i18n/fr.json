@@ -151,7 +151,8 @@
       "sub": "Gratuit · Sans compte · Rapport privé · Source disponible"
     },
     "footer": {
-      "built": "Fait par Antoine LE LOUËT.",
+      "builtPrefix": "Fait par",
+      "maltProfile": "Antoine LE LOUËT sur Malt",
       "copy": "© 2026 Antoine LE LOUËT · Licence BSL 1.1"
     }
   },
