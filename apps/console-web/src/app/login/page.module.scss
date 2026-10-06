@@ -11,7 +11,7 @@
 .form {
   background: t.$surface;
   border-radius: t.$radius-lg;
-  padding: t.$space-10 t.$space-8;
+  padding: t.$space-8 t.$panel-space;
   box-shadow: t.$shadow-md;
   width: t.$login-form-width;
   max-width: calc(100vw - 2 * t.$space-5);
@@ -22,7 +22,7 @@
 
 @media (max-width: 400px) {
   .form {
-    padding: t.$space-7 t.$space-5;
+    padding: t.$panel-space t.$space-5;
     border-radius: t.$radius-md;
   }
 }
@@ -35,7 +35,7 @@
 }
 
 .input {
-  padding: 10px 14px;
+  padding: t.$space-3 t.$space-4;
   border-radius: t.$radius-sm;
   border: 1px solid t.$border;
   background: t.$surface;
@@ -44,9 +44,12 @@
   outline: none;
   width: 100%;
   box-sizing: border-box;
+  min-height: 44px;
 
   &:focus {
     border-color: t.$color-indigo;
+    outline: 2px solid t.$color-indigo;
+    outline-offset: 2px;
   }
 }
 
@@ -58,7 +61,8 @@
 }
 
 .btn {
-  padding: 10px;
+  padding: t.$space-3 t.$space-4;
+  min-height: 44px;
   border-radius: t.$radius-sm;
   background: t.$text;
   color: t.$bg;
@@ -67,6 +71,11 @@
   cursor: pointer;
   font-weight: 600;
   transition: opacity 0.15s;
+
+  &:focus-visible {
+    outline: 2px solid t.$color-indigo;
+    outline-offset: 2px;
+  }
 
   &:disabled {
     background: t.$text-subtle;

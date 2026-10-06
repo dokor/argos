@@ -20,7 +20,7 @@
 .navInner {
   max-width: t.$container-width;
   margin: 0 auto;
-  padding: 0 t.$space-6;
+  padding: 0 t.$page-gutter;
   height: 60px;
   display: flex;
   align-items: center;
@@ -84,7 +84,7 @@
 .footerInner {
   max-width: t.$container-width;
   margin: 0 auto;
-  padding: t.$space-6;
+  padding: t.$panel-space;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -95,7 +95,12 @@
 }
 
 @media (max-width: 560px) {
+  .navInner {
+    padding: 0 t.$page-gutter-mobile;
+  }
+
   .footerInner {
+    padding: t.$panel-space-mobile;
     flex-direction: column;
     text-align: center;
   }

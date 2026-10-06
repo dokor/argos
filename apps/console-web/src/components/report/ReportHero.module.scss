@@ -15,14 +15,14 @@
 .heroInner {
   max-width: t.$container-width;
   margin: 0 auto;
-  padding: 40px t.$space-6 0;
+  padding: t.$space-10 t.$page-gutter 0;
 }
 
 // ─── Top row ──────────────────────────────────────────────────────────────────
 .topRow {
   display: flex;
   align-items: flex-start;
-  gap: 40px;
+  gap: t.$space-10;
   flex-wrap: wrap;
 }
 
@@ -115,13 +115,13 @@
 .statsRow {
   display: flex;
   gap: 0;
-  margin-top: 40px;
+  margin-top: t.$space-10;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .stat {
   flex: 1;
-  padding: 20px t.$space-5;
+  padding: t.$space-5;
   border-right: 1px solid rgba(255, 255, 255, 0.08);
   text-align: center;
 
@@ -164,7 +164,7 @@
   }
 
   .topRow {
-    gap: 28px;
+    gap: t.$space-7;
   }
 
   .scoreBlock {
@@ -176,7 +176,7 @@
   }
 
   .stat {
-    padding: 16px t.$space-3;
+    padding: t.$space-4 t.$space-3;
   }
 
   .statValue {

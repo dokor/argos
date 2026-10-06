@@ -16,7 +16,7 @@
   width: 100%;
   max-width: 640px;
   margin: 0 auto;
-  padding: 96px t.$space-6;
+  padding: t.$section-space t.$page-gutter;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -113,3 +113,9 @@
 }
 
 // Nav et footer déplacés dans le composant partagé SiteNav/SiteFooter (#143).
+
+@media (max-width: 560px) {
+  .content {
+    padding: t.$section-space-mobile t.$page-gutter-mobile;
+  }
+}

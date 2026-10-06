@@ -16,7 +16,7 @@
 .hero {
   position: relative;
   background: linear-gradient(135deg, t.$color-navy 0%, t.$color-slate-800 60%, t.$color-navy 100%);
-  padding: 72px t.$space-6 64px;
+  padding: t.$section-space t.$page-gutter;
   text-align: center;
 }
 
@@ -57,7 +57,7 @@
   width: 100%;
   max-width: 760px;
   margin: 0 auto;
-  padding: 56px t.$space-6;
+  padding: t.$section-space t.$page-gutter;
 }
 
 .category {
@@ -169,7 +169,7 @@
 
 // ─── Still-have-questions CTA ────────────────────────────────────────────────────
 .cta {
-  margin-top: 64px;
+  margin-top: t.$section-space;
   padding: t.$space-8 t.$space-6;
   background: t.$surface-2;
   border: 1px solid t.$border-subtle;
@@ -224,3 +224,23 @@
 }
 
 // Footer déplacé dans le composant partagé SiteFooter (#143).
+
+@media (max-width: 560px) {
+  .hero,
+  .content {
+    padding: t.$section-space-mobile t.$page-gutter-mobile;
+  }
+
+  .question {
+    padding: t.$space-4;
+  }
+
+  .answer {
+    padding: 0 t.$space-4 t.$space-4;
+  }
+
+  .cta {
+    margin-top: t.$section-space-mobile;
+    padding: t.$panel-space-mobile;
+  }
+}
