@@ -28,7 +28,7 @@ export default function FaqPage() {
       {/* CONTENT */}
       <main className={s.content}>
         {f.categories.map((category) => (
-          <section key={category.title} className={s.category}>
+          <section key={category.id} id={category.id} className={s.category}>
             <h2 className={s.categoryTitle}>{category.title}</h2>
             <div className={s.items}>
               {category.items.map((item) => (

@@ -49,7 +49,7 @@ export default function ResourcesPage() {
 
   return (
     <div className={s.page}>
-      <SiteNav showFaqLink showResourcesLink={false} />
+      <SiteNav />
       <main>
         <header className={s.hero}>
           <div className={s.container}>

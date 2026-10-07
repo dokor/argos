@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { createLogger, safeError } from "@/lib/logger";
 import { useLang } from "@/lib/i18n/LangContext";
+import SiteNav from "@/components/site/SiteNav";
+import SiteFooter from "@/components/site/SiteFooter";
 import s from "./page.module.scss";
 
 function LoginForm() {
@@ -97,8 +99,12 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense>
-      <LoginForm />
-    </Suspense>
+    <div className={s.page}>
+      <SiteNav />
+      <Suspense>
+        <LoginForm />
+      </Suspense>
+      <SiteFooter />
+    </div>
   );
 }

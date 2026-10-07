@@ -7,65 +7,6 @@
   background: t.$bg;
 }
 
-// ─── Nav ──────────────────────────────────────────────────────────────────────
-.nav {
-  position: sticky;
-  top: 0;
-  z-index: t.$z-sticky;
-  background: t.$header-bg;
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid t.$border-subtle;
-}
-
-.navInner {
-  max-width: t.$container-width;
-  margin: 0 auto;
-  padding: 0 t.$page-gutter;
-  height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.logo {
-  display: flex;
-  align-items: center;
-  gap: t.$space-2;
-}
-
-.logoIcon {
-  display: block;
-  flex-shrink: 0;
-}
-
-.navCta {
-  background: t.$text;
-  color: t.$bg;
-  text-decoration: none;
-  padding: t.$space-2 t.$space-4;
-  border-radius: t.$radius-sm;
-  font-size: t.$text-base;
-  font-weight: 500;
-}
-
-.navLink {
-  color: t.$text-muted;
-  text-decoration: none;
-  font-size: t.$text-base;
-  font-weight: 500;
-  padding: t.$space-2;
-
-  &:hover {
-    color: t.$text;
-  }
-}
-
-.navRight {
-  display: flex;
-  align-items: center;
-  gap: t.$space-3;
-}
-
 // ─── Hero ─────────────────────────────────────────────────────────────────────
 .heroSection {
   position: relative;
@@ -166,7 +107,7 @@
 }
 
 .heroFormWrap {
-  scroll-margin-top: 80px;
+  scroll-margin-top: 160px;
   max-width: 480px;
   width: 100%;
 }
@@ -656,56 +597,4 @@
     border-left: 3px solid t.$color-indigo;
   }
 
-  // Nav
-  .navInner {
-    padding: 0 t.$space-4;
-  }
-
-  .articleNavLink {
-    display: none;
-  }
-
-  // Footer - stack vertically and center on small screens
-  .footer {
-    padding: t.$space-5 t.$space-4;
-  }
-
-  .footerInner {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: t.$space-3;
-  }
-}
-
-// ─── Footer ───────────────────────────────────────────────────────────────────
-.footer {
-  background: t.$color-navy;
-  padding: t.$space-6;
-  border-top: 1px solid t.$color-slate-800;
-}
-
-.footerLink {
-  color: t.$color-slate-300;
-  text-underline-offset: 3px;
-
-  &:hover {
-    color: t.$color-white;
-  }
-
-  &:focus-visible {
-    outline: 2px solid t.$color-white;
-    outline-offset: 3px;
-  }
-}
-
-.footerInner {
-  max-width: t.$container-width;
-  margin: 0 auto;
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: t.$space-2;
-  font-size: t.$text-base;
-  color: t.$color-slate-400;
 }

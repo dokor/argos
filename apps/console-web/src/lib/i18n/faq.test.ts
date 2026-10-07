@@ -6,7 +6,7 @@ import en from "./en.json";
 // The FAQPage JSON-LD and the rendered accordion both rely on this structure.
 
 type FaqItem = { q: string; a: string };
-type FaqCategory = { title: string; items: FaqItem[] };
+type FaqCategory = { id: string; title: string; items: FaqItem[] };
 
 const locales = { fr, en } as const;
 
@@ -31,6 +31,7 @@ describe("faq i18n", () => {
         expect(categories.length).toBeGreaterThan(0);
         for (const category of categories) {
           expect(category.title.trim()).not.toBe("");
+          expect(category.id.trim()).not.toBe("");
           expect(category.items.length).toBeGreaterThan(0);
           for (const item of category.items) {
             expect(item.q.trim()).not.toBe("");
@@ -47,6 +48,16 @@ describe("faq i18n", () => {
     expect(frCats.length).toBe(enCats.length);
     frCats.forEach((cat, i) => {
       expect(cat.items.length).toBe(enCats[i].items.length);
+      expect(cat.id).toBe(enCats[i].id);
     });
+  });
+
+  it("provides stable targets for footer links in both locales", () => {
+    for (const dict of [fr, en]) {
+      const ids = dict.faq.categories.map((category) => category.id);
+      expect(new Set(ids).size).toBe(ids.length);
+      expect(ids).toContain("privacy");
+      expect(ids).toContain("limits");
+    }
   });
 });

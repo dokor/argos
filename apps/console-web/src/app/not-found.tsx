@@ -24,7 +24,7 @@ export default function NotFound() {
   return (
     <div className={s.page}>
       {/* NAV */}
-      <SiteNav showFaqLink />
+      <SiteNav />
 
       {/* CONTENT */}
       <main className={s.content}>
