@@ -41,6 +41,7 @@ export default function AuditForm({ onCreated, mode = "dashboard", sourceRoute }
   // publiques le montrent dans l'onglet courant. Le hook garde le même BFF.
   const { phase, error, submit } = useAuditSubmit({
     logger,
+    sourceRoute,
     openInNewTab: !publicMode,
     onCreated: (res: CreateAuditResponse, normalizedUrl: string) => {
       onCreated?.({

@@ -1,0 +1,232 @@
+@use '../../../styles/tokens' as t;
+
+.page {
+  min-height: 100vh;
+  background: t.$bg;
+  color: t.$text;
+}
+
+.container {
+  width: min(100% - 48px, 960px);
+  margin-inline: auto;
+}
+
+.hero {
+  padding: t.$space-16 0;
+  background: t.$canvas;
+  border-bottom: 1px solid t.$border-subtle;
+
+  h1 {
+    max-width: 800px;
+    margin: 0 0 t.$space-6;
+    font-size: clamp(2.2rem, 5vw, 3.9rem);
+    line-height: 1.12;
+    letter-spacing: -0.04em;
+  }
+}
+
+.eyebrow {
+  margin: 0 0 t.$space-4;
+  color: t.$text-muted;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.lead {
+  max-width: 760px;
+  font-size: clamp(1.1rem, 2vw, 1.3rem);
+  line-height: 1.6;
+}
+
+.scope {
+  max-width: 760px;
+  margin: t.$space-6 0 0;
+  color: t.$text-muted;
+  line-height: 1.65;
+}
+
+.contents,
+.checklist,
+.example,
+.more,
+.cta {
+  margin-block: t.$space-16;
+}
+
+.contents {
+  padding: t.$space-6;
+  border: 1px solid t.$border;
+  border-radius: t.$radius-lg;
+  background: t.$surface;
+
+  h2 {
+    margin: 0 0 t.$space-4;
+    font-size: 1.2rem;
+  }
+
+  ol {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: t.$space-3 t.$space-8;
+    margin: 0;
+    padding-left: t.$space-6;
+  }
+}
+
+.page a {
+  color: t.$text;
+  text-decoration-color: t.$text-muted;
+  text-underline-offset: 3px;
+
+  &:hover {
+    text-decoration-thickness: 2px;
+  }
+
+  &:focus-visible {
+    outline: 3px solid t.$color-indigo;
+    outline-offset: 3px;
+  }
+}
+
+.checklist > ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  scroll-margin-top: t.$space-8;
+  padding: t.$space-10 0;
+  border-top: 1px solid t.$border;
+
+  &:last-child {
+    border-bottom: 1px solid t.$border;
+  }
+}
+
+.stepHeading {
+  display: flex;
+  gap: t.$space-5;
+  align-items: baseline;
+  margin-bottom: t.$space-6;
+
+  h2 {
+    margin: 0;
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    line-height: 1.25;
+  }
+}
+
+.stepNumber {
+  color: t.$text-muted;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: t.$space-5 t.$space-8;
+  margin: 0;
+
+  div:last-child {
+    grid-column: 1 / -1;
+    padding: t.$space-5;
+    border-left: 3px solid t.$color-indigo;
+    background: t.$surface-2;
+  }
+
+  dt {
+    margin-bottom: t.$space-2;
+    font-weight: 700;
+  }
+
+  dd {
+    margin: 0;
+    color: t.$text-muted;
+    line-height: 1.65;
+  }
+}
+
+.example,
+.cta {
+  padding: t.$space-8;
+  border: 1px solid t.$border;
+  border-radius: t.$radius-lg;
+  background: t.$canvas;
+}
+
+.example,
+.more,
+.cta {
+  h2 {
+    margin: 0 0 t.$space-5;
+    font-size: clamp(1.5rem, 3vw, 2rem);
+  }
+
+  p,
+  li {
+    line-height: 1.7;
+  }
+}
+
+.example ol,
+.more ul {
+  display: grid;
+  gap: t.$space-3;
+  padding-left: t.$space-6;
+}
+
+.more h3 {
+  margin-top: t.$space-8;
+  font-size: 1.15rem;
+}
+
+.cta {
+  p {
+    max-width: 760px;
+    margin-bottom: t.$space-6;
+  }
+
+  form {
+    max-width: 680px;
+    padding: t.$space-6;
+    border: 1px solid t.$border;
+    border-radius: t.$radius-lg;
+    background: t.$surface;
+  }
+}
+
+@media (max-width: 680px) {
+  .container {
+    width: min(100% - 32px, 960px);
+  }
+
+  .hero {
+    padding-block: t.$space-12;
+  }
+
+  .contents,
+  .checklist,
+  .example,
+  .more,
+  .cta {
+    margin-block: t.$space-12;
+  }
+
+  .contents ol,
+  .fields {
+    grid-template-columns: 1fr;
+  }
+
+  .fields div:last-child {
+    grid-column: auto;
+  }
+
+  .example,
+  .cta {
+    padding: t.$space-5;
+  }
+}

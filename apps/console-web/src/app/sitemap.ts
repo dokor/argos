@@ -25,5 +25,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     {
       url: `${SITE_URL}/ressources/audit-technique-gratuit`,
     },
+    {
+      url: `${SITE_URL}/guides/checklist-audit-site-web`,
+    },
   ];
 }

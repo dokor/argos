@@ -14,6 +14,7 @@ const copy = {
     guidesTitle: "Comprendre les mesures",
     audiencesTitle: "Choisir votre contexte",
     guides: [
+      { href: "/guides/checklist-audit-site-web", title: "Checklist d’audit de site web", description: "Six contrôles manuels, leurs résultats attendus et les limites de l’analyse automatique." },
       { href: "/ressources/audit-technique-gratuit", title: "Audit technique gratuit", description: "Méthode, contrôles HTTP, HTML, performance et sécurité, lecture du rapport et résultats partiels." },
       { href: "/ressources/accessibilite-numerique", title: "Accessibilité numérique", description: "Comprendre le RGAA, l’EAA, les obligations et ce qui nécessite une vérification humaine." },
     ],
@@ -30,6 +31,7 @@ const copy = {
     guidesTitle: "Understand the measurements",
     audiencesTitle: "Choose your context",
     guides: [
+      { href: "/guides/checklist-audit-site-web", title: "Website audit checklist", description: "Six manual checks, expected results, and the limits of automated analysis." },
       { href: "/ressources/audit-technique-gratuit", title: "Free technical audit", description: "Method, HTTP, HTML, performance and security checks, reading the report and partial results." },
       { href: "/ressources/accessibilite-numerique", title: "Digital accessibility", description: "Understand the RGAA, EAA, obligations and what requires human review." },
     ],
