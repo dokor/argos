@@ -1,6 +1,7 @@
 package com.dokor.argos.services.analysis.modules.tech;
 
 import com.dokor.argos.services.analysis.AuditModule;
+import com.dokor.argos.services.analysis.ModuleUnavailableException;
 import com.dokor.argos.services.analysis.model.AuditCheckResult;
 import com.dokor.argos.services.analysis.model.AuditContext;
 import com.dokor.argos.services.analysis.model.AuditModuleResult;
@@ -93,6 +94,9 @@ public class TechModuleAnalyzer {
         String html,
         Logger logger
     ) {
+        if ((html == null || html.isBlank()) && (headers == null || headers.isEmpty())) {
+            throw new ModuleUnavailableException("Tech analysis has no HTML or HTTP headers");
+        }
         long start = System.currentTimeMillis();
 
         headers = headers != null ? headers : Map.of();
@@ -251,7 +255,7 @@ public class TechModuleAnalyzer {
         if (serverVer != null) exposedVersions.add("Server: " + serverVer);
         if (poweredVer != null) exposedVersions.add("X-Powered-By: " + poweredVer);
         boolean versionExposed = !exposedVersions.isEmpty();
-        checks.add(AuditCheckResult.of(
+        if (headers != null && !headers.isEmpty()) checks.add(AuditCheckResult.of(
             "tech.security.version_disclosure",
             "Divulgation de version logicielle",
             versionExposed ? AuditStatus.WARN : AuditStatus.PASS,
@@ -268,23 +272,6 @@ public class TechModuleAnalyzer {
                 ? "Masquez les numéros de version (en-têtes Server, X-Powered-By) : ils facilitent le ciblage de vulnérabilités connues."
                 : null
         ));
-
-        // 6) Orchestrator coverage (warn if missing html)
-        if (html == null || html.isBlank()) {
-            checks.add(AuditCheckResult.of(
-                "tech.html.available",
-                "HTML disponible pour la détection tech",
-                AuditStatus.WARN,
-                AuditSeverity.MEDIUM,
-                false,          // scorable filled later
-                0.0,            // weight filled later
-                List.of(),      // tags filled later
-                false,
-                Map.of("reason", "html not provided"),
-                "HTML non fourni : la détection tech est limitée aux en-têtes HTTP.",
-                "Vérifiez que l'orchestrateur transmet le contenu HTML du module HTTP pour améliorer la détection."
-            ));
-        }
 
         // 7) Duration (info)
         checks.add(AuditCheckResult.of(
@@ -324,6 +311,7 @@ public class TechModuleAnalyzer {
         data.put("serverHeader", serverHeader);
         data.put("xPoweredBy", poweredBy);
         data.put("durationMs", durationMs);
+        data.put("partial", html == null || html.isBlank());
 
         logger.info("TECH module done: cms={}({}) frontend={}({}) backendHints={} cloudflare={}",
             cms.name, cms.confidence, frontend.name, frontend.confidence, backendHints.size(), cloudflare

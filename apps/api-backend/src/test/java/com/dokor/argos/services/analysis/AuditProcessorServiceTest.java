@@ -342,6 +342,73 @@ class AuditProcessorServiceTest {
             processor.configureRemoteModuleExecutor(remote);
             return processor;
         }
+
+        private void assertRuntimeFallback(java.util.function.Consumer<RuntimeModuleAnalyzer> stub,
+                                           String expectedStatus) throws Exception {
+            try (var remote = new RemoteModuleExecutor(Duration.ofSeconds(5))) {
+                var processor = processor(remote);
+                stub.accept(runtime);
+                processor.process(1L);
+                var report = ArgumentCaptor.forClass(AuditReportJson.class);
+                verify(publisher).completeAndPublish(eq(1L), any(), report.capture(), anyString(), nullable(String.class));
+                var statuses = mapper.readTree(report.getValue().meta().get("moduleStatuses"));
+                assertEquals(expectedStatus, statuses.path("runtime").asText());
+                assertEquals("COMPLETED", statuses.path("html").asText());
+                var result = report.getValue().modules().get(2);
+                assertEquals(List.of("runtime.collect"), result.checks().stream().map(c -> c.key()).toList());
+                assertFalse(result.checks().getFirst().scorable());
+                assertEquals(false, result.data().get("available"));
+                verify(runs).updateModuleStatus(1L, "runtime", "FAILED");
+                verify(runs, never()).fail(anyLong(), anyString(), nullable(String.class));
+            }
+        }
+
+        @Test void moduleExceptionProducesOneFallbackAndOtherModulesContinue() throws Exception {
+            assertRuntimeFallback(module -> when(module.analyze(any(), any()))
+                .thenThrow(new IllegalStateException("broken")), "FAILED");
+        }
+
+        @Test void nullModuleResultIsUnavailable() throws Exception {
+            assertRuntimeFallback(module -> when(module.analyze(any(), any())).thenReturn(null), "UNAVAILABLE");
+        }
+
+        @Test void moduleTimeoutKeepsTimeoutReason() throws Exception {
+            assertRuntimeFallback(module -> when(module.analyze(any(), any()))
+                .thenThrow(new ModuleUnavailableException("late", new java.net.http.HttpTimeoutException("timeout"))), "TIMEOUT");
+        }
+
+        @Test void legacyUnavailableResultIsNormalizedWithoutDuplicateCheck() throws Exception {
+            assertRuntimeFallback(module -> when(module.analyze(any(), any())).thenReturn(
+                new AuditModuleResult("runtime", "Runtime", "old", Map.of("available", false, "reason", "UNAVAILABLE"),
+                    List.of(com.dokor.argos.services.analysis.model.AuditCheckResult.of(
+                        "runtime.available", "old", com.dokor.argos.services.analysis.model.enums.AuditStatus.WARN,
+                        com.dokor.argos.services.analysis.model.enums.AuditSeverity.LOW,
+                        false, 0, List.of(), false, Map.of(), "old", null)))), "UNAVAILABLE");
+        }
+
+        @Test void legacyAvailabilityCheckWithoutFlagIsAlsoNormalized() throws Exception {
+            assertRuntimeFallback(module -> when(module.analyze(any(), any())).thenReturn(
+                new AuditModuleResult("runtime", "Runtime", "old", Map.of(),
+                    List.of(com.dokor.argos.services.analysis.model.AuditCheckResult.of(
+                        "runtime.available", "old", com.dokor.argos.services.analysis.model.enums.AuditStatus.WARN,
+                        com.dokor.argos.services.analysis.model.enums.AuditSeverity.LOW,
+                        false, 0, List.of(), false, Map.of(), "old", null)))), "UNAVAILABLE");
+        }
+
+        @Test void partialResultKeepsItsDataWithoutAvailabilityCheck() throws Exception {
+            try (var remote = new RemoteModuleExecutor(Duration.ofSeconds(5))) {
+                var processor = processor(remote);
+                when(runtime.analyze(any(), any())).thenReturn(
+                    new AuditModuleResult("runtime", "Runtime", "partial", Map.of("partial", true), List.of()));
+                processor.process(1L);
+                var report = ArgumentCaptor.forClass(AuditReportJson.class);
+                verify(publisher).completeAndPublish(eq(1L), any(), report.capture(), anyString(), nullable(String.class));
+                assertEquals("PARTIAL", mapper.readTree(report.getValue().meta().get("moduleStatuses"))
+                    .path("runtime").asText());
+                assertTrue(report.getValue().modules().get(2).checks().isEmpty());
+                verify(runs).updateModuleStatus(1L, "runtime", "COMPLETED");
+            }
+        }
         @Test void remoteCallsHaveHttpContextOverlapLocalWorkAndPublishOneOrderedReport() throws Exception {
             var started = new CountDownLatch(2); var release = new CountDownLatch(1);
             Thread localThread = Thread.currentThread();

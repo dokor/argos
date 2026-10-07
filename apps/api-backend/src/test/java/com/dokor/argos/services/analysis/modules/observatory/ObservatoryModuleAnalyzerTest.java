@@ -1,5 +1,6 @@
 package com.dokor.argos.services.analysis.modules.observatory;
 
+import com.dokor.argos.services.analysis.ModuleUnavailableException;
 import com.dokor.argos.services.analysis.model.AuditCheckResult;
 import com.dokor.argos.services.analysis.model.AuditContext;
 import com.dokor.argos.services.analysis.model.AuditModuleResult;
@@ -14,6 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -49,10 +51,16 @@ class ObservatoryModuleAnalyzerTest {
     @Test
     void unavailableScoreIsInfoNotWarn() throws Exception {
         // Pas de champ score => indisponible. Ne doit pas pénaliser le site : INFO non scoré.
-        AuditModuleResult result = analyze("{\"grade\":null}");
+        AuditModuleResult result = analyze("{\"grade\":\"pending\"}");
         AuditCheckResult score = check(result, "observatory.score");
         assertEquals(AuditStatus.INFO, score.status());
         assertNull(score.scoreRatio(), "indisponible => pas de ratio de score");
+        assertEquals(Boolean.TRUE, result.data().get("partial"));
+    }
+
+    @Test
+    void emptyResponseIsUnavailable() {
+        assertThrows(ModuleUnavailableException.class, () -> analyze("{}"));
     }
 
     @Test

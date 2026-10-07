@@ -1,6 +1,7 @@
 package com.dokor.argos.services.analysis.modules.runtime;
 
 import com.dokor.argos.services.analysis.model.AuditCheckResult;
+import com.dokor.argos.services.analysis.ModuleUnavailableException;
 import com.dokor.argos.services.analysis.model.AuditContext;
 import com.dokor.argos.services.analysis.model.AuditModuleResult;
 import com.dokor.argos.services.analysis.model.enums.AuditStatus;
@@ -13,6 +14,8 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.mockito.Mockito.*;
 
 class RuntimeModuleAnalyzerTest {
@@ -26,13 +29,9 @@ class RuntimeModuleAnalyzerTest {
         PlaywrightRuntimeClient client = mock(PlaywrightRuntimeClient.class);
         when(client.analyzeRuntime(anyString())).thenThrow(new HttpTimeoutException("request timed out"));
 
-        AuditModuleResult res = new RuntimeModuleAnalyzer(client)
-            .analyze(ctx(), LoggerFactory.getLogger("test"));
-
-        assertEquals(Boolean.FALSE, res.data().get("available"));
-        assertEquals("TIMEOUT", res.data().get("reason"));
-        assertEquals(1, res.checks().size());
-        assertEquals(AuditStatus.WARN, res.checks().get(0).status());
+        var error = assertThrows(ModuleUnavailableException.class,
+            () -> new RuntimeModuleAnalyzer(client).analyze(ctx(), LoggerFactory.getLogger("test")));
+        assertInstanceOf(HttpTimeoutException.class, error.getCause());
     }
 
     @Test
@@ -40,11 +39,28 @@ class RuntimeModuleAnalyzerTest {
         PlaywrightRuntimeClient client = mock(PlaywrightRuntimeClient.class);
         when(client.analyzeRuntime(anyString())).thenThrow(new IllegalStateException("service 500"));
 
-        AuditModuleResult res = new RuntimeModuleAnalyzer(client)
-            .analyze(ctx(), LoggerFactory.getLogger("test"));
+        assertThrows(ModuleUnavailableException.class,
+            () -> new RuntimeModuleAnalyzer(client).analyze(ctx(), LoggerFactory.getLogger("test")));
+    }
 
-        assertEquals(Boolean.FALSE, res.data().get("available"));
-        assertEquals("FAILED", res.data().get("reason"));
+    @Test
+    void emptyResponseCannotBecomeZeroErrorSuccess() {
+        var empty = new PlaywrightRuntimeClient.RuntimeAnalyzeResponse(
+            "https://example.com", "https://example.com", null, null, null, null);
+        assertThrows(ModuleUnavailableException.class, () -> analyze(empty));
+    }
+
+    @Test
+    void partialResponseKeepsOnlyMeasuredChecks() throws Exception {
+        var partial = new PlaywrightRuntimeClient.RuntimeAnalyzeResponse(
+            "https://example.com", "https://example.com", null,
+            new PlaywrightRuntimeClient.Console(2, 0, List.of(), null), null, null);
+        var result = analyze(partial);
+        assertEquals(Boolean.TRUE, result.data().get("partial"));
+        assertEquals(AuditStatus.WARN, checkStatus(result, "runtime.console.errors"));
+        assertEquals(0, result.checks().stream()
+            .filter(c -> c.key().equals("runtime.js.errors") || c.key().equals("runtime.network.5xx"))
+            .count());
     }
 
     // -------------------------

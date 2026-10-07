@@ -14,14 +14,12 @@ class HtmlModuleAnalyzerTest {
     private final HtmlModuleAnalyzer analyzer = new HtmlModuleAnalyzer();
 
     @Test
-    void shouldReturnWarningWhenHtmlIsMissing() {
+    void shouldSignalUnavailableWhenHtmlIsMissing() {
         AuditContext ctx = new AuditContext("http://x", "http://x", 0L)
             .withHttpResult("http://x", 200, 10, java.util.List.of("http://x"), java.util.Map.of(), null);
 
-        AuditModuleResult result = analyzer.analyze(ctx, LoggerFactory.getLogger("test"));
-
-        assertEquals("html", result.id());
-        assertTrue(result.checks().stream().anyMatch(c -> c.key().equals("html.available") && Boolean.FALSE.equals(c.value())));
+        assertThrows(ModuleUnavailableException.class,
+            () -> analyzer.analyze(ctx, LoggerFactory.getLogger("test")));
     }
 
     @Test

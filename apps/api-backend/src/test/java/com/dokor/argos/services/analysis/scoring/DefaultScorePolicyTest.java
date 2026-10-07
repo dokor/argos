@@ -243,7 +243,9 @@ class DefaultScorePolicyTest {
     void availabilityStubsAreNeverScored() {
         for (String key : new String[]{
             "ssl.available", "runtime.collect", "html.available",
-            "observatory.available", "zap.available", "lighthouse.collect"
+            "observatory.available", "zap.available", "lighthouse.collect",
+            "http.collect", "html.collect", "ssl.collect", "observatory.collect",
+            "zap.collect", "tech.collect"
         }) {
             ScorePolicy.ScoreRule rule = policy.ruleFor("any", key);
             assertFalse(rule.scorable(), key + " should not be scorable");

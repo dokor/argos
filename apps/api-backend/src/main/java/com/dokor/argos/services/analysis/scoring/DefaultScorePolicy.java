@@ -30,8 +30,9 @@ import java.util.*;
  *       <b>uniquement</b> par une clé exacte du catalogue. La sévérité sert à l'affichage,
  *       jamais au calcul du poids.</li>
  *   <li>INFO ⇒ non scoré (forcé en amont par {@link ScoreEnricherService}).</li>
- *   <li>Les stubs de disponibilité / mode dégradé ({@code *.available}, {@code *.collect})
- *       sont explicitement non scorés : bien qu'émis en WARN, ils ne doivent jamais peser
+ *   <li>Les stubs de disponibilité {@code *.collect} sont explicitement non scorés ;
+ *       les anciennes clés {@code *.available} restent lisibles via le repli informatif.
+ *       Bien qu'émis en WARN, ils ne doivent jamais peser
  *       sur le score (une panne de service externe ne doit pas faire chuter la note).</li>
  *   <li>Les catégories affichées sont les seuls <b>domaines métier</b> (performance,
  *       security, seo, a11y) — issue #197. Les tags d'outil (lighthouse, ssl, observatory,
@@ -132,17 +133,19 @@ public class DefaultScorePolicy implements ScorePolicy {
         map.put("ssl.protocols.tls13",        rule(true, 2,  "security", "ssl"));
         map.put("ssl.protocols.tls12",        rule(true, 2,  "security", "ssl"));
         map.put("ssl.protocols.legacy_disabled", rule(true, 3, "security", "ssl"));
-        map.put("ssl.available",              rule(false, 0, "ssl")); // stub dispo (WARN)
+        map.put("ssl.collect",                rule(false, 0, "ssl"));
 
         // ----- Observatory (Mozilla) -----
         map.put("observatory.score",     rule(true, 8, "security", "observatory"));
-        map.put("observatory.available", rule(false, 0, "observatory")); // stub dispo (WARN)
+        map.put("observatory.collect", rule(false, 0, "observatory"));
 
         // ----- ZAP : alertes génériques informatives (findings d'en-têtes via http.security.*) -----
-        map.put("zap.available", rule(false, 0, "zap")); // stub dispo (WARN)
+        map.put("zap.collect", rule(false, 0, "zap"));
 
         // ----- HTML : stub HTML vide -----
-        map.put("html.available", rule(false, 0, "html")); // stub dispo (WARN)
+        map.put("html.collect", rule(false, 0, "html"));
+        map.put("http.collect", rule(false, 0, "http"));
+        map.put("tech.collect", rule(false, 0, "tech"));
 
         // Les anciennes règles de préfixe rendaient implicitement ces clés
         // scorables. Elles sont désormais toutes déclarées et revues ici.
@@ -178,7 +181,6 @@ public class DefaultScorePolicy implements ScorePolicy {
         map.put("tech.cdn.cloudflare",     rule(false, 0, "tech"));
         map.put("tech.frontend.nextjs",     rule(false, 0, "tech"));
         map.put("tech.http.server_header",  rule(false, 0, "tech"));
-        map.put("tech.html.available",      rule(false, 0, "tech"));
         map.put("tech.analysis.duration_ms", rule(false, 0, "tech"));
 
         this.catalogue = Collections.unmodifiableMap(new TreeMap<>(map));

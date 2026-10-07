@@ -1,5 +1,6 @@
 package com.dokor.argos.services.analysis.modules.lighthouse;
 
+import com.dokor.argos.services.analysis.ModuleUnavailableException;
 import com.dokor.argos.services.analysis.model.AuditCheckResult;
 import com.dokor.argos.services.analysis.model.AuditContext;
 import com.dokor.argos.services.analysis.model.AuditModuleResult;
@@ -14,6 +15,8 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.mockito.Mockito.*;
 
 class LighthouseModuleAnalyzerTest {
@@ -41,13 +44,9 @@ class LighthouseModuleAnalyzerTest {
         LighthouseClient client = mock(LighthouseClient.class);
         when(client.analyze(anyString())).thenThrow(new HttpTimeoutException("request timed out"));
 
-        AuditModuleResult res = new LighthouseModuleAnalyzer(client)
-            .analyze(ctx(), LoggerFactory.getLogger("test"));
-
-        assertEquals(Boolean.FALSE, res.data().get("available"));
-        assertEquals("TIMEOUT", res.data().get("reason"));
-        assertEquals(1, res.checks().size());
-        assertEquals(AuditStatus.WARN, res.checks().get(0).status());
+        var error = assertThrows(ModuleUnavailableException.class,
+            () -> new LighthouseModuleAnalyzer(client).analyze(ctx(), LoggerFactory.getLogger("test")));
+        assertInstanceOf(HttpTimeoutException.class, error.getCause());
     }
 
     @Test
@@ -55,11 +54,8 @@ class LighthouseModuleAnalyzerTest {
         LighthouseClient client = mock(LighthouseClient.class);
         when(client.analyze(anyString())).thenThrow(new IllegalStateException("service 500"));
 
-        AuditModuleResult res = new LighthouseModuleAnalyzer(client)
-            .analyze(ctx(), LoggerFactory.getLogger("test"));
-
-        assertEquals(Boolean.FALSE, res.data().get("available"));
-        assertEquals("FAILED", res.data().get("reason"));
+        assertThrows(ModuleUnavailableException.class,
+            () -> new LighthouseModuleAnalyzer(client).analyze(ctx(), LoggerFactory.getLogger("test")));
     }
 
     // -------------------------
@@ -72,15 +68,8 @@ class LighthouseModuleAnalyzerTest {
         LighthouseClient client = mock(LighthouseClient.class);
         when(client.analyze(anyString())).thenReturn(new ObjectMapper().readTree("{}"));
 
-        AuditModuleResult res = new LighthouseModuleAnalyzer(client)
-            .analyze(ctx(), LoggerFactory.getLogger("test"));
-
-        assertEquals(Boolean.FALSE, res.data().get("available"));
-        assertEquals("UNAVAILABLE", res.data().get("reason"));
-        // Un seul check "collect" non scorable, aucun lighthouse.score.* qui pénaliserait le score.
-        assertEquals(1, res.checks().size());
-        assertEquals("lighthouse.collect", res.checks().get(0).key());
-        assertEquals(0, res.checks().stream().filter(c -> c.key().startsWith("lighthouse.score.")).count());
+        assertThrows(ModuleUnavailableException.class,
+            () -> new LighthouseModuleAnalyzer(client).analyze(ctx(), LoggerFactory.getLogger("test")));
     }
 
     /** Corps sans nœud "categories" : même traitement que le corps vide. */
@@ -90,12 +79,8 @@ class LighthouseModuleAnalyzerTest {
         when(client.analyze(anyString()))
             .thenReturn(new ObjectMapper().readTree("{\"lighthouseVersion\":\"11.0.0\",\"audits\":{}}"));
 
-        AuditModuleResult res = new LighthouseModuleAnalyzer(client)
-            .analyze(ctx(), LoggerFactory.getLogger("test"));
-
-        assertEquals(Boolean.FALSE, res.data().get("available"));
-        assertEquals("UNAVAILABLE", res.data().get("reason"));
-        assertEquals(0, res.checks().stream().filter(c -> c.key().startsWith("lighthouse.score.")).count());
+        assertThrows(ModuleUnavailableException.class,
+            () -> new LighthouseModuleAnalyzer(client).analyze(ctx(), LoggerFactory.getLogger("test")));
     }
 
     /** Catégories présentes mais toutes en score null (catégories en erreur) : indisponible, pas de 0 fabriqué. */
@@ -107,11 +92,8 @@ class LighthouseModuleAnalyzerTest {
             + "\"seo\":{\"score\":null}}}";
         when(client.analyze(anyString())).thenReturn(new ObjectMapper().readTree(json));
 
-        AuditModuleResult res = new LighthouseModuleAnalyzer(client)
-            .analyze(ctx(), LoggerFactory.getLogger("test"));
-
-        assertEquals(Boolean.FALSE, res.data().get("available"));
-        assertEquals(0, res.checks().stream().filter(c -> c.key().startsWith("lighthouse.score.")).count());
+        assertThrows(ModuleUnavailableException.class,
+            () -> new LighthouseModuleAnalyzer(client).analyze(ctx(), LoggerFactory.getLogger("test")));
     }
 
     /**
@@ -128,6 +110,7 @@ class LighthouseModuleAnalyzerTest {
             .analyze(ctx(), LoggerFactory.getLogger("test"));
 
         assertEquals(Boolean.TRUE, res.data().get("available"));
+        assertEquals(Boolean.TRUE, res.data().get("partial"));
         AuditCheckResult perf = res.checks().stream()
             .filter(c -> "lighthouse.score.performance".equals(c.key()))
             .findFirst().orElseThrow();
