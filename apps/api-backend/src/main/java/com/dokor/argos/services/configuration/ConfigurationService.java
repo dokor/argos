@@ -4,6 +4,8 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
 import com.typesafe.config.Config;
+import org.glassfish.grizzly.threadpool.ThreadPoolConfig;
+import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,10 +77,47 @@ public class ConfigurationService {
     }
 
     public Integer httpGrizzlyWorkerThreadsPoolSize() {
-        if (!config.hasPath("http-grizzly.worker-threads-pool-size")) {
-            return null;
+        return positiveInt("http-grizzly.worker-threads-pool-size", 24);
+    }
+
+    /** Missing/null settings use the bounded candidate profile; invalid values fail startup. */
+    public ThreadPoolConfig httpGrizzlyWorkerThreadPoolConfig() {
+        int maximum = httpGrizzlyWorkerThreadsPoolSize();
+        int core = positiveInt("http-grizzly.worker-threads-core-pool-size", Math.min(4, maximum));
+        int queue = positiveInt("http-grizzly.worker-threads-queue-limit", 64);
+        if (core > maximum) {
+            throw new IllegalArgumentException("HTTP core pool size must not exceed maximum pool size");
         }
-        return config.getInt("http-grizzly.worker-threads-pool-size");
+        return ThreadPoolConfig.defaultConfig()
+            .setCorePoolSize(core).setMaxPoolSize(maximum).setQueueLimit(queue)
+            .setKeepAliveTime(30, TimeUnit.SECONDS);
+    }
+
+    /** Validate before Guice eagerly opens DB pools; Hikari must not silently fix invalid sizes. */
+    public void validateResourcePools() {
+        httpGrizzlyWorkerThreadPoolConfig();
+        for (String path : java.util.List.of("db.hikari.maximumPoolSize", "db.hikari.minimumIdle", "db.hikari.connectionTimeout")) {
+            if (config.hasPathOrNull(path) && !config.hasPath(path)) {
+                throw new IllegalArgumentException("DB pool setting must not be null: " + path);
+            }
+        }
+        int maximum = positiveInt("db.hikari.maximumPoolSize", 6);
+        int minimum = config.hasPath("db.hikari.minimumIdle") ? config.getInt("db.hikari.minimumIdle") : 1;
+        if (minimum < 0 || minimum > maximum) {
+            throw new IllegalArgumentException("DB minimumIdle must be between zero and maximumPoolSize");
+        }
+        int timeout = positiveInt("db.hikari.connectionTimeout", 5000);
+        if (timeout < 250) {
+            throw new IllegalArgumentException("DB connectionTimeout must be at least 250 milliseconds");
+        }
+    }
+
+    private int positiveInt(String path, int fallback) {
+        int value = config.hasPath(path) ? config.getInt(path) : fallback;
+        if (value < 1) {
+            throw new IllegalArgumentException("Pool setting must be positive: " + path);
+        }
+        return value;
     }
 
     public Duration auditSchedulerInterval() {

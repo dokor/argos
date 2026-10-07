@@ -2,6 +2,8 @@ package com.dokor.argos.jersey;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.concurrent.RejectedExecutionException;
+import org.glassfish.grizzly.threadpool.ThreadPoolConfig;
 
 import jakarta.ws.rs.core.UriBuilder;
 
@@ -22,7 +24,7 @@ public class GrizzlySetup {
 	private static final int DEFAULT_HTTP_PORT = 8081;
 	private static final String DEFAULT_HTTP_HOST = "0.0.0.0";
 
-	public static HttpServer start(ResourceConfig jerseyResourceConfig, GrizzlyThreadPoolProbe grizzlyThreadPoolProbe, String httpPort, String httpHost, Integer httpGrizzlyWorkerThreadsPoolSize)
+	public static HttpServer start(ResourceConfig jerseyResourceConfig, GrizzlyThreadPoolProbe grizzlyThreadPoolProbe, String httpPort, String httpHost, ThreadPoolConfig workerThreadPoolConfig)
 			throws IOException {
 		// replace JUL logger (used by Grizzly) by SLF4J logger
 		SLF4JBridgeHandler.removeHandlersForRootLogger();
@@ -45,12 +47,20 @@ public class GrizzlySetup {
         httpServer.getServerConfiguration().getMonitoringConfig().getThreadPoolConfig().addProbes(grizzlyThreadPoolProbe);
 
         // worker thread pool configuration
-        if (httpGrizzlyWorkerThreadsPoolSize != null) {
-            httpServer.getListeners().forEach(networkListener -> networkListener.getTransport().getWorkerThreadPoolConfig().setMaxPoolSize(httpGrizzlyWorkerThreadsPoolSize));
-        }
+        httpServer.getListeners().forEach(networkListener ->
+            networkListener.getTransport().setWorkerThreadPoolConfig(workerThreadPoolConfig.copy()));
 
 		// minimal error page to avoid leaking server information
-		httpServer.getServerConfiguration().setDefaultErrorPageGenerator(new GrizzlyErrorPageHandler());
+		GrizzlyErrorPageHandler defaultErrorPage = new GrizzlyErrorPageHandler();
+        httpServer.getServerConfiguration().setDefaultErrorPageGenerator((request, status, reason, description, error) -> {
+            // Grizzly rejects a full request executor before Jersey filters can run.
+            if (error instanceof RejectedExecutionException) {
+                request.getResponse().setStatus(503);
+                request.getResponse().setHeader("Retry-After", "1");
+                return "Service Unavailable";
+            }
+            return defaultErrorPage.generate(request, status, reason, description, error);
+        });
 
 		// webjars for swagger ui
 		CLStaticHttpHandler webJarHandler = new CLStaticHttpHandler(
