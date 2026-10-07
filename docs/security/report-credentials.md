@@ -21,7 +21,7 @@ Published runs predating V5 inherit their report hash. Legacy queued/running row
 with no recoverable credential become FAILED with
 `LEGACY_REPORT_CREDENTIAL_UNAVAILABLE`; inventing a replacement would not restore
 the user's original link. Pending, published and expired links are covered by the
-real migration/DAO tests on MariaDB 10.11 and 11.4 in `mariadb-credentials.yml`.
+real migration/DAO tests on the production MariaDB 11.4 version in `mariadb-integration.yml`.
 
 The credential is not recoverable for future email delivery. Issue #97 needs its
 own creation-time delivery design; admin access does not reconstruct public links.

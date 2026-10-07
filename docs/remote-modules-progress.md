@@ -41,9 +41,10 @@ prouve le chevauchement SSL/Observatory avec le travail local ; aucun navigateur
 ou site tiers n'est exécuté. Le gain structurel est le passage de la somme des
 durées à leur chevauchement, sans promesse de latence Raspberry.
 
-Le workflow `MariaDB progress` lance `mvn -P mariadb-integration verify` sur
-MariaDB 10.11 et 11.4, avec une base dédiée `argos_progress_test`. Il teste le
-vrai DAO/SQL QueryDSL : vingt paires de transitions concurrentes, état terminal,
+Le workflow `MariaDB integration` lance `mvn -P mariadb-integration verify` sur
+MariaDB 11.4, la version de production, avec une base dédiée
+`argos_progress_test`. Il teste le vrai DAO/SQL QueryDSL : vingt paires de
+transitions concurrentes, état terminal,
 retry, JSON invalide, ordre historique, clôture reaper et blob intact. Les rapports
 Failsafe sont conservés en artefact lié au SHA. Le profil échoue si l'URL de la
 base isolée n'est pas renseignée ; aucune DB d'exploitation n'est utilisée.
@@ -51,8 +52,8 @@ base isolée n'est pas renseignée ; aucune DB d'exploitation n'est utilisée.
 Le test `normalProgressUsesSixteenUpdatesAndNoSelectInsteadOfThirtyTwoStatements`
 imprime les nombres de statements et durées avant/après sur la fixture MariaDB.
 Ces timings comprennent les connexions de test ; ils ne mesurent ni le Raspberry
-ni le parcours réseau réel. La version de MariaDB en production reste à relever
-avant déploiement ; les deux versions CI bornent la compatibilité vérifiée.
+ni le parcours réseau réel. La matrice historique 10.11/11.4 a établi la
+compatibilité initiale ; la CI courante cible la version 11.4 déployée.
 
 Première exécution CI (commit `865ea0c`) : les huit tests d'intégration réussissent
 sur les deux versions. La fixture mesure 57 → 87 ms sur 10.11 et 74 → 84 ms sur

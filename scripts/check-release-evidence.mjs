@@ -3,8 +3,7 @@ import { pathToFileURL } from 'node:url';
 
 export const REQUIRED_CHECKS = [
   'API backend tests', 'Frontend checks', 'Lighthouse checks', 'Playwright checks',
-  'MariaDB credentials (10.11)', 'MariaDB credentials (11.4)',
-  'MariaDB progress (10.11)', 'MariaDB progress (11.4)',
+  'MariaDB integration (11.4)',
   'Controlled audit E2E', 'Secret scan',
   'Production dependency audit (console-web)',
   'Production dependency audit (playwright-service)',

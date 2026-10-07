@@ -22,6 +22,6 @@ Valid new and repeated emails use the same `INSERT ... ON DUPLICATE KEY UPDATE i
 
 ## Evidence
 
-`PublicWriteLimiterTest` covers windows, burst, concurrent admissions and literal proxy trust. `PublicWriteHttpTest` runs actual Grizzly/Jersey requests and rotates forged forwarded headers: the sixth newsletter request is rejected before service execution and responses for new/duplicate are identical. `NewsletterPrivacyIT` races eight subscriptions against real MariaDB in CI (10.11/11.4), asserting one row and identical results. BFF tests assert header propagation and prevent forwarding untrusted identity headers.
+`PublicWriteLimiterTest` covers windows, burst, concurrent admissions and literal proxy trust. `PublicWriteHttpTest` runs actual Grizzly/Jersey requests and rotates forged forwarded headers: the sixth newsletter request is rejected before service execution and responses for new/duplicate are identical. `NewsletterPrivacyIT` races eight subscriptions against real MariaDB 11.4 in CI, asserting one row and identical results. BFF tests assert header propagation and prevent forwarding untrusted identity headers.
 
 No production quotas or trust list have been applied by this PR; deployment verification remains a #259 gate.
