@@ -19,6 +19,8 @@ export class ApiError extends Error {
 
 export type CreateAuditRequest = {
   url: string;
+  /** Attribution BFF uniquement ; jamais transmise au backend Java. */
+  sourceRoute?: string;
 };
 
 export type CreateAuditResponse = {

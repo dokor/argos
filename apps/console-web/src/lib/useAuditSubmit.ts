@@ -29,6 +29,8 @@ type AppLogger = ReturnType<typeof createLogger>;
 export type UseAuditSubmitOptions = {
   /** Logger déjà contextualisé (canal + route + details). */
   logger: AppLogger;
+  /** Route publique fixe utilisée pour attribuer les créations d'audit côté BFF. */
+  sourceRoute?: string;
   /** Fenêtre de polling (ms) avant redirection forcée ; 0 = redirection immédiate. */
   maxWaitMs?: number;
   /** Intervalle de polling (ms). */
@@ -62,6 +64,7 @@ const DEFAULT_MAX_POLLS = 48; // ~2 min à 2,5 s
 export function useAuditSubmit(options: UseAuditSubmitOptions): UseAuditSubmitResult {
   const {
     logger,
+    sourceRoute,
     maxWaitMs = 0,
     pollIntervalMs = DEFAULT_POLL_INTERVAL_MS,
     maxPolls = DEFAULT_MAX_POLLS,
@@ -205,7 +208,10 @@ export function useAuditSubmit(options: UseAuditSubmitOptions): UseAuditSubmitRe
       });
 
       try {
-        const res = await argosApi.createAudit({ url: normalized });
+        const res = await argosApi.createAudit({
+          url: normalized,
+          ...(sourceRoute === "/guides/checklist-audit-site-web" ? { sourceRoute } : {}),
+        });
         runIdRef.current = res.runId;
         reportTokenRef.current = res.reportToken ?? null;
         pollCountRef.current = 0;
@@ -238,7 +244,7 @@ export function useAuditSubmit(options: UseAuditSubmitOptions): UseAuditSubmitRe
         });
       }
     },
-    [phase, maxWaitMs, logger, redirectToReport]
+    [phase, maxWaitMs, logger, redirectToReport, sourceRoute]
   );
 
   const reset = useCallback(() => {

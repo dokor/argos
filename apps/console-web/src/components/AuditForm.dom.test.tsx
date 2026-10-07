@@ -76,6 +76,20 @@ describe("AuditForm (soumission d'audit)", () => {
     expect(window.open).not.toHaveBeenCalled();
   });
 
+  it("attribue un audit lancé depuis la checklist", async () => {
+    vi.mocked(argosApi.createAudit).mockResolvedValue({
+      auditId: 1, runId: 2, reportToken: "checklist-token", status: "QUEUED",
+    } as never);
+    render(<AuditForm mode="public" sourceRoute="/guides/checklist-audit-site-web" />);
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "example.com" } });
+    fireEvent.click(screen.getByRole("button", { name: "Lancer un audit gratuit" }));
+
+    await waitFor(() => expect(argosApi.createAudit).toHaveBeenCalledWith({
+      url: "https://example.com",
+      sourceRoute: "/guides/checklist-audit-site-web",
+    }));
+  });
+
   it("annonce en anglais une erreur de création sans exposer le message serveur", async () => {
     window.localStorage.setItem("argos-lang", "en");
     vi.mocked(argosApi.createAudit).mockRejectedValue(new Error("Service temporarily unavailable"));

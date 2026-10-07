@@ -48,6 +48,7 @@ const copy = {
     homeLink: "Découvrir Argos",
     faqLink: "Lire la FAQ",
     accessibilityLink: "Comprendre l’accessibilité numérique",
+    checklistLink: "Suivre la checklist d’audit de site web",
   },
   en: {
     eyebrow: "Automated diagnosis · No account",
@@ -87,6 +88,7 @@ const copy = {
     homeLink: "Explore Argos",
     faqLink: "Read the FAQ",
     accessibilityLink: "Understand digital accessibility",
+    checklistLink: "Follow the website audit checklist",
   },
 } as const;
 
@@ -172,6 +174,7 @@ export default function AuditTechniquePage() {
               <Link href="/">{c.homeLink}</Link>
               <Link href="/faq">{c.faqLink}</Link>
               <Link href="/ressources/accessibilite-numerique">{c.accessibilityLink}</Link>
+              <Link href="/guides/checklist-audit-site-web">{c.checklistLink}</Link>
             </div>
           </div>
         </section>
