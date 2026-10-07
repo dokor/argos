@@ -11,15 +11,15 @@ concurrency:
 permissions:
   contents: read
 jobs:
-  audit:
-    name: Production dependency audit
+  changes:
+    uses: ./.github/workflows/changed-paths.yml
+
+  console-web:
+    name: Production dependency audit (console-web)
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.dependency_frontend == 'true') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 8
-    strategy:
-      fail-fast: false
-      max-parallel: 1
-      matrix:
-        app: [console-web, playwright-service, lighthouse-service]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -28,5 +28,39 @@ jobs:
         with:
           node-version: '24.21.0'
       - name: Check locked production dependencies
-        working-directory: apps/${{ matrix.app }}
+        working-directory: apps/console-web
+        run: npm audit --omit=dev --audit-level=high
+
+  playwright-service:
+    name: Production dependency audit (playwright-service)
+    needs: [changes, console-web]
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.dependency_playwright == 'true') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.21.0'
+      - name: Check locked production dependencies
+        working-directory: apps/playwright-service
+        run: npm audit --omit=dev --audit-level=high
+
+  lighthouse-service:
+    name: Production dependency audit (lighthouse-service)
+    needs: [changes, playwright-service]
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.dependency_lighthouse == 'true') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.21.0'
+      - name: Check locked production dependencies
+        working-directory: apps/lighthouse-service
         run: npm audit --omit=dev --audit-level=high
