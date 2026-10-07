@@ -40,17 +40,38 @@ public class ConfigurationService {
     }
 
     public String internalApiAuthPassword() {
-        if (environment.containsKey("INTERNAL_API_PASSWORD")) return environment.get("INTERNAL_API_PASSWORD");
-        return config.getString("internal-api.auth-password");
+        String path = "internal-api.auth-password";
+        if (environment.containsKey("INTERNAL_API_PASSWORD")) {
+            return requireNonBlankSecret(path, environment.get("INTERNAL_API_PASSWORD"));
+        }
+        return requiredConfigSecret(path);
     }
 
-    /** Validate before opening the DB or serving HTTP; error messages never contain values. */
+    /** Validate the effective credentials before opening the DB or serving HTTP. */
     public void validateRequiredSecrets() {
-        for (String path : java.util.List.of("internal-api.auth-password", "db.hikari.\"dataSource.password\"")) {
-            if (!config.hasPath(path) || config.getString(path).isBlank()) {
-                throw new IllegalStateException("Required external secret missing: " + path);
-            }
+        internalApiAuthPassword();
+        requiredConfigSecret("db.hikari.\"dataSource.password\"");
+    }
+
+    private String requiredConfigSecret(String path) {
+        // Inspect the type first: ConfigException.WrongType can include the secret value.
+        if (!config.hasPath(path)
+            || config.getValue(path).valueType() != com.typesafe.config.ConfigValueType.STRING) {
+            throw invalidSecret(path);
         }
+        return requireNonBlankSecret(path, config.getString(path));
+    }
+
+    private String requireNonBlankSecret(String path, String value) {
+        if (value.isBlank()) {
+            throw invalidSecret(path);
+        }
+        return value;
+    }
+
+    private IllegalStateException invalidSecret(String path) {
+        // Never attach a configuration exception as a cause: it may contain credentials.
+        return new IllegalStateException("Required external secret missing or invalid: " + path);
     }
 
     public Integer httpGrizzlyWorkerThreadsPoolSize() {
