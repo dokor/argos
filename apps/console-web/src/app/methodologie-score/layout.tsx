@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://argos.lelouet.fr").replace(/\/+$/, "");
 const pageUrl = `${siteUrl}/methodologie-score`;
-const title = "Comment est calculé le score d'audit Argos ?";
+const title = "Comment est calculé le score d'audit de site web ?";
 const description = "Comprendre le score d'audit de site web Argos : contrôles, poids, quatre domaines, résultats partiels et différence avec Lighthouse. Exemple chiffré du barème v11.";
 
 export const metadata: Metadata = {
