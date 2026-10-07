@@ -1,5 +1,6 @@
 package com.dokor.argos.services.analysis.modules.lighthouse;
 
+import com.dokor.argos.services.analysis.AuditModule;
 import com.dokor.argos.services.analysis.model.*;
 import com.dokor.argos.services.analysis.accessibility.LighthouseAccessibilityNormalizer;
 import com.dokor.argos.services.analysis.model.enums.AuditSeverity;
@@ -14,7 +15,7 @@ import java.net.http.HttpTimeoutException;
 import java.util.*;
 
 @Singleton
-public class LighthouseModuleAnalyzer implements AuditModuleAnalyzer {
+public class LighthouseModuleAnalyzer {
 
     private final LighthouseClient client;
 
@@ -23,12 +24,10 @@ public class LighthouseModuleAnalyzer implements AuditModuleAnalyzer {
         this.client = client;
     }
 
-    @Override
     public String moduleId() {
-        return "lighthouse";
+        return AuditModule.LIGHTHOUSE.id();
     }
 
-    @Override
     public AuditModuleResult analyze(AuditContext auditContext, Logger logger) {
         long start = System.currentTimeMillis();
 

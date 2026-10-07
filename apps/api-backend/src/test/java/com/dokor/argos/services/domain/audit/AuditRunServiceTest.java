@@ -2,6 +2,7 @@ package com.dokor.argos.services.domain.audit;
 
 import com.dokor.argos.db.dao.AuditRunDao;
 import com.dokor.argos.db.generated.AuditRun;
+import com.dokor.argos.services.analysis.AuditModule;
 import com.dokor.argos.services.domain.audit.model.ModuleStatus;
 import com.dokor.argos.services.token.TokenService;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -22,6 +23,17 @@ import static org.mockito.Mockito.*;
  * corrompu.
  */
 class AuditRunServiceTest {
+
+    @Test
+    void catalogueControlsExecutionOrderAndInitialProgress() {
+        var modules = AuditModule.ordered();
+        assertEquals(List.of("http", "html", "runtime", "lighthouse", "observatory", "ssl", "zap", "tech"),
+            modules.stream().map(AuditModule::id).toList());
+        assertEquals(modules.stream()
+                .map(module -> new ModuleStatus(module.id(), module.progressLabel(), ModuleStatus.PENDING)).toList(),
+            AuditRunService.INITIAL_MODULE_STATUSES);
+        assertEquals(AuditModule.HTTP, modules.getFirst());
+    }
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 

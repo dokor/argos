@@ -192,12 +192,14 @@ public class AuditProcessorService {
             // rapport partiel. Le détail est exposé dans meta.moduleStatuses / meta.degraded.
             Map<String, String> moduleStatuses = new LinkedHashMap<>();
 
-            // --- Modules PAGE ---
-
-            // HTTP (page-level : status, redirects, headers, body)
+            // HTTP must run first: it supplies finalUrl, headers and body to every
+            // remaining module. The catalogue controls the execution/report order.
+            AuditModule httpDefinition = AuditModule.ordered().getFirst();
+            if (httpDefinition != AuditModule.HTTP)
+                throw new IllegalStateException("HTTP must be the first audit module");
             final AuditContext baseContext = context;
             AuditModuleResult httpModule = runModule(
-                runId, "http", "HTTP", moduleStatuses,
+                runId, httpDefinition, moduleStatuses,
                 () -> httpModuleAnalyzer.analyze(baseContext, logger));
 
             // Enrichir le contexte avec les données HTTP (finalUrl, headers, body…)
@@ -210,69 +212,37 @@ public class AuditProcessorService {
             httpModule = stripRawBody(httpModule);
 
             // HTTP has supplied the immutable context. Only these two distant APIs overlap local work.
-            logger.info("module_start module=observatory runId={}", runId);
-            logger.info("module_start module=ssl runId={}", runId);
+            logger.info("module_start module={} runId={}", AuditModule.OBSERVATORY.id(), runId);
+            logger.info("module_start module={} runId={}", AuditModule.SSL.id(), runId);
             AuditDeadline collectionDeadline=AuditDeadline.current();
-            try (var observatory = remote.submit("observatory", () -> collectionDeadline.call(() -> observatoryModuleAnalyzer.analyze(ctx, logger)));
-                 var ssl = remote.submit("ssl", () -> collectionDeadline.call(() -> sslLabsModuleAnalyzer.analyze(ctx, logger)))) {
-                auditRunService.updateModuleStatus(runId, "observatory", "RUNNING");
-                auditRunService.updateModuleStatus(runId, "ssl", "RUNNING");
+            try (var observatory = remote.submit(AuditModule.OBSERVATORY.id(), () -> collectionDeadline.call(() -> observatoryModuleAnalyzer.analyze(ctx, logger)));
+                 var ssl = remote.submit(AuditModule.SSL.id(), () -> collectionDeadline.call(() -> sslLabsModuleAnalyzer.analyze(ctx, logger)))) {
+                auditRunService.updateModuleStatus(runId, AuditModule.OBSERVATORY.id(), "RUNNING");
+                auditRunService.updateModuleStatus(runId, AuditModule.SSL.id(), "RUNNING");
 
-                AuditModuleResult htmlModule = runModule(
-                    runId, "html", "HTML", moduleStatuses,
-                    () -> htmlModuleAnalyzer.analyze(ctx, logger));
-
-                AuditModuleResult runtimeModule = runModule(
-                    runId, "runtime", "Runtime (Playwright)", moduleStatuses,
-                    () -> runtimeModuleAnalyzer.analyze(ctx, logger));
-
-                AuditModuleResult lighthouseModule = runModule(
-                    runId, "lighthouse", "Lighthouse", moduleStatuses,
-                    () -> lighthouseModuleAnalyzer.analyze(ctx, logger));
-                if (httpModule.data() != null && Boolean.TRUE.equals(httpModule.data().get("antiBotDetected"))) {
-                    Map<String, Object> data = new LinkedHashMap<>(
-                        lighthouseModule.data() == null ? Map.of() : lighthouseModule.data());
-                    data.put("accessibilityEvidence", LighthouseAccessibilityNormalizer.unavailable());
-                    lighthouseModule = new AuditModuleResult(lighthouseModule.id(), lighthouseModule.title(),
-                        lighthouseModule.summary(), data, lighthouseModule.checks());
+                List<AuditModuleResult> allModules = new ArrayList<>(AuditModule.ordered().size());
+                allModules.add(httpModule);
+                for (AuditModule module : AuditModule.ordered().subList(1, AuditModule.ordered().size())) {
+                    AuditModuleResult result = switch (module) {
+                        case HTTP -> throw new IllegalStateException("HTTP already executed");
+                        case HTML -> runModule(runId, module, moduleStatuses,
+                            () -> htmlModuleAnalyzer.analyze(ctx, logger));
+                        case RUNTIME -> runModule(runId, module, moduleStatuses,
+                            () -> runtimeModuleAnalyzer.analyze(ctx, logger));
+                        case LIGHTHOUSE -> enrichLighthouse(runModule(runId, module, moduleStatuses,
+                            () -> lighthouseModuleAnalyzer.analyze(ctx, logger)), httpModule, ctx);
+                        case OBSERVATORY -> runModule(runId, module, moduleStatuses,
+                            observatory::await, observatory.startedAtMillis(), true);
+                        case SSL -> runModule(runId, module, moduleStatuses,
+                            ssl::await, ssl.startedAtMillis(), true);
+                        case ZAP -> runModule(runId, module, moduleStatuses,
+                            () -> zapModuleAnalyzer.analyze(ctx, logger));
+                        // Only Tech has a 24h domain cache. Observatory and SSL still run for each audit.
+                        case TECH -> runModule(runId, module, moduleStatuses,
+                            () -> domainAnalysisService.getOrRunTechAnalysis(ctx, logger));
+                    };
+                    allModules.add(result);
                 }
-                boolean blockedPage = ctx.httpStatusCode() == 403 || ctx.httpStatusCode() == 429
-                    || httpModule.data() != null && Boolean.TRUE.equals(httpModule.data().get("antiBotDetected"));
-                Map<String, Object> accessibilityData = new LinkedHashMap<>(
-                    lighthouseModule.data() == null ? Map.of() : lighthouseModule.data());
-                AccessibilityEvidence evidence = accessibilityData.containsKey("accessibilityEvidence")
-                    ? objectMapper.convertValue(accessibilityData.get("accessibilityEvidence"), AccessibilityEvidence.class)
-                    : LighthouseAccessibilityNormalizer.unavailable();
-                accessibilityData.put("accessibilityEvidence", evidence);
-                accessibilityData.put("accessibilityCompliance", accessibilityRiskService.assess(evidence,
-                    accessibilityScopeService.qualify(ctx.body(), blockedPage, AccessibilityRegulatoryScopeService.Facts.unknown()),
-                    AccessibilityComplianceRiskService.Rules.pending()));
-                lighthouseModule = new AuditModuleResult(lighthouseModule.id(), lighthouseModule.title(),
-                    lighthouseModule.summary(), accessibilityData, lighthouseModule.checks());
-
-                // --- Modules DOMAIN ---
-
-                AuditModuleResult observatoryModule = runModule(
-                    runId, "observatory", "Observatory", moduleStatuses,
-                    observatory::await, observatory.startedAtMillis(), true);
-
-                AuditModuleResult sslModule = runModule(
-                    runId, "ssl", "SSL Labs", moduleStatuses,
-                    ssl::await, ssl.startedAtMillis(), true);
-
-                AuditModuleResult zapModule = runModule(
-                    runId, "zap", "OWASP ZAP", moduleStatuses,
-                    () -> zapModuleAnalyzer.analyze(ctx, logger));
-
-                // --- Module DOMAIN (tech) - cache 24h partagé entre toutes les pages du domaine ---
-                AuditModuleResult techModule = runModule(
-                    runId, "tech", "Tech stack", moduleStatuses,
-                    () -> domainAnalysisService.getOrRunTechAnalysis(ctx, logger));
-
-                List<AuditModuleResult> allModules = List.of(
-                    httpModule, htmlModule, runtimeModule, lighthouseModule,
-                    observatoryModule, sslModule, zapModule, techModule
-                );
 
                 boolean degraded = moduleStatuses.values().stream()
                     .anyMatch(st -> !"COMPLETED".equals(st));
@@ -354,6 +324,30 @@ public class AuditProcessorService {
         }
     }
 
+    private AuditModuleResult enrichLighthouse(AuditModuleResult lighthouseModule,
+                                              AuditModuleResult httpModule, AuditContext context) {
+        if (httpModule.data() != null && Boolean.TRUE.equals(httpModule.data().get("antiBotDetected"))) {
+            Map<String, Object> data = new LinkedHashMap<>(
+                lighthouseModule.data() == null ? Map.of() : lighthouseModule.data());
+            data.put("accessibilityEvidence", LighthouseAccessibilityNormalizer.unavailable());
+            lighthouseModule = new AuditModuleResult(lighthouseModule.id(), lighthouseModule.title(),
+                lighthouseModule.summary(), data, lighthouseModule.checks());
+        }
+        boolean blockedPage = context.httpStatusCode() == 403 || context.httpStatusCode() == 429
+            || httpModule.data() != null && Boolean.TRUE.equals(httpModule.data().get("antiBotDetected"));
+        Map<String, Object> accessibilityData = new LinkedHashMap<>(
+            lighthouseModule.data() == null ? Map.of() : lighthouseModule.data());
+        AccessibilityEvidence evidence = accessibilityData.containsKey("accessibilityEvidence")
+            ? objectMapper.convertValue(accessibilityData.get("accessibilityEvidence"), AccessibilityEvidence.class)
+            : LighthouseAccessibilityNormalizer.unavailable();
+        accessibilityData.put("accessibilityEvidence", evidence);
+        accessibilityData.put("accessibilityCompliance", accessibilityRiskService.assess(evidence,
+            accessibilityScopeService.qualify(context.body(), blockedPage, AccessibilityRegulatoryScopeService.Facts.unknown()),
+            AccessibilityComplianceRiskService.Rules.pending()));
+        return new AuditModuleResult(lighthouseModule.id(), lighthouseModule.title(),
+            lighthouseModule.summary(), accessibilityData, lighthouseModule.checks());
+    }
+
     /**
      * Annotates each check in the module with the module's own id as source,
      * unless the check already has sources set (e.g. from a merge).
@@ -402,13 +396,15 @@ public class AuditProcessorService {
      * TIMEOUT / FAILED) et, en cas d'échec, un résultat "indisponible" (WARN, non
      * scorable) est substitué afin que le reste de l'analyse se poursuive.
      */
-    private AuditModuleResult runModule(long runId, String moduleId, String title,
+    private AuditModuleResult runModule(long runId, AuditModule module,
                                         Map<String, String> statuses, ModuleCall call) {
-        return runModule(runId, moduleId, title, statuses, call, System.currentTimeMillis(), false);
+        return runModule(runId, module, statuses, call, System.currentTimeMillis(), false);
     }
 
-    private AuditModuleResult runModule(long runId, String moduleId, String title,
+    private AuditModuleResult runModule(long runId, AuditModule module,
                                         Map<String, String> statuses, ModuleCall call, long start, boolean started) {
+        String moduleId = module.id();
+        String title = module.fallbackTitle();
         MDC.put("module", moduleId);
         if (!started) {
             logger.info("module_start module={} runId={}", moduleId, runId);

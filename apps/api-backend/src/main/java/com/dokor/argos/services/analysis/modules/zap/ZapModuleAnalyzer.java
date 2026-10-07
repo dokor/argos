@@ -1,8 +1,8 @@
 package com.dokor.argos.services.analysis.modules.zap;
 
+import com.dokor.argos.services.analysis.AuditModule;
 import com.dokor.argos.services.analysis.model.AuditCheckResult;
 import com.dokor.argos.services.analysis.model.AuditContext;
-import com.dokor.argos.services.analysis.model.AuditModuleAnalyzer;
 import com.dokor.argos.services.analysis.model.AuditModuleResult;
 import com.dokor.argos.services.analysis.model.enums.AuditSeverity;
 import com.dokor.argos.services.analysis.model.enums.AuditStatus;
@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 @Singleton
-public class ZapModuleAnalyzer implements AuditModuleAnalyzer {
+public class ZapModuleAnalyzer {
 
     /** Mapping of ZAP pluginId → existing check key */
     private static final Map<String, String> PLUGIN_KEY_MAP = Map.of(
@@ -35,14 +35,12 @@ public class ZapModuleAnalyzer implements AuditModuleAnalyzer {
         this.client = client;
     }
 
-    @Override
     public String moduleId() {
-        return "zap";
+        return AuditModule.ZAP.id();
     }
 
     // PAGE scope (default)
 
-    @Override
     public AuditModuleResult analyze(AuditContext context, Logger logger) {
         String url = context.finalUrl() != null ? context.finalUrl() : context.normalizedUrl();
 
