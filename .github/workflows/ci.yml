@@ -14,8 +14,13 @@ permissions:
   contents: read
 
 jobs:
+  changes:
+    uses: ./.github/workflows/changed-paths.yml
+
   api-backend-tests:
     name: API backend tests
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.api == 'true') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     defaults:
@@ -70,6 +75,8 @@ jobs:
 
   frontend:
     name: Frontend checks
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.frontend == 'true') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     defaults:
@@ -88,8 +95,8 @@ jobs:
           cache-dependency-path: apps/console-web/package-lock.json
       - run: npm ci
       - run: npm run lint
-      - name: Test release evidence gate
-        run: node --test ../../scripts/check-release-evidence.test.mjs ../../scripts/release/inspect-runtime.test.mjs
+      - name: Test CI and release helpers
+        run: node --test ../../scripts/ci/changed-paths.test.mjs ../../scripts/check-release-evidence.test.mjs ../../scripts/release/inspect-runtime.test.mjs
       - run: npm run test
       - run: npm run build
       - name: Verify test failure propagates
@@ -97,6 +104,8 @@ jobs:
 
   lighthouse:
     name: Lighthouse checks
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.lighthouse == 'true') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     defaults:
@@ -119,6 +128,8 @@ jobs:
 
   playwright:
     name: Playwright checks
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.playwright == 'true') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     defaults:
