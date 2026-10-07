@@ -140,7 +140,7 @@ export default function ChecklistAuditPage() {
 
   return (
     <div className={s.page}>
-      <SiteNav showFaqLink />
+      <SiteNav />
       <main>
         <header className={s.hero}>
           <div className={s.container}>

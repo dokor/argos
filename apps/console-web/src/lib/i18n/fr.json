@@ -5,10 +5,26 @@
   },
   "nav": {
     "logo": "Argos",
+    "primary": "Navigation principale",
+    "audit": "Auditer un site",
     "openConsole": "Accéder à la console →",
     "faq": "FAQ",
     "resources": "Ressources",
     "accessibility": "Accessibilité"
+  },
+  "siteFooter": {
+    "description": "Audit technique de site web gratuit. Comprenez la performance, le SEO, l'accessibilité et la sécurité de votre page.",
+    "discover": "Découvrir",
+    "resources": "Ressources et guides",
+    "faq": "Questions fréquentes",
+    "learn": "Comprendre l'audit",
+    "technicalAudit": "Audit technique gratuit",
+    "checklist": "Checklist d'audit de site web",
+    "accessibility": "Accessibilité numérique",
+    "information": "Informations",
+    "privacy": "Confidentialité des rapports",
+    "limits": "Limites de l'analyse",
+    "source": "Code source sur GitHub"
   },
   "landing": {
     "hero": {
@@ -170,6 +186,7 @@
     "backHome": "← Retour à l'accueil",
     "categories": [
       {
+        "id": "about",
         "title": "À propos d'Argos",
         "items": [
           {
@@ -191,6 +208,7 @@
         ]
       },
       {
+        "id": "reports",
         "title": "Les rapports",
         "items": [
           {
@@ -212,6 +230,7 @@
         ]
       },
       {
+        "id": "limits",
         "title": "Limites d'analyse",
         "items": [
           {
@@ -233,6 +252,7 @@
         ]
       },
       {
+        "id": "privacy",
         "title": "Confidentialité",
         "items": [
           {
@@ -250,6 +270,7 @@
         ]
       },
       {
+        "id": "future",
         "title": "Offres futures",
         "items": [
           {

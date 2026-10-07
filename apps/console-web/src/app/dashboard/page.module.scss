@@ -3,65 +3,12 @@
 .root {
   min-height: 100vh;
   background: t.$canvas;
-}
-
-.header {
-  background: t.$surface;
-  border-bottom: 1px solid t.$border;
-  position: sticky;
-  top: 0;
-  z-index: t.$z-sticky;
-}
-
-.headerInner {
-  max-width: t.$dashboard-width;
-  margin: 0 auto;
-  padding: 0 t.$page-gutter;
-  height: 56px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.logo {
-  display: flex;
-  align-items: center;
-  gap: t.$space-3;
-}
-
-.logoMark {
-  width: 28px;
-  height: 28px;
-  border-radius: t.$radius-sm;
-  background: t.$text;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  color: t.$bg;
-  font-size: t.$text-base;
-  font-weight: 900;
-  line-height: 1;
-}
-
-.logoName {
-  font-size: t.$text-xl;
-  font-weight: 900;
-  color: t.$text;
-  letter-spacing: -0.02em;
-}
-
-.logoBadge {
-  font-size: t.$text-xs;
-  font-weight: 700;
-  color: t.$text-muted;
-  background: t.$surface-2;
-  padding: 2px t.$space-2;
-  border-radius: t.$radius-pill;
-  border: 1px solid t.$border;
+  flex-direction: column;
 }
 
 .main {
+  flex: 1;
   max-width: t.$dashboard-width;
   margin: 0 auto;
   padding: t.$space-8 t.$page-gutter;
@@ -96,10 +43,6 @@
 }
 
 @media (max-width: 600px) {
-  .headerInner {
-    padding: 0 t.$page-gutter-mobile;
-  }
-
   .main {
     padding: t.$space-5 t.$page-gutter-mobile;
     gap: t.$space-5;

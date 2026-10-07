@@ -34,7 +34,8 @@ public class RemoteModuleExecutor implements AutoCloseable {
     }
 
     public <T> Task<T> submit(String module, Callable<T> call) {
-        if (!"ssl".equals(module) && !"observatory".equals(module)) throw new IllegalArgumentException("Not a remote module");
+        if (!AuditModule.SSL.id().equals(module) && !AuditModule.OBSERVATORY.id().equals(module))
+            throw new IllegalArgumentException("Not a remote module");
         long submitted = System.nanoTime();
         long effectiveBudget = AuditDeadline.current()==null ? budgetNanos : Math.min(budgetNanos,AuditDeadline.current().remainingNanos());
         long startedAtMillis = System.currentTimeMillis();

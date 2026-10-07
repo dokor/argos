@@ -2,6 +2,7 @@ package com.dokor.argos.services.domain.audit;
 
 import com.dokor.argos.db.dao.AuditRunDao;
 import com.dokor.argos.db.generated.AuditRun;
+import com.dokor.argos.services.analysis.AuditModule;
 import com.dokor.argos.services.domain.audit.enums.AuditRunStatus;
 import com.dokor.argos.services.domain.audit.model.ModuleStatus;
 import com.dokor.argos.services.domain.audit.model.QueuedRun;
@@ -21,20 +22,10 @@ import java.util.UUID;
 public class AuditRunService {
     private static final Logger logger = LoggerFactory.getLogger(AuditRunService.class);
 
-    /**
-     * Liste ordonnée des modules dans l'ordre d'exécution.
-     * Utilisée pour initialiser les statuts à PENDING à la création du run.
-     */
-    static final List<ModuleStatus> INITIAL_MODULE_STATUSES = List.of(
-        new ModuleStatus("http",        "HTTP & Sécurité", ModuleStatus.PENDING),
-        new ModuleStatus("html",        "HTML & SEO",      ModuleStatus.PENDING),
-        new ModuleStatus("runtime",     "Runtime",         ModuleStatus.PENDING),
-        new ModuleStatus("lighthouse",  "Lighthouse",      ModuleStatus.PENDING),
-        new ModuleStatus("observatory", "Observatory",     ModuleStatus.PENDING),
-        new ModuleStatus("ssl",         "SSL Labs",        ModuleStatus.PENDING),
-        new ModuleStatus("zap",         "ZAP",             ModuleStatus.PENDING),
-        new ModuleStatus("tech",        "Stack",           ModuleStatus.PENDING)
-    );
+    /** Initial progress is derived from the execution catalogue. */
+    static final List<ModuleStatus> INITIAL_MODULE_STATUSES = AuditModule.ordered().stream()
+        .map(module -> new ModuleStatus(module.id(), module.progressLabel(), ModuleStatus.PENDING))
+        .toList();
 
     private final AuditRunDao auditRunDao;
     private final TokenService tokenService;
@@ -107,7 +98,7 @@ public class AuditRunService {
      * @param status   nouveau statut ({@code RUNNING | COMPLETED | FAILED | SKIPPED})
      */
     public void updateModuleStatus(long runId, String moduleId, String status) {
-        if (INITIAL_MODULE_STATUSES.stream().noneMatch(module -> module.id().equals(moduleId)))
+        if (!AuditModule.containsId(moduleId))
             throw new IllegalArgumentException("Unknown audit module");
         if (!List.of(ModuleStatus.RUNNING, ModuleStatus.COMPLETED, ModuleStatus.FAILED, ModuleStatus.SKIPPED).contains(status))
             throw new IllegalArgumentException("Invalid module transition");

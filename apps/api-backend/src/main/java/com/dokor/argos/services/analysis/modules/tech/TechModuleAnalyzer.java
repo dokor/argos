@@ -1,8 +1,8 @@
 package com.dokor.argos.services.analysis.modules.tech;
 
+import com.dokor.argos.services.analysis.AuditModule;
 import com.dokor.argos.services.analysis.model.AuditCheckResult;
 import com.dokor.argos.services.analysis.model.AuditContext;
-import com.dokor.argos.services.analysis.model.AuditModuleAnalyzer;
 import com.dokor.argos.services.analysis.model.AuditModuleResult;
 import com.dokor.argos.services.analysis.model.enums.AuditSeverity;
 import com.dokor.argos.services.analysis.model.enums.AuditStatus;
@@ -20,17 +20,15 @@ import java.util.regex.Pattern;
  * - détection heuristique (sans JS, sans headless browser)
  * - se base sur signaux HTML + headers HTTP disponibles (si l'orchestrateur les fournit)
  * <p>
- * ⚠️ Comme pour HtmlModuleAnalyzer, l'interface AuditModuleAnalyzer ne fournit pas encore
- * de "context" (headers/html). Donc :
- * - la méthode analyze(...) retourne un module "warning" par défaut
- * - l'orchestrateur doit appeler analyzeTech(...) en lui passant headers+html
+ * Le contexte enrichi par HTTP fournit les en-têtes et le HTML. L'orchestrateur
+ * passe par DomainAnalysisService pour réutiliser le résultat en cache.
  * <p>
  * Plus tard :
  * - intégrer Playwright (JS rendu) pour une détection plus fiable (Next/React/Angular etc.)
  * - enrichir la détection via signatures (Wappalyzer-like) ou empreintes (hash, bundles, meta generator...)
  */
 @Singleton
-public class TechModuleAnalyzer implements AuditModuleAnalyzer {
+public class TechModuleAnalyzer {
 
     // Signatures simples (HTML)
     private static final Pattern WP_CONTENT_PATTERN = Pattern.compile("(?is)wp-content|wp-includes|/wp-json/");
@@ -67,18 +65,8 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
     private static final Pattern VERSION_BANNER_PATTERN =
         Pattern.compile("[A-Za-z][A-Za-z.+_-]*[/ ]\\d+(?:\\.\\d+)+");
 
-    @Override
     public String moduleId() {
-        return "tech";
-    }
-
-    /**
-     * Ce module est de portée DOMAIN : son résultat est identique pour toutes les pages
-     * d'un même hostname et est donc mis en cache 24h dans ARG_DOMAIN_ANALYSIS.
-     */
-    @Override
-    public com.dokor.argos.services.analysis.model.ModuleScope scope() {
-        return com.dokor.argos.services.analysis.model.ModuleScope.DOMAIN;
+        return AuditModule.TECH.id();
     }
 
     private final NextJsDetectorService nextDetector;
@@ -351,11 +339,10 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
     }
 
     /**
-     * Implémentation AuditModuleAnalyzer : MVP.
+     * Analyse avec le contexte HTTP enrichi.
      * Comme l'interface ne fournit pas encore headers/html, on retourne un module "warning".
      * L'orchestrator doit appeler analyzeTech(...).
      */
-    @Override
     public AuditModuleResult analyze(AuditContext auditContext, Logger logger) {
         logger.debug("TECH module called.");
         return analyzeTech(auditContext.inputUrl(), auditContext.normalizedUrl(), auditContext.finalUrl(), auditContext.headers(), auditContext.body(), logger);

@@ -1,5 +1,6 @@
 package com.dokor.argos.services.analysis.modules.runtime;
 
+import com.dokor.argos.services.analysis.AuditModule;
 import com.dokor.argos.services.analysis.model.*;
 import com.dokor.argos.services.analysis.model.enums.AuditSeverity;
 import com.dokor.argos.services.analysis.model.enums.AuditStatus;
@@ -11,7 +12,7 @@ import java.net.http.HttpTimeoutException;
 import java.util.*;
 
 @Singleton
-public class RuntimeModuleAnalyzer implements AuditModuleAnalyzer {
+public class RuntimeModuleAnalyzer {
 
     // Seuils des erreurs console. Relevés (vs 2 auparavant) car les scripts tiers
     // légitimes (analytics, régies pub, widgets, extensions) émettent couramment
@@ -27,12 +28,10 @@ public class RuntimeModuleAnalyzer implements AuditModuleAnalyzer {
         this.client = client;
     }
 
-    @Override
     public String moduleId() {
-        return "runtime";
+        return AuditModule.RUNTIME.id();
     }
 
-    @Override
     public AuditModuleResult analyze(AuditContext auditContext, Logger logger) {
         long start = System.currentTimeMillis();
 

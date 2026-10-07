@@ -1,22 +1,44 @@
 "use client";
 
+import Link from "next/link";
 import { useLang } from "@/lib/i18n/LangContext";
 import fr from "@/lib/i18n/fr.json";
 import AuthorCredit from "@/components/AuthorCredit";
 import s from "./SiteChrome.module.scss";
 
-/**
- * Pied de page partagé des pages marketing (`not-found`, `faq`) — issue #143.
- * La landing conserve son propre footer (navy) au rendu distinct.
- */
+/** Liens éditoriaux communs à toutes les pages, sauf les rapports privés. */
 export default function SiteFooter({ fixedFrench = false }: { fixedFrench?: boolean }) {
   const { t: localized } = useLang();
   const t = fixedFrench ? fr : localized;
+  const f = t.siteFooter;
   return (
     <footer className={s.footer}>
       <div className={s.footerInner}>
-        <AuthorCredit className={s.footerLink} />
-        <a href="/ressources" className={s.footerLink}>{t.nav.resources}</a>
+        <div className={s.footerBrand}>
+          <p className={s.footerBrandName}>{t.nav.logo}</p>
+          <p>{f.description}</p>
+        </div>
+        <nav className={s.footerGroup} aria-label={f.discover}>
+          <h2>{f.discover}</h2>
+          <Link href="/#audit">{t.nav.audit}</Link>
+          <Link href="/ressources">{f.resources}</Link>
+          <Link href="/faq">{f.faq}</Link>
+        </nav>
+        <nav className={s.footerGroup} aria-label={f.learn}>
+          <h2>{f.learn}</h2>
+          <Link href="/ressources/audit-technique-gratuit">{f.technicalAudit}</Link>
+          <Link href="/guides/checklist-audit-site-web">{f.checklist}</Link>
+          <Link href="/ressources/accessibilite-numerique">{f.accessibility}</Link>
+        </nav>
+        <nav className={s.footerGroup} aria-label={f.information}>
+          <h2>{f.information}</h2>
+          <Link href="/faq#privacy">{f.privacy}</Link>
+          <Link href="/faq#limits">{f.limits}</Link>
+          <a href="https://github.com/dokor/argos" target="_blank" rel="noopener noreferrer">{f.source}</a>
+        </nav>
+      </div>
+      <div className={s.footerBottom}>
+        <AuthorCredit className={s.footerCreditLink} />
         <span>{t.landing.footer.copy}</span>
       </div>
     </footer>

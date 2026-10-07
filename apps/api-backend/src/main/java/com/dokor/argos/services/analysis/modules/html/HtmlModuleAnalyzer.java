@@ -1,8 +1,8 @@
 package com.dokor.argos.services.analysis.modules.html;
 
+import com.dokor.argos.services.analysis.AuditModule;
 import com.dokor.argos.services.analysis.model.AuditCheckResult;
 import com.dokor.argos.services.analysis.model.AuditContext;
-import com.dokor.argos.services.analysis.model.AuditModuleAnalyzer;
 import com.dokor.argos.services.analysis.model.AuditModuleResult;
 import com.dokor.argos.services.analysis.model.enums.AuditSeverity;
 import com.dokor.argos.services.analysis.model.enums.AuditStatus;
@@ -20,14 +20,10 @@ import java.util.regex.Pattern;
  * et transmis via l'{@link com.dokor.argos.services.analysis.model.AuditContext}.
  * Il ne refait pas de fetch HTTP - il exploite uniquement le body déjà disponible dans le contexte.
  * <p>
- * 👉 Dans l'immédiat, on expose une méthode analyzeHtml(...) utilisée par l'orchestrateur.
- * Et la méthode analyze(...) retourne un module "vide" + warning si l'orchestrateur n'a pas fourni le HTML.
- * <p>
- * Lorsqu'on passera à l'orchestrator, je te propose d'introduire un AuditContext (inputUrl, normalizedUrl, httpResult, html, headers...)
- * et de faire évoluer l'interface.
+ * Le contexte enrichi par HTTP apporte le HTML à analyze(...).
  */
 @Singleton
-public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
+public class HtmlModuleAnalyzer {
 
     // Regex simples (MVP). Pour plus robuste : jsoup plus tard.
     private static final Pattern TITLE_PATTERN = Pattern.compile("(?is)<title\\b[^>]*>(.*?)</title>");
@@ -52,9 +48,8 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
     private static final Pattern A_PATTERN = Pattern.compile("(?is)<a\\b[^>]*>");
     private static final Pattern A_NO_HREF_PATTERN = Pattern.compile("(?is)<a\\b(?![^>]*\\bhref\\s*=)[^>]*>");
 
-    @Override
     public String moduleId() {
-        return "html";
+        return AuditModule.HTML.id();
     }
 
     /**
@@ -233,12 +228,11 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
     }
 
     /**
-     * Implémentation AuditModuleAnalyzer : MVP.
+     * Analyse le HTML du contexte.
      * Comme l'interface ne fournit pas encore l'HTML, on retourne un module "vide" avec un warning.
      * <p>
      * 👉 On corrigera ça dans l'orchestrator (en introduisant un AuditContext).
      */
-    @Override
     public AuditModuleResult analyze(AuditContext context, Logger logger) {
         logger.debug("HTML module called");
         return analyzeHtml(context.inputUrl(), context.normalizedUrl(), context.finalUrl(), context.body(), logger);

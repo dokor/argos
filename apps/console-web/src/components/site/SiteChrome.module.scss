@@ -1,141 +1,155 @@
 @use '../../styles/tokens' as t;
 
-// Nav + footer partagés des pages marketing (not-found, faq).
-// Styles repris à l'identique de not-found.module.scss / faq/page.module.scss
-// (issue #143). La landing conserve son propre chrome (fond de nav thématisé,
-// footer navy) car son rendu diverge.
-
-// ─── Nav ────────────────────────────────────────────────────────────────────
 .nav {
   position: sticky;
   top: 0;
   z-index: t.$z-sticky;
-  // Token théma-aware (issue #191) : la valeur codée en dur rgba(255,255,255,.9)
-  // laissait la barre blanche en thème sombre. $header-bg suit le thème (clair
-  // ≈ blanc translucide, sombre = navy translucide).
   background: t.$header-bg;
   backdrop-filter: blur(12px);
   border-bottom: 1px solid t.$border-subtle;
 }
+
 .navInner {
   max-width: t.$container-width;
   margin: 0 auto;
-  padding: 0 t.$page-gutter;
-  height: 60px;
+  min-height: 60px;
+  padding: t.$space-2 t.$page-gutter;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: t.$space-8;
 }
+
 .logo {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: t.$space-2;
   color: t.$text;
   text-decoration: none;
-}
-.logoIcon {
-  display: block;
   flex-shrink: 0;
 }
-.logoText {
-  font-weight: 700;
-  font-size: 18px;
-  letter-spacing: -0.02em;
-}
-.navRight {
+
+.logoIcon { flex-shrink: 0; }
+.logoText { font-size: t.$text-2xl; font-weight: 700; letter-spacing: -0.02em; }
+
+.navLinks,
+.navActions {
   display: flex;
   align-items: center;
-  gap: t.$space-3;
+  gap: t.$space-4;
 }
 
-@media (max-width: 620px) {
-  .navInner {
-    padding-inline: t.$space-4;
-  }
+.navActions { margin-left: auto; gap: t.$space-2; }
 
-  .navRight {
-    gap: t.$space-2;
-  }
-
-  .navLink {
-    display: none;
-  }
-}
 .navLink {
   color: t.$text-muted;
   text-decoration: none;
-  font-size: t.$text-xl;
-  font-weight: 500;
+  font-size: t.$text-md;
+  font-weight: 600;
+  padding: t.$space-2 0;
+  white-space: nowrap;
 
-  &:hover {
-    color: t.$text;
-  }
+  &:hover,
+  &[aria-current] { color: t.$text; }
+
+  &[aria-current] { box-shadow: inset 0 -2px t.$color-indigo; }
 }
+
 .navCta {
   background: t.$text;
   color: t.$bg;
   text-decoration: none;
-  padding: t.$space-2 t.$space-4;
+  padding: t.$space-2 t.$space-3;
   border-radius: t.$radius-sm;
   font-size: t.$text-base;
-  font-weight: 500;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
-// ─── Footer ───────────────────────────────────────────────────────────────────
+.navLink:focus-visible,
+.navCta:focus-visible,
+.logo:focus-visible,
+.footer a:focus-visible {
+  outline: 3px solid t.$color-indigo;
+  outline-offset: 3px;
+}
+
 .footer {
-  border-top: 1px solid t.$border-subtle;
-  background: t.$surface;
-}
-.footerLink {
-  color: t.$text-muted;
-  text-underline-offset: 3px;
-
-  &:hover {
-    color: t.$text;
-  }
-
-  &:focus-visible {
-    outline: 3px solid t.$color-indigo;
-    outline-offset: 3px;
-  }
+  background: t.$color-navy;
+  color: t.$color-slate-300;
 }
 
 .footerInner {
   max-width: t.$container-width;
   margin: 0 auto;
-  padding: t.$panel-space;
+  padding: t.$space-12 t.$page-gutter;
+  display: grid;
+  grid-template-columns: minmax(190px, 1.4fr) repeat(3, minmax(140px, 1fr));
+  gap: t.$space-8;
+}
+
+.footerBrand {
+  max-width: 260px;
+  line-height: 1.6;
+  font-size: t.$text-md;
+}
+
+.footerBrandName {
+  margin-bottom: t.$space-3;
+  color: t.$color-white;
+  font-size: t.$text-2xl;
+  font-weight: 700;
+}
+
+.footerGroup {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: t.$space-3;
+  font-size: t.$text-md;
+}
+
+.footerGroup h2 {
+  color: t.$color-white;
+  font-size: t.$text-md;
+  font-weight: 700;
+  margin-bottom: t.$space-1;
+}
+
+.footerGroup a,
+.footerCreditLink {
+  color: t.$color-slate-300;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+
+  &:hover { text-decoration-color: currentColor; color: t.$color-white; }
+}
+
+.footerBottom {
+  max-width: t.$container-width;
+  margin: 0 auto;
+  padding: t.$space-5 t.$page-gutter;
+  border-top: 1px solid t.$color-slate-700;
+  display: flex;
   justify-content: space-between;
   gap: t.$space-3;
   flex-wrap: wrap;
-  color: t.$text-muted;
   font-size: t.$text-base;
 }
 
+@media (max-width: 800px) {
+  .navInner { flex-wrap: wrap; gap: t.$space-2 t.$space-4; }
+  .navLinks { order: 3; width: 100%; justify-content: space-between; }
+  .footerInner { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
 @media (max-width: 560px) {
-  .navInner {
-    height: auto;
-    min-height: 60px;
-    padding: t.$space-3 t.$page-gutter-mobile;
-    flex-wrap: wrap;
-    gap: t.$space-2;
-  }
-
-  .navRight {
-    width: 100%;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: t.$space-2;
-  }
-
-  .navLink {
-    font-size: t.$text-md;
-  }
-
-  .footerInner {
-    padding: t.$panel-space-mobile;
-    flex-direction: column;
-    text-align: center;
-  }
+  .navInner { padding: t.$space-3 t.$page-gutter-mobile; }
+  .navActions { gap: t.$space-1; }
+  .navCta { padding: t.$space-2; }
+  .navLinks { gap: t.$space-2; font-size: t.$text-base; }
+  .navLink { font-size: t.$text-base; }
+  .footerInner { padding: t.$space-10 t.$page-gutter-mobile; gap: t.$space-8 t.$space-4; }
+  .footerBrand { grid-column: 1 / -1; }
+  .footerBottom { padding-inline: t.$page-gutter-mobile; }
 }

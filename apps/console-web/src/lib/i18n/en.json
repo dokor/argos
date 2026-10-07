@@ -5,10 +5,26 @@
   },
   "nav": {
     "logo": "Argos",
+    "primary": "Main navigation",
+    "audit": "Audit a website",
     "openConsole": "Open console →",
     "faq": "FAQ",
     "resources": "Resources",
     "accessibility": "Accessibility"
+  },
+  "siteFooter": {
+    "description": "Free technical website audit. Understand your page's performance, SEO, accessibility and security.",
+    "discover": "Explore",
+    "resources": "Resources and guides",
+    "faq": "Frequently asked questions",
+    "learn": "Understand the audit",
+    "technicalAudit": "Free technical audit",
+    "checklist": "Website audit checklist",
+    "accessibility": "Digital accessibility",
+    "information": "Information",
+    "privacy": "Report privacy",
+    "limits": "Analysis limits",
+    "source": "Source code on GitHub"
   },
   "landing": {
     "hero": {
@@ -170,6 +186,7 @@
     "backHome": "← Back to home",
     "categories": [
       {
+        "id": "about",
         "title": "About Argos",
         "items": [
           {
@@ -191,6 +208,7 @@
         ]
       },
       {
+        "id": "reports",
         "title": "Reports",
         "items": [
           {
@@ -212,6 +230,7 @@
         ]
       },
       {
+        "id": "limits",
         "title": "Analysis limits",
         "items": [
           {
@@ -233,6 +252,7 @@
         ]
       },
       {
+        "id": "privacy",
         "title": "Privacy",
         "items": [
           {
@@ -250,6 +270,7 @@
         ]
       },
       {
+        "id": "future",
         "title": "What's next",
         "items": [
           {

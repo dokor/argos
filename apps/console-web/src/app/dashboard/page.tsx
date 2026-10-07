@@ -3,8 +3,8 @@
 import React, { useState, useMemo } from "react";
 import AuditForm from "@/components/AuditForm";
 import AuditList from "@/components/AuditList";
-import LangToggle from "@/components/LangToggle";
-import ThemeToggle from "@/components/ThemeToggle";
+import SiteNav from "@/components/site/SiteNav";
+import SiteFooter from "@/components/site/SiteFooter";
 import KpiCard from "@/components/KpiCard";
 import { useLang } from "@/lib/i18n/LangContext";
 import { AuditListItem } from "@/lib/ArgosApi";
@@ -45,17 +45,7 @@ export default function DashboardPage() {
 
   return (
     <div className={styles.root}>
-      <header className={styles.header}>
-        <div className={styles.headerInner}>
-          <div className={styles.logo}>
-            <span className={styles.logoMark}>A</span>
-            <span className={styles.logoName}>Argos</span>
-            <span className={styles.logoBadge}>Console</span>
-          </div>
-          <ThemeToggle />
-            <LangToggle />
-        </div>
-      </header>
+      <SiteNav />
 
       <main className={styles.main}>
         <div className={styles.kpiGrid}>
@@ -72,6 +62,7 @@ export default function DashboardPage() {
 
         <AuditList items={items} setItems={setItems} />
       </main>
+      <SiteFooter />
     </div>
   );
 }
