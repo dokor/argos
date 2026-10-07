@@ -63,6 +63,8 @@ export type AuditListItem = {
   createdAt?: string;
   finishedAt?: string | null;
   reportUrl?: string | null;
+  globalScore?: number | null;
+  /** Loaded only from the single-run endpoint when technical details are requested. */
   resultJson?: string | null;
 };
 
@@ -84,6 +86,8 @@ export type AuditHistoryItem = {
   /** Score global 0..100 issu du rapport publié, ou null si indisponible. */
   globalScore?: number | null;
 };
+
+export type AuditComparisonDetail = Pick<AuditHistoryItem, "calculation" | "coverage" | "comparison">;
 
 // API_BASE is only used server-side (SSR); client calls use relative paths proxied by next.config.ts
 const API_BASE: string = process.env.API_BASE ?? "http://api-backend:8081";
@@ -161,4 +165,7 @@ export const argosApi = {
   /** Historique des analyses (runs) d'un audit (une URL), du plus récent au plus ancien. */
   getAuditHistory: (auditId: number, historyLimit = 20): Promise<AuditHistoryItem[]> =>
     http<AuditHistoryItem[]>(`/api/audits/${auditId}/history?limit=${historyLimit}`, { method: "GET" }),
+
+  getComparisonDetail: (auditId: number, runId: number): Promise<AuditComparisonDetail> =>
+    http<AuditComparisonDetail>(`/api/audits/${auditId}/history/${runId}/comparison`, { method: "GET" }),
 };

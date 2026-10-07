@@ -773,6 +773,7 @@
   },
   "auditList": {
     "comparison": {
+      "show": "View comparison", "loadError": "Could not load comparison.",
       "method": "Frozen scoring policy", "coverage": "Coverage", "unknown": "Unknown", "coverageChanged": "Measurement coverage changed; this change is not a site regression.",
       "delta": "Change since the previous report", "points": "points", "globalPoints": "global points", "domainPoints": "domain points", "contributions": "Main improvements and regressions",
       "reasons": { "COMPARABLE": "Comparable audits", "NO_PREVIOUS_REPORT": "No previous report in this history.", "EVIDENCE_MISSING": "Comparison unavailable: insufficient historical evidence. Run a new audit with the current policy.", "SCOPE_CHANGED": "Comparison unavailable: different scope.", "METHODOLOGY_CHANGED": "Comparison unavailable: different policy or coefficients.", "COVERAGE_CHANGED": "Comparison unavailable: different usable measurements.", "INSUFFICIENT_COVERAGE": "Comparison unavailable: insufficient coverage or anti-bot protection.", "SCORE_UNAVAILABLE": "Comparison unavailable: score not measured." }
@@ -783,6 +784,9 @@
     "copyJson": "📋 Copy JSON",
     "copied": "✅ Copied",
     "showJson": "Show JSON",
+    "loadDetails": "Load technical details",
+    "loadingDetails": "Loading details…",
+    "detailsError": "Could not load details.",
     "viewReport": "🔎 View report",
     "reportPending": "Report pending…",
     "scorePending": "Score pending…",
@@ -808,6 +812,10 @@
       "moduleLabel": "Module",
       "tagLabel": "Tag",
       "techLabel": "Tech",
+      "loadDetails": "Load detailed filters",
+      "loadingDetails": "Loading details…",
+      "detailsLoaded": "Detailed filters loaded",
+      "detailsError": "Could not load detailed filters.",
       "clearFilters": "Clear filters",
       "noResults": "No results for these filters."
     },

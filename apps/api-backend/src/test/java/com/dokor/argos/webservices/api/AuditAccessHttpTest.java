@@ -12,6 +12,7 @@ import com.dokor.argos.services.domain.report.ReportDto;
 import com.dokor.argos.db.generated.AuditRun;
 import com.dokor.argos.db.generated.Audit;
 import com.dokor.argos.db.generated.Domain;
+import com.dokor.argos.db.dao.AuditDao;
 import com.coreoz.plume.jersey.errors.WsJacksonJsonProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
@@ -69,7 +70,7 @@ class AuditAccessHttpTest {
             .POST(HttpRequest.BodyPublishers.ofString(body)).build();
         return CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
     }
-    @ParameterizedTest @ValueSource(strings = {"/audits", "/audits/1/history", "/audits/runs/1", "/audits/runs/1/report"})
+    @ParameterizedTest @ValueSource(strings = {"/audits", "/audits/1/history", "/audits/1/history/1/comparison", "/audits/runs/1", "/audits/runs/1/report"})
     void privateRoutesRejectAbsentInvalidCookieAndBearer(String path) throws Exception {
         assertEquals(401, get(path, null, null).statusCode());
         assertEquals(401, get(path, "Cookie", "argos_admin=synthetic-server-credential").statusCode());
@@ -100,11 +101,16 @@ class AuditAccessHttpTest {
         AuditRun run = new AuditRun();
         run.setId(42L); run.setAuditId(7L); run.setStatus("COMPLETED");
         run.setCreatedAt(Instant.EPOCH); run.setResultJson("{}");
-        when(QUERIES.listAudits(200)).thenReturn(List.of(
-            new AuditQueryService.Overview(audit, domain, run, true)));
-        when(QUERIES.getAuditHistory(7, 1)).thenReturn(List.of(
-            new AuditQueryService.History(run, true, 68, null, null, null)));
+        when(QUERIES.listAudits(200)).thenReturn(List.of(new AuditQueryService.Overview(
+            new AuditDao.OverviewRow(7, "example.com", audit.getInputUrl(), audit.getNormalizedUrl(),
+                Instant.EPOCH, 42L, "COMPLETED", Instant.EPOCH, null, true, 68))));
+        when(QUERIES.getAuditHistory(7, 1)).thenReturn(List.of(new AuditQueryService.History(
+            new AuditDao.HistoryRow(42, "COMPLETED", Instant.EPOCH, null, true, 68))));
         when(QUERIES.getRunStatus(42)).thenReturn(run);
+        when(QUERIES.getComparisonDetail(7, 42)).thenReturn(new AuditQueryService.ComparisonDetail(
+            null, null, new com.dokor.argos.services.domain.report.AuditComparisonService.Comparison(
+                com.dokor.argos.services.domain.report.AuditComparisonService.Reason.NO_PREVIOUS_REPORT,
+                null, List.of(), List.of(), false)));
         String authorization = "Bearer synthetic-server-credential";
 
         var list = get("/audits?limit=999", "Authorization", authorization);
@@ -112,12 +118,20 @@ class AuditAccessHttpTest {
         assertEquals("42", MAPPER.readTree(list.body()).get(0).path("runId").asText());
         assertEquals("/dashboard/report/42",
             MAPPER.readTree(list.body()).get(0).path("reportUrl").asText());
+        var listItem = MAPPER.readTree(list.body()).get(0);
+        assertEquals(68, listItem.path("globalScore").asInt());
+        for (String field : List.of("resultJson", "reportJson", "reportToken", "tokenHash", "claimToken"))
+            assertFalse(listItem.has(field));
         assertTrue(list.headers().firstValue("Cache-Control").orElseThrow().contains("no-store"));
         var history = get("/audits/7/history?limit=0", "Authorization", authorization);
         assertEquals(68, MAPPER.readTree(history.body()).get(0).path("globalScore").asInt());
+        assertFalse(MAPPER.readTree(history.body()).get(0).has("reportJson"));
+        var comparison = get("/audits/7/history/42/comparison", "Authorization", authorization);
+        assertEquals("NO_PREVIOUS_REPORT", MAPPER.readTree(comparison.body()).path("comparison").path("reason").asText());
         assertEquals(200, get("/audits/runs/42", "Authorization", authorization).statusCode());
         verify(QUERIES).listAudits(200);
         verify(QUERIES).getAuditHistory(7, 1);
+        verify(QUERIES).getComparisonDetail(7, 42);
     }
     @Test void unknownTokenIs404AndKnownProgressNeverEchoesCredentialsOrInternals() throws Exception {
         when(RUNS.findByReportToken("unknown")).thenReturn(Optional.empty());

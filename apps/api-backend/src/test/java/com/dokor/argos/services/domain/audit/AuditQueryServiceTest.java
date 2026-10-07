@@ -2,44 +2,43 @@ package com.dokor.argos.services.domain.audit;
 
 import com.dokor.argos.db.dao.AuditDao;
 import com.dokor.argos.db.generated.AuditReport;
-import com.dokor.argos.db.generated.AuditRun;
+import com.dokor.argos.services.domain.report.AuditComparisonService;
+import com.dokor.argos.services.domain.report.ReportDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.querydsl.core.Tuple;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class AuditQueryServiceTest {
-    private final ObjectMapper mapper = new ObjectMapper();
+    @Test void historyUsesDenormalizedScoreWithoutParsingReports() {
+        AuditDao audits = mock(AuditDao.class);
+        ObjectMapper mapper = spy(new ObjectMapper());
+        when(audits.listRunsWithReportByAuditId(1, 20)).thenReturn(List.of(
+            new AuditDao.HistoryRow(42, "COMPLETED", Instant.EPOCH, Instant.EPOCH, true, 68),
+            new AuditDao.HistoryRow(41, "COMPLETED", Instant.EPOCH, Instant.EPOCH, true, null)));
 
-    @Test void scoreRespectsUnavailableAndMissingValues() throws Exception {
-        assertEquals(68, AuditQueryService.globalScore(mapper.readTree("{\"scores\":{\"global\":68}}")));
-        assertNull(AuditQueryService.globalScore(mapper.readTree(
-            "{\"scores\":{\"global\":0,\"globalAvailable\":false}}")));
-        assertNull(AuditQueryService.globalScore(mapper.readTree("{\"scores\":{}}")));
-        assertNull(AuditQueryService.globalScore(null));
+        var history = new AuditQueryService(audits, mock(AuditRunService.class), mapper)
+            .getAuditHistory(1, 20);
+        assertEquals(68, history.getFirst().row().globalScore());
+        assertNull(history.get(1).row().globalScore());
+        verifyNoInteractions(mapper);
     }
 
-    @Test void historyParsesPublishedReportOnceForScoreAndComparison() throws Exception {
+    @Test void comparisonLoadsOnlyTheRequestedAndPreviousReports() throws Exception {
         AuditDao audits = mock(AuditDao.class);
-        AuditRunService runs = mock(AuditRunService.class);
-        ObjectMapper countingMapper = spy(new ObjectMapper());
-        String reportJson = "{\"scores\":{\"global\":68,\"globalAvailable\":true}}";
-        AuditRun run = new AuditRun();
-        run.setId(42L);
-        AuditReport report = new AuditReport();
-        report.setReportJson(reportJson);
-        Tuple tuple = mock(Tuple.class);
-        when(tuple.get(0, AuditRun.class)).thenReturn(run);
-        when(tuple.get(1, AuditReport.class)).thenReturn(report);
-        when(audits.listRunsWithReportByAuditId(1, 20)).thenReturn(List.of(tuple));
+        ObjectMapper mapper = spy(new ObjectMapper());
+        AuditReport current = new AuditReport();
+        current.setRunId(42L);
+        current.setReportJson("{\"url\":\"https://example.com\",\"scores\":{\"global\":68,\"globalAvailable\":true}}");
+        when(audits.comparisonReports(1, 42)).thenReturn(List.of(current));
 
-        var history = new AuditQueryService(audits, runs, countingMapper).getAuditHistory(1, 20);
-        assertEquals(68, history.getFirst().globalScore());
-        assertTrue(history.getFirst().hasReport());
-        verify(countingMapper, times(1)).readTree(reportJson);
+        var detail = new AuditQueryService(audits, mock(AuditRunService.class), mapper)
+            .getComparisonDetail(1, 42);
+        assertEquals(AuditComparisonService.Reason.NO_PREVIOUS_REPORT, detail.comparison().reason());
+        verify(mapper, times(1)).readValue(current.getReportJson(), ReportDto.class);
     }
 }

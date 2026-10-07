@@ -5,7 +5,7 @@ import { argosApi, AuditListItem } from "@/lib/ArgosApi";
 import { useLang } from "@/lib/i18n/LangContext";
 import { createLogger, safeError } from "@/lib/logger";
 import {
-  parseReport, extractTechs, prettyJson,
+  parseReport, extractTechs, prettyJson, getGlobalScore,
   AuditReportV2, SortKey,
 } from "@/lib/auditTypes";
 import FilterBar from "./FilterBar";
@@ -30,6 +30,9 @@ export default function AuditList({ items, setItems }: Props) {
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState<string | null>(null);
   const [copiedRunId, setCopiedRunId] = useState<number | null>(null);
+  const [loadingAllDetails, setLoadingAllDetails] = useState(false);
+  const [allDetailsLoaded, setAllDetailsLoaded] = useState(false);
+  const [detailsError, setDetailsError] = useState(false);
 
   const [sortBy, setSortBy]             = useState<SortKey>("date_desc");
   const [filterStatus, setFilterStatus] = useState<string>("ALL");
@@ -53,6 +56,7 @@ export default function AuditList({ items, setItems }: Props) {
             },
           });
           setItems(list);
+          setAllDetailsLoaded(false);
         }
       } catch (e: unknown) {
         loggerRef.current.error("dashboard_audit_list_load_failed", {
@@ -117,6 +121,7 @@ export default function AuditList({ items, setItems }: Props) {
               ...existing,
               status: u.r.status,
               resultJson:  u.r.resultJson  ?? existing.resultJson  ?? null,
+              globalScore: getGlobalScore(u.r.resultJson) ?? existing.globalScore ?? null,
               finishedAt:  u.r.finishedAt  ?? existing.finishedAt  ?? null,
               reportUrl: u.r.status === "COMPLETED" ? `/dashboard/report/${u.runId}` : existing.reportUrl,
             });
@@ -171,6 +176,39 @@ export default function AuditList({ items, setItems }: Props) {
     previousStatusesRef.current = nextStatuses;
   }, [items]);
 
+  async function loadDetails(runId: number) {
+    const run = await argosApi.getRunsByRunId(runId);
+    setItems((previous) => previous.map((item) => item.runId === runId
+      ? { ...item, resultJson: run.resultJson ?? null,
+          globalScore: getGlobalScore(run.resultJson) ?? item.globalScore ?? null }
+      : item));
+  }
+
+  async function loadAllDetails() {
+    if (loadingAllDetails || allDetailsLoaded) return;
+    setLoadingAllDetails(true);
+    setDetailsError(false);
+    try {
+      const completed = items.filter((item) => item.runId && isFinal(item.status) && !item.resultJson);
+      for (let offset = 0; offset < completed.length; offset += 5) {
+        const batch = await Promise.all(completed.slice(offset, offset + 5)
+          .map((item) => argosApi.getRunsByRunId(item.runId)));
+        const byId = new Map(batch.map((run) => [Number(run.runId), run]));
+        setItems((previous) => previous.map((item) => {
+          const run = byId.get(item.runId);
+          return run ? { ...item, resultJson: run.resultJson ?? null,
+            globalScore: getGlobalScore(run.resultJson) ?? item.globalScore ?? null } : item;
+        }));
+      }
+      setAllDetailsLoaded(true);
+    } catch (e) {
+      setDetailsError(true);
+      throw e;
+    } finally {
+      setLoadingAllDetails(false);
+    }
+  }
+
   // Derive filter options from data
   const allModules = useMemo(() => {
     const ids = new Set<string>();
@@ -202,8 +240,8 @@ export default function AuditList({ items, setItems }: Props) {
     result.sort((a, b) => {
       if (sortBy === "date_desc") return (b.runId ?? 0) - (a.runId ?? 0);
       if (sortBy === "date_asc")  return (a.runId ?? 0) - (b.runId ?? 0);
-      const sa = parseReport(a.resultJson)?.score?.global?.ratio ?? -1;
-      const sb = parseReport(b.resultJson)?.score?.global?.ratio ?? -1;
+      const sa = a.globalScore ?? -1;
+      const sb = b.globalScore ?? -1;
       return sortBy === "score_desc" ? sb - sa : sa - sb;
     });
 
@@ -258,12 +296,22 @@ export default function AuditList({ items, setItems }: Props) {
       </div>
 
       {items.length > 0 && (
+        <div>
+          <button type="button" onClick={() => { void loadAllDetails().catch(() => {}); }}
+            disabled={loadingAllDetails || allDetailsLoaded} className={styles.detailButton}>
+            {loadingAllDetails ? tl.filters.loadingDetails : allDetailsLoaded ? tl.filters.detailsLoaded : tl.filters.loadDetails}
+          </button>
+          {detailsError && <span className={styles.helper}>{tl.filters.detailsError}</span>}
+        </div>
+      )}
+
+      {items.length > 0 && (
         <FilterBar
           tl={tl}
           statusCounts={statusCounts}
-          allModules={allModules}
-          allTags={allTags}
-          allTechs={allTechs}
+          allModules={allDetailsLoaded ? allModules : []}
+          allTags={allDetailsLoaded ? allTags : []}
+          allTechs={allDetailsLoaded ? allTechs : []}
           sortBy={sortBy}
           filterStatus={filterStatus}
           filterModule={filterModule}
@@ -295,6 +343,9 @@ export default function AuditList({ items, setItems }: Props) {
             setFilterTag={setFilterTag}
             copiedRunId={copiedRunId}
             onCopyJson={copyJson}
+            onLoadDetails={loadDetails}
+            filtersReady={allDetailsLoaded}
+            onLoadAllDetails={loadAllDetails}
             tl={tl}
           />
         ))

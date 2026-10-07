@@ -43,6 +43,9 @@ type Translations = {
   copyJson: string;
   copied: string;
   showJson: string;
+  loadDetails: string;
+  loadingDetails: string;
+  detailsError: string;
   status: Record<string, string>;
   history: HistoryTranslations;
 };
@@ -56,6 +59,9 @@ type Props = {
   setFilterTag: (v: string) => void;
   copiedRunId: number | null;
   onCopyJson: (runId: number, json: string) => void;
+  onLoadDetails: (runId: number) => Promise<void>;
+  filtersReady: boolean;
+  onLoadAllDetails: () => Promise<void>;
   tl: Translations;
 };
 
@@ -63,10 +69,11 @@ export default function AuditCard({
   item, report,
   filterModule, filterTag,
   setFilterModule, setFilterTag,
-  copiedRunId, onCopyJson,
+  copiedRunId, onCopyJson, onLoadDetails, filtersReady, onLoadAllDetails,
   tl,
 }: Props) {
   const score: AuditScoreReport | undefined = report?.score;
+  const globalRatio = score?.global?.ratio ?? (typeof item.globalScore === "number" ? item.globalScore / 100 : null);
   const techs = extractTechs(report);
   const reportHref = item.reportUrl ?? null;
 
@@ -74,6 +81,8 @@ export default function AuditCard({
   const [history, setHistory] = useState<AuditHistoryItem[] | null>(null);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyError, setHistoryError] = useState(false);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [detailsError, setDetailsError] = useState(false);
   const historyLoadedRef = useRef(false);
   const loggerRef = useRef(createLogger("dashboard", { route: "/dashboard" }));
 
@@ -97,6 +106,14 @@ export default function AuditCard({
       setHistoryLoading(false);
     }
   }, [item.auditId]);
+
+  async function loadDetails() {
+    setDetailsLoading(true);
+    setDetailsError(false);
+    try { await onLoadDetails(item.runId); }
+    catch { setDetailsError(true); }
+    finally { setDetailsLoading(false); }
+  }
 
   return (
     <div className={styles.card}>
@@ -123,10 +140,10 @@ export default function AuditCard({
         <div className={styles.headerRight}>
           <StatusBadge status={item.status} labels={tl.status} />
 
-          {score?.global ? (
+          {globalRatio !== null ? (
             <div className={styles.scoreRow}>
-              <ScoreBubbles ratio={score.global.ratio} />
-              <span className={styles.scoreText}>{formatPct(score.global.ratio)}</span>
+              <ScoreBubbles ratio={globalRatio} />
+              <span className={styles.scoreText}>{formatPct(globalRatio)}</span>
             </div>
           ) : (
             <span className={styles.mutedSmall}>
@@ -158,7 +175,10 @@ export default function AuditCard({
                   ratio={m.ratio}
                   title={m.id + ": " + formatPct(m.ratio)}
                   active={filterModule === m.id}
-                  onClick={() => setFilterModule(filterModule === m.id ? "ALL" : m.id)}
+                  onClick={() => {
+                    if (filtersReady) setFilterModule(filterModule === m.id ? "ALL" : m.id);
+                    else void onLoadAllDetails().then(() => setFilterModule(m.id)).catch(() => {});
+                  }}
                 />
               ))}
           </div>
@@ -181,7 +201,10 @@ export default function AuditCard({
                   ratio={tag.ratio}
                   title={tag.id + ": " + formatPct(tag.ratio)}
                   active={filterTag === tag.id}
-                  onClick={() => setFilterTag(filterTag === tag.id ? "ALL" : tag.id)}
+                  onClick={() => {
+                    if (filtersReady) setFilterTag(filterTag === tag.id ? "ALL" : tag.id);
+                    else void onLoadAllDetails().then(() => setFilterTag(tag.id)).catch(() => {});
+                  }}
                 />
               ))}
           </div>
@@ -191,9 +214,12 @@ export default function AuditCard({
       {/* Actions */}
       <div className={styles.actions}>
         {!item.resultJson ? (
-          <div className={styles.muted}>
-            {isFinal(item.status) ? tl.noJson : tl.resultPending}
-          </div>
+          isFinal(item.status) ? <>
+            <button type="button" onClick={loadDetails} disabled={detailsLoading} className={styles.copyBtn}>
+              {detailsLoading ? tl.loadingDetails : tl.loadDetails}
+            </button>
+            {detailsError && <span className={styles.muted}>{tl.detailsError}</span>}
+          </> : <div className={styles.muted}>{tl.resultPending}</div>
         ) : (
           <>
             <button
@@ -249,7 +275,7 @@ export default function AuditCard({
                   {href && !isCurrent && (
                     <Link href={href} className={styles.historyLink}>{th.view}</Link>
                   )}
-                  {h.status === "COMPLETED" && <AuditComparison item={h} url={item.inputUrl}/>}
+                  {h.status === "COMPLETED" && <AuditComparison item={h} auditId={item.auditId} url={item.inputUrl}/>}
                 </li>
               );
             })}

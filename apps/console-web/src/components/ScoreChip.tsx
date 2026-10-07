@@ -16,21 +16,18 @@ type ChipProps = {
 export function ScoreChip({ label, ratio, title, active = false, onClick }: ChipProps) {
   const r = Math.max(0, Math.min(1, ratio ?? 0));
   const { bg, fg, border } = scoreChipTheme(r);
-  return (
-    <div
-      title={title}
-      onClick={onClick}
-      className={`${styles.chip} ${onClick ? styles["chip--clickable"] : ""}`}
-      style={{
+  const content = <><span>{label}</span><span className={styles.pct}>{formatPct(r)}</span></>;
+  const props = {
+      title,
+      className: `${styles.chip} ${onClick ? styles["chip--clickable"] : ""}`,
+      style: {
         border: active ? "2px solid " + fg : "1px solid " + border,
         background: active ? fg : bg,
         color: active ? "#fff" : fg,
-      }}
-    >
-      <span>{label}</span>
-      <span className={styles.pct}>{formatPct(r)}</span>
-    </div>
-  );
+      },
+  };
+  return onClick ? <button type="button" onClick={onClick} {...props}>{content}</button>
+    : <div {...props}>{content}</div>;
 }
 
 type BubblesProps = { ratio: number };

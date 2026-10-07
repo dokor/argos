@@ -23,6 +23,12 @@ public class AuditReport extends com.coreoz.plume.db.querydsl.crud.CrudEntityQue
     @Column("expires_at")
     private java.time.Instant expiresAt;
 
+    @Column("global_score")
+    private Integer globalScore;
+
+    @Column("scoring_version")
+    private Integer scoringVersion;
+
     @Column("id")
     @JsonSerialize(using=com.fasterxml.jackson.databind.ser.std.ToStringSerializer.class)
     private Long id;
@@ -76,6 +82,22 @@ public class AuditReport extends com.coreoz.plume.db.querydsl.crud.CrudEntityQue
 
     public void setExpiresAt(java.time.Instant expiresAt) {
         this.expiresAt = expiresAt;
+    }
+
+    public Integer getGlobalScore() {
+        return globalScore;
+    }
+
+    public void setGlobalScore(Integer globalScore) {
+        this.globalScore = globalScore;
+    }
+
+    public Integer getScoringVersion() {
+        return scoringVersion;
+    }
+
+    public void setScoringVersion(Integer scoringVersion) {
+        this.scoringVersion = scoringVersion;
     }
 
     public Long getId() {
