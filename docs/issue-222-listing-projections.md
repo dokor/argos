@@ -1,6 +1,6 @@
 # Audit list and history read model (#222)
 
-`V7__report_global_score.sql` adds nullable `global_score` and `scoring_version` to
+`V9__report_global_score.sql` adds nullable `global_score` and `scoring_version` to
 `ARG_AUDIT_REPORT`, plus an index on `global_score`. Publication writes both fields
 in the same transaction as the report and completed run. Before writing, it checks
 that the public score matches the internal aggregate and that the public
