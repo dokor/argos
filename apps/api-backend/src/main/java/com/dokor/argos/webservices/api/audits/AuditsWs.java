@@ -4,6 +4,7 @@ import com.coreoz.plume.jersey.security.permission.PublicApi;
 import com.dokor.argos.services.domain.audit.AuditService;
 import com.dokor.argos.services.domain.audit.AuditQueryService;
 import com.dokor.argos.services.domain.audit.UrlNormalizer;
+import com.dokor.argos.services.domain.audit.errors.NotFoundException;
 import com.dokor.argos.services.domain.report.ReportReadService;
 import com.dokor.argos.webservices.api.audits.data.CreateAuditRequest;
 import io.swagger.v3.oas.annotations.Operation;
@@ -110,7 +111,11 @@ public class AuditsWs {
     ) {
         adminReadAccess.require(authorization);
         logger.debug("Get run status requested: runId={}", runId);
-        return privateRead(AuditResponseMapper.status(auditQueryService.getRunStatus(runId)));
+        try {
+            return privateRead(AuditResponseMapper.status(auditQueryService.getRunStatus(runId)));
+        } catch (NotFoundException missing) {
+            return Response.status(Response.Status.NOT_FOUND).header("Cache-Control", "no-store").build();
+        }
     }
 
     /**
