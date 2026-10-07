@@ -1,5 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { appendFileSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
 
 const event = process.env.GITHUB_EVENT_NAME;
 const base = process.env.BASE_SHA;
@@ -60,7 +61,7 @@ export function classify(paths) {
   };
 }
 
-if (process.env.GITHUB_OUTPUT) {
+if (process.env.GITHUB_OUTPUT && process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const result = classify(changedPaths());
   for (const [name, enabled] of Object.entries(result)) {
     appendFileSync(process.env.GITHUB_OUTPUT, `${name}=${enabled}\n`);
