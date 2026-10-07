@@ -1,7 +1,14 @@
 @use '../../styles/tokens' as t;
 
-.root {
+.page {
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.root {
+  flex: 1;
+  min-height: 420px;
   display: flex;
   align-items: center;
   justify-content: center;

@@ -5,11 +5,8 @@ import Link from "next/link";
 import { useLang } from "@/lib/i18n/LangContext";
 import { createLogger } from "@/lib/logger";
 import { useAuditSubmit } from "@/lib/useAuditSubmit";
-import { useIsAdmin } from "@/lib/useIsAdmin";
-import ArgosIcon from "@/components/ArgosIcon";
-import LangToggle from "@/components/LangToggle";
-import ThemeToggle from "@/components/ThemeToggle";
-import AuthorCredit from "@/components/AuthorCredit";
+import SiteNav from "@/components/site/SiteNav";
+import SiteFooter from "@/components/site/SiteFooter";
 import ScoreRingSvg from "@/components/report/ScoreRing";
 import s from "./page.module.scss";
 
@@ -254,7 +251,6 @@ function MockReport({
 export default function LandingPage() {
   const { t } = useLang();
   const tl = t.landing;
-  const isAdmin = useIsAdmin();
 
   const formT: AuditFormT = {
     inputPlaceholder: tl.hero.inputPlaceholder,
@@ -273,32 +269,7 @@ export default function LandingPage() {
   return (
     <div className={s.page}>
 
-      {/* NAV */}
-      <nav className={s.nav}>
-        <div className={s.navInner}>
-          <div className={s.logo}>
-            <ArgosIcon size={22} className={s.logoIcon} />
-            <span style={{ fontWeight: 700, fontSize: 18, letterSpacing: "-0.02em" }}>
-              {t.nav.logo}
-            </span>
-          </div>
-          <div className={s.navRight}>
-            <a href="/faq" className={s.navLink}>
-              {t.nav.faq}
-            </a>
-            <a href="/ressources" className={`${s.navLink} ${s.articleNavLink}`}>
-              {t.nav.resources}
-            </a>
-            <ThemeToggle />
-            <LangToggle />
-            {isAdmin && (
-              <a href="/dashboard" className={s.navCta}>
-                {t.nav.openConsole}
-              </a>
-            )}
-          </div>
-        </div>
-      </nav>
+      <SiteNav />
 
       <main>
       {/* HERO */}
@@ -425,14 +396,7 @@ export default function LandingPage() {
 
       </main>
 
-      {/* FOOTER */}
-      <footer className={s.footer}>
-        <div className={s.footerInner}>
-          <AuthorCredit className={s.footerLink} />
-          <a href="/ressources" className={s.footerLink}>{t.nav.resources}</a>
-          <span>{tl.footer.copy}</span>
-        </div>
-      </footer>
+      <SiteFooter />
 
     </div>
   );
