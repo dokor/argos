@@ -35,7 +35,9 @@ public class WebApplication {
     public static void main(String[] args) {
         try {
             long startTimestamp = System.currentTimeMillis();
-            new ConfigurationService(com.typesafe.config.ConfigFactory.load()).validateRequiredSecrets();
+            ConfigurationService startupConfiguration = new ConfigurationService(com.typesafe.config.ConfigFactory.load());
+            startupConfiguration.validateRequiredSecrets();
+            startupConfiguration.validateResourcePools();
 
             // Initialize all application objects with Guice
             Injector injector = Guice.createInjector(Stage.PRODUCTION, new ApplicationModule());
@@ -53,7 +55,7 @@ public class WebApplication {
                 injector.getInstance(GrizzlyThreadPoolProbe.class),
                 System.getProperty("http.port"),
                 System.getProperty("http.address"),
-                injector.getInstance(ConfigurationService.class).httpGrizzlyWorkerThreadsPoolSize()
+                injector.getInstance(ConfigurationService.class).httpGrizzlyWorkerThreadPoolConfig()
             );
 
             injector.getInstance(SchedulerJobs.class).scheduleJobs();

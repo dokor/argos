@@ -73,7 +73,7 @@ class ConfigurationServiceTest {
 
     @Test void optionalSettingsHaveDefaultsAndRequiredSettingsRemainRequired() {
         var service = service("", Map.of());
-        assertNull(service.httpGrizzlyWorkerThreadsPoolSize());
+        assertEquals(24, service.httpGrizzlyWorkerThreadsPoolSize());
         assertEquals(Duration.ofMinutes(20), service.auditStuckRunTimeout());
         assertEquals(Duration.ofMinutes(1), service.auditStuckCheckInterval());
         assertEquals(3, service.auditMaxAttempts());
@@ -160,4 +160,36 @@ class ConfigurationServiceTest {
         assertThrows(IllegalArgumentException.class,
             () -> service("external.playwright.timeout = -1s", Map.of()).playwrightTimeout());
     }
+    @Test void workerPoolDefaultsAreBoundedAndLegacyMaximumRemainsSupported() {
+        var pool = service("", Map.of()).httpGrizzlyWorkerThreadPoolConfig();
+        assertEquals(4, pool.getCorePoolSize());
+        assertEquals(24, pool.getMaxPoolSize());
+        assertEquals(64, pool.getQueueLimit());
+        var legacy = service("http-grizzly.worker-threads-pool-size=2", Map.of()).httpGrizzlyWorkerThreadPoolConfig();
+        assertEquals(2, legacy.getCorePoolSize());
+        assertEquals(2, legacy.getMaxPoolSize());
+        var configured = service("""
+            http-grizzly.worker-threads-pool-size=8
+            http-grizzly.worker-threads-core-pool-size=2
+            http-grizzly.worker-threads-queue-limit=12
+            """, Map.of()).httpGrizzlyWorkerThreadPoolConfig();
+        assertEquals(2, configured.getCorePoolSize());
+        assertEquals(8, configured.getMaxPoolSize());
+        assertEquals(12, configured.getQueueLimit());
+    }
+
+    @ParameterizedTest @ValueSource(strings = {
+        "http-grizzly.worker-threads-pool-size=0",
+        "http-grizzly.worker-threads-core-pool-size=-1",
+        "http-grizzly.worker-threads-queue-limit=-1",
+        "http-grizzly.worker-threads-pool-size=2\nhttp-grizzly.worker-threads-core-pool-size=3",
+        "db.hikari.maximumPoolSize=0", "db.hikari.minimumIdle=-1",
+        "db.hikari.maximumPoolSize=2\ndb.hikari.minimumIdle=3",
+        "db.hikari.connectionTimeout=0", "db.hikari.connectionTimeout=249",
+        "db.hikari.maximumPoolSize=null", "db.hikari.minimumIdle=null", "db.hikari.connectionTimeout=null"
+    })
+    void invalidPoolSettingsFailBeforeStartup(String config) {
+        assertThrows(IllegalArgumentException.class, () -> service(config, Map.of()).validateResourcePools());
+    }
+
 }
