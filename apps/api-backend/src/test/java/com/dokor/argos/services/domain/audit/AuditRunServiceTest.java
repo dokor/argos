@@ -144,4 +144,39 @@ class AuditRunServiceTest {
     private static ModuleStatus find(List<ModuleStatus> list, String id) {
         return list.stream().filter(m -> m.id().equals(id)).findFirst().orElseThrow();
     }
+
+    @Test
+    void claimNextQueuedRunReturnsEmptyWithoutTryingToClaimWhenQueueIsEmpty() {
+        AuditRunDao dao = mock(AuditRunDao.class);
+        when(dao.findNextQueuedRun()).thenReturn(Optional.empty());
+
+        assertTrue(newService(dao, mock(TokenService.class)).claimNextQueuedRun().isEmpty());
+        verify(dao, never()).claimRun(anyLong(), anyString(), any());
+    }
+
+    @Test
+    void claimNextQueuedRunReturnsSelectedRunAfterSuccessfulClaim() {
+        AuditRunDao dao = mock(AuditRunDao.class);
+        AuditRun queued = new AuditRun();
+        queued.setId(42L);
+        when(dao.findNextQueuedRun()).thenReturn(Optional.of(queued));
+        when(dao.claimRun(eq(42L), anyString(), any(Instant.class))).thenReturn(true);
+
+        assertSame(queued, newService(dao, mock(TokenService.class)).claimNextQueuedRun().orElseThrow());
+        ArgumentCaptor<String> claim = ArgumentCaptor.forClass(String.class);
+        verify(dao).claimRun(eq(42L), claim.capture(), any(Instant.class));
+        assertTrue(claim.getValue().matches("[0-9a-f]{32}"));
+    }
+
+    @Test
+    void claimNextQueuedRunReturnsEmptyWhenAnotherWorkerWinsTheRace() {
+        AuditRunDao dao = mock(AuditRunDao.class);
+        AuditRun queued = new AuditRun();
+        queued.setId(42L);
+        when(dao.findNextQueuedRun()).thenReturn(Optional.of(queued));
+        when(dao.claimRun(eq(42L), anyString(), any(Instant.class))).thenReturn(false);
+
+        assertTrue(newService(dao, mock(TokenService.class)).claimNextQueuedRun().isEmpty());
+        verify(dao).claimRun(eq(42L), anyString(), any(Instant.class));
+    }
 }
