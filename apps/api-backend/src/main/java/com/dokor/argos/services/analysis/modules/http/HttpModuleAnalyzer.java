@@ -1,9 +1,9 @@
 package com.dokor.argos.services.analysis.modules.http;
 
+import com.dokor.argos.services.analysis.AuditModule;
 import com.dokor.argos.services.analysis.BoundedBodyHandlers;
 import com.dokor.argos.services.analysis.model.AuditCheckResult;
 import com.dokor.argos.services.analysis.model.AuditContext;
-import com.dokor.argos.services.analysis.model.AuditModuleAnalyzer;
 import com.dokor.argos.services.analysis.model.AuditModuleResult;
 import com.dokor.argos.services.analysis.model.enums.AuditSeverity;
 import com.dokor.argos.services.analysis.model.enums.AuditStatus;
@@ -32,7 +32,7 @@ import java.util.*;
  * - On se limite à MAX_REDIRECTS pour éviter les boucles.
  */
 @Singleton
-public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
+public class HttpModuleAnalyzer {
 
     private static final int MAX_REDIRECTS = 10;
 
@@ -51,12 +51,10 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
         this.client = client;
     }
 
-    @Override
     public String moduleId() {
-        return "http";
+        return AuditModule.HTTP.id();
     }
 
-    @Override
     public AuditModuleResult analyze(AuditContext context, Logger logger) {
         long start = System.currentTimeMillis();
         var global=com.dokor.argos.services.analysis.AuditDeadline.current();

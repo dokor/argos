@@ -1,12 +1,11 @@
 package com.dokor.argos.services.analysis.modules.observatory;
 
+import com.dokor.argos.services.analysis.AuditModule;
 import com.dokor.argos.util.Urls;
 import com.dokor.argos.util.JsonNodes;
 import com.dokor.argos.services.analysis.model.AuditCheckResult;
 import com.dokor.argos.services.analysis.model.AuditContext;
-import com.dokor.argos.services.analysis.model.AuditModuleAnalyzer;
 import com.dokor.argos.services.analysis.model.AuditModuleResult;
-import com.dokor.argos.services.analysis.model.ModuleScope;
 import com.dokor.argos.services.analysis.model.enums.AuditSeverity;
 import com.dokor.argos.services.analysis.model.enums.AuditStatus;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -21,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 @Singleton
-public class ObservatoryModuleAnalyzer implements AuditModuleAnalyzer {
+public class ObservatoryModuleAnalyzer {
 
     private final ObservatoryClient client;
 
@@ -30,17 +29,10 @@ public class ObservatoryModuleAnalyzer implements AuditModuleAnalyzer {
         this.client = client;
     }
 
-    @Override
     public String moduleId() {
-        return "observatory";
+        return AuditModule.OBSERVATORY.id();
     }
 
-    @Override
-    public ModuleScope scope() {
-        return ModuleScope.DOMAIN;
-    }
-
-    @Override
     public AuditModuleResult analyze(AuditContext context, Logger logger) {
         String url = context.finalUrl() != null ? context.finalUrl() : context.normalizedUrl();
         String hostname = Urls.host(url);

@@ -2,16 +2,9 @@ package com.dokor.argos.guice;
 
 import com.coreoz.plume.db.querydsl.guice.GuiceQuerydslModule;
 import com.dokor.argos.services.analysis.DomainAnalysisService;
-import com.dokor.argos.services.analysis.modules.lighthouse.LighthouseModuleAnalyzer;
-import com.dokor.argos.services.analysis.model.AuditModuleAnalyzer;
-import com.dokor.argos.services.analysis.modules.html.HtmlModuleAnalyzer;
-import com.dokor.argos.services.analysis.modules.http.HttpModuleAnalyzer;
-import com.dokor.argos.services.analysis.modules.runtime.RuntimeModuleAnalyzer;
-import com.dokor.argos.services.analysis.modules.tech.TechModuleAnalyzer;
 import com.dokor.argos.services.analysis.scoring.ScorePolicy;
 import com.dokor.argos.services.analysis.scoring.DefaultScorePolicy;
 import com.dokor.argos.services.domain.domain.DomainService;
-import com.google.inject.multibindings.Multibinder;
 import jakarta.inject.Singleton;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -35,15 +28,6 @@ public class ApplicationModule extends AbstractModule {
 
         // Prepare Jersey configuration
         bind(ResourceConfig.class).toProvider(JerseyConfigProvider.class);
-
-        Multibinder<AuditModuleAnalyzer> multibinder
-            = Multibinder.newSetBinder(binder(), AuditModuleAnalyzer.class);
-        multibinder.addBinding().to(HtmlModuleAnalyzer.class);
-        multibinder.addBinding().to(TechModuleAnalyzer.class);
-        multibinder.addBinding().to(HttpModuleAnalyzer.class);
-        multibinder.addBinding().to(RuntimeModuleAnalyzer.class);
-        multibinder.addBinding().to(LighthouseModuleAnalyzer.class);
-
 
         bind(ScorePolicy.class)
             .to(DefaultScorePolicy.class)

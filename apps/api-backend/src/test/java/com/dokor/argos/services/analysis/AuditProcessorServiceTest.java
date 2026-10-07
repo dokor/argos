@@ -310,13 +310,14 @@ class AuditProcessorServiceTest {
         private final RuntimeModuleAnalyzer runtime = mock(RuntimeModuleAnalyzer.class);
         private final LighthouseModuleAnalyzer lighthouse = mock(LighthouseModuleAnalyzer.class);
         private final ZapModuleAnalyzer zap = mock(ZapModuleAnalyzer.class);
+        private final DomainAnalysisService domains = mock(DomainAnalysisService.class);
         private final ReportPublishService publisher = mock(ReportPublishService.class);
         private final ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
 
         private AuditModuleResult result(String id) { return new AuditModuleResult(id, id, "fixture", Map.of(), List.of()); }
         private AuditProcessorService processor(RemoteModuleExecutor remote) throws Exception {
             var dao = mock(AuditDao.class); var http = mock(HttpModuleAnalyzer.class);
-            var domains = mock(DomainAnalysisService.class); var merger = mock(CheckMergerService.class);
+            var merger = mock(CheckMergerService.class);
             var enricher = mock(ScoreEnricherService.class); var scorer = mock(ScoreService.class);
             var run = new AuditRun(); run.setAuditId(10L); run.setId(1L); run.setReportTokenHash(new byte[32]); run.setClaimToken("synthetic-worker");
             var audit = new Audit(); audit.setId(10L); audit.setDomainId(1L);
@@ -356,7 +357,16 @@ class AuditProcessorServiceTest {
                 });
                 when(html.analyze(any(), any())).thenAnswer(call -> {
                     assertNotSame(localThread, Thread.currentThread()); assertTrue(started.await(2, TimeUnit.SECONDS));
+                    var context = (AuditContext) call.getArgument(0);
+                    assertEquals("https://example.com/final", context.finalUrl());
+                    assertEquals("<p>fixture</p>", context.body());
                     release.countDown(); return result("html");
+                });
+                when(domains.getOrRunTechAnalysis(any(), any())).thenAnswer(call -> {
+                    var context = (AuditContext) call.getArgument(0);
+                    assertEquals("https://example.com/final", context.finalUrl());
+                    assertEquals("<p>fixture</p>", context.body());
+                    return result("tech");
                 });
                 processor.process(1);
                 var order = inOrder(html, runtime, lighthouse, zap);
