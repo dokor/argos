@@ -28,6 +28,49 @@ class ConfigurationServiceTest {
         assertFalse(error.getMessage().contains("synthetic-db-fixture"));
         assertEquals("synthetic-env-value", service("", Map.of("INTERNAL_API_PASSWORD","synthetic-env-value")).internalApiAuthPassword());
     }
+    @Test void startupValidatesEnvironmentCredentialUsedByAuthentication() {
+        var config = """
+            internal-api.auth-password="synthetic-test-internal"
+            db.hikari."dataSource.password"="synthetic-db-fixture"
+            """;
+        for (String blank : java.util.List.of("", " ", "\t\n")) {
+            var service = service(config, Map.of("INTERNAL_API_PASSWORD", blank));
+            var error = assertThrows(IllegalStateException.class, service::validateRequiredSecrets);
+            assertEquals("Required external secret missing or invalid: internal-api.auth-password", error.getMessage());
+            assertNull(error.getCause());
+            assertThrows(IllegalStateException.class, service::internalApiAuthPassword);
+        }
+        var external = service("""
+            db.hikari."dataSource.password"="synthetic-db-fixture"
+            """, Map.of("INTERNAL_API_PASSWORD", "synthetic-env-value"));
+        assertDoesNotThrow(external::validateRequiredSecrets);
+        assertEquals("synthetic-env-value", external.internalApiAuthPassword());
+    }
+
+    @Test void malformedSecretsFailWithoutLeakingValuesOrConfigurationCauses() {
+        var valid = ConfigFactory.parseString("""
+            internal-api.auth-password="synthetic-test-internal"
+            db.hikari."dataSource.password"="synthetic-db-fixture"
+            """);
+        for (String path : java.util.List.of("internal-api.auth-password", "db.hikari.\"dataSource.password\"")) {
+            for (Object value : java.util.List.of(219, true, java.util.List.of("synthetic-private-value"),
+                    Map.of("private", "synthetic-private-value"), "", " \t")) {
+                var config = valid.withValue(path, com.typesafe.config.ConfigValueFactory.fromAnyRef(value));
+                var service = new ConfigurationService(config, Map.of());
+                var error = assertThrows(IllegalStateException.class, service::validateRequiredSecrets);
+                assertEquals("Required external secret missing or invalid: " + path, error.getMessage());
+                assertNull(error.getCause());
+            }
+            for (var config : java.util.List.of(valid.withoutPath(path),
+                    valid.withValue(path, com.typesafe.config.ConfigValueFactory.fromAnyRef(null)))) {
+                var error = assertThrows(IllegalStateException.class,
+                    new ConfigurationService(config, Map.of())::validateRequiredSecrets);
+                assertEquals("Required external secret missing or invalid: " + path, error.getMessage());
+                assertNull(error.getCause());
+            }
+        }
+    }
+
     @Test void optionalSettingsHaveDefaultsAndRequiredSettingsRemainRequired() {
         var service = service("", Map.of());
         assertNull(service.httpGrizzlyWorkerThreadsPoolSize());
@@ -39,7 +82,7 @@ class ConfigurationServiceTest {
         assertEquals(Duration.ofSeconds(45), service.codexSummaryTimeout());
         assertThrows(ConfigException.Missing.class, service::auditSchedulerInterval);
         assertThrows(ConfigException.Missing.class, service::internalApiAuthUsername);
-        assertThrows(ConfigException.Missing.class, service::internalApiAuthPassword);
+        assertThrows(IllegalStateException.class, service::internalApiAuthPassword);
     }
     @Test void explicitHoconAndEnvironmentSettingsOverrideDefaults() {
         var service = service("""
