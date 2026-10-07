@@ -25,13 +25,13 @@ class ScorePolicyContractTest {
                 "http.security.x_content_type_options", "http.security.x_frame_options", "http.security.referrer_policy",
                 "http.security.permissions_policy", "http.security.cookie_flags", "http.protocol.http2",
                 "http.headers.compression", "http.headers.caching", "http.headers.server", "http.seo.robots_txt",
-                "http.seo.sitemap"
+                "http.seo.sitemap", "http.collect"
             ),
             Set.of(
                 "html.meta.robots.present", "html.scripts.count", "html.size.bytes", "html.analysis.duration_ms",
                 "html.title", "html.meta.description.present", "html.link.canonical.present", "html.h1.count",
                 "html.lang", "html.meta.viewport.present", "html.doctype.html5", "html.meta.charset.present",
-                "html.social.meta", "html.images.alt_coverage", "html.anchors.href_coverage", "html.available"
+                "html.social.meta", "html.images.alt_coverage", "html.anchors.href_coverage", "html.collect"
             ),
             Set.of(
                 "runtime.collect", "runtime.console.errors", "runtime.js.errors", "runtime.network.5xx",
@@ -44,14 +44,14 @@ class ScorePolicyContractTest {
             ),
             Set.of(
                 "ssl.grade", "ssl.certificate.valid", "ssl.certificate.expiry_days", "ssl.protocols.tls13",
-                "ssl.protocols.tls12", "ssl.protocols.legacy_disabled", "ssl.available"
+                "ssl.protocols.tls12", "ssl.protocols.legacy_disabled", "ssl.collect"
             ),
-            Set.of("observatory.score", "observatory.grade", "observatory.tests.passed", "observatory.available"),
-            Set.of("zap.scan.result", "zap.available"),
+            Set.of("observatory.score", "observatory.grade", "observatory.tests.passed", "observatory.collect"),
+            Set.of("zap.scan.result", "zap.collect"),
             Set.of(
                 "tech.cms", "tech.frontend.framework", "tech.frontend.nextjs", "tech.backend.hints",
                 "tech.cdn.cloudflare", "tech.http.server_header", "tech.security.version_disclosure",
-                "tech.html.available", "tech.analysis.duration_ms"
+                "tech.collect", "tech.analysis.duration_ms"
             )
         );
 

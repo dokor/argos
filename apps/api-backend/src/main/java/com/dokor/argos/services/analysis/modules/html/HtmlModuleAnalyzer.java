@@ -1,6 +1,7 @@
 package com.dokor.argos.services.analysis.modules.html;
 
 import com.dokor.argos.services.analysis.AuditModule;
+import com.dokor.argos.services.analysis.ModuleUnavailableException;
 import com.dokor.argos.services.analysis.model.AuditCheckResult;
 import com.dokor.argos.services.analysis.model.AuditContext;
 import com.dokor.argos.services.analysis.model.AuditModuleResult;
@@ -60,7 +61,7 @@ public class HtmlModuleAnalyzer {
 
         if (html == null || html.isBlank()) {
             logger.warn("HTML module: empty HTML input url={} normalizedUrl={}", inputUrl, normalizedUrl);
-            return emptyHtmlModule(inputUrl, normalizedUrl, finalUrl, "Le HTML est vide ou absent.");
+            throw new ModuleUnavailableException("Le HTML est vide ou absent.");
         }
 
         String title = firstGroup(TITLE_PATTERN, html);
@@ -594,35 +595,6 @@ public class HtmlModuleAnalyzer {
     // -------------------------
     // Helpers
     // -------------------------
-
-    private static AuditModuleResult emptyHtmlModule(String inputUrl, String normalizedUrl, String finalUrl, String reason) {
-        return new AuditModuleResult(
-            "html",
-            "HTML",
-            "Analyse HTML indisponible : " + reason,
-            Map.of(
-                "inputUrl", inputUrl,
-                "normalizedUrl", normalizedUrl,
-                "finalUrl", finalUrl != null ? finalUrl : "unknown",
-                "reason", reason
-            ),
-            List.of(
-                AuditCheckResult.of(
-                    "html.available",
-                    "Disponibilité du HTML",
-                    AuditStatus.WARN,
-                    AuditSeverity.MEDIUM,
-                    false,          // scorable filled later
-                    0.0,            // weight filled later
-                    List.of(),      // tags filled later
-                    false,
-                    Map.of("reason", reason),
-                    "L'analyse HTML n'a pas pu s'exécuter.",
-                    "Vérifiez que l'orchestrateur fournit le contenu HTML (fetch ou réutilisation du body du module HTTP)."
-                )
-            )
-        );
-    }
 
     private static String firstGroup(Pattern pattern, String html) {
         Matcher m = pattern.matcher(html);

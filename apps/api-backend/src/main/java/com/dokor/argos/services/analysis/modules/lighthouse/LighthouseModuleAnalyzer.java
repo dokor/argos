@@ -1,6 +1,7 @@
 package com.dokor.argos.services.analysis.modules.lighthouse;
 
 import com.dokor.argos.services.analysis.AuditModule;
+import com.dokor.argos.services.analysis.ModuleUnavailableException;
 import com.dokor.argos.services.analysis.model.*;
 import com.dokor.argos.services.analysis.accessibility.LighthouseAccessibilityNormalizer;
 import com.dokor.argos.services.analysis.model.enums.AuditSeverity;
@@ -11,7 +12,6 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 
-import java.net.http.HttpTimeoutException;
 import java.util.*;
 
 @Singleton
@@ -37,13 +37,7 @@ public class LighthouseModuleAnalyzer {
         try {
             lhr = client.analyze(url);
         } catch (Exception e) {
-            // module "soft fail" : on ne casse pas tout l'audit
-            boolean timeout = e instanceof HttpTimeoutException;
-            String reason = timeout ? "TIMEOUT" : "FAILED";
-            String message = timeout
-                ? "Lighthouse indisponible : délai d'attente dépassé (timeout)."
-                : "Impossible d'exécuter Lighthouse (service indisponible).";
-            return unavailable(reason, String.valueOf(e.getMessage()), message);
+            throw new ModuleUnavailableException("Lighthouse service unavailable", e);
         }
 
         long durationMs = System.currentTimeMillis() - start;
@@ -57,9 +51,7 @@ public class LighthouseModuleAnalyzer {
         // chuter le score global à tort — cohérent avec le chemin d'exception (issue #205).
         if (categoryScores.isEmpty()) {
             logger.warn("LIGHTHOUSE response without usable category scores, treating as unavailable");
-            return unavailable("UNAVAILABLE",
-                "Réponse Lighthouse sans scores exploitables",
-                "Lighthouse a répondu mais sans scores exploitables (rapport vide ou incomplet).");
+            throw new ModuleUnavailableException("Lighthouse response has no usable category scores");
         }
 
         List<AuditCheckResult> checks = new ArrayList<>();
@@ -87,6 +79,7 @@ public class LighthouseModuleAnalyzer {
 
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("available", true);
+        data.put("partial", categoryScores.size() < CATEGORIES.length);
         data.put("requestedUrl", url);
         data.put("finalUrl", JsonNodes.nonBlankText(lhr.at("/finalDisplayedUrl")));
         data.put("fetchTime", JsonNodes.nonBlankText(lhr.at("/fetchTime")));
@@ -110,35 +103,6 @@ public class LighthouseModuleAnalyzer {
             "Lighthouse",
             summary.toString(),
             data,
-            checks
-        );
-    }
-
-    /**
-     * Résultat "Lighthouse indisponible" (mode dégradé) : un seul check {@code lighthouse.collect}
-     * en WARN, <b>non scorable</b> et de poids nul, plus {@code data.available=false} et un
-     * {@code reason} reconnu par {@code AuditProcessorService}. Aucun {@code lighthouse.score.*}
-     * n'est émis : la panne (ou une réponse vide) ne pèse pas sur le score global.
-     */
-    private AuditModuleResult unavailable(String reason, String errorMsg, String message) {
-        List<AuditCheckResult> checks = List.of(AuditCheckResult.of(
-            "lighthouse.collect",
-            "Lighthouse collection",
-            AuditStatus.WARN,
-            AuditSeverity.MEDIUM,
-            false, 0.0, List.of("lighthouse"),
-            false,
-            Map.of("error", errorMsg, "reason", reason),
-            message,
-            "Vérifier que lighthouse-service est up et joignable depuis api-backend."
-        ));
-
-        return new AuditModuleResult(
-            moduleId(),
-            "Lighthouse",
-            "lighthouse=unavailable(" + reason.toLowerCase(Locale.ROOT) + ")",
-            Map.of("available", false, "error", errorMsg, "reason", reason,
-                "accessibilityEvidence", LighthouseAccessibilityNormalizer.unavailable()),
             checks
         );
     }

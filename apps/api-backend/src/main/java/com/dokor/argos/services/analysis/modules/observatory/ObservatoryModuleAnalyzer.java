@@ -1,6 +1,7 @@
 package com.dokor.argos.services.analysis.modules.observatory;
 
 import com.dokor.argos.services.analysis.AuditModule;
+import com.dokor.argos.services.analysis.ModuleUnavailableException;
 import com.dokor.argos.util.Urls;
 import com.dokor.argos.util.JsonNodes;
 import com.dokor.argos.services.analysis.model.AuditCheckResult;
@@ -39,7 +40,7 @@ public class ObservatoryModuleAnalyzer {
 
         if (hostname == null) {
             logger.warn("Observatory module: could not extract hostname from url={}", url);
-            return errorModule("Could not extract hostname from URL: " + url);
+            throw new ModuleUnavailableException("Could not extract hostname from URL");
         }
 
         logger.info("Observatory module: scanning hostname={}", hostname);
@@ -49,15 +50,21 @@ public class ObservatoryModuleAnalyzer {
             result = client.scan(hostname);
         } catch (Exception e) {
             logger.warn("Observatory module: API call failed hostname={} error={}", hostname, e.getMessage());
-            return errorModule("Observatory API unavailable: " + e.getMessage());
+            throw new ModuleUnavailableException("Observatory API unavailable", e);
         }
 
+        if (result == null || result.isNull()) {
+            throw new ModuleUnavailableException("Observatory response is empty");
+        }
         // Parse score
         int score = JsonNodes.intValue(result, "score", -1);
         String grade = JsonNodes.text(result, "grade");
         int testsPassed = JsonNodes.intValue(result, "tests_passed", -1);
         int testsFailed = JsonNodes.intValue(result, "tests_failed", -1);
         int testsQuantity = JsonNodes.intValue(result, "tests_quantity", -1);
+        if (score < 0 && grade == null && testsPassed < 0 && testsFailed < 0 && testsQuantity < 0) {
+            throw new ModuleUnavailableException("Observatory response has no usable measurements");
+        }
 
         List<AuditCheckResult> checks = new ArrayList<>();
 
@@ -169,6 +176,7 @@ public class ObservatoryModuleAnalyzer {
         data.put("testsPassed", testsPassed >= 0 ? testsPassed : null);
         data.put("testsFailed", testsFailed >= 0 ? testsFailed : null);
         data.put("testsQuantity", testsQuantity >= 0 ? testsQuantity : null);
+        data.put("partial", score < 0 || grade == null || testsPassed < 0);
         if (!failedTests.isEmpty()) {
             data.put("failedPolicies", failedTests.stream().map(FailedTest::name).toList());
         }
@@ -177,24 +185,6 @@ public class ObservatoryModuleAnalyzer {
         logger.info("Observatory module done: {}", summary);
 
         return new AuditModuleResult(moduleId(), "Mozilla Observatory", summary, data, checks);
-    }
-
-    private AuditModuleResult errorModule(String reason) {
-        List<AuditCheckResult> checks = List.of(AuditCheckResult.of(
-            "observatory.available",
-            "Disponibilité de Mozilla Observatory",
-            AuditStatus.WARN,
-            AuditSeverity.LOW,
-            false,
-            0.0,
-            List.of(),
-            false,
-            Map.of("reason", reason),
-            "L'analyse Mozilla Observatory n'a pas pu s'exécuter : " + reason,
-            "Vérifiez l'accès réseau à observatory-api.mdn.mozilla.net."
-        ));
-        return new AuditModuleResult(moduleId(), "Mozilla Observatory", "observatory=unavailable",
-            Map.of("available", false, "reason", reason), checks);
     }
 
     private static Map<String, Object> buildTestsDetails(int passed, int failed, int quantity) {

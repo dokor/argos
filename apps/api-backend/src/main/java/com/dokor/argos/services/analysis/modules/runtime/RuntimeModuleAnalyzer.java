@@ -1,6 +1,7 @@
 package com.dokor.argos.services.analysis.modules.runtime;
 
 import com.dokor.argos.services.analysis.AuditModule;
+import com.dokor.argos.services.analysis.ModuleUnavailableException;
 import com.dokor.argos.services.analysis.model.*;
 import com.dokor.argos.services.analysis.model.enums.AuditSeverity;
 import com.dokor.argos.services.analysis.model.enums.AuditStatus;
@@ -8,7 +9,6 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 
-import java.net.http.HttpTimeoutException;
 import java.util.*;
 
 @Singleton
@@ -41,32 +41,14 @@ public class RuntimeModuleAnalyzer {
         try {
             r = client.analyzeRuntime(url);
         } catch (Exception e) {
-            // module "soft fail" : on ne casse pas tout l'audit
-            boolean timeout = e instanceof HttpTimeoutException;
-            String reason = timeout ? "TIMEOUT" : "FAILED";
-            String errorMsg = String.valueOf(e.getMessage());
-            String message = timeout
-                ? "Runtime (Playwright) indisponible : délai d'attente dépassé (timeout)."
-                : "Impossible de collecter les métriques runtime (Playwright).";
-            List<AuditCheckResult> checks = List.of(AuditCheckResult.of(
-                "runtime.collect",
-                "Runtime collection (Playwright)",
-                AuditStatus.WARN,
-                AuditSeverity.MEDIUM,
-                false, 0.0, List.of("runtime"),
-                false,
-                Map.of("error", errorMsg, "reason", reason),
-                message,
-                "Vérifier que playwright-service est up et joignable depuis api-backend."
-            ));
+            throw new ModuleUnavailableException("Playwright service unavailable", e);
+        }
 
-            return new AuditModuleResult(
-                moduleId(),
-                "Runtime behavior",
-                "runtime=unavailable(" + reason.toLowerCase(Locale.ROOT) + ")",
-                Map.of("available", false, "error", errorMsg, "reason", reason),
-                checks
-            );
+        if (r == null || ((r.console() == null || r.console().errors() == null)
+            && (r.jsErrors() == null || r.jsErrors().count() == null)
+            && (r.network() == null || (r.network().failedRequests() == null
+                && r.network().status5xx() == null && r.network().requests() == null)))) {
+            throw new ModuleUnavailableException("Runtime response has no usable measurements");
         }
 
         long durationMs = System.currentTimeMillis() - start;
@@ -218,15 +200,31 @@ public class RuntimeModuleAnalyzer {
             null
         ));
 
+        // Missing sections are not evidence of zero errors or zero requests.
+        checks.removeIf(c -> switch (c.key()) {
+            case "runtime.console.errors" -> r.console() == null || r.console().errors() == null;
+            case "runtime.js.errors" -> r.jsErrors() == null || r.jsErrors().count() == null;
+            case "runtime.network.5xx" -> r.network() == null || r.network().status5xx() == null;
+            case "runtime.network.failed_requests" -> r.network() == null || r.network().failedRequests() == null;
+            case "runtime.network.request_count" -> r.network() == null || r.network().requests() == null;
+            case "runtime.network.bytes_estimated" -> r.network() == null || r.network().totalBytesEstimated() == null;
+            case "runtime.network.third_party_errors" -> r.network() == null
+                || r.network().failedRequests() == null || r.network().status5xx() == null;
+            default -> false;
+        });
         // -------- data payload (stocké dans report_json) --------
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("available", true);
+        data.put("partial", r.console() == null || r.console().errors() == null
+            || r.jsErrors() == null || r.jsErrors().count() == null
+            || r.network() == null || r.network().failedRequests() == null
+            || r.network().status5xx() == null);
         data.put("url", r.url());
         data.put("finalUrl", r.finalUrl());
-        data.put("timings", Map.of(
-            "domContentLoadedMs", r.timings() != null ? r.timings().domContentLoadedMs() : null,
-            "loadMs", r.timings() != null ? r.timings().loadMs() : null
-        ));
+        Map<String, Object> timings = new LinkedHashMap<>();
+        timings.put("domContentLoadedMs", r.timings() != null ? r.timings().domContentLoadedMs() : null);
+        timings.put("loadMs", r.timings() != null ? r.timings().loadMs() : null);
+        data.put("timings", timings);
         data.put("console", Map.of(
             "errors", consoleErrors,
             "errorsFirstParty", firstPartyErrors,

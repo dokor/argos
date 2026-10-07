@@ -414,43 +414,53 @@ public class AuditProcessorService {
             // Remote work already has its bounded future. Read finished results even after
             // collection expiry; awaiting unfinished work consumes only the shared deadline.
             AuditModuleResult raw = started ? call.run() : auditModuleExecutor.execute(AuditDeadline.current(), call::run);
-            if (raw == null) {
-                statuses.put(moduleId, "FAILED");
-                auditRunService.updateModuleStatus(runId, moduleId, "FAILED");
-                logger.warn("module_failed module={} status=FAILED durationMs={} reason=null_result",
-                    moduleId, System.currentTimeMillis() - start);
-                return annotateWithSource(fallbackModule(moduleId, title, false,
-                    new IllegalStateException("module returned null")));
+            if (raw == null) throw new ModuleUnavailableException("module returned null");
+            // Cached or older analyzer results can still carry the former availability
+            // checks. They are translated only for new reports; stored reports stay intact.
+            if (raw.checks() != null && raw.checks().stream().anyMatch(c ->
+                (moduleId + ".available").equals(c.key()) || (moduleId + ".collect").equals(c.key()))
+                && (raw.data() == null || !Boolean.FALSE.equals(raw.data().get("available")))) {
+                throw new ModuleUnavailableException("legacy module availability result");
+            }
+            if ("tech".equals(moduleId) && raw.checks() != null && raw.checks().stream()
+                .anyMatch(c -> "tech.html.available".equals(c.key()))) {
+                Map<String, Object> partialData = new LinkedHashMap<>(raw.data() == null ? Map.of() : raw.data());
+                partialData.put("partial", true);
+                raw = new AuditModuleResult(raw.id(), raw.title(), raw.summary(), partialData,
+                    raw.checks().stream().filter(c -> !"tech.html.available".equals(c.key())).toList());
             }
             AuditModuleResult res = annotateWithSource(raw);
             Map<String, Object> data = res.data();
-            String status;
+            ModuleOutcome outcome;
             if (data != null && Boolean.FALSE.equals(data.get("available"))) {
+                // Legacy analyzers may still return an unavailable result. Normalize it
+                // here so new reports contain exactly one availability check.
                 Object reason = data.get("reason");
-                status = reason != null ? reason.toString() : "UNAVAILABLE";
-                statuses.put(moduleId, status);
-                // Module indisponible (dégradé) : marqué FAILED côté live (le détail
-                // fin - UNAVAILABLE/TIMEOUT - reste dans meta.moduleStatuses du rapport).
-                auditRunService.updateModuleStatus(runId, moduleId, "FAILED");
+                outcome = "TIMEOUT".equals(reason) ? ModuleOutcome.TIMEOUT
+                    : "FAILED".equals(reason) ? ModuleOutcome.FAILED : ModuleOutcome.UNAVAILABLE;
+                res = annotateWithSource(fallbackModule(moduleId, title, outcome,
+                    new ModuleUnavailableException(String.valueOf(data.getOrDefault("error", reason)))));
             } else {
-                status = "COMPLETED";
-                statuses.put(moduleId, status);
-                auditRunService.updateModuleStatus(runId, moduleId, "COMPLETED");
+                outcome = data != null && Boolean.TRUE.equals(data.get("partial"))
+                    ? ModuleOutcome.PARTIAL : ModuleOutcome.COMPLETED;
             }
+            statuses.put(moduleId, outcome.name());
+            auditRunService.updateModuleStatus(runId, moduleId, outcome.liveStatus());
             logger.info("module_completed module={} status={} durationMs={}",
-                moduleId, status, System.currentTimeMillis() - start);
+                moduleId, outcome, System.currentTimeMillis() - start);
             return res;
         } catch (Exception e) {
             if (e instanceof InterruptedException) {
                 Thread.currentThread().interrupt();
                 throw new IllegalStateException("Audit interrupted", e);
             }
-            boolean timeout = isTimeout(e);
-            statuses.put(moduleId, timeout ? "TIMEOUT" : "FAILED");
-            auditRunService.updateModuleStatus(runId, moduleId, "FAILED");
+            ModuleOutcome outcome = isTimeout(e) ? ModuleOutcome.TIMEOUT
+                : e instanceof ModuleUnavailableException ? ModuleOutcome.UNAVAILABLE : ModuleOutcome.FAILED;
+            statuses.put(moduleId, outcome.name());
+            auditRunService.updateModuleStatus(runId, moduleId, outcome.liveStatus());
             logger.warn("module_failed module={} status={} durationMs={} error={}", moduleId,
-                timeout ? "TIMEOUT" : "FAILED", System.currentTimeMillis() - start, e.getMessage(), e);
-            return annotateWithSource(fallbackModule(moduleId, title, timeout, e));
+                outcome, System.currentTimeMillis() - start, e.getMessage(), e);
+            return annotateWithSource(fallbackModule(moduleId, title, outcome, e));
         } finally {
             MDC.remove("module");
         }
@@ -472,9 +482,9 @@ public class AuditProcessorService {
     }
 
     /** Résultat "module indisponible" substitué en mode dégradé (WARN, non bloquant, non scorable). */
-    private static AuditModuleResult fallbackModule(String moduleId, String title, boolean timeout, Exception e) {
-        String reason = timeout ? "TIMEOUT" : "FAILED";
-        String message = timeout
+    private static AuditModuleResult fallbackModule(String moduleId, String title, ModuleOutcome outcome, Exception e) {
+        String reason = outcome.name();
+        String message = outcome == ModuleOutcome.TIMEOUT
             ? "Module « " + title + " » indisponible : délai d'attente dépassé (timeout)."
             : "Module « " + title + " » indisponible suite à une erreur technique.";
         AuditCheckResult check = AuditCheckResult.of(

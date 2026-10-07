@@ -1,5 +1,6 @@
 package com.dokor.argos.services.analysis.modules.ssl;
 
+import com.dokor.argos.services.analysis.ModuleUnavailableException;
 import com.dokor.argos.services.analysis.model.AuditCheckResult;
 import com.dokor.argos.services.analysis.model.AuditContext;
 import com.dokor.argos.services.analysis.model.AuditModuleResult;
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -47,14 +49,23 @@ class SslLabsModuleAnalyzerTest {
     }
 
     @Test
+    void emptyResponseIsUnavailable() {
+        assertThrows(ModuleUnavailableException.class, () -> analyze("{}"));
+    }
+
+    @Test
     void unknownGradeIsInfoNotWarn() throws Exception {
         // Pas d'endpoint => grade indisponible. "inconnu" ≠ "moyen" : doit être INFO (non scoré).
         AuditModuleResult result = analyze("{\"status\":\"READY\",\"endpoints\":[]}");
+        assertEquals(Boolean.TRUE, result.data().get("partial"));
 
         assertEquals(AuditStatus.INFO, check(result, "ssl.grade").status());
         // Validité et expiration également indéterminées => INFO
         assertEquals(AuditStatus.INFO, check(result, "ssl.certificate.valid").status());
         assertEquals(AuditStatus.INFO, check(result, "ssl.certificate.expiry_days").status());
+        assertEquals(0, result.checks().stream().filter(c ->
+            c.key().equals("ssl.protocols.tls12") || c.key().equals("ssl.protocols.tls13")
+                || c.key().equals("http.security.hsts")).count());
     }
 
     @Test

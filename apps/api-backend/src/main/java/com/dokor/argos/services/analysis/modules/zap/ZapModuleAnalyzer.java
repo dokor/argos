@@ -1,6 +1,7 @@
 package com.dokor.argos.services.analysis.modules.zap;
 
 import com.dokor.argos.services.analysis.AuditModule;
+import com.dokor.argos.services.analysis.ModuleUnavailableException;
 import com.dokor.argos.services.analysis.model.AuditCheckResult;
 import com.dokor.argos.services.analysis.model.AuditContext;
 import com.dokor.argos.services.analysis.model.AuditModuleResult;
@@ -52,13 +53,16 @@ public class ZapModuleAnalyzer {
         } catch (Exception e) {
             logger.warn("ZAP module: passive analysis unavailable url={} error={}",
                 com.dokor.argos.services.domain.audit.UrlNormalizer.sanitizeForLog(url), e.getClass().getSimpleName());
-            return emptyModule("ZAP daemon unavailable: " + e.getMessage());
+            throw new ModuleUnavailableException("ZAP daemon unavailable", e);
         }
 
+        if (response == null || response.isNull()) {
+            throw new ModuleUnavailableException("ZAP response is empty");
+        }
         JsonNode alerts = response.path("alerts");
         if (!alerts.isArray()) {
             logger.warn("ZAP module: unexpected response format (no 'alerts' array)");
-            return emptyModule("Unexpected ZAP response format.");
+            throw new ModuleUnavailableException("ZAP response has no alerts array");
         }
 
         // Agrégation par clé de check : ZAP émet souvent la même alerte pour plusieurs
@@ -124,24 +128,6 @@ public class ZapModuleAnalyzer {
         logger.info("ZAP module done: alerts={} distinct={} fp={}", rawCount, byKey.size(), falsePositives);
 
         return new AuditModuleResult(moduleId(), "OWASP ZAP", summary, data, checks);
-    }
-
-    private AuditModuleResult emptyModule(String reason) {
-        List<AuditCheckResult> checks = List.of(AuditCheckResult.of(
-            "zap.available",
-            "Disponibilité d'OWASP ZAP",
-            AuditStatus.WARN,
-            AuditSeverity.LOW,
-            false,
-            0.0,
-            List.of(),
-            false,
-            Map.of("reason", reason),
-            "L'analyse OWASP ZAP n'a pas pu s'exécuter : " + reason,
-            "Start the ZAP daemon and set ZAP_API_URL environment variable."
-        ));
-        return new AuditModuleResult(moduleId(), "OWASP ZAP", "zap=unavailable",
-            Map.of("available", false, "reason", reason), checks);
     }
 
     /** Nombre maximal d'URLs affectées listées par finding (évite de gonfler le rapport). */
