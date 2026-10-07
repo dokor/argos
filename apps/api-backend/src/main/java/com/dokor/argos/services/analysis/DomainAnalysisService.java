@@ -11,6 +11,7 @@ import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Connection;
 import java.time.Duration;
 import java.time.Instant;
 
@@ -62,62 +63,72 @@ public class DomainAnalysisService {
      */
     public AuditModuleResult getOrRunTechAnalysis(AuditContext context, Logger logger) {
         long domainId = context.domainId();
+        // The domain row exists even when the cache does not. Lock it across the
+        // read, repair and local tech analysis so concurrent workers share one run.
+        AnalysisOutcome outcome = domainAnalysisDao.withLockedDomain(domainId, connection -> {
+            var cached = domainAnalysisDao.findFreshByDomainId(domainId, connection);
+            if (cached.isPresent()) {
+                try {
+                    AuditModuleResult result = deserialize(cached.get());
+                    logger.info("Tech analysis cache hit domainId={} expiresAt={}", domainId, cached.get().getExpiresAt());
+                    return new AnalysisOutcome(result, null);
+                } catch (Exception invalidCache) {
+                    // Jackson exceptions can contain snippets of cached URLs.
+                    DomainAnalysisService.logger.warn("Invalid tech cache domainId={} errorType={} - deleting and recalculating",
+                        domainId, invalidCache.getClass().getSimpleName());
+                    domainAnalysisDao.deleteByDomainId(domainId, connection);
+                }
+            }
 
-        // 1. Chercher un résultat valide en cache
-        var cached = domainAnalysisDao.findFreshByDomainId(domainId);
-        if (cached.isPresent()) {
-            logger.info("Tech analysis cache hit domainId={} expiresAt={}", domainId, cached.get().getExpiresAt());
-            return deserialize(cached.get());
-        }
-
-        // 2. Pas de cache valide → exécuter le module
-        logger.info("Tech analysis cache miss domainId={} - running TechModuleAnalyzer", domainId);
-        AuditModuleResult result = techModuleAnalyzer.analyze(context, logger);
-
-        // 3. Persister (remplace l'ancienne entrée si présente)
-        persist(domainId, result);
-
-        return result;
+            logger.info("Tech analysis cache miss domainId={} - running TechModuleAnalyzer", domainId);
+            try {
+                AuditModuleResult result = techModuleAnalyzer.analyze(context, logger);
+                if (result == null || !AuditModule.TECH.id().equals(result.id()) || result.checks() == null) {
+                    throw new IllegalStateException("Tech analyzer returned an invalid result");
+                }
+                persist(domainId, result, connection);
+                return new AnalysisOutcome(result, null);
+            } catch (RuntimeException failure) {
+                // Commit the cache deletion before propagating to runModule, which
+                // marks this audit degraded. Never cache a failed recalculation.
+                return new AnalysisOutcome(null, failure);
+            }
+        });
+        if (outcome.failure() != null) throw outcome.failure();
+        return outcome.result();
     }
 
     // -------------------------
     // Helpers privés
     // -------------------------
 
-    private AuditModuleResult deserialize(DomainAnalysis entity) {
-        try {
-            return objectMapper.readValue(entity.getResultJson(), AuditModuleResult.class);
-        } catch (Exception e) {
-            // Cache corrompu : on loggue et on laisse l'appelant gérer (il repassera par run)
-            DomainAnalysisService.logger.warn(
-                "Failed to deserialize cached tech result domainId={} - will re-run",
-                entity.getDomainId(), e
-            );
-            throw new IllegalStateException("Corrupted domain analysis cache for domainId=" + entity.getDomainId(), e);
+    private AuditModuleResult deserialize(DomainAnalysis entity) throws Exception {
+        AuditModuleResult result = objectMapper.readValue(entity.getResultJson(), AuditModuleResult.class);
+        if (result == null || !AuditModule.TECH.id().equals(result.id()) || result.checks() == null) {
+            throw new IllegalStateException("Invalid cached tech result");
         }
+        return result;
     }
 
-    private void persist(long domainId, AuditModuleResult result) {
+    private void persist(long domainId, AuditModuleResult result, Connection connection) {
         try {
-            // Supprimer l'ancienne entrée (une seule ligne par domaine)
-            domainAnalysisDao.deleteByDomainId(domainId);
-
             Instant now = Instant.now();
             DomainAnalysis entity = new DomainAnalysis();
             entity.setDomainId(domainId);
             entity.setResultJson(objectMapper.writeValueAsString(result));
             entity.setAnalyzedAt(now);
             entity.setExpiresAt(now.plus(DOMAIN_ANALYSIS_TTL));
-            domainAnalysisDao.save(entity);
+            domainAnalysisDao.deleteByDomainId(domainId, connection);
+            domainAnalysisDao.save(entity, connection);
 
             DomainAnalysisService.logger.info(
                 "Tech analysis persisted domainId={} expiresAt={}", domainId, entity.getExpiresAt()
             );
-        } catch (Exception e) {
-            // Échec de persistance non bloquant : le résultat est quand même retourné
-            DomainAnalysisService.logger.warn(
-                "Failed to persist domain analysis domainId={}", domainId, e
-            );
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            // A valid analysis can still be returned if it cannot be serialized.
+            DomainAnalysisService.logger.warn("Failed to serialize tech analysis domainId={}", domainId, e);
         }
     }
+
+    private record AnalysisOutcome(AuditModuleResult result, RuntimeException failure) {}
 }

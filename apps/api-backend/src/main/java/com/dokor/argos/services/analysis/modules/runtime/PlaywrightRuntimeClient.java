@@ -5,6 +5,8 @@ import com.dokor.argos.services.analysis.BoundedBodyHandlers;
 import com.dokor.argos.services.analysis.ExternalHttpClient;
 import com.dokor.argos.services.analysis.AuditDeadline;
 import com.dokor.argos.services.configuration.ConfigurationService;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -22,12 +24,17 @@ public class PlaywrightRuntimeClient {
 
     private final ExternalHttpClient http;
     private final ObjectMapper objectMapper;
+    private final ObjectMapper responseMapper;
     private final String baseUrl;
     private final Duration requestTimeout;
 
     @Inject
     public PlaywrightRuntimeClient(ObjectMapper objectMapper, ExternalHttpClient http, ConfigurationService config) {
         this.objectMapper = objectMapper;
+        // Only this external DTO is forward-compatible; the shared/Jersey mapper
+        // keeps its validation behavior for user input and persisted data.
+        this.responseMapper = objectMapper.copy()
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
         this.http = http;
         this.baseUrl = config.playwrightServiceUrl();
         this.requestTimeout = config.playwrightTimeout();
@@ -44,10 +51,31 @@ public class PlaywrightRuntimeClient {
 
             String body = objectMapper.writeValueAsString(Map.of("url", url, "timeoutMs",
                 Math.max(1, AuditDeadline.requestTimeout(requestTimeout).toMillis())));
-            return objectMapper.treeToValue(http.postJson(endpoint, body, "application/json", requestTimeout,
-                Duration.ofSeconds(5), BoundedBodyHandlers.MAX_PAGE_BYTES, Map.of()), RuntimeAnalyzeResponse.class);
+            return parseResponse(http.postJson(endpoint, body, "application/json", requestTimeout,
+                Duration.ofSeconds(5), BoundedBodyHandlers.MAX_PAGE_BYTES, Map.of()));
         });
     }
+
+    RuntimeAnalyzeResponse parseResponse(JsonNode json) throws Exception {
+        RuntimeAnalyzeResponse response = responseMapper.treeToValue(json, RuntimeAnalyzeResponse.class);
+        if (response == null || blank(response.url()) || blank(response.finalUrl())
+            || response.timings() == null || response.console() == null
+            || response.jsErrors() == null || response.network() == null
+            || !nonNegative(response.console().errors())
+            || !nonNegative(response.jsErrors().count())
+            || !nonNegative(response.network().requests())
+            || !nonNegative(response.network().failedRequests())
+            || !nonNegative(response.network().status4xx())
+            || !nonNegative(response.network().status5xx())
+            || !nonNegative(response.network().totalBytesEstimated())) {
+            throw new IllegalStateException("Playwright service returned an incomplete runtime response");
+        }
+        return response;
+    }
+
+    private static boolean blank(String value) { return value == null || value.isBlank(); }
+    private static boolean nonNegative(Integer value) { return value != null && value >= 0; }
+    private static boolean nonNegative(Long value) { return value != null && value >= 0; }
 
     // DTO (match la réponse Node)
     public record RuntimeAnalyzeResponse(
