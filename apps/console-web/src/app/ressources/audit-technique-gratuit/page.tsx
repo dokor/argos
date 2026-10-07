@@ -47,6 +47,7 @@ const copy = {
     moreText: "Consultez la FAQ pour les questions pratiques, et notre guide sur l’accessibilité numérique pour comprendre ce qui exige un audit humain.",
     homeLink: "Découvrir Argos",
     faqLink: "Lire la FAQ",
+    scoreMethodLink: "Comprendre le calcul du score",
     accessibilityLink: "Comprendre l’accessibilité numérique",
     checklistLink: "Suivre la checklist d’audit de site web",
   },
@@ -87,6 +88,7 @@ const copy = {
     moreText: "Read the FAQ for practical questions and our digital accessibility guide to understand what requires a human audit.",
     homeLink: "Explore Argos",
     faqLink: "Read the FAQ",
+    scoreMethodLink: "How the score is calculated (French)",
     accessibilityLink: "Understand digital accessibility",
     checklistLink: "Follow the website audit checklist",
   },
@@ -175,6 +177,7 @@ export default function AuditTechniquePage() {
               <Link href="/faq">{c.faqLink}</Link>
               <Link href="/ressources/accessibilite-numerique">{c.accessibilityLink}</Link>
               <Link href="/guides/checklist-audit-site-web">{c.checklistLink}</Link>
+              <Link href="/methodologie-score">{c.scoreMethodLink}</Link>
             </div>
           </div>
         </section>

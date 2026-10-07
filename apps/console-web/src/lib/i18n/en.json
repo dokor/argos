@@ -586,6 +586,7 @@
       "title": "Scores by category",
       "desc": "Synthetic view for prioritization. Click a category to see details.",
       "globalLabel": "Global",
+      "methodologyLink": "How is the score calculated? (French)",
       "globalTooltip": "Aggregated global score (0-100) based on detected issues.",
       "issueCount": "issue(s)",
       "seeDetail": "See details →",

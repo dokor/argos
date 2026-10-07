@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useLang } from "@/lib/i18n/LangContext";
+import fr from "@/lib/i18n/fr.json";
 import { useIsAdmin } from "@/lib/useIsAdmin";
 import ArgosIcon from "@/components/ArgosIcon";
 import LangToggle from "@/components/LangToggle";
@@ -12,14 +13,16 @@ type Props = {
   /** Affiche le lien vers la FAQ (masqué sur la page FAQ elle-même). */
   showFaqLink?: boolean;
   showResourcesLink?: boolean;
+  fixedFrench?: boolean;
 };
 
 /**
  * Barre de navigation partagée des pages marketing (`not-found`, `faq`) — issue #143.
  * La landing conserve sa propre nav (rendu distinct : logo, fond thématisé).
  */
-export default function SiteNav({ showFaqLink = false, showResourcesLink = true }: Props) {
-  const { t } = useLang();
+export default function SiteNav({ showFaqLink = false, showResourcesLink = true, fixedFrench = false }: Props) {
+  const { t: localized } = useLang();
+  const t = fixedFrench ? fr : localized;
   const isAdmin = useIsAdmin();
 
   return (
@@ -41,7 +44,7 @@ export default function SiteNav({ showFaqLink = false, showResourcesLink = true 
             </a>
           )}
           <ThemeToggle />
-          <LangToggle />
+          {!fixedFrench && <LangToggle />}
           {isAdmin && (
             <a href="/dashboard" className={s.navCta}>
               {t.nav.openConsole}

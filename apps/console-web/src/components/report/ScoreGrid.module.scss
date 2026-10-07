@@ -30,6 +30,18 @@
   margin: 0;
 }
 
+.methodLink {
+  display: inline-block;
+  margin-top: t.$space-2;
+  color: t.$text;
+  text-underline-offset: 3px;
+
+  &:focus-visible {
+    outline: 3px solid t.$color-indigo;
+    outline-offset: 3px;
+  }
+}
+
 .partialNote {
   margin: t.$space-2 0 0;
   font-size: t.$text-sm;

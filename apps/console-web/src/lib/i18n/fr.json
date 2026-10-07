@@ -586,6 +586,7 @@
       "title": "Scores par catégorie",
       "desc": "Vue synthétique pour prioriser. Clique sur une catégorie pour aller au détail.",
       "globalLabel": "Global",
+      "methodologyLink": "Comment est calculé le score ?",
       "globalTooltip": "Score global agrégé (0-100) basé sur les points détectés.",
       "issueCount": "point(s)",
       "seeDetail": "Voir le détail →",

@@ -1,6 +1,7 @@
 "use client";
 
 import { CategoryScore, Coverage } from "./types";
+import Link from "next/link";
 import { useLang } from "@/lib/i18n/LangContext";
 import s from "./ScoreGrid.module.scss";
 
@@ -35,6 +36,7 @@ export default function ScoreGrid({
         <div className={s.titleBlock}>
           <h2 className={s.sectionTitle}>{ts.title}</h2>
           <p className={s.sectionDesc}>{ts.desc}</p>
+          <Link href="/methodologie-score" className={s.methodLink}>{ts.methodologyLink}</Link>
           {isPartial && (
             <p className={s.partialNote} title={ts.partialTooltip}>
               ⚠︎ {ts.partial.replace("{n}", String(completeness))}
