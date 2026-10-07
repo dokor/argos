@@ -9,6 +9,7 @@ import com.dokor.argos.db.generated.QAuditReport;
 import com.dokor.argos.db.generated.QAuditRun;
 import com.dokor.argos.db.generated.QDomain;
 import com.querydsl.core.Tuple;
+import com.querydsl.sql.SQLQuery;
 import com.querydsl.sql.SQLExpressions;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -17,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Optional;
+import java.time.Instant;
 
 
 /**
@@ -97,19 +99,30 @@ public class AuditDao extends CrudDaoQuerydsl<Audit> {
             .fetchFirst() != null;
     }
 
-    /**
-     * Liste des audits avec leur domaine, leur dernier run et leur rapport public.
-     * <p>
-     * Le Tuple retourné contient dans l'ordre : Audit (0), Domain (1), AuditRun (2), AuditReport (3).
-     * Le run est sélectionné par MAX(id) pour garantir qu'une seule ligne est retournée par audit.
-     *
-     * @param limit nombre max de lignes
-     */
-    public List<Tuple> listAuditsWithLatestRun(int limit) {
+    public record OverviewRow(long auditId, String hostname, String inputUrl, String normalizedUrl,
+                              Instant auditCreatedAt, Long runId, String status, Instant runCreatedAt,
+                              Instant finishedAt, boolean hasReport, Integer globalScore) {}
+
+    public record HistoryRow(long runId, String status, Instant createdAt, Instant finishedAt,
+                             boolean hasReport, Integer globalScore) {}
+
+    /** Latest run per audit, selecting only fields used by the list response. */
+    public List<OverviewRow> listAuditsWithLatestRun(int limit) {
         logger.debug("Listing audits with latest run limit={}", limit);
 
-        return transactionManager.selectQuery()
-            .select(AUDIT, DOMAIN, RUN, AUDIT_REPORT)
+        return overviewQuery(transactionManager.selectQuery(), limit)
+            .fetch().stream().map(row -> new OverviewRow(
+                row.get(AUDIT.id), row.get(DOMAIN.hostname), row.get(AUDIT.inputUrl),
+                row.get(AUDIT.normalizedUrl), row.get(AUDIT.createdAt), row.get(RUN.id),
+                row.get(RUN.status), row.get(RUN.createdAt), row.get(RUN.finishedAt),
+                row.get(AUDIT_REPORT.id) != null, row.get(AUDIT_REPORT.globalScore))).toList();
+    }
+
+    static SQLQuery<Tuple> overviewQuery(SQLQuery<?> query, int limit) {
+        return query
+            .select(AUDIT.id, DOMAIN.hostname, AUDIT.inputUrl, AUDIT.normalizedUrl,
+                AUDIT.createdAt, RUN.id, RUN.status, RUN.createdAt, RUN.finishedAt,
+                AUDIT_REPORT.id, AUDIT_REPORT.globalScore)
             .from(AUDIT)
             .innerJoin(DOMAIN).on(DOMAIN.id.eq(AUDIT.domainId))
             .leftJoin(RUN).on(
@@ -122,31 +135,41 @@ public class AuditDao extends CrudDaoQuerydsl<Audit> {
             )
             .leftJoin(AUDIT_REPORT).on(AUDIT_REPORT.runId.eq(RUN.id))
             .orderBy(AUDIT.createdAt.desc())
-            .limit(limit)
-            .fetch();
+            .limit(limit);
     }
 
 
-    /**
-     * Historique des runs d'un audit (une URL), avec leur rapport public éventuel.
-     * <p>
-     * Le Tuple retourné contient dans l'ordre : AuditRun (0), AuditReport (1, nullable).
-     * Les runs sont triés du plus récent au plus ancien.
-     *
-     * @param auditId identifiant de l'audit (URL)
-     * @param limit   nombre max de runs
-     */
-    public List<Tuple> listRunsWithReportByAuditId(long auditId, int limit) {
+    /** Run history without result_json, report_json or credentials. */
+    public List<HistoryRow> listRunsWithReportByAuditId(long auditId, int limit) {
         logger.debug("Listing run history auditId={} limit={}", auditId, limit);
 
-        return transactionManager.selectQuery()
-            .select(RUN, AUDIT_REPORT)
+        return historyQuery(transactionManager.selectQuery(), auditId, limit)
+            .fetch().stream().map(row -> new HistoryRow(row.get(RUN.id), row.get(RUN.status),
+                row.get(RUN.createdAt), row.get(RUN.finishedAt),
+                row.get(AUDIT_REPORT.id) != null, row.get(AUDIT_REPORT.globalScore))).toList();
+    }
+
+    static SQLQuery<Tuple> historyQuery(SQLQuery<?> query, long auditId, int limit) {
+        return query
+            .select(RUN.id, RUN.status, RUN.createdAt, RUN.finishedAt,
+                AUDIT_REPORT.id, AUDIT_REPORT.globalScore)
             .from(RUN)
             .leftJoin(AUDIT_REPORT).on(AUDIT_REPORT.runId.eq(RUN.id))
             .where(RUN.auditId.eq(auditId))
             .orderBy(RUN.createdAt.desc(), RUN.id.desc())
-            .limit(limit)
-            .fetch();
+            .limit(limit);
+    }
+
+    /** At most two full reports for an explicitly requested comparison. */
+    public List<AuditReport> comparisonReports(long auditId, long runId) {
+        Instant createdAt = transactionManager.selectQuery().select(RUN.createdAt).from(RUN)
+            .where(RUN.id.eq(runId), RUN.auditId.eq(auditId)).fetchOne();
+        if (createdAt == null) return List.of();
+        return transactionManager.selectQuery().select(AUDIT_REPORT).from(RUN)
+            .innerJoin(AUDIT_REPORT).on(AUDIT_REPORT.runId.eq(RUN.id))
+            .where(RUN.auditId.eq(auditId), RUN.createdAt.lt(createdAt)
+                .or(RUN.createdAt.eq(createdAt).and(RUN.id.loe(runId))))
+            .orderBy(RUN.createdAt.desc(), RUN.id.desc()).limit(2).fetch();
     }
 
     /**

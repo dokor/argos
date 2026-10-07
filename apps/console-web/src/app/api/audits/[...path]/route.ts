@@ -4,7 +4,7 @@ import { adminReadProxy } from "@/lib/admin-read-proxy";
 export async function GET(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
   const { path } = await context.params;
   const suffix = path.join("/");
-  if (!/^(runs\/[0-9]+(?:\/report)?|[0-9]+\/history)$/.test(suffix)) {
+  if (!/^(runs\/[0-9]+(?:\/report)?|[0-9]+\/history(?:\/[0-9]+\/comparison)?)$/.test(suffix)) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
   const limit = Math.max(1, Math.min(100, Number(request.nextUrl.searchParams.get("limit")) || 20));

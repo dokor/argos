@@ -773,6 +773,7 @@
   },
   "auditList": {
     "comparison": {
+      "show": "Voir la comparaison", "loadError": "Impossible de charger la comparaison.",
       "method": "Barème figé", "coverage": "Couverture", "unknown": "Inconnue", "coverageChanged": "La couverture de mesure a changé ; ce changement n’est pas une régression du site.",
       "delta": "Évolution depuis le rapport précédent", "points": "points", "globalPoints": "points globaux", "domainPoints": "points du domaine", "contributions": "Principales améliorations et dégradations",
       "reasons": { "COMPARABLE": "Audits comparables", "NO_PREVIOUS_REPORT": "Aucun rapport précédent dans cet historique.", "EVIDENCE_MISSING": "Comparaison indisponible : preuves historiques insuffisantes. Relancez une analyse au barème courant.", "SCOPE_CHANGED": "Comparaison indisponible : périmètre différent.", "METHODOLOGY_CHANGED": "Comparaison indisponible : barème ou coefficients différents.", "COVERAGE_CHANGED": "Comparaison indisponible : mesures utilisables différentes.", "INSUFFICIENT_COVERAGE": "Comparaison indisponible : couverture insuffisante ou anti-bot.", "SCORE_UNAVAILABLE": "Comparaison indisponible : score non mesuré." }
@@ -783,6 +784,9 @@
     "copyJson": "📋 Copier le JSON",
     "copied": "✅ Copié",
     "showJson": "Voir le JSON",
+    "loadDetails": "Charger le détail technique",
+    "loadingDetails": "Chargement du détail…",
+    "detailsError": "Impossible de charger le détail.",
     "viewReport": "🔎 Voir le rapport",
     "reportPending": "Rapport en attente…",
     "scorePending": "Score en attente…",
@@ -808,6 +812,10 @@
       "moduleLabel": "Module",
       "tagLabel": "Tag",
       "techLabel": "Techno",
+      "loadDetails": "Charger les filtres détaillés",
+      "loadingDetails": "Chargement des détails…",
+      "detailsLoaded": "Filtres détaillés chargés",
+      "detailsError": "Impossible de charger les filtres détaillés.",
       "clearFilters": "Réinitialiser",
       "noResults": "Aucun résultat pour ces filtres."
     },

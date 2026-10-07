@@ -32,6 +32,10 @@ public class QAuditReport extends com.querydsl.sql.RelationalPathBase<AuditRepor
 
     public final DateTimePath<java.time.Instant> expiresAt = createDateTime("expiresAt", java.time.Instant.class);
 
+    public final NumberPath<Integer> globalScore = createNumber("globalScore", Integer.class);
+
+    public final NumberPath<Integer> scoringVersion = createNumber("scoringVersion", Integer.class);
+
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
     public final StringPath logoUrl = createString("logoUrl");
@@ -82,6 +86,8 @@ public class QAuditReport extends com.querydsl.sql.RelationalPathBase<AuditRepor
         addMetadata(createdAt, ColumnMetadata.named("created_at").withIndex(10).ofType(Types.TIMESTAMP).withSize(23).notNull());
         addMetadata(domain, ColumnMetadata.named("domain").withIndex(5).ofType(Types.VARCHAR).withSize(255).notNull());
         addMetadata(expiresAt, ColumnMetadata.named("expires_at").withIndex(11).ofType(Types.TIMESTAMP).withSize(23));
+        addMetadata(globalScore, ColumnMetadata.named("global_score").withIndex(12).ofType(Types.SMALLINT).withSize(5));
+        addMetadata(scoringVersion, ColumnMetadata.named("scoring_version").withIndex(13).ofType(Types.INTEGER).withSize(10));
         addMetadata(id, ColumnMetadata.named("id").withIndex(1).ofType(Types.BIGINT).withSize(19).notNull());
         addMetadata(logoUrl, ColumnMetadata.named("logo_url").withIndex(8).ofType(Types.LONGVARCHAR).withSize(65535));
         addMetadata(reportJson, ColumnMetadata.named("report_json").withIndex(9).ofType(Types.LONGVARCHAR).withSize(2147483647).notNull());

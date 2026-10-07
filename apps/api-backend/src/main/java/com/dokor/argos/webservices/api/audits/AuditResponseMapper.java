@@ -20,24 +20,23 @@ final class AuditResponseMapper {
     }
 
     static AuditListItemResponse overview(AuditQueryService.Overview row) {
-        AuditRun run = row.run();
-        return new AuditListItemResponse(row.audit().getId(),
-            row.domain() == null ? null : row.domain().getHostname(),
-            row.audit().getInputUrl(), row.audit().getNormalizedUrl(),
-            run == null ? 0L : run.getId(),
-            run == null ? "NO_RUN" : run.getStatus(),
-            run == null ? row.audit().getCreatedAt() : run.getCreatedAt(),
-            run == null ? null : run.getFinishedAt(),
-            row.hasReport() && run != null ? REPORTS_BASE_PATH + run.getId() : null,
-            run == null ? null : run.getResultJson());
+        var data = row.row();
+        return new AuditListItemResponse(data.auditId(), data.hostname(),
+            data.inputUrl(), data.normalizedUrl(),
+            data.runId() == null ? 0L : data.runId(),
+            data.status() == null ? "NO_RUN" : data.status(),
+            data.runCreatedAt() == null ? data.auditCreatedAt() : data.runCreatedAt(),
+            data.finishedAt(),
+            data.hasReport() && data.runId() != null ? REPORTS_BASE_PATH + data.runId() : null,
+            data.globalScore());
     }
 
     static AuditHistoryItemResponse history(AuditQueryService.History row) {
-        AuditRun run = row.run();
-        return new AuditHistoryItemResponse(run.getId(), run.getStatus(),
-            run.getCreatedAt(), run.getFinishedAt(),
-            row.hasReport() ? REPORTS_BASE_PATH + run.getId() : null,
-            row.globalScore(), row.calculation(), row.coverage(), row.comparison());
+        var data = row.row();
+        return new AuditHistoryItemResponse(data.runId(), data.status(),
+            data.createdAt(), data.finishedAt(),
+            data.hasReport() ? REPORTS_BASE_PATH + data.runId() : null,
+            data.globalScore(), null, null, null);
     }
 
     static AuditRunStatusResponse status(AuditRun run) {

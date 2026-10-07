@@ -158,6 +158,18 @@ public class AuditsWs {
             .map(AuditResponseMapper::history).toList());
     }
 
+    @GET
+    @Path("/{auditId}/history/{runId}/comparison")
+    @Operation(description = "Charge les preuves nécessaires à une comparaison précise")
+    public Response getComparisonDetail(
+        @PathParam("auditId") long auditId,
+        @PathParam("runId") long runId,
+        @HeaderParam("Authorization") String authorization
+    ) {
+        adminReadAccess.require(authorization);
+        return privateRead(auditQueryService.getComparisonDetail(auditId, runId));
+    }
+
     private Response privateRead(Object body) {
         return Response.ok(body).header("Cache-Control", "private, no-store").build();
     }
