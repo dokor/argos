@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { useLang } from "@/lib/i18n/LangContext";
+import fr from "@/lib/i18n/fr.json";
 import AuthorCredit from "@/components/AuthorCredit";
 import s from "./SiteChrome.module.scss";
 
 /** Liens éditoriaux communs à toutes les pages, sauf les rapports privés. */
-export default function SiteFooter() {
-  const { t } = useLang();
+export default function SiteFooter({ fixedFrench = false }: { fixedFrench?: boolean }) {
+  const { t: localized } = useLang();
+  const t = fixedFrench ? fr : localized;
   const f = t.siteFooter;
   return (
     <footer className={s.footer}>

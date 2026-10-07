@@ -28,5 +28,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     {
       url: `${SITE_URL}/guides/checklist-audit-site-web`,
     },
+    {
+      url: `${SITE_URL}/methodologie-score`,
+    },
   ];
 }

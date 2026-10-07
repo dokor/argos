@@ -1,0 +1,232 @@
+@use '../../styles/tokens' as t;
+
+.page {
+  min-height: 100vh;
+  background: t.$bg;
+  color: t.$text;
+}
+
+.container {
+  width: min(100% - 40px, 1000px);
+  margin-inline: auto;
+}
+
+.hero {
+  padding: 80px 0 76px;
+  background: radial-gradient(circle at 84% 12%, rgba(99, 102, 241, 0.13), transparent 38%), t.$canvas;
+  border-bottom: 1px solid t.$border-subtle;
+
+  h1 {
+    max-width: 800px;
+    margin: 0 0 20px;
+    font-size: clamp(2.3rem, 5vw, 4.1rem);
+    line-height: 1.1;
+    letter-spacing: -0.04em;
+  }
+}
+
+.eyebrow {
+  margin: 0 0 18px;
+  color: t.$text-muted;
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.lead {
+  max-width: 740px;
+  margin: 0;
+  color: t.$text-muted;
+  font-size: clamp(1.08rem, 2vw, 1.25rem);
+  line-height: 1.65;
+}
+
+.contents {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 22px;
+  padding: 26px 0;
+  border-bottom: 1px solid t.$border-subtle;
+
+  p {
+    margin: 0 12px 0 0;
+    font-weight: 700;
+  }
+}
+
+.page a {
+  color: t.$text;
+  text-underline-offset: 3px;
+
+  &:focus-visible {
+    outline: 3px solid t.$color-indigo;
+    outline-offset: 3px;
+  }
+}
+
+.section {
+  max-width: 840px;
+  padding: 68px 0 0;
+  scroll-margin-top: 24px;
+
+  h2 {
+    margin: 0 0 22px;
+    font-size: clamp(1.7rem, 3vw, 2.4rem);
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+  }
+
+  p,
+  li {
+    line-height: 1.72;
+  }
+
+  p {
+    margin: 0 0 18px;
+    color: t.$text-muted;
+  }
+}
+
+.domainGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin: 28px 0;
+}
+
+.domainCard {
+  padding: 24px;
+  border: 1px solid t.$border;
+  border-radius: t.$radius-lg;
+  background: t.$surface;
+
+  h3 {
+    margin: 0 0 10px;
+    font-size: 1.15rem;
+  }
+
+  p {
+    margin: 0;
+  }
+}
+
+.steps,
+.limits {
+  display: grid;
+  gap: 16px;
+  padding-left: 24px;
+  margin: 0 0 28px;
+}
+
+.formula {
+  padding: 20px 24px;
+  margin: 0 0 28px;
+  border-left: 4px solid t.$color-indigo;
+  border-radius: 0 t.$radius-sm t.$radius-sm 0;
+  background: t.$surface-2;
+
+  p {
+    color: t.$text;
+    margin: 0;
+
+    & + p {
+      margin-top: 8px;
+    }
+  }
+}
+
+.tableWrap {
+  max-width: 100%;
+  overflow-x: auto;
+  margin: 26px 0 20px;
+  border: 1px solid t.$border;
+  border-radius: t.$radius-lg;
+
+  table {
+    width: 100%;
+    min-width: 650px;
+    border-collapse: collapse;
+    background: t.$surface;
+  }
+
+  caption {
+    padding: 14px 18px;
+    text-align: left;
+    font-weight: 700;
+  }
+
+  th,
+  td {
+    padding: 14px 18px;
+    border-top: 1px solid t.$border-subtle;
+    text-align: left;
+    vertical-align: top;
+    line-height: 1.5;
+  }
+
+  thead {
+    background: t.$surface-2;
+  }
+
+  tbody th {
+    font-weight: 700;
+  }
+}
+
+.section .result {
+  color: t.$text;
+  font-size: 1.08rem;
+}
+
+.next {
+  margin: 72px 0 80px;
+  padding: 30px;
+  border: 1px solid t.$border;
+  border-radius: t.$radius-lg;
+  background: t.$canvas;
+
+  h2 {
+    margin: 0 0 12px;
+  }
+
+  p {
+    line-height: 1.65;
+  }
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  margin: 24px 0;
+}
+
+.cta {
+  margin-bottom: 0;
+}
+
+@media (max-width: 700px) {
+  .hero {
+    padding-block: 52px;
+  }
+
+  .domainGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .section {
+    padding-top: 52px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    width: min(100% - 32px, 1000px);
+  }
+
+  .next {
+    padding: 22px;
+  }
+}

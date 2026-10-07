@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLang } from "@/lib/i18n/LangContext";
+import fr from "@/lib/i18n/fr.json";
 import { useIsAdmin } from "@/lib/useIsAdmin";
 import ArgosIcon from "@/components/ArgosIcon";
 import LangToggle from "@/components/LangToggle";
@@ -10,8 +11,9 @@ import ThemeToggle from "@/components/ThemeToggle";
 import s from "./SiteChrome.module.scss";
 
 /** Navigation commune à toutes les pages, sauf les rapports. */
-export default function SiteNav() {
-  const { t } = useLang();
+export default function SiteNav({ fixedFrench = false }: { fixedFrench?: boolean }) {
+  const { t: localized } = useLang();
+  const t = fixedFrench ? fr : localized;
   const pathname = usePathname();
   const isAdmin = useIsAdmin();
   const onResources = pathname.startsWith("/ressources") || pathname.startsWith("/guides");
@@ -36,7 +38,7 @@ export default function SiteNav() {
         </div>
         <div className={s.navActions}>
           <ThemeToggle />
-          <LangToggle />
+          {!fixedFrench && <LangToggle />}
           {isAdmin && (
             <Link href="/dashboard" className={s.navCta} aria-current={pathname === "/dashboard" ? "page" : undefined}>
               {t.nav.openConsole}
