@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -26,7 +27,7 @@ class SslLabsModuleAnalyzerTest {
         var grade = check(analyze("{\"endpoints\":[{\"grade\":\"null\"}]}"), "ssl.grade");
         assertEquals(AuditStatus.INFO, grade.status());
         assertEquals("Note SSL Labs indisponible.", grade.message());
-        assertEquals("Corrigez la configuration SSL/TLS signalée par SSL Labs.", grade.recommendation());
+        assertNull(grade.recommendation());
     }
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -63,9 +64,9 @@ class SslLabsModuleAnalyzerTest {
         // Validité et expiration également indéterminées => INFO
         assertEquals(AuditStatus.INFO, check(result, "ssl.certificate.valid").status());
         assertEquals(AuditStatus.INFO, check(result, "ssl.certificate.expiry_days").status());
-        assertEquals(0, result.checks().stream().filter(c ->
-            c.key().equals("ssl.protocols.tls12") || c.key().equals("ssl.protocols.tls13")
-                || c.key().equals("http.security.hsts")).count());
+        assertEquals(AuditStatus.INFO, check(result, "ssl.protocols.tls12").status());
+        assertEquals(AuditStatus.INFO, check(result, "ssl.protocols.tls13").status());
+        assertEquals(AuditStatus.INFO, check(result, "http.security.hsts").status());
     }
 
     @Test

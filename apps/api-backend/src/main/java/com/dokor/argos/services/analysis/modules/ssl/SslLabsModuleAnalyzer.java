@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Singleton
 public class SslLabsModuleAnalyzer {
@@ -66,7 +67,8 @@ public class SslLabsModuleAnalyzer {
         List<AuditCheckResult> checks = new ArrayList<>();
 
         // ssl.grade
-        String grade = endpoint != null ? JsonNodes.text(endpoint.path("grade")) : null;
+        String grade = endpoint != null ? textField(endpoint, "grade") : null;
+        if (grade != null && !Set.of("A+", "A", "A-", "B", "C", "D", "E", "F", "T", "M").contains(grade)) grade = null;
         boolean hasWarnings = endpoint != null && endpoint.path("hasWarnings").asBoolean(false);
 
         // Grade indisponible (SSL Labs en cours, endpoint absent, erreur amont) => INFO
@@ -89,21 +91,23 @@ public class SslLabsModuleAnalyzer {
             gradeStatus,
             gradeStatus == AuditStatus.FAIL ? AuditSeverity.HIGH
                 : gradeStatus == AuditStatus.WARN ? AuditSeverity.MEDIUM : AuditSeverity.LOW,
-            true,
+            grade != null,
             0.0,
             List.of(),
             grade,
             grade != null ? Map.of("grade", grade, "hasWarnings", hasWarnings) : Map.of(),
             grade != null ? "Note SSL Labs : " + grade + (hasWarnings ? " (avec avertissements)" : "") : "Note SSL Labs indisponible.",
-            gradeStatus != AuditStatus.PASS ? "Corrigez la configuration SSL/TLS signalée par SSL Labs." : null
+            gradeStatus != AuditStatus.PASS && gradeStatus != AuditStatus.INFO ? "Corrigez la configuration SSL/TLS signalée par SSL Labs." : null
         ));
 
         // ssl.certificate.valid & ssl.certificate.expiry_days
         JsonNode details = endpoint != null ? endpoint.path("details") : null;
         JsonNode cert = details != null ? details.path("cert") : null;
 
-        int certIssues = JsonNodes.intValue(cert, "issues", -1);
-        long notAfterMs = cert != null && !cert.isMissingNode() ? cert.path("notAfter").asLong(0L) : 0L;
+        Long issues = nonNegativeLongField(cert, "issues");
+        int certIssues = issues != null && issues <= Integer.MAX_VALUE ? issues.intValue() : -1;
+        Long expiry = nonNegativeLongField(cert, "notAfter");
+        long notAfterMs = expiry != null ? expiry : 0L;
 
         // Validité indéterminée (pas de détails de cert) => INFO non scoré plutôt que WARN :
         // "inconnu" ≠ "certificat problématique". Cf. issue #100 - point "SSL unknown".
@@ -119,7 +123,7 @@ public class SslLabsModuleAnalyzer {
             "Validité du certificat SSL",
             certValidStatus,
             certValidStatus == AuditStatus.FAIL ? AuditSeverity.HIGH : AuditSeverity.LOW,
-            true,
+            certIssues >= 0,
             0.0,
             List.of(),
             certIssues >= 0 ? certIssues == 0 : null,
@@ -185,20 +189,25 @@ public class SslLabsModuleAnalyzer {
         boolean hasTls11 = false;
         boolean hasSsl3 = false;
         boolean hasProtocolData = protocols != null && protocols.isArray() && protocols.size() > 0;
+        boolean completeProtocols = hasProtocolData;
 
         if (hasProtocolData) {
             for (JsonNode proto : protocols) {
-                String name = JsonNodes.text(proto.path("name"));
-                String version = JsonNodes.text(proto.path("version"));
+                String name = textField(proto, "name");
+                String version = textField(proto, "version");
+                if (!knownProtocol(name, version)) completeProtocols = false;
                 if ("TLS".equals(name) && "1.3".equals(version)) hasTls13 = true;
                 if ("TLS".equals(name) && "1.2".equals(version)) hasTls12 = true;
                 if ("TLS".equals(name) && "1.1".equals(version)) hasTls11 = true;
                 if ("TLS".equals(name) && "1.0".equals(version)) hasTls10 = true;
-                if ("SSL".equals(name)) hasSsl3 = true;
+                if ("SSL".equals(name) && ("2.0".equals(version) || "3.0".equals(version))) hasSsl3 = true;
             }
         }
 
-        if (hasProtocolData) checks.add(AuditCheckResult.of(
+        // Presence is evidence even in a partial list; absence requires a complete readable list.
+        Boolean tls13 = hasTls13 ? Boolean.TRUE : completeProtocols ? Boolean.FALSE : null;
+        Boolean tls12 = hasTls12 ? Boolean.TRUE : completeProtocols ? Boolean.FALSE : null;
+        if (tls13 != null) checks.add(AuditCheckResult.of(
             "ssl.protocols.tls13",
             "Prise en charge de TLS 1.3",
             hasTls13 ? AuditStatus.PASS : AuditStatus.WARN,
@@ -212,7 +221,9 @@ public class SslLabsModuleAnalyzer {
             hasTls13 ? null : "Activez TLS 1.3 pour améliorer la sécurité et les performances."
         ));
 
-        if (hasProtocolData) checks.add(AuditCheckResult.of(
+        else checks.add(unknown("ssl.protocols.tls13", "Prise en charge de TLS 1.3", "Prise en charge de TLS 1.3 indéterminée."));
+
+        if (tls12 != null) checks.add(AuditCheckResult.of(
             "ssl.protocols.tls12",
             "Prise en charge de TLS 1.2",
             hasTls12 ? AuditStatus.PASS : AuditStatus.FAIL,
@@ -226,13 +237,16 @@ public class SslLabsModuleAnalyzer {
             hasTls12 ? null : "TLS 1.2 doit être pris en charge pour la compatibilité avec la majorité des navigateurs."
         ));
 
+        else checks.add(unknown("ssl.protocols.tls12", "Prise en charge de TLS 1.2", "Prise en charge de TLS 1.2 indéterminée."));
+
         // ssl.protocols.legacy_disabled — présence de protocoles obsolètes (SSL 2/3, TLS 1.0/1.1).
         // Ces versions sont dépréciées (RFC 8996) et vulnérables (POODLE, BEAST…). Distinct de
         // "TLS 1.2/1.3 activés" : un serveur peut proposer 1.3 tout en gardant 1.0 actif.
         // Sans données de protocoles (SSL Labs incomplet) => INFO non scoré ("inconnu" ≠ "défaut").
         boolean hasLegacy = hasSsl3 || hasTls10 || hasTls11;
-        AuditStatus legacyStatus = !hasProtocolData ? AuditStatus.INFO
-            : hasLegacy ? AuditStatus.FAIL : AuditStatus.PASS;
+        boolean legacyMeasured = hasLegacy || completeProtocols;
+        AuditStatus legacyStatus = hasLegacy ? AuditStatus.FAIL
+            : completeProtocols ? AuditStatus.PASS : AuditStatus.INFO;
         List<String> legacyProtos = new ArrayList<>();
         if (hasSsl3) legacyProtos.add("SSL");
         if (hasTls10) legacyProtos.add("TLS 1.0");
@@ -243,12 +257,12 @@ public class SslLabsModuleAnalyzer {
             "Désactivation des protocoles obsolètes",
             legacyStatus,
             legacyStatus == AuditStatus.FAIL ? AuditSeverity.HIGH : AuditSeverity.LOW,
-            hasProtocolData,
+            legacyMeasured,
             0.0,
             List.of(),
-            hasProtocolData ? !hasLegacy : null,
-            hasProtocolData ? Map.of("legacyEnabled", hasLegacy, "protocols", legacyProtos) : Map.of(),
-            !hasProtocolData ? "Liste des protocoles TLS indisponible."
+            legacyMeasured ? !hasLegacy : null,
+            legacyMeasured ? Map.of("legacyEnabled", hasLegacy, "protocols", legacyProtos) : Map.of(),
+            !legacyMeasured ? "Liste des protocoles TLS indisponible."
                 : hasLegacy ? "Des protocoles obsolètes sont encore activés : " + String.join(", ", legacyProtos) + "."
                 : "Aucun protocole obsolète (SSL, TLS 1.0/1.1) n'est activé.",
             hasLegacy ? "Désactivez SSL 2/3 et TLS 1.0/1.1 : ces versions sont dépréciées et vulnérables." : null
@@ -256,13 +270,13 @@ public class SslLabsModuleAnalyzer {
 
         // http.security.hsts - reuses existing key, will be merged by CheckMergerService
         JsonNode hstsPolicy = details != null ? details.path("hstsPolicy") : null;
-        String hstsStatus = hstsPolicy != null && !hstsPolicy.isMissingNode()
-            ? JsonNodes.text(hstsPolicy.path("status")) : null;
-        long hstsMaxAge = hstsPolicy != null && !hstsPolicy.isMissingNode()
-            ? hstsPolicy.path("maxAge").asLong(0L) : 0L;
-        boolean hstsPresent = "present".equalsIgnoreCase(hstsStatus);
+        String hstsStatus = textField(hstsPolicy, "status");
+        boolean hstsMeasured = hstsStatus != null
+            && Set.of("present", "absent", "invalid", "disabled").contains(hstsStatus);
+        Long hstsMaxAge = nonNegativeLongField(hstsPolicy, "maxAge");
+        Boolean hstsPresent = hstsMeasured ? "present".equals(hstsStatus) : null;
 
-        if (hstsStatus != null) checks.add(AuditCheckResult.of(
+        if (hstsMeasured) checks.add(AuditCheckResult.of(
             "http.security.hsts",
             "HSTS (Strict-Transport-Security)",
             hstsPresent ? AuditStatus.PASS : AuditStatus.WARN,
@@ -272,33 +286,54 @@ public class SslLabsModuleAnalyzer {
             List.of(),
             hstsPresent,
             buildHstsDetails(hstsStatus, hstsMaxAge),
-            hstsPresent ? "HSTS est actif (max-age=" + hstsMaxAge + ")." : "HSTS n'est pas actif.",
+            hstsPresent ? "HSTS est actif." : "HSTS n'est pas actif.",
             hstsPresent ? null : "Activez HSTS pour forcer les connexions HTTPS."
         ));
-
+        else checks.add(unknown("http.security.hsts", "HSTS (Strict-Transport-Security)", "Politique HSTS indisponible."));
         // Build data
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("host", host);
         data.put("status", JsonNodes.text(result.path("status")));
         data.put("grade", grade);
         data.put("hasWarnings", hasWarnings);
-        data.put("tls13", hasTls13);
-        data.put("tls12", hasTls12);
-        data.put("legacyProtocolsEnabled", hasProtocolData ? hasLegacy : null);
+        data.put("tls13", tls13);
+        data.put("tls12", tls12);
+        data.put("legacyProtocolsEnabled", legacyMeasured ? hasLegacy : null);
         data.put("certIssues", certIssues >= 0 ? certIssues : null);
         data.put("hstsPresent", hstsPresent);
-        data.put("partial", endpoint == null || grade == null || certIssues < 0 || !hasProtocolData);
+        data.put("partial", endpoint == null || grade == null || certIssues < 0 || notAfterMs <= 0 || !completeProtocols || !hstsMeasured);
 
-        String summary = "host=" + host + " grade=" + grade + " tls13=" + hasTls13 + " tls12=" + hasTls12;
+        String summary = "host=" + host + " grade=" + grade + " tls13=" + tls13 + " tls12=" + tls12;
         logger.info("SSL Labs module done: {}", summary);
 
         return new AuditModuleResult(moduleId(), "SSL Labs", summary, data, checks);
     }
 
-    private static Map<String, Object> buildHstsDetails(String status, long maxAge) {
+    private static AuditCheckResult unknown(String key, String title, String message) {
+        return AuditCheckResult.of(key, title, AuditStatus.INFO, AuditSeverity.LOW,
+            false, 0.0, List.of(), null, Map.of(), message, null);
+    }
+
+    private static String textField(JsonNode object, String field) {
+        JsonNode value = object == null ? null : object.get(field);
+        return value != null && value.isTextual() ? JsonNodes.text(value) : null;
+    }
+
+    private static Long nonNegativeLongField(JsonNode object, String field) {
+        JsonNode value = object == null ? null : object.get(field);
+        return value != null && value.isIntegralNumber() && value.canConvertToLong() && value.longValue() >= 0
+            ? value.longValue() : null;
+    }
+
+    private static boolean knownProtocol(String name, String version) {
+        if (name == null || version == null) return false;
+        return ("TLS".equals(name) && Set.of("1.0", "1.1", "1.2", "1.3").contains(version))
+            || ("SSL".equals(name) && Set.of("2.0", "3.0").contains(version));
+    }
+    private static Map<String, Object> buildHstsDetails(String status, Long maxAge) {
         Map<String, Object> m = new LinkedHashMap<>();
         if (status != null) m.put("status", status);
-        if (maxAge > 0) m.put("maxAge", maxAge);
+        if (maxAge != null) m.put("maxAge", maxAge);
         return m;
     }
 }
