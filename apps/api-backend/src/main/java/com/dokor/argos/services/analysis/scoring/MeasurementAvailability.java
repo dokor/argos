@@ -32,7 +32,9 @@ public final class MeasurementAvailability {
         if (MeasurementCoverageService.blocked(source, check.key(), antiBot))
             return new Decision(State.BLOCKED_BY_ANTIBOT, "HTTP_CHALLENGE_OBSERVED", source, sources);
         if (check.status() != AuditStatus.INFO || check.value() != null)
-            return new Decision(State.MEASURED, "CHECK_OBSERVED", source, sources);
+            return new Decision(State.MEASURED,
+                "ssl".equals(source) && check.details() != null && Boolean.TRUE.equals(check.details().get("endpointCoveragePartial"))
+                    ? "SSL_ENDPOINTS_PARTIALLY_MEASURED" : "CHECK_OBSERVED", source, sources);
         return new Decision(State.UNAVAILABLE, "MEASUREMENT_MISSING", source, sources);
     }
 
