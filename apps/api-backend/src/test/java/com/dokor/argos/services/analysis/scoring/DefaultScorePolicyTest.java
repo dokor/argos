@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Consolide les assertions historiques des tests V2→V6 : barème complet (V2),
  * {@code tech.security.version_disclosure} (ex-V4), {@code lighthouse.audit.*} poids nul
  * (ex-V5) et {@code runtime.*} en catégorie runtime seule (ex-V6). {@code version()} doit
- * rester 6 pour la continuité des {@code scoringVersion} persistés.
+ * identifier la méthodologie active ; les rapports historiques restent figés.
  */
 class DefaultScorePolicyTest {
 
@@ -20,7 +20,7 @@ class DefaultScorePolicyTest {
 
     @Test
     void versionAndFingerprintExposeTheActiveRubric() {
-        assertEquals(11, policy.version());
+        assertEquals(12, policy.version());
         assertTrue(policy.fingerprint().matches("[0-9a-f]{64}"));
         assertEquals(policy.fingerprint(), new DefaultScorePolicy().fingerprint());
     }

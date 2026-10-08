@@ -160,11 +160,11 @@ public class RuntimeModuleAnalyzer {
             thirdPartyNetworkErrors == 0 ? null : "Aucune action requise sur votre site ; vous pouvez vérifier le fournisseur tiers concerné."
         ));
 
-        // 5) Request count
+        // 5) Request count — PASS/WARN keeps the scored denominator constant (#327).
         checks.add(AuditCheckResult.of(
             "runtime.network.request_count",
             "Network request count",
-            reqCount <= 120 ? AuditStatus.INFO : AuditStatus.WARN,
+            reqCount <= 120 ? AuditStatus.PASS : AuditStatus.WARN,
             AuditSeverity.LOW,
             false, 0.0, List.of("runtime"),
             reqCount,
@@ -177,7 +177,7 @@ public class RuntimeModuleAnalyzer {
         checks.add(AuditCheckResult.of(
             "runtime.network.bytes_estimated",
             "Transferred bytes (estimated)",
-            bytes <= 3_000_000 ? AuditStatus.INFO : AuditStatus.WARN,
+            bytes <= 3_000_000 ? AuditStatus.PASS : AuditStatus.WARN,
             AuditSeverity.LOW,
             false, 0.0, List.of("runtime"),
             bytes,

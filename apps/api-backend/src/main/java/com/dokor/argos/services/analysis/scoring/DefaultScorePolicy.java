@@ -20,8 +20,9 @@ import java.util.*;
  * n'apportait donc que de la dette : elle est ici aplatie en une classe unique intégrant
  * l'ensemble des deltas jusqu'à V8 inclus. La V9 introduit le catalogue explicite
  * et son empreinte déterministe ; la V10 versionne son calcul global par domaine.
+ * La V11 ajoute la couverture ; la V12 rend les seuils réseau runtime monotones (#327).
  * <p>
- * {@link #version()} est fixé à <b>11</b> pour identifier les rapports utilisant
+ * {@link #version()} est fixé à <b>12</b> pour identifier les rapports utilisant
  * ce catalogue explicite avec pondération globale par domaine.
  *
  * <h3>Principes</h3>
@@ -54,6 +55,7 @@ import java.util.*;
  *                · lighthouse.score.accessibility(10)
  * performance  : lighthouse.score.performance(22, #199) · runtime.console.errors(5)
  *                js.errors(6) network.5xx(8) network.failed_requests(4)
+ *                network.request_count(4) network.bytes_estimated(4)
  * </pre>
  */
 @Singleton
@@ -61,8 +63,8 @@ public class DefaultScorePolicy implements ScorePolicy {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultScorePolicy.class);
 
-    /** V11 ajoute la couverture et exclut les mesures d'une page de challenge (#48). */
-    private static final int VERSION = 11;
+    /** V12 score les seuils réseau runtime en PASS/WARN à poids constant (#327). */
+    private static final int VERSION = 12;
 
     private final Map<String, ScoreRule> catalogue;
     private final String fingerprint;
