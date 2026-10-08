@@ -6,6 +6,23 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class AuditComparisonServiceTest {
+    @Test void changedMeasurementProvenanceOrCoverageVersionPreventsComparison() throws Exception {
+        var mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        var previous = fixture(11, "frozen", .5, MeasurementCoverage.State.MEASURED, false);
+        for (String field : List.of("measurementModule", "measurementSources", "version")) {
+            var json = mapper.valueToTree(previous);
+            var coverage = (com.fasterxml.jackson.databind.node.ObjectNode) json.path("scores").path("coverage");
+            var check = (com.fasterxml.jackson.databind.node.ObjectNode) coverage.path("checks").get(0);
+            if (field.equals("measurementModule")) check.put(field, "other");
+            else if (field.equals("measurementSources")) check.putArray(field).add("ssl").add("other");
+            else coverage.put(field, "weighted-coverage-v2");
+            var result = AuditComparisonService.compare(previous, mapper.treeToValue(json, ReportDto.class));
+            assertEquals(AuditComparisonService.Reason.COVERAGE_CHANGED, result.reason());
+            assertTrue(result.coverageChanged());
+            assertNull(result.globalDelta());
+        }
+    }
+
     private ReportDto fixture(int version,String fingerprint,double quality,MeasurementCoverage.State state,boolean provisional) {
         var check=new MeasurementCoverage.Check("ssl.grade","security","ssl",10,state,"FIXTURE_OBSERVATION","MEASURED");
         var aggregate=new MeasurementCoverage.Aggregate("global",state==MeasurementCoverage.State.MEASURED?10:0,10,state==MeasurementCoverage.State.MEASURED?1:0,state==MeasurementCoverage.State.MEASURED,!provisional);
