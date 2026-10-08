@@ -13,9 +13,7 @@ import java.net.http.HttpTimeoutException;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class RuntimeModuleAnalyzerTest {
@@ -61,6 +59,98 @@ class RuntimeModuleAnalyzerTest {
         assertEquals(0, result.checks().stream()
             .filter(c -> c.key().equals("runtime.js.errors") || c.key().equals("runtime.network.5xx"))
             .count());
+    }
+
+    @Test
+    void missingTimingsPreserveMeasuredNetworkDefectsAndScoring() throws Exception {
+        var full = response(2, 1, 2, 1, 2, 1, 0, 0);
+        var result = analyze(new PlaywrightRuntimeClient.RuntimeAnalyzeResponse(full.url(), full.finalUrl(),
+            new PlaywrightRuntimeClient.Timings(null, null), full.console(), full.jsErrors(), full.network(),
+            new PlaywrightRuntimeClient.Navigation("FAILED", "NAVIGATION_ERROR")));
+        assertEquals(true, result.data().get("partial"));
+        assertEquals("FAILED", ((Map<?, ?>) result.data().get("navigation")).get("status"));
+        assertNull(((Map<?, ?>) result.data().get("timings")).get("loadMs"));
+        assertEquals(AuditStatus.FAIL, checkStatus(result, "runtime.network.5xx"));
+        assertEquals(2, checkValue(result, "runtime.network.failed_requests"));
+        var policy = new com.dokor.argos.services.analysis.scoring.DefaultScorePolicy();
+        var modules = new com.dokor.argos.services.analysis.scoring.ScoreEnricherService(policy).enrich(List.of(result));
+        var failed = modules.getFirst().checks().stream().filter(c -> c.key().equals("runtime.network.5xx")).findFirst().orElseThrow();
+        assertTrue(failed.scorable());
+        assertTrue(failed.weight() > 0);
+        var coverage = com.dokor.argos.services.analysis.scoring.MeasurementCoverageService.compute(policy, modules);
+        assertEquals(com.dokor.argos.services.analysis.scoring.MeasurementCoverage.State.MEASURED,
+            coverage.checks().stream().filter(c -> c.key().equals("runtime.network.5xx")).findFirst().orElseThrow().state());
+    }
+
+    @Test
+    void singleMissingTimingRemainsNullAndMarksPartial() throws Exception {
+        var full = response(0);
+        var result = analyze(new PlaywrightRuntimeClient.RuntimeAnalyzeResponse(full.url(), full.finalUrl(),
+            new PlaywrightRuntimeClient.Timings(100L, null), full.console(), full.jsErrors(), full.network()));
+        assertEquals(true, result.data().get("partial"));
+        var timings = (Map<?, ?>) result.data().get("timings");
+        assertEquals(100L, timings.get("domContentLoadedMs"));
+        assertNull(timings.get("loadMs"));
+        assertEquals("UNKNOWN", ((Map<?, ?>) result.data().get("navigation")).get("status"));
+    }
+
+    @Test
+    void absentNetworkAndCountersStayUnknownInData() throws Exception {
+        var result = analyze(new PlaywrightRuntimeClient.RuntimeAnalyzeResponse("https://example.com", "https://example.com",
+            null, new PlaywrightRuntimeClient.Console(null, null, List.of(), null),
+            new PlaywrightRuntimeClient.JsErrors(0, List.of()), null));
+        assertNull(result.data().get("network"));
+        var console = (Map<?, ?>) result.data().get("console");
+        assertNull(console.get("errors"));
+        assertNull(console.get("errorsFirstParty"));
+        assertNull(console.get("warnings"));
+        assertEquals(0, ((Map<?, ?>) result.data().get("jsErrors")).get("count"));
+        assertEquals(AuditStatus.PASS, checkStatus(result, "runtime.js.errors"));
+        assertFalse(result.checks().stream().anyMatch(c -> c.key().equals("runtime.console.errors") || c.key().startsWith("runtime.network.")));
+    }
+
+    @Test
+    void absentByTypeAndPartialSamplesDoNotDiscardCounters() throws Exception {
+        var samples = java.util.Arrays.asList(null, new PlaywrightRuntimeClient.ConsoleSample("error", "failure", null),
+            new PlaywrightRuntimeClient.ConsoleSample("error", null, null));
+        var result = analyze(new PlaywrightRuntimeClient.RuntimeAnalyzeResponse("https://example.com", "https://example.com",
+            null, new PlaywrightRuntimeClient.Console(2, null, samples, null),
+            new PlaywrightRuntimeClient.JsErrors(1, java.util.Arrays.asList(null, new PlaywrightRuntimeClient.JsErrorSample(null))),
+            new PlaywrightRuntimeClient.Network(3, 1, null, 0, null, null, null, null, null, null, null)));
+        assertEquals(true, result.data().get("partial"));
+        var network = (Map<?, ?>) result.data().get("network");
+        assertNull(network.get("byType"));
+        assertNull(network.get("totalBytesEstimated"));
+        assertEquals(1, network.get("failedRequests"));
+        assertEquals(AuditStatus.WARN, checkStatus(result, "runtime.network.failed_requests"));
+        assertEquals(3, checkValue(result, "runtime.network.request_count"));
+        var console = result.checks().stream().filter(c -> c.key().equals("runtime.console.errors")).findFirst().orElseThrow();
+        assertEquals(List.of(Map.of("type", "error", "text", "failure"), Map.of("type", "error")), console.details().get("samples"));
+    }
+
+    @Test
+    void explicitFirstPartyCounterIsMeasuredEvenWhenAggregateIsUnknown() throws Exception {
+        var result = analyze(new PlaywrightRuntimeClient.RuntimeAnalyzeResponse("https://example.com", "https://example.com",
+            null, null, null, new PlaywrightRuntimeClient.Network(null, null, null, null, null, null, null, 2, null, 1, null)));
+        assertEquals(2, checkValue(result, "runtime.network.failed_requests"));
+        assertEquals(AuditStatus.FAIL, checkStatus(result, "runtime.network.5xx"));
+        var network = (Map<?, ?>) result.data().get("network");
+        assertNull(network.get("failedRequests"));
+        assertNull(network.get("failedRequestsThirdParty"));
+        assertFalse(result.checks().stream().anyMatch(c -> c.key().equals("runtime.network.third_party_errors")));
+    }
+
+    @Test
+    void timingOnlyAndSampleOnlyResponsesPreserveAvailableObservations() throws Exception {
+        var timing = analyze(new PlaywrightRuntimeClient.RuntimeAnalyzeResponse("https://example.com", "https://example.com",
+            new PlaywrightRuntimeClient.Timings(0L, null), null, null, null));
+        assertEquals(0L, ((Map<?, ?>) timing.data().get("timings")).get("domContentLoadedMs"));
+        assertEquals(1, timing.checks().size()); // Only worker duration; no invented error counts.
+        var sample = new PlaywrightRuntimeClient.ConsoleSample("error", "observed failure", null);
+        var result = analyze(new PlaywrightRuntimeClient.RuntimeAnalyzeResponse("https://example.com", "https://example.com",
+            null, new PlaywrightRuntimeClient.Console(null, null, List.of(sample), null), null, null));
+        assertEquals(List.of(sample), ((Map<?, ?>) result.data().get("console")).get("samples"));
+        assertEquals(1, result.checks().size());
     }
 
     // -------------------------
