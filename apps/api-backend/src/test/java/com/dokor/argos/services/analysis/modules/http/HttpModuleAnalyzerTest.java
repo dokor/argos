@@ -264,7 +264,7 @@ class HttpModuleAnalyzerTest {
         HttpResponse<String> sitemapResp
     ) throws Exception {
         HttpClient client = mock(HttpClient.class);
-        when(client.send(any(HttpRequest.class), any())).thenAnswer(invocation -> {
+        when(client.<String>send(any(HttpRequest.class), any())).thenAnswer(invocation -> {
             HttpRequest req = invocation.getArgument(0);
             String uri = req.uri().toString();
             if (uri.endsWith("/robots.txt")) return robotsResp;
@@ -344,7 +344,7 @@ class HttpModuleAnalyzerTest {
         // Redirection d'un site public vers l'endpoint de métadonnées cloud (SSRF).
         HttpResponse<String> redirect = resp(302, "",
             Map.of("location", List.of("http://127.0.0.1/latest/meta-data/")), HttpClient.Version.HTTP_1_1);
-        when(client.send(any(HttpRequest.class), any())).thenAnswer(inv -> redirect);
+        when(client.<String>send(any(HttpRequest.class), any())).thenAnswer(inv -> redirect);
 
         HttpModuleAnalyzer a = new HttpModuleAnalyzer(client);
         AuditContext ctx = new AuditContext("https://example.com", "https://example.com", 0L);
@@ -360,6 +360,115 @@ class HttpModuleAnalyzerTest {
         ArgumentCaptor<HttpRequest> captor = ArgumentCaptor.forClass(HttpRequest.class);
         verify(client, times(1)).send(captor.capture(), any());
         assertEquals("https://example.com", captor.getValue().uri().toString());
+        assertIncompleteSnapshot(result, "TARGET_BLOCKED", "https://example.com", 302);
+    }
+
+    @Test
+    void redirectFollowedByTimeoutDoesNotPublishTheRedirectBodyAsTargetContent() throws Exception {
+        HttpClient client = mock(HttpClient.class);
+        var redirect = resp(301, "initial response", Map.of("location", List.of("https://example.com/target"),
+            "server", List.of("initial-server")), HttpClient.Version.HTTP_1_1);
+        when(client.<String>send(any(HttpRequest.class), any())).thenReturn(redirect)
+            .thenThrow(new java.net.http.HttpTimeoutException("fixture timeout"));
+        var result = analyzeWith(client);
+        assertIncompleteSnapshot(result, "TIMEOUT", "https://example.com", 301);
+        assertEquals("https://example.com/target", result.data().get("requestedUrl"));
+        assertTrue(result.data().get("errors").toString().contains("HttpTimeoutException"));
+        verify(client, times(2)).send(any(), any()); // no SEO probe of the unvisited target
+    }
+
+    @Test
+    void redirectLimitIsExplicitAndDoesNotExposeTheNextTargetsSnapshot() throws Exception {
+        HttpClient client = mock(HttpClient.class);
+        var count = new java.util.concurrent.atomic.AtomicInteger();
+        when(client.<String>send(any(HttpRequest.class), any())).thenAnswer(call -> {
+            int next = count.incrementAndGet();
+            return resp(302, "redirect body " + next, Map.of("location", List.of("/hop/" + next)), HttpClient.Version.HTTP_1_1);
+        });
+        var result = analyzeWith(client);
+        assertIncompleteSnapshot(result, "REDIRECT_LIMIT", "https://example.com/hop/9", 302);
+        assertEquals("https://example.com/hop/9", result.data().get("requestedUrl"));
+        assertEquals("https://example.com/hop/10", result.data().get("targetUrl"));
+        assertTrue(result.data().get("errors").toString().contains("RedirectLimitExceeded"));
+        verify(client, times(10)).send(any(), any());
+    }
+
+    @Test
+    void redirectLoopStopsBeforeRefetchingTheSameUrl() throws Exception {
+        HttpClient client = mock(HttpClient.class);
+        var first = resp(302, "first redirect", Map.of("location", List.of("/second")), HttpClient.Version.HTTP_1_1);
+        var second = resp(302, "second redirect", Map.of("location", List.of("https://example.com")), HttpClient.Version.HTTP_1_1);
+        when(client.<String>send(any(HttpRequest.class), any())).thenReturn(first, second);
+        var result = analyzeWith(client);
+        assertIncompleteSnapshot(result, "REDIRECT_LOOP", "https://example.com/second", 302);
+        assertTrue(result.data().get("errors").toString().contains("RedirectLoop"));
+        verify(client, times(2)).send(any(), any());
+    }
+
+    @Test
+    void redirectWithMissingOrInvalidLocationHasNoFinalSnapshot() throws Exception {
+        for (Map<String, List<String>> headers : List.of(Map.<String, List<String>>of(), Map.of("location", List.of("http://[")))) {
+            HttpClient client = mock(HttpClient.class);
+            var redirect = resp(301, "redirect response", headers, HttpClient.Version.HTTP_1_1);
+            when(client.<String>send(any(HttpRequest.class), any())).thenReturn(redirect);
+            var result = analyzeWith(client);
+            assertIncompleteSnapshot(result, headers.isEmpty() ? "MISSING_LOCATION" : "INVALID_LOCATION", "https://example.com", 301);
+            verify(client).send(any(), any());
+        }
+    }
+
+    @Test
+    void successfulChainPublishesOnlyTheReachedTerminalResponse() throws Exception {
+        HttpClient client = mock(HttpClient.class);
+        var redirect = resp(301, "initial response", Map.of("location", List.of("/target"), "server", List.of("initial")), HttpClient.Version.HTTP_1_1);
+        var terminal = resp(200, "<html>final response</html>", Map.of("server", List.of("final")), HttpClient.Version.HTTP_2);
+        var missing = resp(404, "missing");
+        when(client.<String>send(any(HttpRequest.class), any())).thenReturn(redirect, terminal, missing, missing);
+        var result = analyzeWith(client);
+        assertEquals("COMPLETED", result.data().get("fetchOutcome"));
+        assertEquals(true, result.data().get("responseSnapshotAvailable"));
+        assertEquals("https://example.com/target", result.data().get("finalUrl"));
+        assertEquals("https://example.com/target", result.data().get("requestedUrl"));
+        assertEquals(200, result.data().get("statusCode"));
+        assertEquals("<html>final response</html>", result.data().get("body"));
+        assertEquals(Map.of("server", "final"), result.data().get("headers"));
+        var context = HttpModuleAnalyzer.enrichContext(new AuditContext("https://example.com", "https://example.com", 0L), result);
+        assertEquals(result.data().get("finalUrl"), context.finalUrl());
+        assertEquals(200, context.httpStatusCode());
+        assertEquals(result.data().get("body"), context.body());
+        assertEquals(result.data().get("headers"), context.headers());
+        verify(client, times(4)).send(any(), any());
+    }
+
+    private AuditModuleResult analyzeWith(HttpClient client) {
+        return new HttpModuleAnalyzer(client).analyze(new AuditContext("https://example.com", "https://example.com", 0L),
+            LoggerFactory.getLogger("test"));
+    }
+
+    @SuppressWarnings("unchecked")
+    private void assertIncompleteSnapshot(AuditModuleResult result, String outcome, String responseUrl, int responseStatus) {
+        assertEquals(outcome, result.data().get("fetchOutcome"));
+        assertEquals(false, result.data().get("responseSnapshotAvailable"));
+        assertNull(result.data().get("finalUrl"));
+        assertEquals(0, result.data().get("statusCode"));
+        assertNull(result.data().get("body"));
+        assertEquals(Map.of(), result.data().get("headers"));
+        var last = (Map<String, Object>) result.data().get("lastResponse");
+        assertEquals(responseUrl, last.get("url"));
+        assertEquals(responseStatus, last.get("statusCode"));
+        assertFalse(last.containsKey("body"));
+        var context = HttpModuleAnalyzer.enrichContext(new AuditContext("https://example.com", "https://example.com", 0L), result);
+        assertNull(context.finalUrl());
+        assertNull(context.body());
+        assertTrue(context.headers().isEmpty());
+        assertEquals(0, context.httpStatusCode());
+        var policy = new com.dokor.argos.services.analysis.scoring.DefaultScorePolicy();
+        var enriched = new com.dokor.argos.services.analysis.scoring.ScoreEnricherService(policy).enrich(List.of(result));
+        var score = new com.dokor.argos.services.analysis.scoring.ScoreService(policy).compute(policy.version(), policy.fingerprint(), enriched);
+        assertEquals(0, score.global().maxScore());
+        assertTrue(score.coverage().checks().stream().filter(c -> c.module().equals("http"))
+            .allMatch(c -> c.state() == com.dokor.argos.services.analysis.scoring.MeasurementCoverage.State.UNAVAILABLE
+                && c.reason().equals("HTTP_FETCH_" + outcome)));
     }
 
     @SuppressWarnings("unchecked")

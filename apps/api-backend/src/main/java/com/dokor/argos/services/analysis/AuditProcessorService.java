@@ -205,6 +205,9 @@ public class AuditProcessorService {
             // Enrichir le contexte avec les données HTTP (finalUrl, headers, body…)
             context = HttpModuleAnalyzer.enrichContext(context, httpModule);
             final AuditContext ctx = context;
+            final boolean snapshotUnavailable = httpModule.data() != null
+                && (Boolean.FALSE.equals(httpModule.data().get("responseSnapshotAvailable"))
+                    || Boolean.FALSE.equals(httpModule.data().get("available")));
 
             // #221 : le corps HTML brut a servi à enrichir le contexte (consommé par les
             // modules html/tech via AuditContext.body()) ; il ne doit PAS être persisté dans
@@ -215,8 +218,8 @@ public class AuditProcessorService {
             logger.info("module_start module={} runId={}", AuditModule.OBSERVATORY.id(), runId);
             logger.info("module_start module={} runId={}", AuditModule.SSL.id(), runId);
             AuditDeadline collectionDeadline=AuditDeadline.current();
-            try (var observatory = remote.submit(AuditModule.OBSERVATORY.id(), () -> collectionDeadline.call(() -> observatoryModuleAnalyzer.analyze(ctx, logger)));
-                 var ssl = remote.submit(AuditModule.SSL.id(), () -> collectionDeadline.call(() -> sslLabsModuleAnalyzer.analyze(ctx, logger)))) {
+            try (var observatory = remote.submit(AuditModule.OBSERVATORY.id(), () -> collectionDeadline.call(() -> withHttpSnapshot(snapshotUnavailable, () -> observatoryModuleAnalyzer.analyze(ctx, logger))));
+                 var ssl = remote.submit(AuditModule.SSL.id(), () -> collectionDeadline.call(() -> withHttpSnapshot(snapshotUnavailable, () -> sslLabsModuleAnalyzer.analyze(ctx, logger))))) {
                 auditRunService.updateModuleStatus(runId, AuditModule.OBSERVATORY.id(), "RUNNING");
                 auditRunService.updateModuleStatus(runId, AuditModule.SSL.id(), "RUNNING");
 
@@ -226,20 +229,20 @@ public class AuditProcessorService {
                     AuditModuleResult result = switch (module) {
                         case HTTP -> throw new IllegalStateException("HTTP already executed");
                         case HTML -> runModule(runId, module, moduleStatuses,
-                            () -> htmlModuleAnalyzer.analyze(ctx, logger));
+                            () -> withHttpSnapshot(snapshotUnavailable, () -> htmlModuleAnalyzer.analyze(ctx, logger)));
                         case RUNTIME -> runModule(runId, module, moduleStatuses,
-                            () -> runtimeModuleAnalyzer.analyze(ctx, logger));
+                            () -> withHttpSnapshot(snapshotUnavailable, () -> runtimeModuleAnalyzer.analyze(ctx, logger)));
                         case LIGHTHOUSE -> enrichLighthouse(runModule(runId, module, moduleStatuses,
-                            () -> lighthouseModuleAnalyzer.analyze(ctx, logger)), httpModule, ctx);
+                            () -> withHttpSnapshot(snapshotUnavailable, () -> lighthouseModuleAnalyzer.analyze(ctx, logger))), httpModule, ctx);
                         case OBSERVATORY -> runModule(runId, module, moduleStatuses,
                             observatory::await, observatory.startedAtMillis(), true);
                         case SSL -> runModule(runId, module, moduleStatuses,
                             ssl::await, ssl.startedAtMillis(), true);
                         case ZAP -> runModule(runId, module, moduleStatuses,
-                            () -> zapModuleAnalyzer.analyze(ctx, logger));
+                            () -> withHttpSnapshot(snapshotUnavailable, () -> zapModuleAnalyzer.analyze(ctx, logger)));
                         // Only Tech has a 24h domain cache. Observatory and SSL still run for each audit.
                         case TECH -> runModule(runId, module, moduleStatuses,
-                            () -> domainAnalysisService.getOrRunTechAnalysis(ctx, logger));
+                            () -> withHttpSnapshot(snapshotUnavailable, () -> domainAnalysisService.getOrRunTechAnalysis(ctx, logger)));
                     };
                     allModules.add(result);
                 }
@@ -322,6 +325,11 @@ public class AuditProcessorService {
             }
             logger.warn("Run failed runId={} error={}", runId, e.getMessage(), e);
         }
+    }
+
+    private static AuditModuleResult withHttpSnapshot(boolean unavailable, java.util.function.Supplier<AuditModuleResult> analysis) {
+        if (unavailable) throw new ModuleUnavailableException("HTTP final response snapshot unavailable");
+        return analysis.get();
     }
 
     private AuditModuleResult enrichLighthouse(AuditModuleResult lighthouseModule,

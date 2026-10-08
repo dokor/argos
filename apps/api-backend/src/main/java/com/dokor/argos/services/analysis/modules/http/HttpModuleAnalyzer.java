@@ -68,11 +68,22 @@ public class HttpModuleAnalyzer {
         int lastStatus = 0;
         String httpVersion = null;
         String body = null;
+        String lastRequestedUrl = null;
+        String redirectTargetUrl = null;
+        String lastResponseUrl = null;
+        String finalUrl = null;
+        String fetchOutcome = "REQUEST_FAILED";
+        Set<String> visited = new HashSet<>();
 
         List<String> errors = new ArrayList<>();
 
         try {
             for (int i = 0; i < MAX_REDIRECTS; i++) {
+                if (!visited.add(currentUrl)) {
+                    fetchOutcome = "REDIRECT_LOOP";
+                    errors.add("RedirectLoop");
+                    break;
+                }
                 // Revalidation SSRF à chaque saut (URL initiale + cibles de redirection),
                 // au moment du fetch : bloque une redirection vers une IP interne et couvre
                 // le DNS rebinding entre la soumission et le traitement (#217).
@@ -81,6 +92,7 @@ public class HttpModuleAnalyzer {
                 } catch (IllegalArgumentException ssrf) {
                     logger.warn("HTTP module: blocked SSRF target url={} reason={}",
                         UrlNormalizer.sanitizeForLog(currentUrl), ssrf.getMessage());
+                    fetchOutcome = "TARGET_BLOCKED";
                     errors.add("SsrfBlocked: " + ssrf.getMessage());
                     break;
                 }
@@ -95,38 +107,71 @@ public class HttpModuleAnalyzer {
                     .GET()
                     .build();
 
-                logger.debug("HTTP module: requesting url={}", currentUrl);
+                logger.debug("HTTP module: requesting url={}", UrlNormalizer.sanitizeForLog(currentUrl));
 
+                lastRequestedUrl = currentUrl;
                 HttpResponse<String> response = client.send(request, BoundedBodyHandlers.ofString(BoundedBodyHandlers.MAX_PAGE_BYTES));
 
+                lastResponseUrl = currentUrl;
                 body = response.body();
                 lastStatus = response.statusCode();
                 lastHeaders = flattenHeaders(response.headers());
                 httpVersion = response.version() != null ? response.version().name() : null;
 
-                logger.debug("HTTP module: response status={} url={}", lastStatus, currentUrl);
+                logger.debug("HTTP module: response status={} url={}", lastStatus, UrlNormalizer.sanitizeForLog(currentUrl));
 
                 if (isRedirect(lastStatus)) {
                     String location = response.headers().firstValue("location").orElse(null);
-                    if (location == null) {
-                        logger.warn("HTTP module: redirect without Location header status={} url={}", lastStatus, currentUrl);
+                    if (location == null || location.isBlank()) {
+                        logger.warn("HTTP module: redirect without Location header status={} url={}", lastStatus, UrlNormalizer.sanitizeForLog(currentUrl));
+                        fetchOutcome = "MISSING_LOCATION";
                         errors.add("RedirectWithoutLocation");
                         break;
                     }
 
-                    currentUrl = URI.create(currentUrl).resolve(location).toString();
+                    try {
+                        currentUrl = URI.create(currentUrl).resolve(location).normalize().toString();
+                        redirectTargetUrl = currentUrl;
+                    } catch (IllegalArgumentException invalidLocation) {
+                        fetchOutcome = "INVALID_LOCATION";
+                        errors.add("InvalidRedirectLocation");
+                        break;
+                    }
+                    if (i == MAX_REDIRECTS - 1) {
+                        fetchOutcome = "REDIRECT_LIMIT";
+                        errors.add("RedirectLimitExceeded");
+                        break;
+                    }
                     continue;
                 }
 
-                // On s'arrête dès qu'on a une réponse finale (non-3xx)
+                // The URL, headers and body are published only as one terminal response snapshot.
+                finalUrl = currentUrl;
+                fetchOutcome = "COMPLETED";
                 break;
             }
         } catch (Exception e) {
             if (e instanceof InterruptedException) Thread.currentThread().interrupt();
-            logger.warn("HTTP module: request failed url={} error={}", currentUrl, e.toString());
+            fetchOutcome = e instanceof java.net.http.HttpTimeoutException ? "TIMEOUT" : "REQUEST_FAILED";
+            logger.warn("HTTP module: request failed url={} error={}", UrlNormalizer.sanitizeForLog(currentUrl), e.getClass().getSimpleName());
             errors.add(e.getClass().getSimpleName() + ": " + e.getMessage());
         }
 
+        // Retain response identity for diagnostics, without forwarding a redirect body as target content.
+        Map<String, Object> lastResponse = new LinkedHashMap<>();
+        if (lastResponseUrl != null) {
+            lastResponse.put("url", lastResponseUrl);
+            lastResponse.put("statusCode", lastStatus);
+            lastResponse.put("headers", lastHeaders);
+            lastResponse.put("httpVersion", httpVersion);
+        }
+        boolean snapshotAvailable = finalUrl != null;
+        if (!snapshotAvailable) {
+            lastStatus = 0;
+            lastHeaders = Map.of();
+            body = null;
+            httpVersion = null;
+        }
         long durationMs = System.currentTimeMillis() - start;
 
         // Détection d'une protection anti-bot (Cloudflare…) — issue #56 : on dégrade
@@ -165,10 +210,10 @@ public class HttpModuleAnalyzer {
         checks.add(checkRedirectCount(redirectChain));
 
         // 3) Final URL scheme (https)
-        checks.add(checkFinalHttps(currentUrl));
+        checks.add(checkFinalHttps(finalUrl));
 
         // 4) Redirect to HTTPS (si input est http et final https)
-        checks.add(checkRedirectToHttps(inputUrl, currentUrl, redirectChain));
+        checks.add(checkRedirectToHttps(inputUrl, finalUrl, redirectChain));
 
         // 5) Response time
         checks.add(checkResponseTime(durationMs));
@@ -183,7 +228,7 @@ public class HttpModuleAnalyzer {
         checks.add(checkCookieFlags(lastHeaders));
 
         // 7c) Support de HTTP/2 (uniquement pertinent en HTTPS) — issue #151
-        checks.add(checkHttp2(httpVersion, currentUrl));
+        checks.add(checkHttp2(httpVersion, finalUrl));
 
         // 8) Compression (Content-Encoding)
         checks.add(checkCompression(lastHeaders));
@@ -232,17 +277,28 @@ public class HttpModuleAnalyzer {
         // simplement en panne réseau.
         SeoResources seoResources = null;
         if (lastStatus >= 200 && lastStatus < 400) {
-            seoResources = probeSeoResources(currentUrl, logger);
+            seoResources = probeSeoResources(finalUrl, logger);
             checks.add(checkRobotsTxt(seoResources));
             checks.add(checkSitemap(seoResources));
         }
 
-        String summary = buildSummary(lastStatus, redirectChain, durationMs, currentUrl);
+        String summary = buildSummary(lastStatus, redirectChain, durationMs, finalUrl);
 
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("inputUrl", inputUrl);
         data.put("normalizedUrl", normalizedUrl);
-        data.put("finalUrl", currentUrl);
+        data.put("finalUrl", finalUrl);
+        data.put("requestedUrl", lastRequestedUrl);
+        data.put("targetUrl", currentUrl);
+        data.put("redirectTargetUrl", redirectTargetUrl);
+        data.put("lastResponse", lastResponse);
+        data.put("fetchOutcome", fetchOutcome);
+        data.put("responseSnapshotAvailable", snapshotAvailable);
+        if (!snapshotAvailable) {
+            data.put("measurementState", "UNAVAILABLE");
+            data.put("measurementReason", "HTTP_FETCH_" + fetchOutcome);
+            data.put("partial", true);
+        }
         data.put("statusCode", lastStatus);
         data.put("durationMs", durationMs);
         data.put("redirectChain", redirectChain);
@@ -260,7 +316,7 @@ public class HttpModuleAnalyzer {
         data.put("body", body);
 
         logger.info("HTTP module done: status={} redirects={} durationMs={} finalUrl={}",
-            lastStatus, Math.max(0, redirectChain.size() - 1), durationMs, currentUrl
+            lastStatus, Math.max(0, redirectChain.size() - 1), durationMs, UrlNormalizer.sanitizeForLog(finalUrl)
         );
 
         return new AuditModuleResult(
@@ -424,7 +480,7 @@ public class HttpModuleAnalyzer {
             0.0,            // weight filled later
             List.of(),      // tags filled later
             isHttps,
-            Map.of("finalUrl", finalUrl),
+            finalUrl != null ? Map.of("finalUrl", finalUrl) : Map.of("reason", "FINAL_RESPONSE_UNAVAILABLE"),
             isHttps ? "L'URL finale utilise HTTPS." : "L'URL finale n'utilise pas HTTPS.",
             isHttps ? null : "Privilégiez HTTPS pour protéger les visiteurs et renforcer la confiance."
         );
@@ -463,7 +519,8 @@ public class HttpModuleAnalyzer {
             0.0,            // weight filled later
             List.of(),      // tags filled later
             Map.of("inputIsHttp", inputIsHttp, "finalIsHttps", finalIsHttps),
-            Map.of("inputUrl", inputUrl, "finalUrl", finalUrl, "redirectChain", chain),
+            finalUrl != null ? Map.of("inputUrl", inputUrl, "finalUrl", finalUrl, "redirectChain", chain)
+                : Map.of("inputUrl", inputUrl, "reason", "FINAL_RESPONSE_UNAVAILABLE", "redirectChain", chain),
             message,
             recommendation
         );
@@ -897,6 +954,10 @@ public class HttpModuleAnalyzer {
      */
     public static AuditContext enrichContext(AuditContext context, AuditModuleResult httpResult) {
         Map<String, Object> data = httpResult.data();
+        if (Boolean.FALSE.equals(data.get("responseSnapshotAvailable"))) {
+            return context.withHttpResult(null, 0, toLong(data.get("durationMs")),
+                safeStringList(data.get("redirectChain")), Map.of(), null);
+        }
         return context.withHttpResult(
             (String) data.get("finalUrl"),
             toInt(data.get("statusCode")),
