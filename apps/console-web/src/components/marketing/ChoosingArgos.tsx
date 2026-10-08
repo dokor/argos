@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/LocalizedLink";
 import { useLang } from "@/lib/i18n/LangContext";
 import s from "./ChoosingArgos.module.scss";
 

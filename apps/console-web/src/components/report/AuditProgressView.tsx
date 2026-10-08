@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/LocalizedLink";
 import { useRouter } from "next/navigation";
 import { argosApi, PublicReportStatusResponse, ModuleStatus } from "@/lib/ArgosApi";
 import { createLogger, safeError, maskToken } from "@/lib/logger";

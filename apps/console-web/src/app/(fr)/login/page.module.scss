@@ -1,0 +1,91 @@
+@use '../../../styles/tokens' as t;
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.root {
+  flex: 1;
+  min-height: 420px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: t.$canvas;
+}
+
+.form {
+  background: t.$surface;
+  border-radius: t.$radius-lg;
+  padding: t.$space-8 t.$panel-space;
+  box-shadow: t.$shadow-md;
+  width: t.$login-form-width;
+  max-width: calc(100vw - 2 * t.$space-5);
+  display: flex;
+  flex-direction: column;
+  gap: t.$space-4;
+}
+
+@media (max-width: 400px) {
+  .form {
+    padding: t.$panel-space t.$space-5;
+    border-radius: t.$radius-md;
+  }
+}
+
+.title {
+  margin: 0;
+  font-size: t.$text-3xl;
+  color: t.$text;
+  text-align: center;
+}
+
+.input {
+  padding: t.$space-3 t.$space-4;
+  border-radius: t.$radius-sm;
+  border: 1px solid t.$border;
+  background: t.$surface;
+  color: t.$text;
+  font-size: t.$text-lg;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 44px;
+
+  &:focus {
+    border-color: t.$color-indigo;
+    outline: 2px solid t.$color-indigo;
+    outline-offset: 2px;
+  }
+}
+
+.error {
+  margin: 0;
+  color: t.$color-red;
+  font-size: t.$text-base;
+  text-align: center;
+}
+
+.btn {
+  padding: t.$space-3 t.$space-4;
+  min-height: 44px;
+  border-radius: t.$radius-sm;
+  background: t.$text;
+  color: t.$bg;
+  border: none;
+  font-size: t.$text-lg;
+  cursor: pointer;
+  font-weight: 600;
+  transition: opacity 0.15s;
+
+  &:focus-visible {
+    outline: 2px solid t.$color-indigo;
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    background: t.$text-subtle;
+    cursor: not-allowed;
+  }
+}

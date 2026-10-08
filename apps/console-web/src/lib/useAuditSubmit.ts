@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useLang } from "@/lib/i18n/LangContext";
+import { localizedPath } from "@/lib/i18n/routes";
 import { useRouter } from "next/navigation";
 import { argosApi, CreateAuditResponse } from "@/lib/ArgosApi";
 import { createLogger, safeError, sanitizeUrl } from "@/lib/logger";
@@ -74,6 +76,7 @@ export function useAuditSubmit(options: UseAuditSubmitOptions): UseAuditSubmitRe
   } = options;
 
   const router = useRouter();
+  const { lang } = useLang();
   const [phase, setPhase] = useState<AuditPhase>("idle");
   const [errorKind, setErrorKind] = useState<AuditErrorKind | null>(null);
   const [error, setError] = useState<Error | null>(null);
@@ -94,7 +97,7 @@ export function useAuditSubmit(options: UseAuditSubmitOptions): UseAuditSubmitRe
 
   const redirectToReport = useCallback(
     (reportToken: string, reason: "completed" | "timeout" | "created", polls: number) => {
-      const href = `/report/${reportToken}`;
+      const href = localizedPath(`/report/${reportToken}`, lang);
       logger.info("audit_submit_redirect", {
         action: "redirect_to_report",
         details: { reason, reportToken, runId: runIdRef.current, polls, openInNewTab },
@@ -118,7 +121,7 @@ export function useAuditSubmit(options: UseAuditSubmitOptions): UseAuditSubmitRe
       setPhase("redirecting");
       router.push(href);
     },
-    [logger, router, openInNewTab]
+    [logger, router, openInNewTab, lang]
   );
 
   // Effet de polling (cas landing) : actif uniquement en phase "polling".

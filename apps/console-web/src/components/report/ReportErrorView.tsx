@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/LocalizedLink";
 import AuditForm from "@/components/AuditForm";
 import { useLang } from "@/lib/i18n/LangContext";
 import s from "./ReportErrorView.module.scss";
