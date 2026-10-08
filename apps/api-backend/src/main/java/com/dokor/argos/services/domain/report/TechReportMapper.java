@@ -54,6 +54,11 @@ public final class TechReportMapper {
         // si tout est null => pas de tech utile
         if (cms == null && ff == null && next == null) return null;
 
-        return new ReportDto.Tech(cms, ff, next);
+        Map<String, Object> cacheMap = asMap(techData.get("stackCache"));
+        ReportDto.StackCache cache = cacheMap == null ? null : new ReportDto.StackCache(
+            asBoolean(cacheMap.get("hit")), asString(cacheMap.get("scope")),
+            asString(cacheMap.get("sourceFinalUrl")), asString(cacheMap.get("analyzedAt")),
+            asString(cacheMap.get("expiresAt")), asStringList(cacheMap.get("checkKeys")));
+        return new ReportDto.Tech(cms, ff, next, cache);
     }
 }

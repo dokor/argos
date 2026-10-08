@@ -36,9 +36,18 @@ public record ReportDto(
     public record Tech(
         Cms cms,
         FrontendFramework frontendFramework,
-        NextJs nextJs
+        NextJs nextJs,
+        @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+        StackCache stackCache
     ) {
+        public Tech(Cms cms, FrontendFramework frontendFramework, NextJs nextJs) {
+            this(cms, frontendFramework, nextJs, null);
+        }
     }
+
+    /** Provenance of stack signatures; response security checks are always fresh. */
+    public record StackCache(Boolean hit, String scope, String sourceFinalUrl,
+                             String analyzedAt, String expiresAt, List<String> checkKeys) {}
 
     public record Cms(
         String name,
