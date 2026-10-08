@@ -3,6 +3,7 @@ export type Lang = "fr" | "en";
 // Only pages with a complete English version belong in this map.
 export const languageRoutes: Record<string, string> = {
   "/": "/en",
+  "/exemple-rapport": "/en/example-report",
   "/faq": "/en/faq",
   "/ressources": "/en/resources",
   "/ressources/audit-site-pme": "/en/resources/small-business-website-audit",

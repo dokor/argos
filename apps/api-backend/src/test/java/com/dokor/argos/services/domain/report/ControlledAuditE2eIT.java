@@ -59,7 +59,11 @@ class ControlledAuditE2eIT extends MariaDbReportFixture {
             int status=path.equals("/antibot")?403:200;
             exchange.getResponseHeaders().set("Content-Type","text/html; charset=utf-8");
             exchange.getResponseHeaders().set("X-Content-Type-Options","nosniff");
-            if(path.equals("/antibot")) exchange.getResponseHeaders().set("Server","cloudflare");
+            if(path.equals("/antibot")) {
+                exchange.getResponseHeaders().set("Server","cloudflare");
+                // Explicit challenge evidence; a CDN header and generic wording are insufficient.
+                exchange.getResponseHeaders().set("cf-mitigated","challenge");
+            }
             String body="<!doctype html><html lang='fr'><head><title>Controlled Argos fixture</title><meta name='description' content='Page locale contrôlée'><meta name='viewport' content='width=device-width'><meta charset='utf-8'></head><body><main><h1>Controlled fixture</h1><p>Local fixture content.</p>";
             if(path.equals("/errors")) body+="<img src='/missing.png'><script>console.error('Synthetic fixture error');throw new Error('Synthetic fixture error')</script>";
             if(path.equals("/antibot")) body+="<p>Just a moment… Verify you are human</p>";
