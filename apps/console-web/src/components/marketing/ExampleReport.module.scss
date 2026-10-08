@@ -18,8 +18,8 @@
 .comparison pre { white-space: pre-wrap; overflow-wrap: anywhere; background: t.$surface-2; padding: t.$space-4; border-radius: t.$radius-md; line-height: 1.6; font-size: 0.9rem; }
 .finding code { overflow-wrap: anywhere; }
 .links { display: flex; flex-wrap: wrap; gap: t.$space-4 t.$space-6; }
-.page a { color: t.$text; text-decoration: underline; text-underline-offset: 3px; }
-.page a:focus-visible { outline: 3px solid t.$color-indigo; outline-offset: 3px; }
+.page main a { color: t.$text; text-decoration: underline; text-underline-offset: 3px; }
+.page main a:focus-visible { outline: 3px solid t.$color-indigo; outline-offset: 3px; }
 .section ol { padding-left: t.$space-6; display: grid; gap: t.$space-4; }
 @media (max-width: 680px) {
   .container { width: min(100% - 32px, 960px); }

@@ -88,6 +88,16 @@ jobs:
             if(!ready) throw new Error('Controlled service failed readiness');
           }
           JS
+      - name: Compare public header geometry and captures
+        run: node scripts/e2e/public-header.mjs
+      - name: Upload public header captures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-header-${{ github.sha }}
+          path: outputs/public-header/
+          if-no-files-found: warn
+          retention-days: 14
       - name: Run real database and browser lifecycle
         run: mvn --batch-mode -f apps/api-backend/pom.xml -P mariadb-integration -Dit.test=ControlledAuditE2eIT verify
       - name: Rehearse consistent backup and isolated restore
