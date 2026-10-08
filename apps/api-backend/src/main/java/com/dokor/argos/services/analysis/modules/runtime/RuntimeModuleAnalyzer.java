@@ -44,34 +44,33 @@ public class RuntimeModuleAnalyzer {
             throw new ModuleUnavailableException("Playwright service unavailable", e);
         }
 
-        if (r == null || ((r.console() == null || r.console().errors() == null)
-            && (r.jsErrors() == null || r.jsErrors().count() == null)
-            && (r.network() == null || (r.network().failedRequests() == null
-                && r.network().status5xx() == null && r.network().requests() == null)))) {
+        if (r == null || !r.hasMeasurements()) {
             throw new ModuleUnavailableException("Runtime response has no usable measurements");
         }
 
         long durationMs = System.currentTimeMillis() - start;
 
         // -------- checks --------
-        int consoleErrors = safeInt(r.console() != null ? r.console().errors() : null);
         // Distinction première partie / tiers (issue #153) : on ne pénalise que les
         // erreurs du site lui-même. Si le service ne fournit pas la distinction
         // (errorsFirstParty == null), on retombe sur le total (comportement historique).
         Integer fpObj = r.console() != null ? r.console().errorsFirstParty() : null;
-        int firstPartyErrors = fpObj != null ? fpObj : consoleErrors;
-        int thirdPartyErrors = Math.max(0, consoleErrors - firstPartyErrors);
+        Integer consoleTotal = r.console() != null ? r.console().errors() : null;
+        Integer consoleFirstParty = firstPartyOrLegacy(fpObj, consoleTotal);
+        Integer consoleThirdParty = thirdPartyOrDerived(null, consoleTotal, consoleFirstParty);
+        int firstPartyErrors = safeInt(consoleFirstParty);
+        int thirdPartyErrors = safeInt(consoleThirdParty);
         int jsErrors = safeInt(r.jsErrors() != null ? r.jsErrors().count() : null);
-        int failedReq = safeInt(r.network() != null ? r.network().failedRequests() : null);
-        int s5xx = safeInt(r.network() != null ? r.network().status5xx() : null);
-        int firstPartyFailedReq = firstPartyOrLegacy(
-            r.network() != null ? r.network().failedRequestsFirstParty() : null, failedReq);
-        int thirdPartyFailedReq = thirdPartyOrDerived(
-            r.network() != null ? r.network().failedRequestsThirdParty() : null, failedReq, firstPartyFailedReq);
-        int firstParty5xx = firstPartyOrLegacy(
-            r.network() != null ? r.network().status5xxFirstParty() : null, s5xx);
-        int thirdParty5xx = thirdPartyOrDerived(
-            r.network() != null ? r.network().status5xxThirdParty() : null, s5xx, firstParty5xx);
+        Integer failedTotal = r.network() != null ? r.network().failedRequests() : null;
+        Integer serverTotal = r.network() != null ? r.network().status5xx() : null;
+        Integer failedFirstParty = firstPartyOrLegacy(r.network() != null ? r.network().failedRequestsFirstParty() : null, failedTotal);
+        Integer failedThirdParty = thirdPartyOrDerived(r.network() != null ? r.network().failedRequestsThirdParty() : null, failedTotal, failedFirstParty);
+        Integer serverFirstParty = firstPartyOrLegacy(r.network() != null ? r.network().status5xxFirstParty() : null, serverTotal);
+        Integer serverThirdParty = thirdPartyOrDerived(r.network() != null ? r.network().status5xxThirdParty() : null, serverTotal, serverFirstParty);
+        int firstPartyFailedReq = safeInt(failedFirstParty);
+        int thirdPartyFailedReq = safeInt(failedThirdParty);
+        int firstParty5xx = safeInt(serverFirstParty);
+        int thirdParty5xx = safeInt(serverThirdParty);
         int reqCount = safeInt(r.network() != null ? r.network().requests() : null);
         long bytes = safeLong(r.network() != null ? r.network().totalBytesEstimated() : null);
 
@@ -81,7 +80,7 @@ public class RuntimeModuleAnalyzer {
         //    que le propriétaire du site peut corriger), pas sur le bruit des scripts tiers.
         String consoleMsg;
         if (firstPartyErrors == 0) {
-            consoleMsg = thirdPartyErrors == 0
+            consoleMsg = consoleThirdParty == null ? "Aucune erreur console de votre site détectée ; total tiers inconnu." : thirdPartyErrors == 0
                 ? "Aucune erreur console détectée."
                 : "Aucune erreur console de votre site (" + thirdPartyErrors + " erreur(s) tierce(s) ignorée(s)).";
         } else {
@@ -91,7 +90,7 @@ public class RuntimeModuleAnalyzer {
         }
         Map<String, Object> consoleDetails = new LinkedHashMap<>();
         consoleDetails.put("firstParty", firstPartyErrors);
-        consoleDetails.put("thirdParty", thirdPartyErrors);
+        consoleDetails.put("thirdParty", consoleThirdParty);
         if (sampleConsole(r, "error") != null) consoleDetails.put("samples", sampleConsole(r, "error"));
         checks.add(AuditCheckResult.of(
             "runtime.console.errors",
@@ -126,7 +125,7 @@ public class RuntimeModuleAnalyzer {
             firstParty5xx == 0 ? AuditSeverity.LOW : AuditSeverity.HIGH,
             false, 0.0, List.of("runtime"),
             firstParty5xx,
-            safeList(r.network() != null ? r.network().topLargest() : null) != null ? Map.of("topLargest", safeList(r.network() != null ? r.network().topLargest() : null)) : Map.of(),
+            nullableMap("topLargest", r.network() != null ? r.network().topLargest() : null),
             firstParty5xx == 0 ? "Aucune réponse 5xx de votre site observée." : (firstParty5xx + " réponse(s) 5xx de votre site observée(s)."),
             firstParty5xx == 0 ? null : "Analyser les endpoints en erreur (logs serveur, timeouts, config CDN)."
         ));
@@ -169,7 +168,7 @@ public class RuntimeModuleAnalyzer {
             AuditSeverity.LOW,
             false, 0.0, List.of("runtime"),
             reqCount,
-            Map.of("byType", r.network() != null ? r.network().byType() : Map.of()),
+            nullableMap("byType", r.network() != null ? r.network().byType() : null),
             "Nombre de requêtes observées : " + reqCount,
             reqCount <= 120 ? null : "Réduire scripts tiers, images, bundling, lazy-loading, cache."
         ));
@@ -182,7 +181,7 @@ public class RuntimeModuleAnalyzer {
             AuditSeverity.LOW,
             false, 0.0, List.of("runtime"),
             bytes,
-            Map.of("topLargest", safeList(r.network() != null ? r.network().topLargest() : null)),
+            nullableMap("topLargest", r.network() != null ? r.network().topLargest() : null),
             "Transfert estimé : ~" + humanBytes(bytes),
             bytes <= 3_000_000 ? null : "Optimiser poids page (images, fonts, scripts), compression, cache."
         ));
@@ -202,61 +201,53 @@ public class RuntimeModuleAnalyzer {
 
         // Missing sections are not evidence of zero errors or zero requests.
         checks.removeIf(c -> switch (c.key()) {
-            case "runtime.console.errors" -> r.console() == null || r.console().errors() == null;
+            case "runtime.console.errors" -> consoleFirstParty == null;
             case "runtime.js.errors" -> r.jsErrors() == null || r.jsErrors().count() == null;
-            case "runtime.network.5xx" -> r.network() == null || r.network().status5xx() == null;
-            case "runtime.network.failed_requests" -> r.network() == null || r.network().failedRequests() == null;
+            case "runtime.network.5xx" -> serverFirstParty == null;
+            case "runtime.network.failed_requests" -> failedFirstParty == null;
             case "runtime.network.request_count" -> r.network() == null || r.network().requests() == null;
             case "runtime.network.bytes_estimated" -> r.network() == null || r.network().totalBytesEstimated() == null;
-            case "runtime.network.third_party_errors" -> r.network() == null
-                || r.network().failedRequests() == null || r.network().status5xx() == null;
+            case "runtime.network.third_party_errors" -> failedThirdParty == null || serverThirdParty == null;
             default -> false;
         });
         // -------- data payload (stocké dans report_json) --------
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("available", true);
-        data.put("partial", r.console() == null || r.console().errors() == null
+        boolean timingsPartial = r.timings() == null || r.timings().domContentLoadedMs() == null || r.timings().loadMs() == null;
+        String navigationStatus = r.navigation() != null && r.navigation().status() != null ? r.navigation().status() : "UNKNOWN";
+        data.put("navigation", nullableMap("status", navigationStatus,
+            "reason", r.navigation() != null ? r.navigation().reason() : "LEGACY_RESPONSE"));
+        data.put("partial", timingsPartial || (r.navigation() != null && !"COMPLETED".equals(navigationStatus))
+            || r.console() == null || consoleTotal == null || r.console().warnings() == null
             || r.jsErrors() == null || r.jsErrors().count() == null
-            || r.network() == null || r.network().failedRequests() == null
-            || r.network().status5xx() == null);
+            || r.network() == null || failedTotal == null || serverTotal == null
+            || r.network().requests() == null || r.network().totalBytesEstimated() == null
+            || r.network().status4xx() == null || r.network().byType() == null);
         data.put("url", r.url());
         data.put("finalUrl", r.finalUrl());
         Map<String, Object> timings = new LinkedHashMap<>();
         timings.put("domContentLoadedMs", r.timings() != null ? r.timings().domContentLoadedMs() : null);
         timings.put("loadMs", r.timings() != null ? r.timings().loadMs() : null);
         data.put("timings", timings);
-        data.put("console", Map.of(
-            "errors", consoleErrors,
-            "errorsFirstParty", firstPartyErrors,
-            "errorsThirdParty", thirdPartyErrors,
-            "warnings", safeInt(r.console() != null ? r.console().warnings() : null),
-            "samples", safeList(r.console() != null ? r.console().samples() : null)
-        ));
-        data.put("jsErrors", Map.of(
-            "count", jsErrors,
-            "samples", safeList(r.jsErrors() != null ? r.jsErrors().samples() : null)
-        ));
-        if (r.network() != null) {
-            data.put("network", Map.ofEntries(
-                Map.entry("requests", reqCount),
-                Map.entry("failedRequests", failedReq),
-                Map.entry("failedRequestsFirstParty", firstPartyFailedReq),
-                Map.entry("failedRequestsThirdParty", thirdPartyFailedReq),
-                Map.entry("status4xx", safeInt(r.network().status4xx())),
-                Map.entry("status5xx", s5xx),
-                Map.entry("status5xxFirstParty", firstParty5xx),
-                Map.entry("status5xxThirdParty", thirdParty5xx),
-                Map.entry("totalBytesEstimated", bytes),
-                Map.entry("byType", r.network().byType() != null ? r.network().byType() : Map.of()),
-                Map.entry("topLargest", safeList(r.network().topLargest()))
-            ));
-        }
+        data.put("console", r.console() == null ? null : nullableMap(
+            "errors", consoleTotal, "errorsFirstParty", consoleFirstParty, "errorsThirdParty", consoleThirdParty,
+            "warnings", r.console().warnings(), "samples", r.console().samples()));
+        data.put("jsErrors", r.jsErrors() == null ? null : nullableMap(
+            "count", r.jsErrors().count(), "samples", r.jsErrors().samples()));
+        data.put("network", r.network() == null ? null : nullableMap(
+            "requests", r.network().requests(), "failedRequests", failedTotal,
+            "failedRequestsFirstParty", failedFirstParty, "failedRequestsThirdParty", failedThirdParty,
+            "status4xx", r.network().status4xx(), "status5xx", serverTotal,
+            "status5xxFirstParty", serverFirstParty, "status5xxThirdParty", serverThirdParty,
+            "totalBytesEstimated", r.network().totalBytesEstimated(), "byType", r.network().byType(),
+            "topLargest", r.network().topLargest()));
 
-        String summary = "consoleErrors=" + consoleErrors
-            + " jsErrors=" + jsErrors
-            + " req=" + reqCount
-            + " bytes=~" + bytes
-            + " 5xx=" + firstParty5xx + "/" + s5xx;
+        String summary = "consoleErrors=" + consoleTotal
+            + " jsErrors=" + (r.jsErrors() != null ? r.jsErrors().count() : null)
+            + " req=" + (r.network() != null ? r.network().requests() : null)
+            + " bytes=" + (r.network() != null ? r.network().totalBytesEstimated() : null)
+            + " 5xx=" + serverFirstParty + "/" + serverTotal
+            + " navigation=" + navigationStatus + " partial=" + data.get("partial");
 
         logger.info("RUNTIME module done: {}", summary);
 
@@ -271,37 +262,47 @@ public class RuntimeModuleAnalyzer {
 
     private static int safeInt(Integer v) { return v == null ? 0 : v; }
     private static long safeLong(Long v) { return v == null ? 0L : v; }
-    private static List<?> safeList(Object v) { return v instanceof List<?> l ? l : List.of(); }
 
-    private static int firstPartyOrLegacy(Integer firstParty, int total) {
-        if (firstParty == null) return total;
-        return Math.min(total, Math.max(0, firstParty));
+    private static Map<String, Object> nullableMap(Object... entries) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        for (int i = 0; i < entries.length; i += 2) map.put((String) entries[i], entries[i + 1]);
+        return map;
     }
 
-    private static int thirdPartyOrDerived(Integer thirdParty, int total, int firstParty) {
+    private static Integer firstPartyOrLegacy(Integer firstParty, Integer total) {
+        if (firstParty == null) return total;
+        return total == null ? Math.max(0, firstParty) : Math.min(total, Math.max(0, firstParty));
+    }
+
+    private static Integer thirdPartyOrDerived(Integer thirdParty, Integer total, Integer firstParty) {
+        if (total == null || firstParty == null) return thirdParty;
         if (thirdParty == null) return Math.max(0, total - firstParty);
         return Math.min(Math.max(0, total - firstParty), Math.max(0, thirdParty));
     }
 
     private static List<Map<String, String>> sampleConsole(PlaywrightRuntimeClient.RuntimeAnalyzeResponse r, String type) {
-        if (r.console() == null || r.console().samples() == null) return List.of();
+        if (r.console() == null || r.console().samples() == null) return null;
         return r.console().samples().stream()
+            .filter(Objects::nonNull)
             .filter(s -> type.equalsIgnoreCase(s.type()))
             .limit(5)
-            .map(s -> Map.of(
-                "type", s.type(),
-                "text", s.text(),
-                "location", s.location()
-            ))
+            .map(s -> sampleFields("type", s.type(), "text", s.text(), "location", s.location()))
             .toList();
     }
 
     private static List<Map<String, String>> sampleJsErrors(PlaywrightRuntimeClient.RuntimeAnalyzeResponse r) {
-        if (r.jsErrors() == null || r.jsErrors().samples() == null) return List.of();
+        if (r.jsErrors() == null || r.jsErrors().samples() == null) return null;
         return r.jsErrors().samples().stream()
             .limit(5)
-            .map(s -> Map.of("message", s.message()))
+            .filter(Objects::nonNull)
+            .map(s -> sampleFields("message", s.message()))
             .toList();
+    }
+
+    private static Map<String, String> sampleFields(String... fields) {
+        Map<String, String> sample = new LinkedHashMap<>();
+        for (int i = 0; i < fields.length; i += 2) if (fields[i + 1] != null) sample.put(fields[i], fields[i + 1]);
+        return sample;
     }
 
     private static String humanBytes(long bytes) {

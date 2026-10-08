@@ -70,6 +70,7 @@ test('runtime contract retains metrics and partitions errors using the final dom
   const report = await response.json();
   assert.equal(report.url, 'https://example.co.uk');
   assert.equal(report.finalUrl, 'https://www.example.co.uk/final');
+  assert.deepEqual(report.navigation, { status: 'COMPLETED', reason: null });
   assert.equal(report.console.errors, 2);
   assert.equal(report.console.errorsFirstParty, 1);
   assert.equal(report.jsErrors.count, 1);
@@ -88,6 +89,9 @@ test('navigation timeout returns partial observations and closes the browser', a
   const report = await response.json();
   assert.equal(response.status, 200);
   assert.deepEqual(report.timings, { domContentLoadedMs: null, loadMs: null });
+  assert.deepEqual(report.navigation, { status: 'FAILED', reason: 'NAVIGATION_ERROR' });
+  assert.equal(report.console.errors, 2);
+  assert.equal(report.jsErrors.count, 1);
   assert.equal(report.network.failedRequestsFirstParty, 1);
   assert.equal(fake.closed(), 1);
 });

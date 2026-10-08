@@ -141,6 +141,7 @@ export function createRuntimeApp({ chromium, log = () => {} }) {
       let finalUrl = url;
       let domContentLoadedMs = null;
       let loadMs = null;
+      let navigation = { status: 'COMPLETED', reason: null };
 
       try {
         const response = await page.goto(url, { waitUntil: 'load', timeout: remaining() });
@@ -159,6 +160,7 @@ export function createRuntimeApp({ chromium, log = () => {} }) {
         await page.waitForTimeout(Math.min(1500, remaining()));
       } catch (e) {
         // si le site bloque, on renvoie ce qu’on a
+        navigation = { status: 'FAILED', reason: 'NAVIGATION_ERROR' };
         log('analyze.navigation_error', { url: safeUrl, error: String(e?.message ?? e).slice(0, 300) });
       } finally {
         // page.url() reflète aussi la dernière URL atteinte si la navigation échoue
@@ -187,6 +189,7 @@ export function createRuntimeApp({ chromium, log = () => {} }) {
         url,
         finalUrl,
         timings: { domContentLoadedMs, loadMs },
+        navigation,
         console: {
           errors: consoleErrors,
           errorsFirstParty: consoleErrorsFirstParty,

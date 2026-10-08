@@ -303,6 +303,7 @@ class AuditProcessorServiceTest {
 
     @Nested
     class ParallelRemoteModules {
+        private final HttpModuleAnalyzer http = mock(HttpModuleAnalyzer.class);
         private final AuditRunService runs = mock(AuditRunService.class);
         private final ObservatoryModuleAnalyzer observatory = mock(ObservatoryModuleAnalyzer.class);
         private final SslLabsModuleAnalyzer ssl = mock(SslLabsModuleAnalyzer.class);
@@ -316,7 +317,7 @@ class AuditProcessorServiceTest {
 
         private AuditModuleResult result(String id) { return new AuditModuleResult(id, id, "fixture", Map.of(), List.of()); }
         private AuditProcessorService processor(RemoteModuleExecutor remote) throws Exception {
-            var dao = mock(AuditDao.class); var http = mock(HttpModuleAnalyzer.class);
+            var dao = mock(AuditDao.class);
             var merger = mock(CheckMergerService.class);
             var enricher = mock(ScoreEnricherService.class); var scorer = mock(ScoreService.class);
             var run = new AuditRun(); run.setAuditId(10L); run.setId(1L); run.setReportTokenHash(new byte[32]); run.setClaimToken("synthetic-worker");
@@ -360,6 +361,29 @@ class AuditProcessorServiceTest {
                 assertEquals(false, result.data().get("available"));
                 verify(runs).updateModuleStatus(1L, "runtime", "FAILED");
                 verify(runs, never()).fail(anyLong(), anyString(), nullable(String.class));
+            }
+        }
+
+        @Test void incompleteHttpTraversalDoesNotAnalyzeAnUnreachedTarget() throws Exception {
+            try (var remote = new RemoteModuleExecutor(Duration.ofSeconds(5))) {
+                var processor = processor(remote);
+                when(http.analyze(any(), any())).thenReturn(new AuditModuleResult("http", "HTTP", "incomplete",
+                    Map.of("responseSnapshotAvailable", false, "statusCode", 0, "partial", true,
+                        "fetchOutcome", "TIMEOUT", "requestedUrl", "https://example.com/unreached",
+                        "lastResponse", Map.of("url", "https://example.com", "statusCode", 301)), List.of()));
+                processor.process(1L);
+                verifyNoInteractions(html, runtime, lighthouse, observatory, ssl, zap, domains);
+                var report = ArgumentCaptor.forClass(AuditReportJson.class);
+                verify(publisher).completeAndPublish(eq(1L), any(), report.capture(), anyString(), nullable(String.class));
+                var statuses = mapper.readTree(report.getValue().meta().get("moduleStatuses"));
+                assertEquals("PARTIAL", statuses.path("http").asText());
+                for (String id : List.of("html", "runtime", "lighthouse", "observatory", "ssl", "zap", "tech")) {
+                    assertEquals("UNAVAILABLE", statuses.path(id).asText(), id);
+                    var module = report.getValue().modules().stream().filter(m -> m.id().equals(id)).findFirst().orElseThrow();
+                    assertEquals(List.of(id + ".collect"), module.checks().stream().map(c -> c.key()).toList());
+                    assertFalse(module.checks().getFirst().scorable());
+                }
+                assertEquals("true", report.getValue().meta().get("degraded"));
             }
         }
 
