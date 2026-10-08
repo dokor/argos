@@ -1,7 +1,7 @@
 {
   "layout": {
     "title": "Argos - Website auditor",
-    "description": "Argos scans HTTP headers, HTML quality, tech stack and Lighthouse performance. Scored, private report - no login required."
+    "description": "Argos is a free technical audit tool for a public URL, with no account required, that provides a private report with scores and recommendations for performance, security, SEO and accessibility."
   },
   "nav": {
     "logo": "Argos",
@@ -13,7 +13,7 @@
     "accessibility": "Accessibility"
   },
   "siteFooter": {
-    "description": "Free technical website audit. Understand your page's performance, SEO, accessibility and security.",
+    "description": "Argos is a free technical audit tool for a public URL, with no account required, that provides a private report with scores and recommendations for performance, security, SEO and accessibility.",
     "discover": "Explore",
     "resources": "Resources and guides",
     "faq": "Frequently asked questions",
@@ -31,7 +31,7 @@
       "badge": "Website auditor · Free · No account",
       "slogan": "Your site, under every eye.",
       "headline": "Find what's hurting your site.\nFree, no account, in 30 seconds.",
-      "sub": "HTTP, SEO, performance, stack - Argos analyzes everything and gives you a prioritized report with the concrete actions to take first.",
+      "sub": "Argos is a free technical audit tool for a public URL, with no account required, that provides a private report with scores and recommendations for performance, security, SEO and accessibility.",
       "audience": "For developers, growth teams, and agencies.",
       "inputPlaceholder": "https://yoursite.com",
       "inputAriaLabel": "Website URL to analyze",
@@ -40,11 +40,10 @@
       "hint": "Free · No account · Private report, not indexed",
       "analyzing": "Analyzing",
       "analyzeSteps": [
-        "HTTP & Security",
-        "HTML & SEO",
-        "Tech stack",
-        "Playwright runtime",
-        "Lighthouse"
+        "Performance",
+        "Security",
+        "SEO",
+        "Accessibility"
       ],
       "redirecting": "Report ready · Redirecting…",
       "errorMsg": "Error: check the URL and try again.",
@@ -89,32 +88,27 @@
     },
     "modules": {
       "title": "What Argos analyzes",
-      "sub": "Five independent modules. One complete picture.",
+      "sub": "Four areas to understand what needs improving on your page.",
       "items": [
         {
+          "icon": "⚡",
+          "label": "Performance",
+          "desc": "Loading times, browser rendering metrics and Lighthouse checks to identify obstacles to browsing."
+        },
+        {
           "icon": "🔒",
-          "label": "HTTP & Security",
-          "desc": "Status code, redirects, HTTPS enforcement, HSTS, CSP, X-Frame-Options, Referrer-Policy, compression…"
+          "label": "Security",
+          "desc": "HTTPS, TLS certificate, security headers and automated checks to detect technical weaknesses."
         },
         {
           "icon": "🏷️",
-          "label": "HTML & SEO",
-          "desc": "Title tag, meta description, canonical, H1, lang attribute, viewport, OpenGraph, Twitter Card, image alt…"
+          "label": "SEO",
+          "desc": "Title, meta description, canonical URL and HTML structure to check key technical search signals."
         },
         {
-          "icon": "🧩",
-          "label": "Tech stack detection",
-          "desc": "CMS (WordPress, Shopify, Wix…), frameworks (Next.js, Nuxt, React, Vue…), backend hints, Cloudflare CDN."
-        },
-        {
-          "icon": "⚡",
-          "label": "Playwright runtime",
-          "desc": "Metrics collected on a rendered page: console errors, LCP, FCP, TTI, render-blocking resources."
-        },
-        {
-          "icon": "📊",
-          "label": "Lighthouse",
-          "desc": "Performance, accessibility, best practices and SEO scores via headless Lighthouse."
+          "icon": "♿",
+          "label": "Accessibility",
+          "desc": "Automated checks for text alternatives, accessible names and other signals. An initial diagnosis to complement with a manual audit."
         }
       ]
     },
@@ -128,13 +122,13 @@
         },
         {
           "n": "02",
-          "label": "We analyze everything",
-          "desc": "Five modules run in sequence: HTTP → HTML → Tech → Runtime → Lighthouse."
+          "label": "Technical analysis",
+          "desc": "Automated checks examine the submitted page for performance, security, SEO and accessibility."
         },
         {
           "n": "03",
           "label": "Scored report",
-          "desc": "A private (non-indexable) report with a global score and actionable recommendations."
+          "desc": "A private, non-indexable report with an overall score, scores by area and prioritized recommendations."
         }
       ]
     },
@@ -176,7 +170,7 @@
   "faq": {
     "meta": {
       "title": "FAQ - Frequently asked questions",
-      "description": "Answers to common questions about Argos: how it works, reports, analysis limits, privacy and what's coming next."
+      "description": "Common questions about Argos, the free technical audit of a public URL with no account required: performance, security, SEO and accessibility scores, private reports and limits."
     },
     "hero": {
       "badge": "Help center",
@@ -191,7 +185,7 @@
         "items": [
           {
             "q": "What is Argos?",
-            "a": "Argos is a website audit tool: you submit a URL, five analysis modules run in sequence (HTTP, HTML, performance, Lighthouse, security) and you get a scored, prioritized report with concrete actions to take."
+            "a": "Argos is a free technical audit tool for a public URL, with no account required, that provides a private report with scores and recommendations for performance, security, SEO and accessibility."
           },
           {
             "q": "Is Argos really free?",
@@ -235,7 +229,7 @@
         "items": [
           {
             "q": "What does Argos analyze?",
-            "a": "Five modules: HTTP headers, HTML structure and SEO, runtime metrics (perceived performance), Lighthouse scores (performance, accessibility, best practices, SEO) and security (SSL, security headers, basic vulnerability scan)."
+            "a": "Four areas: performance, security, SEO and accessibility. Checks include HTTP headers, HTML structure, the TLS certificate, browser metrics and Lighthouse results. Runtime is a source of performance measurements, not an additional area."
           },
           {
             "q": "Does Argos replace a manual audit?",
