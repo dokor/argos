@@ -178,7 +178,7 @@ class HttpModuleAnalyzerTest {
         HttpModuleAnalyzer mockedAnalyzer = new HttpModuleAnalyzer(stubClient(
             resp(200, "<html></html>"),
             resp(200, "User-agent: *\nSitemap: https://example.com/sitemap.xml\n"),
-            resp(200, "<urlset></urlset>")
+            resp(200, "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\"></urlset>")
         ));
         AuditContext ctx = new AuditContext("https://example.com", "https://example.com", 0L);
 
@@ -204,7 +204,7 @@ class HttpModuleAnalyzerTest {
     }
 
     @Test
-    void analyze_shouldDetectSitemapDeclaredInRobotsEvenIfXmlMissing() throws Exception {
+    void analyze_shouldRejectUnverifiedSitemapDeclaredInRobots() throws Exception {
         HttpModuleAnalyzer mockedAnalyzer = new HttpModuleAnalyzer(stubClient(
             resp(200, "<html></html>"),
             resp(200, "Sitemap: https://example.com/custom-sitemap.xml\n"),
@@ -214,8 +214,12 @@ class HttpModuleAnalyzerTest {
 
         AuditModuleResult result = mockedAnalyzer.analyze(ctx, LoggerFactory.getLogger("test"));
 
-        // Sitemap déclaré dans robots.txt ⇒ considéré présent malgré /sitemap.xml en 404.
-        assertEquals(AuditStatus.PASS, checkByKey(result, "http.seo.sitemap").status());
+        // The custom target returns the default HTML response: declaration alone is insufficient.
+        AuditCheckResult sitemap = checkByKey(result, "http.seo.sitemap");
+        assertEquals(AuditStatus.WARN, sitemap.status());
+        assertEquals("INVALID", sitemap.details().get("state"));
+        assertEquals(true, sitemap.details().get("declaredInRobots"));
+        assertEquals(false, sitemap.details().get("verified"));
     }
 
     @Test

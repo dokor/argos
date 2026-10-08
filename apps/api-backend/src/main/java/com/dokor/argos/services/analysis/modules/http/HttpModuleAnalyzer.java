@@ -275,7 +275,7 @@ public class HttpModuleAnalyzer {
         // On ne sonde que si le site a répondu (2xx/3xx) : inutile de refaire deux
         // fetchs sur un site injoignable, et cela évite de pénaliser le SEO d'un site
         // simplement en panne réseau.
-        SeoResources seoResources = null;
+        SeoResourceProbe.Result seoResources = null;
         if (lastStatus >= 200 && lastStatus < 400) {
             seoResources = probeSeoResources(finalUrl, logger);
             checks.add(checkRobotsTxt(seoResources));
@@ -310,8 +310,12 @@ public class HttpModuleAnalyzer {
             data.put("antiBotVendor", antiBotVendor);
         }
         if (seoResources != null) {
-            data.put("robotsTxtPresent", seoResources.robotsPresent());
-            data.put("sitemapPresent", seoResources.sitemapPresent());
+            data.put("robotsTxtPresent", seoResources.robots().present());
+            data.put("sitemapPresent", seoResources.sitemap().present());
+            data.put("seoResources", Map.of("robots", seoResources.robots().diagnostics(),
+                "sitemap", seoResources.sitemap().diagnostics(), "declaredSitemaps", seoResources.declarations(),
+                "sitemapCandidates", seoResources.candidates().stream().map(SeoResourceProbe.Resource::diagnostics).toList()));
+            if (seoResources.unavailable()) data.put("partial", true);
         }
         data.put("body", body);
 
@@ -797,70 +801,8 @@ public class HttpModuleAnalyzer {
     // SEO resources (robots.txt / sitemap.xml)
     // -------------------------
 
-    /** Résultat du sondage des ressources SEO à la racine du domaine. */
-    private record SeoResources(
-        boolean robotsPresent,
-        int robotsStatus,
-        boolean sitemapPresent,
-        boolean sitemapInRobots,
-        boolean sitemapDirect,
-        int sitemapStatus
-    ) {}
-
-    /**
-     * Sonde {@code /robots.txt} et {@code /sitemap.xml} à la racine du domaine de {@code finalUrl}.
-     * Le sitemap est considéré présent s'il répond en 200 <b>ou</b> s'il est déclaré via une
-     * directive {@code Sitemap:} dans le robots.txt. Toute erreur réseau ⇒ ressource absente.
-     */
-    private SeoResources probeSeoResources(String finalUrl, Logger logger) {
-        String origin = originOf(finalUrl);
-        if (origin == null) {
-            return new SeoResources(false, 0, false, false, false, 0);
-        }
-
-        boolean robotsPresent = false;
-        boolean sitemapInRobots = false;
-        int robotsStatus = 0;
-        try {
-            HttpResponse<String> r = getResource(origin + "/robots.txt");
-            robotsStatus = r.statusCode();
-            String body = r.body();
-            robotsPresent = robotsStatus == 200 && body != null && !body.isBlank();
-            if (robotsPresent) {
-                sitemapInRobots = body.lines()
-                    .anyMatch(line -> line.trim().toLowerCase(Locale.ROOT).startsWith("sitemap:"));
-            }
-        } catch (Exception e) {
-            logger.debug("SEO probe: robots.txt fetch failed origin={} error={}", origin, e.toString());
-        }
-
-        boolean sitemapDirect = false;
-        int sitemapStatus = 0;
-        try {
-            HttpResponse<String> s = getResource(origin + "/sitemap.xml");
-            sitemapStatus = s.statusCode();
-            String body = s.body();
-            sitemapDirect = sitemapStatus == 200 && body != null && !body.isBlank();
-        } catch (Exception e) {
-            logger.debug("SEO probe: sitemap.xml fetch failed origin={} error={}", origin, e.toString());
-        }
-
-        boolean sitemapPresent = sitemapDirect || sitemapInRobots;
-        return new SeoResources(robotsPresent, robotsStatus, sitemapPresent, sitemapInRobots, sitemapDirect, sitemapStatus);
-    }
-
-    private HttpResponse<String> getResource(String url) throws Exception {
-        // Défense en profondeur : les probes SEO refetchent l'origine finale, revalider
-        // évite d'atteindre une IP interne (rebinding entre le fetch page et le probe).
-        UrlNormalizer.validatePublicUrl(url);
-        HttpRequest req = HttpRequest.newBuilder()
-            .uri(URI.create(url))
-            .timeout(com.dokor.argos.services.analysis.AuditDeadline.requestTimeout(Duration.ofSeconds(10)))
-            .header("User-Agent", "argos-auditor/1.0")
-            .header("Accept", "*/*")
-            .GET()
-            .build();
-        return client.send(req, BoundedBodyHandlers.ofString(BoundedBodyHandlers.MAX_PAGE_BYTES));
+    private SeoResourceProbe.Result probeSeoResources(String finalUrl, Logger logger) {
+        return new SeoResourceProbe(client, logger).collect(originOf(finalUrl));
     }
 
     /** Reconstruit l'origine (scheme://host[:port]) à partir d'une URL, ou null si invalide. */
@@ -876,44 +818,45 @@ public class HttpModuleAnalyzer {
         }
     }
 
-    private static AuditCheckResult checkRobotsTxt(SeoResources seo) {
-        boolean present = seo.robotsPresent();
-        return AuditCheckResult.of(
-            "http.seo.robots_txt",
-            "Présence de robots.txt",
-            present ? AuditStatus.PASS : AuditStatus.WARN,
-            present ? AuditSeverity.LOW : AuditSeverity.MEDIUM,
-            false,          // scorable filled later
-            0.0,            // weight filled later
-            List.of(),      // tags filled later
-            present,
-            Map.of("present", present, "status", seo.robotsStatus()),
-            present ? "Le fichier robots.txt est présent." : "Le fichier robots.txt est absent.",
-            present ? null : "Ajoutez un /robots.txt pour guider les robots d'indexation et référencer votre sitemap."
-        );
+    private static AuditCheckResult checkRobotsTxt(SeoResourceProbe.Result seo) {
+        return seoCheck("http.seo.robots_txt", "Présence de robots.txt", seo.robots(), Map.of(),
+            "Le fichier robots.txt est reconnu.", "Le fichier robots.txt est absent.",
+            "La réponse de robots.txt ne contient pas un fichier robots reconnu.",
+            "Ajoutez un /robots.txt valide pour guider les robots d'indexation.");
     }
 
-    private static AuditCheckResult checkSitemap(SeoResources seo) {
-        boolean present = seo.sitemapPresent();
-        String via = seo.sitemapDirect() ? "sitemap.xml" : (seo.sitemapInRobots() ? "robots.txt" : "none");
-        return AuditCheckResult.of(
-            "http.seo.sitemap",
-            "Présence du sitemap",
-            present ? AuditStatus.PASS : AuditStatus.WARN,
-            present ? AuditSeverity.LOW : AuditSeverity.MEDIUM,
-            false,          // scorable filled later
-            0.0,            // weight filled later
-            List.of(),      // tags filled later
-            present,
-            Map.of(
-                "present", present,
-                "via", via,
-                "sitemapXmlStatus", seo.sitemapStatus(),
-                "declaredInRobots", seo.sitemapInRobots()
-            ),
-            present ? ("Sitemap détecté (via " + via + ").") : "Aucun sitemap détecté (/sitemap.xml ou robots.txt).",
-            present ? null : "Publiez un sitemap.xml et référencez-le dans robots.txt pour faciliter l'indexation."
-        );
+    private static AuditCheckResult checkSitemap(SeoResourceProbe.Result seo) {
+        return seoCheck("http.seo.sitemap", "Présence du sitemap", seo.sitemap(),
+            Map.of("declaredInRobots", !seo.declarations().isEmpty(), "declaredSitemaps", seo.declarations(),
+                "sitemapCandidates", seo.candidates().stream().map(SeoResourceProbe.Resource::diagnostics).toList()),
+            "Un sitemap XML a été vérifié.", "Aucun sitemap vérifié détecté.",
+            "La réponse du sitemap ne contient pas un sitemap XML reconnu.",
+            "Publiez un sitemap XML valide et référencez-le dans robots.txt.");
+    }
+
+    private static AuditCheckResult seoCheck(String key, String title, SeoResourceProbe.Resource resource,
+                                             Map<String, Object> extra, String recognized, String absent,
+                                             String invalid, String recommendation) {
+        var state = resource.state();
+        boolean unavailable = state == SeoResourceProbe.State.UNAVAILABLE;
+        boolean present = state == SeoResourceProbe.State.RECOGNIZED;
+        Map<String, Object> details = new LinkedHashMap<>(resource.diagnostics());
+        details.putAll(extra);
+        details.put("present", resource.present());
+        details.put("verified", present);
+        details.put("measurementState", unavailable ? "UNAVAILABLE" : "MEASURED");
+        details.put("measurementReason", "SEO_PROBE_" + resource.reason());
+        String message = switch (state) {
+            case RECOGNIZED -> recognized;
+            case ABSENT -> absent;
+            case INVALID -> invalid;
+            case UNAVAILABLE -> "La collecte de cette ressource SEO est indisponible (" + resource.reason() + ").";
+        };
+        return AuditCheckResult.of(key, title,
+            unavailable ? AuditStatus.INFO : present ? AuditStatus.PASS : AuditStatus.WARN,
+            present || unavailable ? AuditSeverity.LOW : AuditSeverity.MEDIUM,
+            false, 0.0, List.of(), resource.present(), details, message,
+            present || unavailable ? null : recommendation);
     }
 
     // -------------------------
