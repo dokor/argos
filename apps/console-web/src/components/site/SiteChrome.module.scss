@@ -1,6 +1,9 @@
 @use '../../styles/tokens' as t;
 
 .nav {
+  // Page wrappers must never change the shared header's typography.
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
   position: sticky;
   top: 0;
   z-index: t.$z-sticky;
@@ -25,7 +28,7 @@
   gap: t.$space-2;
   color: t.$text;
   text-decoration: none;
-  flex-shrink: 0;
+  flex: 0 0 96px;
 }
 
 .logoIcon { flex-shrink: 0; }
@@ -38,7 +41,24 @@
   gap: t.$space-4;
 }
 
-.navActions { margin-left: auto; gap: t.$space-2; }
+.navLinks {
+  // Reserve the same columns for both translations and active states.
+  display: grid;
+  grid-template-columns: 128px 96px 36px;
+  flex-shrink: 0;
+}
+
+.navActions {
+  margin-left: auto;
+  gap: t.$space-2;
+  flex-shrink: 0;
+
+  > * { flex-shrink: 0; }
+}
+
+// The cookie is read after hydration: keep the controls in place throughout.
+.consoleSlot { width: 190px; height: 34px; }
+.consoleIcon { display: none; }
 
 .navLink {
   color: t.$text-muted;
@@ -55,6 +75,10 @@
 }
 
 .navCta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
   background: t.$text;
   color: t.$bg;
   text-decoration: none;
@@ -137,17 +161,23 @@
   font-size: t.$text-base;
 }
 
-@media (max-width: 800px) {
+@media (max-width: 900px) {
   .navInner { flex-wrap: wrap; gap: t.$space-2 t.$space-4; }
   .navLinks { order: 3; width: 100%; justify-content: space-between; }
+}
+
+@media (max-width: 800px) {
   .footerInner { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 560px) {
-  .navInner { padding: t.$space-3 t.$page-gutter-mobile; }
+  .navInner { padding: t.$space-3 t.$page-gutter-mobile; column-gap: t.$space-2; }
   .navActions { gap: t.$space-1; }
+  .consoleSlot { width: 34px; }
   .navCta { padding: t.$space-2; }
-  .navLinks { gap: t.$space-2; font-size: t.$text-base; }
+  .consoleIcon { display: block; flex-shrink: 0; }
+  .consoleText { display: none; }
+  .navLinks { grid-template-columns: minmax(0, 1fr) 96px 36px; gap: t.$space-2; font-size: t.$text-base; }
   .navLink { font-size: t.$text-base; }
   .footerInner { padding: t.$space-10 t.$page-gutter-mobile; gap: t.$space-8 t.$space-4; }
   .footerBrand { grid-column: 1 / -1; }

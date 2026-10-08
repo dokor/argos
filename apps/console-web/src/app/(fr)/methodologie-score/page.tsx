@@ -24,7 +24,7 @@ const example = [
 export default function ScoreMethodologyPage() {
   return (
     <div className={s.page} lang="fr">
-      <SiteNav fixedFrench />
+      <SiteNav />
       <main lang="fr">
         <header className={s.hero}>
           <div className={s.container}>

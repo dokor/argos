@@ -16,6 +16,7 @@ const themeInitScript = `(function(){try{var t=localStorage.getItem('argos-theme
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: "optional",
 });
 
 const geistMono = Geist_Mono({

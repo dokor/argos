@@ -4,7 +4,6 @@ import Link from "@/components/LocalizedLink";
 import { usePathname } from "next/navigation";
 import { useLang } from "@/lib/i18n/LangContext";
 import { frenchPath } from "@/lib/i18n/routes";
-import fr from "@/lib/i18n/fr.json";
 import { useIsAdmin } from "@/lib/useIsAdmin";
 import ArgosIcon from "@/components/ArgosIcon";
 import LangToggle from "@/components/LangToggle";
@@ -12,9 +11,8 @@ import ThemeToggle from "@/components/ThemeToggle";
 import s from "./SiteChrome.module.scss";
 
 /** Navigation commune à toutes les pages, sauf les rapports. */
-export default function SiteNav({ fixedFrench = false }: { fixedFrench?: boolean }) {
-  const { t: localized } = useLang();
-  const t = fixedFrench ? fr : localized;
+export default function SiteNav() {
+  const { t } = useLang();
   const pathname = frenchPath(usePathname());
   const isAdmin = useIsAdmin();
   const onResources = pathname.startsWith("/ressources") || pathname.startsWith("/guides");
@@ -39,12 +37,20 @@ export default function SiteNav({ fixedFrench = false }: { fixedFrench?: boolean
         </div>
         <div className={s.navActions}>
           <ThemeToggle />
-          {!fixedFrench && <LangToggle />}
-          {isAdmin && (
-            <Link href="/dashboard" className={s.navCta} aria-current={pathname === "/dashboard" ? "page" : undefined}>
-              {t.nav.openConsole}
-            </Link>
-          )}
+          <LangToggle />
+          <div className={s.consoleSlot}>
+            {isAdmin && (
+              <Link href="/dashboard" className={s.navCta} aria-label={t.nav.openConsole} title={t.nav.openConsole} aria-current={pathname === "/dashboard" ? "page" : undefined}>
+                <svg className={s.consoleIcon} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                  <rect x="3" y="3" width="7" height="7" rx="1" />
+                  <rect x="14" y="3" width="7" height="7" rx="1" />
+                  <rect x="3" y="14" width="7" height="7" rx="1" />
+                  <rect x="14" y="14" width="7" height="7" rx="1" />
+                </svg>
+                <span className={s.consoleText}>{t.nav.openConsole}</span>
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     </nav>

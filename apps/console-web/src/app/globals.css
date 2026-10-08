@@ -14,6 +14,9 @@
 }
 
 html {
+  /* Keep the viewport's content width stable between short and long pages. */
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
   -webkit-text-size-adjust: 100%;
   line-height: 1.5;
 }
