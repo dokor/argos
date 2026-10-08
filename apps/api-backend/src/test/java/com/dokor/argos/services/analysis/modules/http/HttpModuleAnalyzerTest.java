@@ -619,6 +619,110 @@ class HttpModuleAnalyzerTest {
     // -------------------------
 
     @Test
+    void cookieFlagsDoNotTransferBetweenCookies() throws Exception {
+        var result = analyzeCookies(List.of("good=1; Secure; HttpOnly", "session=secret-marker"));
+        var check = checkByKey(result, "http.security.cookie_flags");
+        assertEquals(AuditStatus.WARN, check.status());
+        assertEquals(2, check.details().get("cookieCount"));
+        assertEquals(1, check.details().get("missingSecureCount"));
+        assertEquals(1, check.details().get("missingHttpOnlyCount"));
+        assertEquals(List.of(Map.of("index", 1, "secure", true, "httpOnly", true),
+            Map.of("index", 2, "secure", false, "httpOnly", false)), check.details().get("cookies"));
+        assertFalse(result.toString().contains("secret-marker"));
+        assertFalse(check.toString().contains("session" + "="));
+    }
+
+    @Test
+    void cookieFlagsRequireExactStandaloneAttributesOutsideValues() {
+        for (String cookie : List.of("session=secure-httponly", "secure-httponly=1",
+            "session=1; Path=/secure/httponly", "session=1; NotSecure; X-HttpOnly",
+            "session=1; Secure=yes; HttpOnly=yes", "session=\"abc; Secure; HttpOnly\"",
+            "session=1; extension=\"abc; Secure; HttpOnly\"")) {
+            var check = HttpModuleAnalyzer.checkCookieFlags(List.of(cookie));
+            assertEquals(AuditStatus.WARN, check.status(), cookie);
+            assertEquals(false, check.details().get("secure"), cookie);
+            assertEquals(false, check.details().get("httpOnly"), cookie);
+        }
+    }
+
+    @Test
+    void complementaryCookieFlagsStillWarnAndAffectSecurityScore() throws Exception {
+        var result = analyzeCookies(List.of("a=1; Secure", "b=2; HttpOnly"));
+        var check = checkByKey(result, "http.security.cookie_flags");
+        assertEquals(AuditStatus.WARN, check.status());
+        assertEquals(1, check.details().get("missingSecureCount"));
+        assertEquals(1, check.details().get("missingHttpOnlyCount"));
+        var policy = new DefaultScorePolicy();
+        var enriched = new ScoreEnricherService(policy).enrich(List.of(result));
+        var score = new ScoreService(policy).compute(policy.version(), policy.fingerprint(), enriched);
+        var scored = score.checks().stream().filter(c -> c.key().equals("http.security.cookie_flags"))
+            .findFirst().orElseThrow();
+        assertEquals(6.0, scored.weight());
+        assertEquals(3.0, scored.score());
+    }
+
+    @Test
+    void cookieFlagsKeepExpiresCommasAndIgnoreAttributeCase() throws Exception {
+        var result = analyzeCookies(List.of(
+            "a=expires-secret; Expires=Wed, 21 Oct 2037 07:28:00 GMT; sEcUrE; hTtPoNlY",
+            "b=other-secret; HTTPONLY ; SECURE"));
+        var check = checkByKey(result, "http.security.cookie_flags");
+        assertEquals(AuditStatus.PASS, check.status());
+        assertEquals(2, check.details().get("cookieCount"));
+        assertEquals(0, check.details().get("missingSecureCount"));
+        assertEquals(0, check.details().get("missingHttpOnlyCount"));
+        assertFalse(result.toString().contains("expires-secret"));
+        assertFalse(result.toString().contains("other-secret"));
+    }
+
+    @Test
+    void cookieFlagsWithoutCookiesPassAndBlankFieldsDoNotPass() throws Exception {
+        var check = checkByKey(analyzeCookies(List.of()), "http.security.cookie_flags");
+        assertEquals(AuditStatus.PASS, check.status());
+        assertEquals(false, check.value());
+        assertEquals(AuditStatus.WARN, HttpModuleAnalyzer.checkCookieFlags(List.of("")).status());
+    }
+
+    @Test
+    void javascriptReadableCookieNeedsManualReviewAndStillRequiresSecure() {
+        var check = HttpModuleAnalyzer.checkCookieFlags(List.of(
+            "session=secret; Secure; HttpOnly", "XSRF-TOKEN=public; Secure"));
+        assertEquals(AuditStatus.WARN, check.status());
+        assertEquals(0, check.details().get("missingSecureCount"));
+        assertEquals(1, check.details().get("missingHttpOnlyCount"));
+        assertEquals("REQUIRE_ALL_REVIEW_JAVASCRIPT_EXCEPTIONS", check.details().get("httpOnlyPolicy"));
+        assertTrue(check.recommendation().contains("JavaScript"));
+        var insecure = HttpModuleAnalyzer.checkCookieFlags(List.of("XSRF-TOKEN=public; HttpOnly"));
+        assertEquals(AuditStatus.WARN, insecure.status());
+        assertEquals(1, insecure.details().get("missingSecureCount"));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void cookieValuesAreRedactedInRedirectDiagnosticsAndEnrichedContext() throws Exception {
+        HttpClient client = mock(HttpClient.class);
+        var redirect = resp(302, "", Map.of(
+            "location", List.of("http://127.0.0.1/"),
+            "set-cookie", List.of("JSESSIONID=redirect-secret; Secure; HttpOnly")), HttpClient.Version.HTTP_1_1);
+        when(client.<String>send(any(), any())).thenReturn(redirect);
+        var result = analyzeWith(client);
+        assertFalse(result.toString().contains("redirect-secret"));
+        var last = (Map<String, Object>) result.data().get("lastResponse");
+        assertEquals("JSESSIONID=[redacted]", ((Map<?, ?>) last.get("headers")).get("set-cookie"));
+        assertEquals(false, checkByKey(result, "http.security.cookie_flags").value());
+
+        var terminal = analyzeCookies(List.of("JSESSIONID=terminal-secret; Secure; HttpOnly"));
+        var context = HttpModuleAnalyzer.enrichContext(new AuditContext("https://example.com", "https://example.com", 0L), terminal);
+        assertEquals("JSESSIONID=[redacted]", context.headers().get("set-cookie"));
+        assertFalse(context.headers().toString().contains("terminal-secret"));
+    }
+
+    private AuditModuleResult analyzeCookies(List<String> cookies) throws Exception {
+        return analyzeWith(stubClient(resp(200, "<html></html>", Map.of("Set-Cookie", cookies),
+            HttpClient.Version.HTTP_2), resp(404, "missing"), resp(404, "missing")));
+    }
+
+    @Test
     void analyze_shouldWarnWhenCookiesLackSecurityFlags() throws Exception {
         HttpModuleAnalyzer a = new HttpModuleAnalyzer(stubClient(
             resp(200, "<html></html>", Map.of("set-cookie", List.of("sid=abc; Path=/")), HttpClient.Version.HTTP_2),
