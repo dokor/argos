@@ -310,7 +310,7 @@ export default function LandingPage() {
             <h2 className={s.sectionTitle}>{tl.modules.title}</h2>
             <p className={s.sectionSub}>{tl.modules.sub}</p>
           </div>
-          <div className={s.grid5}>
+          <div className={s.grid4}>
             {tl.modules.items.map((m) => (
               <div key={m.label} className={s.moduleCard}>
                 <span className={s.moduleIcon}>{m.icon}</span>

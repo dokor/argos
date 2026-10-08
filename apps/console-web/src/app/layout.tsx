@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { LangProvider } from "@/lib/i18n/LangContext";
 import { ThemeProvider } from "@/lib/theme/ThemeContext";
 import ClientErrorLogger from "@/components/ClientErrorLogger";
+import fr from "@/lib/i18n/fr.json";
 import "./globals.css";
 
 // Applique le thème avant le premier paint pour éviter un flash (FOUC) :
@@ -20,9 +21,8 @@ const geistMono = Geist_Mono({
 });
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://argos.lelouet.fr";
-const TITLE = "Argos - Analyseur de site web";
-const DESCRIPTION =
-  "Argos analyse vos headers HTTP, HTML, stack technique et performances. Rapport scoré, privé, sans login.";
+const TITLE = fr.layout.title;
+const DESCRIPTION = fr.layout.description;
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
