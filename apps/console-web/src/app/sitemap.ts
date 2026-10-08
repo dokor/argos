@@ -1,4 +1,6 @@
 import type { MetadataRoute } from "next";
+import { languageRoutes } from "@/lib/i18n/routes";
+import { languageAlternates } from "@/lib/i18n/metadata";
 
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://argos.lelouet.fr").replace(/\/+$/, "");
 
@@ -31,5 +33,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     {
       url: `${SITE_URL}/methodologie-score`,
     },
-  ];
+  ].flatMap((entry) => {
+    const path = entry.url.slice(SITE_URL.length) || "/";
+    const en = languageRoutes[path];
+    if (!en) return [entry];
+    const alternates = { languages: languageAlternates(path) };
+    return [{ ...entry, alternates }, { url: SITE_URL + en, alternates }];
+  });
 }

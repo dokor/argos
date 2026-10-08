@@ -1,0 +1,55 @@
+@use '../../../styles/tokens' as t;
+
+.root {
+  min-height: 100vh;
+  background: t.$canvas;
+  display: flex;
+  flex-direction: column;
+}
+
+.main {
+  flex: 1;
+  max-width: t.$dashboard-width;
+  margin: 0 auto;
+  padding: t.$space-8 t.$page-gutter;
+  display: grid;
+  gap: t.$space-8;
+}
+
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: t.$space-4;
+}
+
+.sectionLabel {
+  font-size: t.$text-xs;
+  font-weight: 800;
+  color: t.$text-subtle;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.formSection {
+  display: grid;
+  gap: t.$space-3;
+}
+
+// ─── Responsive ───────────────────────────────────────────────────────────────
+@media (max-width: 900px) {
+  .kpiGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .main {
+    padding: t.$space-5 t.$page-gutter-mobile;
+    gap: t.$space-5;
+  }
+
+  .kpiGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: t.$space-3;
+  }
+}

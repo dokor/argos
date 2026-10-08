@@ -1,8 +1,9 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/LocalizedLink";
 import { usePathname } from "next/navigation";
 import { useLang } from "@/lib/i18n/LangContext";
+import { frenchPath } from "@/lib/i18n/routes";
 import fr from "@/lib/i18n/fr.json";
 import { useIsAdmin } from "@/lib/useIsAdmin";
 import ArgosIcon from "@/components/ArgosIcon";
@@ -14,7 +15,7 @@ import s from "./SiteChrome.module.scss";
 export default function SiteNav({ fixedFrench = false }: { fixedFrench?: boolean }) {
   const { t: localized } = useLang();
   const t = fixedFrench ? fr : localized;
-  const pathname = usePathname();
+  const pathname = frenchPath(usePathname());
   const isAdmin = useIsAdmin();
   const onResources = pathname.startsWith("/ressources") || pathname.startsWith("/guides");
 

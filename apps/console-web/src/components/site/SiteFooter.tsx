@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/LocalizedLink";
 import { useLang } from "@/lib/i18n/LangContext";
 import fr from "@/lib/i18n/fr.json";
 import AuthorCredit from "@/components/AuthorCredit";
