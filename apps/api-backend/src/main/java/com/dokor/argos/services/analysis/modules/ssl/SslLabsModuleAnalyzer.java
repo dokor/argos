@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,16 +55,62 @@ public class SslLabsModuleAnalyzer {
             throw new ModuleUnavailableException("SSL Labs API unavailable", e);
         }
 
-        // Pick the best/first endpoint
+        // Assess every address; aggregate each control independently.
         if (result == null || result.isNull()) {
             throw new ModuleUnavailableException("SSL Labs response is empty");
         }
         JsonNode endpoints = result.path("endpoints");
-        JsonNode endpoint = endpoints.isArray() && endpoints.size() > 0 ? endpoints.get(0) : null;
-        if (endpoint == null && JsonNodes.text(result.path("status")) == null) {
+        if ((!endpoints.isArray() || endpoints.isEmpty()) && JsonNodes.text(result.path("status")) == null) {
             throw new ModuleUnavailableException("SSL Labs response has no usable measurements");
         }
 
+        long nowMs = Instant.now().toEpochMilli();
+        String hostStatus = JsonNodes.text(result.path("status"));
+        List<EndpointObservation> observations = new ArrayList<>();
+        if (endpoints.isArray()) {
+            for (JsonNode item : endpoints) {
+                String statusMessage = textField(item, "statusMessage");
+                JsonNode progress = item.get("progress");
+                boolean pending = progress != null && progress.isNumber() && progress.intValue() < 100;
+                boolean failed = "READY".equals(hostStatus) && statusMessage != null
+                    && !"Ready".equalsIgnoreCase(statusMessage);
+                var analysis = analyzeEndpoint(host, hostStatus, pending || failed ? null : item, nowMs);
+                observations.add(new EndpointObservation(item, analysis,
+                    failed ? "ASSESSMENT_FAILED" : pending ? "NOT_EVALUATED"
+                        : analysis.checks().stream().anyMatch(c -> c.status() != AuditStatus.INFO)
+                            ? "EVALUATED" : "NOT_EVALUATED"));
+            }
+        }
+        observations.sort(Comparator.comparing(EndpointObservation::identity).thenComparing(o -> o.raw().toString()));
+        // An empty response retains explicit unknown checks, with zero measured endpoints.
+        var template = analyzeEndpoint(host, hostStatus, null, nowMs);
+        List<AuditCheckResult> checks = new ArrayList<>();
+        for (var unknown : template.checks()) checks.add(aggregate(unknown, observations));
+
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("host", host);
+        data.put("status", hostStatus);
+        data.put("aggregation", "worst-measured-endpoint-v1");
+        data.put("endpoints", observations.stream().map(EndpointObservation::evidence).toList());
+        boolean partial = observations.isEmpty() || checks.stream().anyMatch(c ->
+            Boolean.TRUE.equals(c.details().get("endpointCoveragePartial")));
+        data.put("partial", partial);
+        data.put("endpointCoveragePartial", partial);
+        data.put("grade", value(checks, "ssl.grade"));
+        data.put("tls13", value(checks, "ssl.protocols.tls13"));
+        data.put("tls12", value(checks, "ssl.protocols.tls12"));
+        Object legacyDisabled = value(checks, "ssl.protocols.legacy_disabled");
+        data.put("legacyProtocolsEnabled", legacyDisabled instanceof Boolean disabled ? !disabled : null);
+        var certificate = checks.stream().filter(c -> c.key().equals("ssl.certificate.valid")).findFirst().orElseThrow();
+        data.put("certIssues", certificate.details().get("issues"));
+        data.put("hstsPresent", value(checks, "http.security.hsts"));
+        data.put("hasWarnings", observations.stream().anyMatch(o -> Boolean.TRUE.equals(o.analysis().data().get("hasWarnings"))));
+        String summary = "host=" + host + " endpoints=" + observations.size() + " partial=" + partial;
+        logger.info("SSL Labs module done: {}", summary);
+        return new AuditModuleResult(moduleId(), "SSL Labs", summary, data, checks);
+    }
+
+    private AuditModuleResult analyzeEndpoint(String host, String hostStatus, JsonNode endpoint, long nowMs) {
         List<AuditCheckResult> checks = new ArrayList<>();
 
         // ssl.grade
@@ -136,7 +183,6 @@ public class SslLabsModuleAnalyzer {
 
         // ssl.certificate.expiry_days
         if (notAfterMs > 0) {
-            long nowMs = Instant.now().toEpochMilli();
             long diffMs = notAfterMs - nowMs;
             long expiryDays = diffMs / (1000L * 60 * 60 * 24);
 
@@ -293,7 +339,7 @@ public class SslLabsModuleAnalyzer {
         // Build data
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("host", host);
-        data.put("status", JsonNodes.text(result.path("status")));
+        data.put("status", hostStatus);
         data.put("grade", grade);
         data.put("hasWarnings", hasWarnings);
         data.put("tls13", tls13);
@@ -304,11 +350,82 @@ public class SslLabsModuleAnalyzer {
         data.put("partial", endpoint == null || grade == null || certIssues < 0 || notAfterMs <= 0 || !completeProtocols || !hstsMeasured);
 
         String summary = "host=" + host + " grade=" + grade + " tls13=" + tls13 + " tls12=" + tls12;
-        logger.info("SSL Labs module done: {}", summary);
-
         return new AuditModuleResult(moduleId(), "SSL Labs", summary, data, checks);
     }
 
+    private record EndpointObservation(JsonNode raw, AuditModuleResult analysis, String assessmentState) {
+        String identity() {
+            String ip = textField(raw, "ipAddress");
+            return ip != null ? ip : "endpoint-" + Integer.toUnsignedString(raw.hashCode(), 16);
+        }
+        Map<String, Object> evidence() {
+            Map<String, Object> evidence = new LinkedHashMap<>();
+            evidence.put("endpointId", identity());
+            evidence.put("ipAddress", textField(raw, "ipAddress"));
+            evidence.put("serverName", textField(raw, "serverName"));
+            evidence.put("assessmentState", assessmentState);
+            evidence.put("statusMessage", textField(raw, "statusMessage"));
+            evidence.put("checks", analysis.checks());
+            return evidence;
+        }
+        AuditCheckResult check(String key) {
+            return analysis.checks().stream().filter(c -> key.equals(c.key())).findFirst().orElseThrow();
+        }
+    }
+
+    private static AuditCheckResult aggregate(AuditCheckResult unknown, List<EndpointObservation> endpoints) {
+        var measured = endpoints.stream().filter(o -> o.check(unknown.key()).status() != AuditStatus.INFO).toList();
+        // Worst status, then worst grade/expiry, then stable address: never input order.
+        var selected = measured.stream().min(Comparator
+            .comparingInt((EndpointObservation o) -> -statusRank(o.check(unknown.key()).status()))
+            .thenComparingDouble(o -> detailRank(o.check(unknown.key())))
+            .thenComparing(EndpointObservation::identity).thenComparing(o -> o.raw().toString())).orElse(null);
+        var base = selected == null ? unknown : selected.check(unknown.key());
+        boolean partial = measured.size() < endpoints.size() || endpoints.isEmpty();
+        // A healthy observed address cannot establish a healthy hostname while another is unknown.
+        boolean unknownConclusion = selected == null || (partial && base.status() == AuditStatus.PASS);
+        Map<String, Object> details = new LinkedHashMap<>(unknownConclusion ? Map.of() : base.details());
+        details.put("aggregation", "worst-measured-endpoint-v1");
+        details.put("endpointCount", endpoints.size());
+        details.put("measuredEndpointCount", measured.size());
+        details.put("endpointCoveragePartial", partial);
+        if (selected != null) details.put("selectedEndpoint", selected.identity());
+        details.put("endpoints", endpoints.stream().map(o -> {
+            var check = o.check(unknown.key());
+            Map<String, Object> evidence = new LinkedHashMap<>();
+            evidence.put("endpointId", o.identity());
+            evidence.put("ipAddress", textField(o.raw(), "ipAddress"));
+            evidence.put("serverName", textField(o.raw(), "serverName"));
+            evidence.put("assessmentState", o.assessmentState());
+            evidence.put("statusMessage", textField(o.raw(), "statusMessage"));
+            evidence.put("status", check.status());
+            evidence.put("value", check.value());
+            evidence.put("details", check.details());
+            return evidence;
+        }).toList());
+        String message = unknownConclusion ? unknown.message() : base.message() + " — endpoint " + selected.identity() + ".";
+        if (partial) message += " Couverture partielle : " + measured.size() + "/" + endpoints.size() + " endpoint(s) mesuré(s).";
+        return new AuditCheckResult(base.key(), base.title(), unknownConclusion ? AuditStatus.INFO : base.status(),
+            unknownConclusion ? AuditSeverity.LOW : base.severity(), !unknownConclusion && base.scorable(),
+            base.weight(), base.tags(), unknownConclusion ? null : base.value(), details, message,
+            unknownConclusion ? null : base.recommendation(), base.sources(), base.scoreRatio());
+    }
+
+    private static int statusRank(AuditStatus status) {
+        return switch (status) { case FAIL -> 3; case WARN -> 2; case PASS -> 1; case INFO -> 0; };
+    }
+
+    private static double detailRank(AuditCheckResult check) {
+        if ("ssl.certificate.expiry_days".equals(check.key()) && check.value() instanceof Number days)
+            return days.doubleValue();
+        if ("ssl.grade".equals(check.key()) && check.value() instanceof String grade)
+            return -List.of("A+", "A", "A-", "B", "C", "D", "E", "F", "T", "M").indexOf(grade);
+        return 0;
+    }
+
+    private static Object value(List<AuditCheckResult> checks, String key) {
+        return checks.stream().filter(c -> key.equals(c.key())).findFirst().orElseThrow().value();
+    }
     private static AuditCheckResult unknown(String key, String title, String message) {
         return AuditCheckResult.of(key, title, AuditStatus.INFO, AuditSeverity.LOW,
             false, 0.0, List.of(), null, Map.of(), message, null);

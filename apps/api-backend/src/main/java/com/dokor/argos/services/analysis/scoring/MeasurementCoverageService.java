@@ -6,7 +6,7 @@ import java.util.*;
 import static com.dokor.argos.services.analysis.scoring.MeasurementCoverage.*;
 
 public final class MeasurementCoverageService {
-    public static final String VERSION = "weighted-coverage-v2";
+    public static final String VERSION = "weighted-coverage-v3";
     public static final double THRESHOLD = 0.8;
     private MeasurementCoverageService() {}
     public static boolean antiBot(List<AuditModuleResult> modules) {
@@ -53,7 +53,7 @@ public final class MeasurementCoverageService {
                 }
             }
             checks.add(new Check(key, rule.businessCategory().tag(), owner, rule.weight(), decision.state(),
-                decision.reason(), decision.measured() ? "MEASURED" : "UNKNOWN", decision.module(), decision.sources()));
+                decision.reason(), "SSL_ENDPOINTS_PARTIALLY_MEASURED".equals(decision.reason()) ? "PARTIAL" : decision.measured() ? "MEASURED" : "UNKNOWN", decision.module(), decision.sources()));
         }
         var domains=Arrays.stream(ScoreDomain.values()).map(d -> aggregate(d.id(),checks.stream().filter(c -> c.domain().equals(d.id())).toList())).toList();
         var global=aggregate("global",checks);
@@ -66,6 +66,6 @@ public final class MeasurementCoverageService {
         double measured=checks.stream().filter(c -> c.state()==State.MEASURED).mapToDouble(Check::weight).sum();
         double expected=checks.stream().filter(c -> c.state()!=State.NOT_APPLICABLE).mapToDouble(Check::weight).sum();
         double ratio=expected>0?measured/expected:0;
-        return new Aggregate(key,measured,expected,ratio,measured>0,expected>0 && ratio>=THRESHOLD);
+        return new Aggregate(key,measured,expected,ratio,measured>0,expected>0 && ratio>=THRESHOLD && checks.stream().noneMatch(c -> "PARTIAL".equals(c.confidence())));
     }
 }

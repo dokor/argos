@@ -140,6 +140,6 @@ class MeasurementProvenanceTest {
         var merged = new CheckMergerService().merge(raw).getFirst().checks().getFirst();
         assertEquals(merged, mapper.readValue(mapper.writeValueAsString(merged), AuditCheckResult.class));
         assertNull(mapper.readValue(mapper.writeValueAsString(check(HSTS, AuditStatus.FAIL, Map.of())), AuditCheckResult.class).measurementProvenance());
-        assertEquals("weighted-coverage-v2", score(raw).coverage().version());
+        assertEquals("weighted-coverage-v3", score(raw).coverage().version());
     }
 }
