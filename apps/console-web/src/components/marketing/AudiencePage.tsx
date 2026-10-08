@@ -4,6 +4,7 @@ import Link from "@/components/LocalizedLink";
 import AuditForm from "@/components/AuditForm";
 import SiteFooter from "@/components/site/SiteFooter";
 import SiteNav from "@/components/site/SiteNav";
+import ChoosingArgos from "./ChoosingArgos";
 import { useLang } from "@/lib/i18n/LangContext";
 import s from "./AudiencePage.module.scss";
 
@@ -95,6 +96,8 @@ export default function AudiencePage({ audience }: { audience: Audience }) {
             </ul>
           </div>
         </section>
+
+        <ChoosingArgos audience={audience} />
 
         <section id="audit" className={`${s.section} ${s.ctaSection}`} aria-labelledby="audit-title">
           <div className={s.container}>

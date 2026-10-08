@@ -1,0 +1,27 @@
+@use '../../styles/tokens' as t;
+
+.section {
+  width: min(100% - 48px, 960px);
+  margin: t.$space-16 auto;
+  color: t.$text;
+  h2 { font-size: clamp(1.6rem, 3vw, 2.25rem); line-height: 1.25; }
+  h3 { margin: t.$space-8 0 t.$space-4; font-size: 1.2rem; }
+  p, li { line-height: 1.7; margin-block: t.$space-4; }
+  ol { padding-left: t.$space-6; }
+  a { color: t.$text; text-decoration: underline; text-underline-offset: 3px; }
+  a:focus-visible, .tableWrap:focus-visible { outline: 3px solid t.$color-indigo; outline-offset: 3px; }
+}
+
+.tableWrap {
+  overflow-x: auto;
+  border: 1px solid t.$border;
+  border-radius: t.$radius-md;
+  table { width: 100%; min-width: 640px; border-collapse: collapse; background: t.$surface; }
+  th, td { padding: t.$space-4; text-align: left; vertical-align: top; line-height: 1.65; border-bottom: 1px solid t.$border; }
+  thead { background: t.$surface-2; }
+  tr:last-child td, tr:last-child th { border-bottom: 0; }
+}
+
+.sources { font-size: 0.9rem; }
+
+@media (max-width: 680px) { .section { width: min(100% - 32px, 960px); } }

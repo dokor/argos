@@ -1,0 +1,29 @@
+@use '../../styles/tokens' as t;
+
+.page { min-height: 100vh; color: t.$text; background: t.$bg; }
+.container { width: min(100% - 48px, 960px); margin-inline: auto; }
+.hero { padding: t.$space-16 0; background: t.$canvas; border-bottom: 1px solid t.$border; }
+.hero h1 { font-size: clamp(2.2rem, 5vw, 3.9rem); line-height: 1.12; letter-spacing: -0.04em; }
+.eyebrow { font-size: 0.85rem; font-weight: 700; color: t.$text-muted; margin-bottom: t.$space-4; }
+.lead { font-size: 1.2rem; margin-block: t.$space-6; }
+.page p, .page li { line-height: 1.7; }
+.page p { margin-block: t.$space-4; }
+.page h2 { font-size: clamp(1.6rem, 3vw, 2.25rem); line-height: 1.25; margin-bottom: t.$space-5; }
+.section { margin-block: t.$space-16; }
+.notice { padding: t.$space-6; background: t.$surface-2; border-left: 3px solid t.$color-indigo; border-radius: t.$radius-md; }
+.finding { padding: t.$space-8; margin-top: t.$space-6; background: t.$surface; border: 1px solid t.$border; border-radius: t.$radius-lg; }
+.finding h3 { font-size: 1.35rem; }
+.finding h4 { margin-block: t.$space-4; }
+.comparison { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: t.$space-5; }
+.comparison pre { white-space: pre-wrap; overflow-wrap: anywhere; background: t.$surface-2; padding: t.$space-4; border-radius: t.$radius-md; line-height: 1.6; font-size: 0.9rem; }
+.finding code { overflow-wrap: anywhere; }
+.links { display: flex; flex-wrap: wrap; gap: t.$space-4 t.$space-6; }
+.page a { color: t.$text; text-decoration: underline; text-underline-offset: 3px; }
+.page a:focus-visible { outline: 3px solid t.$color-indigo; outline-offset: 3px; }
+.section ol { padding-left: t.$space-6; display: grid; gap: t.$space-4; }
+@media (max-width: 680px) {
+  .container { width: min(100% - 32px, 960px); }
+  .comparison { grid-template-columns: 1fr; }
+  .finding { padding: t.$space-5; }
+  .hero { padding-block: t.$space-12; }
+}

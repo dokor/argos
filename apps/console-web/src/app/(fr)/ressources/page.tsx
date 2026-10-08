@@ -14,6 +14,7 @@ const copy = {
     guidesTitle: "Comprendre les mesures",
     audiencesTitle: "Choisir votre contexte",
     guides: [
+      { href: "/exemple-rapport", title: "Exemple de rapport public", description: "Une fiche produit de démonstration contrôlée, trois preuves HTML et leurs corrections avant/après." },
       { href: "/guides/checklist-audit-site-web", title: "Checklist d’audit de site web", description: "Six contrôles manuels, leurs résultats attendus et les limites de l’analyse automatique." },
       { href: "/methodologie-score", title: "Méthode du score Argos", description: "Quatre domaines, contrôles pondérés, exemple chiffré et lecture des résultats partiels." },
       { href: "/ressources/audit-technique-gratuit", title: "Audit technique gratuit", description: "Méthode, contrôles HTTP, HTML, performance et sécurité, lecture du rapport et résultats partiels." },
@@ -32,6 +33,7 @@ const copy = {
     guidesTitle: "Understand the measurements",
     audiencesTitle: "Choose your context",
     guides: [
+      { href: "/exemple-rapport", title: "Public example report", description: "A controlled demo product page, three pieces of HTML evidence and before/after corrections." },
       { href: "/guides/checklist-audit-site-web", title: "Website audit checklist", description: "Six manual checks, expected results, and the limits of automated analysis." },
       { href: "/methodologie-score", title: "Argos scoring method (French)", description: "Four domains, weighted checks, a worked example and partial results." },
       { href: "/ressources/audit-technique-gratuit", title: "Free technical audit", description: "Method, HTTP, HTML, performance and security checks, reading the report and partial results." },
