@@ -36,9 +36,32 @@ class PlaywrightRuntimeClientTest {
     }
 
     @Test
-    void rejectsMissingRequiredCounter() throws Exception {
+    void acceptsMissingCounterWithoutFabricatingZero() throws Exception {
         String incomplete = RESPONSE.replace("\"failedRequests\":0,", "");
-        assertThrows(IllegalStateException.class, () -> client.parseResponse(sharedMapper.readTree(incomplete)));
+        var parsed = client.parseResponse(sharedMapper.readTree(incomplete));
+        assertNull(parsed.network().failedRequests());
+        assertEquals(0, parsed.network().status5xx());
+    }
+
+    @Test
+    void acceptsPartialSectionsAndNavigationFailure() throws Exception {
+        var parsed = client.parseResponse(sharedMapper.readTree("""
+            {"url":"https://example.com","finalUrl":"https://example.com/",
+             "timings":{"domContentLoadedMs":null,"loadMs":null},
+             "navigation":{"status":"FAILED","reason":"NAVIGATION_ERROR"},
+             "console":{"errors":2,"samples":[{"type":"error","text":"failure"}]}}
+            """));
+        assertNull(parsed.network());
+        assertNull(parsed.timings().loadMs());
+        assertEquals("FAILED", parsed.navigation().status());
+        assertEquals(2, parsed.console().errors());
+    }
+
+    @Test
+    void emptyObservationsAreUnavailable() throws Exception {
+        assertThrows(IllegalStateException.class, () -> client.parseResponse(sharedMapper.readTree("""
+            {"url":"https://example.com","finalUrl":"https://example.com/","console":{},"network":{}}
+            """)));
     }
 
     @Test

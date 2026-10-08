@@ -59,23 +59,24 @@ public class PlaywrightRuntimeClient {
     RuntimeAnalyzeResponse parseResponse(JsonNode json) throws Exception {
         RuntimeAnalyzeResponse response = responseMapper.treeToValue(json, RuntimeAnalyzeResponse.class);
         if (response == null || blank(response.url()) || blank(response.finalUrl())
-            || response.timings() == null || response.console() == null
-            || response.jsErrors() == null || response.network() == null
-            || !nonNegative(response.console().errors())
-            || !nonNegative(response.jsErrors().count())
-            || !nonNegative(response.network().requests())
-            || !nonNegative(response.network().failedRequests())
-            || !nonNegative(response.network().status4xx())
-            || !nonNegative(response.network().status5xx())
-            || !nonNegative(response.network().totalBytesEstimated())) {
+            || !response.hasMeasurements()
+            || (response.timings() != null && (!nonNegative(response.timings().domContentLoadedMs()) || !nonNegative(response.timings().loadMs())))
+            || (response.console() != null && (!nonNegative(response.console().errors()) || !nonNegative(response.console().warnings())
+                || !nonNegative(response.console().errorsFirstParty())))
+            || (response.jsErrors() != null && !nonNegative(response.jsErrors().count()))
+            || (response.network() != null && (!nonNegative(response.network().requests())
+                || !nonNegative(response.network().failedRequests()) || !nonNegative(response.network().status4xx())
+                || !nonNegative(response.network().status5xx()) || !nonNegative(response.network().totalBytesEstimated())
+                || !nonNegative(response.network().failedRequestsFirstParty()) || !nonNegative(response.network().failedRequestsThirdParty())
+                || !nonNegative(response.network().status5xxFirstParty()) || !nonNegative(response.network().status5xxThirdParty())))) {
             throw new IllegalStateException("Playwright service returned an incomplete runtime response");
         }
         return response;
     }
 
     private static boolean blank(String value) { return value == null || value.isBlank(); }
-    private static boolean nonNegative(Integer value) { return value != null && value >= 0; }
-    private static boolean nonNegative(Long value) { return value != null && value >= 0; }
+    private static boolean nonNegative(Integer value) { return value == null || value >= 0; }
+    private static boolean nonNegative(Long value) { return value == null || value >= 0; }
 
     // DTO (match la réponse Node)
     public record RuntimeAnalyzeResponse(
@@ -84,9 +85,29 @@ public class PlaywrightRuntimeClient {
         Timings timings,
         Console console,
         JsErrors jsErrors,
-        Network network
+        Network network,
+        Navigation navigation
     ) {
+        public RuntimeAnalyzeResponse(String url, String finalUrl, Timings timings, Console console, JsErrors jsErrors, Network network) {
+            this(url, finalUrl, timings, console, jsErrors, network, null);
+        }
+        public boolean hasMeasurements() {
+            return (timings != null && (timings.domContentLoadedMs() != null || timings.loadMs() != null))
+                || (console != null && (console.errors() != null || console.errorsFirstParty() != null || console.warnings() != null
+                    || hasSamples(console.samples())))
+                || (jsErrors != null && (jsErrors.count() != null || hasSamples(jsErrors.samples())))
+                || (network != null && (network.requests() != null || network.failedRequests() != null || network.status5xx() != null
+                    || network.failedRequestsFirstParty() != null || network.status5xxFirstParty() != null
+                    || network.failedRequestsThirdParty() != null || network.status5xxThirdParty() != null
+                    || network.status4xx() != null || network.totalBytesEstimated() != null || network.byType() != null
+                    || hasSamples(network.topLargest())));
+        }
+        private static boolean hasSamples(java.util.List<?> samples) {
+            return samples != null && samples.stream().anyMatch(java.util.Objects::nonNull);
+        }
     }
+
+    public record Navigation(String status, String reason) {}
 
     public record Timings(
         Long domContentLoadedMs,
