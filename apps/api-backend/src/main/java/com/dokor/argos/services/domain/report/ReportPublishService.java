@@ -43,12 +43,15 @@ public class ReportPublishService {
             new ReportDto.Site(site == null ? null : site.title(), site == null ? null : site.logoUrl(), rating),
             composed.scores(), composed.summary(), composed.issues(), composed.tech(), composed.antiBot(),
             composed.accessibilityEvidence(), composed.accessibilityCompliance());
+        Integer globalScore = publishedGlobalScore(internal, dto);
         AuditReport entity = new AuditReport();
         entity.setAuditId(audit.getId()); entity.setRunId(runId);
         entity.setDomain(Urls.host(audit.getNormalizedUrl(), audit.getNormalizedUrl()));
         entity.setTargetUrl(audit.getNormalizedUrl());
         entity.setSiteTitle(dto.site() == null ? null : dto.site().title());
         entity.setLogoUrl(dto.site() == null ? null : dto.site().logoUrl());
+        entity.setGlobalScore(globalScore);
+        entity.setScoringVersion(globalScore == null ? null : internal.score().scoringVersion());
         try { entity.setReportJson(mapper.writeValueAsString(dto)); }
         catch (Exception error) { throw new IllegalStateException("Report serialization failed", error); }
         entity.setCreatedAt(Instant.now());
@@ -70,5 +73,23 @@ public class ReportPublishService {
             }
             return reportId;
         });
+    }
+
+    static Integer publishedGlobalScore(AuditReportJson internal, ReportDto report) {
+        if (report.scores() == null) return null;
+        var score = internal.score();
+        var calculation = report.scores().calculation();
+        if (calculation != null && (score == null
+            || calculation.scoringVersion() != score.scoringVersion()
+            || !Objects.equals(calculation.scoringFingerprint(), score.scoringFingerprint()))) {
+            throw new IllegalStateException("Published scoring method differs from the audit score");
+        }
+        if (!Boolean.TRUE.equals(report.scores().globalAvailable()) || calculation == null) return null;
+        int value = report.scores().global();
+        if (value < 0 || value > 100 || score == null || score.global() == null
+            || value != (int) Math.round(Math.max(0, Math.min(1, score.global().ratio())) * 100)) {
+            throw new IllegalStateException("Published global score differs from the audit score");
+        }
+        return value;
     }
 }

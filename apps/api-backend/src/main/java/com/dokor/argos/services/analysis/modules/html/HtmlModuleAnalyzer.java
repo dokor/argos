@@ -1,17 +1,24 @@
 package com.dokor.argos.services.analysis.modules.html;
 
+import com.dokor.argos.services.analysis.AuditModule;
+import com.dokor.argos.services.analysis.ModuleUnavailableException;
 import com.dokor.argos.services.analysis.model.AuditCheckResult;
 import com.dokor.argos.services.analysis.model.AuditContext;
-import com.dokor.argos.services.analysis.model.AuditModuleAnalyzer;
 import com.dokor.argos.services.analysis.model.AuditModuleResult;
 import com.dokor.argos.services.analysis.model.enums.AuditSeverity;
 import com.dokor.argos.services.analysis.model.enums.AuditStatus;
+import com.dokor.argos.services.domain.audit.UrlNormalizer;
 import jakarta.inject.Singleton;
 import org.slf4j.Logger;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.DocumentType;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
+import java.net.URI;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.function.Predicate;
 
 /**
  * Analyse "HTML" d'une URL.
@@ -20,78 +27,65 @@ import java.util.regex.Pattern;
  * et transmis via l'{@link com.dokor.argos.services.analysis.model.AuditContext}.
  * Il ne refait pas de fetch HTTP - il exploite uniquement le body déjà disponible dans le contexte.
  * <p>
- * 👉 Dans l'immédiat, on expose une méthode analyzeHtml(...) utilisée par l'orchestrateur.
- * Et la méthode analyze(...) retourne un module "vide" + warning si l'orchestrateur n'a pas fourni le HTML.
- * <p>
- * Lorsqu'on passera à l'orchestrator, je te propose d'introduire un AuditContext (inputUrl, normalizedUrl, httpResult, html, headers...)
- * et de faire évoluer l'interface.
+ * Le contexte enrichi par HTTP apporte le HTML à analyze(...).
  */
 @Singleton
-public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
+public class HtmlModuleAnalyzer {
 
-    // Regex simples (MVP). Pour plus robuste : jsoup plus tard.
-    private static final Pattern TITLE_PATTERN = Pattern.compile("(?is)<title\\b[^>]*>(.*?)</title>");
-    private static final Pattern META_DESC_PATTERN = Pattern.compile("(?is)<meta\\b[^>]*name\\s*=\\s*['\"]description['\"][^>]*>");
-    private static final Pattern META_ROBOTS_PATTERN = Pattern.compile("(?is)<meta\\b[^>]*name\\s*=\\s*['\"]robots['\"][^>]*>");
-    private static final Pattern CANONICAL_PATTERN = Pattern.compile("(?is)<link\\b[^>]*rel\\s*=\\s*['\"]canonical['\"][^>]*>");
-    private static final Pattern H1_PATTERN = Pattern.compile("(?is)<h1\\b[^>]*>(.*?)</h1>");
-    private static final Pattern LANG_PATTERN = Pattern.compile("(?is)<html\\b[^>]*lang\\s*=\\s*['\"]([^'\"]+)['\"][^>]*>");
-    private static final Pattern VIEWPORT_PATTERN = Pattern.compile("(?is)<meta\\b[^>]*name\\s*=\\s*['\"]viewport['\"][^>]*>");
-    // Doctype HTML5 (déclenche le mode standards). Présent dans le HTML initial, y
-    // compris pour une SPA → sûr sur les contenus dynamiques (issue #152).
-    private static final Pattern DOCTYPE_HTML5_PATTERN = Pattern.compile("(?i)<!doctype\\s+html\\s*>");
-    // Déclaration d'encodage : <meta charset=...> ou http-equiv Content-Type ...charset=.
-    private static final Pattern CHARSET_PATTERN = Pattern.compile("(?is)<meta\\b[^>]*charset\\s*=");
-    private static final Pattern OG_TITLE_PATTERN = Pattern.compile("(?is)<meta\\b[^>]*property\\s*=\\s*['\"]og:title['\"][^>]*>");
-    private static final Pattern OG_DESC_PATTERN = Pattern.compile("(?is)<meta\\b[^>]*property\\s*=\\s*['\"]og:description['\"][^>]*>");
-    private static final Pattern OG_IMAGE_PATTERN = Pattern.compile("(?is)<meta\\b[^>]*property\\s*=\\s*['\"]og:image['\"][^>]*>");
-    private static final Pattern TW_CARD_PATTERN = Pattern.compile("(?is)<meta\\b[^>]*name\\s*=\\s*['\"]twitter:card['\"][^>]*>");
-    private static final Pattern SCRIPT_PATTERN = Pattern.compile("(?is)<script\\b[^>]*>");
-    private static final Pattern IMG_PATTERN = Pattern.compile("(?is)<img\\b[^>]*>");
-    private static final Pattern IMG_ALT_MISSING_PATTERN = Pattern.compile("(?is)<img\\b(?![^>]*\\balt\\s*=)[^>]*>");
-    private static final Pattern A_PATTERN = Pattern.compile("(?is)<a\\b[^>]*>");
-    private static final Pattern A_NO_HREF_PATTERN = Pattern.compile("(?is)<a\\b(?![^>]*\\bhref\\s*=)[^>]*>");
-
-    @Override
     public String moduleId() {
-        return "html";
+        return AuditModule.HTML.id();
     }
 
     /**
-     * Méthode MVP pour analyser du HTML fourni par l'orchestrateur.
+     * Analyse structurelle du HTML fourni par l'orchestrateur.
      */
     public AuditModuleResult analyzeHtml(String inputUrl, String normalizedUrl, String finalUrl, String html, Logger logger) {
         long start = System.currentTimeMillis();
 
         if (html == null || html.isBlank()) {
-            logger.warn("HTML module: empty HTML input url={} normalizedUrl={}", inputUrl, normalizedUrl);
-            return emptyHtmlModule(inputUrl, normalizedUrl, finalUrl, "Le HTML est vide ou absent.");
+            logger.warn("HTML module: empty HTML input url={} normalizedUrl={}", UrlNormalizer.sanitizeForLog(inputUrl), UrlNormalizer.sanitizeForLog(normalizedUrl));
+            throw new ModuleUnavailableException("Le HTML est vide ou absent.");
         }
 
-        String title = firstGroup(TITLE_PATTERN, html);
-        String lang = firstGroup(LANG_PATTERN, html);
+        // Parse the supplied snapshot only: no network fetch and no script execution.
+        Document document = Jsoup.parse(html, finalUrl != null ? finalUrl : normalizedUrl);
+        String title = textOf(document.selectFirst("title"));
+        Element root = document.selectFirst("html");
+        String lang = root != null && root.hasAttr("lang") ? clean(root.attr("lang")) : null;
 
-        boolean hasMetaDesc = META_DESC_PATTERN.matcher(html).find();
-        boolean hasRobots = META_ROBOTS_PATTERN.matcher(html).find();
-        boolean hasCanonical = CANONICAL_PATTERN.matcher(html).find();
-        boolean hasViewport = VIEWPORT_PATTERN.matcher(html).find();
-        boolean hasDoctype = DOCTYPE_HTML5_PATTERN.matcher(html).find();
-        boolean hasCharset = CHARSET_PATTERN.matcher(html).find();
+        AttributeObservation description = observe(namedMeta(document, "name", "description"), "content", value -> true);
+        AttributeObservation canonical = observe(document.select("link").stream()
+            .filter(e -> Arrays.stream(e.attr("rel").split("\\s+")).anyMatch("canonical"::equalsIgnoreCase)).toList(),
+            "href", HtmlModuleAnalyzer::usableHttpUrl);
+        AttributeObservation viewport = observe(namedMeta(document, "name", "viewport"), "content", HtmlModuleAnalyzer::usableViewport);
+        boolean hasMetaDesc = description.usable();
+        boolean hasCanonical = canonical.usable();
+        boolean hasViewport = viewport.usable();
+        boolean hasRobots = !namedMeta(document, "name", "robots").isEmpty();
+        boolean hasDoctype = document.childNodes().stream().filter(DocumentType.class::isInstance)
+            .map(DocumentType.class::cast).anyMatch(d -> "html".equalsIgnoreCase(d.name())
+                && d.publicId().isBlank() && d.systemId().isBlank());
+        boolean hasCharset = document.select("meta").stream().anyMatch(e ->
+            (e.hasAttr("charset") && !clean(e.attr("charset")).isBlank())
+                || ("content-type".equalsIgnoreCase(e.attr("http-equiv"))
+                    && Arrays.stream(e.attr("content").split(";")).anyMatch(HtmlModuleAnalyzer::charsetParameter)));
 
-        boolean hasOgTitle = OG_TITLE_PATTERN.matcher(html).find();
-        boolean hasOgDesc = OG_DESC_PATTERN.matcher(html).find();
-        boolean hasOgImage = OG_IMAGE_PATTERN.matcher(html).find();
-        boolean hasTwitterCard = TW_CARD_PATTERN.matcher(html).find();
+        boolean hasOgTitle = usableMeta(document, "property", "og:title");
+        boolean hasOgDesc = usableMeta(document, "property", "og:description");
+        boolean hasOgImage = usableMeta(document, "property", "og:image");
+        boolean hasTwitterCard = usableMeta(document, "name", "twitter:card");
 
-        int h1Count = countMatches(H1_PATTERN, html);
-        String firstH1 = firstGroup(H1_PATTERN, html);
-
-        int scriptCount = countMatches(SCRIPT_PATTERN, html);
-        int imgCount = countMatches(IMG_PATTERN, html);
-        int imgAltMissingCount = countMatches(IMG_ALT_MISSING_PATTERN, html);
-
-        int aCount = countMatches(A_PATTERN, html);
-        int aNoHrefCount = countMatches(A_NO_HREF_PATTERN, html);
+        Elements headings = document.select("h1");
+        int h1Count = headings.size();
+        String firstH1 = textOf(headings.first());
+        int scriptCount = document.select("script").size();
+        Elements images = document.select("img");
+        int imgCount = images.size();
+        // Empty alt is intentional for decorative images; data-alt is a separate attribute.
+        int imgAltMissingCount = (int) images.stream().filter(e -> !e.hasAttr("alt")).count();
+        Elements anchors = document.select("a");
+        int aCount = anchors.size();
+        int aNoHrefCount = (int) anchors.stream().filter(e -> !e.hasAttr("href")).count();
 
         long durationMs = System.currentTimeMillis() - start;
 
@@ -101,10 +95,10 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
         checks.add(checkTitle(title));
 
         // 2) Meta description
-        checks.add(checkMetaDescription(hasMetaDesc));
+        checks.add(checkMetaDescription(description));
 
         // 3) Canonical
-        checks.add(checkCanonical(hasCanonical));
+        checks.add(checkCanonical(canonical));
 
         // 4) H1 presence and count
         checks.add(checkH1Count(h1Count, firstH1));
@@ -113,7 +107,7 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
         checks.add(checkHtmlLang(lang));
 
         // 6) viewport (mobile)
-        checks.add(checkViewport(hasViewport));
+        checks.add(checkViewport(viewport));
 
         // 6b) Doctype HTML5 (mode standards) — issue #152
         checks.add(checkDoctype(hasDoctype));
@@ -203,6 +197,9 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
         data.put("hasMetaDescription", hasMetaDesc);
         data.put("hasCanonical", hasCanonical);
         data.put("hasViewport", hasViewport);
+        data.put("description", description.details());
+        data.put("canonical", canonical.details());
+        data.put("viewport", viewport.details());
         data.put("hasOgTitle", hasOgTitle);
         data.put("hasOgDescription", hasOgDesc);
         data.put("hasOgImage", hasOgImage);
@@ -233,12 +230,8 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
     }
 
     /**
-     * Implémentation AuditModuleAnalyzer : MVP.
-     * Comme l'interface ne fournit pas encore l'HTML, on retourne un module "vide" avec un warning.
-     * <p>
-     * 👉 On corrigera ça dans l'orchestrator (en introduisant un AuditContext).
+     * Analyse le HTML du contexte.
      */
-    @Override
     public AuditModuleResult analyze(AuditContext context, Logger logger) {
         logger.debug("HTML module called");
         return analyzeHtml(context.inputUrl(), context.normalizedUrl(), context.finalUrl(), context.body(), logger);
@@ -293,7 +286,8 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
         );
     }
 
-    private static AuditCheckResult checkMetaDescription(boolean present) {
+    private static AuditCheckResult checkMetaDescription(AttributeObservation observation) {
+        boolean present = observation.usable();
         return AuditCheckResult.of(
             "html.meta.description.present",
             "Présence de la meta description",
@@ -303,13 +297,14 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
             0.0,            // weight filled later
             List.of(),      // tags filled later
             present,
-            Map.of("present", present),
-            present ? "La meta description est présente." : "La meta description est absente.",
+            observation.details(),
+            present ? "La meta description est présente." : "La meta description est absente ou son contenu est vide.",
             present ? null : "Ajoutez une meta description pour améliorer l'aperçu dans les résultats de recherche."
         );
     }
 
-    private static AuditCheckResult checkCanonical(boolean present) {
+    private static AuditCheckResult checkCanonical(AttributeObservation observation) {
+        boolean present = observation.usable();
         return AuditCheckResult.of(
             "html.link.canonical.present",
             "Présence du lien canonical",
@@ -319,8 +314,8 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
             0.0,            // weight filled later
             List.of(),      // tags filled later
             present,
-            Map.of("present", present),
-            present ? "Le lien canonical est présent." : "Le lien canonical est absent.",
+            observation.details(),
+            present ? "Le lien canonical est présent." : "Le lien canonical est absent, vide ou invalide.",
             present ? null : "Ajoutez un lien canonical pour limiter le contenu dupliqué."
         );
     }
@@ -384,7 +379,8 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
         );
     }
 
-    private static AuditCheckResult checkViewport(boolean present) {
+    private static AuditCheckResult checkViewport(AttributeObservation observation) {
+        boolean present = observation.usable();
         return AuditCheckResult.of(
             "html.meta.viewport.present",
             "Présence de la balise meta viewport",
@@ -394,8 +390,8 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
             0.0,            // weight filled later
             List.of(),      // tags filled later
             present,
-            Map.of("present", present),
-            present ? "La balise meta viewport est présente." : "La balise meta viewport est absente.",
+            observation.details(),
+            present ? "La balise meta viewport est présente." : "La balise meta viewport est absente, vide ou inexploitable.",
             present ? null : "Ajoutez <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"> pour l'affichage mobile."
         );
     }
@@ -601,56 +597,72 @@ public class HtmlModuleAnalyzer implements AuditModuleAnalyzer {
     // Helpers
     // -------------------------
 
-    private static AuditModuleResult emptyHtmlModule(String inputUrl, String normalizedUrl, String finalUrl, String reason) {
-        return new AuditModuleResult(
-            "html",
-            "HTML",
-            "Analyse HTML indisponible : " + reason,
-            Map.of(
-                "inputUrl", inputUrl,
-                "normalizedUrl", normalizedUrl,
-                "finalUrl", finalUrl != null ? finalUrl : "unknown",
-                "reason", reason
-            ),
-            List.of(
-                AuditCheckResult.of(
-                    "html.available",
-                    "Disponibilité du HTML",
-                    AuditStatus.WARN,
-                    AuditSeverity.MEDIUM,
-                    false,          // scorable filled later
-                    0.0,            // weight filled later
-                    List.of(),      // tags filled later
-                    false,
-                    Map.of("reason", reason),
-                    "L'analyse HTML n'a pas pu s'exécuter.",
-                    "Vérifiez que l'orchestrateur fournit le contenu HTML (fetch ou réutilisation du body du module HTTP)."
-                )
-            )
-        );
+    private record AttributeObservation(boolean elementPresent, boolean attributePresent, String value, boolean usable) {
+        Map<String, Object> details() {
+            Map<String, Object> details = new LinkedHashMap<>();
+            details.put("present", usable);
+            details.put("elementPresent", elementPresent);
+            details.put("attributePresent", attributePresent);
+            details.put("value", value);
+            details.put("usable", usable);
+            details.put("state", !elementPresent ? "ABSENT" : !attributePresent ? "ATTRIBUTE_MISSING"
+                : value.isBlank() ? "EMPTY" : usable ? "USABLE" : "INVALID");
+            return details;
+        }
     }
 
-    private static String firstGroup(Pattern pattern, String html) {
-        Matcher m = pattern.matcher(html);
-        if (!m.find()) return null;
-        String value = m.group(1);
-        return value != null ? stripTags(value).trim() : null;
+    private static AttributeObservation observe(List<Element> elements, String attribute, Predicate<String> validator) {
+        AttributeObservation first = new AttributeObservation(false, false, null, false);
+        for (Element element : elements) {
+            boolean present = element.hasAttr(attribute);
+            String value = present ? clean(element.attr(attribute)) : null;
+            String validationValue = "href".equals(attribute) ? element.absUrl(attribute) : value;
+            boolean usable = present && !value.isBlank() && validator.test(validationValue);
+            var observation = new AttributeObservation(true, present, value, usable);
+            if (usable) return observation;
+            if (!first.elementPresent()) first = observation;
+        }
+        return first;
     }
 
-    private static int countMatches(Pattern pattern, String html) {
-        int count = 0;
-        Matcher m = pattern.matcher(html);
-        while (m.find()) count++;
-        return count;
+    private static List<Element> namedMeta(Document document, String attribute, String value) {
+        return document.select("meta").stream().filter(e -> value.equalsIgnoreCase(clean(e.attr(attribute)))).toList();
     }
 
-    /**
-     * MVP: retire grossièrement les tags éventuels.
-     * Si tu veux plus précis, on passera sur jsoup.
-     */
-    private static String stripTags(String s) {
-        if (s == null) return null;
-        return s.replaceAll("(?is)<[^>]+>", " ");
+    private static boolean usableMeta(Document document, String attribute, String value) {
+        return observe(namedMeta(document, attribute, value), "content", ignored -> true).usable();
+    }
+
+    private static String clean(String value) { return value.replace('\u00a0', ' ').strip(); }
+    private static String textOf(Element element) { return element == null ? null : element.text(); }
+
+    private static boolean charsetParameter(String value) {
+        String[] parameter = value.split("=", 2);
+        return parameter.length == 2 && "charset".equalsIgnoreCase(parameter[0].trim())
+            && !parameter[1].replace("\"", "").replace("'", "").isBlank();
+    }
+
+    private static boolean usableHttpUrl(String value) {
+        try {
+            URI uri = URI.create(value);
+            return ("https".equalsIgnoreCase(uri.getScheme()) || "http".equalsIgnoreCase(uri.getScheme()))
+                && uri.getHost() != null && uri.getUserInfo() == null;
+        } catch (IllegalArgumentException invalid) { return false; }
+    }
+
+    private static boolean usableViewport(String value) {
+        for (String directive : value.split("[,;]")) {
+            String[] pair = directive.trim().toLowerCase(Locale.ROOT).split("=", 2);
+            if (pair.length != 2) continue;
+            String key = pair[0].trim(), setting = pair[1].trim();
+            if (("width".equals(key) && "device-width".equals(setting))
+                || ("height".equals(key) && "device-height".equals(setting))) return true;
+            if (Set.of("width", "height", "initial-scale", "minimum-scale", "maximum-scale").contains(key)) {
+                try { double number = Double.parseDouble(setting); if (Double.isFinite(number) && number > 0) return true; }
+                catch (NumberFormatException ignored) { }
+            }
+        }
+        return false;
     }
 
     private static String buildSummary(String title, int h1Count, boolean metaDesc, boolean canonical, long durationMs) {

@@ -56,7 +56,7 @@ try {
       assert.ok(report.scores.coverage.checks.some(check=>check.module==='http' && check.state==='MEASURED'));
     }
     if(scenario==='antibot') {
-      assert.equal(report.antiBot.detected,true);assert.equal(report.scores.coverage.provisional,true);
+      assert.ok(report.antiBot,'Explicit challenge evidence must be published');assert.equal(report.antiBot.detected,true);assert.equal(report.scores.coverage.provisional,true);
       assert.ok(report.scores.coverage.checks.some(check=>check.state==='BLOCKED_BY_ANTIBOT'));
       assert.ok(!report.issues.some(issue=>['html','runtime','lighthouse','tech'].includes(issue.module)),'Challenge page must not create site findings');
     }

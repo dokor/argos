@@ -1,5 +1,6 @@
 package com.dokor.argos.services.analysis.modules.zap;
 
+import com.dokor.argos.services.analysis.ModuleUnavailableException;
 import com.dokor.argos.services.analysis.model.AuditCheckResult;
 import com.dokor.argos.services.analysis.model.AuditContext;
 import com.dokor.argos.services.analysis.model.AuditModuleResult;
@@ -35,6 +36,11 @@ class ZapModuleAnalyzerTest {
 
     private static Optional<AuditCheckResult> check(AuditModuleResult result, String key) {
         return result.checks().stream().filter(c -> key.equals(c.key())).findFirst();
+    }
+
+    @Test
+    void missingAlertsArrayIsUnavailable() {
+        assertThrows(ModuleUnavailableException.class, () -> analyze("{}"));
     }
 
     @Test

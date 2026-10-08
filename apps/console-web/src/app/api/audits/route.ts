@@ -104,7 +104,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Request body must be a JSON object" }, { status: 400 });
   }
 
-  const { url } = body as Record<string, unknown>;
+  const { url, sourceRoute } = body as Record<string, unknown>;
+  // A fixed allowlist keeps untrusted values out of structured logs.
+  const auditSource = sourceRoute === "/guides/checklist-audit-site-web"
+    ? sourceRoute
+    : undefined;
   if (typeof url !== "string" || url.trim() === "") {
     logger.warn("audit_bff_missing_url", {
       action: "create_audit",
@@ -171,6 +175,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         durationMs: Date.now() - startedAt,
         statusCode: backendRes.status,
         url: sanitizeUrl(trimmed),
+        ...(auditSource ? { sourceRoute: auditSource } : {}),
       },
     });
   } else {

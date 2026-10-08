@@ -36,7 +36,16 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  experimental: { globalNotFound: true },
   reactCompiler: true,
+  async redirects() {
+    return [
+      { source: "/accessibilite-numerique", destination: "/ressources/accessibilite-numerique", permanent: true },
+      { source: "/audit-technique-gratuit", destination: "/ressources/audit-technique-gratuit", permanent: true },
+      { source: "/audit-site-pme", destination: "/ressources/audit-site-pme", permanent: true },
+      { source: "/audit-site-ecommerce", destination: "/ressources/audit-site-ecommerce", permanent: true },
+    ];
+  },
   async headers() {
     return [
       {

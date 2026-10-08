@@ -30,10 +30,7 @@ public record AuditListItemResponse(
     @Schema(example = "https://example.com/")
     String reportUrl,
 
-    /**
-     * JSON complet du report si dispo.
-     * (MVP) On le renvoie brut (String) pour affichage/debug.
-     */
-    String resultJson
+    /** Published score, or null for unavailable and pre-migration reports. */
+    Integer globalScore
 ) {
 }

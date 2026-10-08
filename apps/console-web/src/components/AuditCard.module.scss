@@ -1,13 +1,13 @@
 @use '../styles/tokens' as t;
 
 .card {
-  padding: 18px t.$space-5;
+  padding: t.$space-5;
   border: 1px solid t.$border;
   border-radius: t.$radius-xl;
   background: t.$surface;
   box-shadow: t.$shadow-sm;
   display: grid;
-  gap: 14px;
+  gap: t.$space-4;
 }
 
 .header {
@@ -20,7 +20,7 @@
 
 .headerLeft {
   display: grid;
-  gap: 5px;
+  gap: t.$space-1;
   min-width: 0;
   flex: 1;
 }
@@ -133,7 +133,7 @@
 
 .actions {
   display: flex;
-  gap: 10px;
+  gap: t.$space-3;
   flex-wrap: wrap;
   align-items: center;
   padding-top: t.$space-1;
@@ -146,7 +146,8 @@
 }
 
 .copyBtn {
-  padding: 7px t.$space-3;
+  padding: t.$space-3 t.$space-4;
+  min-height: 44px;
   border-radius: t.$radius-sm;
   border: 1px solid t.$text;
   background: t.$text;
@@ -186,7 +187,7 @@
   margin: t.$space-2 0 0;
   padding: 0;
   display: grid;
-  gap: 6px;
+  gap: t.$space-2;
 }
 
 .historyRow {
@@ -194,7 +195,7 @@
   align-items: center;
   gap: t.$space-3;
   flex-wrap: wrap;
-  padding: 6px 8px;
+  padding: t.$space-2 t.$space-3;
   border-radius: t.$radius-sm;
   background: t.$surface-2;
 }

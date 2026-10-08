@@ -8,10 +8,10 @@
 .inner {
   max-width: t.$container-width;
   margin: 0 auto;
-  padding: 48px t.$space-6;
+  padding: t.$space-12 t.$page-gutter;
   display: flex;
   align-items: center;
-  gap: 40px;
+  gap: t.$space-10;
   flex-wrap: wrap;
 }
 
@@ -47,7 +47,8 @@
   color: t.$color-white;
   border: none;
   border-radius: t.$radius-md;
-  padding: 11px 22px;
+  padding: t.$space-3 t.$space-5;
+  min-height: 44px;
   font-size: t.$text-lg;
   font-weight: 600;
   cursor: pointer;
@@ -66,7 +67,8 @@
   color: t.$color-slate-300;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: t.$radius-md;
-  padding: 10px 20px;
+  padding: t.$space-3 t.$space-5;
+  min-height: 44px;
   font-size: t.$text-lg;
   font-weight: 500;
   cursor: pointer;
@@ -81,6 +83,22 @@
   font-size: t.$text-xs;
   color: t.$color-slate-600;
   width: 100%;
+}
+
+.author {
+  width: 100%;
+  margin: 0;
+  text-align: center;
+  font-size: t.$text-base;
+  color: t.$color-slate-300;
+}
+
+.authorLink {
+  color: t.$color-slate-100;
+  text-underline-offset: 3px;
+
+  &:hover { color: t.$color-white; }
+  &:focus-visible { outline: 2px solid t.$color-white; outline-offset: 3px; }
 }
 
 .soon {
@@ -109,7 +127,7 @@
   .inner {
     flex-direction: column;
     align-items: flex-start;
-    padding: 36px t.$space-4;
+    padding: t.$space-8 t.$page-gutter-mobile;
     gap: t.$space-5;
   }
 

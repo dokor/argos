@@ -2,6 +2,7 @@ package com.dokor.argos.services.domain.audit;
 
 import com.dokor.argos.db.dao.AuditRunDao;
 import com.dokor.argos.db.generated.AuditRun;
+import com.dokor.argos.services.analysis.AuditModule;
 import com.dokor.argos.services.domain.audit.model.ModuleStatus;
 import com.dokor.argos.services.token.TokenService;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -22,6 +23,17 @@ import static org.mockito.Mockito.*;
  * corrompu.
  */
 class AuditRunServiceTest {
+
+    @Test
+    void catalogueControlsExecutionOrderAndInitialProgress() {
+        var modules = AuditModule.ordered();
+        assertEquals(List.of("http", "html", "runtime", "lighthouse", "observatory", "ssl", "zap", "tech"),
+            modules.stream().map(AuditModule::id).toList());
+        assertEquals(modules.stream()
+                .map(module -> new ModuleStatus(module.id(), module.progressLabel(), ModuleStatus.PENDING)).toList(),
+            AuditRunService.INITIAL_MODULE_STATUSES);
+        assertEquals(AuditModule.HTTP, modules.getFirst());
+    }
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -131,5 +143,40 @@ class AuditRunServiceTest {
 
     private static ModuleStatus find(List<ModuleStatus> list, String id) {
         return list.stream().filter(m -> m.id().equals(id)).findFirst().orElseThrow();
+    }
+
+    @Test
+    void claimNextQueuedRunReturnsEmptyWithoutTryingToClaimWhenQueueIsEmpty() {
+        AuditRunDao dao = mock(AuditRunDao.class);
+        when(dao.findNextQueuedRun()).thenReturn(Optional.empty());
+
+        assertTrue(newService(dao, mock(TokenService.class)).claimNextQueuedRun().isEmpty());
+        verify(dao, never()).claimRun(anyLong(), anyString(), any());
+    }
+
+    @Test
+    void claimNextQueuedRunReturnsSelectedRunAfterSuccessfulClaim() {
+        AuditRunDao dao = mock(AuditRunDao.class);
+        AuditRun queued = new AuditRun();
+        queued.setId(42L);
+        when(dao.findNextQueuedRun()).thenReturn(Optional.of(queued));
+        when(dao.claimRun(eq(42L), anyString(), any(Instant.class))).thenReturn(true);
+
+        assertSame(queued, newService(dao, mock(TokenService.class)).claimNextQueuedRun().orElseThrow());
+        ArgumentCaptor<String> claim = ArgumentCaptor.forClass(String.class);
+        verify(dao).claimRun(eq(42L), claim.capture(), any(Instant.class));
+        assertTrue(claim.getValue().matches("[0-9a-f]{32}"));
+    }
+
+    @Test
+    void claimNextQueuedRunReturnsEmptyWhenAnotherWorkerWinsTheRace() {
+        AuditRunDao dao = mock(AuditRunDao.class);
+        AuditRun queued = new AuditRun();
+        queued.setId(42L);
+        when(dao.findNextQueuedRun()).thenReturn(Optional.of(queued));
+        when(dao.claimRun(eq(42L), anyString(), any(Instant.class))).thenReturn(false);
+
+        assertTrue(newService(dao, mock(TokenService.class)).claimNextQueuedRun().isEmpty());
+        verify(dao).claimRun(eq(42L), anyString(), any(Instant.class));
     }
 }

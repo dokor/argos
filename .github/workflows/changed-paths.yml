@@ -1,0 +1,49 @@
+name: Detect changed paths
+
+on:
+  workflow_call:
+    outputs:
+      api:
+        value: ${{ jobs.detect.outputs.api }}
+      frontend:
+        value: ${{ jobs.detect.outputs.frontend }}
+      playwright:
+        value: ${{ jobs.detect.outputs.playwright }}
+      lighthouse:
+        value: ${{ jobs.detect.outputs.lighthouse }}
+      e2e:
+        value: ${{ jobs.detect.outputs.e2e }}
+      dependency_frontend:
+        value: ${{ jobs.detect.outputs.dependency_frontend }}
+      dependency_playwright:
+        value: ${{ jobs.detect.outputs.dependency_playwright }}
+      dependency_lighthouse:
+        value: ${{ jobs.detect.outputs.dependency_lighthouse }}
+
+permissions:
+  contents: read
+
+jobs:
+  detect:
+    name: Detect changed paths
+    runs-on: ubuntu-24.04
+    outputs:
+      api: ${{ steps.paths.outputs.api }}
+      frontend: ${{ steps.paths.outputs.frontend }}
+      playwright: ${{ steps.paths.outputs.playwright }}
+      lighthouse: ${{ steps.paths.outputs.lighthouse }}
+      e2e: ${{ steps.paths.outputs.e2e }}
+      dependency_frontend: ${{ steps.paths.outputs.dependency_frontend }}
+      dependency_playwright: ${{ steps.paths.outputs.dependency_playwright }}
+      dependency_lighthouse: ${{ steps.paths.outputs.dependency_lighthouse }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - id: paths
+        name: Classify changed paths
+        run: node scripts/ci/changed-paths.mjs
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}

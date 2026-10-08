@@ -2,7 +2,9 @@ package com.dokor.argos.webservices.api.audits;
 
 import com.coreoz.plume.jersey.security.permission.PublicApi;
 import com.dokor.argos.services.domain.audit.AuditService;
+import com.dokor.argos.services.domain.audit.AuditQueryService;
 import com.dokor.argos.services.domain.audit.UrlNormalizer;
+import com.dokor.argos.services.domain.audit.errors.NotFoundException;
 import com.dokor.argos.services.domain.report.ReportReadService;
 import com.dokor.argos.webservices.api.audits.data.CreateAuditRequest;
 import io.swagger.v3.oas.annotations.Operation;
@@ -44,12 +46,15 @@ public class AuditsWs {
     private static final Logger logger = LoggerFactory.getLogger(AuditsWs.class);
 
     private final AuditService auditService;
+    private final AuditQueryService auditQueryService;
     private final AdminReadAccess adminReadAccess;
     private final ReportReadService reportReadService;
 
     @Inject
-    public AuditsWs(AuditService auditService, AdminReadAccess adminReadAccess, ReportReadService reportReadService) {
+    public AuditsWs(AuditService auditService, AuditQueryService auditQueryService,
+                    AdminReadAccess adminReadAccess, ReportReadService reportReadService) {
         this.auditService = auditService;
+        this.auditQueryService = auditQueryService;
         this.adminReadAccess = adminReadAccess;
         this.reportReadService = reportReadService;
     }
@@ -78,7 +83,7 @@ public class AuditsWs {
         logger.info("Create audit requested: url={}", sanitizeForLog(request.url()));
 
         try {
-            return Response.ok(auditService.createAudit(request)).build();
+            return Response.ok(AuditResponseMapper.created(auditService.createAudit(request.url()))).build();
         } catch (IllegalArgumentException e) {
             logger.warn("Invalid URL submitted url={} error={}", sanitizeForLog(request.url()), e.getMessage());
             return Response.status(Response.Status.BAD_REQUEST)
@@ -106,7 +111,11 @@ public class AuditsWs {
     ) {
         adminReadAccess.require(authorization);
         logger.debug("Get run status requested: runId={}", runId);
-        return privateRead(auditService.getRunStatus(runId));
+        try {
+            return privateRead(AuditResponseMapper.status(auditQueryService.getRunStatus(runId)));
+        } catch (NotFoundException missing) {
+            return Response.status(Response.Status.NOT_FOUND).header("Cache-Control", "no-store").build();
+        }
     }
 
     /**
@@ -123,7 +132,8 @@ public class AuditsWs {
         adminReadAccess.require(authorization);
         int safeLimit = Math.max(1, Math.min(limit, 200));
         logger.info("List audits limit={}", safeLimit);
-        return privateRead(auditService.listAudits(safeLimit));
+        return privateRead(auditQueryService.listAudits(safeLimit).stream()
+            .map(AuditResponseMapper::overview).toList());
     }
 
     /**
@@ -144,7 +154,20 @@ public class AuditsWs {
         adminReadAccess.require(authorization);
         int safeLimit = Math.max(1, Math.min(limit, 100));
         logger.info("Get audit history auditId={} limit={}", auditId, safeLimit);
-        return privateRead(auditService.getAuditHistory(auditId, safeLimit));
+        return privateRead(auditQueryService.getAuditHistory(auditId, safeLimit).stream()
+            .map(AuditResponseMapper::history).toList());
+    }
+
+    @GET
+    @Path("/{auditId}/history/{runId}/comparison")
+    @Operation(description = "Charge les preuves nécessaires à une comparaison précise")
+    public Response getComparisonDetail(
+        @PathParam("auditId") long auditId,
+        @PathParam("runId") long runId,
+        @HeaderParam("Authorization") String authorization
+    ) {
+        adminReadAccess.require(authorization);
+        return privateRead(auditQueryService.getComparisonDetail(auditId, runId));
     }
 
     private Response privateRead(Object body) {

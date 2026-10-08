@@ -1,12 +1,12 @@
 package com.dokor.argos.services.analysis.modules.ssl;
 
+import com.dokor.argos.services.analysis.AuditModule;
+import com.dokor.argos.services.analysis.ModuleUnavailableException;
 import com.dokor.argos.util.Urls;
 import com.dokor.argos.util.JsonNodes;
 import com.dokor.argos.services.analysis.model.AuditCheckResult;
 import com.dokor.argos.services.analysis.model.AuditContext;
-import com.dokor.argos.services.analysis.model.AuditModuleAnalyzer;
 import com.dokor.argos.services.analysis.model.AuditModuleResult;
-import com.dokor.argos.services.analysis.model.ModuleScope;
 import com.dokor.argos.services.analysis.model.enums.AuditSeverity;
 import com.dokor.argos.services.analysis.model.enums.AuditStatus;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 @Singleton
-public class SslLabsModuleAnalyzer implements AuditModuleAnalyzer {
+public class SslLabsModuleAnalyzer {
 
     private final SslLabsClient client;
 
@@ -30,24 +30,17 @@ public class SslLabsModuleAnalyzer implements AuditModuleAnalyzer {
         this.client = client;
     }
 
-    @Override
     public String moduleId() {
-        return "ssl";
+        return AuditModule.SSL.id();
     }
 
-    @Override
-    public ModuleScope scope() {
-        return ModuleScope.DOMAIN;
-    }
-
-    @Override
     public AuditModuleResult analyze(AuditContext context, Logger logger) {
         String url = context.finalUrl() != null ? context.finalUrl() : context.normalizedUrl();
         String host = Urls.host(url);
 
         if (host == null) {
             logger.warn("SSL Labs module: could not extract host from url={}", url);
-            return errorModule("Could not extract host from URL: " + url);
+            throw new ModuleUnavailableException("Could not extract host from URL");
         }
 
         logger.info("SSL Labs module: analyzing host={}", host);
@@ -57,12 +50,18 @@ public class SslLabsModuleAnalyzer implements AuditModuleAnalyzer {
             result = client.analyze(host);
         } catch (Exception e) {
             logger.warn("SSL Labs module: API failed host={} error={}", host, e.getMessage());
-            return errorModule("SSL Labs API unavailable: " + e.getMessage());
+            throw new ModuleUnavailableException("SSL Labs API unavailable", e);
         }
 
         // Pick the best/first endpoint
+        if (result == null || result.isNull()) {
+            throw new ModuleUnavailableException("SSL Labs response is empty");
+        }
         JsonNode endpoints = result.path("endpoints");
         JsonNode endpoint = endpoints.isArray() && endpoints.size() > 0 ? endpoints.get(0) : null;
+        if (endpoint == null && JsonNodes.text(result.path("status")) == null) {
+            throw new ModuleUnavailableException("SSL Labs response has no usable measurements");
+        }
 
         List<AuditCheckResult> checks = new ArrayList<>();
 
@@ -103,7 +102,7 @@ public class SslLabsModuleAnalyzer implements AuditModuleAnalyzer {
         JsonNode details = endpoint != null ? endpoint.path("details") : null;
         JsonNode cert = details != null ? details.path("cert") : null;
 
-        int certIssues = cert != null && !cert.isMissingNode() ? cert.path("issues").asInt(0) : -1;
+        int certIssues = JsonNodes.intValue(cert, "issues", -1);
         long notAfterMs = cert != null && !cert.isMissingNode() ? cert.path("notAfter").asLong(0L) : 0L;
 
         // Validité indéterminée (pas de détails de cert) => INFO non scoré plutôt que WARN :
@@ -199,7 +198,7 @@ public class SslLabsModuleAnalyzer implements AuditModuleAnalyzer {
             }
         }
 
-        checks.add(AuditCheckResult.of(
+        if (hasProtocolData) checks.add(AuditCheckResult.of(
             "ssl.protocols.tls13",
             "Prise en charge de TLS 1.3",
             hasTls13 ? AuditStatus.PASS : AuditStatus.WARN,
@@ -213,7 +212,7 @@ public class SslLabsModuleAnalyzer implements AuditModuleAnalyzer {
             hasTls13 ? null : "Activez TLS 1.3 pour améliorer la sécurité et les performances."
         ));
 
-        checks.add(AuditCheckResult.of(
+        if (hasProtocolData) checks.add(AuditCheckResult.of(
             "ssl.protocols.tls12",
             "Prise en charge de TLS 1.2",
             hasTls12 ? AuditStatus.PASS : AuditStatus.FAIL,
@@ -263,7 +262,7 @@ public class SslLabsModuleAnalyzer implements AuditModuleAnalyzer {
             ? hstsPolicy.path("maxAge").asLong(0L) : 0L;
         boolean hstsPresent = "present".equalsIgnoreCase(hstsStatus);
 
-        checks.add(AuditCheckResult.of(
+        if (hstsStatus != null) checks.add(AuditCheckResult.of(
             "http.security.hsts",
             "HSTS (Strict-Transport-Security)",
             hstsPresent ? AuditStatus.PASS : AuditStatus.WARN,
@@ -288,29 +287,12 @@ public class SslLabsModuleAnalyzer implements AuditModuleAnalyzer {
         data.put("legacyProtocolsEnabled", hasProtocolData ? hasLegacy : null);
         data.put("certIssues", certIssues >= 0 ? certIssues : null);
         data.put("hstsPresent", hstsPresent);
+        data.put("partial", endpoint == null || grade == null || certIssues < 0 || !hasProtocolData);
 
         String summary = "host=" + host + " grade=" + grade + " tls13=" + hasTls13 + " tls12=" + hasTls12;
         logger.info("SSL Labs module done: {}", summary);
 
         return new AuditModuleResult(moduleId(), "SSL Labs", summary, data, checks);
-    }
-
-    private AuditModuleResult errorModule(String reason) {
-        List<AuditCheckResult> checks = List.of(AuditCheckResult.of(
-            "ssl.available",
-            "Disponibilité de SSL Labs",
-            AuditStatus.WARN,
-            AuditSeverity.LOW,
-            false,
-            0.0,
-            List.of(),
-            false,
-            Map.of("reason", reason),
-            "L'analyse SSL Labs n'a pas pu s'exécuter : " + reason,
-            "Vérifiez l'accès réseau à api.ssllabs.com."
-        ));
-        return new AuditModuleResult(moduleId(), "SSL Labs", "ssl=unavailable",
-            Map.of("available", false, "reason", reason), checks);
     }
 
     private static Map<String, Object> buildHstsDetails(String status, long maxAge) {

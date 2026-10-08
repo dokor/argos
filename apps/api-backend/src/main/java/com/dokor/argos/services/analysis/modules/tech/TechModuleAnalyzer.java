@@ -1,8 +1,9 @@
 package com.dokor.argos.services.analysis.modules.tech;
 
+import com.dokor.argos.services.analysis.AuditModule;
+import com.dokor.argos.services.analysis.ModuleUnavailableException;
 import com.dokor.argos.services.analysis.model.AuditCheckResult;
 import com.dokor.argos.services.analysis.model.AuditContext;
-import com.dokor.argos.services.analysis.model.AuditModuleAnalyzer;
 import com.dokor.argos.services.analysis.model.AuditModuleResult;
 import com.dokor.argos.services.analysis.model.enums.AuditSeverity;
 import com.dokor.argos.services.analysis.model.enums.AuditStatus;
@@ -20,17 +21,15 @@ import java.util.regex.Pattern;
  * - détection heuristique (sans JS, sans headless browser)
  * - se base sur signaux HTML + headers HTTP disponibles (si l'orchestrateur les fournit)
  * <p>
- * ⚠️ Comme pour HtmlModuleAnalyzer, l'interface AuditModuleAnalyzer ne fournit pas encore
- * de "context" (headers/html). Donc :
- * - la méthode analyze(...) retourne un module "warning" par défaut
- * - l'orchestrateur doit appeler analyzeTech(...) en lui passant headers+html
+ * Le contexte enrichi par HTTP fournit les en-têtes et le HTML. L'orchestrateur
+ * passe par DomainAnalysisService pour réutiliser le résultat en cache.
  * <p>
  * Plus tard :
  * - intégrer Playwright (JS rendu) pour une détection plus fiable (Next/React/Angular etc.)
  * - enrichir la détection via signatures (Wappalyzer-like) ou empreintes (hash, bundles, meta generator...)
  */
 @Singleton
-public class TechModuleAnalyzer implements AuditModuleAnalyzer {
+public class TechModuleAnalyzer {
 
     // Signatures simples (HTML)
     private static final Pattern WP_CONTENT_PATTERN = Pattern.compile("(?is)wp-content|wp-includes|/wp-json/");
@@ -67,18 +66,8 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
     private static final Pattern VERSION_BANNER_PATTERN =
         Pattern.compile("[A-Za-z][A-Za-z.+_-]*[/ ]\\d+(?:\\.\\d+)+");
 
-    @Override
     public String moduleId() {
-        return "tech";
-    }
-
-    /**
-     * Ce module est de portée DOMAIN : son résultat est identique pour toutes les pages
-     * d'un même hostname et est donc mis en cache 24h dans ARG_DOMAIN_ANALYSIS.
-     */
-    @Override
-    public com.dokor.argos.services.analysis.model.ModuleScope scope() {
-        return com.dokor.argos.services.analysis.model.ModuleScope.DOMAIN;
+        return AuditModule.TECH.id();
     }
 
     private final NextJsDetectorService nextDetector;
@@ -105,12 +94,20 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
         String html,
         Logger logger
     ) {
-        long start = System.currentTimeMillis();
+        AuditContext context = new AuditContext(inputUrl, normalizedUrl, 0L)
+            .withHttpResult(finalUrl, 200, 0L, List.of(), headers, html);
+        return analyze(context, logger);
+    }
 
+    /** Stack signatures only: no raw response headers, URLs or security findings. */
+    public AuditModuleResult analyzeStack(AuditContext context, Logger logger) {
+        Map<String, String> headers = context.headers();
+        String html = context.body();
+
+        if ((html == null || html.isBlank()) && (headers == null || headers.isEmpty())) {
+            throw new ModuleUnavailableException("Tech analysis has no HTML or HTTP headers");
+        }
         headers = headers != null ? headers : Map.of();
-        String serverHeader = headers.get("server");
-        String poweredBy = headers.get("x-powered-by");
-        String setCookie = headers.get("set-cookie");
 
         // Détections "CMS"
         DetectedTech cms = detectCms(headers, html);
@@ -120,14 +117,6 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
 
         // Détections spécifique a Next
         var next = nextDetector.detect(headers, html);
-
-        // Détections "backend / runtime"
-        List<String> backendHints = detectBackendHints(headers, poweredBy, setCookie, serverHeader, html);
-
-        // CDN / proxy
-        boolean cloudflare = matchesAny(CLOUDFLARE_HINT_PATTERN, concat(headers));
-
-        long durationMs = System.currentTimeMillis() - start;
 
         List<AuditCheckResult> checks = new ArrayList<>();
 
@@ -200,6 +189,35 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
                 : null
         ));
 
+        Map<String, Object> data = new LinkedHashMap<>();
+        Map<String, Object> cmsMap = new LinkedHashMap<>();
+        if (cms.name != null) {
+            cmsMap.put("name", cms.name);
+            cmsMap.put("confidence", cms.confidence);
+            cmsMap.put("signals", cms.signals);
+        }
+        data.put("cms", cmsMap);
+        data.put("nextJs", nextData);
+        data.put("frontendFramework", Map.of("name", frontend.name, "confidence", frontend.confidence, "signals", frontend.signals));
+        return new AuditModuleResult(moduleId(), "Technology",
+            "cms=" + safe(cms.name) + " frontend=" + safe(frontend.name), data, checks);
+    }
+
+    /** Recalculates response-specific checks on every run, including cache hits. */
+    public AuditModuleResult analyzeCurrentResponse(AuditContext context, AuditModuleResult stack, Logger logger) {
+        long start = System.currentTimeMillis();
+        String inputUrl = context.inputUrl();
+        String normalizedUrl = context.normalizedUrl();
+        String finalUrl = context.finalUrl();
+        Map<String, String> headers = context.headers() != null ? context.headers() : Map.of();
+        String html = context.body();
+        String serverHeader = headers.get("server");
+        String poweredBy = headers.get("x-powered-by");
+        String setCookie = headers.get("set-cookie");
+        List<String> backendHints = detectBackendHints(headers, poweredBy, setCookie, serverHeader, html);
+        boolean cloudflare = matchesAny(CLOUDFLARE_HINT_PATTERN, concat(headers));
+        long durationMs = System.currentTimeMillis() - start;
+        List<AuditCheckResult> checks = new ArrayList<>(stack.checks());
         Map<String, Object> objectMap = new HashMap<>(Map.of());
         if (serverHeader != null) {
             objectMap.put("server", serverHeader);
@@ -263,7 +281,7 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
         if (serverVer != null) exposedVersions.add("Server: " + serverVer);
         if (poweredVer != null) exposedVersions.add("X-Powered-By: " + poweredVer);
         boolean versionExposed = !exposedVersions.isEmpty();
-        checks.add(AuditCheckResult.of(
+        if (headers != null && !headers.isEmpty()) checks.add(AuditCheckResult.of(
             "tech.security.version_disclosure",
             "Divulgation de version logicielle",
             versionExposed ? AuditStatus.WARN : AuditStatus.PASS,
@@ -281,23 +299,6 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
                 : null
         ));
 
-        // 6) Orchestrator coverage (warn if missing html)
-        if (html == null || html.isBlank()) {
-            checks.add(AuditCheckResult.of(
-                "tech.html.available",
-                "HTML disponible pour la détection tech",
-                AuditStatus.WARN,
-                AuditSeverity.MEDIUM,
-                false,          // scorable filled later
-                0.0,            // weight filled later
-                List.of(),      // tags filled later
-                false,
-                Map.of("reason", "html not provided"),
-                "HTML non fourni : la détection tech est limitée aux en-têtes HTTP.",
-                "Vérifiez que l'orchestrateur transmet le contenu HTML du module HTTP pour améliorer la détection."
-            ));
-        }
-
         // 7) Duration (info)
         checks.add(AuditCheckResult.of(
             "tech.analysis.duration_ms",
@@ -313,34 +314,19 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
             null
         ));
 
-        String summary = "cms=" + safe(cms.name)
-            + " frontend=" + safe(frontend.name)
-            + " cloudflare=" + cloudflare
-            + " durationMs=" + durationMs;
-
-        Map<String, Object> data = new LinkedHashMap<>();
-        Map<String, Object> cmsMap = new LinkedHashMap<>();
-        if (cms.name != null) {
-            cmsMap.put("name", cms.name);
-            cmsMap.put("confidence", cms.confidence);
-            cmsMap.put("signals", cms.signals);
-        }
+        String summary = stack.summary() + " cloudflare=" + cloudflare + " durationMs=" + durationMs;
+        Map<String, Object> data = new LinkedHashMap<>(stack.data());
         data.put("inputUrl", inputUrl);
         data.put("normalizedUrl", normalizedUrl);
         data.put("finalUrl", finalUrl);
-        data.put("cms", cmsMap);
-        data.put("nextJs", nextData);
-        data.put("frontendFramework", Map.of("name", frontend.name, "confidence", frontend.confidence, "signals", frontend.signals));
         data.put("backendHints", backendHints);
         data.put("cloudflare", cloudflare);
         data.put("serverHeader", serverHeader);
         data.put("xPoweredBy", poweredBy);
         data.put("durationMs", durationMs);
+        data.put("partial", html == null || html.isBlank());
 
-        logger.info("TECH module done: cms={}({}) frontend={}({}) backendHints={} cloudflare={}",
-            cms.name, cms.confidence, frontend.name, frontend.confidence, backendHints.size(), cloudflare
-        );
-
+        logger.info("TECH response checks done: backendHints={} cloudflare={}", backendHints.size(), cloudflare);
         return new AuditModuleResult(
             moduleId(),
             "Technology",
@@ -350,15 +336,8 @@ public class TechModuleAnalyzer implements AuditModuleAnalyzer {
         );
     }
 
-    /**
-     * Implémentation AuditModuleAnalyzer : MVP.
-     * Comme l'interface ne fournit pas encore headers/html, on retourne un module "warning".
-     * L'orchestrator doit appeler analyzeTech(...).
-     */
-    @Override
-    public AuditModuleResult analyze(AuditContext auditContext, Logger logger) {
-        logger.debug("TECH module called.");
-        return analyzeTech(auditContext.inputUrl(), auditContext.normalizedUrl(), auditContext.finalUrl(), auditContext.headers(), auditContext.body(), logger);
+    public AuditModuleResult analyze(AuditContext context, Logger logger) {
+        return analyzeCurrentResponse(context, analyzeStack(context, logger), logger);
     }
 
     // -------------------------

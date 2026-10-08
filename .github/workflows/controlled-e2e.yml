@@ -11,8 +11,13 @@ concurrency:
 permissions:
   contents: read
 jobs:
+  changes:
+    uses: ./.github/workflows/changed-paths.yml
+
   audit-e2e:
     name: Controlled audit E2E
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.e2e == 'true') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     services:

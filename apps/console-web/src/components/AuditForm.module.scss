@@ -11,7 +11,7 @@
 
 .fieldGroup {
   display: grid;
-  gap: 6px;
+  gap: t.$space-2;
 }
 
 .label {
@@ -21,7 +21,8 @@
 }
 
 .input {
-  padding: 10px;
+  padding: t.$space-3 t.$space-4;
+  min-height: 44px;
   border-radius: t.$radius-md;
   border: 1px solid t.$border;
   background: t.$surface;
@@ -29,8 +30,10 @@
   font-size: t.$text-lg;
   outline: none;
 
-  &:focus {
+  &:focus-visible {
     border-color: t.$color-indigo;
+    outline: 3px solid t.$color-indigo-muted;
+    outline-offset: 2px;
   }
 
   &:disabled {
@@ -39,7 +42,8 @@
 }
 
 .submitBtn {
-  padding: 10px;
+  padding: t.$space-3 t.$space-4;
+  min-height: 44px;
   border-radius: t.$radius-md;
   border: 1px solid t.$text;
   background: t.$text;
@@ -52,10 +56,15 @@
     opacity: 0.6;
     cursor: not-allowed;
   }
+
+  &:focus-visible {
+    outline: 3px solid t.$color-indigo;
+    outline-offset: 3px;
+  }
 }
 
 .successMsg {
-  padding: 10px;
+  padding: t.$space-3;
   border-radius: t.$radius-md;
   background: #eefaf0;
   border: 1px solid #b7e4c7;
@@ -64,10 +73,29 @@
 }
 
 .errorMsg {
-  padding: 10px;
+  padding: t.$space-3;
   border-radius: t.$radius-md;
-  background: #fff0f0;
-  border: 1px solid #f2b8b5;
+  background: t.$surface-2;
+  border: 1px solid t.$color-red;
   font-size: t.$text-md;
-  color: t.$color-red;
+  color: t.$text;
+}
+
+.publicForm {
+  max-width: 660px;
+  padding: t.$space-6;
+  box-shadow: t.$shadow-md;
+}
+
+.statusMsg,
+.hint {
+  color: t.$text-muted;
+  font-size: t.$text-base;
+  line-height: 1.5;
+}
+
+@media (max-width: 600px) {
+  .publicForm {
+    padding: t.$space-4;
+  }
 }

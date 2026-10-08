@@ -55,7 +55,7 @@ public final class AuditComparisonService {
         if(previous.size()!=a.checks().size() || previous.size()!=b.checks().size()) return false;
         for(var check:b.checks()) {
             var earlier=previous.remove(check.key());
-            if(earlier==null || !Objects.equals(earlier.domain(),check.domain()) || !Objects.equals(earlier.module(),check.module()) || earlier.state()!=check.state() || Double.compare(earlier.weight(),check.weight())!=0 || !Objects.equals(earlier.reason(),check.reason())) return false;
+            if(earlier==null || !Objects.equals(earlier.domain(),check.domain()) || !Objects.equals(earlier.module(),check.module()) || earlier.state()!=check.state() || Double.compare(earlier.weight(),check.weight())!=0 || !Objects.equals(earlier.reason(),check.reason()) || !Objects.equals(earlier.measurementModule(),check.measurementModule()) || !Objects.equals(earlier.measurementSources(),check.measurementSources())) return false;
         }
         return previous.isEmpty();
     }

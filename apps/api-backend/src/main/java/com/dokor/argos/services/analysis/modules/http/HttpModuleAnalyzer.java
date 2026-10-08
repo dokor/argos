@@ -1,9 +1,9 @@
 package com.dokor.argos.services.analysis.modules.http;
 
+import com.dokor.argos.services.analysis.AuditModule;
 import com.dokor.argos.services.analysis.BoundedBodyHandlers;
 import com.dokor.argos.services.analysis.model.AuditCheckResult;
 import com.dokor.argos.services.analysis.model.AuditContext;
-import com.dokor.argos.services.analysis.model.AuditModuleAnalyzer;
 import com.dokor.argos.services.analysis.model.AuditModuleResult;
 import com.dokor.argos.services.analysis.model.enums.AuditSeverity;
 import com.dokor.argos.services.analysis.model.enums.AuditStatus;
@@ -32,7 +32,7 @@ import java.util.*;
  * - On se limite à MAX_REDIRECTS pour éviter les boucles.
  */
 @Singleton
-public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
+public class HttpModuleAnalyzer {
 
     private static final int MAX_REDIRECTS = 10;
 
@@ -51,12 +51,10 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
         this.client = client;
     }
 
-    @Override
     public String moduleId() {
-        return "http";
+        return AuditModule.HTTP.id();
     }
 
-    @Override
     public AuditModuleResult analyze(AuditContext context, Logger logger) {
         long start = System.currentTimeMillis();
         var global=com.dokor.argos.services.analysis.AuditDeadline.current();
@@ -70,11 +68,22 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
         int lastStatus = 0;
         String httpVersion = null;
         String body = null;
+        String lastRequestedUrl = null;
+        String redirectTargetUrl = null;
+        String lastResponseUrl = null;
+        String finalUrl = null;
+        String fetchOutcome = "REQUEST_FAILED";
+        Set<String> visited = new HashSet<>();
 
         List<String> errors = new ArrayList<>();
 
         try {
             for (int i = 0; i < MAX_REDIRECTS; i++) {
+                if (!visited.add(currentUrl)) {
+                    fetchOutcome = "REDIRECT_LOOP";
+                    errors.add("RedirectLoop");
+                    break;
+                }
                 // Revalidation SSRF à chaque saut (URL initiale + cibles de redirection),
                 // au moment du fetch : bloque une redirection vers une IP interne et couvre
                 // le DNS rebinding entre la soumission et le traitement (#217).
@@ -83,6 +92,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
                 } catch (IllegalArgumentException ssrf) {
                     logger.warn("HTTP module: blocked SSRF target url={} reason={}",
                         UrlNormalizer.sanitizeForLog(currentUrl), ssrf.getMessage());
+                    fetchOutcome = "TARGET_BLOCKED";
                     errors.add("SsrfBlocked: " + ssrf.getMessage());
                     break;
                 }
@@ -97,44 +107,78 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
                     .GET()
                     .build();
 
-                logger.debug("HTTP module: requesting url={}", currentUrl);
+                logger.debug("HTTP module: requesting url={}", UrlNormalizer.sanitizeForLog(currentUrl));
 
+                lastRequestedUrl = currentUrl;
                 HttpResponse<String> response = client.send(request, BoundedBodyHandlers.ofString(BoundedBodyHandlers.MAX_PAGE_BYTES));
 
+                lastResponseUrl = currentUrl;
                 body = response.body();
                 lastStatus = response.statusCode();
                 lastHeaders = flattenHeaders(response.headers());
                 httpVersion = response.version() != null ? response.version().name() : null;
 
-                logger.debug("HTTP module: response status={} url={}", lastStatus, currentUrl);
+                logger.debug("HTTP module: response status={} url={}", lastStatus, UrlNormalizer.sanitizeForLog(currentUrl));
 
                 if (isRedirect(lastStatus)) {
                     String location = response.headers().firstValue("location").orElse(null);
-                    if (location == null) {
-                        logger.warn("HTTP module: redirect without Location header status={} url={}", lastStatus, currentUrl);
+                    if (location == null || location.isBlank()) {
+                        logger.warn("HTTP module: redirect without Location header status={} url={}", lastStatus, UrlNormalizer.sanitizeForLog(currentUrl));
+                        fetchOutcome = "MISSING_LOCATION";
                         errors.add("RedirectWithoutLocation");
                         break;
                     }
 
-                    currentUrl = URI.create(currentUrl).resolve(location).toString();
+                    try {
+                        currentUrl = URI.create(currentUrl).resolve(location).normalize().toString();
+                        redirectTargetUrl = currentUrl;
+                    } catch (IllegalArgumentException invalidLocation) {
+                        fetchOutcome = "INVALID_LOCATION";
+                        errors.add("InvalidRedirectLocation");
+                        break;
+                    }
+                    if (i == MAX_REDIRECTS - 1) {
+                        fetchOutcome = "REDIRECT_LIMIT";
+                        errors.add("RedirectLimitExceeded");
+                        break;
+                    }
                     continue;
                 }
 
-                // On s'arrête dès qu'on a une réponse finale (non-3xx)
+                // The URL, headers and body are published only as one terminal response snapshot.
+                finalUrl = currentUrl;
+                fetchOutcome = "COMPLETED";
                 break;
             }
         } catch (Exception e) {
             if (e instanceof InterruptedException) Thread.currentThread().interrupt();
-            logger.warn("HTTP module: request failed url={} error={}", currentUrl, e.toString());
+            fetchOutcome = e instanceof java.net.http.HttpTimeoutException ? "TIMEOUT" : "REQUEST_FAILED";
+            logger.warn("HTTP module: request failed url={} error={}", UrlNormalizer.sanitizeForLog(currentUrl), e.getClass().getSimpleName());
             errors.add(e.getClass().getSimpleName() + ": " + e.getMessage());
         }
 
+        // Retain response identity for diagnostics, without forwarding a redirect body as target content.
+        Map<String, Object> lastResponse = new LinkedHashMap<>();
+        if (lastResponseUrl != null) {
+            lastResponse.put("url", lastResponseUrl);
+            lastResponse.put("statusCode", lastStatus);
+            lastResponse.put("headers", lastHeaders);
+            lastResponse.put("httpVersion", httpVersion);
+        }
+        boolean snapshotAvailable = finalUrl != null;
+        if (!snapshotAvailable) {
+            lastStatus = 0;
+            lastHeaders = Map.of();
+            body = null;
+            httpVersion = null;
+        }
         long durationMs = System.currentTimeMillis() - start;
 
         // Détection d'une protection anti-bot (Cloudflare…) — issue #56 : on dégrade
         // proprement (statut non pénalisant + check informatif) au lieu de compter le
         // challenge comme un échec du site.
-        String antiBotVendor = detectAntiBot(lastStatus, lastHeaders, body);
+        AntiBotDetection antiBot = detectAntiBotEvidence(lastStatus, lastHeaders, body);
+        String antiBotVendor = antiBot.vendor();
         if (antiBotVendor != null) {
             logger.info("HTTP module: anti-bot challenge detected vendor={} status={}", antiBotVendor, lastStatus);
         }
@@ -156,7 +200,8 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
                 0.0,
                 List.of(),
                 antiBotVendor,
-                Map.of("vendor", antiBotVendor, "statusCode", lastStatus),
+                Map.of("vendor", antiBotVendor, "statusCode", lastStatus,
+                    "reason", antiBot.reason(), "evidence", antiBot.evidence()),
                 "Le site est protégé par une protection anti-bot (" + antiBotVendor + ") : l'analyse a porté "
                     + "sur la page de challenge et peut être partielle. Ce blocage n'est pas imputé au score du site.",
                 null
@@ -167,10 +212,10 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
         checks.add(checkRedirectCount(redirectChain));
 
         // 3) Final URL scheme (https)
-        checks.add(checkFinalHttps(currentUrl));
+        checks.add(checkFinalHttps(finalUrl));
 
         // 4) Redirect to HTTPS (si input est http et final https)
-        checks.add(checkRedirectToHttps(inputUrl, currentUrl, redirectChain));
+        checks.add(checkRedirectToHttps(inputUrl, finalUrl, redirectChain));
 
         // 5) Response time
         checks.add(checkResponseTime(durationMs));
@@ -185,7 +230,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
         checks.add(checkCookieFlags(lastHeaders));
 
         // 7c) Support de HTTP/2 (uniquement pertinent en HTTPS) — issue #151
-        checks.add(checkHttp2(httpVersion, currentUrl));
+        checks.add(checkHttp2(httpVersion, finalUrl));
 
         // 8) Compression (Content-Encoding)
         checks.add(checkCompression(lastHeaders));
@@ -232,19 +277,30 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
         // On ne sonde que si le site a répondu (2xx/3xx) : inutile de refaire deux
         // fetchs sur un site injoignable, et cela évite de pénaliser le SEO d'un site
         // simplement en panne réseau.
-        SeoResources seoResources = null;
-        if (lastStatus >= 200 && lastStatus < 400) {
-            seoResources = probeSeoResources(currentUrl, logger);
+        SeoResourceProbe.Result seoResources = null;
+        if (lastStatus >= 200 && lastStatus < 400 && antiBotVendor == null) {
+            seoResources = probeSeoResources(finalUrl, logger);
             checks.add(checkRobotsTxt(seoResources));
             checks.add(checkSitemap(seoResources));
         }
 
-        String summary = buildSummary(lastStatus, redirectChain, durationMs, currentUrl);
+        String summary = buildSummary(lastStatus, redirectChain, durationMs, finalUrl);
 
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("inputUrl", inputUrl);
         data.put("normalizedUrl", normalizedUrl);
-        data.put("finalUrl", currentUrl);
+        data.put("finalUrl", finalUrl);
+        data.put("requestedUrl", lastRequestedUrl);
+        data.put("targetUrl", currentUrl);
+        data.put("redirectTargetUrl", redirectTargetUrl);
+        data.put("lastResponse", lastResponse);
+        data.put("fetchOutcome", fetchOutcome);
+        data.put("responseSnapshotAvailable", snapshotAvailable);
+        if (!snapshotAvailable) {
+            data.put("measurementState", "UNAVAILABLE");
+            data.put("measurementReason", "HTTP_FETCH_" + fetchOutcome);
+            data.put("partial", true);
+        }
         data.put("statusCode", lastStatus);
         data.put("durationMs", durationMs);
         data.put("redirectChain", redirectChain);
@@ -252,17 +308,24 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
         data.put("httpVersion", httpVersion);
         data.put("errors", errors);
         data.put("antiBotDetected", antiBotVendor != null);
+        data.put("antiBotReason", antiBot.reason());
+        data.put("antiBotEvidence", antiBot.evidence());
+        if (antiBot.cdnProvider() != null) data.put("cdnProvider", antiBot.cdnProvider());
         if (antiBotVendor != null) {
             data.put("antiBotVendor", antiBotVendor);
         }
         if (seoResources != null) {
-            data.put("robotsTxtPresent", seoResources.robotsPresent());
-            data.put("sitemapPresent", seoResources.sitemapPresent());
+            data.put("robotsTxtPresent", seoResources.robots().present());
+            data.put("sitemapPresent", seoResources.sitemap().present());
+            data.put("seoResources", Map.of("robots", seoResources.robots().diagnostics(),
+                "sitemap", seoResources.sitemap().diagnostics(), "declaredSitemaps", seoResources.declarations(),
+                "sitemapCandidates", seoResources.candidates().stream().map(SeoResourceProbe.Resource::diagnostics).toList()));
+            if (seoResources.unavailable()) data.put("partial", true);
         }
         data.put("body", body);
 
         logger.info("HTTP module done: status={} redirects={} durationMs={} finalUrl={}",
-            lastStatus, Math.max(0, redirectChain.size() - 1), durationMs, currentUrl
+            lastStatus, Math.max(0, redirectChain.size() - 1), durationMs, UrlNormalizer.sanitizeForLog(finalUrl)
         );
 
         return new AuditModuleResult(
@@ -340,32 +403,51 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
         );
     }
 
-    /** Marqueurs textuels d'une page de challenge anti-bot (Cloudflare & génériques). */
-    private static final java.util.regex.Pattern ANTIBOT_BODY_MARKERS = java.util.regex.Pattern.compile(
-        "(?i)just a moment|cf-browser-verification|_cf_chl_opt|attention required|checking your browser");
+    /** Cloudflare interstitial controls, not generic CDN or embedded Turnstile assets. */
+    private static final java.util.regex.Pattern CF_CHALLENGE_OPTIONS = java.util.regex.Pattern.compile(
+        "(?is)<script\\b[^>]*>[^<]*\\b_cf_chl_opt\\s*=\\s*\\{");
+    private static final java.util.regex.Pattern CF_CHALLENGE_ELEMENT = java.util.regex.Pattern.compile(
+        "(?is)<[^>]+\\bid\\s*=\\s*['\"](?:cf-browser-verification|cf-challenge-running)['\"]");
+    private static final java.util.regex.Pattern GENERIC_BROWSER_VERIFICATION = java.util.regex.Pattern.compile(
+        "(?i)checking your browser before accessing");
+
+    record AntiBotDetection(String cdnProvider, String vendor, String reason, List<String> evidence) {}
 
     /**
      * Détecte une protection anti-bot / challenge (Cloudflare & co.) — issue #56.
      * Retourne le fournisseur détecté ({@code "cloudflare"} / {@code "generic"}) ou
      * {@code null}. On évite les faux positifs : un simple CDN Cloudflare (en-têtes
-     * {@code cf-ray} sur une 200 sans marqueur) n'est PAS un challenge.
+     * {@code cf-ray}) ne confirme jamais un challenge, quel que soit le statut HTTP.
      */
     static String detectAntiBot(int statusCode, Map<String, String> headers, String body) {
-        Map<String, String> h = headers != null ? headers : Map.of();
-        String server = h.getOrDefault("server", "").toLowerCase();
-        boolean cloudflare = h.containsKey("cf-ray") || h.containsKey("cf-mitigated") || server.contains("cloudflare");
-        boolean challengeStatus = statusCode == 403 || statusCode == 429 || statusCode == 503;
-        boolean bodyMarker = body != null && ANTIBOT_BODY_MARKERS.matcher(body).find();
+        return detectAntiBotEvidence(statusCode, headers, body).vendor();
+    }
 
-        // Cloudflare : en-têtes CF + (statut de challenge OU marqueur de challenge).
-        if (cloudflare && (challengeStatus || bodyMarker)) {
-            return "cloudflare";
+    static AntiBotDetection detectAntiBotEvidence(int statusCode, Map<String, String> headers, String body) {
+        Map<String, String> h = headers != null ? headers : Map.of();
+        String server = h.getOrDefault("server", "").toLowerCase(Locale.ROOT);
+        boolean cloudflare = h.containsKey("cf-ray") || h.containsKey("cf-mitigated") || server.contains("cloudflare");
+        String cdn = cloudflare ? "cloudflare" : null;
+        // Explicit response signal, including challenges served with HTTP 200.
+        // https://developers.cloudflare.com/cloudflare-challenges/challenge-types/challenge-pages/detect-response/
+        if ("challenge".equalsIgnoreCase(h.getOrDefault("cf-mitigated", "").trim())) {
+            return new AntiBotDetection("cloudflare", "cloudflare", "CF_MITIGATED_CHALLENGE",
+                List.of("header:cf-mitigated=challenge"));
         }
-        // Générique : marqueur explicite de challenge sur un statut de blocage.
-        if (bodyMarker && challengeStatus) {
-            return "generic";
+        var evidence = new ArrayList<String>();
+        if (body != null && CF_CHALLENGE_OPTIONS.matcher(body).find()) evidence.add("html:cloudflare-challenge-options");
+        if (body != null && CF_CHALLENGE_ELEMENT.matcher(body).find()) evidence.add("html:cloudflare-verification-element");
+        if (!evidence.isEmpty()) {
+            return new AntiBotDetection(cdn, "cloudflare", "CLOUDFLARE_CHALLENGE_HTML", List.copyOf(evidence));
         }
-        return null;
+        if (body != null && GENERIC_BROWSER_VERIFICATION.matcher(body).find()
+            && (statusCode == 200 || statusCode == 403 || statusCode == 429 || statusCode == 503)) {
+            return new AntiBotDetection(cdn, "generic", "BROWSER_VERIFICATION_PAGE",
+                List.of("body:checking-your-browser-before-accessing"));
+        }
+        // Ambiguous errors remain ordinary HTTP failures; they do not exclude other modules.
+        return new AntiBotDetection(cdn, null, statusCode >= 400 && statusCode < 600
+            ? "HTTP_ERROR_WITHOUT_CHALLENGE_EVIDENCE" : "NO_CHALLENGE_EVIDENCE", List.of());
     }
 
     private static AuditCheckResult checkRedirectCount(List<String> chain) {
@@ -426,7 +508,7 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
             0.0,            // weight filled later
             List.of(),      // tags filled later
             isHttps,
-            Map.of("finalUrl", finalUrl),
+            finalUrl != null ? Map.of("finalUrl", finalUrl) : Map.of("reason", "FINAL_RESPONSE_UNAVAILABLE"),
             isHttps ? "L'URL finale utilise HTTPS." : "L'URL finale n'utilise pas HTTPS.",
             isHttps ? null : "Privilégiez HTTPS pour protéger les visiteurs et renforcer la confiance."
         );
@@ -465,7 +547,8 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
             0.0,            // weight filled later
             List.of(),      // tags filled later
             Map.of("inputIsHttp", inputIsHttp, "finalIsHttps", finalIsHttps),
-            Map.of("inputUrl", inputUrl, "finalUrl", finalUrl, "redirectChain", chain),
+            finalUrl != null ? Map.of("inputUrl", inputUrl, "finalUrl", finalUrl, "redirectChain", chain)
+                : Map.of("inputUrl", inputUrl, "reason", "FINAL_RESPONSE_UNAVAILABLE", "redirectChain", chain),
             message,
             recommendation
         );
@@ -742,70 +825,8 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
     // SEO resources (robots.txt / sitemap.xml)
     // -------------------------
 
-    /** Résultat du sondage des ressources SEO à la racine du domaine. */
-    private record SeoResources(
-        boolean robotsPresent,
-        int robotsStatus,
-        boolean sitemapPresent,
-        boolean sitemapInRobots,
-        boolean sitemapDirect,
-        int sitemapStatus
-    ) {}
-
-    /**
-     * Sonde {@code /robots.txt} et {@code /sitemap.xml} à la racine du domaine de {@code finalUrl}.
-     * Le sitemap est considéré présent s'il répond en 200 <b>ou</b> s'il est déclaré via une
-     * directive {@code Sitemap:} dans le robots.txt. Toute erreur réseau ⇒ ressource absente.
-     */
-    private SeoResources probeSeoResources(String finalUrl, Logger logger) {
-        String origin = originOf(finalUrl);
-        if (origin == null) {
-            return new SeoResources(false, 0, false, false, false, 0);
-        }
-
-        boolean robotsPresent = false;
-        boolean sitemapInRobots = false;
-        int robotsStatus = 0;
-        try {
-            HttpResponse<String> r = getResource(origin + "/robots.txt");
-            robotsStatus = r.statusCode();
-            String body = r.body();
-            robotsPresent = robotsStatus == 200 && body != null && !body.isBlank();
-            if (robotsPresent) {
-                sitemapInRobots = body.lines()
-                    .anyMatch(line -> line.trim().toLowerCase(Locale.ROOT).startsWith("sitemap:"));
-            }
-        } catch (Exception e) {
-            logger.debug("SEO probe: robots.txt fetch failed origin={} error={}", origin, e.toString());
-        }
-
-        boolean sitemapDirect = false;
-        int sitemapStatus = 0;
-        try {
-            HttpResponse<String> s = getResource(origin + "/sitemap.xml");
-            sitemapStatus = s.statusCode();
-            String body = s.body();
-            sitemapDirect = sitemapStatus == 200 && body != null && !body.isBlank();
-        } catch (Exception e) {
-            logger.debug("SEO probe: sitemap.xml fetch failed origin={} error={}", origin, e.toString());
-        }
-
-        boolean sitemapPresent = sitemapDirect || sitemapInRobots;
-        return new SeoResources(robotsPresent, robotsStatus, sitemapPresent, sitemapInRobots, sitemapDirect, sitemapStatus);
-    }
-
-    private HttpResponse<String> getResource(String url) throws Exception {
-        // Défense en profondeur : les probes SEO refetchent l'origine finale, revalider
-        // évite d'atteindre une IP interne (rebinding entre le fetch page et le probe).
-        UrlNormalizer.validatePublicUrl(url);
-        HttpRequest req = HttpRequest.newBuilder()
-            .uri(URI.create(url))
-            .timeout(com.dokor.argos.services.analysis.AuditDeadline.requestTimeout(Duration.ofSeconds(10)))
-            .header("User-Agent", "argos-auditor/1.0")
-            .header("Accept", "*/*")
-            .GET()
-            .build();
-        return client.send(req, BoundedBodyHandlers.ofString(BoundedBodyHandlers.MAX_PAGE_BYTES));
+    private SeoResourceProbe.Result probeSeoResources(String finalUrl, Logger logger) {
+        return new SeoResourceProbe(client, logger).collect(originOf(finalUrl));
     }
 
     /** Reconstruit l'origine (scheme://host[:port]) à partir d'une URL, ou null si invalide. */
@@ -821,44 +842,45 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
         }
     }
 
-    private static AuditCheckResult checkRobotsTxt(SeoResources seo) {
-        boolean present = seo.robotsPresent();
-        return AuditCheckResult.of(
-            "http.seo.robots_txt",
-            "Présence de robots.txt",
-            present ? AuditStatus.PASS : AuditStatus.WARN,
-            present ? AuditSeverity.LOW : AuditSeverity.MEDIUM,
-            false,          // scorable filled later
-            0.0,            // weight filled later
-            List.of(),      // tags filled later
-            present,
-            Map.of("present", present, "status", seo.robotsStatus()),
-            present ? "Le fichier robots.txt est présent." : "Le fichier robots.txt est absent.",
-            present ? null : "Ajoutez un /robots.txt pour guider les robots d'indexation et référencer votre sitemap."
-        );
+    private static AuditCheckResult checkRobotsTxt(SeoResourceProbe.Result seo) {
+        return seoCheck("http.seo.robots_txt", "Présence de robots.txt", seo.robots(), Map.of(),
+            "Le fichier robots.txt est reconnu.", "Le fichier robots.txt est absent.",
+            "La réponse de robots.txt ne contient pas un fichier robots reconnu.",
+            "Ajoutez un /robots.txt valide pour guider les robots d'indexation.");
     }
 
-    private static AuditCheckResult checkSitemap(SeoResources seo) {
-        boolean present = seo.sitemapPresent();
-        String via = seo.sitemapDirect() ? "sitemap.xml" : (seo.sitemapInRobots() ? "robots.txt" : "none");
-        return AuditCheckResult.of(
-            "http.seo.sitemap",
-            "Présence du sitemap",
-            present ? AuditStatus.PASS : AuditStatus.WARN,
-            present ? AuditSeverity.LOW : AuditSeverity.MEDIUM,
-            false,          // scorable filled later
-            0.0,            // weight filled later
-            List.of(),      // tags filled later
-            present,
-            Map.of(
-                "present", present,
-                "via", via,
-                "sitemapXmlStatus", seo.sitemapStatus(),
-                "declaredInRobots", seo.sitemapInRobots()
-            ),
-            present ? ("Sitemap détecté (via " + via + ").") : "Aucun sitemap détecté (/sitemap.xml ou robots.txt).",
-            present ? null : "Publiez un sitemap.xml et référencez-le dans robots.txt pour faciliter l'indexation."
-        );
+    private static AuditCheckResult checkSitemap(SeoResourceProbe.Result seo) {
+        return seoCheck("http.seo.sitemap", "Présence du sitemap", seo.sitemap(),
+            Map.of("declaredInRobots", !seo.declarations().isEmpty(), "declaredSitemaps", seo.declarations(),
+                "sitemapCandidates", seo.candidates().stream().map(SeoResourceProbe.Resource::diagnostics).toList()),
+            "Un sitemap XML a été vérifié.", "Aucun sitemap vérifié détecté.",
+            "La réponse du sitemap ne contient pas un sitemap XML reconnu.",
+            "Publiez un sitemap XML valide et référencez-le dans robots.txt.");
+    }
+
+    private static AuditCheckResult seoCheck(String key, String title, SeoResourceProbe.Resource resource,
+                                             Map<String, Object> extra, String recognized, String absent,
+                                             String invalid, String recommendation) {
+        var state = resource.state();
+        boolean unavailable = state == SeoResourceProbe.State.UNAVAILABLE;
+        boolean present = state == SeoResourceProbe.State.RECOGNIZED;
+        Map<String, Object> details = new LinkedHashMap<>(resource.diagnostics());
+        details.putAll(extra);
+        details.put("present", resource.present());
+        details.put("verified", present);
+        details.put("measurementState", unavailable ? "UNAVAILABLE" : "MEASURED");
+        details.put("measurementReason", "SEO_PROBE_" + resource.reason());
+        String message = switch (state) {
+            case RECOGNIZED -> recognized;
+            case ABSENT -> absent;
+            case INVALID -> invalid;
+            case UNAVAILABLE -> "La collecte de cette ressource SEO est indisponible (" + resource.reason() + ").";
+        };
+        return AuditCheckResult.of(key, title,
+            unavailable ? AuditStatus.INFO : present ? AuditStatus.PASS : AuditStatus.WARN,
+            present || unavailable ? AuditSeverity.LOW : AuditSeverity.MEDIUM,
+            false, 0.0, List.of(), resource.present(), details, message,
+            present || unavailable ? null : recommendation);
     }
 
     // -------------------------
@@ -899,6 +921,10 @@ public class HttpModuleAnalyzer implements AuditModuleAnalyzer {
      */
     public static AuditContext enrichContext(AuditContext context, AuditModuleResult httpResult) {
         Map<String, Object> data = httpResult.data();
+        if (Boolean.FALSE.equals(data.get("responseSnapshotAvailable"))) {
+            return context.withHttpResult(null, 0, toLong(data.get("durationMs")),
+                safeStringList(data.get("redirectChain")), Map.of(), null);
+        }
         return context.withHttpResult(
             (String) data.get("finalUrl"),
             toInt(data.get("statusCode")),

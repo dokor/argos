@@ -1,0 +1,82 @@
+name: MariaDB integration
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    uses: ./.github/workflows/changed-paths.yml
+
+  integration:
+    name: MariaDB integration (11.4)
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.api == 'true') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      mariadb:
+        image: mariadb:11.4
+        env:
+          MARIADB_ROOT_PASSWORD: synthetic-root-fixture
+          MARIADB_DATABASE: argos_credentials_test
+          MARIADB_USER: argos_fixture
+          MARIADB_PASSWORD: synthetic-fixture
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s --health-timeout=5s --health-retries=15
+    env:
+      ARGOS_TEST_CREDENTIALS_URL: jdbc:mariadb://127.0.0.1:3306/argos_credentials_test
+      ARGOS_TEST_CREDENTIALS_USER: argos_fixture
+      ARGOS_TEST_CREDENTIALS_PASSWORD: synthetic-fixture
+      ARGOS_TEST_MARIADB_URL: jdbc:mariadb://127.0.0.1:3306/argos_progress_test
+      ARGOS_TEST_MARIADB_USER: argos_fixture
+      ARGOS_TEST_MARIADB_PASSWORD: synthetic-fixture
+      ARGOS_TEST_DOMAIN_CACHE_URL: jdbc:mariadb://127.0.0.1:3306/argos_domain_cache_test
+      ARGOS_TEST_DOMAIN_CACHE_USER: argos_fixture
+      ARGOS_TEST_DOMAIN_CACHE_PASSWORD: synthetic-fixture
+    defaults:
+      run:
+        working-directory: apps/api-backend
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: apps/api-backend/pom.xml
+      - name: Create isolated integration schemas
+        env:
+          DB_FIXTURE_CONTAINER: ${{ job.services.mariadb.id }}
+        run: |
+          docker exec "$DB_FIXTURE_CONTAINER" mariadb -uroot -psynthetic-root-fixture -e "
+            CREATE DATABASE argos_progress_test;
+            CREATE DATABASE argos_domain_cache_test;
+            GRANT ALL PRIVILEGES ON argos_progress_test.* TO 'argos_fixture'@'%';
+            GRANT ALL PRIVILEGES ON argos_domain_cache_test.* TO 'argos_fixture'@'%';
+          "
+      - name: Run MariaDB integration tests
+        run: >-
+          mvn --batch-mode -P mariadb-integration
+          -Dit.test=ReportCredentialMigrationIT,AuditPublicationIT,AuditClaimIT,NewsletterPrivacyIT,AuditRunProgressIT,DomainAnalysisConcurrencyIT
+          verify
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mariadb-integration-11.4-${{ github.sha }}
+          path: apps/api-backend/target/failsafe-reports/
+          if-no-files-found: error
+          retention-days: 14

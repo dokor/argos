@@ -75,13 +75,22 @@ class TechModuleAnalyzerTest {
     }
 
     @Test
-    void shouldWarnWhenHtmlMissing() {
+    void shouldMarkPartialWhenHtmlMissing() {
         AuditContext ctx = new AuditContext("http://x", "http://x", 0L)
-            .withHttpResult("http://x", 200, 10, List.of("http://x"), Map.of(), null);
+            .withHttpResult("http://x", 200, 10, List.of("http://x"), Map.of("server", "nginx"), null);
 
         AuditModuleResult result = analyzer.analyze(ctx, LoggerFactory.getLogger("test"));
 
-        assertTrue(result.checks().stream().anyMatch(c -> c.key().equals("tech.html.available") && c.status() == AuditStatus.WARN));
+        assertEquals(Boolean.TRUE, result.data().get("partial"));
+        assertTrue(result.checks().stream().noneMatch(c -> c.key().equals("tech.html.available")));
+    }
+
+    @Test
+    void shouldRejectAbsentHtmlAndHeaders() {
+        AuditContext ctx = new AuditContext("http://x", "http://x", 0L)
+            .withHttpResult("http://x", 200, 10, List.of("http://x"), Map.of(), null);
+        assertThrows(com.dokor.argos.services.analysis.ModuleUnavailableException.class,
+            () -> analyzer.analyze(ctx, LoggerFactory.getLogger("test")));
     }
 
     @Test

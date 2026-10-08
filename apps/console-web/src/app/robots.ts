@@ -6,13 +6,14 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       {
-        // Standard crawlers: index public pages, including FAQ and accessibility guide.
+        // Standard crawlers: index public pages, including FAQ and resources.
         userAgent: "*",
         allow: "/",
         disallow: [
           "/dashboard/",  // admin console - auth-gated
           "/login/",      // login page - no value for indexing
           "/api/",        // REST API - never index
+          "/en/report/",
           "/report/",     // reports are private (token-gated) - also set noindex per-page
         ],
       },

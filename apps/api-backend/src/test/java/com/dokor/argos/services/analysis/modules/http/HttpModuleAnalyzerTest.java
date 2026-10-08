@@ -4,6 +4,12 @@ import com.dokor.argos.services.analysis.model.AuditCheckResult;
 import com.dokor.argos.services.analysis.model.AuditContext;
 import com.dokor.argos.services.analysis.model.AuditModuleResult;
 import com.dokor.argos.services.analysis.model.enums.AuditStatus;
+import com.dokor.argos.services.analysis.model.enums.AuditSeverity;
+import com.dokor.argos.services.analysis.model.AuditReportJson;
+import com.dokor.argos.services.analysis.CheckMergerService;
+import com.dokor.argos.services.analysis.scoring.*;
+import com.dokor.argos.services.domain.report.PublicReportComposer;
+import java.time.Instant;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 
@@ -178,7 +184,7 @@ class HttpModuleAnalyzerTest {
         HttpModuleAnalyzer mockedAnalyzer = new HttpModuleAnalyzer(stubClient(
             resp(200, "<html></html>"),
             resp(200, "User-agent: *\nSitemap: https://example.com/sitemap.xml\n"),
-            resp(200, "<urlset></urlset>")
+            resp(200, "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\"></urlset>")
         ));
         AuditContext ctx = new AuditContext("https://example.com", "https://example.com", 0L);
 
@@ -204,7 +210,7 @@ class HttpModuleAnalyzerTest {
     }
 
     @Test
-    void analyze_shouldDetectSitemapDeclaredInRobotsEvenIfXmlMissing() throws Exception {
+    void analyze_shouldRejectUnverifiedSitemapDeclaredInRobots() throws Exception {
         HttpModuleAnalyzer mockedAnalyzer = new HttpModuleAnalyzer(stubClient(
             resp(200, "<html></html>"),
             resp(200, "Sitemap: https://example.com/custom-sitemap.xml\n"),
@@ -214,8 +220,12 @@ class HttpModuleAnalyzerTest {
 
         AuditModuleResult result = mockedAnalyzer.analyze(ctx, LoggerFactory.getLogger("test"));
 
-        // Sitemap déclaré dans robots.txt ⇒ considéré présent malgré /sitemap.xml en 404.
-        assertEquals(AuditStatus.PASS, checkByKey(result, "http.seo.sitemap").status());
+        // The custom target returns the default HTML response: declaration alone is insufficient.
+        AuditCheckResult sitemap = checkByKey(result, "http.seo.sitemap");
+        assertEquals(AuditStatus.WARN, sitemap.status());
+        assertEquals("INVALID", sitemap.details().get("state"));
+        assertEquals(true, sitemap.details().get("declaredInRobots"));
+        assertEquals(false, sitemap.details().get("verified"));
     }
 
     @Test
@@ -264,7 +274,7 @@ class HttpModuleAnalyzerTest {
         HttpResponse<String> sitemapResp
     ) throws Exception {
         HttpClient client = mock(HttpClient.class);
-        when(client.send(any(HttpRequest.class), any())).thenAnswer(invocation -> {
+        when(client.<String>send(any(HttpRequest.class), any())).thenAnswer(invocation -> {
             HttpRequest req = invocation.getArgument(0);
             String uri = req.uri().toString();
             if (uri.endsWith("/robots.txt")) return robotsResp;
@@ -281,7 +291,7 @@ class HttpModuleAnalyzerTest {
     @Test
     void analyze_detectsCloudflareChallengeAndDoesNotPenalize() throws Exception {
         HttpModuleAnalyzer a = new HttpModuleAnalyzer(stubClient(
-            resp(403, "<html><title>Just a moment...</title></html>",
+            resp(403, "<html><title>Just a moment...</title><script>window._cf_chl_opt = {};</script></html>",
                 Map.of("cf-ray", List.of("abc123"), "server", List.of("cloudflare")),
                 HttpClient.Version.HTTP_2),
             resp(404, "x"), resp(404, "x")));
@@ -333,6 +343,119 @@ class HttpModuleAnalyzerTest {
         assertEquals(AuditStatus.FAIL, HttpModuleAnalyzer.checkStatusCode(403, false).status());
     }
 
+    @Test
+    void cloudflareMaintenanceForbiddenAndQuotaResponsesRemainMeasuredFailures() throws Exception {
+        for (int status : List.of(503, 403, 429)) {
+            String body = switch (status) {
+                case 503 -> "<html>Service unavailable - maintenance</html>";
+                case 403 -> "<html>Forbidden: account has no access</html>";
+                default -> "<html>API quota exceeded</html>";
+            };
+            var result = fixtureAnalysis(status, body, Map.of("server", List.of("cloudflare"), "cf-ray", List.of("fixture")));
+            assertEquals(false, result.data().get("antiBotDetected"));
+            assertEquals("cloudflare", result.data().get("cdnProvider"));
+            assertEquals("HTTP_ERROR_WITHOUT_CHALLENGE_EVIDENCE", result.data().get("antiBotReason"));
+            assertEquals(List.of(), result.data().get("antiBotEvidence"));
+            assertFalse(result.data().containsKey("antiBotVendor"));
+            assertEquals(status, result.data().get("statusCode"));
+            assertEquals(AuditStatus.FAIL, checkByKey(result, "http.status_code").status());
+            assertFalse(result.checks().stream().anyMatch(c -> c.key().equals("http.antibot.challenge")));
+            assertScoringAndCoverage(result, false);
+        }
+    }
+
+    @Test
+    void explicitCloudflareHeaderConfirmsChallengesIncludingHttp200() throws Exception {
+        for (int status : List.of(200, 403, 429, 503)) {
+            var result = fixtureAnalysis(status, "<html>Custom challenge</html>", Map.of("cf-mitigated", List.of("challenge")));
+            assertEquals(true, result.data().get("antiBotDetected"));
+            assertEquals("cloudflare", result.data().get("antiBotVendor"));
+            assertEquals("CF_MITIGATED_CHALLENGE", result.data().get("antiBotReason"));
+            assertEquals(List.of("header:cf-mitigated=challenge"), result.data().get("antiBotEvidence"));
+            assertEquals(result.data().get("antiBotEvidence"), checkByKey(result, "http.antibot.challenge").details().get("evidence"));
+            assertEquals(AuditStatus.INFO, checkByKey(result, "http.status_code").status());
+            assertScoringAndCoverage(result, true);
+        }
+    }
+
+    @Test
+    void challengeHtmlIsRecognizedWithoutInferringItFromCdnOrStatus() throws Exception {
+        for (String body : List.of("<html><script>window._cf_chl_opt = {cType:'managed'};</script></html>",
+            "<html><form id='cf-browser-verification'>Verify</form></html>")) {
+            var result = fixtureAnalysis(200, body, Map.of());
+            assertEquals(true, result.data().get("antiBotDetected"));
+            assertEquals("cloudflare", result.data().get("antiBotVendor"));
+            assertFalse(result.data().containsKey("cdnProvider"));
+            assertEquals("CLOUDFLARE_CHALLENGE_HTML", result.data().get("antiBotReason"));
+            assertScoringAndCoverage(result, true);
+        }
+    }
+
+    @Test
+    void ambiguousTextInvalidMitigationAndEmbeddedTurnstileNeverConfirmChallenge() throws Exception {
+        for (String body : List.of("<html><title>Just a moment...</title>Maintenance</html>",
+            "<html><h1>Attention required</h1>Renew your subscription</html>",
+            "<html>Checking your browser compatibility</html>",
+            "<html><script src='https://challenges.cloudflare.com/turnstile/v0/api.js'></script><form>Contact us</form></html>",
+            "<html><script src='/cdn-cgi/challenge-platform/scripts/jsd/main.js'></script>Welcome</html>")) {
+            var result = fixtureAnalysis(503, body, Map.of("server", List.of("cloudflare"), "cf-mitigated", List.of("guardrails")));
+            assertEquals(false, result.data().get("antiBotDetected"));
+            assertEquals(AuditStatus.FAIL, checkByKey(result, "http.status_code").status());
+            assertScoringAndCoverage(result, false);
+        }
+    }
+
+    @Test
+    void genericVerificationKeepsCdnProviderSeparateFromChallengeVendor() throws Exception {
+        var result = fixtureAnalysis(403, "Checking your browser before accessing the site",
+            Map.of("server", List.of("cloudflare")));
+        assertEquals("cloudflare", result.data().get("cdnProvider"));
+        assertEquals("generic", result.data().get("antiBotVendor"));
+        assertEquals("BROWSER_VERIFICATION_PAGE", result.data().get("antiBotReason"));
+        assertScoringAndCoverage(result, true);
+    }
+
+    private AuditModuleResult fixtureAnalysis(int status, String body, Map<String, List<String>> headers) throws Exception {
+        var analyzer = new HttpModuleAnalyzer(stubClient(resp(status, body, headers, HttpClient.Version.HTTP_2),
+            resp(404, "missing"), resp(404, "missing")));
+        return analyzer.analyze(new AuditContext("https://example.com", "https://example.com", 0L), LoggerFactory.getLogger("test"));
+    }
+
+    private void assertScoringAndCoverage(AuditModuleResult http, boolean challenge) {
+        var policy = new DefaultScorePolicy();
+        var raw = List.of(http, dependent("html", "html.title"), dependent("runtime", "runtime.console.errors"),
+            dependent("lighthouse", "lighthouse.score.performance"), dependent("tech", "tech.security.version_disclosure"),
+            dependent("ssl", "ssl.grade"));
+        var enriched = new ScoreEnricherService(policy).enrich(new CheckMergerService().merge(raw));
+        var score = new ScoreService(policy).compute(policy.version(), policy.fingerprint(), enriched);
+        for (String key : List.of("http.status_code", "http.security.hsts", "html.title", "runtime.console.errors",
+            "lighthouse.score.performance", "tech.security.version_disclosure")) {
+            var covered = score.coverage().checks().stream().filter(c -> c.key().equals(key)).findFirst().orElseThrow();
+            assertEquals(challenge ? MeasurementCoverage.State.BLOCKED_BY_ANTIBOT : MeasurementCoverage.State.MEASURED, covered.state(), key);
+            var scored = score.checks().stream().filter(c -> c.key().equals(key)).findFirst().orElseThrow();
+            assertEquals(!challenge, scored.scorable(), key);
+            if (challenge) assertEquals(0, scored.weight(), key);
+            else assertTrue(scored.weight() > 0, key);
+        }
+        assertEquals(MeasurementCoverage.State.MEASURED, score.coverage().checks().stream()
+            .filter(c -> c.key().equals("ssl.grade")).findFirst().orElseThrow().state());
+        var meta = challenge ? Map.of("antiBotDetected", "true", "antiBotVendor", (String) http.data().get("antiBotVendor"))
+            : Map.<String, String>of();
+        var report = new PublicReportComposer().compose(new AuditReportJson(6, "https://example.com", "https://example.com",
+            Instant.now(), meta, enriched, score));
+        if (challenge) assertTrue(report.antiBot().detected());
+        else {
+            assertNull(report.antiBot());
+            assertTrue(report.issues().stream().anyMatch(i -> i.id().equals("http.status_code")));
+        }
+    }
+
+    private AuditModuleResult dependent(String module, String key) {
+        var check = AuditCheckResult.of(key, key, AuditStatus.FAIL, AuditSeverity.MEDIUM, false, 0,
+            List.of(), false, Map.of(), "fixture", "fix");
+        return new AuditModuleResult(module, module, null, Map.of(), List.of(check));
+    }
+
     // -------------------------
     // SSRF : revalidation des redirections (#217)
     // -------------------------
@@ -344,7 +467,7 @@ class HttpModuleAnalyzerTest {
         // Redirection d'un site public vers l'endpoint de métadonnées cloud (SSRF).
         HttpResponse<String> redirect = resp(302, "",
             Map.of("location", List.of("http://127.0.0.1/latest/meta-data/")), HttpClient.Version.HTTP_1_1);
-        when(client.send(any(HttpRequest.class), any())).thenAnswer(inv -> redirect);
+        when(client.<String>send(any(HttpRequest.class), any())).thenAnswer(inv -> redirect);
 
         HttpModuleAnalyzer a = new HttpModuleAnalyzer(client);
         AuditContext ctx = new AuditContext("https://example.com", "https://example.com", 0L);
@@ -360,6 +483,115 @@ class HttpModuleAnalyzerTest {
         ArgumentCaptor<HttpRequest> captor = ArgumentCaptor.forClass(HttpRequest.class);
         verify(client, times(1)).send(captor.capture(), any());
         assertEquals("https://example.com", captor.getValue().uri().toString());
+        assertIncompleteSnapshot(result, "TARGET_BLOCKED", "https://example.com", 302);
+    }
+
+    @Test
+    void redirectFollowedByTimeoutDoesNotPublishTheRedirectBodyAsTargetContent() throws Exception {
+        HttpClient client = mock(HttpClient.class);
+        var redirect = resp(301, "initial response", Map.of("location", List.of("https://example.com/target"),
+            "server", List.of("initial-server")), HttpClient.Version.HTTP_1_1);
+        when(client.<String>send(any(HttpRequest.class), any())).thenReturn(redirect)
+            .thenThrow(new java.net.http.HttpTimeoutException("fixture timeout"));
+        var result = analyzeWith(client);
+        assertIncompleteSnapshot(result, "TIMEOUT", "https://example.com", 301);
+        assertEquals("https://example.com/target", result.data().get("requestedUrl"));
+        assertTrue(result.data().get("errors").toString().contains("HttpTimeoutException"));
+        verify(client, times(2)).send(any(), any()); // no SEO probe of the unvisited target
+    }
+
+    @Test
+    void redirectLimitIsExplicitAndDoesNotExposeTheNextTargetsSnapshot() throws Exception {
+        HttpClient client = mock(HttpClient.class);
+        var count = new java.util.concurrent.atomic.AtomicInteger();
+        when(client.<String>send(any(HttpRequest.class), any())).thenAnswer(call -> {
+            int next = count.incrementAndGet();
+            return resp(302, "redirect body " + next, Map.of("location", List.of("/hop/" + next)), HttpClient.Version.HTTP_1_1);
+        });
+        var result = analyzeWith(client);
+        assertIncompleteSnapshot(result, "REDIRECT_LIMIT", "https://example.com/hop/9", 302);
+        assertEquals("https://example.com/hop/9", result.data().get("requestedUrl"));
+        assertEquals("https://example.com/hop/10", result.data().get("targetUrl"));
+        assertTrue(result.data().get("errors").toString().contains("RedirectLimitExceeded"));
+        verify(client, times(10)).send(any(), any());
+    }
+
+    @Test
+    void redirectLoopStopsBeforeRefetchingTheSameUrl() throws Exception {
+        HttpClient client = mock(HttpClient.class);
+        var first = resp(302, "first redirect", Map.of("location", List.of("/second")), HttpClient.Version.HTTP_1_1);
+        var second = resp(302, "second redirect", Map.of("location", List.of("https://example.com")), HttpClient.Version.HTTP_1_1);
+        when(client.<String>send(any(HttpRequest.class), any())).thenReturn(first, second);
+        var result = analyzeWith(client);
+        assertIncompleteSnapshot(result, "REDIRECT_LOOP", "https://example.com/second", 302);
+        assertTrue(result.data().get("errors").toString().contains("RedirectLoop"));
+        verify(client, times(2)).send(any(), any());
+    }
+
+    @Test
+    void redirectWithMissingOrInvalidLocationHasNoFinalSnapshot() throws Exception {
+        for (Map<String, List<String>> headers : List.of(Map.<String, List<String>>of(), Map.of("location", List.of("http://[")))) {
+            HttpClient client = mock(HttpClient.class);
+            var redirect = resp(301, "redirect response", headers, HttpClient.Version.HTTP_1_1);
+            when(client.<String>send(any(HttpRequest.class), any())).thenReturn(redirect);
+            var result = analyzeWith(client);
+            assertIncompleteSnapshot(result, headers.isEmpty() ? "MISSING_LOCATION" : "INVALID_LOCATION", "https://example.com", 301);
+            verify(client).send(any(), any());
+        }
+    }
+
+    @Test
+    void successfulChainPublishesOnlyTheReachedTerminalResponse() throws Exception {
+        HttpClient client = mock(HttpClient.class);
+        var redirect = resp(301, "initial response", Map.of("location", List.of("/target"), "server", List.of("initial")), HttpClient.Version.HTTP_1_1);
+        var terminal = resp(200, "<html>final response</html>", Map.of("server", List.of("final")), HttpClient.Version.HTTP_2);
+        var missing = resp(404, "missing");
+        when(client.<String>send(any(HttpRequest.class), any())).thenReturn(redirect, terminal, missing, missing);
+        var result = analyzeWith(client);
+        assertEquals("COMPLETED", result.data().get("fetchOutcome"));
+        assertEquals(true, result.data().get("responseSnapshotAvailable"));
+        assertEquals("https://example.com/target", result.data().get("finalUrl"));
+        assertEquals("https://example.com/target", result.data().get("requestedUrl"));
+        assertEquals(200, result.data().get("statusCode"));
+        assertEquals("<html>final response</html>", result.data().get("body"));
+        assertEquals(Map.of("server", "final"), result.data().get("headers"));
+        var context = HttpModuleAnalyzer.enrichContext(new AuditContext("https://example.com", "https://example.com", 0L), result);
+        assertEquals(result.data().get("finalUrl"), context.finalUrl());
+        assertEquals(200, context.httpStatusCode());
+        assertEquals(result.data().get("body"), context.body());
+        assertEquals(result.data().get("headers"), context.headers());
+        verify(client, times(4)).send(any(), any());
+    }
+
+    private AuditModuleResult analyzeWith(HttpClient client) {
+        return new HttpModuleAnalyzer(client).analyze(new AuditContext("https://example.com", "https://example.com", 0L),
+            LoggerFactory.getLogger("test"));
+    }
+
+    @SuppressWarnings("unchecked")
+    private void assertIncompleteSnapshot(AuditModuleResult result, String outcome, String responseUrl, int responseStatus) {
+        assertEquals(outcome, result.data().get("fetchOutcome"));
+        assertEquals(false, result.data().get("responseSnapshotAvailable"));
+        assertNull(result.data().get("finalUrl"));
+        assertEquals(0, result.data().get("statusCode"));
+        assertNull(result.data().get("body"));
+        assertEquals(Map.of(), result.data().get("headers"));
+        var last = (Map<String, Object>) result.data().get("lastResponse");
+        assertEquals(responseUrl, last.get("url"));
+        assertEquals(responseStatus, last.get("statusCode"));
+        assertFalse(last.containsKey("body"));
+        var context = HttpModuleAnalyzer.enrichContext(new AuditContext("https://example.com", "https://example.com", 0L), result);
+        assertNull(context.finalUrl());
+        assertNull(context.body());
+        assertTrue(context.headers().isEmpty());
+        assertEquals(0, context.httpStatusCode());
+        var policy = new com.dokor.argos.services.analysis.scoring.DefaultScorePolicy();
+        var enriched = new com.dokor.argos.services.analysis.scoring.ScoreEnricherService(policy).enrich(List.of(result));
+        var score = new com.dokor.argos.services.analysis.scoring.ScoreService(policy).compute(policy.version(), policy.fingerprint(), enriched);
+        assertEquals(0, score.global().maxScore());
+        assertTrue(score.coverage().checks().stream().filter(c -> c.module().equals("http"))
+            .allMatch(c -> c.state() == com.dokor.argos.services.analysis.scoring.MeasurementCoverage.State.UNAVAILABLE
+                && c.reason().equals("HTTP_FETCH_" + outcome)));
     }
 
     @SuppressWarnings("unchecked")

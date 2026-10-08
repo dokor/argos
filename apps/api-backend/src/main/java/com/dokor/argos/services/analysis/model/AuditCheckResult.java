@@ -47,8 +47,25 @@ public record AuditCheckResult(
     String message,
     String recommendation,
     List<String> sources,
-    Double scoreRatio     // null => ratio dérivé du status ; sinon ratio continu [0,1]
+    Double scoreRatio,    // null => ratio dérivé du status ; sinon ratio continu [0,1]
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    MeasurementProvenance measurementProvenance
 ) {
+    /** The carrier/owner may differ from the module that actually observed the response. */
+    public record MeasurementProvenance(String module, List<String> sources) {
+        public MeasurementProvenance {
+            sources = sources == null ? List.of() : sources.stream().distinct().sorted().toList();
+        }
+    }
+
+    public AuditCheckResult(String key, String title, AuditStatus status, AuditSeverity severity,
+                            boolean scorable, double weight, List<String> tags, Object value,
+                            Map<String, Object> details, String message, String recommendation,
+                            List<String> sources, Double scoreRatio) {
+        this(key, title, status, severity, scorable, weight, tags, value, details, message,
+            recommendation, sources, scoreRatio, null);
+    }
+
     public AuditCheckResult {
         sources = sources != null ? List.copyOf(sources) : List.of();
         tags = tags != null ? tags : List.of();
@@ -68,7 +85,13 @@ public record AuditCheckResult(
 
     public AuditCheckResult withSources(List<String> newSources) {
         return new AuditCheckResult(key, title, status, severity, scorable, weight, tags,
-            value, details, message, recommendation, newSources, scoreRatio);
+            value, details, message, recommendation, newSources, scoreRatio, measurementProvenance);
+    }
+
+    public AuditCheckResult withMeasurementProvenance(String module, List<String> measuredSources) {
+        return new AuditCheckResult(key, title, status, severity, scorable, weight, tags,
+            value, details, message, recommendation, sources, scoreRatio,
+            new MeasurementProvenance(module, measuredSources));
     }
 
     /**
@@ -78,7 +101,7 @@ public record AuditCheckResult(
      */
     public AuditCheckResult withScoreRatio(Double ratio) {
         return new AuditCheckResult(key, title, status, severity, scorable, weight, tags,
-            value, details, message, recommendation, sources, ratio);
+            value, details, message, recommendation, sources, ratio, measurementProvenance);
     }
 
     public AuditCheckResult mergeWith(AuditCheckResult other) {
@@ -94,7 +117,7 @@ public record AuditCheckResult(
         return new AuditCheckResult(key, title, mergedStatus, mergedSeverity,
             this.scorable || other.scorable, Math.max(this.weight, other.weight),
             this.tags, this.value, mergedDetails, mergedMessage, mergedReco, List.copyOf(mergedSources),
-            mergedScoreRatio);
+            mergedScoreRatio, measurementProvenance);
     }
 
     private static int statusRank(AuditStatus s) {

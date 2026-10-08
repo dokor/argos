@@ -2,35 +2,32 @@ package com.dokor.argos.services.analysis.modules.observatory;
 
 import com.dokor.argos.logging.ExternalServiceCall;
 import com.dokor.argos.services.analysis.BoundedBodyHandlers;
+import com.dokor.argos.services.analysis.ExternalHttpClient;
+import com.dokor.argos.services.configuration.ConfigurationService;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Map;
 
 @Singleton
 public class ObservatoryClient {
 
     private static final Logger logger = LoggerFactory.getLogger(ObservatoryClient.class);
 
-    private static final String API_BASE = "https://observatory-api.mdn.mozilla.net/api/v2";
-
-    private final HttpClient httpClient;
-    private final ObjectMapper objectMapper;
+    private final ExternalHttpClient http;
+    private final String apiBase;
 
     @Inject
-    public ObservatoryClient(ObjectMapper objectMapper) {
-        this.httpClient = HttpClient.newBuilder()
-            .connectTimeout(Duration.ofSeconds(15))
-            .build();
-        this.objectMapper = objectMapper;
+    public ObservatoryClient(ExternalHttpClient http, ConfigurationService config) {
+        this.http = http;
+        this.apiBase = config.observatoryApiUrl();
     }
 
     /**
@@ -39,23 +36,10 @@ public class ObservatoryClient {
      */
     public JsonNode scan(String hostname) throws Exception {
         return ExternalServiceCall.timed(logger, "observatory", hostname, () -> {
-            String url = API_BASE + "/scan?host=" + hostname + "&rescan=false";
-
-            HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .timeout(com.dokor.argos.services.analysis.AuditDeadline.requestTimeout(Duration.ofSeconds(30)))
-                .header("User-Agent", "argos-auditor/1.0")
-                .header("Content-Type", "application/x-www-form-urlencoded")
-                .POST(HttpRequest.BodyPublishers.noBody())
-                .build();
-
-            HttpResponse<String> response = httpClient.send(request, BoundedBodyHandlers.ofString(BoundedBodyHandlers.MAX_PAGE_BYTES));
-
-            if (response.statusCode() < 200 || response.statusCode() >= 300) {
-                throw new RuntimeException("Observatory API returned HTTP " + response.statusCode() + " for host=" + hostname);
-            }
-
-            return objectMapper.readTree(response.body());
+            URI endpoint = URI.create(apiBase + "/scan?host="
+                + URLEncoder.encode(hostname, StandardCharsets.UTF_8) + "&rescan=false");
+            return http.postJson(endpoint, null, "application/x-www-form-urlencoded",
+                Duration.ofSeconds(30), Duration.ofSeconds(15), BoundedBodyHandlers.MAX_PAGE_BYTES, Map.of());
         });
     }
 
@@ -66,22 +50,8 @@ public class ObservatoryClient {
      */
     public JsonNode tests(int scanId) throws Exception {
         return ExternalServiceCall.timed(logger, "observatory-tests", "scan=" + scanId, () -> {
-            String url = API_BASE + "/tests?scan=" + scanId;
-
-            HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .timeout(com.dokor.argos.services.analysis.AuditDeadline.requestTimeout(Duration.ofSeconds(30)))
-                .header("User-Agent", "argos-auditor/1.0")
-                .GET()
-                .build();
-
-            HttpResponse<String> response = httpClient.send(request, BoundedBodyHandlers.ofString(BoundedBodyHandlers.MAX_PAGE_BYTES));
-
-            if (response.statusCode() < 200 || response.statusCode() >= 300) {
-                throw new RuntimeException("Observatory tests API returned HTTP " + response.statusCode() + " for scan=" + scanId);
-            }
-
-            return objectMapper.readTree(response.body());
+            return http.getJson(URI.create(apiBase + "/tests?scan=" + scanId),
+                Duration.ofSeconds(30), Duration.ofSeconds(15), BoundedBodyHandlers.MAX_PAGE_BYTES, Map.of());
         });
     }
 }

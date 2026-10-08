@@ -38,19 +38,17 @@ public class ScoreEnricherService {
         logger.info("Enriching checks with scoring metadata modules={}", modules.size());
 
         boolean antiBot = MeasurementCoverageService.antiBot(modules);
+        var moduleIndex = MeasurementAvailability.index(modules);
         return modules.stream()
-            .map(module -> enrichModule(module, antiBot))
+            .map(module -> enrichModule(module, moduleIndex, antiBot))
             .toList();
     }
 
-    private AuditModuleResult enrichModule(AuditModuleResult module, boolean antiBot) {
+    private AuditModuleResult enrichModule(AuditModuleResult module, Map<String, AuditModuleResult> modules, boolean antiBot) {
         String moduleId = module.id();
-        boolean outsideScope = module.data()!=null && "NOT_APPLICABLE".equals(module.data().get("measurementState"))
-            && module.data().get("measurementReason") instanceof String reason && !reason.isBlank();
-
         List<AuditCheckResult> enriched = module.checks().stream()
-            .map(check -> outsideScope || notApplicable(check) || MeasurementCoverageService.transportUnavailable(module) || MeasurementCoverageService.blocked(moduleId,check.key(),antiBot)
-                ? withScore(check,false,0.0,check.tags()) : enrichCheck(moduleId, check))
+            .map(check -> !MeasurementAvailability.resolve(module, check, modules, antiBot).measured()
+                ? withScore(check,false,0.0,mergeTags(check.tags(), List.of(moduleId))) : enrichCheck(moduleId, check))
             .toList();
 
         return new AuditModuleResult(
@@ -60,11 +58,6 @@ public class ScoreEnricherService {
             module.data(),
             enriched
         );
-    }
-
-    private static boolean notApplicable(AuditCheckResult check) {
-        return check.details()!=null && "NOT_APPLICABLE".equals(check.details().get("measurementState"))
-            && check.details().get("measurementReason") instanceof String reason && !reason.isBlank();
     }
 
     private AuditCheckResult enrichCheck(String moduleId, AuditCheckResult check) {
@@ -102,7 +95,8 @@ public class ScoreEnricherService {
             base.message(),
             base.recommendation(),
             base.sources(),
-            base.scoreRatio()
+            base.scoreRatio(),
+            base.measurementProvenance()
         );
     }
 

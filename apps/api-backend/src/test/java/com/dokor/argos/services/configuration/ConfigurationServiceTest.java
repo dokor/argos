@@ -28,9 +28,52 @@ class ConfigurationServiceTest {
         assertFalse(error.getMessage().contains("synthetic-db-fixture"));
         assertEquals("synthetic-env-value", service("", Map.of("INTERNAL_API_PASSWORD","synthetic-env-value")).internalApiAuthPassword());
     }
+    @Test void startupValidatesEnvironmentCredentialUsedByAuthentication() {
+        var config = """
+            internal-api.auth-password="synthetic-test-internal"
+            db.hikari."dataSource.password"="synthetic-db-fixture"
+            """;
+        for (String blank : java.util.List.of("", " ", "\t\n")) {
+            var service = service(config, Map.of("INTERNAL_API_PASSWORD", blank));
+            var error = assertThrows(IllegalStateException.class, service::validateRequiredSecrets);
+            assertEquals("Required external secret missing or invalid: internal-api.auth-password", error.getMessage());
+            assertNull(error.getCause());
+            assertThrows(IllegalStateException.class, service::internalApiAuthPassword);
+        }
+        var external = service("""
+            db.hikari."dataSource.password"="synthetic-db-fixture"
+            """, Map.of("INTERNAL_API_PASSWORD", "synthetic-env-value"));
+        assertDoesNotThrow(external::validateRequiredSecrets);
+        assertEquals("synthetic-env-value", external.internalApiAuthPassword());
+    }
+
+    @Test void malformedSecretsFailWithoutLeakingValuesOrConfigurationCauses() {
+        var valid = ConfigFactory.parseString("""
+            internal-api.auth-password="synthetic-test-internal"
+            db.hikari."dataSource.password"="synthetic-db-fixture"
+            """);
+        for (String path : java.util.List.of("internal-api.auth-password", "db.hikari.\"dataSource.password\"")) {
+            for (Object value : java.util.List.of(219, true, java.util.List.of("synthetic-private-value"),
+                    Map.of("private", "synthetic-private-value"), "", " \t")) {
+                var config = valid.withValue(path, com.typesafe.config.ConfigValueFactory.fromAnyRef(value));
+                var service = new ConfigurationService(config, Map.of());
+                var error = assertThrows(IllegalStateException.class, service::validateRequiredSecrets);
+                assertEquals("Required external secret missing or invalid: " + path, error.getMessage());
+                assertNull(error.getCause());
+            }
+            for (var config : java.util.List.of(valid.withoutPath(path),
+                    valid.withValue(path, com.typesafe.config.ConfigValueFactory.fromAnyRef(null)))) {
+                var error = assertThrows(IllegalStateException.class,
+                    new ConfigurationService(config, Map.of())::validateRequiredSecrets);
+                assertEquals("Required external secret missing or invalid: " + path, error.getMessage());
+                assertNull(error.getCause());
+            }
+        }
+    }
+
     @Test void optionalSettingsHaveDefaultsAndRequiredSettingsRemainRequired() {
         var service = service("", Map.of());
-        assertNull(service.httpGrizzlyWorkerThreadsPoolSize());
+        assertEquals(24, service.httpGrizzlyWorkerThreadsPoolSize());
         assertEquals(Duration.ofMinutes(20), service.auditStuckRunTimeout());
         assertEquals(Duration.ofMinutes(1), service.auditStuckCheckInterval());
         assertEquals(3, service.auditMaxAttempts());
@@ -39,7 +82,7 @@ class ConfigurationServiceTest {
         assertEquals(Duration.ofSeconds(45), service.codexSummaryTimeout());
         assertThrows(ConfigException.Missing.class, service::auditSchedulerInterval);
         assertThrows(ConfigException.Missing.class, service::internalApiAuthUsername);
-        assertThrows(ConfigException.Missing.class, service::internalApiAuthPassword);
+        assertThrows(IllegalStateException.class, service::internalApiAuthPassword);
     }
     @Test void explicitHoconAndEnvironmentSettingsOverrideDefaults() {
         var service = service("""
@@ -85,4 +128,68 @@ class ConfigurationServiceTest {
     void summaryTimeoutHasAMinimumOfFiveSeconds(String value) {
         assertEquals(Duration.ofSeconds(5), service("", Map.of("CODEX_SUMMARY_TIMEOUT_SECONDS", value)).codexSummaryTimeout());
     }
+
+    @Test void externalSettingsPreferHoconThenEnvironmentThenDefaults() {
+        var fallback = service("", Map.of());
+        assertEquals("http://playwright-service:3016", fallback.playwrightServiceUrl());
+        assertEquals(Duration.ofSeconds(60), fallback.lighthouseTimeout());
+        assertEquals("http://zap:8080", fallback.zapApiUrl());
+        assertEquals("https://api.ssllabs.com/api/v3", fallback.sslLabsApiUrl());
+        var legacy = service("", Map.of("PLAYWRIGHT_SERVICE_URL", "http://legacy:3016/",
+            "LIGHTHOUSE_TIMEOUT_SECONDS", "75", "ZAP_API_KEY", "legacy-key"));
+        assertEquals("http://legacy:3016", legacy.playwrightServiceUrl());
+        assertEquals(Duration.ofSeconds(75), legacy.lighthouseTimeout());
+        assertEquals("legacy-key", legacy.zapApiKey());
+        var hocon = service("""
+            external.playwright.url = "http://configured:3016"
+            external.lighthouse.timeout = 80s
+            external.zap.api-key = "configured-key"
+            """, Map.of("PLAYWRIGHT_SERVICE_URL", "http://legacy:3016",
+                "LIGHTHOUSE_TIMEOUT_SECONDS", "75", "ZAP_API_KEY", "legacy-key"));
+        assertEquals("http://configured:3016", hocon.playwrightServiceUrl());
+        assertEquals(Duration.ofSeconds(80), hocon.lighthouseTimeout());
+        assertEquals("configured-key", hocon.zapApiKey());
+    }
+
+    @Test void invalidExternalSettingsFailWithoutEchoingValues() {
+        var badUrl = service("", Map.of("ZAP_API_URL", "synthetic-secret"));
+        var urlError = assertThrows(IllegalArgumentException.class, badUrl::zapApiUrl);
+        assertFalse(urlError.getMessage().contains("synthetic-secret"));
+        assertThrows(IllegalArgumentException.class,
+            () -> service("", Map.of("LIGHTHOUSE_TIMEOUT_SECONDS", "invalid")).lighthouseTimeout());
+        assertThrows(IllegalArgumentException.class,
+            () -> service("external.playwright.timeout = -1s", Map.of()).playwrightTimeout());
+    }
+    @Test void workerPoolDefaultsAreBoundedAndLegacyMaximumRemainsSupported() {
+        var pool = service("", Map.of()).httpGrizzlyWorkerThreadPoolConfig();
+        assertEquals(4, pool.getCorePoolSize());
+        assertEquals(24, pool.getMaxPoolSize());
+        assertEquals(64, pool.getQueueLimit());
+        var legacy = service("http-grizzly.worker-threads-pool-size=2", Map.of()).httpGrizzlyWorkerThreadPoolConfig();
+        assertEquals(2, legacy.getCorePoolSize());
+        assertEquals(2, legacy.getMaxPoolSize());
+        var configured = service("""
+            http-grizzly.worker-threads-pool-size=8
+            http-grizzly.worker-threads-core-pool-size=2
+            http-grizzly.worker-threads-queue-limit=12
+            """, Map.of()).httpGrizzlyWorkerThreadPoolConfig();
+        assertEquals(2, configured.getCorePoolSize());
+        assertEquals(8, configured.getMaxPoolSize());
+        assertEquals(12, configured.getQueueLimit());
+    }
+
+    @ParameterizedTest @ValueSource(strings = {
+        "http-grizzly.worker-threads-pool-size=0",
+        "http-grizzly.worker-threads-core-pool-size=-1",
+        "http-grizzly.worker-threads-queue-limit=-1",
+        "http-grizzly.worker-threads-pool-size=2\nhttp-grizzly.worker-threads-core-pool-size=3",
+        "db.hikari.maximumPoolSize=0", "db.hikari.minimumIdle=-1",
+        "db.hikari.maximumPoolSize=2\ndb.hikari.minimumIdle=3",
+        "db.hikari.connectionTimeout=0", "db.hikari.connectionTimeout=249",
+        "db.hikari.maximumPoolSize=null", "db.hikari.minimumIdle=null", "db.hikari.connectionTimeout=null"
+    })
+    void invalidPoolSettingsFailBeforeStartup(String config) {
+        assertThrows(IllegalArgumentException.class, () -> service(config, Map.of()).validateResourcePools());
+    }
+
 }

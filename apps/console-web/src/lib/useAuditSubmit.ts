@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useLang } from "@/lib/i18n/LangContext";
+import { localizedPath } from "@/lib/i18n/routes";
 import { useRouter } from "next/navigation";
 import { argosApi, CreateAuditResponse } from "@/lib/ArgosApi";
 import { createLogger, safeError, sanitizeUrl } from "@/lib/logger";
@@ -29,6 +31,8 @@ type AppLogger = ReturnType<typeof createLogger>;
 export type UseAuditSubmitOptions = {
   /** Logger déjà contextualisé (canal + route + details). */
   logger: AppLogger;
+  /** Route publique fixe utilisée pour attribuer les créations d'audit côté BFF. */
+  sourceRoute?: string;
   /** Fenêtre de polling (ms) avant redirection forcée ; 0 = redirection immédiate. */
   maxWaitMs?: number;
   /** Intervalle de polling (ms). */
@@ -62,6 +66,7 @@ const DEFAULT_MAX_POLLS = 48; // ~2 min à 2,5 s
 export function useAuditSubmit(options: UseAuditSubmitOptions): UseAuditSubmitResult {
   const {
     logger,
+    sourceRoute,
     maxWaitMs = 0,
     pollIntervalMs = DEFAULT_POLL_INTERVAL_MS,
     maxPolls = DEFAULT_MAX_POLLS,
@@ -71,6 +76,7 @@ export function useAuditSubmit(options: UseAuditSubmitOptions): UseAuditSubmitRe
   } = options;
 
   const router = useRouter();
+  const { lang } = useLang();
   const [phase, setPhase] = useState<AuditPhase>("idle");
   const [errorKind, setErrorKind] = useState<AuditErrorKind | null>(null);
   const [error, setError] = useState<Error | null>(null);
@@ -91,7 +97,7 @@ export function useAuditSubmit(options: UseAuditSubmitOptions): UseAuditSubmitRe
 
   const redirectToReport = useCallback(
     (reportToken: string, reason: "completed" | "timeout" | "created", polls: number) => {
-      const href = `/report/${reportToken}`;
+      const href = localizedPath(`/report/${reportToken}`, lang);
       logger.info("audit_submit_redirect", {
         action: "redirect_to_report",
         details: { reason, reportToken, runId: runIdRef.current, polls, openInNewTab },
@@ -115,7 +121,7 @@ export function useAuditSubmit(options: UseAuditSubmitOptions): UseAuditSubmitRe
       setPhase("redirecting");
       router.push(href);
     },
-    [logger, router, openInNewTab]
+    [logger, router, openInNewTab, lang]
   );
 
   // Effet de polling (cas landing) : actif uniquement en phase "polling".
@@ -205,7 +211,10 @@ export function useAuditSubmit(options: UseAuditSubmitOptions): UseAuditSubmitRe
       });
 
       try {
-        const res = await argosApi.createAudit({ url: normalized });
+        const res = await argosApi.createAudit({
+          url: normalized,
+          ...(sourceRoute === "/guides/checklist-audit-site-web" ? { sourceRoute } : {}),
+        });
         runIdRef.current = res.runId;
         reportTokenRef.current = res.reportToken ?? null;
         pollCountRef.current = 0;
@@ -238,7 +247,7 @@ export function useAuditSubmit(options: UseAuditSubmitOptions): UseAuditSubmitRe
         });
       }
     },
-    [phase, maxWaitMs, logger, redirectToReport]
+    [phase, maxWaitMs, logger, redirectToReport, sourceRoute]
   );
 
   const reset = useCallback(() => {

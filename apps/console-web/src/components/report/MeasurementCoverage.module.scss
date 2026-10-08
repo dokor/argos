@@ -1,12 +1,14 @@
+@use '../../styles/tokens' as t;
+
 .panel {
-  margin-top: 1.5rem;
-  padding: 1rem;
+  margin-top: t.$space-6;
+  padding: t.$panel-space-mobile;
   border: 1px solid var(--argos-border);
   border-radius: .75rem;
   color: var(--argos-text);
   background: var(--argos-surface);
-  h2 { font-size: 1rem; margin: 0 0 .5rem; }
-  p { margin: .5rem 0; }
+  h2 { font-size: 1rem; margin: 0 0 t.$space-2; }
+  p { margin: t.$space-2 0; }
   summary { cursor: pointer; }
 }
-.domains { display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; padding: 0; list-style: none; }
+.domains { display: flex; flex-wrap: wrap; gap: t.$space-2 t.$space-6; padding: 0; list-style: none; }

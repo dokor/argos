@@ -1,20 +1,38 @@
 {
   "layout": {
     "title": "Argos - Analyseur de site web",
-    "description": "Argos analyse vos headers HTTP, HTML, stack technique et performances. Rapport scoré, privé, sans login."
+    "description": "Argos est un outil gratuit d'audit technique d'une URL publique, sans compte, qui fournit un rapport privé avec des scores et des recommandations en performance, sécurité, SEO et accessibilité."
   },
   "nav": {
     "logo": "Argos",
+    "primary": "Navigation principale",
+    "audit": "Auditer un site",
     "openConsole": "Accéder à la console →",
     "faq": "FAQ",
+    "resources": "Ressources",
     "accessibility": "Accessibilité"
+  },
+  "siteFooter": {
+    "exampleReport": "Exemple de rapport public",
+    "description": "Argos est un outil gratuit d'audit technique d'une URL publique, sans compte, qui fournit un rapport privé avec des scores et des recommandations en performance, sécurité, SEO et accessibilité.",
+    "discover": "Découvrir",
+    "resources": "Ressources et guides",
+    "faq": "Questions fréquentes",
+    "learn": "Comprendre l'audit",
+    "technicalAudit": "Audit technique gratuit",
+    "checklist": "Checklist d'audit de site web",
+    "accessibility": "Accessibilité numérique",
+    "information": "Informations",
+    "privacy": "Confidentialité des rapports",
+    "limits": "Limites de l'analyse",
+    "source": "Code source sur GitHub"
   },
   "landing": {
     "hero": {
       "badge": "Audit de site web · Gratuit · Sans compte",
       "slogan": "Votre site, passé au crible.",
       "headline": "Trouvez ce qui plombe votre site.\nGratuit, sans compte, en 30 secondes.",
-      "sub": "HTTP, SEO, performance, stack - Argos analyse tout et vous rend un rapport priorisé avec les actions concrètes à mener en premier.",
+      "sub": "Argos est un outil gratuit d'audit technique d'une URL publique, sans compte, qui fournit un rapport privé avec des scores et des recommandations en performance, sécurité, SEO et accessibilité.",
       "audience": "Pour les devs, les équipes growth et les agences.",
       "inputPlaceholder": "https://monsite.com",
       "inputAriaLabel": "URL du site à analyser",
@@ -23,11 +41,10 @@
       "hint": "Gratuit · Sans compte · Rapport privé, non indexé",
       "analyzing": "Analyse en cours",
       "analyzeSteps": [
-        "HTTP & Sécurité",
-        "HTML & SEO",
-        "Stack technique",
-        "Playwright runtime",
-        "Lighthouse"
+        "Performance",
+        "Sécurité",
+        "SEO",
+        "Accessibilité"
       ],
       "redirecting": "Rapport prêt · Redirection…",
       "errorMsg": "Erreur : vérifiez l'URL et réessayez.",
@@ -72,32 +89,27 @@
     },
     "modules": {
       "title": "Ce qu'Argos analyse",
-      "sub": "Cinq modules indépendants, une vision complète.",
+      "sub": "Quatre domaines pour comprendre les points à améliorer sur votre page.",
       "items": [
         {
+          "icon": "⚡",
+          "label": "Performance",
+          "desc": "Temps de chargement, métriques de rendu dans un navigateur et contrôles Lighthouse pour repérer les freins à la navigation."
+        },
+        {
           "icon": "🔒",
-          "label": "HTTP & Sécurité",
-          "desc": "Status code, redirections, HTTPS, HSTS, CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy…"
+          "label": "Sécurité",
+          "desc": "HTTPS, certificat TLS, en-têtes de sécurité et contrôles automatisés pour détecter des faiblesses techniques."
         },
         {
           "icon": "🏷️",
-          "label": "HTML & SEO",
-          "desc": "Title, meta description, canonical, H1, lang, viewport, OpenGraph, Twitter Card, alt images…"
+          "label": "SEO",
+          "desc": "Titre, meta description, URL canonique et structure HTML pour vérifier les principaux signaux techniques de référencement."
         },
         {
-          "icon": "🧩",
-          "label": "Détection de stack",
-          "desc": "CMS (WordPress, Shopify, Wix…), frameworks (Next.js, Nuxt, React, Vue…), backend hints, CDN Cloudflare."
-        },
-        {
-          "icon": "⚡",
-          "label": "Runtime Playwright",
-          "desc": "Métriques collectées sur page rendue : console errors, LCP, FCP, TTI, ressources bloquantes."
-        },
-        {
-          "icon": "📊",
-          "label": "Lighthouse",
-          "desc": "Score de performance, accessibilité, bonnes pratiques et SEO via Lighthouse headless."
+          "icon": "♿",
+          "label": "Accessibilité",
+          "desc": "Contrôles automatisés sur les alternatives textuelles, les noms accessibles et d’autres signaux. Un premier diagnostic à compléter par un audit manuel."
         }
       ]
     },
@@ -111,13 +123,13 @@
         },
         {
           "n": "02",
-          "label": "On analyse tout",
-          "desc": "Les cinq modules tournent en séquence : HTTP → HTML → Tech → Runtime → Lighthouse."
+          "label": "Analyse technique",
+          "desc": "Les contrôles automatisés examinent la page soumise en performance, sécurité, SEO et accessibilité."
         },
         {
           "n": "03",
           "label": "Rapport scoré",
-          "desc": "Un rapport privé (non indexable) avec un score global et des recommandations actionnables."
+          "desc": "Un rapport privé, non indexable, avec un score global, des scores par domaine et des recommandations priorisées."
         }
       ]
     },
@@ -151,14 +163,15 @@
       "sub": "Gratuit · Sans compte · Rapport privé · Source disponible"
     },
     "footer": {
-      "built": "Fait par Antoine LE LOUËT.",
+      "builtPrefix": "Fait par",
+      "maltProfile": "Antoine LE LOUËT sur Malt",
       "copy": "© 2026 Antoine LE LOUËT · Licence BSL 1.1"
     }
   },
   "faq": {
     "meta": {
       "title": "FAQ - Questions fréquentes",
-      "description": "Réponses aux questions fréquentes sur Argos : fonctionnement, rapports, limites d'analyse, confidentialité et évolutions à venir."
+      "description": "Questions fréquentes sur Argos, l’audit technique gratuit d’une URL publique, sans compte : scores en performance, sécurité, SEO et accessibilité, rapport privé et limites."
     },
     "hero": {
       "badge": "Centre d'aide",
@@ -168,11 +181,12 @@
     "backHome": "← Retour à l'accueil",
     "categories": [
       {
+        "id": "about",
         "title": "À propos d'Argos",
         "items": [
           {
             "q": "Qu'est-ce qu'Argos ?",
-            "a": "Argos est un outil d'audit de site web : vous soumettez une URL, cinq modules d'analyse tournent en séquence (HTTP, HTML, performance, Lighthouse, sécurité) et vous obtenez un rapport scoré et priorisé avec les actions concrètes à mener."
+            "a": "Argos est un outil gratuit d'audit technique d'une URL publique, sans compte, qui fournit un rapport privé avec des scores et des recommandations en performance, sécurité, SEO et accessibilité."
           },
           {
             "q": "Argos est-il vraiment gratuit ?",
@@ -189,6 +203,7 @@
         ]
       },
       {
+        "id": "reports",
         "title": "Les rapports",
         "items": [
           {
@@ -210,11 +225,12 @@
         ]
       },
       {
+        "id": "limits",
         "title": "Limites d'analyse",
         "items": [
           {
             "q": "Quels aspects Argos analyse-t-il ?",
-            "a": "Cinq modules : en-têtes HTTP, structure HTML et SEO, métriques d'exécution (performance perçue), scores Lighthouse (perf, accessibilité, bonnes pratiques, SEO) et sécurité (SSL, en-têtes de sécurité, scan de vulnérabilités basique)."
+            "a": "Quatre domaines : performance, sécurité, SEO et accessibilité. Les contrôles portent notamment sur les en-têtes HTTP, la structure HTML, le certificat TLS, les métriques du navigateur et les résultats Lighthouse. Runtime désigne une source de mesures de performance, pas un domaine supplémentaire."
           },
           {
             "q": "Argos remplace-t-il un audit manuel ?",
@@ -231,6 +247,7 @@
         ]
       },
       {
+        "id": "privacy",
         "title": "Confidentialité",
         "items": [
           {
@@ -248,6 +265,7 @@
         ]
       },
       {
+        "id": "future",
         "title": "Offres futures",
         "items": [
           {
@@ -586,6 +604,7 @@
       "title": "Scores par catégorie",
       "desc": "Vue synthétique pour prioriser. Clique sur une catégorie pour aller au détail.",
       "globalLabel": "Global",
+      "methodologyLink": "Comment est calculé le score ?",
       "globalTooltip": "Score global agrégé (0-100) basé sur les points détectés.",
       "issueCount": "point(s)",
       "seeDetail": "Voir le détail →",
@@ -647,6 +666,99 @@
       "note": "Synthèse générée par Codex à partir des résultats mesurés par Argos."
     }
   },
+  "marketing": {
+    "common": {
+      "measuresTitle": "Ce que l'audit peut mesurer",
+      "benefitsTitle": "Ce que vous pouvez en faire",
+      "exampleLabel": "Exemple fictif",
+      "stepsTitle": "Un parcours en trois étapes",
+      "steps": [
+        { "title": "Choisissez une page", "description": "Collez l'adresse d'une page publique importante pour votre activité." },
+        { "title": "Consultez le diagnostic", "description": "Argos lance ses vérifications et prépare un rapport privé, accessible par lien." },
+        { "title": "Décidez quoi corriger", "description": "Parcourez les constats et les priorités, puis faites valider les changements utiles." }
+      ],
+      "limitsTitle": "Le périmètre à connaître",
+      "ctaLabel": "Passer à l'action",
+      "otherPages": "À découvrir aussi",
+      "homeLink": "Comprendre Argos",
+      "faqLink": "Questions fréquentes",
+      "pmeLink": "Audit pour PME",
+      "ecommerceLink": "Audit e-commerce"
+    },
+    "form": {
+      "urlLabel": "Adresse de la page publique à auditer",
+      "urlPlaceholder": "https://exemple.fr",
+      "submit": "Lancer un audit gratuit",
+      "submitting": "Envoi de la demande…",
+      "analysing": "Ouverture du rapport et de sa progression…",
+      "errorUrlMissing": "Saisissez l'adresse d'une page publique.",
+      "errorInvalidUrl": "Saisissez une URL HTTP ou HTTPS valide.",
+      "errorRequest": "L'audit n'a pas pu démarrer. Vérifiez l'adresse ou réessayez.",
+      "hint": "Une seule URL publique est analysée. Le rapport reste privé et non indexé."
+    },
+    "landing": {
+      "title": "Un audit adapté à votre site",
+      "description": "Choisissez le contexte de votre activité pour comprendre les mesures disponibles et leurs limites.",
+      "pmeTitle": "Site de PME",
+      "pmeDescription": "Repérez les points qui peuvent freiner la visibilité, l'accès et la confiance sur une page clé.",
+      "ecommerceTitle": "Site e-commerce",
+      "ecommerceDescription": "Examinez une page publique de votre boutique sans confondre cet audit avec un test du paiement."
+    },
+    "pme": {
+      "meta": { "title": "Audit site web PME : priorisez les corrections", "description": "Analysez une page publique de votre site PME : SEO, performance, sécurité et accessibilité. Un rapport privé pour prioriser les corrections, sans promesse de conversion." },
+      "eyebrow": "Pour les PME",
+      "title": "Un audit de site web pour décider quoi améliorer en premier",
+      "lead": "Votre site présente votre activité avant même le premier échange. Argos examine une page publique et rassemble des constats techniques pour aider votre équipe ou votre prestataire à fixer des priorités.",
+      "heroNote": "Un diagnostic de page, pas une prévision de chiffre d'affaires.",
+      "measures": [
+        { "title": "Visibilité dans les résultats", "description": "Titres, description, balise canonique et structure des titres HTML de la page." },
+        { "title": "Performance ressentie", "description": "Scores et mesures de chargement via Lighthouse et navigateur, lorsque la page est accessible." },
+        { "title": "Confiance technique", "description": "HTTPS, redirections et en-têtes de sécurité observables depuis l'extérieur." },
+        { "title": "Accessibilité détectable", "description": "Contrôles automatiques et score Lighthouse ; les usages réels demandent une vérification humaine." }
+      ],
+      "benefits": [
+        { "title": "Cadrer une intervention", "description": "Partager des constats précis avec votre agence ou votre équipe, plutôt qu'une demande vague d'optimisation." },
+        { "title": "Prioriser les corrections", "description": "Commencer par les problèmes visibles dans le rapport et vérifier ensuite leur effet sur vos propres indicateurs." },
+        { "title": "Préparer la confiance", "description": "Repérer des signaux techniques qui peuvent gêner la navigation ou la crédibilité, sans garantir une hausse des contacts." }
+      ],
+      "exampleTitle": "Une page de service qui mérite une revue",
+      "exampleText": "Si une page de présentation a un titre peu descriptif, une image lourde et une politique de sécurité absente, le rapport peut faire remonter ces constats. Votre équipe décide ensuite des corrections et vérifie leur effet.",
+      "limits": [
+        "L'audit porte sur l'URL soumise, pas sur toutes les pages du site ni sur votre référencement global.",
+        "Argos n'observe ni vos ventes, ni vos formulaires envoyés, ni vos données de conversion.",
+        "Certains contrôles peuvent être indisponibles si la page bloque les robots ; les résultats automatiques ne remplacent pas un audit humain."
+      ],
+      "ctaTitle": "Commencez par une page importante",
+      "ctaText": "Accueil ou page de service : lancez un audit et utilisez les constats comme point de départ d'une décision."
+    },
+    "ecommerce": {
+      "meta": { "title": "Audit site e-commerce : SEO, vitesse et confiance", "description": "Auditez une page publique de boutique : SEO, performance, sécurité et accessibilité. Comprenez les limites : panier, commande et paiement ne sont pas testés." },
+      "eyebrow": "Pour les sites e-commerce",
+      "title": "Analysez une page clé de votre boutique avant le parcours d'achat",
+      "lead": "Une fiche produit, une catégorie ou l'accueil peut révéler des problèmes de visibilité, de chargement et de confiance. Argos mesure ce qui est accessible sur l'URL fournie et aide à prioriser les corrections.",
+      "heroNote": "Le panier, la commande et le paiement ne sont pas parcourus.",
+      "measures": [
+        { "title": "SEO d'une page publique", "description": "Titre, description, balise canonique et titres HTML de la fiche ou catégorie soumise." },
+        { "title": "Vitesse de chargement", "description": "Lighthouse et mesures navigateur sur cette page, lorsque le site permet l'analyse." },
+        { "title": "Sécurité visible", "description": "HTTPS, redirections et en-têtes HTTP ; aucune transaction n'est réalisée." },
+        { "title": "Accessibilité automatique", "description": "Signaux détectables et score Lighthouse, à compléter par des tests utilisateurs." }
+      ],
+      "benefits": [
+        { "title": "Choisir une page à corriger", "description": "Repérer des freins techniques sur une page qui compte dans votre catalogue." },
+        { "title": "Briefer votre équipe", "description": "Transmettre des constats exploitables sur le chargement, les balises ou les en-têtes." },
+        { "title": "Évaluer ensuite l'impact", "description": "Comparer vos propres mesures après correction ; l'audit ne prédit pas les ventes." }
+      ],
+      "exampleTitle": "Une fiche produit publique",
+      "exampleText": "Une fiche avec une description absente, un chargement lent et des images sans texte alternatif peut générer des points à examiner. Ce scénario illustre un seul URL ; il ne représente aucun rapport client.",
+      "limits": [
+        "L'audit examine uniquement la page publique soumise ; il ne suit pas toutes les fiches et catégories.",
+        "Aucun produit n'est ajouté au panier ; aucune commande, connexion ou étape de paiement n'est testée.",
+        "Argos ne mesure pas le taux de conversion ni les revenus. Les protections anti-bot peuvent rendre des contrôles indisponibles."
+      ],
+      "ctaTitle": "Testez une page de votre boutique",
+      "ctaText": "Soumettez une fiche produit ou une catégorie publique pour obtenir un point de départ concret."
+    }
+  },
   "auditForm": {
     "urlLabel": "URL à analyser",
     "urlPlaceholder": "https://example.com",
@@ -658,6 +770,7 @@
   },
   "auditList": {
     "comparison": {
+      "show": "Voir la comparaison", "loadError": "Impossible de charger la comparaison.",
       "method": "Barème figé", "coverage": "Couverture", "unknown": "Inconnue", "coverageChanged": "La couverture de mesure a changé ; ce changement n’est pas une régression du site.",
       "delta": "Évolution depuis le rapport précédent", "points": "points", "globalPoints": "points globaux", "domainPoints": "points du domaine", "contributions": "Principales améliorations et dégradations",
       "reasons": { "COMPARABLE": "Audits comparables", "NO_PREVIOUS_REPORT": "Aucun rapport précédent dans cet historique.", "EVIDENCE_MISSING": "Comparaison indisponible : preuves historiques insuffisantes. Relancez une analyse au barème courant.", "SCOPE_CHANGED": "Comparaison indisponible : périmètre différent.", "METHODOLOGY_CHANGED": "Comparaison indisponible : barème ou coefficients différents.", "COVERAGE_CHANGED": "Comparaison indisponible : mesures utilisables différentes.", "INSUFFICIENT_COVERAGE": "Comparaison indisponible : couverture insuffisante ou anti-bot.", "SCORE_UNAVAILABLE": "Comparaison indisponible : score non mesuré." }
@@ -668,6 +781,9 @@
     "copyJson": "📋 Copier le JSON",
     "copied": "✅ Copié",
     "showJson": "Voir le JSON",
+    "loadDetails": "Charger le détail technique",
+    "loadingDetails": "Chargement du détail…",
+    "detailsError": "Impossible de charger le détail.",
     "viewReport": "🔎 Voir le rapport",
     "reportPending": "Rapport en attente…",
     "scorePending": "Score en attente…",
@@ -693,6 +809,10 @@
       "moduleLabel": "Module",
       "tagLabel": "Tag",
       "techLabel": "Techno",
+      "loadDetails": "Charger les filtres détaillés",
+      "loadingDetails": "Chargement des détails…",
+      "detailsLoaded": "Filtres détaillés chargés",
+      "detailsError": "Impossible de charger les filtres détaillés.",
       "clearFilters": "Réinitialiser",
       "noResults": "Aucun résultat pour ces filtres."
     },

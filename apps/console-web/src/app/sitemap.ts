@@ -1,39 +1,44 @@
 import type { MetadataRoute } from "next";
+import { languageRoutes } from "@/lib/i18n/routes";
+import { languageAlternates } from "@/lib/i18n/metadata";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://argos.lelouet.fr";
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://argos.lelouet.fr").replace(/\/+$/, "");
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
+    { url: `${SITE_URL}/exemple-rapport` },
     {
       url: SITE_URL,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 1,
-      // Alternate language versions - fr is canonical, en available via toggle
-      alternates: {
-        languages: {
-          fr: SITE_URL,
-          en: SITE_URL, // same URL, language switch is client-side
-        },
-      },
     },
     {
       url: `${SITE_URL}/faq`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.7,
-      alternates: {
-        languages: {
-          fr: `${SITE_URL}/faq`,
-          en: `${SITE_URL}/faq`, // same URL, language switch is client-side
-        },
-      },
     },
     {
-      url: `${SITE_URL}/accessibilite-numerique`,
-      lastModified: new Date("2026-10-06"),
-      changeFrequency: "monthly",
-      priority: 0.8,
+      url: `${SITE_URL}/ressources`,
     },
-  ];
+    {
+      url: `${SITE_URL}/ressources/audit-site-pme`,
+    },
+    {
+      url: `${SITE_URL}/ressources/audit-site-ecommerce`,
+    },
+    {
+      url: `${SITE_URL}/ressources/accessibilite-numerique`,
+    },
+    {
+      url: `${SITE_URL}/ressources/audit-technique-gratuit`,
+    },
+    {
+      url: `${SITE_URL}/guides/checklist-audit-site-web`,
+    },
+    {
+      url: `${SITE_URL}/methodologie-score`,
+    },
+  ].flatMap((entry) => {
+    const path = entry.url.slice(SITE_URL.length) || "/";
+    const en = languageRoutes[path];
+    if (!en) return [entry];
+    const alternates = { languages: languageAlternates(path) };
+    return [{ ...entry, alternates }, { url: SITE_URL + en, alternates }];
+  });
 }
