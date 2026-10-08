@@ -94,15 +94,20 @@ public class TechModuleAnalyzer {
         String html,
         Logger logger
     ) {
+        AuditContext context = new AuditContext(inputUrl, normalizedUrl, 0L)
+            .withHttpResult(finalUrl, 200, 0L, List.of(), headers, html);
+        return analyze(context, logger);
+    }
+
+    /** Stack signatures only: no raw response headers, URLs or security findings. */
+    public AuditModuleResult analyzeStack(AuditContext context, Logger logger) {
+        Map<String, String> headers = context.headers();
+        String html = context.body();
+
         if ((html == null || html.isBlank()) && (headers == null || headers.isEmpty())) {
             throw new ModuleUnavailableException("Tech analysis has no HTML or HTTP headers");
         }
-        long start = System.currentTimeMillis();
-
         headers = headers != null ? headers : Map.of();
-        String serverHeader = headers.get("server");
-        String poweredBy = headers.get("x-powered-by");
-        String setCookie = headers.get("set-cookie");
 
         // Détections "CMS"
         DetectedTech cms = detectCms(headers, html);
@@ -112,14 +117,6 @@ public class TechModuleAnalyzer {
 
         // Détections spécifique a Next
         var next = nextDetector.detect(headers, html);
-
-        // Détections "backend / runtime"
-        List<String> backendHints = detectBackendHints(headers, poweredBy, setCookie, serverHeader, html);
-
-        // CDN / proxy
-        boolean cloudflare = matchesAny(CLOUDFLARE_HINT_PATTERN, concat(headers));
-
-        long durationMs = System.currentTimeMillis() - start;
 
         List<AuditCheckResult> checks = new ArrayList<>();
 
@@ -192,6 +189,35 @@ public class TechModuleAnalyzer {
                 : null
         ));
 
+        Map<String, Object> data = new LinkedHashMap<>();
+        Map<String, Object> cmsMap = new LinkedHashMap<>();
+        if (cms.name != null) {
+            cmsMap.put("name", cms.name);
+            cmsMap.put("confidence", cms.confidence);
+            cmsMap.put("signals", cms.signals);
+        }
+        data.put("cms", cmsMap);
+        data.put("nextJs", nextData);
+        data.put("frontendFramework", Map.of("name", frontend.name, "confidence", frontend.confidence, "signals", frontend.signals));
+        return new AuditModuleResult(moduleId(), "Technology",
+            "cms=" + safe(cms.name) + " frontend=" + safe(frontend.name), data, checks);
+    }
+
+    /** Recalculates response-specific checks on every run, including cache hits. */
+    public AuditModuleResult analyzeCurrentResponse(AuditContext context, AuditModuleResult stack, Logger logger) {
+        long start = System.currentTimeMillis();
+        String inputUrl = context.inputUrl();
+        String normalizedUrl = context.normalizedUrl();
+        String finalUrl = context.finalUrl();
+        Map<String, String> headers = context.headers() != null ? context.headers() : Map.of();
+        String html = context.body();
+        String serverHeader = headers.get("server");
+        String poweredBy = headers.get("x-powered-by");
+        String setCookie = headers.get("set-cookie");
+        List<String> backendHints = detectBackendHints(headers, poweredBy, setCookie, serverHeader, html);
+        boolean cloudflare = matchesAny(CLOUDFLARE_HINT_PATTERN, concat(headers));
+        long durationMs = System.currentTimeMillis() - start;
+        List<AuditCheckResult> checks = new ArrayList<>(stack.checks());
         Map<String, Object> objectMap = new HashMap<>(Map.of());
         if (serverHeader != null) {
             objectMap.put("server", serverHeader);
@@ -288,24 +314,11 @@ public class TechModuleAnalyzer {
             null
         ));
 
-        String summary = "cms=" + safe(cms.name)
-            + " frontend=" + safe(frontend.name)
-            + " cloudflare=" + cloudflare
-            + " durationMs=" + durationMs;
-
-        Map<String, Object> data = new LinkedHashMap<>();
-        Map<String, Object> cmsMap = new LinkedHashMap<>();
-        if (cms.name != null) {
-            cmsMap.put("name", cms.name);
-            cmsMap.put("confidence", cms.confidence);
-            cmsMap.put("signals", cms.signals);
-        }
+        String summary = stack.summary() + " cloudflare=" + cloudflare + " durationMs=" + durationMs;
+        Map<String, Object> data = new LinkedHashMap<>(stack.data());
         data.put("inputUrl", inputUrl);
         data.put("normalizedUrl", normalizedUrl);
         data.put("finalUrl", finalUrl);
-        data.put("cms", cmsMap);
-        data.put("nextJs", nextData);
-        data.put("frontendFramework", Map.of("name", frontend.name, "confidence", frontend.confidence, "signals", frontend.signals));
         data.put("backendHints", backendHints);
         data.put("cloudflare", cloudflare);
         data.put("serverHeader", serverHeader);
@@ -313,10 +326,7 @@ public class TechModuleAnalyzer {
         data.put("durationMs", durationMs);
         data.put("partial", html == null || html.isBlank());
 
-        logger.info("TECH module done: cms={}({}) frontend={}({}) backendHints={} cloudflare={}",
-            cms.name, cms.confidence, frontend.name, frontend.confidence, backendHints.size(), cloudflare
-        );
-
+        logger.info("TECH response checks done: backendHints={} cloudflare={}", backendHints.size(), cloudflare);
         return new AuditModuleResult(
             moduleId(),
             "Technology",
@@ -326,14 +336,8 @@ public class TechModuleAnalyzer {
         );
     }
 
-    /**
-     * Analyse avec le contexte HTTP enrichi.
-     * Comme l'interface ne fournit pas encore headers/html, on retourne un module "warning".
-     * L'orchestrator doit appeler analyzeTech(...).
-     */
-    public AuditModuleResult analyze(AuditContext auditContext, Logger logger) {
-        logger.debug("TECH module called.");
-        return analyzeTech(auditContext.inputUrl(), auditContext.normalizedUrl(), auditContext.finalUrl(), auditContext.headers(), auditContext.body(), logger);
+    public AuditModuleResult analyze(AuditContext context, Logger logger) {
+        return analyzeCurrentResponse(context, analyzeStack(context, logger), logger);
     }
 
     // -------------------------

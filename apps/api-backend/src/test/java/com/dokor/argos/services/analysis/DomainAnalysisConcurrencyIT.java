@@ -32,7 +32,8 @@ class DomainAnalysisConcurrencyIT {
     private static MariaDbDataSource source;
     private final ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
     private DomainAnalysisDao dao;
-    private final AuditContext context = new AuditContext("https://example.com/a", "https://example.com/a", 7L);
+    private final AuditContext context = new AuditContext("https://example.com/a", "https://example.com/a", 7L)
+        .withHttpResult("https://example.com/a", 200, 1L, List.of(), Map.of(), "<html/>");
     private final AuditModuleResult fresh = new AuditModuleResult(AuditModule.TECH.id(), "Technology", "fresh", Map.of(), List.of());
 
     @BeforeAll
@@ -63,11 +64,12 @@ class DomainAnalysisConcurrencyIT {
     void concurrentRepairsRunOnlyOnceAndLeaveOneValidRow() throws Exception {
         var calls = new AtomicInteger();
         TechModuleAnalyzer analyzer = mock(TechModuleAnalyzer.class);
-        when(analyzer.analyze(any(), any())).thenAnswer(invocation -> {
+        when(analyzer.analyzeStack(any(), any())).thenAnswer(invocation -> {
             calls.incrementAndGet();
             Thread.sleep(200);
             return fresh;
         });
+        when(analyzer.analyzeCurrentResponse(any(), any(), any())).thenReturn(fresh);
         // Separate service/DAO instances emulate workers sharing only MariaDB.
         var first = new DomainAnalysisService(dao, analyzer, mapper);
         var secondDao = new DomainAnalysisDao(new TransactionManagerQuerydsl(source, new Configuration(MySQLTemplates.DEFAULT)));
@@ -87,13 +89,14 @@ class DomainAnalysisConcurrencyIT {
     @Test
     void failedRepairCommitsInvalidationAndNextAuditCanRetry() throws Exception {
         TechModuleAnalyzer failing = mock(TechModuleAnalyzer.class);
-        when(failing.analyze(any(), any())).thenThrow(new IllegalStateException("tech failed"));
+        when(failing.analyzeStack(any(), any())).thenThrow(new IllegalStateException("tech failed"));
         assertThrows(IllegalStateException.class, () -> new DomainAnalysisService(dao, failing, mapper)
             .getOrRunTechAnalysis(context, LoggerFactory.getLogger(getClass())));
         assertEquals(0, rowCount());
 
         TechModuleAnalyzer recovered = mock(TechModuleAnalyzer.class);
-        when(recovered.analyze(any(), any())).thenReturn(fresh);
+        when(recovered.analyzeStack(any(), any())).thenReturn(fresh);
+        when(recovered.analyzeCurrentResponse(any(), any(), any())).thenReturn(fresh);
         assertEquals(fresh, new DomainAnalysisService(dao, recovered, mapper)
             .getOrRunTechAnalysis(context, LoggerFactory.getLogger(getClass())));
         assertEquals(1, rowCount());
