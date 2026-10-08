@@ -177,7 +177,8 @@ public class HttpModuleAnalyzer {
         // Détection d'une protection anti-bot (Cloudflare…) — issue #56 : on dégrade
         // proprement (statut non pénalisant + check informatif) au lieu de compter le
         // challenge comme un échec du site.
-        String antiBotVendor = detectAntiBot(lastStatus, lastHeaders, body);
+        AntiBotDetection antiBot = detectAntiBotEvidence(lastStatus, lastHeaders, body);
+        String antiBotVendor = antiBot.vendor();
         if (antiBotVendor != null) {
             logger.info("HTTP module: anti-bot challenge detected vendor={} status={}", antiBotVendor, lastStatus);
         }
@@ -199,7 +200,8 @@ public class HttpModuleAnalyzer {
                 0.0,
                 List.of(),
                 antiBotVendor,
-                Map.of("vendor", antiBotVendor, "statusCode", lastStatus),
+                Map.of("vendor", antiBotVendor, "statusCode", lastStatus,
+                    "reason", antiBot.reason(), "evidence", antiBot.evidence()),
                 "Le site est protégé par une protection anti-bot (" + antiBotVendor + ") : l'analyse a porté "
                     + "sur la page de challenge et peut être partielle. Ce blocage n'est pas imputé au score du site.",
                 null
@@ -276,7 +278,7 @@ public class HttpModuleAnalyzer {
         // fetchs sur un site injoignable, et cela évite de pénaliser le SEO d'un site
         // simplement en panne réseau.
         SeoResourceProbe.Result seoResources = null;
-        if (lastStatus >= 200 && lastStatus < 400) {
+        if (lastStatus >= 200 && lastStatus < 400 && antiBotVendor == null) {
             seoResources = probeSeoResources(finalUrl, logger);
             checks.add(checkRobotsTxt(seoResources));
             checks.add(checkSitemap(seoResources));
@@ -306,6 +308,9 @@ public class HttpModuleAnalyzer {
         data.put("httpVersion", httpVersion);
         data.put("errors", errors);
         data.put("antiBotDetected", antiBotVendor != null);
+        data.put("antiBotReason", antiBot.reason());
+        data.put("antiBotEvidence", antiBot.evidence());
+        if (antiBot.cdnProvider() != null) data.put("cdnProvider", antiBot.cdnProvider());
         if (antiBotVendor != null) {
             data.put("antiBotVendor", antiBotVendor);
         }
@@ -398,32 +403,51 @@ public class HttpModuleAnalyzer {
         );
     }
 
-    /** Marqueurs textuels d'une page de challenge anti-bot (Cloudflare & génériques). */
-    private static final java.util.regex.Pattern ANTIBOT_BODY_MARKERS = java.util.regex.Pattern.compile(
-        "(?i)just a moment|cf-browser-verification|_cf_chl_opt|attention required|checking your browser");
+    /** Cloudflare interstitial controls, not generic CDN or embedded Turnstile assets. */
+    private static final java.util.regex.Pattern CF_CHALLENGE_OPTIONS = java.util.regex.Pattern.compile(
+        "(?is)<script\\b[^>]*>[^<]*\\b_cf_chl_opt\\s*=\\s*\\{");
+    private static final java.util.regex.Pattern CF_CHALLENGE_ELEMENT = java.util.regex.Pattern.compile(
+        "(?is)<[^>]+\\bid\\s*=\\s*['\"](?:cf-browser-verification|cf-challenge-running)['\"]");
+    private static final java.util.regex.Pattern GENERIC_BROWSER_VERIFICATION = java.util.regex.Pattern.compile(
+        "(?i)checking your browser before accessing");
+
+    record AntiBotDetection(String cdnProvider, String vendor, String reason, List<String> evidence) {}
 
     /**
      * Détecte une protection anti-bot / challenge (Cloudflare & co.) — issue #56.
      * Retourne le fournisseur détecté ({@code "cloudflare"} / {@code "generic"}) ou
      * {@code null}. On évite les faux positifs : un simple CDN Cloudflare (en-têtes
-     * {@code cf-ray} sur une 200 sans marqueur) n'est PAS un challenge.
+     * {@code cf-ray}) ne confirme jamais un challenge, quel que soit le statut HTTP.
      */
     static String detectAntiBot(int statusCode, Map<String, String> headers, String body) {
-        Map<String, String> h = headers != null ? headers : Map.of();
-        String server = h.getOrDefault("server", "").toLowerCase();
-        boolean cloudflare = h.containsKey("cf-ray") || h.containsKey("cf-mitigated") || server.contains("cloudflare");
-        boolean challengeStatus = statusCode == 403 || statusCode == 429 || statusCode == 503;
-        boolean bodyMarker = body != null && ANTIBOT_BODY_MARKERS.matcher(body).find();
+        return detectAntiBotEvidence(statusCode, headers, body).vendor();
+    }
 
-        // Cloudflare : en-têtes CF + (statut de challenge OU marqueur de challenge).
-        if (cloudflare && (challengeStatus || bodyMarker)) {
-            return "cloudflare";
+    static AntiBotDetection detectAntiBotEvidence(int statusCode, Map<String, String> headers, String body) {
+        Map<String, String> h = headers != null ? headers : Map.of();
+        String server = h.getOrDefault("server", "").toLowerCase(Locale.ROOT);
+        boolean cloudflare = h.containsKey("cf-ray") || h.containsKey("cf-mitigated") || server.contains("cloudflare");
+        String cdn = cloudflare ? "cloudflare" : null;
+        // Explicit response signal, including challenges served with HTTP 200.
+        // https://developers.cloudflare.com/cloudflare-challenges/challenge-types/challenge-pages/detect-response/
+        if ("challenge".equalsIgnoreCase(h.getOrDefault("cf-mitigated", "").trim())) {
+            return new AntiBotDetection("cloudflare", "cloudflare", "CF_MITIGATED_CHALLENGE",
+                List.of("header:cf-mitigated=challenge"));
         }
-        // Générique : marqueur explicite de challenge sur un statut de blocage.
-        if (bodyMarker && challengeStatus) {
-            return "generic";
+        var evidence = new ArrayList<String>();
+        if (body != null && CF_CHALLENGE_OPTIONS.matcher(body).find()) evidence.add("html:cloudflare-challenge-options");
+        if (body != null && CF_CHALLENGE_ELEMENT.matcher(body).find()) evidence.add("html:cloudflare-verification-element");
+        if (!evidence.isEmpty()) {
+            return new AntiBotDetection(cdn, "cloudflare", "CLOUDFLARE_CHALLENGE_HTML", List.copyOf(evidence));
         }
-        return null;
+        if (body != null && GENERIC_BROWSER_VERIFICATION.matcher(body).find()
+            && (statusCode == 200 || statusCode == 403 || statusCode == 429 || statusCode == 503)) {
+            return new AntiBotDetection(cdn, "generic", "BROWSER_VERIFICATION_PAGE",
+                List.of("body:checking-your-browser-before-accessing"));
+        }
+        // Ambiguous errors remain ordinary HTTP failures; they do not exclude other modules.
+        return new AntiBotDetection(cdn, null, statusCode >= 400 && statusCode < 600
+            ? "HTTP_ERROR_WITHOUT_CHALLENGE_EVIDENCE" : "NO_CHALLENGE_EVIDENCE", List.of());
     }
 
     private static AuditCheckResult checkRedirectCount(List<String> chain) {
