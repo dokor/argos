@@ -47,3 +47,14 @@ DGCCRF and W3C. The article was reviewed on 6 October 2026 and is also readable 
 using Argos's language switch. Argos can identify some technical accessibility signals,
 but its automated report is not a complete RGAA/WCAG audit, a compliance certificate, or
 legal advice.
+
+## Public educational report example
+
+https://argos.lelouet.fr/exemple-rapport
+
+This bilingual example uses an Argos-controlled fictional product page with before
+and after HTML sources. It explains three verifiable HTML findings and their
+corrections; it is not a complete measured audit and contains no claimed score
+or performance gain. User reports are not published as examples. The guides
+explain when to choose Argos alongside PageSpeed Insights and Lighthouse, and
+how to prioritize corrections for small-business and e-commerce pages.

@@ -4,6 +4,7 @@ import Link from "next/link";
 import AuditForm from "@/components/AuditForm";
 import SiteNav from "@/components/site/SiteNav";
 import SiteFooter from "@/components/site/SiteFooter";
+import ChoosingArgos from "@/components/marketing/ChoosingArgos";
 import { useLang } from "@/lib/i18n/LangContext";
 import s from "./page.module.scss";
 
@@ -197,6 +198,7 @@ export default function ChecklistAuditPage() {
             <AuditForm mode="public" sourceRoute="/guides/checklist-audit-site-web" />
           </section>
         </div>
+        <ChoosingArgos />
       </main>
       <SiteFooter />
     </div>

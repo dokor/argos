@@ -4,6 +4,7 @@ import Link from "next/link";
 import AuditForm from "@/components/AuditForm";
 import SiteNav from "@/components/site/SiteNav";
 import SiteFooter from "@/components/site/SiteFooter";
+import ChoosingArgos from "@/components/marketing/ChoosingArgos";
 import { useLang } from "@/lib/i18n/LangContext";
 import s from "./page.module.scss";
 
@@ -160,6 +161,8 @@ export default function AuditTechniquePage() {
             <ul className={s.limits}>{c.limits.map((limit) => <li key={limit}>{limit}</li>)}</ul>
           </div>
         </section>
+
+        <ChoosingArgos />
 
         <section className={s.section} aria-labelledby="privacy-title">
           <div className={s.narrow}>
