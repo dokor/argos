@@ -13,6 +13,7 @@
     "accessibility": "Accessibilité"
   },
   "siteFooter": {
+    "exampleReport": "Exemple de rapport public",
     "description": "Argos est un outil gratuit d'audit technique d'une URL publique, sans compte, qui fournit un rapport privé avec des scores et des recommandations en performance, sécurité, SEO et accessibilité.",
     "discover": "Découvrir",
     "resources": "Ressources et guides",

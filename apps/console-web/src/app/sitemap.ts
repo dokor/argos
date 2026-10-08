@@ -4,6 +4,7 @@ const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://argos.lelouet.fr"
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
+    { url: `${SITE_URL}/exemple-rapport` },
     {
       url: SITE_URL,
     },
