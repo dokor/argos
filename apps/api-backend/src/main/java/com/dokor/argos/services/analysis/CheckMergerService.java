@@ -10,7 +10,8 @@ import java.util.*;
 
 /**
  * Fusionne les checks ayant la même key à travers plusieurs modules.
- * Le check "gagnant" vit dans le module propriétaire (OWNER_MAP).
+ * Le check "gagnant" vit dans le module propriétaire (OWNER_MAP) si celui-ci a émis la clé.
+ * Sinon, le module de la mesure sélectionnée porte le résultat fusionné.
  * Le doublon est retiré du module secondaire.
  * Les sources des deux checks sont fusionnées.
  */
