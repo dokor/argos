@@ -65,6 +65,7 @@ public class HttpModuleAnalyzer {
         String currentUrl = normalizedUrl != null ? normalizedUrl : inputUrl;
         List<String> redirectChain = new ArrayList<>();
         Map<String, String> lastHeaders = Map.of();
+        List<String> lastCookies = List.of();
         int lastStatus = 0;
         String httpVersion = null;
         String body = null;
@@ -116,6 +117,7 @@ public class HttpModuleAnalyzer {
                 body = response.body();
                 lastStatus = response.statusCode();
                 lastHeaders = flattenHeaders(response.headers());
+                lastCookies = response.headers().allValues("set-cookie");
                 httpVersion = response.version() != null ? response.version().name() : null;
 
                 logger.debug("HTTP module: response status={} url={}", lastStatus, UrlNormalizer.sanitizeForLog(currentUrl));
@@ -169,6 +171,7 @@ public class HttpModuleAnalyzer {
         if (!snapshotAvailable) {
             lastStatus = 0;
             lastHeaders = Map.of();
+            lastCookies = List.of();
             body = null;
             httpVersion = null;
         }
@@ -227,7 +230,7 @@ public class HttpModuleAnalyzer {
         checks.addAll(checkSecurityHeaders(lastHeaders));
 
         // 7b) Attributs de sécurité des cookies (Secure / HttpOnly) — issue #151
-        checks.add(checkCookieFlags(lastHeaders));
+        checks.add(checkCookieFlags(lastCookies));
 
         // 7c) Support de HTTP/2 (uniquement pertinent en HTTPS) — issue #151
         checks.add(checkHttp2(httpVersion, finalUrl));
@@ -659,12 +662,13 @@ public class HttpModuleAnalyzer {
 
     /**
      * Attributs de sécurité des cookies posés par la réponse (Secure, HttpOnly).
-     * Déterministe (lu dans l'en-tête Set-Cookie) : pas de faux positif lié au réseau.
+     * Each Set-Cookie field is one cookie: commas (including Expires) are never separators.
+     * Conservative policy: require both flags on every cookie. JavaScript-readable cookies
+     * remain WARN for manual review; names alone cannot establish a safe exemption.
+     * Evidence contains only ordinal positions and flags, never cookie names or values.
      */
-    private static AuditCheckResult checkCookieFlags(Map<String, String> headers) {
-        String setCookie = headers.get("set-cookie");
-        boolean hasCookies = setCookie != null && !setCookie.isBlank();
-        if (!hasCookies) {
+    static AuditCheckResult checkCookieFlags(List<String> cookies) {
+        if (cookies.isEmpty()) {
             return AuditCheckResult.of(
                 "http.security.cookie_flags",
                 "Attributs de sécurité des cookies",
@@ -677,10 +681,20 @@ public class HttpModuleAnalyzer {
                 null
             );
         }
-        String low = setCookie.toLowerCase(Locale.ROOT);
+        List<Map<String, Object>> observations = new ArrayList<>();
+        int missingSecure = 0;
+        int missingHttpOnly = 0;
+        for (String cookie : cookies) {
+            Set<String> attributes = cookieAttributes(cookie);
+            boolean secure = attributes.contains("secure");
+            boolean httpOnly = attributes.contains("httponly");
+            if (!secure) missingSecure++;
+            if (!httpOnly) missingHttpOnly++;
+            observations.add(Map.of("index", observations.size() + 1, "secure", secure, "httpOnly", httpOnly));
+        }
         List<String> missing = new ArrayList<>();
-        if (!low.contains("secure")) missing.add("Secure");
-        if (!low.contains("httponly")) missing.add("HttpOnly");
+        if (missingSecure > 0) missing.add("Secure");
+        if (missingHttpOnly > 0) missing.add("HttpOnly");
         boolean ok = missing.isEmpty();
         return AuditCheckResult.of(
             "http.security.cookie_flags",
@@ -689,11 +703,33 @@ public class HttpModuleAnalyzer {
             ok ? AuditSeverity.LOW : AuditSeverity.MEDIUM,
             false, 0.0, List.of(),
             missing,
-            Map.of("secure", low.contains("secure"), "httpOnly", low.contains("httponly")),
+            Map.of("secure", missingSecure == 0, "httpOnly", missingHttpOnly == 0,
+                "cookieCount", cookies.size(), "missingSecureCount", missingSecure,
+                "missingHttpOnlyCount", missingHttpOnly, "cookies", observations,
+                "httpOnlyPolicy", "REQUIRE_ALL_REVIEW_JAVASCRIPT_EXCEPTIONS"),
             ok ? "Les cookies portent les attributs Secure et HttpOnly."
-               : "Attribut(s) manquant(s) sur les cookies : " + String.join(", ", missing) + ".",
-            ok ? null : "Ajoutez Secure (transmission en HTTPS uniquement) et HttpOnly (cookie inaccessible au JavaScript) pour limiter le vol de session."
+               : "Attribut(s) manquant(s) sur au moins un cookie : " + String.join(", ", missing) + ".",
+            ok ? null : "Ajoutez Secure à chaque cookie et HttpOnly aux cookies de session ou sensibles. "
+                + "Si un cookie doit être accessible au JavaScript, vérifiez manuellement cette exception "
+                + "et assurez-vous qu'il ne contient aucun secret de session ; elle reste signalée par cet audit."
         );
+    }
+
+    private static Set<String> cookieAttributes(String cookie) {
+        Set<String> attributes = new HashSet<>();
+        // Skip the name/value pair, and do not interpret text inside quoted values as flags.
+        boolean quoted = false;
+        boolean first = true;
+        int start = 0;
+        for (int i = 0; i <= cookie.length(); i++) {
+            if (i < cookie.length() && cookie.charAt(i) == '"') quoted = !quoted;
+            if (i == cookie.length() || (cookie.charAt(i) == ';' && !quoted)) {
+                if (!first) attributes.add(cookie.substring(start, i).trim().toLowerCase(Locale.ROOT));
+                first = false;
+                start = i + 1;
+            }
+        }
+        return attributes;
     }
 
     /**
@@ -893,7 +929,15 @@ public class HttpModuleAnalyzer {
 
     private static Map<String, String> flattenHeaders(HttpHeaders headers) {
         Map<String, String> out = new LinkedHashMap<>();
-        headers.map().forEach((k, v) -> out.put(k.toLowerCase(Locale.ROOT), String.join(", ", v)));
+        headers.map().forEach((k, v) -> {
+            // Preserve cookie-name technology hints without publishing credentials in data/context.
+            List<String> safeValues = k.equalsIgnoreCase("set-cookie")
+                ? v.stream().map(cookie -> {
+                    int equals = cookie.indexOf('=');
+                    return equals > 0 ? cookie.substring(0, equals) + "=[redacted]" : "[redacted]";
+                }).toList() : v;
+            out.put(k.toLowerCase(Locale.ROOT), String.join(", ", safeValues));
+        });
         return out;
     }
 
