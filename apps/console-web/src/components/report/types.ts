@@ -5,6 +5,7 @@ export type Report = {
   site: {
     title?: string;
     logoUrl?: string;
+    domainRating?: { score: number; fetchedAt: string } | null;
   };
   scores: {
     global: number;

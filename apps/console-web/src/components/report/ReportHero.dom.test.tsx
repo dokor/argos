@@ -50,4 +50,19 @@ describe("ReportHero (rendu du rapport)", () => {
     // 3 issues au total (1 critique + 1 important + 1 info).
     expect(screen.getByText("3")).toBeInTheDocument();
   });
+
+  it("affiche le DR avec la date et l'attribution Ahrefs quand il est disponible", () => {
+    render(<ReportHero report={{ ...report, site: {
+      ...report.site, domainRating: { score: 42.4, fetchedAt: "2026-10-06T12:00:00Z" },
+    } }} />);
+    expect(screen.getByText("DR 42/100")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Domain Rating by Ahrefs" }))
+      .toHaveAttribute("href", "https://ahrefs.com/");
+    expect(screen.getByText(/mesuré le/)).toBeInTheDocument();
+  });
+
+  it("ne montre aucun badge DR pour un rapport historique sans donnée Ahrefs", () => {
+    render(<ReportHero report={report} />);
+    expect(screen.queryByText(/Domain Rating by Ahrefs/)).not.toBeInTheDocument();
+  });
 });

@@ -40,7 +40,7 @@ class ReportPublishServiceTest {
         when(connection.getAutoCommit()).thenReturn(true);
         service = new ReportPublishService(
             new TransactionManagerQuerydsl(dataSource, mock(Configuration.class)),
-            runs, reports, composer, summaries, new ObjectMapper());
+            runs, reports, composer, summaries, mock(AhrefsDomainRatingClient.class), new ObjectMapper());
         audit = new Audit();
         audit.setId(7L);
         audit.setNormalizedUrl("https://example.com/page");
