@@ -1,6 +1,9 @@
 @use '../../styles/tokens' as t;
 
 .section {
+  overflow-wrap: anywhere;
+  select { background: var(--argos-surface); color: var(--argos-text); border: 1px solid var(--argos-border); padding: 8px; max-width: 100%; }
+  summary:focus, button:focus-visible, select:focus-visible { outline: 3px solid var(--argos-text); outline-offset: -3px; }
   background: t.$surface;
   border: 1px solid t.$border;
   border-radius: t.$radius-2xl;

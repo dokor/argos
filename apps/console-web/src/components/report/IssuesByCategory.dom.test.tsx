@@ -30,8 +30,8 @@ describe("IssuesByCategory", () => {
   it("renders every issue in its canonical business category", () => {
     render(<IssuesByCategory report={report} />);
 
-    expect(within(document.querySelector("#cat-performance")!).getByText("HTTP status")).toBeInTheDocument();
-    expect(within(document.querySelector("#cat-a11y")!).getByText("Color contrast")).toBeInTheDocument();
+    expect(within(document.querySelector("#cat-performance")!).getByText(/Titre technique original: HTTP status/)).toBeInTheDocument();
+    expect(within(document.querySelector("#cat-a11y")!).getByText(/Titre technique original: Color contrast/)).toBeInTheDocument();
     expect(within(document.querySelector("#cat-security")!).getByText("Libraries")).toBeInTheDocument();
   });
 });

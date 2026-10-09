@@ -17,6 +17,7 @@ export default function ScoreGrid({
   globalAvailable,
   completeness,
   coverage,
+  onSelectDomain,
 }: {
   categories: CategoryScore[];
   model?: ReportModel;
@@ -24,6 +25,7 @@ export default function ScoreGrid({
   globalAvailable?: boolean | null;
   completeness?: number | null;
   coverage?: Coverage | null;
+  onSelectDomain?: (domain: string) => void;
 }) {
   const { t } = useLang();
   const ts = t.report.scoreGrid;
@@ -69,7 +71,8 @@ export default function ScoreGrid({
           const sc = c.score === undefined ? undefined : clamp(c.score);
           const color = sc === undefined ? "var(--argos-text-muted)" : scoreColor(sc);
           return (
-            <a key={c.key} href={`#cat-${encodeURIComponent(c.key)}`} className={s.card}>
+            <a key={c.key} href={onSelectDomain ? `?view=technical&domain=${encodeURIComponent(c.key)}#cat-${encodeURIComponent(c.key)}` : `#cat-${encodeURIComponent(c.key)}`} className={s.card}
+              onClick={event => { if (onSelectDomain) { event.preventDefault(); onSelectDomain(c.key); } }}>
               <div className={s.cardTop}>
                 <div>
                   <p className={s.catLabel}>{(t.report.priorityCards.domains as Record<string, string>)[c.key] ?? c.label}</p>

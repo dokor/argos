@@ -184,13 +184,23 @@ public record ReportDto(
         String evidence,
         String recommendation,
         Effort effort,
-        String confidence
+        String confidence,
+        @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+        StructuredEvidence structuredEvidence
     ) {
+        public Issue(String id,String category,List<String> categories,String module,IssueSeverity severity,
+            String title,String impact,String evidence,String recommendation,Effort effort,String confidence) {
+            this(id,category,categories,module,severity,title,impact,evidence,recommendation,effort,confidence,null);
+        }
         public Issue(String id,String category,List<String> categories,String module,IssueSeverity severity,
             String title,String impact,String evidence,String recommendation,Effort effort) {
             this(id,category,categories,module,severity,title,impact,evidence,recommendation,effort,"UNKNOWN");
         }
     }
+
+    public record StructuredEvidence(String source, Measurement measurement, List<EvidenceDetail> details) {}
+    public record Measurement(double value, String unit) {}
+    public record EvidenceDetail(String key, String text) {}
 
     public enum Severity {critical, important, opportunity}
 

@@ -170,15 +170,12 @@ export default function AuditProgressView({ token }: Props) {
 
   const modules = parseModuleStatuses(runStatus?.moduleStatuses);
   const globalStatus = runStatus?.status ?? "QUEUED";
-  // Progression : les états terminaux (COMPLETED/FAILED/SKIPPED) comptent pour un
-  // pas plein, le module en cours (RUNNING) pour un demi-pas - la barre avance de
-  // façon fluide et atteint 100 % même si un module se termine en échec.
+  // Operational completion only. RUNNING has no invented fractional progress.
   const isTerminal = (st: ModuleStatus["status"]) =>
     st === "COMPLETED" || st === "FAILED" || st === "SKIPPED";
   const terminalCount = modules.filter(m => isTerminal(m.status)).length;
-  const runningCount = modules.filter(m => m.status === "RUNNING").length;
   const progress = modules.length > 0
-    ? Math.round(((terminalCount + runningCount * 0.5) / modules.length) * 100)
+    ? Math.round((terminalCount / modules.length) * 100)
     : 0;
 
   // Une erreur "connection" est transitoire (retry en cours) : on ne bascule
@@ -221,7 +218,7 @@ export default function AuditProgressView({ token }: Props) {
 
         {/* Barre de progression globale */}
         {!isBlockingError && modules.length > 0 && (
-          <div className={s.progressBar} role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
+          <div className={s.progressBar} role="progressbar" aria-label={tp.modulesLabel} aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
             <div className={s.progressFill} style={{ width: `${progress}%` }} />
           </div>
         )}

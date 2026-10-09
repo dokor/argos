@@ -1,0 +1,9 @@
+.navigation {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  border-bottom: 1px solid var(--argos-border); padding-bottom: 12px;
+  button { padding: 12px 16px; border: 1px solid var(--argos-border); border-radius: 8px;
+    background: var(--argos-surface); color: var(--argos-text); }
+  button[aria-pressed='true'] { background: var(--argos-surface-2); font-weight: 700; border-color: var(--argos-text); }
+  button:focus-visible { outline: 3px solid var(--argos-text); outline-offset: 3px; }
+  @media (max-width: 480px) { flex-direction: column; button { width: 100%; text-align: left; } }
+}

@@ -5,13 +5,14 @@ import { useLang } from "@/lib/i18n/LangContext";
 import { SEVERITY_COLORS } from "./reportColors";
 import type { ReportModel } from "./reportModel";
 import s from "./PriorityCards.module.scss";
+import { findingContent } from "./findingCatalogue";
 
 type SevKey = "critical" | "important" | "opportunity";
 
-export default function PriorityCards({ priorities, model, onSelectFinding }: { priorities: PriorityItem[]; model?: ReportModel; onSelectFinding?: (key: string) => void }) {
+export default function PriorityCards({ priorities, model, onSelectFinding, limit = 6 }: { priorities: PriorityItem[]; model?: ReportModel; onSelectFinding?: (key: string) => void; limit?: number }) {
   const { t, lang } = useLang();
   const tp = t.report.priorityCards;
-  const list = (priorities || []).slice(0, 6);
+  const list = (priorities || []).slice(0, limit);
 
   return (
     <section className={s.section}>
@@ -27,6 +28,7 @@ export default function PriorityCards({ priorities, model, onSelectFinding }: { 
           {list.map((p, i) => {
             const resolution = model?.priorities[i];
             const grouped = new Set([p.findingKey, ...(p.relatedFindingKeys ?? [])].filter(Boolean)).size > 1;
+            const content = !grouped && resolution?.findings.length === 1 ? findingContent(resolution.findings[0].issue, lang) : undefined;
             const sev = SEVERITY_COLORS[p.severity as SevKey] ?? SEVERITY_COLORS.opportunity;
             return (
               <div
@@ -54,8 +56,8 @@ export default function PriorityCards({ priorities, model, onSelectFinding }: { 
                   )}
                 </div>
 
-                <p className={s.cardTitle}>{p.title}</p>
-                <p className={s.cardImpact}>{p.impact}</p>
+                <p className={s.cardTitle}>{content?.recommendation ?? p.title}</p>
+                <p className={s.cardImpact}>{content?.impact ?? p.impact}</p>
                 {p.rankReason && (
                   <div className={s.explanation}>
                     {p.categoryKey && <p>{(tp.domains as Record<string, string>)[p.categoryKey] ?? p.categoryKey}</p>}

@@ -1,11 +1,12 @@
 "use client";
 
-import { Fragment } from "react";
+import { Fragment, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { frenchPath, languageRoutes, localizedPath } from "@/lib/i18n/routes";
 import { useLang, Lang } from "@/lib/i18n/LangContext";
 import s from "./LangToggle.module.scss";
+import { readingSnapshot, subscribeReading } from "./report/reportReading";
 
 type Props = {
   className?: string;
@@ -15,6 +16,7 @@ type Props = {
 export default function LangToggle({ className, variant = "light" }: Props) {
   const { lang, setLang } = useLang();
   const pathname = usePathname();
+  const suffix = useSyncExternalStore(subscribeReading, readingSnapshot, () => "");
   const hasLanguageRoute = Boolean(languageRoutes[frenchPath(pathname)]) || /^\/(en\/)?report\//.test(pathname);
 
   return (
@@ -27,7 +29,7 @@ export default function LangToggle({ className, variant = "light" }: Props) {
         <Fragment key={l}>
           {i === 1 && <span className={s.sep} aria-hidden="true" />}
           {hasLanguageRoute ? <Link
-            href={localizedPath(pathname, l)}
+            href={localizedPath(pathname + suffix, l)}
             hrefLang={l}
             lang={l}
             className={`${s.option} ${lang === l ? s.active : ""}`}

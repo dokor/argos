@@ -531,10 +531,10 @@
       "scoreMaintain": "maintain",
       "scoreQuickwins": "focus on quick wins",
       "oneLiner": {
-        "high": "Solid site: a few optimizations could further improve impact.",
-        "good": "Good potential: targeted actions can improve performance and conversion.",
-        "fair": "Several blockers: a small roadmap can quickly raise the score.",
-        "low": "Big opportunities: fixing critical issues will improve trust and conversion."
+        "high": "High global score among measured checks; review findings and limits.",
+        "good": "Favourable global score among measured checks; some points may still need attention.",
+        "fair": "Several measured checks need review; confirm priorities before making changes.",
+        "low": "Measured checks need priority attention; confirm their scope."
       },
       "analyzedAt": "Analyzed",
       "domainRatingFetchedAt": "measured on",
@@ -570,9 +570,9 @@
       "missingFinding": "The detailed finding link is missing from this report. The action context remains available above.",
       "partialFindings": "Some findings for this action are unavailable in this report.",
       "title": "Recommended priorities",
-      "desc": "Six distinct actions ranked by score contribution, then severity and available information.",
+      "desc": "Actions ranked by score contribution, then severity and available information.",
       "domains": { "performance": "Performance", "security": "Security", "seo": "SEO", "a11y": "Accessibility" },
-      "gainLabel": "Maximum modelled gain:",
+      "gainLabel": "Modelled score gain:",
       "gainUnit": "global points",
       "modelLimit": "Rubric estimate with constant measurements and denominators. Actual improvement depends on the fix and a new audit.",
       "groupedLabel": "Grouped findings:",
@@ -611,7 +611,7 @@
       "globalTooltip": "Aggregated global score (0-100) based on detected issues.",
       "issueCount": "issue(s)",
       "seeDetail": "See details →",
-      "partial": "Partial analysis · {n}% coverage",
+      "partial": "Partial analysis · {n}% module completeness",
       "partialTooltip": "One or more modules could not be evaluated (service temporarily unavailable). The score covers the modules actually analyzed - the site is not penalized."
     },
     "issuesByCategory": {

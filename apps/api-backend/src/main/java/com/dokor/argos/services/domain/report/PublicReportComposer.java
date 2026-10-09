@@ -175,7 +175,8 @@ public class PublicReportComposer {
                     evidenceFrom(check),
                     check.recommendation() != null ? check.recommendation() : "Corriger selon les bonnes pratiques.",
                     ReportPriorityService.explicitEffort(check),
-                    ReportPriorityService.explicitConfidence(check)
+                    ReportPriorityService.explicitConfidence(check),
+                    ReportEvidence.from(module.id(), check)
                 ));
             }
         }
@@ -188,7 +189,7 @@ public class PublicReportComposer {
     private static String evidenceFrom(AuditCheckResult check) {
         if (check.details() == null || check.details().isEmpty()) return null;
         // MVP : stringify court
-        return check.details().toString();
+        return ReportEvidence.clean(check.details());
     }
 
     private static int severityRank(ReportDto.IssueSeverity s) {
