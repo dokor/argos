@@ -126,6 +126,13 @@
   flex-shrink: 0;
 }
 
+.missingScore {
+  font-size: t.$text-sm;
+  flex-shrink: 1;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
 .catDesc {
   font-size: t.$text-xs;
   line-height: 1.45;

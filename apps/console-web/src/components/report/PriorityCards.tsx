@@ -3,11 +3,12 @@
 import { PriorityItem } from "./types";
 import { useLang } from "@/lib/i18n/LangContext";
 import { SEVERITY_COLORS } from "./reportColors";
+import type { ReportModel } from "./reportModel";
 import s from "./PriorityCards.module.scss";
 
 type SevKey = "critical" | "important" | "opportunity";
 
-export default function PriorityCards({ priorities }: { priorities: PriorityItem[] }) {
+export default function PriorityCards({ priorities, model, onSelectFinding }: { priorities: PriorityItem[]; model?: ReportModel; onSelectFinding?: (key: string) => void }) {
   const { t, lang } = useLang();
   const tp = t.report.priorityCards;
   const list = (priorities || []).slice(0, 6);
@@ -24,10 +25,12 @@ export default function PriorityCards({ priorities }: { priorities: PriorityItem
       ) : (
         <div className={s.grid}>
           {list.map((p, i) => {
+            const resolution = model?.priorities[i];
+            const grouped = new Set([p.findingKey, ...(p.relatedFindingKeys ?? [])].filter(Boolean)).size > 1;
             const sev = SEVERITY_COLORS[p.severity as SevKey] ?? SEVERITY_COLORS.opportunity;
             return (
               <div
-                key={p.findingKey ?? `${p.title}-${i}`}
+                key={`${p.findingKey ?? "priority"}-${i}`}
                 className={s.card}
                 style={{ ["--accent" as string]: sev.color }}
               >
@@ -61,10 +64,21 @@ export default function PriorityCards({ priorities }: { priorities: PriorityItem
                       <p>{tp.gainLabel} {p.globalScoreGain.toLocaleString(lang === "en" ? "en-US" : "fr-FR", { maximumFractionDigits: 2 })} {tp.gainUnit}</p>
                     )}
                     {p.confidence && <p>{tp.confidenceLabel} {tp.confidence[p.confidence]}</p>}
-                    {p.relatedFindingKeys && p.relatedFindingKeys.length > 1 && (
-                      <p>{tp.groupedLabel} {p.relatedFindingKeys.length}</p>
-                    )}
                     <p className={s.modelLimit}>{tp.modelLimit}</p>
+                  </div>
+                )}
+                {grouped && <p>{tp.groupedLabel} {resolution ? resolution.findings.length : new Set([p.findingKey, ...(p.relatedFindingKeys ?? [])].filter(Boolean)).size}</p>}
+                {resolution && (
+                  <div className={s.findingLinks}>
+                    {resolution.findings.map(finding => (
+                      <a key={finding.key} href={`#${finding.anchor}`} onClick={event => {
+                        if (onSelectFinding) {
+                          event.preventDefault();
+                          onSelectFinding(finding.key);
+                        }
+                      }}>{tp.seeFinding}: {finding.issue.title}</a>
+                    ))}
+                    {resolution.status !== "resolved" && <p>{resolution.status === "partial" ? tp.partialFindings : tp.missingFinding}</p>}
                   </div>
                 )}
               </div>

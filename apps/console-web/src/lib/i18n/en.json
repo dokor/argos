@@ -566,6 +566,9 @@
       "footerNote": "Private report • not indexed • auto-generated"
     },
     "priorityCards": {
+      "seeFinding": "View finding",
+      "missingFinding": "The detailed finding link is missing from this report. The action context remains available above.",
+      "partialFindings": "Some findings for this action are unavailable in this report.",
       "title": "Recommended priorities",
       "desc": "Six distinct actions ranked by score contribution, then severity and available information.",
       "domains": { "performance": "Performance", "security": "Security", "seo": "SEO", "a11y": "Accessibility" },
@@ -612,6 +615,9 @@
       "partialTooltip": "One or more modules could not be evaluated (service temporarily unavailable). The score covers the modules actually analyzed - the site is not penalized."
     },
     "issuesByCategory": {
+      "unknownDomain": "Domain not provided",
+      "sourcesLabel": "Sources",
+      "resultCount": "{n} findings of {total}",
       "title": "Details by category",
       "desc": "Filter by severity, then explore issues by category (sorted critical → info).",
       "filterLabel": "Severity",
