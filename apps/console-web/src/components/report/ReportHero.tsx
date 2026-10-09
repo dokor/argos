@@ -1,166 +1,70 @@
 "use client";
 
 import { buildReportModel, ReportModel } from "./reportModel";
-import { Report, TechSummary } from "./types";
+import type { Report } from "./types";
 import { useLang } from "@/lib/i18n/LangContext";
-import { scoreColor, scoreBg, SEVERITY_COLORS } from "./reportColors";
-import ScoreRing from "./ScoreRing";
-import MeasurementCoverage from "./MeasurementCoverage";
+import { decisionCopy } from "./decisionCopy";
+import { reportReadingCopy } from "./reportReadingCopy";
+import { globalScore, reportScope } from "./reportSummaryModel";
+import ReportSummary from "./ReportSummary";
 import RelaunchButton from "./RelaunchButton";
 import s from "./ReportHero.module.scss";
-import { reportReadingCopy } from "./reportReadingCopy";
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function scoreGradient(score: number): string {
-  const c = scoreColor(score);
-  return `linear-gradient(90deg, ${c} 0%, ${c}88 100%)`;
-}
-
-function getInitial(domain: string): string {
-  return (domain || "?").replace(/^www\./, "")[0]?.toUpperCase() ?? "?";
-}
-
-function formatDate(iso: string, locale: string): string {
-  try {
-    return new Date(iso).toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" });
-  } catch {
-    return iso;
-  }
-}
-
-function techLabels(tech?: TechSummary): string[] {
-  if (!tech) return [];
-  const labels: string[] = [];
-  if (tech.cms?.name) labels.push(tech.cms.name);
-  if (tech.nextJs?.isNext) {
-    const router = tech.nextJs.router === "app" ? "App Router" : tech.nextJs.router === "pages" ? "Pages Router" : "";
-    labels.push(router ? `Next.js · ${router}` : "Next.js");
-  } else if (tech.frontendFramework?.name && tech.frontendFramework.name !== "unknown") {
-    labels.push(tech.frontendFramework.name);
-  }
-  return labels;
-}
-
-// ─── Severity counts ──────────────────────────────────────────────────────────
-
-const SEV_CONFIG = [
-  { key: "critical",    color: SEVERITY_COLORS.critical.dot },
-  { key: "important",   color: SEVERITY_COLORS.important.dot },
-  { key: "opportunity", color: SEVERITY_COLORS.opportunity.dot },
-] as const;
-
-// ─── Main component ───────────────────────────────────────────────────────────
-
-export default function ReportHero({ report, model = buildReportModel(report) }: { report: Report; model?: ReportModel }) {
+export default function ReportHero({ report, model = buildReportModel(report), onActions, onMethod }: {
+  report: Report; model?: ReportModel; onActions?: () => void; onMethod?: () => void;
+}) {
   const { t, lang } = useLang();
-  const th = t.report.hero;
-
-  const score = Math.max(0, Math.min(100, report.scores.global));
-  const available = report.scores.globalAvailable !== false;
-  const color = scoreColor(score);
-  const issuesCount = model.counts.total;
-  const counts = model.counts;
-
-  const techs = techLabels(report.tech);
+  const copy = decisionCopy[lang];
+  const reading = reportReadingCopy[lang];
+  const score = globalScore(report);
+  const coverage = report.scores.coverage;
+  const scope = reportScope(report.url);
+  const date = new Date(report.generatedAt);
   const domainRating = report.site?.domainRating;
   const hasDomainRating = domainRating != null && Number.isFinite(domainRating.score)
     && domainRating.score >= 0 && domainRating.score <= 100;
-  const scoreUiLabel =
-    score >= 85 ? th.scoreLabels.excellent :
-    score >= 70 ? th.scoreLabels.good :
-    score >= 55 ? th.scoreLabels.improve :
-    th.scoreLabels.priority;
-
-  return (
-    <section className={s.hero}>
-      {/* Dynamic accent bar */}
-      <div className={s.accentBar} style={{ background: available ? scoreGradient(score) : "var(--argos-border)" }} />
-
-      <div className={s.heroInner}>
-        <div className={s.topRow}>
-          {/* Identity */}
-          <div className={s.identity}>
-            <div className={s.avatar}>
-              {report.site?.logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={report.site.logoUrl} alt="" />
-              ) : (
-                getInitial(report.domain)
-              )}
-            </div>
-
-            <h1 className={s.siteName}>{report.site?.title || report.domain}</h1>
-
-            <div className={s.meta}>
-              <span className={s.metaText}>{report.domain}</span>
-              <span className={s.metaText}>·</span>
-              <span className={s.metaText}>{th.analyzedAt} {formatDate(report.generatedAt, th.locale)}</span>
-              {techs.map((tl) => (
-                <span key={tl} className={s.techPill}>{tl}</span>
-              ))}
-              {hasDomainRating && (
-                <span className={s.domainRating} title={th.domainRatingTooltip}>
-                  <strong>DR {Math.round(domainRating.score)}/100</strong>
-                  <span>· {th.domainRatingFetchedAt} <time dateTime={domainRating.fetchedAt}>
-                    {formatDate(domainRating.fetchedAt, th.locale)}
-                  </time></span>
-                  <a href="https://ahrefs.com/" target="_blank" rel="noopener noreferrer">
-                    Domain Rating by Ahrefs
-                  </a>
-                </span>
-              )}
-            </div>
-
-            {available && !report.scores.coverage?.provisional && report.summary?.oneLiner && (
-              <p className={s.oneLiner}>
-                {(th.oneLiner as Record<string, string>)[report.summary.oneLiner] ?? report.summary.oneLiner}
-              </p>
-            )}
-          </div>
-
-          {/* Score ring */}
-          <div className={s.scoreBlock}>
-            <p>{reportReadingCopy[lang].score}</p>
-            {available ? <ScoreRing score={score}>
-              <text x={70} y={64} textAnchor="middle" fontSize={38} fontWeight={800} className={s.ringScore} fontFamily="Inter,system-ui,sans-serif">
-                {score}
-              </text>
-              <text x={70} y={86} textAnchor="middle" fontSize={13} className={s.ringUnit} fontFamily="Inter,system-ui,sans-serif">
-                /100
-              </text>
-            </ScoreRing> : <p className={s.scoreLabel}>{th.scoreUnavailable}</p>}
-            {available && (
-            <span
-              className={s.scoreLabel}
-              style={{ color, background: scoreBg(score) }}
-            >
-              {report.scores.coverage?.provisional ? t.report.measurementCoverage.provisional : scoreUiLabel}
-            </span>
-            )}
-            <RelaunchButton url={report.url} />
+  return <section className={s.hero} aria-labelledby="report-domain">
+    <div className={s.heroInner}>
+      <div className={s.identity}>
+        <h1 id="report-domain" className={s.siteName}>{report.domain}</h1>
+        <div className={s.meta}>
+          <span>{t.report.hero.analyzedAt} {Number.isFinite(date.getTime())
+            ? <time dateTime={report.generatedAt}>{date.toLocaleDateString(t.report.hero.locale, { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })}</time>
+            : copy.dateUnknown}</span>
+          {report.site?.title && <span>{copy.siteTitle}: {report.site.title}</span>}
+          {hasDomainRating && <span className={s.domainRating} title={t.report.hero.domainRatingTooltip}>
+            <strong>DR {Math.round(domainRating.score)}/100</strong> · {t.report.hero.domainRatingFetchedAt} {new Date(domainRating.fetchedAt).toLocaleDateString(t.report.hero.locale, { timeZone: "UTC" })} · <a href="https://ahrefs.com/" target="_blank" rel="noopener noreferrer">Domain Rating by Ahrefs</a>
+          </span>}
+        </div>
+        <p className={s.scope}>{copy.scope}: {scope ?? copy.scopeUnknown}</p>
+        <p className={s.privacy}>{copy.privacy}</p>
+      </div>
+      <div className={s.topRow}>
+        <div className={s.decision}>
+          <ReportSummary report={report} model={model} />
+          <div className={s.links}>
+            <a href="?view=actions" onClick={event => { if (onActions) { event.preventDefault(); onActions(); } }}>{copy.actions}</a>
+            <a href="#report-method" onClick={event => { if (onMethod) { event.preventDefault(); onMethod(); } }}>{copy.methodLink}</a>
           </div>
         </div>
-
-        <MeasurementCoverage coverage={report.scores.coverage} />
-        {/* Stats bar */}
-        <div className={s.statsRow}>
-          {SEV_CONFIG.map(({ key, color: c }) => (
-            <div key={key} className={s.stat}>
-              <div className={s.statValue} style={{ color: c }}>
-                {counts[key]}
-              </div>
-              <div className={s.statLabel}>{th.severity[key]}</div>
-            </div>
-          ))}
-          <div className={s.stat}>
-            <div className={`${s.statValue} ${s.statTotalValue}`}>
-              {issuesCount}
-            </div>
-            <div className={s.statLabel}>{th.issues}</div>
-          </div>
+        <div className={s.scoreBlock}>
+          <h2 className={s.scoreTitle}>{reading.score}</h2>
+          {score !== undefined ? <p className={s.scoreNumber} aria-label={`Score ${score}/100`}><strong>{score}</strong><span>/100</span></p>
+            : <p className={s.notEvaluated}>{copy.notEvaluated}</p>}
+          {score !== undefined && <p className={s.scoreState}>{coverage?.provisional ? copy.provisional : copy.measured}</p>}
+          <p className={s.coverage}><strong>{reading.coverage}</strong><br />{coverage
+            ? `${Math.round(coverage.global.ratio * 100)} % — ${coverage.global.sufficient ? t.report.measurementCoverage.sufficient : copy.insufficient}`
+            : copy.coverageUnknown}</p>
+          <RelaunchButton url={report.url} />
         </div>
       </div>
-    </section>
-  );
+      <div className={s.statsRow}>
+        {(["critical", "important", "opportunity"] as const).map(key => <div key={key} className={s.stat}>
+          <strong className={key === "critical" && model.counts.critical ? s.criticalCount : s.statValue}>{model.counts[key]}</strong>
+          <span className={s.statLabel}>{t.report.hero.severity[key]}</span>
+        </div>)}
+        <div className={s.stat}><strong className={s.statValue}>{model.counts.total}</strong><span className={s.statLabel}>{t.report.hero.issues}</span></div>
+      </div>
+    </div>
+  </section>;
 }

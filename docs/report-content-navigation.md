@@ -53,3 +53,31 @@ Third-party text is escaped by React. Both producer and renderer bound text, rem
 control/bidi characters and strip URL credentials, query strings and fragments.
 Stored historical strings are not silently rewritten or parsed. Full exports must
 continue to consume the complete #363 model, irrespective of current URL filters.
+
+## Decision summary (#365)
+
+The domain is the report H1. The HTML title is secondary metadata. Page scope
+removes URL credentials, query and fragment; dates use UTC for deterministic SSR
+and hydration. Link access is described explicitly: anyone with the report link
+can read it, and search engines must not index it.
+
+The global Argos score appears once, alongside weighted coverage and the persisted
+provisional state. Explicit unavailability and invalid/missing numeric values render
+as Not evaluated; a measured zero remains zero. Coverage unavailability also wins
+over a historical numeric domain value. Four domain cards keep the business order;
+findings with an unknown domain retain a separate link and stay in global counts.
+The same domain availability rule applies when entering technical details.
+
+The deterministic verdict prioritises canonical critical findings over a favourable
+average. An empty result is scoped to measured checks and never implies compliance.
+Anti-bot and partial states qualify the diagnosis at the top. The first three
+backend priorities remain in their existing overview slot; the action plan and
+technical views use the shared URL navigation from #47.
+
+The summary opens and focuses the Method and limitations disclosure at the end of
+the report. It shows page/date, weighted coverage, operational module completeness,
+check states, unmeasured modules, observed sources and available persisted versions.
+Finding confidence, module completeness and scoring coverage have separate meanings.
+The displayed editorial catalogue version is explicitly separate from the persisted
+scoring version. Automated accessibility is never a RGAA/WCAG certification, and
+Lighthouse tool scores never replace Argos domain scores.

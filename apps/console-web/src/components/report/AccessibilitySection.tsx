@@ -3,6 +3,8 @@
 import { useLang } from "@/lib/i18n/LangContext";
 import type { Report } from "./types";
 import s from "./AccessibilitySection.module.scss";
+import { domainScore } from "./reportSummaryModel";
+import { decisionCopy } from "./decisionCopy";
 
 /** Sources are references supplied by the persisted backend, never inferred in the browser. */
 export function safeAccessibilitySource(value: string): string | null {
@@ -19,12 +21,12 @@ function translated(dict: Record<string, string>, key: string, fallback: string)
 }
 
 export default function AccessibilitySection({ report }: { report: Report }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const copy = t.report.accessibility;
   const evidence = report.accessibilityEvidence;
   const qualification = report.accessibilityCompliance;
   if (!evidence && !qualification) return null;
-  const score = report.scores.byCategory.find(c => c.key === "a11y")?.score;
+  const score = domainScore(report.scores.byCategory.find(c => c.key === "a11y")?.score, "a11y", report.scores.coverage);
   const coverage = evidence?.coverage ?? "UNAVAILABLE";
   const lighthouseScore = coverage !== "UNAVAILABLE" && typeof evidence?.lighthouseScore === "number"
     && Number.isFinite(evidence.lighthouseScore) && evidence.lighthouseScore >= 0 && evidence.lighthouseScore <= 100
@@ -54,7 +56,7 @@ export default function AccessibilitySection({ report }: { report: Report }) {
           <p>{copy.testsDescription}</p>
         </div>
         <dl className={s.facts}>
-          <div><dt>{copy.technicalScore}</dt><dd>{score == null ? unknown : `${score}/100`}</dd></div>
+          <div><dt>{copy.technicalScore}</dt><dd>{score == null ? decisionCopy[lang].notEvaluated : `${score}/100`}</dd></div>
           <div><dt>{copy.lighthouseScore}</dt><dd>{lighthouseScore == null ? unknown : `${lighthouseScore}/100`}</dd></div>
           <div><dt>{copy.coverageTitle}</dt><dd>{translated(copy.coverage, coverage, unknown)}</dd></div>
         </dl>

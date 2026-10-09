@@ -1,0 +1,13 @@
+@use '../../styles/tokens' as t;
+.method { background: t.$surface; border: 1px solid t.$border; border-radius: t.$radius-xl; scroll-margin-top: 80px;
+  summary { padding: t.$space-5; font-size: t.$text-xl; font-weight: 600; cursor: pointer; }
+  summary:focus-visible, a:focus-visible { outline: 3px solid t.$text; outline-offset: 4px; }
+}
+.body { padding: 0 t.$space-5 t.$space-5; font-size: t.$text-md; line-height: 1.65; overflow-wrap: anywhere;
+  h2 { font-size: 22px; } h3 { font-size: t.$text-xl; } a { color: t.$text; text-underline-offset: 3px; }
+}
+.facts { display: grid; gap: t.$space-3;
+  div { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(0, 2fr); gap: t.$space-3; }
+  dt { font-weight: 600; } dd { margin: 0; }
+}
+@media (max-width: 640px) { .facts div { grid-template-columns: minmax(0, 1fr); gap: t.$space-1; } }

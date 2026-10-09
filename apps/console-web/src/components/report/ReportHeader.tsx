@@ -6,9 +6,10 @@ import ThemeToggle from "@/components/ThemeToggle";
 import ArgosIcon from "@/components/ArgosIcon";
 import s from "./ReportHeader.module.scss";
 import { useLang } from "@/lib/i18n/LangContext";
+import { decisionCopy } from "./decisionCopy";
 
 export default function ReportHeader() {
-  const { t } = useLang();
+  const { t, lang } = useLang();
 
   return (
     <header className={s.header}>
@@ -19,7 +20,7 @@ export default function ReportHeader() {
         </Link>
 
         <div className={s.right}>
-          <span className={s.privateBadge}>{t.report.page.private}</span>
+          <span className={s.privateBadge}>{decisionCopy[lang].privateLabel}</span>
           <ThemeToggle />
             <LangToggle />
         </div>

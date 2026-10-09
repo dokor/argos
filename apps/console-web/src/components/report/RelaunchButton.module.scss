@@ -7,29 +7,30 @@
   gap: t.$space-2;
 }
 
-// Bouton sur fond navy du hero : clair-sur-sombre volontaire.
+// The decision summary uses semantic surfaces in both themes.
 .btn {
   display: inline-flex;
   align-items: center;
   gap: t.$space-2;
   padding: 8px t.$space-4;
   border-radius: t.$radius-pill;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(255, 255, 255, 0.08);
-  color: t.$color-slate-50;
+  border: 1px solid t.$border;
+  background: t.$surface;
+  color: t.$text;
   font-size: t.$text-md;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
-  white-space: nowrap;
+  max-width: 100%;
+  text-align: center;
 
   &:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.14);
-    border-color: rgba(255, 255, 255, 0.3);
+    background: t.$surface-2;
+    border-color: t.$text-muted;
   }
 
   &:focus-visible {
-    outline: 2px solid t.$color-indigo-muted;
+    outline: 2px solid t.$text;
     outline-offset: 2px;
   }
 
@@ -61,7 +62,9 @@
 
 .error {
   font-size: t.$text-sm;
-  color: t.$color-red-border; // lisible sur le navy sombre
+  color: t.$text;
+  border-left: 3px solid t.$color-red;
+  padding-left: t.$space-2;
   text-align: center;
   max-width: 200px;
 }
