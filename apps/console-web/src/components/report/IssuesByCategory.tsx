@@ -1,9 +1,10 @@
 "use client";
 
 import React from "react";
-import { Report, Issue, CategoryScore } from "./types";
+import { Report, Issue } from "./types";
 import { useLang } from "@/lib/i18n/LangContext";
 import { scoreColor, SEVERITY_COLORS } from "./reportColors";
+import { buildReportModel, FindingSelection, ReportModel } from "./reportModel";
 import s from "./IssuesByCategory.module.scss";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -11,23 +12,6 @@ import s from "./IssuesByCategory.module.scss";
 type SevKey = "critical" | "important" | "info";
 
 function clamp(n: number) { return Math.max(0, Math.min(100, n ?? 0)); }
-
-// Regroupe les points par catégorie. Un point peut relever de plusieurs catégories
-// (ex. un point SSL apparaît sous "security" ET "ssl", cohérent avec les scores) :
-// il est alors ajouté à chacune. Repli sur categoryKey si categoryKeys est absent.
-function groupIssuesByCategory(issues: Issue[]): Map<string, Issue[]> {
-  const map = new Map<string, Issue[]>();
-  for (const issue of issues) {
-    const keys = issue.categoryKeys && issue.categoryKeys.length > 0
-      ? issue.categoryKeys
-      : [issue.categoryKey];
-    for (const k of keys) {
-      if (!map.has(k)) map.set(k, []);
-      map.get(k)!.push(issue);
-    }
-  }
-  return map;
-}
 
 function sevWeight(sev: Issue["severity"]) {
   return sev === "critical" ? 0 : sev === "important" ? 1 : 2;
@@ -37,16 +21,30 @@ type Filter = "all" | SevKey;
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function IssuesByCategory({ report }: { report: Report }) {
+export default function IssuesByCategory({ report, model = buildReportModel(report), selection }: { report: Report; model?: ReportModel; selection?: FindingSelection }) {
   const { t } = useLang();
   const ti = t.report.issuesByCategory;
   const catInfo = t.report.categoryInfo as Record<string, string>;
   const [filter, setFilter] = React.useState<Filter>("all");
 
-  const categories: CategoryScore[] = report.scores.byCategory || [];
-  const allIssues: Issue[] = report.issues || [];
-  const filtered = filter === "all" ? allIssues : allIssues.filter((i) => i.severity === filter);
-  const byCat = groupIssuesByCategory(filtered);
+  const [activeSelection, setActiveSelection] = React.useState(selection);
+  const effectiveFilter = selection && activeSelection !== selection ? "all" : filter;
+  if (selection && activeSelection !== selection) {
+    setActiveSelection(selection);
+    setFilter("all");
+  }
+  React.useEffect(() => {
+    if (!selection) return;
+    const finding = model.findings.find(item => item.key === selection.key);
+    const detail = finding && document.getElementById(finding.anchor) as HTMLDetailsElement | null;
+    if (detail) {
+      detail.open = true;
+      detail.scrollIntoView?.({ block: "center" });
+      detail.querySelector("summary")?.focus();
+    }
+  }, [selection, model]);
+  const domains = t.report.priorityCards.domains as Record<string, string>;
+  const visibleCount = model.findings.filter(finding => effectiveFilter === "all" || finding.issue.severity === effectiveFilter).length;
 
   const FILTERS: { key: Filter; label: string }[] = [
     { key: "all",       label: ti.filterAll },
@@ -70,7 +68,8 @@ export default function IssuesByCategory({ report }: { report: Report }) {
           <button
             key={key}
             type="button"
-            className={`${s.filterBtn} ${filter === key ? s.active : ""}`}
+            className={`${s.filterBtn} ${effectiveFilter === key ? s.active : ""}`}
+            aria-pressed={effectiveFilter === key}
             onClick={() => setFilter(key)}
           >
             {label}
@@ -78,19 +77,20 @@ export default function IssuesByCategory({ report }: { report: Report }) {
         ))}
       </div>
 
+      <p role="status">{ti.resultCount.replace("{n}", String(visibleCount)).replace("{total}", String(model.counts.total))}</p>
+
       {/* Categories */}
-      {categories.map((cat) => {
-        const issues = (byCat.get(cat.key) || [])
-          .slice()
-          .sort((a, b) => sevWeight(a.severity) - sevWeight(b.severity));
-        const sc = clamp(cat.score);
-        const color = scoreColor(sc);
+      {model.groups.filter(group => group.key !== "unknown" || group.findings.length > 0).map((cat) => {
+        const issues = cat.findings.filter(finding => effectiveFilter === "all" || finding.issue.severity === effectiveFilter)
+          .slice().sort((a, b) => sevWeight(a.issue.severity) - sevWeight(b.issue.severity));
+        const sc = cat.score ? clamp(cat.score.score) : undefined;
+        const color = sc === undefined ? "var(--argos-text-muted)" : scoreColor(sc);
 
         return (
           <div key={cat.key} id={`cat-${cat.key}`} className={s.catBlock}>
             <div className={s.catHeader}>
               <div className={s.catMeta}>
-                <p className={s.catLabel}>{cat.label}</p>
+                <p className={s.catLabel}>{domains[cat.key] ?? ti.unknownDomain}</p>
                 <p className={s.catDesc}>{catInfo[cat.key] ?? catInfo.fallback}</p>
                 <p className={s.catInfo}>
                   {issues.length} {ti.issueCount}
@@ -99,9 +99,9 @@ export default function IssuesByCategory({ report }: { report: Report }) {
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <span
                   className={s.catScoreChip}
-                  style={{ color, background: `${color}18` }}
+                  style={{ color, background: sc === undefined ? "var(--argos-surface-2)" : `${color}18` }}
                 >
-                  {sc}{ti.scoreSuffix}
+                  {sc === undefined ? t.report.hero.scoreUnavailable : `${sc}${ti.scoreSuffix}`}
                 </span>
                 <a href="#top" className={s.backTop}>{ti.backToTop}</a>
               </div>
@@ -111,10 +111,11 @@ export default function IssuesByCategory({ report }: { report: Report }) {
               {issues.length === 0 ? (
                 <p className={s.noIssues}>{ti.noIssues}</p>
               ) : (
-                issues.map((issue) => {
+                issues.map((finding) => {
+                  const { issue } = finding;
                   const sv = SEVERITY_COLORS[issue.severity as SevKey] ?? SEVERITY_COLORS.info;
                   return (
-                    <details key={issue.id} className={s.issueRow}>
+                    <details key={finding.key} id={finding.anchor} className={s.issueRow}>
                       <summary className={s.issueSummary}>
                         <span className={s.sevDot} style={{ background: sv.dot }} />
 
@@ -133,6 +134,7 @@ export default function IssuesByCategory({ report }: { report: Report }) {
                       </summary>
 
                       <div className={s.issueDetail}>
+                        {finding.sources.length > 0 && <p>{ti.sourcesLabel}: {finding.sources.join(", ")}</p>}
                           {issue.confidence && <p>{t.report.priorityCards.confidenceLabel}: {t.report.priorityCards.confidence[issue.confidence]}</p>}
                         {issue.impact && (
                           <div className={s.detailBlock}>

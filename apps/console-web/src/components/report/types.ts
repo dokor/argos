@@ -141,10 +141,12 @@ export type PriorityItem = {
 
 export type Issue = {
   confidence?: "HIGH" | "MEDIUM" | "LOW" | "UNKNOWN" | null;
-  id: string;
-  categoryKey: string;
-  /** Toutes les catégories métier auxquelles le point appartient (ex. ["security","ssl"]). */
+  /** Canonical check key; some historical reports omit it. */
+  id?: string | null;
+  categoryKey?: string | null;
+  /** Historical metadata may mix business domains and engine provenance. */
   categoryKeys?: string[];
+  tags?: string[];
   module?: string;
   severity: "critical" | "important" | "info";
   title: string;

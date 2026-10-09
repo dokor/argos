@@ -114,6 +114,17 @@
   font-size: t.$text-xs;
 }
 
+.findingLinks {
+  display: grid;
+  gap: t.$space-2;
+  color: t.$text-muted;
+  overflow-wrap: anywhere;
+
+  a { color: t.$text; }
+  a:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+  p { margin: 0; }
+}
+
 @media (max-width: 640px) {
   .section { padding: t.$panel-space-mobile; }
   .card { padding: t.$panel-space-mobile; }

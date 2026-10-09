@@ -1,5 +1,6 @@
 "use client";
 
+import { buildReportModel, ReportModel } from "./reportModel";
 import { Report, TechSummary } from "./types";
 import { useLang } from "@/lib/i18n/LangContext";
 import { scoreColor, scoreBg, SEVERITY_COLORS } from "./reportColors";
@@ -50,23 +51,15 @@ const SEV_CONFIG = [
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function ReportHero({ report }: { report: Report }) {
+export default function ReportHero({ report, model = buildReportModel(report) }: { report: Report; model?: ReportModel }) {
   const { t } = useLang();
   const th = t.report.hero;
 
   const score = Math.max(0, Math.min(100, report.scores.global));
   const available = report.scores.globalAvailable !== false;
   const color = scoreColor(score);
-  const allIssues = report.issues ?? [];
-  const issuesCount = allIssues.length;
-
-  // Les compteurs de sévérité reflètent l'ensemble des issues détectées.
-  // "info" côté backend est affiché comme "opportunity" dans l'UI.
-  const counts = {
-    critical:    allIssues.filter((i) => i.severity === "critical").length,
-    important:   allIssues.filter((i) => i.severity === "important").length,
-    opportunity: allIssues.filter((i) => i.severity === "info").length,
-  };
+  const issuesCount = model.counts.total;
+  const counts = model.counts;
 
   const techs = techLabels(report.tech);
   const domainRating = report.site?.domainRating;

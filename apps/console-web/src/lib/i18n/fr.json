@@ -566,6 +566,9 @@
       "footerNote": "Rapport privé • non indexable • généré automatiquement"
     },
     "priorityCards": {
+      "seeFinding": "Voir le constat",
+      "missingFinding": "Le lien détaillé vers le constat manque dans ce rapport. Le contexte de l’action reste disponible ci-dessus.",
+      "partialFindings": "Certains constats de cette action ne sont pas disponibles dans ce rapport.",
       "title": "Priorités recommandées",
       "desc": "Six actions distinctes classées selon leur contribution au score, puis leur gravité et les informations disponibles.",
       "gainLabel": "Gain maximal théorique :",
@@ -612,6 +615,9 @@
       "partialTooltip": "Un ou plusieurs modules n'ont pas pu être évalués (service momentanément indisponible). Le score porte sur les modules réellement analysés - le site n'est pas pénalisé."
     },
     "issuesByCategory": {
+      "unknownDomain": "Domaine non renseigné",
+      "sourcesLabel": "Sources",
+      "resultCount": "{n} constats sur {total}",
       "title": "Détail par catégorie",
       "desc": "Filtre par sévérité, puis explore les points par catégorie (tri critique → info).",
       "filterLabel": "Sévérité",

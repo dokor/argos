@@ -259,6 +259,11 @@
   padding: t.$space-3 0;
 }
 
+.issueSummary:focus-visible {
+  outline: 2px solid var(--argos-text);
+  outline-offset: 3px;
+}
+
 @media (max-width: 640px) {
   .filterBar {
     padding: t.$space-3 t.$space-4;

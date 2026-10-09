@@ -3,6 +3,7 @@
 import { CategoryScore, Coverage } from "./types";
 import Link from "next/link";
 import { useLang } from "@/lib/i18n/LangContext";
+import type { ReportModel } from "./reportModel";
 import s from "./ScoreGrid.module.scss";
 
 import { scoreColor } from "./reportColors";
@@ -11,12 +12,14 @@ function clamp(n: number) { return Math.max(0, Math.min(100, n ?? 0)); }
 
 export default function ScoreGrid({
   categories,
+  model,
   globalScore,
   globalAvailable,
   completeness,
   coverage,
 }: {
   categories: CategoryScore[];
+  model?: ReportModel;
   globalScore: number;
   globalAvailable?: boolean | null;
   completeness?: number | null;
@@ -25,7 +28,13 @@ export default function ScoreGrid({
   const { t } = useLang();
   const ts = t.report.scoreGrid;
   const catInfo = t.report.categoryInfo as Record<string, string>;
-  const cats = [...(categories || [])].sort((a, b) => a.score - b.score);
+  const domains = t.report.priorityCards.domains as Record<string, string>;
+  const cats = model
+    ? model.groups.filter(group => group.key !== "unknown" || group.findings.length > 0)
+      .map(group => ({ key: group.key, label: domains[group.key] ?? t.report.issuesByCategory.unknownDomain,
+        score: group.score?.score, issues: group.findings.length }))
+      .sort((a, b) => (a.score ?? Infinity) - (b.score ?? Infinity))
+    : [...(categories || [])].sort((a, b) => a.score - b.score);
   const global = clamp(globalScore);
   // Analyse partielle : un ou plusieurs modules n'ont pas pu être évalués (issue #101).
   const isPartial = typeof completeness === "number" && completeness < 100;
@@ -57,23 +66,23 @@ export default function ScoreGrid({
 
       <div className={s.grid}>
         {cats.map((c) => {
-          const sc = clamp(c.score);
-          const color = scoreColor(sc);
+          const sc = c.score === undefined ? undefined : clamp(c.score);
+          const color = sc === undefined ? "var(--argos-text-muted)" : scoreColor(sc);
           return (
             <a key={c.key} href={`#cat-${encodeURIComponent(c.key)}`} className={s.card}>
               <div className={s.cardTop}>
                 <div>
-                  <p className={s.catLabel}>{c.label}</p>
+                  <p className={s.catLabel}>{(t.report.priorityCards.domains as Record<string, string>)[c.key] ?? c.label}</p>
                   <p className={s.catIssues}>{c.issues} {ts.issueCount}</p>
                 </div>
-                <span className={s.scoreValue} style={{ color }}>{sc}</span>
+                <span className={`${s.scoreValue} ${sc === undefined ? s.missingScore : ""}`} style={{ color }}>{sc ?? t.report.hero.scoreUnavailable}</span>
               </div>
 
               <p className={s.catDesc}>{catInfo[c.key] ?? catInfo.fallback}</p>
 
-              <div className={s.track}>
+              {sc !== undefined && <div className={s.track}>
                 <div className={s.fill} style={{ width: `${sc}%`, background: color }} />
-              </div>
+              </div>}
 
               <span className={s.detailLink}>{ts.seeDetail}</span>
             </a>
