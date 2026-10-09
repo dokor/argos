@@ -44,7 +44,23 @@ try {
     assert.ok(report,'Audit must publish within the fixture budget');
     assert.ok(states.has('RUNNING'),'A running state must be observed');
     assert.ok(report.scores.coverage,'Coverage must be explicitly published');
-    await page.getByRole('heading',{name:'Couverture de mesure'}).waitFor({timeout:20000});
+    await page.getByRole('heading',{name:'Score Argos',exact:true}).waitFor({timeout:20000});
+    const summary=page.getByRole('region',{name:report.domain,exact:true});
+    assert.equal(await summary.getByRole('heading',{level:1}).textContent(),report.domain);
+    const weightedCoverage=`${Math.round(report.scores.coverage.global.ratio*100)} %`;
+    const summaryCoverage=summary.getByText('Couverture pondérée du barème',{exact:true}).locator('..');
+    assert.ok((await summaryCoverage.textContent()).includes(weightedCoverage),'Summary must show persisted weighted coverage beside the score');
+    await summary.getByRole('link',{name:'Comprendre la mesure',exact:true}).click();
+    const method=page.locator('#report-method');
+    await method.getByRole('heading',{name:'Méthode et limites',exact:true}).waitFor();
+    assert.notEqual(await method.getAttribute('open'),null,'Summary link must open measurement details');
+    assert.equal(await page.locator(':focus').getAttribute('id'),'report-method-toggle','Measurement details must receive keyboard focus');
+    const methodCoverage=method.locator('dl > div').filter({has:page.getByText('Couverture pondérée du barème',{exact:true})});
+    assert.equal(await methodCoverage.locator('dd').textContent(),weightedCoverage,'Method must retain the same weighted coverage');
+    if(typeof report.scores.completeness==='number') {
+      const completeness=method.locator('dl > div').filter({has:page.getByText('Complétude opérationnelle des modules',{exact:true})});
+      assert.equal(await completeness.locator('dd').textContent(),`${report.scores.completeness} %`,'Module completeness must remain distinct from weighted coverage');
+    }
     if(scenario==='errors') assert.ok(report.issues.some(issue=>issue.id.startsWith('runtime.')),'Runtime errors must surface');
     if(scenario==='partial') {
       const lh=report.scores.coverage.checks.filter(check=>check.module==='lighthouse');
