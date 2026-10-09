@@ -27,7 +27,7 @@ const report = {
 describe("ReportHero (rendu du rapport)", () => {
   it("distingue un score indisponible d'un zéro mesuré", () => {
     render(<ReportHero report={{ ...report, scores: { ...report.scores, global: 0, globalAvailable: false } }} />);
-    expect(screen.getByText("Score indisponible")).toBeInTheDocument();
+    expect(screen.getByText("Non évalué")).toBeInTheDocument();
     expect(screen.queryByLabelText("Score 0/100")).not.toBeInTheDocument();
     expect(screen.queryByText("/100")).not.toBeInTheDocument();
     expect(screen.queryByText("À traiter en priorité")).not.toBeInTheDocument();
@@ -36,7 +36,7 @@ describe("ReportHero (rendu du rapport)", () => {
   it("conserve une note zéro lorsqu'elle est mesurée", () => {
     render(<ReportHero report={{ ...report, scores: { ...report.scores, global: 0, globalAvailable: true } }} />);
     expect(screen.getByLabelText("Score 0/100")).toBeInTheDocument();
-    expect(screen.queryByText("Score indisponible")).not.toBeInTheDocument();
+    expect(screen.queryByText("Non évalué")).not.toBeInTheDocument();
   });
   it("affiche le score global dans l'anneau", () => {
     render(<ReportHero report={report} />);
@@ -46,7 +46,7 @@ describe("ReportHero (rendu du rapport)", () => {
 
   it("affiche le nom du site et le compteur total d'issues", () => {
     render(<ReportHero report={report} />);
-    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Example");
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("example.com");
     // 3 issues au total (1 critique + 1 important + 1 info).
     expect(screen.getByText("3")).toBeInTheDocument();
   });

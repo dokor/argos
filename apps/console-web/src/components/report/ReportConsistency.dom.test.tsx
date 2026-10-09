@@ -22,7 +22,7 @@ function Reader() {
     <ReportHero report={report} model={model} />
     <PriorityCards priorities={report.summary.priorities} model={model}
       onSelectFinding={key => setSelection(previous => ({ key, request: (previous?.request ?? 0) + 1 }))} />
-    <ScoreGrid categories={report.scores.byCategory} model={model} globalScore={report.scores.global} />
+    <ScoreGrid categories={report.scores.byCategory} model={model} />
     <IssuesByCategory report={report} model={model} selection={selection} />
   </>;
 }
@@ -36,13 +36,13 @@ describe("historical report consistency", () => {
     expect(container.querySelectorAll("details[id^='finding-']")).toHaveLength(6);
     expect(within(container.querySelector("#cat-a11y")!).getByText("Accessible controls")).toBeInTheDocument();
     expect(within(container.querySelector("#cat-unknown")!).getByText("No identifier")).toBeInTheDocument();
-    expect(screen.getAllByText("Domaine non renseigné")).toHaveLength(2);
+    expect(screen.getAllByText(/Domaine non renseigné/)).toHaveLength(2);
     expect(screen.getByText(/Le lien détaillé vers le constat manque/)).toBeInTheDocument();
     expect(screen.getByText(/Certains constats de cette action/)).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: /^Voir le constat/ })).toHaveLength(2);
     expect(screen.getByText("Constats regroupés : 2")).toBeInTheDocument();
     const gridLink = screen.getByRole("link", { name: /Accessibilité.*1 point/ });
-    expect(gridLink).toHaveTextContent("65");
+    expect(gridLink).toHaveTextContent("65/100");
   });
 
   it("opens and focuses the exact finding, resets the filter, and supports opening the same action again", async () => {
@@ -67,14 +67,14 @@ describe("historical report consistency", () => {
     const model = buildReportModel(emptyScores);
     const { container } = render(<LangProvider initialLang="en">
       <PriorityCards priorities={report.summary.priorities} model={model} />
-      <ScoreGrid categories={[]} globalScore={73} model={model} />
+      <ScoreGrid categories={[]} model={model} />
       <IssuesByCategory report={emptyScores} model={model} />
     </LangProvider>);
-    expect(screen.getAllByText("Domain not provided")).toHaveLength(2);
+    expect(screen.getAllByText(/Domain not provided/)).toHaveLength(2);
     expect(screen.getByText(/The detailed finding link is missing/)).toBeInTheDocument();
     expect(screen.getByText(/Some findings for this action/)).toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveTextContent("6 findings of 6");
-    expect(within(container.querySelector("#cat-performance")!).getByText("Score unavailable")).toBeInTheDocument();
+    expect(within(container.querySelector("#cat-performance")!).getByText("Not evaluated")).toBeInTheDocument();
     expect(screen.queryByText("0/100")).not.toBeInTheDocument();
   });
 });

@@ -8,7 +8,7 @@ import fr from "@/lib/i18n/fr.json";
 import en from "@/lib/i18n/en.json";
 
 let locale: "fr" | "en" = "fr";
-vi.mock("@/lib/i18n/LangContext", () => ({ useLang: () => ({ t: locale === "fr" ? fr : en }) }));
+vi.mock("@/lib/i18n/LangContext", () => ({ useLang: () => ({ t: locale === "fr" ? fr : en, lang: locale }) }));
 
 function fixture(): Report {
   return {

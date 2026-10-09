@@ -9,12 +9,12 @@ import s from "./IssuesByCategory.module.scss";
 import FindingDetails from "./FindingDetails";
 import { findingContent } from "./findingCatalogue";
 import { reportReadingCopy } from "./reportReadingCopy";
+import { domainScore } from "./reportSummaryModel";
+import { decisionCopy } from "./decisionCopy";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 type SevKey = "critical" | "important" | "info";
-
-function clamp(n: number) { return Math.max(0, Math.min(100, n ?? 0)); }
 
 function sevWeight(sev: Issue["severity"]) {
   return sev === "critical" ? 0 : sev === "important" ? 1 : 2;
@@ -98,7 +98,7 @@ export default function IssuesByCategory({ report, model = buildReportModel(repo
       {model.groups.filter(group => (domain === "all" || group.key === domain) && (group.key !== "unknown" || group.findings.length > 0)).map((cat) => {
         const issues = cat.findings.filter(finding => effectiveFilter === "all" || finding.issue.severity === effectiveFilter)
           .slice().sort((a, b) => sevWeight(a.issue.severity) - sevWeight(b.issue.severity));
-        const sc = cat.score ? clamp(cat.score.score) : undefined;
+        const sc = domainScore(cat.score?.score, cat.key, report.scores.coverage);
         const color = sc === undefined ? "var(--argos-text-muted)" : scoreColor(sc);
 
         return (
@@ -116,7 +116,7 @@ export default function IssuesByCategory({ report, model = buildReportModel(repo
                   className={s.catScoreChip}
                   style={{ color, background: sc === undefined ? "var(--argos-surface-2)" : `${color}18` }}
                 >
-                  {sc === undefined ? t.report.hero.scoreUnavailable : `${sc}${ti.scoreSuffix}`}
+                  {sc === undefined ? decisionCopy[lang].notEvaluated : `${sc}${ti.scoreSuffix}`}
                 </span>
                 <a href="#top" className={s.backTop}>{ti.backToTop}</a>
               </div>

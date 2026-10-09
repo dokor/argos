@@ -1,12 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { buildReportModel, FindingSelection } from "@/components/report/reportModel";
 import ReportHeader from "@/components/report/ReportHeader";
 import ReportHero from "@/components/report/ReportHero";
-import AntiBotNotice from "@/components/report/AntiBotNotice";
 import AccessibilitySection from "@/components/report/AccessibilitySection";
-import ReportSummary from "@/components/report/ReportSummary";
+import ReportMethod from "@/components/report/ReportMethod";
 import ReportNavigation from "@/components/report/ReportNavigation";
 import { useReportReading } from "@/components/report/reportReading";
 import { reportReadingCopy } from "@/components/report/reportReadingCopy";
@@ -28,6 +27,12 @@ export default function ReportPage({ params }: Readonly<Params>) {
   const isAdmin = useIsAdmin();
   const model = useMemo(() => buildReportModel(report), [report]);
   const reading = useReportReading(model);
+  const [methodOpen, setMethodOpen] = useState(false);
+  const showMethod = () => {
+    setMethodOpen(true);
+    document.getElementById("report-method")?.scrollIntoView({ block: "start", behavior: "smooth" });
+    document.getElementById("report-method-toggle")?.focus({ preventScroll: true });
+  };
   const selection: FindingSelection | undefined = reading.finding ? { key: reading.finding.key, request: 0 } : undefined;
   const selectFinding = (key: string) => {
     const finding = model.findings.find(item => item.key === key);
@@ -38,15 +43,13 @@ export default function ReportPage({ params }: Readonly<Params>) {
   return (
     <div className={s.page} id="top">
       <ReportHeader />
-      <ReportHero report={report} model={model} />
+      <ReportHero report={report} model={model} onActions={() => reading.navigate({ view: "actions", anchor: "" })} onMethod={showMethod} />
 
       <main className={s.main}>
-        <AntiBotNotice antiBot={report.antiBot} />
-        <ReportSummary report={report} model={model} />
         <ReportNavigation view={reading.view} onChange={view => reading.navigate({ view, anchor: "" })} />
         {reading.missing && <p role="status">{copy.missing}</p>}
         {reading.view === "overview" && <section className={s.view} id="report-overview" aria-label={copy.overview}>
-          <ScoreGrid categories={report.scores.byCategory} model={model} globalScore={report.scores.global} globalAvailable={report.scores.globalAvailable} completeness={report.scores.completeness} coverage={report.scores.coverage}
+          <ScoreGrid categories={report.scores.byCategory} model={model} coverage={report.scores.coverage}
             onSelectDomain={domain => reading.navigate({ view: "technical", domain, severity: "all", anchor: "" })} />
           <PriorityCards priorities={report.summary.priorities} model={model} onSelectFinding={selectFinding} limit={3} />
         </section>}
@@ -58,6 +61,7 @@ export default function ReportPage({ params }: Readonly<Params>) {
             onFilterChange={(domain, severity) => reading.navigate({ domain, severity, anchor: "" })} />
         </section>}
         <AccessibilitySection report={report} />
+        <ReportMethod report={report} model={model} open={methodOpen} onToggle={setMethodOpen} />
 
         {/* Raw JSON - admin only */}
         {isAdmin && (
