@@ -140,6 +140,11 @@ export type PriorityItem = {
 };
 
 export type Issue = {
+  structuredEvidence?: {
+    source: string;
+    measurement?: { value: number; unit: "ms" | "bytes" | "count" | "days" | "score/100" | "ratio" | "unitless" } | null;
+    details?: Array<{ key: string; text: string }>;
+  } | null;
   confidence?: "HIGH" | "MEDIUM" | "LOW" | "UNKNOWN" | null;
   /** Canonical check key; some historical reports omit it. */
   id?: string | null;

@@ -6,6 +6,9 @@ import { useLang } from "@/lib/i18n/LangContext";
 import { scoreColor, SEVERITY_COLORS } from "./reportColors";
 import { buildReportModel, FindingSelection, ReportModel } from "./reportModel";
 import s from "./IssuesByCategory.module.scss";
+import FindingDetails from "./FindingDetails";
+import { findingContent } from "./findingCatalogue";
+import { reportReadingCopy } from "./reportReadingCopy";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -21,14 +24,18 @@ type Filter = "all" | SevKey;
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function IssuesByCategory({ report, model = buildReportModel(report), selection }: { report: Report; model?: ReportModel; selection?: FindingSelection }) {
-  const { t } = useLang();
+export default function IssuesByCategory({ report, model = buildReportModel(report), selection, domain = "all", severity, onFilterChange }: {
+  report: Report; model?: ReportModel; selection?: FindingSelection; domain?: string; severity?: string;
+  onFilterChange?: (domain: string, severity: string) => void;
+}) {
+  const { t, lang } = useLang();
+  const copy = reportReadingCopy[lang];
   const ti = t.report.issuesByCategory;
   const catInfo = t.report.categoryInfo as Record<string, string>;
   const [filter, setFilter] = React.useState<Filter>("all");
 
   const [activeSelection, setActiveSelection] = React.useState(selection);
-  const effectiveFilter = selection && activeSelection !== selection ? "all" : filter;
+  const effectiveFilter = severity ?? (selection && activeSelection !== selection ? "all" : filter);
   if (selection && activeSelection !== selection) {
     setActiveSelection(selection);
     setFilter("all");
@@ -39,12 +46,13 @@ export default function IssuesByCategory({ report, model = buildReportModel(repo
     const detail = finding && document.getElementById(finding.anchor) as HTMLDetailsElement | null;
     if (detail) {
       detail.open = true;
-      detail.scrollIntoView?.({ block: "center" });
-      detail.querySelector("summary")?.focus();
+      const summary = detail.querySelector("summary");
+      summary?.scrollIntoView?.({ block: "center" });
+      summary?.focus({ preventScroll: true });
     }
   }, [selection, model]);
   const domains = t.report.priorityCards.domains as Record<string, string>;
-  const visibleCount = model.findings.filter(finding => effectiveFilter === "all" || finding.issue.severity === effectiveFilter).length;
+  const visibleCount = model.findings.filter(finding => (domain === "all" || finding.domain === domain) && (effectiveFilter === "all" || finding.issue.severity === effectiveFilter)).length;
 
   const FILTERS: { key: Filter; label: string }[] = [
     { key: "all",       label: ti.filterAll },
@@ -63,6 +71,12 @@ export default function IssuesByCategory({ report, model = buildReportModel(repo
 
       {/* Sticky filter bar */}
       <div className={s.filterBar}>
+        {onFilterChange && <label>{copy.domain}
+          <select value={domain} onChange={event => onFilterChange(event.target.value, effectiveFilter)}>
+            <option value="all">{copy.allDomains}</option>
+            {model.groups.map(group => <option key={group.key} value={group.key}>{domains[group.key] ?? ti.unknownDomain}</option>)}
+          </select>
+        </label>}
         <span className={s.filterLabel}>{ti.filterLabel} :</span>
         {FILTERS.map(({ key, label }) => (
           <button
@@ -70,7 +84,7 @@ export default function IssuesByCategory({ report, model = buildReportModel(repo
             type="button"
             className={`${s.filterBtn} ${effectiveFilter === key ? s.active : ""}`}
             aria-pressed={effectiveFilter === key}
-            onClick={() => setFilter(key)}
+            onClick={() => onFilterChange ? onFilterChange(domain, key) : setFilter(key)}
           >
             {label}
           </button>
@@ -78,9 +92,10 @@ export default function IssuesByCategory({ report, model = buildReportModel(repo
       </div>
 
       <p role="status">{ti.resultCount.replace("{n}", String(visibleCount)).replace("{total}", String(model.counts.total))}</p>
+      {visibleCount === 0 && onFilterChange && <button type="button" onClick={() => onFilterChange("all", "all")}>{copy.clear}</button>}
 
       {/* Categories */}
-      {model.groups.filter(group => group.key !== "unknown" || group.findings.length > 0).map((cat) => {
+      {model.groups.filter(group => (domain === "all" || group.key === domain) && (group.key !== "unknown" || group.findings.length > 0)).map((cat) => {
         const issues = cat.findings.filter(finding => effectiveFilter === "all" || finding.issue.severity === effectiveFilter)
           .slice().sort((a, b) => sevWeight(a.issue.severity) - sevWeight(b.issue.severity));
         const sc = cat.score ? clamp(cat.score.score) : undefined;
@@ -128,31 +143,12 @@ export default function IssuesByCategory({ report, model = buildReportModel(repo
                           )}
                         </div>
 
-                        <span className={s.issueTitle}>{issue.title}</span>
-                        <span className={s.issueImpact}>{issue.impact}</span>
+                        <span className={s.issueTitle}>{findingContent(issue, lang).title}</span>
+                        <span className={s.issueImpact}>{findingContent(issue, lang).impact}</span>
                         <span className={s.chevron} aria-hidden>▾</span>
                       </summary>
 
-                      <div className={s.issueDetail}>
-                        {finding.sources.length > 0 && <p>{ti.sourcesLabel}: {finding.sources.join(", ")}</p>}
-                          {issue.confidence && <p>{t.report.priorityCards.confidenceLabel}: {t.report.priorityCards.confidence[issue.confidence]}</p>}
-                        {issue.impact && (
-                          <div className={s.detailBlock}>
-                            <p className={s.detailBlockLabel}>Impact</p>
-                            <p className={s.detailBlockText}>{issue.impact}</p>
-                          </div>
-                        )}
-                        {issue.evidence && (
-                          <div className={s.detailBlock}>
-                            <p className={s.detailBlockLabel}>{ti.evidenceLabel}</p>
-                            <p className={s.detailBlockText}>{issue.evidence}</p>
-                          </div>
-                        )}
-                        <div className={s.detailBlock}>
-                          <p className={s.detailBlockLabel}>{ti.recommendationLabel}</p>
-                          <p className={s.detailBlockText}>{issue.recommendation}</p>
-                        </div>
-                      </div>
+                      <FindingDetails finding={finding} />
                     </details>
                   );
                 })

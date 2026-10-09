@@ -23,7 +23,7 @@ describe("PriorityCards", () => {
   it("explique le gain théorique, le domaine, la confiance et le regroupement en français", () => {
     render(<PriorityCards priorities={[action]} />);
     expect(screen.getByText("Sécurité")).toBeInTheDocument();
-    expect(screen.getByText(/Gain maximal théorique : 3,13 points globaux/)).toBeInTheDocument();
+    expect(screen.getByText(/Gain de score modélisé : 3,13 points globaux/)).toBeInTheDocument();
     expect(screen.getByText("Confiance de mesure : inconnue")).toBeInTheDocument();
     expect(screen.getByText("Constats regroupés : 2")).toBeInTheDocument();
     expect(screen.getByText(/Le gain réel dépend/)).toBeInTheDocument();
@@ -33,19 +33,19 @@ describe("PriorityCards", () => {
     locale = "en";
     render(<PriorityCards priorities={[action]} />);
     expect(screen.getByText("Security")).toBeInTheDocument();
-    expect(screen.getByText(/Maximum modelled gain: 3.13 global points/)).toBeInTheDocument();
+    expect(screen.getByText(/Modelled score gain: 3.13 global points/)).toBeInTheDocument();
     expect(screen.getByText("Measurement confidence: unknown")).toBeInTheDocument();
     expect(screen.getByText(/Actual improvement depends/)).toBeInTheDocument();
   });
   it("n'annonce aucun gain pour un finding explicatif de poids nul", () => {
     render(<PriorityCards priorities={[{ ...action, rankReason: "NO_DIRECT_SCORE_GAIN", globalScoreGain: 12 }]} />);
     expect(screen.getByText("Action explicative sans gain direct de score.")).toBeInTheDocument();
-    expect(screen.queryByText(/Gain maximal/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Gain de score modélisé/)).not.toBeInTheDocument();
   });
   it("distingue une contribution indisponible et n'affiche pas de nombre non fini", () => {
     render(<PriorityCards priorities={[{ ...action, rankReason: "SCORE_UNAVAILABLE", globalScoreGain: Infinity }]} />);
     expect(screen.getByText(/Contribution au score indisponible/)).toBeInTheDocument();
-    expect(screen.queryByText(/Gain maximal/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Gain de score modélisé/)).not.toBeInTheDocument();
   });
   it("conserve les cartes historiques et leur effort explicite", () => {
     render(<PriorityCards priorities={[{ severity: "critical", title: "Historical action", impact: "Impact", effort: "M" }]} />);

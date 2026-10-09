@@ -20,6 +20,22 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.mockito.Mockito.*;
 
 class LighthouseModuleAnalyzerTest {
+    @Test
+    void retainsRawNumericMeasurementsSeparatelyFromTheScoreRatio() throws Exception {
+        LighthouseClient client = mock(LighthouseClient.class);
+        when(client.analyze(anyString())).thenReturn(new ObjectMapper().readTree("""
+            {"categories":{"performance":{"score":0.5,"auditRefs":[
+                {"id":"largest-contentful-paint","weight":10}]}},
+             "audits":{"largest-contentful-paint":{"score":0.02,"scoreDisplayMode":"numeric",
+                 "title":"LCP","numericValue":4800,"numericUnit":"millisecond"}}}
+            """));
+        var result = new LighthouseModuleAnalyzer(client).analyze(ctx(), LoggerFactory.getLogger("test"));
+        var audit = result.checks().stream().filter(c -> c.key().equals("lighthouse.audit.largest-contentful-paint"))
+            .findFirst().orElseThrow();
+        assertEquals(.02, audit.value());
+        assertEquals(4800.0, audit.details().get("numericValue"));
+        assertEquals("millisecond", audit.details().get("numericUnit"));
+    }
 
     @Test
     void literalNullTitlesRemainLiteralText() throws Exception {

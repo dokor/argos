@@ -8,6 +8,7 @@ import ScoreRing from "./ScoreRing";
 import MeasurementCoverage from "./MeasurementCoverage";
 import RelaunchButton from "./RelaunchButton";
 import s from "./ReportHero.module.scss";
+import { reportReadingCopy } from "./reportReadingCopy";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -52,7 +53,7 @@ const SEV_CONFIG = [
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function ReportHero({ report, model = buildReportModel(report) }: { report: Report; model?: ReportModel }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const th = t.report.hero;
 
   const score = Math.max(0, Math.min(100, report.scores.global));
@@ -120,6 +121,7 @@ export default function ReportHero({ report, model = buildReportModel(report) }:
 
           {/* Score ring */}
           <div className={s.scoreBlock}>
+            <p>{reportReadingCopy[lang].score}</p>
             {available ? <ScoreRing score={score}>
               <text x={70} y={64} textAnchor="middle" fontSize={38} fontWeight={800} className={s.ringScore} fontFamily="Inter,system-ui,sans-serif">
                 {score}

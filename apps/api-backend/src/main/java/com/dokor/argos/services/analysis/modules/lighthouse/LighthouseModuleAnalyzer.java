@@ -196,6 +196,12 @@ public class LighthouseModuleAnalyzer {
             details.put("category", c.category());
             details.put("score", c.score());
             details.put("weight", c.weight());
+            JsonNode raw = audits.path(c.id());
+            if (raw.path("numericValue").isNumber() && Double.isFinite(raw.path("numericValue").asDouble())) {
+                details.put("numericValue", raw.path("numericValue").asDouble());
+                String unit = JsonNodes.nonBlankText(raw.path("numericUnit"));
+                if (unit != null) details.put("numericUnit", unit);
+            }
 
             String label = c.title() != null ? c.title() : c.id();
             out.add(AuditCheckResult.of(
