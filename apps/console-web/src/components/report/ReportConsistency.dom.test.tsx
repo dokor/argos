@@ -36,7 +36,7 @@ describe("historical report consistency", () => {
     expect(container.querySelectorAll("details[id^='finding-']")).toHaveLength(6);
     expect(within(container.querySelector("#cat-a11y")!).getByText("Accessible controls")).toBeInTheDocument();
     expect(within(container.querySelector("#cat-unknown")!).getByText("No identifier")).toBeInTheDocument();
-    expect(screen.getByRole("heading", {name: /Domaine non renseigné/})).toBeInTheDocument();
+    expect(within(container.querySelector("#cat-unknown")!).getByText("Domaine non renseigné")).toBeInTheDocument();
     expect(screen.getByText(/Le lien détaillé vers le constat manque/)).toBeInTheDocument();
     expect(screen.getByText(/Certains constats de cette action/)).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: /^Voir le constat/ })).toHaveLength(2);
@@ -70,7 +70,7 @@ describe("historical report consistency", () => {
       <ScoreGrid categories={[]} model={model} />
       <IssuesByCategory report={emptyScores} model={model} />
     </LangProvider>);
-    expect(screen.getByRole("heading", {name: /Domain not provided/})).toBeInTheDocument();
+    expect(within(container.querySelector("#cat-unknown")!).getByText("Domain not provided")).toBeInTheDocument();
     expect(screen.getByText(/The detailed finding link is missing/)).toBeInTheDocument();
     expect(screen.getByText(/Some findings for this action/)).toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveTextContent("6 findings of 6");
