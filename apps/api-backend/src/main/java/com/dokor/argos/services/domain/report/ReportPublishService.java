@@ -23,11 +23,18 @@ public class ReportPublishService {
     private final AiReportSummaryService summaries;
     private final AhrefsDomainRatingClient domainRatings;
     private final ObjectMapper mapper;
+    private final ReportRetentionPolicy retention;
 
-    @Inject
     public ReportPublishService(TransactionManagerQuerydsl transactions, AuditRunDao runs,
         AuditReportDao reports, PublicReportComposer composer, AiReportSummaryService summaries,
         AhrefsDomainRatingClient domainRatings, ObjectMapper mapper) {
+        this(transactions, runs, reports, composer, summaries, domainRatings, mapper, ReportRetentionPolicy.defaults());
+    }
+    @Inject
+    public ReportPublishService(TransactionManagerQuerydsl transactions, AuditRunDao runs,
+        AuditReportDao reports, PublicReportComposer composer, AiReportSummaryService summaries,
+        AhrefsDomainRatingClient domainRatings, ObjectMapper mapper, ReportRetentionPolicy retention) {
+        this.retention = retention;
         this.transactions = transactions; this.runs = runs; this.reports = reports;
         this.composer = composer; this.summaries = summaries; this.domainRatings = domainRatings; this.mapper = mapper;
     }
@@ -55,6 +62,7 @@ public class ReportPublishService {
         try { entity.setReportJson(mapper.writeValueAsString(dto)); }
         catch (Exception error) { throw new IllegalStateException("Report serialization failed", error); }
         entity.setCreatedAt(Instant.now());
+        entity.setExpiresAt(retention.expiresAt(entity.getCreatedAt()));
 
         return transactions.executeAndReturn(connection -> {
             var run = runs.lockForPublication(runId, connection).orElseThrow(() -> new IllegalStateException("Run missing"));
