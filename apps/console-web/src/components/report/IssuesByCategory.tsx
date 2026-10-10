@@ -79,6 +79,7 @@ export default function IssuesByCategory({ report, model = buildReportModel(repo
           </select>
         </label>}
         <span className={s.filterLabel}>{ti.filterLabel} :</span>
+        <div role="group" aria-label={ti.filterLabel} className={s.severityFilters}>
         {FILTERS.map(({ key, label }) => (
           <button
             key={key}
@@ -89,16 +90,16 @@ export default function IssuesByCategory({ report, model = buildReportModel(repo
           >
             {label}
           </button>
-        ))}
+        ))}</div>
       </div>
 
       <p role="status">{ti.resultCount.replace("{n}", String(visibleCount)).replace("{total}", String(model.counts.total))}</p>
-      {visibleCount === 0 && onFilterChange && <button type="button" onClick={() => onFilterChange("all", "all")}>{copy.clear}</button>}
+      {visibleCount === 0 && model.counts.total > 0 && onFilterChange && <button type="button" onClick={() => onFilterChange("all", "all")}>{copy.clear}</button>}
 
       {/* Categories */}
       {model.groups.filter(group => (domain === "all" || group.key === domain) && (group.key !== "unknown" || group.findings.length > 0)).map((cat) => {
         const issues = cat.findings.filter(finding => effectiveFilter === "all" || finding.issue.severity === effectiveFilter)
-          .slice().sort((a, b) => sevWeight(a.issue.severity) - sevWeight(b.issue.severity));
+          .slice().sort((a, b) => sevWeight(a.issue.severity) - sevWeight(b.issue.severity) || (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
         const sc = domainScore(cat.score?.score, cat.key, report.scores.coverage);
         const color = sc === undefined ? "var(--argos-text-muted)" : scoreColor(sc);
 
@@ -133,7 +134,7 @@ export default function IssuesByCategory({ report, model = buildReportModel(repo
                   return (
                     <details key={finding.key} open={finding.key === initialOpenKey || undefined} id={finding.anchor} className={s.issueRow}>
                       <summary className={s.issueSummary}>
-                        <span className={s.sevDot} style={{ background: sv.dot }} />
+                        <span className={s.sevDot} style={{ background: sv.dot }} aria-hidden="true" />
 
                         <div className={s.issueTags}>
                           <span className={s.sevTag} style={{ color: sv.color, background: sv.bg }}>

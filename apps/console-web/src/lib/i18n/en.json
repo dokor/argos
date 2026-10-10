@@ -672,7 +672,7 @@
       "scoreLabel": "Score",
       "scoreSuffix": "/100",
       "backToTop": "Back to top ↑",
-      "noIssues": "No issues in this category.",
+      "noIssues": "No findings reported in the measured scope. This certifies neither compliance nor the absence of problems.",
       "evidenceLabel": "Evidence / Context",
       "recommendationLabel": "Recommendation",
       "detailsLabel": "Details"

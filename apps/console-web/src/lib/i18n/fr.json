@@ -672,7 +672,7 @@
       "scoreLabel": "Score",
       "scoreSuffix": "/100",
       "backToTop": "Retour en haut ↑",
-      "noIssues": "Aucun point pour cette catégorie.",
+      "noIssues": "Aucun constat remonté dans le périmètre mesuré. Cela ne certifie ni conformité ni absence de problème.",
       "evidenceLabel": "Preuve / Contexte",
       "recommendationLabel": "Recommandation",
       "detailsLabel": "Détails"
