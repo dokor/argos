@@ -1,6 +1,6 @@
 @use '../../styles/tokens' as t;
 
-.page { min-height: 100vh; color: t.$text; background: t.$bg; }
+.page { min-height: 100vh; color: t.$text; background: t.$bg; overflow-wrap: anywhere; }
 .container { width: min(100% - 48px, 960px); margin-inline: auto; }
 .hero { padding: t.$space-16 0; background: t.$canvas; border-bottom: 1px solid t.$border; }
 .hero h1 { font-size: clamp(2.2rem, 5vw, 3.9rem); line-height: 1.12; letter-spacing: -0.04em; }
