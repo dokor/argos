@@ -78,3 +78,7 @@
     display: none;
   }
 }
+@media (max-width: 320px) {
+  .inner { height: 96px; padding: 8px; flex-wrap: wrap; gap: 8px; }
+  .right { width: 100%; justify-content: space-between; gap: 8px; min-width: 0; }
+}
