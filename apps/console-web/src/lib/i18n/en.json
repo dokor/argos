@@ -30,7 +30,9 @@
     "limits": "Analysis limits",
     "source": "Source code on GitHub"
   },
-  "publicPromises": { "duration": "Timing depends on the queue and analysis services. Progress updates automatically." },
+  "publicPromises": {
+    "duration": "Timing depends on the queue and analysis services. Progress updates automatically."
+  },
   "landing": {
     "hero": {
       "badge": "Free website audit",
@@ -217,7 +219,7 @@
           },
           {
             "q": "Is my report public?",
-            "a": "No. Each report is accessible through a URL containing a unique token. It is not indexed by search engines and stays private unless you share the link."
+            "a": "The report is not publicly listed. Anyone holding its link can read it without an account; keep the link confidential."
           },
           {
             "q": "Can I share my report?",
@@ -225,7 +227,7 @@
           },
           {
             "q": "How long does a report stay available?",
-            "a": "Reports have an expiration date. After that, the link is no longer valid and you need to run a new analysis to get an up-to-date report."
+            "a": "If an expiry date is assigned, the link stops working after that date. No fixed retention period or automatic deletion of reports is currently established."
           }
         ]
       },
@@ -257,15 +259,15 @@
         "items": [
           {
             "q": "What data does Argos keep?",
-            "a": "Argos keeps the analyzed URL and the generated report for as long as needed to display it. No personal data is required to run an analysis."
+            "a": "Argos records the URL, domain, processing states and dates, and technical results to produce and display the report. No fixed deletion period is currently established; see the privacy page."
           },
           {
             "q": "Who can view my reports?",
-            "a": "Only people who have the link containing the report token. Reports are neither listed publicly nor indexed."
+            "a": "Anyone holding the link can read the report. The operator also has administrator access."
           },
           {
             "q": "Do my reports show up in Google?",
-            "a": "No. Report pages are marked as non-indexable and protected by a token, so they don't appear in search results."
+            "a": "Report pages ask search engines not to index them. This directive is not authentication and does not absolutely guarantee that a link never appears in results."
           }
         ]
       },
@@ -332,11 +334,26 @@
   },
   "report": {
     "measurementCoverage": {
-      "title": "Measurement coverage", "provisional": "Provisional score", "sufficient": "Sufficient coverage", "unavailable": "Measurement unavailable", "notApplicable": "Not applicable",
+      "title": "Measurement coverage",
+      "provisional": "Provisional score",
+      "sufficient": "Sufficient coverage",
+      "unavailable": "Measurement unavailable",
+      "notApplicable": "Not applicable",
       "explanation": "Weighted share of the scoring catalogue actually measured. Below 80% overall or in an applicable domain, the score remains provisional and must not be compared with a complete audit.",
-      "statesTitle": "Measurement states", "confidenceExplanation": "Unavailable or blocked measurements are not site defects. Finding confidence remains separate from score coverage.",
-      "domains": { "performance": "Performance", "security": "Security", "seo": "SEO", "a11y": "Accessibility" },
-      "states": { "MEASURED": "Measured", "UNAVAILABLE": "Unavailable", "BLOCKED_BY_ANTIBOT": "Blocked by anti-bot protection", "NOT_APPLICABLE": "Not applicable" }
+      "statesTitle": "Measurement states",
+      "confidenceExplanation": "Unavailable or blocked measurements are not site defects. Finding confidence remains separate from score coverage.",
+      "domains": {
+        "performance": "Performance",
+        "security": "Security",
+        "seo": "SEO",
+        "a11y": "Accessibility"
+      },
+      "states": {
+        "MEASURED": "Measured",
+        "UNAVAILABLE": "Unavailable",
+        "BLOCKED_BY_ANTIBOT": "Blocked by anti-bot protection",
+        "NOT_APPLICABLE": "Not applicable"
+      }
     },
     "accessibility": {
       "title": "Site accessibility",
@@ -576,13 +593,23 @@
       "partialFindings": "Some findings for this action are unavailable in this report.",
       "title": "Recommended priorities",
       "desc": "Actions ranked by score contribution, then severity and available information.",
-      "domains": { "performance": "Performance", "security": "Security", "seo": "SEO", "a11y": "Accessibility" },
+      "domains": {
+        "performance": "Performance",
+        "security": "Security",
+        "seo": "SEO",
+        "a11y": "Accessibility"
+      },
       "gainLabel": "Modelled score gain:",
       "gainUnit": "global points",
       "modelLimit": "Rubric estimate with constant measurements and denominators. Actual improvement depends on the fix and a new audit.",
       "groupedLabel": "Grouped findings:",
       "confidenceLabel": "Measurement confidence:",
-      "confidence": { "HIGH": "high", "MEDIUM": "medium", "LOW": "low", "UNKNOWN": "unknown" },
+      "confidence": {
+        "HIGH": "high",
+        "MEDIUM": "medium",
+        "LOW": "low",
+        "UNKNOWN": "unknown"
+      },
       "rankReasons": {
         "MODELLED_SCORE_GAIN": "Ranked by avoidable score loss in its domain.",
         "NO_DIRECT_SCORE_GAIN": "Explanatory action without a direct score gain.",
@@ -684,9 +711,18 @@
       "exampleLabel": "Illustrative example",
       "stepsTitle": "Three simple steps",
       "steps": [
-        { "title": "Choose a page", "description": "Paste the address of a public page that matters to your business." },
-        { "title": "Read the findings", "description": "Argos runs its checks and prepares a private report, available through a link." },
-        { "title": "Decide what to fix", "description": "Review the findings and priorities, then validate the changes that make sense." }
+        {
+          "title": "Choose a page",
+          "description": "Paste the address of a public page that matters to your business."
+        },
+        {
+          "title": "Read the findings",
+          "description": "Argos runs its checks and prepares a private report, available through a link."
+        },
+        {
+          "title": "Decide what to fix",
+          "description": "Review the findings and priorities, then validate the changes that make sense."
+        }
       ],
       "limitsTitle": "Understand the scope",
       "ctaLabel": "Get started",
@@ -716,21 +752,45 @@
       "ecommerceDescription": "Examine a public store page without mistaking this audit for a payment flow test."
     },
     "pme": {
-      "meta": { "title": "Small business website audit: prioritize fixes", "description": "Analyze one public page of your small business site for SEO, speed, security, and accessibility. Get a private report to prioritize fixes, with no conversion promises." },
+      "meta": {
+        "title": "Small business website audit: prioritize fixes",
+        "description": "Analyze one public page of your small business site for SEO, speed, security, and accessibility. Get a private report to prioritize fixes, with no conversion promises."
+      },
       "eyebrow": "For small businesses",
       "title": "A website audit to decide what to improve first",
       "lead": "Your website introduces your business before the first conversation. Argos checks one public page and gathers technical findings to help your team or agency set priorities.",
       "heroNote": "A page diagnosis, not a revenue forecast.",
       "measures": [
-        { "title": "Search visibility signals", "description": "Page title, description, canonical tag, and heading structure." },
-        { "title": "Loading performance", "description": "Scores and loading metrics from Lighthouse and a browser when the page is accessible." },
-        { "title": "Technical trust signals", "description": "HTTPS, redirects, and security headers visible from outside." },
-        { "title": "Detectable accessibility", "description": "Automated checks and a Lighthouse score; real usage requires human review." }
+        {
+          "title": "Search visibility signals",
+          "description": "Page title, description, canonical tag, and heading structure."
+        },
+        {
+          "title": "Loading performance",
+          "description": "Scores and loading metrics from Lighthouse and a browser when the page is accessible."
+        },
+        {
+          "title": "Technical trust signals",
+          "description": "HTTPS, redirects, and security headers visible from outside."
+        },
+        {
+          "title": "Detectable accessibility",
+          "description": "Automated checks and a Lighthouse score; real usage requires human review."
+        }
       ],
       "benefits": [
-        { "title": "Scope the work", "description": "Share specific findings with your agency or team instead of a vague optimization request." },
-        { "title": "Prioritize fixes", "description": "Start with issues shown in the report, then check their effect against your own metrics." },
-        { "title": "Support trust", "description": "Spot technical signals that may hinder navigation or credibility, without promising more leads." }
+        {
+          "title": "Scope the work",
+          "description": "Share specific findings with your agency or team instead of a vague optimization request."
+        },
+        {
+          "title": "Prioritize fixes",
+          "description": "Start with issues shown in the report, then check their effect against your own metrics."
+        },
+        {
+          "title": "Support trust",
+          "description": "Spot technical signals that may hinder navigation or credibility, without promising more leads."
+        }
       ],
       "exampleTitle": "A service page worth reviewing",
       "exampleText": "If a service page has a vague title, a heavy image, and no security policy, the report may surface those findings. Your team then decides what to change and checks the outcome.",
@@ -743,21 +803,45 @@
       "ctaText": "Choose your home page or a service page, then use the findings as a starting point for a decision."
     },
     "ecommerce": {
-      "meta": { "title": "E-commerce site audit: SEO, speed, and trust", "description": "Audit a public store page for SEO, performance, security, and accessibility. Know the limits: cart, ordering, and payment are not tested." },
+      "meta": {
+        "title": "E-commerce site audit: SEO, speed, and trust",
+        "description": "Audit a public store page for SEO, performance, security, and accessibility. Know the limits: cart, ordering, and payment are not tested."
+      },
       "eyebrow": "For e-commerce sites",
       "title": "Check a key store page before the purchase journey",
       "lead": "A product, category, or home page can reveal visibility, loading, and trust issues. Argos measures what it can access on the submitted URL and helps prioritize fixes.",
       "heroNote": "Cart, ordering, and payment steps are not traversed.",
       "measures": [
-        { "title": "SEO on a public page", "description": "Title, description, canonical tag, and HTML headings on the submitted product or category page." },
-        { "title": "Loading speed", "description": "Lighthouse and browser measurements on that page when the site allows analysis." },
-        { "title": "Visible security", "description": "HTTPS, redirects, and HTTP headers; no transaction is made." },
-        { "title": "Automated accessibility", "description": "Detectable signals and a Lighthouse score, to be complemented by user testing." }
+        {
+          "title": "SEO on a public page",
+          "description": "Title, description, canonical tag, and HTML headings on the submitted product or category page."
+        },
+        {
+          "title": "Loading speed",
+          "description": "Lighthouse and browser measurements on that page when the site allows analysis."
+        },
+        {
+          "title": "Visible security",
+          "description": "HTTPS, redirects, and HTTP headers; no transaction is made."
+        },
+        {
+          "title": "Automated accessibility",
+          "description": "Detectable signals and a Lighthouse score, to be complemented by user testing."
+        }
       ],
       "benefits": [
-        { "title": "Choose a page to fix", "description": "Find technical obstacles on a page that matters in your catalog." },
-        { "title": "Brief your team", "description": "Share actionable findings about loading, tags, or headers." },
-        { "title": "Assess the impact later", "description": "Compare your own metrics after changes; the audit does not predict sales." }
+        {
+          "title": "Choose a page to fix",
+          "description": "Find technical obstacles on a page that matters in your catalog."
+        },
+        {
+          "title": "Brief your team",
+          "description": "Share actionable findings about loading, tags, or headers."
+        },
+        {
+          "title": "Assess the impact later",
+          "description": "Compare your own metrics after changes; the audit does not predict sales."
+        }
       ],
       "exampleTitle": "A public product page",
       "exampleText": "A product page with a missing description, slow loading, and images without alternative text may yield issues to review. This example covers one URL and is not drawn from a client report.",
@@ -781,10 +865,27 @@
   },
   "auditList": {
     "comparison": {
-      "show": "View comparison", "loadError": "Could not load comparison.",
-      "method": "Frozen scoring policy", "coverage": "Coverage", "unknown": "Unknown", "coverageChanged": "Measurement coverage changed; this change is not a site regression.",
-      "delta": "Change since the previous report", "points": "points", "globalPoints": "global points", "domainPoints": "domain points", "contributions": "Main improvements and regressions",
-      "reasons": { "COMPARABLE": "Comparable audits", "NO_PREVIOUS_REPORT": "No previous report in this history.", "EVIDENCE_MISSING": "Comparison unavailable: insufficient historical evidence. Run a new audit with the current policy.", "SCOPE_CHANGED": "Comparison unavailable: different scope.", "METHODOLOGY_CHANGED": "Comparison unavailable: different policy or coefficients.", "COVERAGE_CHANGED": "Comparison unavailable: different usable measurements.", "INSUFFICIENT_COVERAGE": "Comparison unavailable: insufficient coverage or anti-bot protection.", "SCORE_UNAVAILABLE": "Comparison unavailable: score not measured." }
+      "show": "View comparison",
+      "loadError": "Could not load comparison.",
+      "method": "Frozen scoring policy",
+      "coverage": "Coverage",
+      "unknown": "Unknown",
+      "coverageChanged": "Measurement coverage changed; this change is not a site regression.",
+      "delta": "Change since the previous report",
+      "points": "points",
+      "globalPoints": "global points",
+      "domainPoints": "domain points",
+      "contributions": "Main improvements and regressions",
+      "reasons": {
+        "COMPARABLE": "Comparable audits",
+        "NO_PREVIOUS_REPORT": "No previous report in this history.",
+        "EVIDENCE_MISSING": "Comparison unavailable: insufficient historical evidence. Run a new audit with the current policy.",
+        "SCOPE_CHANGED": "Comparison unavailable: different scope.",
+        "METHODOLOGY_CHANGED": "Comparison unavailable: different policy or coefficients.",
+        "COVERAGE_CHANGED": "Comparison unavailable: different usable measurements.",
+        "INSUFFICIENT_COVERAGE": "Comparison unavailable: insufficient coverage or anti-bot protection.",
+        "SCORE_UNAVAILABLE": "Comparison unavailable: score not measured."
+      }
     },
     "title": "Audits",
     "loading": "Loading…",

@@ -37,7 +37,8 @@ export default function SiteFooter({ fixedFrench = false }: { fixedFrench?: bool
           <Link href="/a-propos">{fixedFrench || lang === "fr" ? "À propos" : "About Argos"}</Link>
           <Link href="/methodologie-score#resume">{fixedFrench || lang === "fr" ? "Méthode du score" : "Scoring method (French)"}</Link>
           <ContactLinks fixedFrench={fixedFrench} />
-          <Link href="/faq#privacy">{f.privacy}</Link>
+          <Link href="/confidentialite">{fixedFrench || lang === "fr" ? f.privacy : "Privacy (French)"}</Link>
+          <Link href="/informations-legales">{fixedFrench || lang === "fr" ? "Informations sur le service" : "Service information (French)"}</Link>
           <Link href="/faq#limits">{f.limits}</Link>
           <a href="https://github.com/dokor/argos" target="_blank" rel="noopener noreferrer">{f.source}</a>
         </nav>
