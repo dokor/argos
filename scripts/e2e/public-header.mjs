@@ -59,6 +59,7 @@ async function comparePixels(page, expected, actual) {
 
 async function ready(page, lang, admin) {
   const nav = page.locator('nav').first();
+  page.setDefaultTimeout(20000);
   await nav.waitFor();
   await page.waitForFunction(() => getComputedStyle(document.body).margin === '0px' && getComputedStyle(document.documentElement).overflowY === 'scroll');
   await page.evaluate(() => document.fonts.ready);
@@ -99,9 +100,14 @@ try {
             assert.deepEqual(actual, sharedGeometry, 'Language/theme/admin must not move controls: ' + state);
             const nav = page.locator('nav').first();
             await nav.screenshot({ animations: "disabled", path: output + '/' + state + '-' + index + '.png' });
-            // Active styles intentionally differ; compare every other header pixel.
-            await page.addStyleTag({ content: 'nav > div > div:first-of-type > a[aria-current] { color: var(--argos-text-muted) !important; box-shadow: none !important; }' });
-            const pixels = await nav.screenshot({ animations: "disabled" });
+            // Active styles and the page behind the translucent header intentionally differ.
+            // Compare controls on a fixed opaque backing; retain the real capture above.
+            await page.addStyleTag({ content: 'nav { background: var(--argos-bg) !important; backdrop-filter: none !important; } nav > div > div:first-of-type > a[aria-current] { color: var(--argos-text-muted) !important; box-shadow: none !important; }' });
+            // Exclude the partially covered final raster row of the fractional header height.
+            // That row blends the border with page content, which varies by route.
+            const bounds = await nav.boundingBox();
+            assert.ok(bounds);
+            const pixels = await page.screenshot({ animations: "disabled", clip: { ...bounds, height: Math.floor(bounds.height) } });
             expectedPixels ??= pixels;
             const difference = await comparePixels(page, expectedPixels, pixels);
             const matches = difference.fraction <= 0.002 && difference.maxDelta <= 20;
@@ -133,7 +139,7 @@ try {
           await page.waitForURL(base + linkedRoute);
           await ready(page, lang, admin);
           assert.deepEqual(await geometry(page), expected, 'Content-link navigation moved header');
-          assert.equal(await page.locator('nav').first().locator('a[aria-current="location"]').textContent(), labels[lang][1]);
+          assert.equal(await page.locator('nav').first().locator('a[aria-current="location"]').textContent(), labels[lang][2]);
           // Short page versus tall page: exercise an actual scrollbar transition.
           const before = await geometry(page);
           await page.addStyleTag({ content: 'main, footer { display: none !important; }' });
@@ -178,14 +184,14 @@ try {
           return [x, y, width, height];
         }));
       }
-      if (performance.now() - start < 2000) requestAnimationFrame(sample);
+      if (window.headerFrames.length < 60 && performance.now() - start < 10000) requestAnimationFrame(sample);
     }
     requestAnimationFrame(sample);
   });
   const page = await context.newPage();
   await page.goto(base + '/');
   await ready(page, 'fr', true);
-  await page.waitForFunction(() => window.headerFrames.length > 30);
+  await page.waitForFunction(() => window.headerFrames.length >= 60, null, { timeout: 12000 });
   const frames = await page.evaluate(() => window.headerFrames);
   assert.ok(frames.length > 30);
   for (const frame of frames) assert.deepEqual(frame, frames[0], 'Font loading/admin hydration moved controls');

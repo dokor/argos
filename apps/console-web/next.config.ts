@@ -48,6 +48,8 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
+      { source: "/report/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] },
+      { source: "/en/report/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] },
       {
         source: "/:path*",
         headers: securityHeaders,

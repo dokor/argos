@@ -129,3 +129,6 @@
   .section { padding: t.$panel-space-mobile; }
   .card { padding: t.$panel-space-mobile; }
 }
+
+.rank { font-weight: 700; margin: 0; color: t.$text; }
+.card { overflow-wrap: anywhere; }

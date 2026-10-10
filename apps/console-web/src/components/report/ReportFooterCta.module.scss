@@ -140,3 +140,7 @@
     justify-content: center;
   }
 }
+
+.note, .ciNote { color: t.$color-slate-300; overflow-wrap: anywhere; }
+.btnPrimary, .btnSecondary { &:focus-visible { outline: 3px solid white; outline-offset: 3px; } }
+.actions { min-width: 0; max-width: 100%; flex-shrink: 1; }

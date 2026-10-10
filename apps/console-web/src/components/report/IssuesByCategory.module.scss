@@ -293,3 +293,9 @@
   }
 }
 .catHeader > div:last-child { display: flex; flex-wrap: wrap; min-width: 0; max-width: 100%; }
+.issueDetail a { color: t.$text; text-underline-offset: 3px; overflow-wrap: anywhere; }
+.issueDetail a:focus-visible { outline: 3px solid t.$color-indigo; outline-offset: 3px; }
+
+.severityFilters { display: flex; flex-wrap: wrap; gap: t.$space-2; min-width: 0; }
+.issueDetail dl { margin: 0; }
+.issueDetail dd { margin-inline-start: 0; white-space: pre-wrap; overflow-wrap: anywhere; }

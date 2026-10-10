@@ -1,0 +1,90 @@
+[
+  {
+    "route": "/guides/checklist-audit-site-web",
+    "lang": "fr",
+    "title": "Checklist d’audit de site web : 6 étapes pratiques | Argos",
+    "canonical": "https://argos.lelouet.fr/guides/checklist-audit-site-web",
+    "alternates": {
+      "fr": "https://argos.lelouet.fr/guides/checklist-audit-site-web",
+      "en": "https://argos.lelouet.fr/en/guides/website-audit-checklist",
+      "x-default": "https://argos.lelouet.fr/guides/checklist-audit-site-web"
+    }
+  },
+  {
+    "route": "/en/guides/website-audit-checklist",
+    "lang": "en",
+    "title": "Website audit checklist: six practical steps | Argos",
+    "canonical": "https://argos.lelouet.fr/en/guides/website-audit-checklist",
+    "alternates": {
+      "fr": "https://argos.lelouet.fr/guides/checklist-audit-site-web",
+      "en": "https://argos.lelouet.fr/en/guides/website-audit-checklist",
+      "x-default": "https://argos.lelouet.fr/guides/checklist-audit-site-web"
+    }
+  },
+  {
+    "route": "/methodologie-score",
+    "lang": "fr",
+    "title": "Comment est calculé le score d'audit de site web ? | Argos",
+    "canonical": "https://argos.lelouet.fr/methodologie-score",
+    "alternates": {
+      "fr": "https://argos.lelouet.fr/methodologie-score",
+      "en": "https://argos.lelouet.fr/en/scoring-method",
+      "x-default": "https://argos.lelouet.fr/methodologie-score"
+    }
+  },
+  {
+    "route": "/en/scoring-method",
+    "lang": "en",
+    "title": "How is the Argos website audit score calculated? | Argos",
+    "canonical": "https://argos.lelouet.fr/en/scoring-method",
+    "alternates": {
+      "fr": "https://argos.lelouet.fr/methodologie-score",
+      "en": "https://argos.lelouet.fr/en/scoring-method",
+      "x-default": "https://argos.lelouet.fr/methodologie-score"
+    }
+  },
+  {
+    "route": "/ressources/audit-technique-gratuit",
+    "lang": "fr",
+    "title": "Audit technique gratuit de site web",
+    "canonical": "https://argos.lelouet.fr/ressources/audit-technique-gratuit",
+    "alternates": {
+      "fr": "https://argos.lelouet.fr/ressources/audit-technique-gratuit",
+      "en": "https://argos.lelouet.fr/en/resources/free-technical-audit",
+      "x-default": "https://argos.lelouet.fr/ressources/audit-technique-gratuit"
+    }
+  },
+  {
+    "route": "/en/resources/free-technical-audit",
+    "lang": "en",
+    "title": "Free technical website audit | Argos",
+    "canonical": "https://argos.lelouet.fr/en/resources/free-technical-audit",
+    "alternates": {
+      "fr": "https://argos.lelouet.fr/ressources/audit-technique-gratuit",
+      "en": "https://argos.lelouet.fr/en/resources/free-technical-audit",
+      "x-default": "https://argos.lelouet.fr/ressources/audit-technique-gratuit"
+    }
+  },
+  {
+    "route": "/ressources/accessibilite-numerique",
+    "lang": "fr",
+    "title": "Accessibilité numérique : RGAA, EAA, obligations et sanctions",
+    "canonical": "https://argos.lelouet.fr/ressources/accessibilite-numerique",
+    "alternates": {
+      "fr": "https://argos.lelouet.fr/ressources/accessibilite-numerique",
+      "en": "https://argos.lelouet.fr/en/resources/digital-accessibility",
+      "x-default": "https://argos.lelouet.fr/ressources/accessibilite-numerique"
+    }
+  },
+  {
+    "route": "/en/resources/digital-accessibility",
+    "lang": "en",
+    "title": "Digital accessibility: French RGAA and European EAA | Argos",
+    "canonical": "https://argos.lelouet.fr/en/resources/digital-accessibility",
+    "alternates": {
+      "fr": "https://argos.lelouet.fr/ressources/accessibilite-numerique",
+      "en": "https://argos.lelouet.fr/en/resources/digital-accessibility",
+      "x-default": "https://argos.lelouet.fr/ressources/accessibilite-numerique"
+    }
+  }
+]

@@ -192,3 +192,7 @@
 @media (max-width: 300px) { .navLinks { grid-template-columns: minmax(0,1fr); } }
 @media (max-width: 300px) { .navInner { padding-inline: 8px; } }
 @media (max-width: 300px) { .navActions { flex-wrap: wrap; flex-shrink: 1; margin-left: 0; } }
+
+// Reserve two lines for the French CTA in both languages.
+.auditCta { height: 60px; box-sizing: border-box; }
+.navLink { display: flex; align-items: center; height: 60px; box-sizing: border-box; }

@@ -12,6 +12,7 @@ import { reportReadingCopy } from "@/components/report/reportReadingCopy";
 import ScoreGrid from "@/components/report/ScoreGrid";
 import PriorityCards from "@/components/report/PriorityCards";
 import IssuesByCategory from "@/components/report/IssuesByCategory";
+import ReportExport from "@/components/report/ReportExport";
 import ReportFooterCta from "@/components/report/ReportFooterCta";
 import { Report } from "@/components/report/types";
 import { useLang } from "@/lib/i18n/LangContext";
@@ -46,6 +47,7 @@ export default function ReportPage({ params }: Readonly<Params>) {
       <ReportHero report={report} model={model} onActions={() => reading.navigate({ view: "actions", anchor: "" })} onMethod={showMethod} />
 
       <main className={s.main}>
+        <ReportExport />
         <ReportNavigation view={reading.view} onChange={view => reading.navigate({ view, anchor: "" })} />
         {reading.missing && <p role="status">{copy.missing}</p>}
         {reading.view === "overview" && <section className={s.view} id="report-overview" aria-label={copy.overview}>
