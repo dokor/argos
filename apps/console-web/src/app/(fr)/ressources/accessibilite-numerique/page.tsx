@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import EditorialMeta from "@/components/marketing/EditorialMeta";
 import SiteNav from "@/components/site/SiteNav";
 import SiteFooter from "@/components/site/SiteFooter";
 import { useLang } from "@/lib/i18n/LangContext";
@@ -234,10 +235,8 @@ export default function AccessibilityArticlePage() {
           <div className={s.heroInner}>
             <p className={s.eyebrow}>{c.eyebrow}</p>
             <h1>{c.title}</h1>
+            <EditorialMeta route="/ressources/accessibilite-numerique" />
             <p className={s.lead}>{c.lead}</p>
-            <p className={s.updated}>
-              {c.byline} <a href="https://www.linkedin.com/in/antoinelelouet/">Antoine LE LOUËT</a> · <time dateTime="2026-10-06">{c.updated}</time>
-            </p>
             <div className={s.heroActions}>
               <Link href="/#audit" className={s.primaryCta}>{c.ctaButton} <span aria-hidden="true">→</span></Link>
             </div>
@@ -349,7 +348,7 @@ export default function AccessibilityArticlePage() {
               </div>
             </section>
 
-            <section className={s.sources}>
+            <section className={s.sources} id="references">
               <h2>{c.sourcesTitle}</h2>
               <p>{c.sourcesIntro}</p>
               <ul>

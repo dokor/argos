@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import AuditForm from "@/components/AuditForm";
+import EditorialMeta from "@/components/marketing/EditorialMeta";
 import SiteNav from "@/components/site/SiteNav";
 import SiteFooter from "@/components/site/SiteFooter";
 import ChoosingArgos from "@/components/marketing/ChoosingArgos";
@@ -107,6 +108,7 @@ export default function AuditTechniquePage() {
           <div className={s.container}>
             <p className={s.eyebrow}>{c.eyebrow}</p>
             <h1>{c.title}</h1>
+            <EditorialMeta route="/ressources/audit-technique-gratuit" />
             <p className={s.lead}>{c.lead}</p>
             <div className={s.formPanel} id="audit">
               <h2>{c.formTitle}</h2>
@@ -184,6 +186,7 @@ export default function AuditTechniquePage() {
             </div>
           </div>
         </section>
+        <section className={s.section} id="references"><div className={s.container}><h2>{lang === "fr" ? "Références officielles" : "Official references"}</h2><ul><li><a href="https://developer.chrome.com/docs/lighthouse/overview/">Chrome : Lighthouse</a></li><li><a href="https://owasp.org/projects/secure-headers-project">OWASP : Secure Headers Project</a></li><li><a href="https://www.w3.org/WAI/test-evaluate/tools/">W3C WAI : {lang === "fr" ? "outils et limites de l’évaluation" : "evaluation tools and limitations"}</a></li></ul></div></section>
       </main>
       <SiteFooter />
     </div>

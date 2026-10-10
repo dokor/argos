@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import AuditForm from "@/components/AuditForm";
+import EditorialMeta from "@/components/marketing/EditorialMeta";
 import SiteNav from "@/components/site/SiteNav";
 import SiteFooter from "@/components/site/SiteFooter";
 import ChoosingArgos from "@/components/marketing/ChoosingArgos";
@@ -161,6 +162,7 @@ export default function ChecklistAuditPage() {
           <div className={s.container}>
             <p className={s.eyebrow}>{c.eyebrow}</p>
             <h1>{c.title}</h1>
+            <EditorialMeta route="/guides/checklist-audit-site-web" />
             <p className={s.lead}>{c.lead}</p>
             <p className={s.scope}>{c.scope}</p>
             <p className={s.earlyCta}><a href="#audit-gratuit">{controls.audit}</a></p>
@@ -212,7 +214,7 @@ export default function ChecklistAuditPage() {
           <section className={s.more} aria-labelledby="more-title">
             <h2 id="more-title">{c.nextTitle}</h2>
             <ul>{c.links.map((link) => <li key={link.href}><Link href={link.href}>{link.label}</Link></li>)}</ul>
-            <h3>{c.sourcesTitle}</h3>
+            <h3 id="references">{c.sourcesTitle}</h3>
             <ul>{c.sources.map((source) => <li key={source.href}><a href={source.href}>{source.label}</a></li>)}</ul>
           </section>
 

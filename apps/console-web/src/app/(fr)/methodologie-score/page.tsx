@@ -1,4 +1,5 @@
 import Link from "next/link";
+import EditorialMeta from "@/components/marketing/EditorialMeta";
 import SiteNav from "@/components/site/SiteNav";
 import SiteFooter from "@/components/site/SiteFooter";
 import s from "./page.module.scss";
@@ -30,6 +31,7 @@ export default function ScoreMethodologyPage() {
           <div className={s.container}>
             <p className={s.eyebrow}>Méthode de calcul · Barème v{POLICY_VERSION}</p>
             <h1>Comment est calculé le score d&apos;audit Argos&nbsp;?</h1>
+            <EditorialMeta route="/methodologie-score" fixedFrench />
             <p className={s.lead}>Le score résume les contrôles techniques effectués sur une URL à un moment donné. Il aide à repérer les points à examiner, sans remplacer la lecture des constats et de la couverture des mesures.</p>
             <section className={s.summary} id="resume" aria-labelledby="resume-title">
               <h2 id="resume-title">Du contrôle à la décision</h2>
