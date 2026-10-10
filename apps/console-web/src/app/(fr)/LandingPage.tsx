@@ -6,7 +6,7 @@ import Link from "@/components/LocalizedLink";
 import { useLang } from "@/lib/i18n/LangContext";
 import SiteNav from "@/components/site/SiteNav";
 import SiteFooter from "@/components/site/SiteFooter";
-import ScoreRingSvg from "@/components/report/ScoreRing";
+import HomeReportPreview from "@/components/marketing/HomeReportPreview";
 import s from "./page.module.scss";
 
 // ─── Social proof bar ─────────────────────────────────────────────────────────
@@ -35,103 +35,10 @@ function SocialProofBar({
   );
 }
 
-// ─── Score ring ───────────────────────────────────────────────────────────────
-
-function ScoreRing({
-  value,
-  label,
-  color,
-}: {
-  value: number;
-  label: string;
-  color: string;
-}) {
-  return (
-    <div className={s.ringWrap}>
-      <ScoreRingSvg
-        score={value}
-        size={72}
-        strokeWidth={6}
-        radius={28}
-        color={color}
-        trackColor="#e2e8f0"
-        ariaLabel={`${label}: ${value}/100`}
-      >
-        <text x={36} y={40} textAnchor="middle" fontSize={15} fontWeight={700} className={s.ringValue}>
-          {value}
-        </text>
-      </ScoreRingSvg>
-      <span className={s.ringLabel}>{label}</span>
-    </div>
-  );
-}
-
-// ─── Mock report card ─────────────────────────────────────────────────────────
-
-type CheckStatus = "pass" | "warn" | "fail" | "info";
-
-const dotClass: Record<CheckStatus, string> = {
-  pass: s.mockDotPass,
-  warn: s.mockDotWarn,
-  fail: s.mockDotFail,
-  info: s.mockDotInfo,
-};
-
-function MockReport({
-  tMock,
-}: {
-  tMock: {
-    securityLabel: string;
-    url: string;
-    urlDetail: string;
-    score: string;
-    checks: Record<string, string>;
-  };
-}) {
-  const checkItems: Array<{ key: string; status: CheckStatus }> = [
-    { key: "httpsEnforced", status: "pass" },
-    { key: "hstsPresent", status: "pass" },
-    { key: "cspMissing", status: "warn" },
-    { key: "metaDescMissing", status: "fail" },
-    { key: "titlePresent", status: "pass" },
-    { key: "h1Found", status: "pass" },
-    { key: "nextjsDetected", status: "info" },
-    { key: "lcpScore", status: "warn" },
-    { key: "performanceScore", status: "warn" },
-  ];
-
-  return (
-    <div className={s.mockCard}>
-      <div className={s.mockHeader}>
-        <div className={s.mockFavicon}>🌐</div>
-        <div>
-          <div className={s.mockUrl}>{tMock.url}</div>
-          <div className={s.mockUrlDetail}>{tMock.urlDetail}</div>
-        </div>
-        <div className={s.mockScore}>{tMock.score}</div>
-      </div>
-      <div className={s.mockRings}>
-        <ScoreRing value={88} label={tMock.securityLabel} color="#6366f1" />
-        <ScoreRing value={72} label="SEO" color="#0ea5e9" />
-        <ScoreRing value={65} label="A11y" color="#f59e0b" />
-        <ScoreRing value={71} label="Perf." color="#10b981" />
-      </div>
-      <div className={s.mockChecks}>
-        {checkItems.map((item) => (
-          <div key={item.key} className={s.mockCheckItem}>
-            <span className={`${s.mockDot} ${dotClass[item.status]}`} />
-            <span className={s.mockCheckText}>{tMock.checks[item.key]}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function LandingPage() {
-  const { t, lang } = useLang();
+  const { t } = useLang();
   const tl = t.landing;
 
 
@@ -155,7 +62,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div className={s.heroRight}>
-            <MockReport tMock={{ ...tl.mockReport, securityLabel: lang === "en" ? "Security" : "Sécurité" }} />
+            <HomeReportPreview />
           </div>
         </div>
         <div className={s.heroFade} />
