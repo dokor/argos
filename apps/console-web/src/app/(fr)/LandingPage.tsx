@@ -6,6 +6,7 @@ import Link from "@/components/LocalizedLink";
 import { useLang } from "@/lib/i18n/LangContext";
 import SiteNav from "@/components/site/SiteNav";
 import SiteFooter from "@/components/site/SiteFooter";
+import PublicIcon from "@/components/marketing/PublicIcon";
 import HomeReportPreview from "@/components/marketing/HomeReportPreview";
 import s from "./page.module.scss";
 
@@ -21,7 +22,7 @@ function SocialProofBar({
       {items.map((item, i) => (
         <React.Fragment key={item.label}>
           <span className={s.socialProofItem}>
-            <span>{item.icon}</span>
+            <PublicIcon index={i} size={16} />
             {item.label}
           </span>
           {i < items.length - 1 && (
@@ -79,9 +80,9 @@ export default function LandingPage() {
             <p className={s.sectionSub}>{tl.modules.sub}</p>
           </div>
           <div className={s.grid4}>
-            {tl.modules.items.map((m) => (
+            {tl.modules.items.map((m, index) => (
               <div key={m.label} className={s.moduleCard}>
-                <span className={s.moduleIcon}>{m.icon}</span>
+                <span className={s.moduleIcon}><PublicIcon index={index} /></span>
                 <h3 className={s.moduleLabel}>{m.label}</h3>
                 <p className={s.moduleDesc}>{m.desc}</p>
               </div>
@@ -99,7 +100,7 @@ export default function LandingPage() {
           <div className={s.stepsGrid}>
             {tl.how.steps.map((step, i) => (
               <div key={step.n} className={s.stepCard}>
-                <div className={s.stepNumber}>{step.n}</div>
+                <div className={s.stepNumber} aria-hidden="true">{step.n}</div>
                 {i < tl.how.steps.length - 1 && (
                   <div className={s.stepArrow}>→</div>
                 )}
@@ -120,7 +121,7 @@ export default function LandingPage() {
           <div className={s.grid4}>
             {tl.why.items.map((item, index) => (
               <div key={item.label} className={s.whyCard}>
-                <span className={s.whyIcon}>{item.icon}</span>
+                <span className={s.whyIcon}><PublicIcon index={index} /></span>
                 <h3 className={s.whyLabel}>{item.label}</h3>
                 <p className={s.whyDesc}>{item.desc}</p>
                 {index === 3 && <Link href="/methodologie-score">{item.label}</Link>}

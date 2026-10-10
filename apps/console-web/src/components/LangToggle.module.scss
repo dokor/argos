@@ -50,7 +50,7 @@
   transition: color 0.15s, background 0.15s, box-shadow 0.15s;
 
   &.active {
-    background: t.$color-indigo;
+    background: #4f46e5;
     color: t.$color-white;
     box-shadow: 0 1px 4px rgba(99, 102, 241, 0.35);
   }

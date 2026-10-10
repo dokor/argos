@@ -220,3 +220,5 @@
     padding: 20px;
   }
 }
+
+.page { @include t.public-type; }

@@ -609,3 +609,8 @@
 .heroInner { padding-bottom: 1rem; }
 
 .heroFormWrap, .sectionAlt { scroll-margin-top: 300px; }
+
+.page { @include t.public-type; }
+
+.whyCard a { color: t.$text; text-decoration: underline; }
+.whyCard a:focus-visible { outline: 3px solid t.$text; outline-offset: 3px; }

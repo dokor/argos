@@ -27,3 +27,7 @@
   .finding { padding: t.$space-5; }
   .hero { padding-block: t.$space-12; }
 }
+
+.page { @include t.public-type; }
+
+.hero { padding-block: 2.5rem; }

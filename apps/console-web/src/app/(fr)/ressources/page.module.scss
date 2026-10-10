@@ -107,3 +107,7 @@
     grid-template-columns: 1fr;
   }
 }
+
+.page { @include t.public-type; }
+
+.hero { padding-block: 2.5rem; }

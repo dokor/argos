@@ -230,3 +230,5 @@
     padding: t.$space-5;
   }
 }
+
+.page { @include t.public-type; }
