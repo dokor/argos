@@ -232,3 +232,25 @@
 }
 
 .page { @include t.public-type; }
+
+.controls { margin-block: 32px; padding: 24px; border: 1px solid t.$border; border-radius: t.$radius-lg; background: t.$surface; p { line-height: 1.6; } }
+.buttons { display: flex; flex-wrap: wrap; gap: 12px; button { padding: 12px 16px; border: 1px solid t.$border; border-radius: t.$radius-md; background: t.$surface-2; color: t.$text; font: inherit; cursor: pointer; &:focus-visible { outline: 3px solid t.$color-indigo; outline-offset: 3px; } } }
+.checkbox { flex: 0 0 22px; width: 22px; height: 22px; accent-color: t.$color-indigo; &:focus-visible { outline: 3px solid t.$color-indigo; outline-offset: 3px; } }
+.stepHeading { align-items: center; label { cursor: pointer; } }
+.step, .cta { scroll-margin-top: 300px; }
+@media print {
+  @page { size: A4; margin: 16mm; }
+  .page { background: white !important; color: black !important; min-height: 0; }
+  .page > :not(main), .contents, .buttons, .cta, .page main > :not(header):not(.container) { display: none !important; }
+  .container { width: 100%; max-width: none; }
+  .hero { padding: 0; background: white; border: 0; }
+  .hero h1 { font-size: 22pt; }
+  .page p, .page dd, .page dt, .page a, .stepNumber { color: black !important; }
+  .page a { overflow-wrap: anywhere; }
+  .controls { padding: 0; border: 0; margin: 12pt 0; background: white; }
+  .checklist, .example, .more { margin: 16pt 0; }
+  .step { padding: 14pt 0; }
+  .stepHeading { break-after: avoid; h2 { font-size: 15pt; } }
+  .fields { display: block; div { margin: 10pt 0; break-inside: avoid; } div:last-child { padding: 0; border: 0; background: white; } dd { font-size: 10pt; line-height: 1.4; } }
+  .example { padding: 0; border: 0; background: white; }
+}
