@@ -4,6 +4,9 @@
     "description": "Analysez gratuitement une page : performance, sécurité, SEO et accessibilité. Obtenez vos scores et des corrections prioritaires, sans compte."
   },
   "nav": {
+    "how": "Comment ça marche",
+    "example": "Exemple de rapport",
+    "guides": "Guides",
     "logo": "Argos",
     "primary": "Navigation principale",
     "audit": "Auditer un site",

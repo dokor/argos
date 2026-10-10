@@ -91,7 +91,7 @@ export default function LandingPage() {
       </section>
 
       {/* HOW IT WORKS */}
-      <section className={s.sectionAlt}>
+      <section id="how-it-works" className={s.sectionAlt}>
         <div className={s.container}>
           <div className={s.sectionHeader}>
             <h2 className={s.sectionTitle}>{tl.how.title}</h2>

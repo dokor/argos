@@ -4,6 +4,9 @@
     "description": "Audit a public page for free: performance, security, SEO and accessibility. Get scores and priority corrections with no account needed."
   },
   "nav": {
+    "how": "How it works",
+    "example": "Example report",
+    "guides": "Guides",
     "logo": "Argos",
     "primary": "Main navigation",
     "audit": "Audit a website",

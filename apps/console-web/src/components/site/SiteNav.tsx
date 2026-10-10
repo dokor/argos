@@ -25,15 +25,10 @@ export default function SiteNav() {
           <span className={s.logoText}>{t.nav.logo}</span>
         </Link>
         <div className={s.navLinks}>
-          <Link href="/#audit" className={s.navLink} aria-current={pathname === "/" ? "page" : undefined}>
-            {t.nav.audit}
-          </Link>
-          <Link href="/ressources" className={s.navLink} aria-current={pathname === "/ressources" ? "page" : onResources ? "location" : undefined}>
-            {t.nav.resources}
-          </Link>
-          <Link href="/faq" className={s.navLink} aria-current={pathname === "/faq" ? "page" : undefined}>
-            {t.nav.faq}
-          </Link>
+          <Link href="/#how-it-works" className={s.navLink}>{t.nav.how}</Link>
+          <Link href="/exemple-rapport" className={s.navLink} aria-current={pathname === "/exemple-rapport" ? "page" : undefined}>{t.nav.example}</Link>
+          <Link href="/ressources" className={s.navLink} aria-current={onResources ? "location" : undefined}>{t.nav.guides}</Link>
+          <Link href="/#audit" className={s.auditCta}>{t.landing.hero.cta}</Link>
         </div>
         <div className={s.navActions}>
           <ThemeToggle />
