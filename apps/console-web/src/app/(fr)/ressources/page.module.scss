@@ -111,3 +111,10 @@
 .page { @include t.public-type; }
 
 .hero { padding-block: 2.5rem; }
+
+.starter { margin-top: 1.5rem; padding: 1.5rem; border: 1px solid t.$border; border-radius: t.$radius-lg; background: t.$surface-2; }
+.starter ol { display: grid; gap: 0.75rem; margin-top: 1rem; }
+.starter a { text-decoration: underline; text-underline-offset: 3px; }
+.starter a:focus-visible { outline: 3px solid t.$text; outline-offset: 3px; }
+.section { padding-block: 2rem; }
+.cardMeta { font-size: 0.85rem; color: t.$text-muted; }

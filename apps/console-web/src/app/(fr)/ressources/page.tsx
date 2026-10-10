@@ -4,13 +4,14 @@ import Link from "@/components/LocalizedLink";
 import SiteNav from "@/components/site/SiteNav";
 import SiteFooter from "@/components/site/SiteFooter";
 import { useLang } from "@/lib/i18n/LangContext";
+import { languageRoutes } from "@/lib/i18n/routes";
 import s from "./page.module.scss";
 
 const copy = {
   fr: {
     eyebrow: "Guides et diagnostics",
     title: "Ressources pour mieux auditer votre site",
-    lead: "Comprenez ce qu’Argos peut mesurer sur une page publique, puis choisissez le diagnostic adapté à votre contexte. Chaque ressource précise aussi les limites de l’analyse automatique.",
+    lead: "Un exemple, une checklist et des guides pour comprendre vos résultats.",
     guidesTitle: "Comprendre les mesures",
     audiencesTitle: "Choisir votre contexte",
     guides: [
@@ -29,7 +30,7 @@ const copy = {
   en: {
     eyebrow: "Guides and diagnostics",
     title: "Resources to audit your website",
-    lead: "Learn what Argos can measure on a public page, then choose the diagnosis that fits your context. Each resource also explains the limits of automated analysis.",
+    lead: "An example, a checklist and guides to understand your results.",
     guidesTitle: "Understand the measurements",
     audiencesTitle: "Choose your context",
     guides: [
@@ -50,6 +51,10 @@ const copy = {
 export default function ResourcesPage() {
   const { lang } = useLang();
   const c = copy[lang];
+  const fr = lang === "fr";
+  const times: Record<string, number> = { "/exemple-rapport": 7, "/guides/checklist-audit-site-web": 9, "/methodologie-score": 6, "/ressources/audit-technique-gratuit": 8, "/ressources/accessibilite-numerique": 10 };
+  const languageLabel = (href: string) => !fr && !languageRoutes[href] ? " · French" : "";
+  const cardMeta = (href: string) => (fr ? "Débutant · " : "Beginner · ") + (href.includes("accessibilite") ? fr ? "Accessibilité" : "Accessibility" : href.includes("score") ? fr ? "Mesures" : "Measurements" : fr ? "Diagnostic" : "Diagnosis") + (fr ? " · Lecture estimée : " : " · Estimated reading: ") + (times[href] ?? 4) + " min" + languageLabel(href);
 
   return (
     <div className={s.page}>
@@ -63,12 +68,19 @@ export default function ResourcesPage() {
           </div>
         </header>
         <div className={s.container}>
+          <section className={s.starter} aria-labelledby="start-title">
+            <h2 id="start-title">{fr ? "Commencer ici" : "Start here"}</h2>
+            <ol><li><Link href="/exemple-rapport">{fr ? "1. Lire un exemple de rapport" : "1. Read an example report"}</Link></li>
+              <li><Link href="/guides/checklist-audit-site-web">{fr ? "2. Choisir les vérifications de la checklist" : "2. Choose checks from the checklist (French)"}</Link></li>
+              <li><Link href="/#audit">{fr ? "3. Analyser votre page gratuitement" : "3. Analyse your page for free"}</Link></li></ol>
+          </section>
           <section className={s.section} aria-labelledby="guides-title">
             <h2 id="guides-title">{c.guidesTitle}</h2>
             <div className={s.grid}>
               {c.guides.map((item) => (
                 <article key={item.href} className={s.card}>
                   <h3>{item.title}</h3>
+                  <p className={s.cardMeta}>{cardMeta(item.href)}</p>
                   <p>{item.description}</p>
                   <Link href={item.href} aria-label={`${c.linkLabel} : ${item.title}`}>{c.linkLabel} <span aria-hidden="true">→</span></Link>
                 </article>
@@ -81,6 +93,7 @@ export default function ResourcesPage() {
               {c.audiences.map((item) => (
                 <article key={item.href} className={s.card}>
                   <h3>{item.title}</h3>
+                  <p className={s.cardMeta}>{cardMeta(item.href)}</p>
                   <p>{item.description}</p>
                   <Link href={item.href} aria-label={`${c.linkLabel} : ${item.title}`}>{c.linkLabel} <span aria-hidden="true">→</span></Link>
                 </article>
