@@ -11,3 +11,5 @@ Dashboard administrateur /dashboard/analytics, périodes 7/30/90 jours. Cohortes
 Tables propres purgées chaque heure : attributions >90 jours ; compteurs au-delà de 90 jours UTC. Cette purge ne touche aucun audit/run/rapport. Pannes de collecte sans impact sur audit ; aucune reprise ni SDK tiers. Endpoints de collecte et agrégats protégés par credential serveur ; BFF valide origine, consentement, champs fermés et corps ≤2048 octets.
 
 Validation : tests de contrats/consentement hors collecte, percentiles/cohortes, migration MariaDB réelle en CI. Première base de comparaison à constituer après activation autorisée ; aucun résultat réel annoncé.
+
+Contrôle navigateur de production local FR/EN à 360 px : aucun événement avant accord/après refus, cookie de session, payload fermé et un seul événement d’exemple après affichage. Credential/auth et panne de stockage vérifiés en Java.
