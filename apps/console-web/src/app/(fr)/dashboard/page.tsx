@@ -48,6 +48,7 @@ export default function DashboardPage() {
       <SiteNav />
 
       <main className={styles.main}>
+        <a href="/dashboard/analytics">Mesure produit</a>
         <div className={styles.kpiGrid}>
           <KpiCard label={td.stats.analyzed}   value={stats.analyzed}   icon="✓" accent="#16a34a" bg="#dcfce7" description={td.stats.analyzedDesc} />
           <KpiCard label={td.stats.inProgress} value={stats.inProgress} icon="↻" accent="#0284c7" bg="#e0f2fe" description={td.stats.inProgressDesc} highlight={stats.inProgress > 0} />

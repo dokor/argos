@@ -8,6 +8,7 @@
  * GET /api/audits (list) is also proxied here so the rewrite remains consistent.
  */
 
+import { attribution, count } from "@/lib/analytics/server";
 import { NextRequest, NextResponse } from "next/server";
 import { adminReadProxy } from "@/lib/admin-read-proxy";
 import { createLogger, safeError, sanitizeText, sanitizeUrl } from "@/lib/logger";
@@ -104,7 +105,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Request body must be a JSON object" }, { status: 400 });
   }
 
-  const { url, sourceRoute } = body as Record<string, unknown>;
+  const { url, sourceRoute, lang } = body as Record<string, unknown>;
+  const analytics = attribution(request,{route:sourceRoute,lang,placement:"form"});
+  const rejected=async(errorCategory:"validation"|"service"|"rate_limit")=>{if(analytics)await count({event:"audit_submission_rejected",dimensions:analytics,errorCategory});};
   // A fixed allowlist keeps untrusted values out of structured logs.
   const auditSource = sourceRoute === "/guides/checklist-audit-site-web"
     ? sourceRoute
@@ -116,6 +119,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         durationMs: Date.now() - startedAt,
       },
     });
+    await rejected("validation");
     return NextResponse.json({ error: "Field 'url' is required" }, { status: 400 });
   }
 
@@ -128,6 +132,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         url: sanitizeUrl(trimmed),
       },
     });
+    await rejected("validation");
     return NextResponse.json(
       { error: `URL must not exceed ${MAX_URL_LENGTH} characters` },
       { status: 400 }
@@ -145,6 +150,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         url: sanitizeUrl(trimmed),
       },
     });
+    await rejected("validation");
     return NextResponse.json({ error: err }, { status: 400 });
   }
 
@@ -152,8 +158,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     backendRes = await fetch(`${API_BASE}/api/audits`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url: trimmed }),
+      headers: { "Content-Type": "application/json", ...(analytics ? {Authorization:"Bearer "+process.env.ADMIN_API_TOKEN} : {}) },
+      body: JSON.stringify({ url: trimmed, ...(analytics ? {analytics} : {}) }),
     });
   } catch (error) {
     logger.error("audit_bff_backend_unreachable", {
@@ -164,10 +170,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         url: sanitizeUrl(trimmed),
       },
     });
+    await rejected("service");
     return NextResponse.json({ error: "Service temporarily unavailable" }, { status: 503 });
   }
 
   const text = await backendRes.text();
+  if(!backendRes.ok)await rejected(backendRes.status===429?"rate_limit":backendRes.status<500?"validation":"service");
   if (backendRes.ok) {
     logger.info("audit_bff_backend_response_ok", {
       action: "create_audit",

@@ -8,6 +8,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
@@ -26,21 +27,26 @@ public class ReportsWs {
     private static final Logger logger = LoggerFactory.getLogger(ReportsWs.class);
     private final ReportReadService reportReadService;
     private final AuditRunService auditRunService;
+    private final com.dokor.argos.services.analytics.ProductAnalyticsService analytics;
 
+    public ReportsWs(ReportReadService reports,AuditRunService runs){this(reports,runs,null);}
     @Inject
-    public ReportsWs(ReportReadService reportReadService, AuditRunService auditRunService) {
+    public ReportsWs(ReportReadService reportReadService, AuditRunService auditRunService, com.dokor.argos.services.analytics.ProductAnalyticsService analytics) {
         this.reportReadService = reportReadService;
         this.auditRunService = auditRunService;
+        this.analytics = analytics;
     }
 
+    public Response getReport(String token){return getReport(token,null,null);}
     @GET
     @Path("/{token}")
-    public Response getReport(@PathParam("token") String token) {
+    public Response getReport(@PathParam("token") String token,@HeaderParam("Authorization") String authorization,@HeaderParam("X-Product-Consent") String consent) {
         var reportOpt = reportReadService.getByToken(token);
         if (reportOpt.isEmpty()) {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
 
+        if(analytics!=null) analytics.viewed(token,authorization,consent);
         return Response.ok(reportOpt.get())
             .header("X-Robots-Tag", "noindex, nofollow")
             .header("Cache-Control", "private, no-store")
