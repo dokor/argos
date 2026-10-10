@@ -71,7 +71,7 @@ jobs:
       - name: Run MariaDB integration tests
         run: >-
           mvn --batch-mode -P mariadb-integration
-          -Dit.test=ReportCredentialMigrationIT,AuditPublicationIT,AuditClaimIT,NewsletterPrivacyIT,AuditRunProgressIT,DomainAnalysisConcurrencyIT
+          -Dit.test=ReportCredentialMigrationIT,AuditPublicationIT,ProductAnalyticsIT,AuditClaimIT,NewsletterPrivacyIT,AuditRunProgressIT,DomainAnalysisConcurrencyIT
           verify
       - uses: actions/upload-artifact@v4
         if: always()

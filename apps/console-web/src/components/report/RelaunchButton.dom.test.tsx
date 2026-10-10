@@ -34,7 +34,7 @@ describe("RelaunchButton (relance d'analyse #9)", () => {
     fireEvent.click(btn);
 
     await waitFor(() => {
-      expect(argosApi.createAudit).toHaveBeenCalledWith({ url: "https://example.com" });
+      expect(argosApi.createAudit).toHaveBeenCalledWith({ url: "https://example.com", sourceRoute: "/", lang: "fr" });
     });
   });
 

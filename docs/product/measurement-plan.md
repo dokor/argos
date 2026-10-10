@@ -38,3 +38,7 @@ L'[exemption CNIL pour la mesure d'audience](https://www.cnil.fr/fr/cookies-et-a
 Instrumenter les transitions serveur avec unicité transactionnelle, puis navigation/CTA bornés et affichage. Tester retries, refresh, StrictMode, polling, double clic, fermeture navigateur, erreur et refus de collecte ; vérifier absence de données privées dans les requêtes et journaux. Contrôler le mécanisme de purge avec une fixture à durée écoulée. Bilan 28 jours avant/après à effectifs comparables, saisonnalité et incertitudes explicites ; aucune causalité revendiquée sur une variation brute. Search Console complète pages/requêtes sans transmettre de résultats d'audit. #350 reste la mesure des présentations externes.
 
 Le ticket #42 reste ouvert pour ces décisions et le lot 2. Ce plan permet les contenus de #373 sans faire passer une instrumentation projetée pour un outil déjà en production.
+
+
+## Implémentation du 11 octobre 2026
+Le dictionnaire, les fenêtres, limites et consentement réellement implémentés sont décrits dans [product-analytics.md](product-analytics.md). Collecte interne désactivée par défaut ; aucune baseline réelle ni Search Console disponible. Responsable : Antoine Le Louët. Aucun gain annoncé.

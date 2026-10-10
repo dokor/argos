@@ -19,24 +19,28 @@ public class SchedulerJobs {
     private static final Logger logger = LoggerFactory.getLogger(SchedulerJobs.class);
 
     private final Scheduler scheduler;
+    private final com.dokor.argos.services.analytics.ProductAnalyticsService analytics;
     private final ConfigurationService configurationService;
     private final AuditQueueService auditQueueService;
     private final StuckAuditRunReaper stuckAuditRunReaper;
 
+    public SchedulerJobs(Scheduler scheduler,ConfigurationService configuration,AuditQueueService queue,StuckAuditRunReaper reaper){this(scheduler,configuration,queue,reaper,null);}
     @Inject
     public SchedulerJobs(
         Scheduler scheduler,
         ConfigurationService configurationService,
         AuditQueueService auditQueueService,
-        StuckAuditRunReaper stuckAuditRunReaper
+        StuckAuditRunReaper stuckAuditRunReaper, com.dokor.argos.services.analytics.ProductAnalyticsService analytics
     ) {
         this.scheduler = scheduler;
+        this.analytics = analytics;
         this.configurationService = configurationService;
         this.auditQueueService = auditQueueService;
         this.stuckAuditRunReaper = stuckAuditRunReaper;
     }
 
     public void scheduleJobs() {
+        if(analytics!=null) scheduler.schedule("Purge product telemetry", analytics::purgeTelemetry, Schedules.fixedDelaySchedule(Duration.ofHours(1)));
 
         scheduler.schedule(
             "Process queued audit runs",

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLang } from "@/lib/i18n/LangContext";
+import { publicRoute } from "@/lib/analytics/contract";
 import { localizedPath } from "@/lib/i18n/routes";
 import { useRouter } from "next/navigation";
 import { argosApi, CreateAuditResponse } from "@/lib/ArgosApi";
@@ -213,7 +214,8 @@ export function useAuditSubmit(options: UseAuditSubmitOptions): UseAuditSubmitRe
       try {
         const res = await argosApi.createAudit({
           url: normalized,
-          ...(sourceRoute === "/guides/checklist-audit-site-web" ? { sourceRoute } : {}),
+          sourceRoute: publicRoute(sourceRoute ?? window.location.pathname),
+          lang,
         });
         runIdRef.current = res.runId;
         reportTokenRef.current = res.reportToken ?? null;
@@ -247,7 +249,7 @@ export function useAuditSubmit(options: UseAuditSubmitOptions): UseAuditSubmitRe
         });
       }
     },
-    [phase, maxWaitMs, logger, redirectToReport, sourceRoute]
+    [phase, maxWaitMs, logger, redirectToReport, sourceRoute, lang]
   );
 
   const reset = useCallback(() => {

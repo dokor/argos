@@ -36,7 +36,7 @@ describe("AuditForm (soumission d'audit)", () => {
     fireEvent.click(screen.getByRole("button"));
 
     await waitFor(() =>
-      expect(argosApi.createAudit).toHaveBeenCalledWith({ url: "https://example.com" })
+      expect(argosApi.createAudit).toHaveBeenCalledWith({ url: "https://example.com", sourceRoute: "/", lang: "fr" })
     );
     await waitFor(() =>
       expect(window.open).toHaveBeenCalledWith("/report/tok123", "_blank")
@@ -70,7 +70,7 @@ describe("AuditForm (soumission d'audit)", () => {
     fireEvent.change(screen.getByRole("textbox"), { target: { value: "shop.example.com" } });
     fireEvent.click(screen.getByRole("button", { name: "Lancer un audit gratuit" }));
 
-    await waitFor(() => expect(argosApi.createAudit).toHaveBeenCalledWith({ url: "https://shop.example.com" }));
+    await waitFor(() => expect(argosApi.createAudit).toHaveBeenCalledWith({ url: "https://shop.example.com", sourceRoute: "/ressources/audit-site-ecommerce", lang: "fr" }));
     await waitFor(() => expect(push).toHaveBeenCalledWith("/report/public-token"));
     expect(window.open).not.toHaveBeenCalled();
   });
@@ -85,7 +85,7 @@ describe("AuditForm (soumission d'audit)", () => {
 
     await waitFor(() => expect(argosApi.createAudit).toHaveBeenCalledWith({
       url: "https://example.com",
-      sourceRoute: "/guides/checklist-audit-site-web",
+      sourceRoute: "/guides/checklist-audit-site-web", lang: "fr",
     }));
   });
 
