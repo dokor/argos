@@ -1,0 +1,9 @@
+@use '../../styles/tokens' as t;
+.demo { display: grid; gap: t.$space-5; padding-block: t.$space-8; color: t.$text; overflow-wrap: anywhere; }
+.notice { border-left: 3px solid t.$color-indigo; padding: t.$space-4; background: t.$surface-2; }
+.notice small { display: block; }
+.summary { padding: t.$space-5; border: 1px solid t.$border; border-radius: t.$radius-lg; background: t.$surface; }
+.scenarios { display: flex; flex-wrap: wrap; gap: t.$space-4; border: 1px solid t.$border; padding: t.$space-4; }
+.scenarios legend { font-weight: 600; }
+.scenarios label { display: flex; align-items: center; gap: t.$space-2; }
+.demo :focus-visible { outline: 3px solid t.$text; outline-offset: 3px; }

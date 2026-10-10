@@ -1,4 +1,5 @@
 "use client";
+import DemoReport from "./DemoReport";
 
 import Link from "@/components/LocalizedLink";
 import SiteNav from "@/components/site/SiteNav";
@@ -30,7 +31,7 @@ const copy = {
       "Valider les changements dans le HTML livré, relancer un audit de la même page, puis vérifier humainement le contenu et l’accès au clavier. Sur une vraie boutique, un blocage d’achat passerait avant ces améliorations.",
     ],
     coverageTitle: "Ce que cet exemple ne démontre pas",
-    coverage: "Les preuves portent uniquement sur trois contrôles HTML. Les en-têtes HTTP, TLS, services de sécurité, mesures du navigateur et scores Lighthouse ne sont pas mesurés ici. Le score global est donc volontairement absent. Les deux pages restent noindex pour éviter d’indexer la boutique fictive ; cet état est intentionnel et inchangé après correction.",
+    coverage: "Les preuves portent uniquement sur trois contrôles HTML. Les en-têtes HTTP, TLS, services de sécurité, mesures du navigateur et scores Lighthouse ne sont pas mesurés ici. Ces trois preuves seules ne permettent pas de calculer un score global mesuré. Les deux pages restent noindex pour éviter d’indexer la boutique fictive ; cet état est intentionnel et inchangé après correction.",
     privacy: "Vos rapports restent accessibles par leur lien privé et exclus de l’indexation. Cette page publique est une ressource éditoriale distincte, sans accès aux rapports utilisateurs.",
     next: "Appliquer la méthode à votre site", pme: "Prioriser pour un site PME", ecommerce: "Prioriser pour un e-commerce", audit: "Lancer l’audit d’une page publique",
   },
@@ -56,7 +57,7 @@ const copy = {
       "Validate the delivered HTML, rerun an audit of the same page, then manually review content and keyboard access. On a real store, a blocked purchase would come before these improvements.",
     ],
     coverageTitle: "What this example does not demonstrate",
-    coverage: "Evidence covers only three HTML checks. HTTP headers, TLS, security services, browser measurements and Lighthouse scores are not measured here. The overall score is therefore intentionally absent. Both demo pages remain noindex to keep the fictional store out of search; this is intentional and unchanged after correction.",
+    coverage: "Evidence covers only three HTML checks. HTTP headers, TLS, security services, browser measurements and Lighthouse scores are not measured here. These three pieces of evidence alone cannot produce a measured overall score. Both demo pages remain noindex to keep the fictional store out of search; this is intentional and unchanged after correction.",
     privacy: "Your reports remain accessible through their private link and excluded from indexing. This public page is a separate editorial resource with no access to user reports.",
     next: "Apply the method to your site", pme: "Prioritize for a small business", ecommerce: "Prioritize for an e-commerce site", audit: "Audit a public page",
   },
@@ -68,12 +69,13 @@ export default function ExampleReport() {
   return (
     <div className={s.page}>
       <SiteNav />
-      <main>
+      <main id="top">
         <header className={s.hero}><div className={s.container}>
           <p className={s.eyebrow}>{c.eyebrow}</p><h1>{c.title}</h1><p className={s.lead}>{c.lead}</p>
           <p className={s.notice}>{c.disclosure}</p>
         </div></header>
         <div className={s.container}>
+          <DemoReport />
           <section className={s.section} aria-labelledby="fixture-title">
             <h2 id="fixture-title">{c.fixtureTitle}</h2><p>{c.fixtureText}</p>
             <div className={s.links}><a href="/demo/atelier/avant.html">{c.beforeLink}</a><a href="/demo/atelier/apres.html">{c.afterLink}</a></div>

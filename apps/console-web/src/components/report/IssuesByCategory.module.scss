@@ -179,7 +179,9 @@
   display: flex;
   flex-wrap: wrap;
   gap: t.$space-2;
-  flex-shrink: 0;
+  min-width: 0;
+  max-width: 100%;
+  flex-shrink: 1;
 }
 
 .sevTag {
@@ -290,3 +292,4 @@
     display: none;
   }
 }
+.catHeader > div:last-child { display: flex; flex-wrap: wrap; min-width: 0; max-width: 100%; }

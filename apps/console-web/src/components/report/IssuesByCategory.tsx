@@ -24,8 +24,9 @@ type Filter = "all" | SevKey;
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function IssuesByCategory({ report, model = buildReportModel(report), selection, domain = "all", severity, onFilterChange }: {
+export default function IssuesByCategory({ report, model = buildReportModel(report), selection, domain = "all", severity, onFilterChange, initialOpenKey }: {
   report: Report; model?: ReportModel; selection?: FindingSelection; domain?: string; severity?: string;
+  initialOpenKey?: string;
   onFilterChange?: (domain: string, severity: string) => void;
 }) {
   const { t, lang } = useLang();
@@ -130,7 +131,7 @@ export default function IssuesByCategory({ report, model = buildReportModel(repo
                   const { issue } = finding;
                   const sv = SEVERITY_COLORS[issue.severity as SevKey] ?? SEVERITY_COLORS.info;
                   return (
-                    <details key={finding.key} id={finding.anchor} className={s.issueRow}>
+                    <details key={finding.key} open={finding.key === initialOpenKey || undefined} id={finding.anchor} className={s.issueRow}>
                       <summary className={s.issueSummary}>
                         <span className={s.sevDot} style={{ background: sv.dot }} />
 
