@@ -9,7 +9,7 @@ export function languageAlternates(path: string) {
 export function localizedMetadata(path: string, lang: Lang, title: string, description: string): Metadata {
   const url = siteUrl + (path === "/" && lang === "fr" ? "" : localizedPath(path, lang));
   return {
-    title, description,
+    title: path === "/" ? { absolute: title } : title, description,
     alternates: { canonical: url, languages: languageAlternates(path) },
     openGraph: {
       type: "website", url, title, description, siteName: "Argos",

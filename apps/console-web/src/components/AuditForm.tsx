@@ -12,6 +12,8 @@ type Props = {
   onCreated?: (item: AuditListItem) => void;
   mode?: "dashboard" | "public";
   sourceRoute?: string;
+  idPrefix?: string;
+  submitLabel?: string;
 };
 
 function isValidPublicUrl(raw: string): boolean {
@@ -25,7 +27,7 @@ function isValidPublicUrl(raw: string): boolean {
   }
 }
 
-export default function AuditForm({ onCreated, mode = "dashboard", sourceRoute }: Props) {
+export default function AuditForm({ onCreated, mode = "dashboard", sourceRoute, idPrefix, submitLabel }: Props) {
   const { t } = useLang();
   const publicMode = mode === "public";
   const tf = publicMode ? t.marketing.form : t.auditForm;
@@ -60,7 +62,7 @@ export default function AuditForm({ onCreated, mode = "dashboard", sourceRoute }
   const errorMsg = inputError ?? (phase === "error"
     ? publicMode ? t.marketing.form.errorRequest : error?.message ?? t.auditForm.errorUnknown
     : null);
-  const inputId = publicMode ? "public-audit-url" : "url";
+  const inputId = idPrefix ? `${idPrefix}-audit-url` : publicMode ? "public-audit-url" : "url";
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -98,7 +100,7 @@ export default function AuditForm({ onCreated, mode = "dashboard", sourceRoute }
       </div>
 
       <button type="submit" disabled={submitting} className={s.submitBtn}>
-        {submitting ? tf.submitting : tf.submit}
+        {submitting ? tf.submitting : submitLabel ?? tf.submit}
       </button>
 
       {publicMode && submitting && (
