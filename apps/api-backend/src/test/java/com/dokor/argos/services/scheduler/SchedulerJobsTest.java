@@ -54,4 +54,15 @@ class SchedulerJobsTest {
         assertDoesNotThrow(tick::run);
         verify(reaper, times(2)).reapStuckRuns();
     }
+    @Test void registersBothRetentionJobsWithoutReplacingExistingJobs() {
+        when(configuration.auditSchedulerInterval()).thenReturn(Duration.ofSeconds(5));
+        when(configuration.auditStuckCheckInterval()).thenReturn(Duration.ofMinutes(1));
+        var analytics=mock(com.dokor.argos.services.analytics.ProductAnalyticsService.class);
+        var retention=mock(com.dokor.argos.services.domain.report.ReportRetentionService.class);
+        new SchedulerJobs(scheduler,configuration,audits,reaper,analytics,retention).scheduleJobs();
+        var task=ArgumentCaptor.forClass(Runnable.class);
+        verify(scheduler).schedule(eq("Purge expired reports"),task.capture(),any(Schedule.class));
+        task.getValue().run();verify(retention).purgeExpiredReports();
+        verify(scheduler,times(5)).schedule(anyString(),any(Runnable.class),any(Schedule.class));
+    }
 }

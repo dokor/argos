@@ -19,20 +19,24 @@ public class SchedulerJobs {
     private static final Logger logger = LoggerFactory.getLogger(SchedulerJobs.class);
 
     private final Scheduler scheduler;
+    private final com.dokor.argos.services.domain.report.ReportRetentionService retention;
     private final com.dokor.argos.services.analytics.ProductAnalyticsService analytics;
     private final ConfigurationService configurationService;
     private final AuditQueueService auditQueueService;
     private final StuckAuditRunReaper stuckAuditRunReaper;
 
     public SchedulerJobs(Scheduler scheduler,ConfigurationService configuration,AuditQueueService queue,StuckAuditRunReaper reaper){this(scheduler,configuration,queue,reaper,null);}
+    public SchedulerJobs(Scheduler scheduler,ConfigurationService configuration,AuditQueueService queue,StuckAuditRunReaper reaper,com.dokor.argos.services.analytics.ProductAnalyticsService analytics){this(scheduler,configuration,queue,reaper,analytics,null);}
     @Inject
     public SchedulerJobs(
         Scheduler scheduler,
         ConfigurationService configurationService,
         AuditQueueService auditQueueService,
-        StuckAuditRunReaper stuckAuditRunReaper, com.dokor.argos.services.analytics.ProductAnalyticsService analytics
+        StuckAuditRunReaper stuckAuditRunReaper, com.dokor.argos.services.analytics.ProductAnalyticsService analytics,
+        com.dokor.argos.services.domain.report.ReportRetentionService retention
     ) {
         this.scheduler = scheduler;
+        this.retention = retention;
         this.analytics = analytics;
         this.configurationService = configurationService;
         this.auditQueueService = auditQueueService;
@@ -40,6 +44,7 @@ public class SchedulerJobs {
     }
 
     public void scheduleJobs() {
+        if(retention!=null) scheduler.schedule("Purge expired reports", retention::purgeExpiredReports, Schedules.fixedDelaySchedule(Duration.ofHours(1)));
         if(analytics!=null) scheduler.schedule("Purge product telemetry", analytics::purgeTelemetry, Schedules.fixedDelaySchedule(Duration.ofHours(1)));
 
         scheduler.schedule(
