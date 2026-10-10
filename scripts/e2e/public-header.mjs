@@ -59,6 +59,7 @@ async function comparePixels(page, expected, actual) {
 
 async function ready(page, lang, admin) {
   const nav = page.locator('nav').first();
+  page.setDefaultTimeout(20000);
   await nav.waitFor();
   await page.waitForFunction(() => getComputedStyle(document.body).margin === '0px' && getComputedStyle(document.documentElement).overflowY === 'scroll');
   await page.evaluate(() => document.fonts.ready);
@@ -183,14 +184,14 @@ try {
           return [x, y, width, height];
         }));
       }
-      if (performance.now() - start < 2000) requestAnimationFrame(sample);
+      if (window.headerFrames.length < 60 && performance.now() - start < 10000) requestAnimationFrame(sample);
     }
     requestAnimationFrame(sample);
   });
   const page = await context.newPage();
   await page.goto(base + '/');
   await ready(page, 'fr', true);
-  await page.waitForFunction(() => window.headerFrames.length > 30);
+  await page.waitForFunction(() => window.headerFrames.length >= 60, null, { timeout: 12000 });
   const frames = await page.evaluate(() => window.headerFrames);
   assert.ok(frames.length > 30);
   for (const frame of frames) assert.deepEqual(frame, frames[0], 'Font loading/admin hydration moved controls');
