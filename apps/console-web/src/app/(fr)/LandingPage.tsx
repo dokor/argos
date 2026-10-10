@@ -211,11 +211,12 @@ export default function LandingPage() {
             <h2 className={s.sectionTitle}>{tl.why.title}</h2>
           </div>
           <div className={s.grid4}>
-            {tl.why.items.map((item) => (
+            {tl.why.items.map((item, index) => (
               <div key={item.label} className={s.whyCard}>
                 <span className={s.whyIcon}>{item.icon}</span>
                 <h3 className={s.whyLabel}>{item.label}</h3>
                 <p className={s.whyDesc}>{item.desc}</p>
+                {index === 3 && <Link href="/methodologie-score">{item.label}</Link>}
               </div>
             ))}
           </div>
