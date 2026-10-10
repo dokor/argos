@@ -4,3 +4,6 @@
 .export select,.export button { background:t.$surface-2; color:t.$text; border:1px solid t.$border; padding:10px; border-radius:t.$radius-md; min-height:44px; max-width:100%; }
 .export p { width:100%; overflow-wrap:anywhere; margin:0; }
 .export select:focus-visible,.export button:focus-visible { outline:3px solid t.$text; outline-offset:3px; }
+.export label { min-width: 0; max-width: 100%; flex: 1 1 140px; }
+.export select { width: 100%; min-width: 0; }
+@media (max-width: 640px) { .export { padding: 12px; } }

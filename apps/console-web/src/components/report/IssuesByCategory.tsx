@@ -3,7 +3,7 @@
 import React from "react";
 import { Report, Issue } from "./types";
 import { useLang } from "@/lib/i18n/LangContext";
-import { scoreColor, SEVERITY_COLORS } from "./reportColors";
+import { scoreChipTheme, SEVERITY_COLORS } from "./reportColors";
 import { buildReportModel, FindingSelection, ReportModel } from "./reportModel";
 import s from "./IssuesByCategory.module.scss";
 import FindingDetails from "./FindingDetails";
@@ -72,12 +72,12 @@ export default function IssuesByCategory({ report, model = buildReportModel(repo
 
       {/* Sticky filter bar */}
       <div className={s.filterBar}>
-        {onFilterChange && <label>{copy.domain}
-          <select value={domain} onChange={event => onFilterChange(event.target.value, effectiveFilter)}>
+        {onFilterChange && <div className={s.domainFilter}><label htmlFor="report-domain-filter">{copy.domain}</label>
+          <select id="report-domain-filter" value={domain} onChange={event => onFilterChange(event.target.value, effectiveFilter)}>
             <option value="all">{copy.allDomains}</option>
             {model.groups.map(group => <option key={group.key} value={group.key}>{domains[group.key] ?? ti.unknownDomain}</option>)}
           </select>
-        </label>}
+        </div>}
         <span className={s.filterLabel}>{ti.filterLabel} :</span>
         <div role="group" aria-label={ti.filterLabel} className={s.severityFilters}>
         {FILTERS.map(({ key, label }) => (
@@ -101,7 +101,7 @@ export default function IssuesByCategory({ report, model = buildReportModel(repo
         const issues = cat.findings.filter(finding => effectiveFilter === "all" || finding.issue.severity === effectiveFilter)
           .slice().sort((a, b) => sevWeight(a.issue.severity) - sevWeight(b.issue.severity) || (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
         const sc = domainScore(cat.score?.score, cat.key, report.scores.coverage);
-        const color = sc === undefined ? "var(--argos-text-muted)" : scoreColor(sc);
+        const chip = sc === undefined ? {fg: "var(--argos-text-muted)", bg: "var(--argos-surface-2)"} : scoreChipTheme(sc / 100);
 
         return (
           <div key={cat.key} id={`cat-${cat.key}`} className={s.catBlock}>
@@ -116,7 +116,7 @@ export default function IssuesByCategory({ report, model = buildReportModel(repo
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <span
                   className={s.catScoreChip}
-                  style={{ color, background: sc === undefined ? "var(--argos-surface-2)" : `${color}18` }}
+                  style={{ color: chip.fg, background: chip.bg }}
                 >
                   {sc === undefined ? decisionCopy[lang].notEvaluated : `${sc}${ti.scoreSuffix}`}
                 </span>
