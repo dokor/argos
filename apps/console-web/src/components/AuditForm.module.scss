@@ -11,6 +11,7 @@
 
 .fieldGroup {
   display: grid;
+  min-width: 0;
   gap: t.$space-2;
 }
 
@@ -21,6 +22,8 @@
 }
 
 .input {
+  min-width: 0;
+  width: 100%;
   padding: t.$space-3 t.$space-4;
   min-height: 44px;
   border-radius: t.$radius-md;

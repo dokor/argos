@@ -29,14 +29,14 @@
   },
   "landing": {
     "hero": {
-      "badge": "Website auditor · Free · No account",
+      "badge": "Free website audit",
       "slogan": "Your site, under every eye.",
-      "headline": "Find what's hurting your site.\nFree, no account, in 30 seconds.",
-      "sub": "Argos is a free technical audit tool for a public URL, with no account required, that provides a private report with scores and recommendations for performance, security, SEO and accessibility.",
+      "headline": "Find the technical problems to fix first.",
+      "sub": "Analyse one page for performance, security, SEO and accessibility. Get your scores and recommendations in a private report.",
       "audience": "For developers, growth teams, and agencies.",
       "inputPlaceholder": "https://yoursite.com",
       "inputAriaLabel": "Website URL to analyze",
-      "cta": "Analyze now →",
+      "cta": "Analyse for free",
       "ctaLoading": "Submitting…",
       "hint": "Free · No account · Private report, not indexed",
       "analyzing": "Analyzing",
@@ -49,7 +49,8 @@
       "redirecting": "Report ready · Redirecting…",
       "errorMsg": "Error: check the URL and try again.",
       "errorFailed": "Analysis failed. Try with a public URL.",
-      "retry": "Try again"
+      "retry": "Try again",
+      "exampleLink": "View an example report"
     },
     "mockReport": {
       "url": "yoursite.com",
@@ -700,7 +701,7 @@
       "errorUrlMissing": "Enter the address of a public page.",
       "errorInvalidUrl": "Enter a valid HTTP or HTTPS URL.",
       "errorRequest": "The audit could not start. Check the address or try again.",
-      "hint": "Only one public URL is analyzed. The report stays private and unindexed."
+      "hint": "No account · One public page analysed"
     },
     "landing": {
       "title": "An audit for your type of site",

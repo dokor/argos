@@ -29,14 +29,14 @@
   },
   "landing": {
     "hero": {
-      "badge": "Audit de site web · Gratuit · Sans compte",
+      "badge": "Audit de site web gratuit",
       "slogan": "Votre site, passé au crible.",
-      "headline": "Trouvez ce qui plombe votre site.\nGratuit, sans compte, en 30 secondes.",
-      "sub": "Argos est un outil gratuit d'audit technique d'une URL publique, sans compte, qui fournit un rapport privé avec des scores et des recommandations en performance, sécurité, SEO et accessibilité.",
+      "headline": "Identifiez les problèmes techniques à corriger en priorité.",
+      "sub": "Analysez une page en performance, sécurité, SEO et accessibilité. Obtenez vos scores et des recommandations dans un rapport privé.",
       "audience": "Pour les devs, les équipes growth et les agences.",
       "inputPlaceholder": "https://monsite.com",
       "inputAriaLabel": "URL du site à analyser",
-      "cta": "Analyser maintenant →",
+      "cta": "Analyser gratuitement",
       "ctaLoading": "Soumission…",
       "hint": "Gratuit · Sans compte · Rapport privé, non indexé",
       "analyzing": "Analyse en cours",
@@ -49,7 +49,8 @@
       "redirecting": "Rapport prêt · Redirection…",
       "errorMsg": "Erreur : vérifiez l'URL et réessayez.",
       "errorFailed": "L'analyse a échoué. Essayez avec une URL publique.",
-      "retry": "Réessayer"
+      "retry": "Réessayer",
+      "exampleLink": "Voir un exemple de rapport"
     },
     "mockReport": {
       "url": "votresite.fr",
@@ -700,7 +701,7 @@
       "errorUrlMissing": "Saisissez l'adresse d'une page publique.",
       "errorInvalidUrl": "Saisissez une URL HTTP ou HTTPS valide.",
       "errorRequest": "L'audit n'a pas pu démarrer. Vérifiez l'adresse ou réessayez.",
-      "hint": "Une seule URL publique est analysée. Le rapport reste privé et non indexé."
+      "hint": "Sans compte · Une page publique analysée"
     },
     "landing": {
       "title": "Un audit adapté à votre site",

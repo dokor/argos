@@ -1,132 +1,13 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React from "react";
+import AuditForm from "@/components/AuditForm";
 import Link from "@/components/LocalizedLink";
 import { useLang } from "@/lib/i18n/LangContext";
-import { createLogger } from "@/lib/logger";
-import { useAuditSubmit } from "@/lib/useAuditSubmit";
 import SiteNav from "@/components/site/SiteNav";
 import SiteFooter from "@/components/site/SiteFooter";
 import ScoreRingSvg from "@/components/report/ScoreRing";
 import s from "./page.module.scss";
-
-// ─── Constants ────────────────────────────────────────────────────────────────
-
-const POLL_INTERVAL_MS = 2500;
-const MAX_POLL = 48; // ~2 min
-// Délai maximum d'attente sur la landing avant de rediriger vers la page
-// rapport (issue #105) : on ne fait pas patienter l'utilisateur ici, la page
-// /report/{token} affiche la progression live via AuditProgressView.
-const MAX_WAIT_MS = 5000; // 5 s
-
-// ─── Hero audit form ──────────────────────────────────────────────────────────
-
-type AuditFormT = {
-  inputPlaceholder: string;
-  inputAriaLabel: string;
-  cta: string;
-  ctaLoading: string;
-  hint: string;
-  analyzing: string;
-  analyzeSteps: string[];
-  redirecting: string;
-  errorMsg: string;
-  errorFailed: string;
-  retry: string;
-};
-
-function HeroAuditForm({
-  t,
-  variant = "hero",
-}: {
-  t: AuditFormT;
-  variant?: "hero" | "cta";
-}) {
-  const [url, setUrl] = useState("");
-  const [stepIdx, setStepIdx] = useState(0);
-  const logger = useMemo(
-    () => createLogger("landing", { route: "/", details: { origin: variant } }),
-    [variant]
-  );
-  // Logique création → polling → redirection factorisée dans useAuditSubmit (#122).
-  const { phase, errorKind, submit, reset } = useAuditSubmit({
-    logger,
-    maxWaitMs: MAX_WAIT_MS,
-    pollIntervalMs: POLL_INTERVAL_MS,
-    maxPolls: MAX_POLL,
-    onPollTick: () => setStepIdx((i) => (i + 1) % t.analyzeSteps.length),
-  });
-  const isHero = variant === "hero";
-  const h = isHero ? 52 : 46;
-  const fs = isHero ? 16 : 15;
-
-  // Le hook classe l'erreur ; la landing choisit la copie i18n correspondante.
-  const errMsg = errorKind === "failed" ? t.errorFailed : errorKind ? t.errorMsg : "";
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setStepIdx(0); // repart de la première étape à chaque nouvelle analyse
-    submit(url);
-  }
-
-  if (phase === "polling" || phase === "redirecting") {
-    return (
-      <div className={s.analyzingBox}>
-        <span className={s.analyzingSpinner} />
-        <span className={s.analyzingText}>
-          {phase === "redirecting"
-            ? t.redirecting
-            : `${t.analyzing} - ${t.analyzeSteps[stepIdx]}...`}
-        </span>
-      </div>
-    );
-  }
-
-  return (
-    <form onSubmit={handleSubmit} style={{ width: "100%" }}>
-      <div className={s.formRow}>
-        <input
-          type="text"
-          inputMode="url"
-          autoCapitalize="none"
-          autoCorrect="off"
-          spellCheck={false}
-          required
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          placeholder={t.inputPlaceholder}
-          aria-label={t.inputAriaLabel}
-          disabled={phase === "submitting"}
-          className={s.input}
-          style={{ height: h, fontSize: fs }}
-        />
-        <button
-          type="submit"
-          disabled={phase === "submitting"}
-          className={s.btn}
-          style={{ height: h, fontSize: fs }}
-        >
-          {phase === "submitting" ? t.ctaLoading : t.cta}
-        </button>
-      </div>
-      {phase === "error" && (
-        <div className={s.formErrorRow}>
-          <p className={s.formErrorMsg} style={{ margin: 0, fontSize: 13 }}>
-            {errMsg}
-          </p>
-          <button
-            type="button"
-            className={s.retryBtn}
-            onClick={reset}
-          >
-            {t.retry}
-          </button>
-        </div>
-      )}
-      {phase === "idle" && <p className={s.hint}>{t.hint}</p>}
-    </form>
-  );
-}
 
 // ─── Social proof bar ─────────────────────────────────────────────────────────
 
@@ -253,19 +134,6 @@ export default function LandingPage() {
   const { t, lang } = useLang();
   const tl = t.landing;
 
-  const formT: AuditFormT = {
-    inputPlaceholder: tl.hero.inputPlaceholder,
-    inputAriaLabel: tl.hero.inputAriaLabel,
-    cta: tl.hero.cta,
-    ctaLoading: tl.hero.ctaLoading,
-    hint: tl.hero.hint,
-    analyzing: tl.hero.analyzing,
-    analyzeSteps: tl.hero.analyzeSteps,
-    redirecting: tl.hero.redirecting,
-    errorMsg: tl.hero.errorMsg,
-    errorFailed: tl.hero.errorFailed,
-    retry: tl.hero.retry,
-  };
 
   return (
     <div className={s.page}>
@@ -279,19 +147,11 @@ export default function LandingPage() {
         <div className={s.heroInner}>
           <div className={s.heroLeft}>
             <span className={s.badge}>{tl.hero.badge}</span>
-            <h1 className={s.headline}>
-              {tl.hero.headline.split("\n").map((line, i) => (
-                <React.Fragment key={i}>
-                  {line}
-                  {i === 0 && <br />}
-                </React.Fragment>
-              ))}
-            </h1>
-            <p className={s.slogan}>{tl.hero.slogan}</p>
+            <h1 className={s.headline}>{tl.hero.headline}</h1>
             <p className={s.sub}>{tl.hero.sub}</p>
-            <p className={s.audience}>{tl.hero.audience}</p>
             <div id="audit" className={s.heroFormWrap}>
-              <HeroAuditForm t={formT} variant="hero" />
+              <AuditForm mode="public" sourceRoute="/" idPrefix="hero" submitLabel={tl.hero.cta} />
+              <Link href="/exemple-rapport" className={s.exampleLink}>{tl.hero.exampleLink}</Link>
             </div>
           </div>
           <div className={s.heroRight}>
@@ -391,7 +251,7 @@ export default function LandingPage() {
             {tl.cta.title}
           </h2>
           <p className={s.sectionSubDark}>{tl.cta.sub}</p>
-          <HeroAuditForm t={formT} variant="cta" />
+          <AuditForm mode="public" sourceRoute="/" idPrefix="final" submitLabel={tl.hero.cta} />
         </div>
       </section>
 
