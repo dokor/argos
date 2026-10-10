@@ -8,6 +8,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     { url: `${SITE_URL}/exemple-rapport` },
     { url: `${SITE_URL}/test-vitesse-site-web` },
+      { url: `${SITE_URL}/analyse-seo-page` },
     { url: `${SITE_URL}/a-propos` },
     { url: `${SITE_URL}/confidentialite` },
     { url: `${SITE_URL}/informations-legales` },
