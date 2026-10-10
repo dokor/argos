@@ -1,7 +1,7 @@
 {
   "layout": {
-    "title": "Argos - Analyseur de site web",
-    "description": "Argos est un outil gratuit d'audit technique d'une URL publique, sans compte, qui fournit un rapport privé avec des scores et des recommandations en performance, sécurité, SEO et accessibilité."
+    "title": "Audit de site web gratuit, sans compte | Argos",
+    "description": "Analysez gratuitement une page : performance, sécurité, SEO et accessibilité. Obtenez vos scores et des corrections prioritaires, sans compte."
   },
   "nav": {
     "logo": "Argos",
