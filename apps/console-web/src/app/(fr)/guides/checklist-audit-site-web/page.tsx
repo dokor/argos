@@ -198,7 +198,7 @@ export default function ChecklistAuditPage() {
             <AuditForm mode="public" sourceRoute="/guides/checklist-audit-site-web" />
           </section>
         </div>
-        <ChoosingArgos />
+        <ChoosingArgos context="checklist" />
       </main>
       <SiteFooter />
     </div>

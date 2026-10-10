@@ -94,7 +94,7 @@ export default function ExampleReport() {
           <section className={s.section} aria-labelledby="plan-title"><h2 id="plan-title">{c.planTitle}</h2><ol>{c.plan.map((step) => <li key={step}>{step}</li>)}</ol></section>
           <section className={s.notice} aria-labelledby="coverage-title"><h2 id="coverage-title">{c.coverageTitle}</h2><p>{c.coverage}</p><p>{c.privacy}</p></section>
         </div>
-        <ChoosingArgos />
+        <ChoosingArgos context="example" />
         <nav className={`${s.container} ${s.section}`} aria-label={c.next}><h2>{c.next}</h2><div className={s.links}>
           <Link href="/ressources/audit-site-pme">{c.pme}</Link><Link href="/ressources/audit-site-ecommerce">{c.ecommerce}</Link><Link href="/#audit">{c.audit}</Link>
         </div></nav>
