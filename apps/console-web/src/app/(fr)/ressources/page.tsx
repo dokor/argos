@@ -15,6 +15,7 @@ const copy = {
     guidesTitle: "Comprendre les mesures",
     audiencesTitle: "Choisir votre contexte",
     guides: [
+      { href: "/test-vitesse-site-web", title: "Test de vitesse d’une page", description: "Lire les mesures de laboratoire et lancer un audit de votre URL." },
       { href: "/exemple-rapport", title: "Exemple de rapport public", description: "Une fiche produit de démonstration contrôlée, trois preuves HTML et leurs corrections avant/après." },
       { href: "/guides/checklist-audit-site-web", title: "Checklist d’audit de site web", description: "Six contrôles manuels, leurs résultats attendus et les limites de l’analyse automatique." },
       { href: "/methodologie-score", title: "Méthode du score Argos", description: "Quatre domaines, contrôles pondérés, exemple chiffré et lecture des résultats partiels." },
