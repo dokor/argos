@@ -14,7 +14,7 @@ export default function ChoosingArgos({ audience, context }: { audience?: "pme" 
   return <section className={s.section} aria-labelledby="choosing-argos-title">
     <h2 id="choosing-argos-title">{fr ? "Situer ce diagnostic" : "Put this diagnosis in context"}</h2>
     <p>{scope}</p><p>{fr ? "Un score automatique ne certifie ni sécurité ni accessibilité. Argos et Lighthouse utilisent des barèmes différents." : "An automated score does not certify security or accessibility. Argos and Lighthouse use different scoring policies."}</p>
-    <Link href="/methodologie-score">{fr ? "Comprendre la méthode et les limites du score" : "Understand the scoring method and limits (French)"}</Link>
+    <Link href="/methodologie-score#resume">{fr ? "Comprendre la méthode et les limites du score" : "Understand the scoring method and limits (French)"}</Link>
     {context !== "example" && <p><Link href="/exemple-rapport">{fr ? "Voir des preuves et corrections dans l’exemple" : "See evidence and corrections in the example"}</Link></p>}
   </section>;
 }

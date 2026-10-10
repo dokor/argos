@@ -57,7 +57,7 @@ export default function ReportMethod({ report, model, open, onToggle }: {
       <h3>{copy.versions}</h3><ul>{versions.map((version, index) => <li key={index}>{version}</li>)}</ul>
       {!report.scores.calculation && <p>{copy.versionsUnknown}</p>}
       <p>{copy.lighthouse}</p><p>{copy.automaticLimit}</p><p>{reading.limits}</p><p>{reading.next}</p>
-      <Link href="/methodologie-score">{copy.generalMethod}</Link>
+      <Link href="/methodologie-score#resume">{copy.generalMethod}</Link>
     </div>
   </details>;
 }

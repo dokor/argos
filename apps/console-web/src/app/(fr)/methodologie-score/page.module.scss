@@ -232,3 +232,8 @@
 }
 
 .page { @include t.public-type; }
+
+.summary { margin-top: 28px; padding: 24px; background: t.$surface; border: 1px solid t.$border; border-radius: t.$radius-lg; scroll-margin-top: 300px; h2 { margin-top: 0; } ol { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 24px; padding-left: 20px; } span { display: block; margin-top: 8px; color: t.$text-muted; } p, li { line-height: 1.6; } }
+.section { scroll-margin-top: 300px; }
+.hero { padding-block: 40px; }
+@media (max-width: 700px) { .summary ol { grid-template-columns: 1fr; } }

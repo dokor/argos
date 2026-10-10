@@ -27,7 +27,6 @@ export default function DemoReport() {
     <MeasurementCoverage coverage={report.scores.coverage} />
     <PriorityCards priorities={report.summary.priorities} model={model} limit={3} onSelectFinding={key => setSelection({ key, request: (selection?.request ?? 0) + 1 })} />
     <IssuesByCategory report={report} model={model} selection={selection} initialOpenKey="html.meta.description.present" />
-    <p><Link href="/methodologie-score">{fr ? "Comprendre la méthode du score" : "Read the scoring method (French)"}</Link> · <Link href="/#audit">{fr ? "Analyser ma page gratuitement" : "Analyse my page for free"}</Link></p>
+    <p><Link href="/methodologie-score#resume">{fr ? "Comprendre la méthode du score" : "Read the scoring method (French)"}</Link> · <Link href="/#audit">{fr ? "Analyser ma page gratuitement" : "Analyse my page for free"}</Link></p>
   </section>;
 }
-
