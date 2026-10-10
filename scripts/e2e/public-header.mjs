@@ -99,8 +99,9 @@ try {
             assert.deepEqual(actual, sharedGeometry, 'Language/theme/admin must not move controls: ' + state);
             const nav = page.locator('nav').first();
             await nav.screenshot({ animations: "disabled", path: output + '/' + state + '-' + index + '.png' });
-            // Active styles intentionally differ; compare every other header pixel.
-            await page.addStyleTag({ content: 'nav > div > div:first-of-type > a[aria-current] { color: var(--argos-text-muted) !important; box-shadow: none !important; }' });
+            // Active styles and the page behind the translucent header intentionally differ.
+            // Compare controls on a fixed opaque backing; retain the real capture above.
+            await page.addStyleTag({ content: 'nav { background: var(--argos-bg) !important; backdrop-filter: none !important; } nav > div > div:first-of-type > a[aria-current] { color: var(--argos-text-muted) !important; box-shadow: none !important; }' });
             const pixels = await nav.screenshot({ animations: "disabled" });
             expectedPixels ??= pixels;
             const difference = await comparePixels(page, expectedPixels, pixels);
