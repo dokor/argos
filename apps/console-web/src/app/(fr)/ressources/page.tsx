@@ -40,7 +40,7 @@ const copy = {
     guides: [
       { href: "/exemple-rapport", title: "Public example report", description: "A controlled demo product page, three pieces of HTML evidence and before/after corrections." },
       { href: "/guides/checklist-audit-site-web", title: "Website audit checklist", description: "Six manual checks, expected results, and the limits of automated analysis." },
-      { href: "/methodologie-score", title: "Argos scoring method (French)", description: "Four domains, weighted checks, a worked example and partial results." },
+      { href: "/methodologie-score", title: "Argos scoring method", description: "Four domains, weighted checks, a worked example and partial results." },
       { href: "/ressources/audit-technique-gratuit", title: "Free technical audit", description: "Method, HTTP, HTML, performance and security checks, reading the report and partial results." },
       { href: "/ressources/accessibilite-numerique", title: "Digital accessibility", description: "Understand the RGAA, EAA, obligations and what requires human review." },
     ],
@@ -75,7 +75,7 @@ export default function ResourcesPage() {
           <section className={s.starter} aria-labelledby="start-title">
             <h2 id="start-title">{fr ? "Commencer ici" : "Start here"}</h2>
             <ol><li><Link href="/exemple-rapport">{fr ? "1. Lire un exemple de rapport" : "1. Read an example report"}</Link></li>
-              <li><Link href="/guides/checklist-audit-site-web">{fr ? "2. Choisir les vérifications de la checklist" : "2. Choose checks from the checklist (French)"}</Link></li>
+              <li><Link href="/guides/checklist-audit-site-web">{fr ? "2. Choisir les vérifications de la checklist" : "2. Choose checks from the checklist"}</Link></li>
               <li><Link href="/#audit">{fr ? "3. Analyser votre page gratuitement" : "3. Analyse your page for free"}</Link></li></ol>
           </section>
           <section className={s.section} aria-labelledby="guides-title">

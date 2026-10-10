@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/LocalizedLink";
 import { useState } from "react";
 import AuditForm from "@/components/AuditForm";
 import EditorialMeta from "@/components/marketing/EditorialMeta";
@@ -10,8 +10,6 @@ import ChoosingArgos from "@/components/marketing/ChoosingArgos";
 import { useLang } from "@/lib/i18n/LangContext";
 import s from "./page.module.scss";
 
-// The French copy is rendered during prerendering and is the canonical content.
-// The language toggle changes the article after hydration, as on other resources.
 const copy = {
   fr: {
     eyebrow: "Guide pratique · 6 étapes",
@@ -123,7 +121,7 @@ const copy = {
     nextTitle: "Explore further",
     links: [
       { href: "/exemple-rapport", label: "Read a commented example report" },
-      { href: "/methodologie-score#resume", label: "Understand score calculation (French)" },
+      { href: "/methodologie-score#resume", label: "Understand score calculation" },
       { href: "/ressources/audit-technique-gratuit#result-title", label: "Understand Argos results and score limits" },
       { href: "/ressources/accessibilite-numerique", label: "Learn more about digital accessibility" },
       { href: "/ressources/audit-site-ecommerce", label: "Apply the method to an e-commerce site" },

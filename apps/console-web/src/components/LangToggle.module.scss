@@ -63,3 +63,6 @@
   flex-shrink: 0;
   margin: 0 1px;
 }
+
+.fallback { flex-direction: column; gap: 1px; small { font-size: 10px; letter-spacing: 0; font-weight: 500; } }
+.option:focus-visible { outline: 3px solid t.$text; outline-offset: 3px; }

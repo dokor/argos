@@ -156,7 +156,7 @@ export default function LandingPage() {
       <section className={s.section} aria-labelledby="creator-title"><div className={s.container}>
         <h2 id="creator-title" className={s.sectionTitle}>{lang === "fr" ? "Un outil créé par Antoine Le Louët" : "A tool created by Antoine Le Louët"}</h2>
         <p>{lang === "fr" ? "Une méthode consultable et un exemple commenté pour comprendre les constats avant de corriger votre page." : "An inspectable method and a commented example to understand findings before fixing your page."}</p>
-        <p><Link href="/a-propos">{lang === "fr" ? "À propos et contact" : "About and contact"}</Link> · <Link href="/methodologie-score#resume">{lang === "fr" ? "Méthode du score" : "Scoring method (French)"}</Link> · <Link href="/exemple-rapport">{lang === "fr" ? "Exemple de rapport" : "Example report"}</Link></p>
+        <p><Link href="/a-propos">{lang === "fr" ? "À propos et contact" : "About and contact"}</Link> · <Link href="/methodologie-score#resume">{lang === "fr" ? "Méthode du score" : "Scoring method"}</Link> · <Link href="/exemple-rapport">{lang === "fr" ? "Exemple de rapport" : "Example report"}</Link></p>
       </div></section>
       {/* BOTTOM CTA */}
       <section className={s.sectionDark}>

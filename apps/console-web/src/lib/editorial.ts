@@ -1,8 +1,9 @@
 // Stable dates refer to first source publication and substantive content revision.
 // Evidence and revision rules: docs/product/editorial-provenance.md.
-export type EditorialRecord = { firstVersion: string; revised: string; minutes: number; sourcesAnchor: string; sourceUrls: string[] };
+export type EditorialRecord = { firstVersion: string; revised: string; translatedAt?: string; minutes: number; sourcesAnchor: string; sourceUrls: string[] };
 export const editorialPages: Record<string, EditorialRecord> = {
   "/guides/checklist-audit-site-web": {
+    "translatedAt": "2026-10-11",
     "firstVersion": "2026-10-07",
     "revised": "2026-10-07",
     "minutes": 9,
@@ -14,6 +15,7 @@ export const editorialPages: Record<string, EditorialRecord> = {
     ]
   },
   "/methodologie-score": {
+    "translatedAt": "2026-10-11",
     "firstVersion": "2026-10-07",
     "revised": "2026-10-10",
     "minutes": 6,
@@ -25,6 +27,7 @@ export const editorialPages: Record<string, EditorialRecord> = {
     ]
   },
   "/ressources/audit-technique-gratuit": {
+    "translatedAt": "2026-10-11",
     "firstVersion": "2026-10-06",
     "revised": "2026-10-10",
     "minutes": 8,
@@ -36,6 +39,7 @@ export const editorialPages: Record<string, EditorialRecord> = {
     ]
   },
   "/ressources/accessibilite-numerique": {
+    "translatedAt": "2026-10-11",
     "firstVersion": "2026-10-06",
     "revised": "2026-10-06",
     "minutes": 10,

@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/LocalizedLink";
 import AuditForm from "@/components/AuditForm";
 import EditorialMeta from "@/components/marketing/EditorialMeta";
 import SiteNav from "@/components/site/SiteNav";
@@ -9,8 +9,6 @@ import ChoosingArgos from "@/components/marketing/ChoosingArgos";
 import { useLang } from "@/lib/i18n/LangContext";
 import s from "./page.module.scss";
 
-// The French version is the indexable canonical. Next prerenders this content
-// into HTML; the language switch changes the copy after hydration.
 const copy = {
   fr: {
     eyebrow: "Diagnostic automatisé · Sans compte",
@@ -44,7 +42,7 @@ const copy = {
       "Les performances et certains signaux varient selon le moment, le réseau, le navigateur et les changements apportés au site.",
     ],
     privacyTitle: "Un rapport accessible par son lien",
-    privacyText: "Aucun compte n’est nécessaire. Le rapport est accessible à toute personne possédant son lien unique ; gardez ce lien privé si les résultats sont sensibles. Les pages de rapport sont exclues de l’indexation et ne sont pas publiées comme exemples.",
+    privacyText: "Aucun compte n’est nécessaire. Le rapport est accessible à toute personne possédant son lien unique ; gardez ce lien privé si les résultats sont sensibles. Les pages de rapport demandent aux moteurs de ne pas les indexer et ne sont pas publiées comme exemples.",
     moreTitle: "Pour aller plus loin",
     moreText: "Consultez la FAQ pour les questions pratiques, et notre guide sur l’accessibilité numérique pour comprendre ce qui exige un audit humain.",
     homeLink: "Découvrir Argos",
@@ -90,7 +88,7 @@ const copy = {
     moreText: "Read the FAQ for practical questions and our digital accessibility guide to understand what requires a human audit.",
     homeLink: "Explore Argos",
     faqLink: "Read the FAQ",
-    scoreMethodLink: "How the score is calculated (French)",
+    scoreMethodLink: "How the score is calculated",
     accessibilityLink: "Understand digital accessibility",
     checklistLink: "Follow the website audit checklist",
   },

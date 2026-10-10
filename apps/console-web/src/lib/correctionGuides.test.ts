@@ -6,5 +6,6 @@ it("links known published findings through controlled keys without audit data", 
 });
 it("omits unknown keys, unpublished guides and missing languages", () => {
   for (const key of [undefined, "__proto__", "constructor", "https://attacker.example", "unknown.finding", "http.security.csp", "http.security.hsts", "lighthouse.audit.largest-contentful-paint"]) expect(correctionGuide(key,"fr")).toBeUndefined();
-  expect(correctionGuide("html.title","en")).toBeUndefined();
+  expect(correctionGuide("html.title","en")?.href).toBe("/en/guides/website-audit-checklist#html-seo");
+  expect(correctionGuide("http.security.csp","en")).toBeUndefined();
 });

@@ -35,7 +35,7 @@ export default function SiteFooter({ fixedFrench = false }: { fixedFrench?: bool
         <nav className={s.footerGroup} aria-label={f.information}>
           <h2>{f.information}</h2>
           <Link href="/a-propos">{fixedFrench || lang === "fr" ? "À propos" : "About Argos"}</Link>
-          <Link href="/methodologie-score#resume">{fixedFrench || lang === "fr" ? "Méthode du score" : "Scoring method (French)"}</Link>
+          <Link href="/methodologie-score#resume">{fixedFrench || lang === "fr" ? "Méthode du score" : "Scoring method"}</Link>
           <ContactLinks fixedFrench={fixedFrench} />
           <Link href="/confidentialite">{fixedFrench || lang === "fr" ? f.privacy : "Privacy (French)"}</Link>
           <Link href="/informations-legales">{fixedFrench || lang === "fr" ? "Informations sur le service" : "Service information (French)"}</Link>
