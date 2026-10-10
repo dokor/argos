@@ -582,10 +582,15 @@
     "footerCta": {
       "title": "Schedule a call",
       "desc": "Review priorities and discuss the corrections with a professional.",
-      "cta": "Book a call",
+      "cta": "Discuss the corrections",
       "copyLink": "Copy link",
       "calendlyComingSoon": "Calendly link coming soon.",
-      "footerNote": "Private report • not indexed • auto-generated"
+      "footerNote": "The link grants access without signing in. The noindex directive does not restrict access.",
+      "copied": "Link copied. Anyone who has it can read this report.",
+      "copyFailed": "Could not copy the link. You can copy it from the address bar.",
+      "copying": "Copying…",
+      "ciNote": "To integrate Argos into your CI, contact Antoine.",
+      "ciContact": "Contact Antoine"
     },
     "priorityCards": {
       "seeFinding": "View finding",

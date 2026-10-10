@@ -582,10 +582,15 @@
     "footerCta": {
       "title": "Planifier un échange",
       "desc": "Passez en revue les priorités et faites estimer les corrections avec un professionnel.",
-      "cta": "Prendre RDV",
+      "cta": "Parler des corrections",
       "copyLink": "Copier le lien",
       "calendlyComingSoon": "Lien Calendly à venir.",
-      "footerNote": "Rapport privé • non indexable • généré automatiquement"
+      "footerNote": "Le lien donne accès au rapport sans connexion. La consigne de non-indexation ne protège pas son accès.",
+      "copied": "Lien copié. Toute personne qui le possède peut lire ce rapport.",
+      "copyFailed": "Copie impossible. Vous pouvez copier le lien depuis la barre d’adresse.",
+      "copying": "Copie en cours…",
+      "ciNote": "Pour intégrer Argos à votre CI, contactez Antoine.",
+      "ciContact": "Contacter Antoine"
     },
     "priorityCards": {
       "seeFinding": "Voir le constat",
