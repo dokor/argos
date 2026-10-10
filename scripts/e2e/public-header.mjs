@@ -134,7 +134,7 @@ try {
           await page.waitForURL(base + linkedRoute);
           await ready(page, lang, admin);
           assert.deepEqual(await geometry(page), expected, 'Content-link navigation moved header');
-          assert.equal(await page.locator('nav').first().locator('a[aria-current="location"]').textContent(), labels[lang][1]);
+          assert.equal(await page.locator('nav').first().locator('a[aria-current="location"]').textContent(), labels[lang][2]);
           // Short page versus tall page: exercise an actual scrollbar transition.
           const before = await geometry(page);
           await page.addStyleTag({ content: 'main, footer { display: none !important; }' });
