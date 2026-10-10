@@ -30,7 +30,9 @@
     "limits": "Limites de l'analyse",
     "source": "Code source sur GitHub"
   },
-  "publicPromises": { "duration": "Le délai dépend de la file d’attente et des services d’analyse. La progression se met à jour automatiquement." },
+  "publicPromises": {
+    "duration": "Le délai dépend de la file d’attente et des services d’analyse. La progression se met à jour automatiquement."
+  },
   "landing": {
     "hero": {
       "badge": "Audit de site web gratuit",
@@ -217,7 +219,7 @@
           },
           {
             "q": "Mon rapport est-il public ?",
-            "a": "Non. Chaque rapport est accessible via une URL contenant un token unique. Il n'est pas indexé par les moteurs de recherche et reste privé tant que vous ne partagez pas le lien."
+            "a": "Le rapport n’est pas listé publiquement. Toute personne disposant de son lien peut le consulter sans compte ; gardez ce lien confidentiel."
           },
           {
             "q": "Puis-je partager mon rapport ?",
@@ -225,7 +227,7 @@
           },
           {
             "q": "Pendant combien de temps un rapport reste-t-il accessible ?",
-            "a": "Les rapports ont une date d'expiration. Passé ce délai, le lien n'est plus valide et il faut relancer une analyse pour obtenir un rapport à jour."
+            "a": "Si une date d’expiration est attribuée, le lien cesse de fonctionner après cette date. Aucune durée fixe ni suppression automatique des rapports n’est actuellement établie."
           }
         ]
       },
@@ -257,15 +259,15 @@
         "items": [
           {
             "q": "Quelles données Argos conserve-t-il ?",
-            "a": "Argos conserve l'URL analysée et le rapport généré, le temps nécessaire à son affichage. Aucune donnée personnelle n'est requise pour lancer une analyse."
+            "a": "Argos enregistre l’URL, le domaine, les états et dates de traitement ainsi que les résultats techniques pour produire et afficher le rapport. Aucune durée fixe de suppression n’est actuellement établie ; consultez la page de confidentialité."
           },
           {
             "q": "Qui peut consulter mes rapports ?",
-            "a": "Uniquement les personnes disposant du lien contenant le token du rapport. Les rapports ne sont ni listés publiquement ni indexés."
+            "a": "Toute personne possédant le lien peut consulter le rapport. L’opérateur dispose également d’un accès administrateur."
           },
           {
             "q": "Mes rapports apparaissent-ils dans Google ?",
-            "a": "Non. Les pages de rapport sont marquées comme non indexables et protégées par un token, elles n'apparaissent donc pas dans les résultats de recherche."
+            "a": "Les pages de rapport demandent aux moteurs de ne pas les indexer. Cette directive n’est pas une authentification et ne garantit pas absolument l’absence d’un lien dans les résultats."
           }
         ]
       },
@@ -332,11 +334,26 @@
   },
   "report": {
     "measurementCoverage": {
-      "title": "Couverture de mesure", "provisional": "Score provisoire", "sufficient": "Couverture suffisante", "unavailable": "Mesure indisponible", "notApplicable": "Non applicable",
+      "title": "Couverture de mesure",
+      "provisional": "Score provisoire",
+      "sufficient": "Couverture suffisante",
+      "unavailable": "Mesure indisponible",
+      "notApplicable": "Non applicable",
       "explanation": "Part pondérée du barème réellement mesurée. Sous 80 % au global ou dans un domaine applicable, le score reste provisoire et ne doit pas être comparé à un audit complet.",
-      "statesTitle": "État des mesures", "confidenceExplanation": "Une mesure indisponible ou bloquée ne constitue pas un défaut du site. La confiance d’un finding reste distincte de la couverture du score.",
-      "domains": { "performance": "Performance", "security": "Sécurité", "seo": "SEO", "a11y": "Accessibilité" },
-      "states": { "MEASURED": "Mesuré", "UNAVAILABLE": "Indisponible", "BLOCKED_BY_ANTIBOT": "Bloqué par une protection anti-bot", "NOT_APPLICABLE": "Non applicable" }
+      "statesTitle": "État des mesures",
+      "confidenceExplanation": "Une mesure indisponible ou bloquée ne constitue pas un défaut du site. La confiance d’un finding reste distincte de la couverture du score.",
+      "domains": {
+        "performance": "Performance",
+        "security": "Sécurité",
+        "seo": "SEO",
+        "a11y": "Accessibilité"
+      },
+      "states": {
+        "MEASURED": "Mesuré",
+        "UNAVAILABLE": "Indisponible",
+        "BLOCKED_BY_ANTIBOT": "Bloqué par une protection anti-bot",
+        "NOT_APPLICABLE": "Non applicable"
+      }
     },
     "accessibility": {
       "title": "Accessibilité du site",
@@ -577,12 +594,22 @@
       "title": "Priorités recommandées",
       "desc": "Actions classées selon leur contribution au score, puis leur gravité et les informations disponibles.",
       "gainLabel": "Gain de score modélisé :",
-      "domains": { "performance": "Performance", "security": "Sécurité", "seo": "Référencement", "a11y": "Accessibilité" },
+      "domains": {
+        "performance": "Performance",
+        "security": "Sécurité",
+        "seo": "Référencement",
+        "a11y": "Accessibilité"
+      },
       "gainUnit": "points globaux",
       "modelLimit": "Estimation du barème à mesures et dénominateurs constants. Le gain réel dépend de la correction et d’un nouvel audit.",
       "groupedLabel": "Constats regroupés :",
       "confidenceLabel": "Confiance de mesure :",
-      "confidence": { "HIGH": "élevée", "MEDIUM": "moyenne", "LOW": "faible", "UNKNOWN": "inconnue" },
+      "confidence": {
+        "HIGH": "élevée",
+        "MEDIUM": "moyenne",
+        "LOW": "faible",
+        "UNKNOWN": "inconnue"
+      },
       "rankReasons": {
         "MODELLED_SCORE_GAIN": "Classée selon la perte de score évitable dans son domaine.",
         "NO_DIRECT_SCORE_GAIN": "Action explicative sans gain direct de score.",
@@ -684,9 +711,18 @@
       "exampleLabel": "Exemple fictif",
       "stepsTitle": "Un parcours en trois étapes",
       "steps": [
-        { "title": "Choisissez une page", "description": "Collez l'adresse d'une page publique importante pour votre activité." },
-        { "title": "Consultez le diagnostic", "description": "Argos lance ses vérifications et prépare un rapport privé, accessible par lien." },
-        { "title": "Décidez quoi corriger", "description": "Parcourez les constats et les priorités, puis faites valider les changements utiles." }
+        {
+          "title": "Choisissez une page",
+          "description": "Collez l'adresse d'une page publique importante pour votre activité."
+        },
+        {
+          "title": "Consultez le diagnostic",
+          "description": "Argos lance ses vérifications et prépare un rapport privé, accessible par lien."
+        },
+        {
+          "title": "Décidez quoi corriger",
+          "description": "Parcourez les constats et les priorités, puis faites valider les changements utiles."
+        }
       ],
       "limitsTitle": "Le périmètre à connaître",
       "ctaLabel": "Passer à l'action",
@@ -716,21 +752,45 @@
       "ecommerceDescription": "Examinez une page publique de votre boutique sans confondre cet audit avec un test du paiement."
     },
     "pme": {
-      "meta": { "title": "Audit site web PME : priorisez les corrections", "description": "Analysez une page publique de votre site PME : SEO, performance, sécurité et accessibilité. Un rapport privé pour prioriser les corrections, sans promesse de conversion." },
+      "meta": {
+        "title": "Audit site web PME : priorisez les corrections",
+        "description": "Analysez une page publique de votre site PME : SEO, performance, sécurité et accessibilité. Un rapport privé pour prioriser les corrections, sans promesse de conversion."
+      },
       "eyebrow": "Pour les PME",
       "title": "Un audit de site web pour décider quoi améliorer en premier",
       "lead": "Votre site présente votre activité avant même le premier échange. Argos examine une page publique et rassemble des constats techniques pour aider votre équipe ou votre prestataire à fixer des priorités.",
       "heroNote": "Un diagnostic de page, pas une prévision de chiffre d'affaires.",
       "measures": [
-        { "title": "Visibilité dans les résultats", "description": "Titres, description, balise canonique et structure des titres HTML de la page." },
-        { "title": "Performance ressentie", "description": "Scores et mesures de chargement via Lighthouse et navigateur, lorsque la page est accessible." },
-        { "title": "Confiance technique", "description": "HTTPS, redirections et en-têtes de sécurité observables depuis l'extérieur." },
-        { "title": "Accessibilité détectable", "description": "Contrôles automatiques et score Lighthouse ; les usages réels demandent une vérification humaine." }
+        {
+          "title": "Visibilité dans les résultats",
+          "description": "Titres, description, balise canonique et structure des titres HTML de la page."
+        },
+        {
+          "title": "Performance ressentie",
+          "description": "Scores et mesures de chargement via Lighthouse et navigateur, lorsque la page est accessible."
+        },
+        {
+          "title": "Confiance technique",
+          "description": "HTTPS, redirections et en-têtes de sécurité observables depuis l'extérieur."
+        },
+        {
+          "title": "Accessibilité détectable",
+          "description": "Contrôles automatiques et score Lighthouse ; les usages réels demandent une vérification humaine."
+        }
       ],
       "benefits": [
-        { "title": "Cadrer une intervention", "description": "Partager des constats précis avec votre agence ou votre équipe, plutôt qu'une demande vague d'optimisation." },
-        { "title": "Prioriser les corrections", "description": "Commencer par les problèmes visibles dans le rapport et vérifier ensuite leur effet sur vos propres indicateurs." },
-        { "title": "Préparer la confiance", "description": "Repérer des signaux techniques qui peuvent gêner la navigation ou la crédibilité, sans garantir une hausse des contacts." }
+        {
+          "title": "Cadrer une intervention",
+          "description": "Partager des constats précis avec votre agence ou votre équipe, plutôt qu'une demande vague d'optimisation."
+        },
+        {
+          "title": "Prioriser les corrections",
+          "description": "Commencer par les problèmes visibles dans le rapport et vérifier ensuite leur effet sur vos propres indicateurs."
+        },
+        {
+          "title": "Préparer la confiance",
+          "description": "Repérer des signaux techniques qui peuvent gêner la navigation ou la crédibilité, sans garantir une hausse des contacts."
+        }
       ],
       "exampleTitle": "Une page de service qui mérite une revue",
       "exampleText": "Si une page de présentation a un titre peu descriptif, une image lourde et une politique de sécurité absente, le rapport peut faire remonter ces constats. Votre équipe décide ensuite des corrections et vérifie leur effet.",
@@ -743,21 +803,45 @@
       "ctaText": "Accueil ou page de service : lancez un audit et utilisez les constats comme point de départ d'une décision."
     },
     "ecommerce": {
-      "meta": { "title": "Audit site e-commerce : SEO, vitesse et confiance", "description": "Auditez une page publique de boutique : SEO, performance, sécurité et accessibilité. Comprenez les limites : panier, commande et paiement ne sont pas testés." },
+      "meta": {
+        "title": "Audit site e-commerce : SEO, vitesse et confiance",
+        "description": "Auditez une page publique de boutique : SEO, performance, sécurité et accessibilité. Comprenez les limites : panier, commande et paiement ne sont pas testés."
+      },
       "eyebrow": "Pour les sites e-commerce",
       "title": "Analysez une page clé de votre boutique avant le parcours d'achat",
       "lead": "Une fiche produit, une catégorie ou l'accueil peut révéler des problèmes de visibilité, de chargement et de confiance. Argos mesure ce qui est accessible sur l'URL fournie et aide à prioriser les corrections.",
       "heroNote": "Le panier, la commande et le paiement ne sont pas parcourus.",
       "measures": [
-        { "title": "SEO d'une page publique", "description": "Titre, description, balise canonique et titres HTML de la fiche ou catégorie soumise." },
-        { "title": "Vitesse de chargement", "description": "Lighthouse et mesures navigateur sur cette page, lorsque le site permet l'analyse." },
-        { "title": "Sécurité visible", "description": "HTTPS, redirections et en-têtes HTTP ; aucune transaction n'est réalisée." },
-        { "title": "Accessibilité automatique", "description": "Signaux détectables et score Lighthouse, à compléter par des tests utilisateurs." }
+        {
+          "title": "SEO d'une page publique",
+          "description": "Titre, description, balise canonique et titres HTML de la fiche ou catégorie soumise."
+        },
+        {
+          "title": "Vitesse de chargement",
+          "description": "Lighthouse et mesures navigateur sur cette page, lorsque le site permet l'analyse."
+        },
+        {
+          "title": "Sécurité visible",
+          "description": "HTTPS, redirections et en-têtes HTTP ; aucune transaction n'est réalisée."
+        },
+        {
+          "title": "Accessibilité automatique",
+          "description": "Signaux détectables et score Lighthouse, à compléter par des tests utilisateurs."
+        }
       ],
       "benefits": [
-        { "title": "Choisir une page à corriger", "description": "Repérer des freins techniques sur une page qui compte dans votre catalogue." },
-        { "title": "Briefer votre équipe", "description": "Transmettre des constats exploitables sur le chargement, les balises ou les en-têtes." },
-        { "title": "Évaluer ensuite l'impact", "description": "Comparer vos propres mesures après correction ; l'audit ne prédit pas les ventes." }
+        {
+          "title": "Choisir une page à corriger",
+          "description": "Repérer des freins techniques sur une page qui compte dans votre catalogue."
+        },
+        {
+          "title": "Briefer votre équipe",
+          "description": "Transmettre des constats exploitables sur le chargement, les balises ou les en-têtes."
+        },
+        {
+          "title": "Évaluer ensuite l'impact",
+          "description": "Comparer vos propres mesures après correction ; l'audit ne prédit pas les ventes."
+        }
       ],
       "exampleTitle": "Une fiche produit publique",
       "exampleText": "Une fiche avec une description absente, un chargement lent et des images sans texte alternatif peut générer des points à examiner. Ce scénario illustre un seul URL ; il ne représente aucun rapport client.",
@@ -781,10 +865,27 @@
   },
   "auditList": {
     "comparison": {
-      "show": "Voir la comparaison", "loadError": "Impossible de charger la comparaison.",
-      "method": "Barème figé", "coverage": "Couverture", "unknown": "Inconnue", "coverageChanged": "La couverture de mesure a changé ; ce changement n’est pas une régression du site.",
-      "delta": "Évolution depuis le rapport précédent", "points": "points", "globalPoints": "points globaux", "domainPoints": "points du domaine", "contributions": "Principales améliorations et dégradations",
-      "reasons": { "COMPARABLE": "Audits comparables", "NO_PREVIOUS_REPORT": "Aucun rapport précédent dans cet historique.", "EVIDENCE_MISSING": "Comparaison indisponible : preuves historiques insuffisantes. Relancez une analyse au barème courant.", "SCOPE_CHANGED": "Comparaison indisponible : périmètre différent.", "METHODOLOGY_CHANGED": "Comparaison indisponible : barème ou coefficients différents.", "COVERAGE_CHANGED": "Comparaison indisponible : mesures utilisables différentes.", "INSUFFICIENT_COVERAGE": "Comparaison indisponible : couverture insuffisante ou anti-bot.", "SCORE_UNAVAILABLE": "Comparaison indisponible : score non mesuré." }
+      "show": "Voir la comparaison",
+      "loadError": "Impossible de charger la comparaison.",
+      "method": "Barème figé",
+      "coverage": "Couverture",
+      "unknown": "Inconnue",
+      "coverageChanged": "La couverture de mesure a changé ; ce changement n’est pas une régression du site.",
+      "delta": "Évolution depuis le rapport précédent",
+      "points": "points",
+      "globalPoints": "points globaux",
+      "domainPoints": "points du domaine",
+      "contributions": "Principales améliorations et dégradations",
+      "reasons": {
+        "COMPARABLE": "Audits comparables",
+        "NO_PREVIOUS_REPORT": "Aucun rapport précédent dans cet historique.",
+        "EVIDENCE_MISSING": "Comparaison indisponible : preuves historiques insuffisantes. Relancez une analyse au barème courant.",
+        "SCOPE_CHANGED": "Comparaison indisponible : périmètre différent.",
+        "METHODOLOGY_CHANGED": "Comparaison indisponible : barème ou coefficients différents.",
+        "COVERAGE_CHANGED": "Comparaison indisponible : mesures utilisables différentes.",
+        "INSUFFICIENT_COVERAGE": "Comparaison indisponible : couverture insuffisante ou anti-bot.",
+        "SCORE_UNAVAILABLE": "Comparaison indisponible : score non mesuré."
+      }
     },
     "title": "Audits",
     "loading": "Chargement…",

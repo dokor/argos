@@ -38,6 +38,7 @@ export default function FaqPage() {
         {f.categories.map((category) => (
           <section key={category.id} id={category.id} className={s.category}>
             <h2 className={s.categoryTitle}>{category.title}</h2>
+            {category.id === "privacy" && <p><Link href="/confidentialite">{fr ? "Données, accès et conservation : les informations détaillées" : "Data, access and retention details (French)"}</Link></p>}
             <div className={s.items}>
               {category.items.map((item) => (
                 <details key={item.q} className={s.item}>
