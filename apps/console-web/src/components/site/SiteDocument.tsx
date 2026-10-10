@@ -44,7 +44,7 @@ export const frenchMetadata: Metadata = {
     "analyse URL",
     "rapport gratuit",
   ],
-  authors: [{ name: "Antoine LE LOUËT", url: "https://www.linkedin.com/in/antoinelelouet/" }],
+  authors: [{ name: "Antoine LE LOUËT", url: "https://www.linkedin.com/in/antoine-le-lou%C3%ABt" }],
   creator: "Antoine LE LOUËT",
   robots: {
     index: true,
@@ -106,7 +106,7 @@ const jsonLd = {
   author: {
     "@type": "Person",
     name: "Antoine LE LOUËT",
-    url: "https://www.linkedin.com/in/antoinelelouet/",
+    url: "https://www.linkedin.com/in/antoine-le-lou%C3%ABt",
   },
 };
 

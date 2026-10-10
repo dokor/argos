@@ -3,6 +3,7 @@
 import Link from "@/components/LocalizedLink";
 import { useLang } from "@/lib/i18n/LangContext";
 import fr from "@/lib/i18n/fr.json";
+import ContactLinks from "./ContactLinks";
 import AuthorCredit from "@/components/AuthorCredit";
 import s from "./SiteChrome.module.scss";
 
@@ -33,6 +34,7 @@ export default function SiteFooter({ fixedFrench = false }: { fixedFrench?: bool
         </nav>
         <nav className={s.footerGroup} aria-label={f.information}>
           <h2>{f.information}</h2>
+          <ContactLinks fixedFrench={fixedFrench} />
           <Link href="/faq#privacy">{f.privacy}</Link>
           <Link href="/faq#limits">{f.limits}</Link>
           <a href="https://github.com/dokor/argos" target="_blank" rel="noopener noreferrer">{f.source}</a>

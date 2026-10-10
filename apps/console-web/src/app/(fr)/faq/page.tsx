@@ -4,6 +4,7 @@ import React from "react";
 import Link from "@/components/LocalizedLink";
 import { useLang } from "@/lib/i18n/LangContext";
 import SiteNav from "@/components/site/SiteNav";
+import ContactLinks from "@/components/site/ContactLinks";
 import SiteFooter from "@/components/site/SiteFooter";
 import s from "./page.module.scss";
 
@@ -47,7 +48,7 @@ export default function FaqPage() {
         {/* STILL HAVE QUESTIONS */}
         <section className={s.cta}>
           <h2 className={s.ctaTitle}>{f.stillQuestions.title}</h2>
-          <p className={s.ctaSub}>{f.stillQuestions.sub}</p>
+          <ContactLinks />
           <Link href="/" className={s.ctaButton}>
             {f.stillQuestions.cta}
           </Link>
