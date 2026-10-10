@@ -27,6 +27,7 @@
     "limits": "Limites de l'analyse",
     "source": "Code source sur GitHub"
   },
+  "publicPromises": { "duration": "Le délai dépend de la file d’attente et des services d’analyse. La progression se met à jour automatiquement." },
   "landing": {
     "hero": {
       "badge": "Audit de site web gratuit",
@@ -72,7 +73,7 @@
       "items": [
         {
           "icon": "⚡",
-          "label": "~20 sec en moyenne"
+          "label": "Progression en direct"
         },
         {
           "icon": "🔒",
@@ -140,22 +141,22 @@
         {
           "icon": "🔗",
           "label": "Privé par défaut",
-          "desc": "Chaque rapport est accessible via un token unique. Pas d'index, pas de SEO."
+          "desc": "Le rapport est accessible aux personnes qui possèdent son lien. Partagez-le uniquement avec des personnes de confiance."
         },
         {
           "icon": "🚫",
           "label": "Sans login",
-          "desc": "Pas de compte, pas de tracking. Soumettez une URL, récupérez votre rapport."
+          "desc": "Soumettez une page publique et consultez votre rapport sans créer de compte."
         },
         {
           "icon": "🎯",
           "label": "Rapport actionnable",
-          "desc": "Chaque point détecté est priorisé par impact réel. Vous savez exactement quoi corriger en premier - sans tout lire."
+          "desc": "Les constats associent preuve, recommandation et priorité pour préparer vos corrections."
         },
         {
           "icon": "📈",
-          "label": "Scoring actionnable",
-          "desc": "Chaque point détecté est pondéré, priorisé et accompagné d'une recommandation concrète - pas juste un chiffre."
+          "label": "Une méthode explicite",
+          "desc": "Comprenez le calcul des scores, la couverture des mesures et les limites du diagnostic."
         }
       ]
     },
@@ -195,7 +196,7 @@
           },
           {
             "q": "Combien de temps prend une analyse ?",
-            "a": "Une analyse complète prend environ 20 à 30 secondes. La page de rapport se met à jour automatiquement une fois l'audit terminé."
+            "a": "Le délai varie selon la file d’attente, la page et les services disponibles. Le rapport affiche la progression et se met à jour à la fin des contrôles."
           },
           {
             "q": "Quels sites puis-je analyser ?",
@@ -560,7 +561,7 @@
     },
     "footerCta": {
       "title": "Planifier un échange",
-      "desc": "15 minutes pour prioriser les optimisations, estimer l'effort, et identifier les quick wins.",
+      "desc": "Passez en revue les priorités et faites estimer les corrections avec un professionnel.",
       "cta": "Prendre RDV",
       "copyLink": "Copier le lien",
       "calendlyComingSoon": "Lien Calendly à venir.",
@@ -646,7 +647,7 @@
       "titleRunning": "Analyse en cours…",
       "titleFailed": "Analyse échouée",
       "subtitle": "Argos analyse votre site. Le rapport s'affichera automatiquement.",
-      "estimate": "Analyse typique : ~20 à 30 secondes.",
+      "estimate": "Le délai dépend de la file d’attente et des services d’analyse. La progression se met à jour automatiquement.",
       "retryLink": "Lancer une nouvelle analyse",
       "genericError": "L'analyse a échoué.",
       "connectionError": "Erreur de connexion. Nouvelle tentative…",

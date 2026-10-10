@@ -27,6 +27,7 @@
     "limits": "Analysis limits",
     "source": "Source code on GitHub"
   },
+  "publicPromises": { "duration": "Timing depends on the queue and analysis services. Progress updates automatically." },
   "landing": {
     "hero": {
       "badge": "Free website audit",
@@ -72,7 +73,7 @@
       "items": [
         {
           "icon": "⚡",
-          "label": "~20 sec on average"
+          "label": "Live progress"
         },
         {
           "icon": "🔒",
@@ -140,22 +141,22 @@
         {
           "icon": "🔗",
           "label": "Private by default",
-          "desc": "Each report is accessed via a unique token. No index, no SEO."
+          "desc": "Anyone with the report link can view it. Share it only with people you trust."
         },
         {
           "icon": "🚫",
           "label": "No login required",
-          "desc": "No account, no tracking. Submit a URL, get your report."
+          "desc": "Submit a public page and view your report without creating an account."
         },
         {
           "icon": "🎯",
           "label": "Actionable report",
-          "desc": "Every detected issue is prioritized by real impact. You know exactly what to fix first - without reading everything."
+          "desc": "Findings connect evidence, recommendations and priorities to help plan corrections."
         },
         {
           "icon": "📈",
-          "label": "Actionable scoring",
-          "desc": "Every detected issue is weighted, prioritized and paired with a concrete recommendation - not just a number."
+          "label": "An explicit method",
+          "desc": "Understand how scores are calculated, what was measured and the limits of the diagnosis."
         }
       ]
     },
@@ -195,7 +196,7 @@
           },
           {
             "q": "How long does an analysis take?",
-            "a": "A full analysis takes about 20 to 30 seconds. The report page updates automatically once the audit is complete."
+            "a": "Timing varies with the queue, the page and available services. The report shows progress and updates when checks finish."
           },
           {
             "q": "Which sites can I analyze?",
@@ -560,7 +561,7 @@
     },
     "footerCta": {
       "title": "Schedule a call",
-      "desc": "15 minutes to prioritize optimizations, estimate effort, and identify quick wins.",
+      "desc": "Review priorities and discuss the corrections with a professional.",
       "cta": "Book a call",
       "copyLink": "Copy link",
       "calendlyComingSoon": "Calendly link coming soon.",
@@ -646,7 +647,7 @@
       "titleRunning": "Analysis in progress…",
       "titleFailed": "Analysis failed",
       "subtitle": "Argos is analysing your site. The report will appear automatically.",
-      "estimate": "Typical analysis: ~20 to 30 seconds.",
+      "estimate": "Timing depends on the queue and analysis services. Progress updates automatically.",
       "retryLink": "Start a new analysis",
       "genericError": "The analysis failed.",
       "connectionError": "Connection error. Retrying…",

@@ -208,7 +208,7 @@ export default function AuditProgressView({ token }: Props) {
               {isBlockingError ? errorMessage : tp.subtitle}
             </p>
             {/* Estimation de durée pour rassurer pendant l'attente (U1). */}
-            {!isBlockingError && <p className={s.estimate}>{tp.estimate}</p>}
+            {!isBlockingError && <p className={s.estimate}>{t.publicPromises.duration}</p>}
             {/* Lien de repli en cas d'échec pour relancer une analyse (U1). */}
             {isBlockingError && (
               <Link href="/" className={s.retryLink}>{tp.retryLink}</Link>
