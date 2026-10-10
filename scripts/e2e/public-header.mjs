@@ -102,7 +102,11 @@ try {
             // Active styles and the page behind the translucent header intentionally differ.
             // Compare controls on a fixed opaque backing; retain the real capture above.
             await page.addStyleTag({ content: 'nav { background: var(--argos-bg) !important; backdrop-filter: none !important; } nav > div > div:first-of-type > a[aria-current] { color: var(--argos-text-muted) !important; box-shadow: none !important; }' });
-            const pixels = await nav.screenshot({ animations: "disabled" });
+            // Exclude the partially covered final raster row of the fractional header height.
+            // That row blends the border with page content, which varies by route.
+            const bounds = await nav.boundingBox();
+            assert.ok(bounds);
+            const pixels = await page.screenshot({ animations: "disabled", clip: { ...bounds, height: Math.floor(bounds.height) } });
             expectedPixels ??= pixels;
             const difference = await comparePixels(page, expectedPixels, pixels);
             const matches = difference.fraction <= 0.002 && difference.maxDelta <= 20;
