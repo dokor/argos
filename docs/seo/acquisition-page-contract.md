@@ -9,3 +9,5 @@ Guide spécialisé #302 non publié dans le dépôt : aucun lien vers une route 
 #392 : title, description, canonical et H1 vérifiés dans HtmlModuleAnalyzer. Présence distincte de qualité éditoriale et indexation réelle ; référence Google Search Central. Exemple avant/après fictif réutilise le contexte de #69.
 
 #393 : clés http.security.csp, hsts, x_frame_options, x_content_type_options, referrer_policy, permissions_policy et cookie_flags vérifiées dans DefaultScorePolicy. Réponse illustrative et recommandations contextualisées selon OWASP/MDN. Guides #303/#304 non publiés : liens uniquement vers checklist et références officielles, à activer par #388 après publication.
+
+#394 : html.images.alt_coverage et constats Lighthouse disponibles. Le fragment est un texte accessible, pas une image réellement sans alternative. Références W3C WAI, aucun verdict de conformité ou nouvelle obligation juridique. Ressource réglementaire séparée et liée.

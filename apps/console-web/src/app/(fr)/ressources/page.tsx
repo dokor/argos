@@ -15,6 +15,7 @@ const copy = {
     guidesTitle: "Comprendre les mesures",
     audiencesTitle: "Choisir votre contexte",
     guides: [
+      { href: "/test-accessibilite-site-web", title: "Test automatique d’accessibilité", description: "Repérer des problèmes détectables et préparer les essais humains." },
       { href: "/verifier-entetes-securite", title: "Vérifier les en-têtes de sécurité", description: "Lire CSP, HSTS et les protections HTTP sans les confondre avec un pentest." },
       { href: "/analyse-seo-page", title: "Analyse SEO d’une page", description: "Vérifier les signaux HTML et préparer les corrections d’une URL." },
       { href: "/test-vitesse-site-web", title: "Test de vitesse d’une page", description: "Lire les mesures de laboratoire et lancer un audit de votre URL." },
