@@ -622,7 +622,12 @@
         "critical": "Critique",
         "important": "Important",
         "opportunity": "Opportunité"
-      }
+      },
+      "rankLabel": "Priorité",
+      "effortUnknown": "À estimer",
+      "unknownDomain": "Domaine non renseigné",
+      "sourcesLabel": "Sources",
+      "confirmNext": "Confirmez le constat, estimez la correction puis relancez une mesure dans des conditions comparables."
     },
     "categoryInfo": {
       "fallback": "Ce que cette catégorie mesure et son impact sur la qualité de votre site.",

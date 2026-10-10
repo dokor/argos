@@ -622,7 +622,12 @@
         "critical": "Critical",
         "important": "Important",
         "opportunity": "Opportunity"
-      }
+      },
+      "rankLabel": "Priority",
+      "effortUnknown": "To estimate",
+      "unknownDomain": "Domain not provided",
+      "sourcesLabel": "Sources",
+      "confirmNext": "Confirm the finding, estimate the correction, then repeat the measurement under comparable conditions."
     },
     "categoryInfo": {
       "fallback": "What this category measures and how it affects your site's quality.",

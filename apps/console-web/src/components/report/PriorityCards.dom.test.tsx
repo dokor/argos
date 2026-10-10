@@ -4,6 +4,8 @@ import { render, screen } from "@testing-library/react";
 import fr from "@/lib/i18n/fr.json";
 import en from "@/lib/i18n/en.json";
 import PriorityCards from "./PriorityCards";
+import { buildReportModel } from "./reportModel";
+import { demoReport as createDemoReport } from "@/components/marketing/reportDemoFixture";
 import type { PriorityItem } from "./types";
 
 let locale: "fr" | "en" = "fr";
@@ -27,7 +29,7 @@ describe("PriorityCards", () => {
     expect(screen.getByText("Confiance de mesure : inconnue")).toBeInTheDocument();
     expect(screen.getByText("Constats regroupés : 2")).toBeInTheDocument();
     expect(screen.getByText(/Le gain réel dépend/)).toBeInTheDocument();
-    expect(screen.queryByText(/^Effort/)).not.toBeInTheDocument();
+    expect(screen.getByText("Effort À estimer")).toBeInTheDocument();
   });
   it("restitue la raison et les limites en anglais", () => {
     locale = "en";
@@ -51,7 +53,7 @@ describe("PriorityCards", () => {
     render(<PriorityCards priorities={[{ severity: "critical", title: "Historical action", impact: "Impact", effort: "M" }]} />);
     expect(screen.getByText("Historical action")).toBeInTheDocument();
     expect(screen.getByText("Effort M")).toBeInTheDocument();
-    expect(screen.queryByText(/Confiance de mesure/)).not.toBeInTheDocument();
+    expect(screen.getByText("Confiance de mesure : inconnue")).toBeInTheDocument();
   });
   it("limite la présentation à six actions sans reclassement client", () => {
     const list = Array.from({ length: 8 }, (_, i) => ({ ...action, findingKey: `key-${i}`, title: `Action ${i}` }));
@@ -63,5 +65,24 @@ describe("PriorityCards", () => {
   it("affiche l'état vide", () => {
     render(<PriorityCards priorities={[]} />);
     expect(screen.getByText("Aucune priorité détectée.")).toBeInTheDocument();
+  });
+});
+
+describe("action resolution", () => {
+  const demoReport = createDemoReport("fr");
+  beforeEach(() => { locale = "fr"; });
+  it("preserves backend rank/order and counts actual unique grouped findings", () => {
+    const report = {...demoReport, summary: {...demoReport.summary, priorities: [{...action, rank: 4, relatedFindingKeys: [demoReport.issues[0].id!, demoReport.issues[0].id!, 'missing'], findingKey: demoReport.issues[0].id}]}};
+    render(<PriorityCards priorities={report.summary.priorities} model={buildReportModel(report)} />);
+    expect(screen.getByText('Priorité 4')).toBeInTheDocument();
+    expect(screen.getByText('Constats regroupés : 1')).toBeInTheDocument();
+    expect(screen.getByText(fr.report.priorityCards.partialFindings)).toBeInTheDocument();
+    expect(screen.getAllByRole('link')).toHaveLength(1);
+  });
+  it("keeps orphan priorities visible without an invented finding link", () => {
+    const report = {...demoReport, summary: {...demoReport.summary, priorities: [action]}};
+    render(<PriorityCards priorities={[action]} model={buildReportModel(report)} />);
+    expect(screen.getByText(fr.report.priorityCards.missingFinding)).toBeInTheDocument();
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
   });
 });
