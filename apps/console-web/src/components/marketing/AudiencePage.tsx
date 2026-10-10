@@ -4,6 +4,7 @@ import Link from "@/components/LocalizedLink";
 import AuditForm from "@/components/AuditForm";
 import SiteFooter from "@/components/site/SiteFooter";
 import SiteNav from "@/components/site/SiteNav";
+import SmallBusinessPage from "./SmallBusinessPage";
 import ChoosingArgos from "./ChoosingArgos";
 import { useLang } from "@/lib/i18n/LangContext";
 import s from "./AudiencePage.module.scss";
@@ -18,6 +19,8 @@ export default function AudiencePage({ audience }: { audience: Audience }) {
   const otherHref = otherAudience === "pme" ? "/ressources/audit-site-pme" : "/ressources/audit-site-ecommerce";
   const otherLabel = otherAudience === "pme" ? common.pmeLink : common.ecommerceLink;
   const route = audience === "pme" ? "/ressources/audit-site-pme" : "/ressources/audit-site-ecommerce";
+
+  if (audience === "pme") return <SmallBusinessPage />;
 
   return (
     <div className={s.page}>
