@@ -9,7 +9,7 @@ import s from "./SiteChrome.module.scss";
 
 /** Liens éditoriaux communs à toutes les pages, sauf les rapports privés. */
 export default function SiteFooter({ fixedFrench = false }: { fixedFrench?: boolean }) {
-  const { t: localized } = useLang();
+  const { t: localized, lang } = useLang();
   const t = fixedFrench ? fr : localized;
   const f = t.siteFooter;
   return (
@@ -34,6 +34,8 @@ export default function SiteFooter({ fixedFrench = false }: { fixedFrench?: bool
         </nav>
         <nav className={s.footerGroup} aria-label={f.information}>
           <h2>{f.information}</h2>
+          <Link href="/a-propos">{fixedFrench || lang === "fr" ? "À propos" : "About Argos"}</Link>
+          <Link href="/methodologie-score#resume">{fixedFrench || lang === "fr" ? "Méthode du score" : "Scoring method (French)"}</Link>
           <ContactLinks fixedFrench={fixedFrench} />
           <Link href="/faq#privacy">{f.privacy}</Link>
           <Link href="/faq#limits">{f.limits}</Link>

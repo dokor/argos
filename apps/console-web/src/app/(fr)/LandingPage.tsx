@@ -39,7 +39,7 @@ function SocialProofBar({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function LandingPage() {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const tl = t.landing;
 
 
@@ -124,7 +124,7 @@ export default function LandingPage() {
                 <span className={s.whyIcon}><PublicIcon index={index} /></span>
                 <h3 className={s.whyLabel}>{item.label}</h3>
                 <p className={s.whyDesc}>{item.desc}</p>
-                {index === 3 && <Link href="/methodologie-score">{item.label}</Link>}
+                {index === 3 && <Link href="/methodologie-score#resume">{item.label}</Link>}
               </div>
             ))}
           </div>
@@ -153,6 +153,11 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <section className={s.section} aria-labelledby="creator-title"><div className={s.container}>
+        <h2 id="creator-title" className={s.sectionTitle}>{lang === "fr" ? "Un outil créé par Antoine Le Louët" : "A tool created by Antoine Le Louët"}</h2>
+        <p>{lang === "fr" ? "Une méthode consultable et un exemple commenté pour comprendre les constats avant de corriger votre page." : "An inspectable method and a commented example to understand findings before fixing your page."}</p>
+        <p><Link href="/a-propos">{lang === "fr" ? "À propos et contact" : "About and contact"}</Link> · <Link href="/methodologie-score#resume">{lang === "fr" ? "Méthode du score" : "Scoring method (French)"}</Link> · <Link href="/exemple-rapport">{lang === "fr" ? "Exemple de rapport" : "Example report"}</Link></p>
+      </div></section>
       {/* BOTTOM CTA */}
       <section className={s.sectionDark}>
         <div className={s.containerNarrow}>
