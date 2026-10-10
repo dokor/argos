@@ -7,3 +7,5 @@ Routes retenues dans #386. Chaque entrée lance le même audit transversal via A
 Guide spécialisé #302 non publié dans le dépôt : aucun lien vers une route absente. Les références web.dev, la checklist, la méthode et la démonstration sont disponibles. #388 activera les destinations spécifiques seulement après publication.
 
 #392 : title, description, canonical et H1 vérifiés dans HtmlModuleAnalyzer. Présence distincte de qualité éditoriale et indexation réelle ; référence Google Search Central. Exemple avant/après fictif réutilise le contexte de #69.
+
+#393 : clés http.security.csp, hsts, x_frame_options, x_content_type_options, referrer_policy, permissions_policy et cookie_flags vérifiées dans DefaultScorePolicy. Réponse illustrative et recommandations contextualisées selon OWASP/MDN. Guides #303/#304 non publiés : liens uniquement vers checklist et références officielles, à activer par #388 après publication.
