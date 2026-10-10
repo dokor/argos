@@ -227,7 +227,7 @@
           },
           {
             "q": "Pendant combien de temps un rapport reste-t-il accessible ?",
-            "a": "Si une date d’expiration est attribuée, le lien cesse de fonctionner après cette date. Aucune durée fixe ni suppression automatique des rapports n’est actuellement établie."
+            "a": "Le lien cesse de fonctionner après trois ans par défaut, ou à une expiration antérieure attribuée au rapport. L’expiration ne supprime pas les données en base ; consultez la page de confidentialité."
           }
         ]
       },
@@ -259,7 +259,7 @@
         "items": [
           {
             "q": "Quelles données Argos conserve-t-il ?",
-            "a": "Argos enregistre l’URL, le domaine, les états et dates de traitement ainsi que les résultats techniques pour produire et afficher le rapport. Aucune durée fixe de suppression n’est actuellement établie ; consultez la page de confidentialité."
+            "a": "Argos enregistre l’URL, le domaine, les états et dates de traitement ainsi que les résultats techniques pour produire et afficher le rapport. L’accès au rapport expire après trois ans par défaut, sans effacement automatique en base ; consultez la page de confidentialité."
           },
           {
             "q": "Qui peut consulter mes rapports ?",

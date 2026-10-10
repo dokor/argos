@@ -227,7 +227,7 @@
           },
           {
             "q": "How long does a report stay available?",
-            "a": "If an expiry date is assigned, the link stops working after that date. No fixed retention period or automatic deletion of reports is currently established."
+            "a": "The link stops working after three years by default, or at an earlier assigned expiry. Expiration does not delete stored data; see the privacy information."
           }
         ]
       },
