@@ -99,10 +99,7 @@ class AuditPublicationIT extends MariaDbReportFixture {
     }
     @Test void migrationReconcilesHistoricalCompletedOrphans() throws Exception {
         // Replay V8 from its historical boundary with a credential-bearing orphan.
-        sql("ALTER TABLE ARG_AUDIT_REPORT DROP INDEX idx_report_global_score, "
-            + "DROP COLUMN scoring_version, DROP COLUMN global_score");
-        sql("DELETE FROM flyway_schema_history WHERE version='9'");
-        sql("DELETE FROM flyway_schema_history WHERE version='8'");
+        migrateHistoricalRowsTo("7");
         sql("INSERT INTO ARG_AUDIT_RUN(id,audit_id,status,report_token_hash) VALUES(6,1,'COMPLETED',UNHEX(SHA2('synthetic-orphan',256)))");
         org.flywaydb.core.Flyway.configure().dataSource(source).load().migrate();
         assertEquals("FAILED",runs.getRun(6).orElseThrow().getStatus());
