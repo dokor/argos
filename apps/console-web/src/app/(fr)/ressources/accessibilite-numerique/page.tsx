@@ -334,6 +334,7 @@ export default function AccessibilityArticlePage() {
               <p>{c.ctaText}</p>
               <Link href="/#audit" className={s.primaryCta}>{c.ctaButton} <span aria-hidden="true">→</span></Link>
               <small>{c.ctaLimit}</small>
+              <p><Link href="/exemple-rapport">{lang === "fr" ? "Lire un exemple de constat" : "Read an example finding"}</Link> · <Link href="/methodologie-score#resume">{lang === "fr" ? "Comprendre le score" : "Understand the score (French)"}</Link></p>
             </section>
 
             <section id="questions" className={s.section}>

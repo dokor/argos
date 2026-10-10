@@ -178,6 +178,7 @@ export default function AuditTechniquePage() {
             <h2 id="more-title">{c.moreTitle}</h2>
             <p>{c.moreText}</p>
             <div className={s.links}>
+              <Link href="/exemple-rapport">{lang === "fr" ? "Lire un exemple de rapport" : "Read an example report"}</Link>
               <Link href="/">{c.homeLink}</Link>
               <Link href="/faq">{c.faqLink}</Link>
               <Link href="/ressources/accessibilite-numerique">{c.accessibilityLink}</Link>

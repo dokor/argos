@@ -80,6 +80,8 @@ const copy = {
     exampleEnd: "L’ordre réel dépend de l’impact sur vos utilisateurs, de votre objectif et du coût de correction. Un score global ne remplace pas ce jugement.",
     nextTitle: "Approfondir un point",
     links: [
+      { href: "/exemple-rapport", label: "Lire un exemple de rapport commenté" },
+      { href: "/methodologie-score#resume", label: "Comprendre le calcul du score" },
       { href: "/ressources/audit-technique-gratuit#result-title", label: "Comprendre les résultats et les limites du score Argos" },
       { href: "/ressources/accessibilite-numerique", label: "Approfondir l’accessibilité numérique" },
       { href: "/ressources/audit-site-ecommerce", label: "Appliquer la méthode à un site e-commerce" },
@@ -120,6 +122,8 @@ const copy = {
     exampleEnd: "The actual order depends on user impact, your goals, and the cost of each fix. An overall score cannot replace that judgment.",
     nextTitle: "Explore further",
     links: [
+      { href: "/exemple-rapport", label: "Read a commented example report" },
+      { href: "/methodologie-score#resume", label: "Understand score calculation (French)" },
       { href: "/ressources/audit-technique-gratuit#result-title", label: "Understand Argos results and score limits" },
       { href: "/ressources/accessibilite-numerique", label: "Learn more about digital accessibility" },
       { href: "/ressources/audit-site-ecommerce", label: "Apply the method to an e-commerce site" },
