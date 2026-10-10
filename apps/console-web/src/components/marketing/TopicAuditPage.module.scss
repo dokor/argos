@@ -1,0 +1,5 @@
+@use "../../styles/tokens" as t;
+.page { @include t.public-type; min-height: 100vh; color: t.$text; background: t.$bg; main { width: min(100% - 32px,1000px); margin-inline: auto; padding-block: 36px 64px; } header { max-width: 840px; } p,li { line-height: 1.7; } section { scroll-margin-top: 300px; margin-top: 32px; padding: 24px; background: t.$surface; border: 1px solid t.$border; border-radius: t.$radius-lg; } a { color: t.$text; overflow-wrap: anywhere; text-underline-offset: 3px; } a:focus-visible { outline: 3px solid t.$color-indigo; outline-offset: 3px; } pre { white-space: pre-wrap; overflow-wrap: anywhere; padding: 16px; border: 1px solid t.$border; border-radius: t.$radius-sm; background: t.$surface-2; } ul { padding-left: 20px; } }
+.lead { font-size: 1.2rem; }
+.measures { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 24px; }
+@media(max-width:700px){ .measures { grid-template-columns:1fr; } .page section { padding:16px; } }

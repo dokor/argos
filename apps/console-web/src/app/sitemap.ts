@@ -7,6 +7,10 @@ const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://argos.lelouet.fr"
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     { url: `${SITE_URL}/exemple-rapport` },
+    { url: `${SITE_URL}/test-vitesse-site-web` },
+      { url: `${SITE_URL}/analyse-seo-page` },
+      { url: `${SITE_URL}/verifier-entetes-securite` },
+      { url: `${SITE_URL}/test-accessibilite-site-web` },
     { url: `${SITE_URL}/a-propos` },
     { url: `${SITE_URL}/confidentialite` },
     { url: `${SITE_URL}/informations-legales` },

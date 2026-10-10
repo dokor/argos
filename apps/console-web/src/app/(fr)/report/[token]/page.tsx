@@ -26,12 +26,12 @@ export async function generateMetadata({ params }: Readonly<Props>): Promise<Met
     const report = await argosApi.getReport(token);
     const domain = report.domain?.trim();
     if (domain) {
-      return { title: { absolute: `${REPORT_TITLE} | ${domain}` }, robots: REPORT_ROBOTS };
+      return { title: { absolute: `${REPORT_TITLE} | ${domain}` }, robots: REPORT_ROBOTS, alternates: { canonical: null, languages: {} } };
     }
   } catch {
     // Rapport non disponible (404 / analyse en cours) → titre générique.
   }
-  return { title: REPORT_TITLE, robots: REPORT_ROBOTS };
+  return { title: REPORT_TITLE, robots: REPORT_ROBOTS, alternates: { canonical: null, languages: {} } };
 }
 
 export default async function ReportPageHome({ params }: Readonly<Props>) {

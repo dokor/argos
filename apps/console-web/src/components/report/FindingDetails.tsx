@@ -1,4 +1,6 @@
 "use client";
+import Link from "next/link";
+import { correctionGuide } from "@/lib/correctionGuides";
 import { useLang } from "@/lib/i18n/LangContext";
 import { CATALOGUE_VERSION, cleanEvidence, findingContent } from "./findingCatalogue";
 import { reportReadingCopy } from "./reportReadingCopy";
@@ -7,7 +9,7 @@ import s from "./IssuesByCategory.module.scss";
 
 export default function FindingDetails({ finding }: { finding: Finding }) {
   const { t, lang } = useLang(); const copy = reportReadingCopy[lang];
-  const issue = finding.issue; const content = findingContent(issue, lang);
+  const issue = finding.issue; const guide = correctionGuide(issue.id, lang); const content = findingContent(issue, lang);
   const evidence = issue.structuredEvidence;
   const measure = evidence?.measurement;
   const validMeasure = measure && Number.isFinite(measure.value) && Object.hasOwn(copy.units, measure.unit);
@@ -29,7 +31,7 @@ export default function FindingDetails({ finding }: { finding: Finding }) {
         <div key={index}><dt><code>{detail.key === "score" && issue.id?.startsWith("lighthouse.audit.") ? copy.lighthouseRatio : cleanEvidence(detail.key)}</code></dt><dd>{cleanEvidence(detail.text)}</dd></div>)}</dl>
         : issue.evidence && <p>{cleanEvidence(issue.evidence)}</p>}
     </div>
-    <div className={s.detailBlock}><h3 className={s.detailBlockLabel}>{copy.recommendation}</h3><p>{content.recommendation}</p></div>
+    <div className={s.detailBlock}><h3 className={s.detailBlockLabel}>{copy.recommendation}</h3><p>{content.recommendation}</p>{guide && <p><Link href={guide.href}>{lang === "fr" ? "En savoir plus" : "Learn more"} : {guide.label}</Link></p>}</div>
     <div className={s.detailBlock}><h3 className={s.detailBlockLabel}>{copy.verification}</h3><p>{content.verification}</p></div>
   </div>;
 }

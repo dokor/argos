@@ -1,0 +1,2 @@
+@use "../../styles/tokens" as t;
+.meta { color: t.$text-muted; margin-block: 16px 24px; p { font-size: 0.9rem; line-height: 1.6; margin-block: 6px; overflow-wrap: anywhere; } a { color: inherit; text-underline-offset: 3px; } a:focus-visible { outline: 3px solid t.$color-indigo; outline-offset: 3px; } }
