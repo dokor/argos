@@ -1,0 +1,14 @@
+@page { size: A4; margin: 16mm 14mm; @bottom-right { content: counter(page) " / " counter(pages); font: 10px Arial, sans-serif; color: #333; } }
+.document { color:#111; background:white; font:14px/1.5 Arial, sans-serif; margin:0 auto; padding:24px; max-width:780px; overflow-wrap:anywhere; }
+.document h1 { font-size:28px; line-height:1.2; }
+.document h2 { font-size:21px; border-bottom:1px solid #777; margin-top:24px; }
+.document h3 { font-size:17px; }.document h4,.document h5 { font-size:15px; }
+.document h1,.document h2,.document h3,.document h4,.document h5 { break-after:avoid; }
+.document article { border-top:1px solid #999; padding-top:12px; margin-top:12px; }
+.document p,.document dd { widows:3; orphans:3; }.document dl { margin:0; }.document dd { margin:0 0 12px; white-space:pre-wrap; }
+.document table { border-collapse:collapse; width:100%; margin:16px 0; }.document caption { text-align:left; font-weight:bold; }.document th,.document td { border:1px solid #888; text-align:left; padding:8px; }.document tr { break-inside:avoid; }
+.document a { color:#111; text-decoration:underline; }.document .evidence { white-space:pre-wrap; }
+.toolbar { padding:16px; display:flex; gap:12px; flex-wrap:wrap; background:white; color:#111; }.toolbar button { padding:12px; min-height:44px; }.toolbar button:focus-visible { outline:3px solid #111; outline-offset:3px; }
+@media print { .document { padding:0; max-width:none; } .toolbar { display:none; } }
+
+.document > section:last-child { break-inside: avoid; }

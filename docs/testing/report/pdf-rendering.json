@@ -1,0 +1,114 @@
+[
+  {
+    "file": "complete-en-full.pdf",
+    "pages": 4,
+    "textCharacters": 9232,
+    "title": "Argos-full-2026-10-10",
+    "tokenFree": true
+  },
+  {
+    "file": "complete-en-summary.pdf",
+    "pages": 2,
+    "textCharacters": 3075,
+    "title": "Argos-summary-2026-10-10",
+    "tokenFree": true
+  },
+  {
+    "file": "complete-fr-full.pdf",
+    "pages": 4,
+    "textCharacters": 9695,
+    "title": "Argos-full-2026-10-10",
+    "tokenFree": true
+  },
+  {
+    "file": "complete-fr-summary.pdf",
+    "pages": 2,
+    "textCharacters": 3295,
+    "title": "Argos-summary-2026-10-10",
+    "tokenFree": true
+  },
+  {
+    "file": "empty-en-full.pdf",
+    "pages": 2,
+    "textCharacters": 1902,
+    "title": "Argos-full-2026-10-10",
+    "tokenFree": true
+  },
+  {
+    "file": "empty-en-summary.pdf",
+    "pages": 2,
+    "textCharacters": 1879,
+    "title": "Argos-summary-2026-10-10",
+    "tokenFree": true
+  },
+  {
+    "file": "empty-fr-full.pdf",
+    "pages": 2,
+    "textCharacters": 2064,
+    "title": "Argos-full-2026-10-10",
+    "tokenFree": true
+  },
+  {
+    "file": "empty-fr-summary.pdf",
+    "pages": 2,
+    "textCharacters": 2037,
+    "title": "Argos-summary-2026-10-10",
+    "tokenFree": true
+  },
+  {
+    "file": "historical-en-full.pdf",
+    "pages": 4,
+    "textCharacters": 6181,
+    "title": "Argos-full-2026-09-23",
+    "tokenFree": true
+  },
+  {
+    "file": "historical-en-summary.pdf",
+    "pages": 2,
+    "textCharacters": 2637,
+    "title": "Argos-summary-2026-09-23",
+    "tokenFree": true
+  },
+  {
+    "file": "historical-fr-full.pdf",
+    "pages": 4,
+    "textCharacters": 6477,
+    "title": "Argos-full-2026-09-23",
+    "tokenFree": true
+  },
+  {
+    "file": "historical-fr-summary.pdf",
+    "pages": 2,
+    "textCharacters": 2813,
+    "title": "Argos-summary-2026-09-23",
+    "tokenFree": true
+  },
+  {
+    "file": "partial-en-full.pdf",
+    "pages": 3,
+    "textCharacters": 5100,
+    "title": "Argos-full-2026-10-10",
+    "tokenFree": true
+  },
+  {
+    "file": "partial-en-summary.pdf",
+    "pages": 2,
+    "textCharacters": 2955,
+    "title": "Argos-summary-2026-10-10",
+    "tokenFree": true
+  },
+  {
+    "file": "partial-fr-full.pdf",
+    "pages": 3,
+    "textCharacters": 5546,
+    "title": "Argos-full-2026-10-10",
+    "tokenFree": true
+  },
+  {
+    "file": "partial-fr-summary.pdf",
+    "pages": 2,
+    "textCharacters": 3206,
+    "title": "Argos-summary-2026-10-10",
+    "tokenFree": true
+  }
+]
