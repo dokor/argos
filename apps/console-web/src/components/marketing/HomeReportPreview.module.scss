@@ -1,0 +1,15 @@
+@use '../../styles/tokens' as t;
+.card { color: t.$text; background: t.$surface; border: 1px solid t.$border; border-radius: t.$radius-xl; padding: t.$space-5; display: grid; gap: t.$space-4; max-width: 520px; overflow-wrap: anywhere; }
+.disclosure { color: t.$text-muted; font-size: t.$text-base; }
+.card h2 { font-size: 1.25rem; line-height: 1.3; }
+.card h3 { font-size: 1rem; margin-bottom: t.$space-2; }
+.scores { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: t.$space-3; }
+.scores dt { color: t.$text-muted; font-size: t.$text-base; }
+.scores dd { font-size: 1.25rem; font-weight: 700; }
+.finding { background: t.$surface-2; padding: t.$space-4; border-radius: t.$radius-md; }
+.finding p { line-height: 1.6; margin-block: t.$space-2; }
+.severity { font-weight: 700; }
+.card pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 0.85rem; }
+.card a { color: t.$text; text-underline-offset: 3px; }
+.card a:focus-visible { outline: 3px solid t.$text; outline-offset: 4px; }
+@media (max-width: 240px) { .scores { grid-template-columns: 1fr; } .card { padding: t.$space-3; } }
