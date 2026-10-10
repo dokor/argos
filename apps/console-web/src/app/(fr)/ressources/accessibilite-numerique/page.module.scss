@@ -386,3 +386,5 @@
     padding: t.$panel-space-mobile;
   }
 }
+
+.page { @include t.public-type; }

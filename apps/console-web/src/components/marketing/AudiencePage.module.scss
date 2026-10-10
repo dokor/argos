@@ -229,3 +229,23 @@
     padding: t.$space-5;
   }
 }
+
+.page { @include t.public-type; }
+
+.hero { padding-block: 2.5rem; }
+
+.brief { display: grid; gap: 1rem; margin-block: 1rem; }
+.brief dt { font-weight: 700; }
+.example pre { white-space: pre-wrap; overflow-wrap: anywhere; margin-block: 1rem; }
+.section { padding-block: 2.5rem; }
+.ctaSection { scroll-margin-top: 300px; }
+
+.productDemo { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 1.5rem; }
+.product { border: 1px solid t.$border; border-radius: t.$radius-lg; padding: 1rem; background: t.$surface-2; }
+.product img { margin-inline: auto; width: 100%; max-width: 320px; height: auto; }
+.product figcaption { line-height: 1.65; }
+.annotations { display: grid; gap: 1rem; }
+.annotations li { padding: 1rem; border-left: 3px solid t.$color-indigo; }
+.annotations p { margin-block: 0.75rem; }
+.annotations pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 0.85rem; }
+@media (max-width: 700px) { .productDemo { grid-template-columns: 1fr; } }

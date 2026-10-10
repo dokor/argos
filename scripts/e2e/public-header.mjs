@@ -10,7 +10,7 @@ const routes = {
   fr: ['/', '/faq', '/ressources', '/guides/checklist-audit-site-web', '/ressources/audit-technique-gratuit', '/ressources/accessibilite-numerique', '/ressources/audit-site-pme', '/ressources/audit-site-ecommerce', '/methodologie-score', '/exemple-rapport'],
   en: ['/en', '/en/faq', '/en/resources', '/en/resources/small-business-website-audit', '/en/resources/ecommerce-website-audit', '/en/example-report'],
 };
-const labels = { fr: ['Auditer un site', 'Ressources', 'FAQ'], en: ['Audit a website', 'Resources', 'FAQ'] };
+const labels = { fr: ['Comment ça marche', 'Exemple de rapport', 'Guides', 'Analyser gratuitement'], en: ['How it works', 'Example report', 'Guides', 'Analyse for free'] };
 const browser = await chromium.launch();
 const evidence = [];
 
@@ -113,7 +113,7 @@ try {
             evidence.push({ state, route, geometry: actual, pixelDifference: difference });
           }
           // Real client transitions through the shared navigation.
-          for (const index of [1, 2, 0, 2, 1]) {
+          for (const index of [1, 2, 0, 3, 2, 1]) {
             const nav = page.locator('nav').first();
             const link = nav.locator(':scope > div > div').first().locator('a').nth(index);
             const href = await link.getAttribute('href');
@@ -122,10 +122,11 @@ try {
             await ready(page, lang, admin);
             assert.deepEqual(await geometry(page), expected, 'Client navigation changed header geometry');
             const current = nav.locator(':scope > div > div').first().locator('a[aria-current="page"]');
-            assert.equal(await current.textContent(), labels[lang][index]);
+            if (index === 1) assert.equal(await current.textContent(), labels[lang][index]);
+            if (index === 2) assert.equal(await nav.locator('a[aria-current="location"]').textContent(), labels[lang][index]);
           }
           // Follow a content link as well, including the French guide.
-          await page.locator('nav').first().locator(':scope > div > div').first().locator('a').nth(1).click();
+          await page.locator('nav').first().locator(':scope > div > div').first().locator('a').nth(2).click();
           await page.waitForURL(base + routes[lang][2]);
           const linkedRoute = lang === 'fr' ? '/guides/checklist-audit-site-web' : '/en/resources/small-business-website-audit';
           await page.locator('main a[href="' + linkedRoute + '"]').first().click();

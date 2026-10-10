@@ -5,6 +5,7 @@ export const languageRoutes: Record<string, string> = {
   "/": "/en",
   "/exemple-rapport": "/en/example-report",
   "/faq": "/en/faq",
+  "/a-propos": "/en/about",
   "/ressources": "/en/resources",
   "/ressources/audit-site-pme": "/en/resources/small-business-website-audit",
   "/ressources/audit-site-ecommerce": "/en/resources/ecommerce-website-audit",
