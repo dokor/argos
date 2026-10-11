@@ -19,6 +19,23 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /** Test-classpath-only HTTP fixture, guarded against non-local or non-fixture databases. */
 public class AccountBrowserFixture extends MariaDbReportFixture {
+    /** Local test-classpath control; never registered by the production application. */
+    @Path("/__test/usage") @PublicApi @Produces(MediaType.APPLICATION_JSON)
+    public static class UsageControl {
+        final AccountBrowserFixture fixture;
+        final AuditRunDao runs;
+        final AuditDao audits;
+        UsageControl(AccountBrowserFixture fixture, AuditRunDao runs, AuditDao audits) {this.fixture=fixture;this.runs=runs;this.audits=audits;}
+        @POST @Path("/{id}/{action}")
+        public Map<String,Boolean> finish(@PathParam("id") long id,@PathParam("action") String action) {
+            if(!java.util.List.of("publish","fail").contains(action)) throw new NotFoundException();
+            var token=fixture.runs.claim(id).orElseThrow(NotFoundException::new);
+            var run=runs.findById(id);
+            if(action.equals("fail")) fixture.runs.fail(id,"SYNTHETIC_FAILURE",token);
+            else fixture.publisher.completeAndPublish(id,audits.findById(run.getAuditId()),mock(com.dokor.argos.services.analysis.model.AuditReportJson.class),"{}",token);
+            return Map.of("accepted",true);
+        }
+    }
     @Path("/__test/mail")
     @PublicApi
     @Produces(MediaType.APPLICATION_JSON)
@@ -80,6 +97,14 @@ public class AccountBrowserFixture extends MariaDbReportFixture {
                         mail,
                         clock);
         var auditDao = new AuditDao(transactions);
+        String limit=System.getProperty("argos.usage.fixture-limit");
+        var usage=new UsageService(transactions,new UsagePolicy(ConfigFactory.parseString(limit==null ? "" : "usage.offers.FREE.monthly-limit="+Long.parseLong(limit))),clock);
+        var runDao=new AuditRunDao(transactions,usage);
+        fixture.runs=new AuditRunService(runDao,fixture.tokens,fixture.mapper);
+        var composer=mock(PublicReportComposer.class);var summary=mock(AiReportSummaryService.class);
+        when(composer.compose(any())).thenReturn(fixture.mapper.readValue("{\"domain\":\"example.com\",\"scores\":{\"coverage\":{\"provisional\":true}}}",ReportDto.class));
+        when(summary.enrich(any())).thenAnswer(call->call.getArgument(0));
+        fixture.publisher=new ReportPublishService(transactions,runDao,fixture.reports,composer,summary,mock(AhrefsDomainRatingClient.class),fixture.mapper);
         var audits =
                 new AuditService(
                         auditDao,
@@ -91,7 +116,7 @@ public class AccountBrowserFixture extends MariaDbReportFixture {
                         dao,
                         sessions,
                         audits,
-                        new AuditRunDao(transactions),
+                        runDao,
                         fixture.reader,
                         fixture.tokens,
                         clock,
@@ -111,6 +136,7 @@ public class AccountBrowserFixture extends MariaDbReportFixture {
                 new org.glassfish.jersey.server.ResourceConfig()
                         .register(json)
                         .register(mail)
+                        .register(new UsageControl(fixture,runDao,auditDao))
                         .register(com.coreoz.plume.jersey.errors.WsResultExceptionMapper.class)
                         .register(
                                 RequireExplicitAccessControlFeature.accessControlAnnotations(

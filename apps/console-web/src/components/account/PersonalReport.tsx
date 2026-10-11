@@ -28,8 +28,8 @@ export default function PersonalReport({ runId }: { runId: string }) {
         setSiteId(run.siteId);setStatus(t.account.statuses[run.status as keyof typeof t.account.statuses]??t.account.working);
         if(run.status==="COMPLETED") {
           const data=await accountFetch<Report>("runs/"+runId+"/report","GET",undefined,controller.signal);
-          if(alive) setReport({runId,data});terminal=true;
-        } else if(run.status==="FAILED") terminal=true;
+          if(alive) {setReport({runId,data});window.dispatchEvent(new Event("argos-usage-refresh"));}terminal=true;
+        } else if(run.status==="FAILED") {terminal=true;window.dispatchEvent(new Event("argos-usage-refresh"));}
         retries=0;schedule(1500);
       } catch(reason) {
         if(!alive) return;

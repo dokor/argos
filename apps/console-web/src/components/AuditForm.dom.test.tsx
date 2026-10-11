@@ -13,6 +13,19 @@ import AuditForm from "./AuditForm";
 import { argosApi } from "@/lib/ArgosApi";
 import { LangProvider } from "@/lib/i18n/LangContext";
 
+it("blocks new launches locally when capacity is exhausted",()=>{
+  vi.mocked(argosApi.createAudit).mockReset();render(<AuditForm mode="personal" initialUrl="https://example.com" launchBlocked/>);
+  expect(screen.getByRole("button")).toBeDisabled();fireEvent.submit(screen.getByRole("textbox").closest("form")!);
+  expect(argosApi.createAudit).not.toHaveBeenCalled();
+});
+it("shows quota errors distinctly and keeps the session valid",async()=>{
+  const invalid=vi.fn();window.addEventListener("argos-account-invalid",invalid);
+  vi.mocked(argosApi.createAudit).mockRejectedValue(Object.assign(new Error("HTTP 429"),{status:429,code:"quota_exceeded"}));
+  render(<AuditForm mode="personal" initialUrl="https://example.com"/>);fireEvent.submit(screen.getByRole("textbox").closest("form")!);
+  expect(await screen.findByRole("alert")).toHaveTextContent("capacité mensuelle");expect(invalid).not.toHaveBeenCalled();
+  expect(push).not.toHaveBeenCalled();window.removeEventListener("argos-account-invalid",invalid);
+});
+
 it("submits a personal audit once and navigates using runId without a report token", async () => {
   push.mockReset();vi.mocked(argosApi.createAudit).mockReset();
   let finish:(value:never)=>void=()=>{};

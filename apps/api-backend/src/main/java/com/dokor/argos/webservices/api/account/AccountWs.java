@@ -77,6 +77,11 @@ public class AccountWs {
     }
 
     @GET
+    @Path("/usage")
+    @AccountAccess("verified")
+    public Response usage() { return AccountAuthWs.ok(runs.usage(auth())); }
+
+    @GET
     @Path("/me")
     public Response me(@Context AccountSessionService.Context context) {
         return AccountAuthWs.ok(AccountAuthWs.profile(context.user()));

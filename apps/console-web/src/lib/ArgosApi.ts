@@ -10,11 +10,13 @@ import { accountAuditHeaders } from "@/lib/account-client";
  */
 export class ApiError extends Error {
   readonly status: number;
+  readonly code: string | null;
 
   constructor(status: number, statusText: string, body: string) {
     super(`HTTP ${status} ${statusText} - ${body}`);
     this.name = "ApiError";
     this.status = status;
+    try { this.code = JSON.parse(body).error ?? null; } catch { this.code = null; }
   }
 }
 
