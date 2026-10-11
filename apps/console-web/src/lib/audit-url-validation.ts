@@ -1,5 +1,3 @@
-
-
 // Only http and https are accepted.
 const ALLOWED_SCHEMES = /^https?:\/\//i;
 
@@ -52,4 +50,3 @@ export function ssrfError(raw: string): string | null {
 
   return null;
 }
-
