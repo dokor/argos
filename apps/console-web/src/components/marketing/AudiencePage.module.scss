@@ -1,4 +1,5 @@
 @use '../../styles/tokens' as t;
+@use "../../styles/editorial" as editorial;
 
 .page {
   min-height: 100vh;
@@ -7,7 +8,7 @@
 }
 
 .container {
-  width: min(100% - 2 * t.$space-6, t.$container-width);
+  width: min(100% - 2 * t.$space-6, t.$container-width - 2 * t.$page-gutter);
   margin: 0 auto;
 }
 
@@ -49,8 +50,8 @@
   margin-top: t.$space-8;
   padding: t.$space-3 t.$space-5;
   border-radius: t.$radius-md;
-  background: t.$text;
-  color: t.$bg;
+  background: t.$brand;
+  color: t.$on-brand;
   font-weight: 700;
   text-decoration: none;
 }
@@ -229,3 +230,5 @@
     padding: t.$space-5;
   }
 }
+
+@include editorial.intro;

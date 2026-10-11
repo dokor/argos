@@ -3,7 +3,7 @@
 import React from "react";
 import { Report, Issue, CategoryScore } from "./types";
 import { useLang } from "@/lib/i18n/LangContext";
-import { scoreColor, SEVERITY_COLORS } from "./reportColors";
+import { scoreChipTheme, SEVERITY_COLORS } from "./reportColors";
 import s from "./IssuesByCategory.module.scss";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -41,6 +41,7 @@ export default function IssuesByCategory({ report }: { report: Report }) {
   const { t } = useLang();
   const ti = t.report.issuesByCategory;
   const catInfo = t.report.categoryInfo as Record<string, string>;
+  const catLabels = t.report.priorityCards.domains as Record<string, string>;
   const [filter, setFilter] = React.useState<Filter>("all");
 
   const categories: CategoryScore[] = report.scores.byCategory || [];
@@ -56,10 +57,10 @@ export default function IssuesByCategory({ report }: { report: Report }) {
   ];
 
   return (
-    <section className={s.section}>
+    <section className={s.section} id="findings" aria-labelledby="findings-title">
       {/* Header */}
       <div className={s.sectionHead}>
-        <h2 className={s.sectionTitle}>{ti.title}</h2>
+        <h2 className={s.sectionTitle} id="findings-title">{ti.title}</h2>
         <p className={s.sectionDesc}>{ti.desc}</p>
       </div>
 
@@ -72,25 +73,30 @@ export default function IssuesByCategory({ report }: { report: Report }) {
             type="button"
             className={`${s.filterBtn} ${filter === key ? s.active : ""}`}
             onClick={() => setFilter(key)}
+            aria-pressed={filter === key}
+            aria-controls="filtered-findings"
           >
-            {label}
+            {label} <span className={s.filterCount}>{key === "all" ? allIssues.length : allIssues.filter((issue) => issue.severity === key).length}</span>
           </button>
         ))}
       </div>
+      <p className={s.resultCount} role="status">{ti.resultCount.replace("{n}", String(filtered.length)).replace("{total}", String(allIssues.length))}</p>
 
       {/* Categories */}
+      <div id="filtered-findings">
       {categories.map((cat) => {
         const issues = (byCat.get(cat.key) || [])
           .slice()
           .sort((a, b) => sevWeight(a.severity) - sevWeight(b.severity));
         const sc = clamp(cat.score);
-        const color = scoreColor(sc);
+        const theme = scoreChipTheme(sc / 100);
+        const available = report.scores.coverage?.domains.find((domain) => domain.key === cat.key)?.available !== false;
 
         return (
           <div key={cat.key} id={`cat-${cat.key}`} className={s.catBlock}>
             <div className={s.catHeader}>
               <div className={s.catMeta}>
-                <p className={s.catLabel}>{cat.label}</p>
+                <h3 className={s.catLabel}>{catLabels[cat.key] ?? cat.label}</h3>
                 <p className={s.catDesc}>{catInfo[cat.key] ?? catInfo.fallback}</p>
                 <p className={s.catInfo}>
                   {issues.length} {ti.issueCount}
@@ -99,9 +105,9 @@ export default function IssuesByCategory({ report }: { report: Report }) {
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <span
                   className={s.catScoreChip}
-                  style={{ color, background: `${color}18` }}
+                  style={{ color: available ? theme.fg : "var(--argos-text-muted)", background: available ? theme.bg : "var(--argos-surface-2)" }}
                 >
-                  {sc}{ti.scoreSuffix}
+                  {available ? `${sc}${ti.scoreSuffix}` : t.report.hero.scoreUnavailable}
                 </span>
                 <a href="#top" className={s.backTop}>{ti.backToTop}</a>
               </div>
@@ -109,14 +115,14 @@ export default function IssuesByCategory({ report }: { report: Report }) {
 
             <div className={s.issueList}>
               {issues.length === 0 ? (
-                <p className={s.noIssues}>{ti.noIssues}</p>
+                <p className={s.noIssues}>{filter !== "all" ? ti.noMatch : !available ? t.report.hero.scoreUnavailable : ti.noIssues}</p>
               ) : (
                 issues.map((issue) => {
                   const sv = SEVERITY_COLORS[issue.severity as SevKey] ?? SEVERITY_COLORS.info;
                   return (
                     <details key={issue.id} className={s.issueRow}>
                       <summary className={s.issueSummary}>
-                        <span className={s.sevDot} style={{ background: sv.dot }} />
+                        <span className={s.sevDot} style={{ background: sv.dot }} aria-hidden="true" />
 
                         <div className={s.issueTags}>
                           <span className={s.sevTag} style={{ color: sv.color, background: sv.bg }}>
@@ -159,6 +165,7 @@ export default function IssuesByCategory({ report }: { report: Report }) {
           </div>
         );
       })}
+      </div>
     </section>
   );
 }

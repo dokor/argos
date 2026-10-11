@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import fr from "@/lib/i18n/fr.json";
 import en from "@/lib/i18n/en.json";
 import PriorityCards from "./PriorityCards";
@@ -20,6 +21,19 @@ const action: PriorityItem = {
 
 describe("PriorityCards", () => {
   beforeEach(() => { locale = "fr"; });
+  it("relie l'action aux constats existants et ouvre l'explication", async () => {
+    const user = userEvent.setup();
+    render(<PriorityCards priorities={[action]} categories={[{ key: "security", label: "Sécurité", score: 40, issues: 1 }]} />);
+    expect(screen.getByRole("link", { name: /Voir les constats/ })).toHaveAttribute("href", "#cat-security");
+    const summary = screen.getByText("Comprendre le classement");
+    expect(summary.closest("details")).not.toHaveAttribute("open");
+    await user.click(summary);
+    expect(summary.closest("details")).toHaveAttribute("open");
+  });
+  it("ne crée pas de lien vers un domaine absent du rapport", () => {
+    render(<PriorityCards priorities={[action]} categories={[]} />);
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
+  });
   it("explique le gain théorique, le domaine, la confiance et le regroupement en français", () => {
     render(<PriorityCards priorities={[action]} />);
     expect(screen.getByText("Sécurité")).toBeInTheDocument();

@@ -2,18 +2,14 @@
 
 import { Report, TechSummary } from "./types";
 import { useLang } from "@/lib/i18n/LangContext";
-import { scoreColor, scoreBg, SEVERITY_COLORS } from "./reportColors";
+import { scoreColor, scoreChipTheme } from "./reportColors";
 import ScoreRing from "./ScoreRing";
 import MeasurementCoverage from "./MeasurementCoverage";
 import RelaunchButton from "./RelaunchButton";
+import ShareReportButton from "./ShareReportButton";
 import s from "./ReportHero.module.scss";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function scoreGradient(score: number): string {
-  const c = scoreColor(score);
-  return `linear-gradient(90deg, ${c} 0%, ${c}88 100%)`;
-}
 
 function getInitial(domain: string): string {
   return (domain || "?").replace(/^www\./, "")[0]?.toUpperCase() ?? "?";
@@ -43,9 +39,9 @@ function techLabels(tech?: TechSummary): string[] {
 // ─── Severity counts ──────────────────────────────────────────────────────────
 
 const SEV_CONFIG = [
-  { key: "critical",    color: SEVERITY_COLORS.critical.dot },
-  { key: "important",   color: SEVERITY_COLORS.important.dot },
-  { key: "opportunity", color: SEVERITY_COLORS.opportunity.dot },
+  { key: "critical" },
+  { key: "important" },
+  { key: "opportunity" },
 ] as const;
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -57,6 +53,7 @@ export default function ReportHero({ report }: { report: Report }) {
   const score = Math.max(0, Math.min(100, report.scores.global));
   const available = report.scores.globalAvailable !== false;
   const color = scoreColor(score);
+  const scoreTheme = scoreChipTheme(score / 100);
   const allIssues = report.issues ?? [];
   const issuesCount = allIssues.length;
 
@@ -78,12 +75,13 @@ export default function ReportHero({ report }: { report: Report }) {
   return (
     <section className={s.hero}>
       {/* Dynamic accent bar */}
-      <div className={s.accentBar} style={{ background: available ? scoreGradient(score) : "var(--argos-border)" }} />
+      <div className={s.accentBar} aria-hidden="true" style={{ background: available ? color : "var(--argos-border)" }} />
 
       <div className={s.heroInner}>
         <div className={s.topRow}>
           {/* Identity */}
           <div className={s.identity}>
+            <p className={s.eyebrow}>{t.report.header.title}</p>
             <div className={s.avatar}>
               {report.site?.logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -103,17 +101,23 @@ export default function ReportHero({ report }: { report: Report }) {
                 <span key={tl} className={s.techPill}>{tl}</span>
               ))}
             </div>
+            <p className={s.analyzedUrl}>{th.urlAnalyzed} <span>{report.url}</span></p>
 
             {available && !report.scores.coverage?.provisional && report.summary?.oneLiner && (
               <p className={s.oneLiner}>
                 {(th.oneLiner as Record<string, string>)[report.summary.oneLiner] ?? report.summary.oneLiner}
               </p>
             )}
+            <div className={s.actions}>
+              <RelaunchButton url={report.url} />
+              <ShareReportButton />
+            </div>
           </div>
 
           {/* Score ring */}
           <div className={s.scoreBlock}>
-            {available ? <ScoreRing score={score}>
+            <p className={s.scoreHeading}>{th.scoreGlobal}</p>
+            {available ? <ScoreRing score={score} trackColor="var(--argos-border)" ariaLabel={`${th.scoreGlobal} ${score}/100`}>
               <text x={70} y={64} textAnchor="middle" fontSize={38} fontWeight={800} className={s.ringScore} fontFamily="Inter,system-ui,sans-serif">
                 {score}
               </text>
@@ -124,21 +128,20 @@ export default function ReportHero({ report }: { report: Report }) {
             {available && (
             <span
               className={s.scoreLabel}
-              style={{ color, background: scoreBg(score) }}
+              style={{ color: scoreTheme.fg, background: scoreTheme.bg }}
             >
               {report.scores.coverage?.provisional ? t.report.measurementCoverage.provisional : scoreUiLabel}
             </span>
             )}
-            <RelaunchButton url={report.url} />
           </div>
         </div>
 
         <MeasurementCoverage coverage={report.scores.coverage} />
         {/* Stats bar */}
         <div className={s.statsRow}>
-          {SEV_CONFIG.map(({ key, color: c }) => (
+          {SEV_CONFIG.map(({ key }) => (
             <div key={key} className={s.stat}>
-              <div className={s.statValue} style={{ color: c }}>
+              <div className={s.statValue}>
                 {counts[key]}
               </div>
               <div className={s.statLabel}>{th.severity[key]}</div>

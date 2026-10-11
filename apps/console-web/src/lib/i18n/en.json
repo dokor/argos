@@ -1,7 +1,7 @@
 {
   "layout": {
     "title": "Argos - Website auditor",
-    "description": "Argos scans HTTP headers, HTML quality, tech stack and Lighthouse performance. Scored, private report - no login required."
+    "description": "Argos is a free technical audit tool for a public URL, with no account required, that provides a private report with scores and recommendations for performance, security, SEO and accessibility."
   },
   "nav": {
     "logo": "Argos",
@@ -13,7 +13,8 @@
     "accessibility": "Accessibility"
   },
   "siteFooter": {
-    "description": "Free technical website audit. Understand your page's performance, SEO, accessibility and security.",
+    "exampleReport": "Public example report",
+    "description": "Argos is a free technical audit tool for a public URL, with no account required, that provides a private report with scores and recommendations for performance, security, SEO and accessibility.",
     "discover": "Explore",
     "resources": "Resources and guides",
     "faq": "Frequently asked questions",
@@ -30,8 +31,8 @@
     "hero": {
       "badge": "Website auditor · Free · No account",
       "slogan": "Your site, under every eye.",
-      "headline": "Find what's hurting your site.\nFree, no account, in 30 seconds.",
-      "sub": "HTTP, SEO, performance, stack - Argos analyzes everything and gives you a prioritized report with the concrete actions to take first.",
+      "headline": "A clear diagnosis.\nPractical next steps.",
+      "sub": "Check a public page for performance, security, SEO and accessibility. Get a private report to understand what to investigate and improve.",
       "audience": "For developers, growth teams, and agencies.",
       "inputPlaceholder": "https://yoursite.com",
       "inputAriaLabel": "Website URL to analyze",
@@ -40,16 +41,16 @@
       "hint": "Free · No account · Private report, not indexed",
       "analyzing": "Analyzing",
       "analyzeSteps": [
-        "HTTP & Security",
-        "HTML & SEO",
-        "Tech stack",
-        "Playwright runtime",
-        "Lighthouse"
+        "Performance",
+        "Security",
+        "SEO",
+        "Accessibility"
       ],
       "redirecting": "Report ready · Redirecting…",
       "errorMsg": "Error: check the URL and try again.",
       "errorFailed": "Analysis failed. Try with a public URL.",
-      "retry": "Try again"
+      "retry": "Try again",
+      "previewNote": "Illustrative preview · Results depend on the page analyzed."
     },
     "mockReport": {
       "url": "yoursite.com",
@@ -89,32 +90,27 @@
     },
     "modules": {
       "title": "What Argos analyzes",
-      "sub": "Five independent modules. One complete picture.",
+      "sub": "Four areas to understand what needs improving on your page.",
       "items": [
         {
+          "icon": "⚡",
+          "label": "Performance",
+          "desc": "Loading times, browser rendering metrics and Lighthouse checks to identify obstacles to browsing."
+        },
+        {
           "icon": "🔒",
-          "label": "HTTP & Security",
-          "desc": "Status code, redirects, HTTPS enforcement, HSTS, CSP, X-Frame-Options, Referrer-Policy, compression…"
+          "label": "Security",
+          "desc": "HTTPS, TLS certificate, security headers and automated checks to detect technical weaknesses."
         },
         {
           "icon": "🏷️",
-          "label": "HTML & SEO",
-          "desc": "Title tag, meta description, canonical, H1, lang attribute, viewport, OpenGraph, Twitter Card, image alt…"
+          "label": "SEO",
+          "desc": "Title, meta description, canonical URL and HTML structure to check key technical search signals."
         },
         {
-          "icon": "🧩",
-          "label": "Tech stack detection",
-          "desc": "CMS (WordPress, Shopify, Wix…), frameworks (Next.js, Nuxt, React, Vue…), backend hints, Cloudflare CDN."
-        },
-        {
-          "icon": "⚡",
-          "label": "Playwright runtime",
-          "desc": "Metrics collected on a rendered page: console errors, LCP, FCP, TTI, render-blocking resources."
-        },
-        {
-          "icon": "📊",
-          "label": "Lighthouse",
-          "desc": "Performance, accessibility, best practices and SEO scores via headless Lighthouse."
+          "icon": "♿",
+          "label": "Accessibility",
+          "desc": "Automated checks for text alternatives, accessible names and other signals. An initial diagnosis to complement with a manual audit."
         }
       ]
     },
@@ -128,13 +124,13 @@
         },
         {
           "n": "02",
-          "label": "We analyze everything",
-          "desc": "Five modules run in sequence: HTTP → HTML → Tech → Runtime → Lighthouse."
+          "label": "Technical analysis",
+          "desc": "Automated checks examine the submitted page for performance, security, SEO and accessibility."
         },
         {
           "n": "03",
           "label": "Scored report",
-          "desc": "A private (non-indexable) report with a global score and actionable recommendations."
+          "desc": "A private, non-indexable report with an overall score, scores by area and prioritized recommendations."
         }
       ]
     },
@@ -169,14 +165,14 @@
     },
     "footer": {
       "builtPrefix": "Made by",
-      "maltProfile": "Antoine LE LOUËT on Malt",
+      "maltProfile": "Antoine LE LOUËT",
       "copy": "© 2026 Antoine LE LOUËT · BSL 1.1 License"
     }
   },
   "faq": {
     "meta": {
       "title": "FAQ - Frequently asked questions",
-      "description": "Answers to common questions about Argos: how it works, reports, analysis limits, privacy and what's coming next."
+      "description": "Common questions about Argos, the free technical audit of a public URL with no account required: performance, security, SEO and accessibility scores, private reports and limits."
     },
     "hero": {
       "badge": "Help center",
@@ -191,7 +187,7 @@
         "items": [
           {
             "q": "What is Argos?",
-            "a": "Argos is a website audit tool: you submit a URL, five analysis modules run in sequence (HTTP, HTML, performance, Lighthouse, security) and you get a scored, prioritized report with concrete actions to take."
+            "a": "Argos is a free technical audit tool for a public URL, with no account required, that provides a private report with scores and recommendations for performance, security, SEO and accessibility."
           },
           {
             "q": "Is Argos really free?",
@@ -235,7 +231,7 @@
         "items": [
           {
             "q": "What does Argos analyze?",
-            "a": "Five modules: HTTP headers, HTML structure and SEO, runtime metrics (perceived performance), Lighthouse scores (performance, accessibility, best practices, SEO) and security (SSL, security headers, basic vulnerability scan)."
+            "a": "Four areas: performance, security, SEO and accessibility. Checks include HTTP headers, HTML structure, the TLS certificate, browser metrics and Lighthouse results. Runtime is a source of performance measurements, not an additional area."
           },
           {
             "q": "Does Argos replace a manual audit?",
@@ -332,11 +328,26 @@
   },
   "report": {
     "measurementCoverage": {
-      "title": "Measurement coverage", "provisional": "Provisional score", "sufficient": "Sufficient coverage", "unavailable": "Measurement unavailable", "notApplicable": "Not applicable",
+      "title": "Measurement coverage",
+      "provisional": "Provisional score",
+      "sufficient": "Sufficient coverage",
+      "unavailable": "Measurement unavailable",
+      "notApplicable": "Not applicable",
       "explanation": "Weighted share of the scoring catalogue actually measured. Below 80% overall or in an applicable domain, the score remains provisional and must not be compared with a complete audit.",
-      "statesTitle": "Measurement states", "confidenceExplanation": "Unavailable or blocked measurements are not site defects. Finding confidence remains separate from score coverage.",
-      "domains": { "performance": "Performance", "security": "Security", "seo": "SEO", "a11y": "Accessibility" },
-      "states": { "MEASURED": "Measured", "UNAVAILABLE": "Unavailable", "BLOCKED_BY_ANTIBOT": "Blocked by anti-bot protection", "NOT_APPLICABLE": "Not applicable" }
+      "statesTitle": "Measurement states",
+      "confidenceExplanation": "Unavailable or blocked measurements are not site defects. Finding confidence remains separate from score coverage.",
+      "domains": {
+        "performance": "Performance",
+        "security": "Security",
+        "seo": "SEO",
+        "a11y": "Accessibility"
+      },
+      "states": {
+        "MEASURED": "Measured",
+        "UNAVAILABLE": "Unavailable",
+        "BLOCKED_BY_ANTIBOT": "Blocked by anti-bot protection",
+        "NOT_APPLICABLE": "Not applicable"
+      }
     },
     "accessibility": {
       "title": "Site accessibility",
@@ -515,6 +526,12 @@
       "dataTab": {
         "title": "Report JSON",
         "desc": "Useful for debugging and for the upcoming PDF export."
+      },
+      "navigation": {
+        "label": "Report navigation",
+        "priorities": "Action plan",
+        "scores": "Domain scores",
+        "findings": "All findings"
       }
     },
     "header": {
@@ -536,10 +553,10 @@
       "scoreMaintain": "maintain",
       "scoreQuickwins": "focus on quick wins",
       "oneLiner": {
-        "high": "Solid site: a few optimizations could further improve impact.",
-        "good": "Good potential: targeted actions can improve performance and conversion.",
-        "fair": "Several blockers: a small roadmap can quickly raise the score.",
-        "low": "Big opportunities: fixing critical issues will improve trust and conversion."
+        "high": "The checks performed show good results. Review the remaining opportunities for improvement.",
+        "good": "Results are generally good. A few areas still need improvement.",
+        "fair": "Several findings need your attention. Start with the priority actions.",
+        "low": "The diagnosis identifies issues to address as a priority."
       },
       "analyzedAt": "Analyzed",
       "relaunch": "Re-run analysis",
@@ -565,19 +582,34 @@
       "desc": "15 minutes to prioritize optimizations, estimate effort, and identify quick wins.",
       "cta": "Book a call",
       "copyLink": "Copy link",
+      "shareReport": "Share this report",
+      "linkCopied": "Link copied. Anyone with this link can read this report.",
+      "copyError": "Unable to copy. Copy the link from the address bar.",
+      "ciNote": "To integrate Argos into your CI:",
+      "contact": "Contact Antoine",
       "calendlyComingSoon": "Calendly link coming soon.",
       "footerNote": "Private report • not indexed • auto-generated"
     },
     "priorityCards": {
       "title": "Recommended priorities",
-      "desc": "Six distinct actions ranked by score contribution, then severity and available information.",
-      "domains": { "performance": "Performance", "security": "Security", "seo": "SEO", "a11y": "Accessibility" },
+      "desc": "Up to six actions ranked by score contribution, then severity and available information.",
+      "domains": {
+        "performance": "Performance",
+        "security": "Security",
+        "seo": "SEO",
+        "a11y": "Accessibility"
+      },
       "gainLabel": "Maximum modelled gain:",
       "gainUnit": "global points",
       "modelLimit": "Rubric estimate with constant measurements and denominators. Actual improvement depends on the fix and a new audit.",
       "groupedLabel": "Grouped findings:",
       "confidenceLabel": "Measurement confidence:",
-      "confidence": { "HIGH": "high", "MEDIUM": "medium", "LOW": "low", "UNKNOWN": "unknown" },
+      "confidence": {
+        "HIGH": "high",
+        "MEDIUM": "medium",
+        "LOW": "low",
+        "UNKNOWN": "unknown"
+      },
       "rankReasons": {
         "MODELLED_SCORE_GAIN": "Ranked by avoidable score loss in its domain.",
         "NO_DIRECT_SCORE_GAIN": "Explanatory action without a direct score gain.",
@@ -590,7 +622,9 @@
         "critical": "Critical",
         "important": "Important",
         "opportunity": "Opportunity"
-      }
+      },
+      "rankingDetails": "Understand the ranking",
+      "seeFindings": "See findings in this domain"
     },
     "categoryInfo": {
       "fallback": "What this category measures and how it affects your site's quality.",
@@ -635,7 +669,9 @@
       "noIssues": "No issues in this category.",
       "evidenceLabel": "Evidence / Context",
       "recommendationLabel": "Recommendation",
-      "detailsLabel": "Details"
+      "detailsLabel": "Details",
+      "resultCount": "Showing {n} of {total} findings",
+      "noMatch": "No findings match this filter in this domain."
     },
     "progress": {
       "titleQueued": "Analysis queued…",
@@ -676,9 +712,18 @@
       "exampleLabel": "Illustrative example",
       "stepsTitle": "Three simple steps",
       "steps": [
-        { "title": "Choose a page", "description": "Paste the address of a public page that matters to your business." },
-        { "title": "Read the findings", "description": "Argos runs its checks and prepares a private report, available through a link." },
-        { "title": "Decide what to fix", "description": "Review the findings and priorities, then validate the changes that make sense." }
+        {
+          "title": "Choose a page",
+          "description": "Paste the address of a public page that matters to your business."
+        },
+        {
+          "title": "Read the findings",
+          "description": "Argos runs its checks and prepares a private report, available through a link."
+        },
+        {
+          "title": "Decide what to fix",
+          "description": "Review the findings and priorities, then validate the changes that make sense."
+        }
       ],
       "limitsTitle": "Understand the scope",
       "ctaLabel": "Get started",
@@ -708,21 +753,45 @@
       "ecommerceDescription": "Examine a public store page without mistaking this audit for a payment flow test."
     },
     "pme": {
-      "meta": { "title": "Small business website audit: prioritize fixes", "description": "Analyze one public page of your small business site for SEO, speed, security, and accessibility. Get a private report to prioritize fixes, with no conversion promises." },
+      "meta": {
+        "title": "Small business website audit: prioritize fixes",
+        "description": "Analyze one public page of your small business site for SEO, speed, security, and accessibility. Get a private report to prioritize fixes, with no conversion promises."
+      },
       "eyebrow": "For small businesses",
       "title": "A website audit to decide what to improve first",
       "lead": "Your website introduces your business before the first conversation. Argos checks one public page and gathers technical findings to help your team or agency set priorities.",
       "heroNote": "A page diagnosis, not a revenue forecast.",
       "measures": [
-        { "title": "Search visibility signals", "description": "Page title, description, canonical tag, and heading structure." },
-        { "title": "Loading performance", "description": "Scores and loading metrics from Lighthouse and a browser when the page is accessible." },
-        { "title": "Technical trust signals", "description": "HTTPS, redirects, and security headers visible from outside." },
-        { "title": "Detectable accessibility", "description": "Automated checks and a Lighthouse score; real usage requires human review." }
+        {
+          "title": "Search visibility signals",
+          "description": "Page title, description, canonical tag, and heading structure."
+        },
+        {
+          "title": "Loading performance",
+          "description": "Scores and loading metrics from Lighthouse and a browser when the page is accessible."
+        },
+        {
+          "title": "Technical trust signals",
+          "description": "HTTPS, redirects, and security headers visible from outside."
+        },
+        {
+          "title": "Detectable accessibility",
+          "description": "Automated checks and a Lighthouse score; real usage requires human review."
+        }
       ],
       "benefits": [
-        { "title": "Scope the work", "description": "Share specific findings with your agency or team instead of a vague optimization request." },
-        { "title": "Prioritize fixes", "description": "Start with issues shown in the report, then check their effect against your own metrics." },
-        { "title": "Support trust", "description": "Spot technical signals that may hinder navigation or credibility, without promising more leads." }
+        {
+          "title": "Scope the work",
+          "description": "Share specific findings with your agency or team instead of a vague optimization request."
+        },
+        {
+          "title": "Prioritize fixes",
+          "description": "Start with issues shown in the report, then check their effect against your own metrics."
+        },
+        {
+          "title": "Support trust",
+          "description": "Spot technical signals that may hinder navigation or credibility, without promising more leads."
+        }
       ],
       "exampleTitle": "A service page worth reviewing",
       "exampleText": "If a service page has a vague title, a heavy image, and no security policy, the report may surface those findings. Your team then decides what to change and checks the outcome.",
@@ -735,21 +804,45 @@
       "ctaText": "Choose your home page or a service page, then use the findings as a starting point for a decision."
     },
     "ecommerce": {
-      "meta": { "title": "E-commerce site audit: SEO, speed, and trust", "description": "Audit a public store page for SEO, performance, security, and accessibility. Know the limits: cart, ordering, and payment are not tested." },
+      "meta": {
+        "title": "E-commerce site audit: SEO, speed, and trust",
+        "description": "Audit a public store page for SEO, performance, security, and accessibility. Know the limits: cart, ordering, and payment are not tested."
+      },
       "eyebrow": "For e-commerce sites",
       "title": "Check a key store page before the purchase journey",
       "lead": "A product, category, or home page can reveal visibility, loading, and trust issues. Argos measures what it can access on the submitted URL and helps prioritize fixes.",
       "heroNote": "Cart, ordering, and payment steps are not traversed.",
       "measures": [
-        { "title": "SEO on a public page", "description": "Title, description, canonical tag, and HTML headings on the submitted product or category page." },
-        { "title": "Loading speed", "description": "Lighthouse and browser measurements on that page when the site allows analysis." },
-        { "title": "Visible security", "description": "HTTPS, redirects, and HTTP headers; no transaction is made." },
-        { "title": "Automated accessibility", "description": "Detectable signals and a Lighthouse score, to be complemented by user testing." }
+        {
+          "title": "SEO on a public page",
+          "description": "Title, description, canonical tag, and HTML headings on the submitted product or category page."
+        },
+        {
+          "title": "Loading speed",
+          "description": "Lighthouse and browser measurements on that page when the site allows analysis."
+        },
+        {
+          "title": "Visible security",
+          "description": "HTTPS, redirects, and HTTP headers; no transaction is made."
+        },
+        {
+          "title": "Automated accessibility",
+          "description": "Detectable signals and a Lighthouse score, to be complemented by user testing."
+        }
       ],
       "benefits": [
-        { "title": "Choose a page to fix", "description": "Find technical obstacles on a page that matters in your catalog." },
-        { "title": "Brief your team", "description": "Share actionable findings about loading, tags, or headers." },
-        { "title": "Assess the impact later", "description": "Compare your own metrics after changes; the audit does not predict sales." }
+        {
+          "title": "Choose a page to fix",
+          "description": "Find technical obstacles on a page that matters in your catalog."
+        },
+        {
+          "title": "Brief your team",
+          "description": "Share actionable findings about loading, tags, or headers."
+        },
+        {
+          "title": "Assess the impact later",
+          "description": "Compare your own metrics after changes; the audit does not predict sales."
+        }
       ],
       "exampleTitle": "A public product page",
       "exampleText": "A product page with a missing description, slow loading, and images without alternative text may yield issues to review. This example covers one URL and is not drawn from a client report.",
@@ -773,10 +866,27 @@
   },
   "auditList": {
     "comparison": {
-      "show": "View comparison", "loadError": "Could not load comparison.",
-      "method": "Frozen scoring policy", "coverage": "Coverage", "unknown": "Unknown", "coverageChanged": "Measurement coverage changed; this change is not a site regression.",
-      "delta": "Change since the previous report", "points": "points", "globalPoints": "global points", "domainPoints": "domain points", "contributions": "Main improvements and regressions",
-      "reasons": { "COMPARABLE": "Comparable audits", "NO_PREVIOUS_REPORT": "No previous report in this history.", "EVIDENCE_MISSING": "Comparison unavailable: insufficient historical evidence. Run a new audit with the current policy.", "SCOPE_CHANGED": "Comparison unavailable: different scope.", "METHODOLOGY_CHANGED": "Comparison unavailable: different policy or coefficients.", "COVERAGE_CHANGED": "Comparison unavailable: different usable measurements.", "INSUFFICIENT_COVERAGE": "Comparison unavailable: insufficient coverage or anti-bot protection.", "SCORE_UNAVAILABLE": "Comparison unavailable: score not measured." }
+      "show": "View comparison",
+      "loadError": "Could not load comparison.",
+      "method": "Frozen scoring policy",
+      "coverage": "Coverage",
+      "unknown": "Unknown",
+      "coverageChanged": "Measurement coverage changed; this change is not a site regression.",
+      "delta": "Change since the previous report",
+      "points": "points",
+      "globalPoints": "global points",
+      "domainPoints": "domain points",
+      "contributions": "Main improvements and regressions",
+      "reasons": {
+        "COMPARABLE": "Comparable audits",
+        "NO_PREVIOUS_REPORT": "No previous report in this history.",
+        "EVIDENCE_MISSING": "Comparison unavailable: insufficient historical evidence. Run a new audit with the current policy.",
+        "SCOPE_CHANGED": "Comparison unavailable: different scope.",
+        "METHODOLOGY_CHANGED": "Comparison unavailable: different policy or coefficients.",
+        "COVERAGE_CHANGED": "Comparison unavailable: different usable measurements.",
+        "INSUFFICIENT_COVERAGE": "Comparison unavailable: insufficient coverage or anti-bot protection.",
+        "SCORE_UNAVAILABLE": "Comparison unavailable: score not measured."
+      }
     },
     "title": "Audits",
     "loading": "Loading…",

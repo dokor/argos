@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/LocalizedLink";
 import { useLang } from "@/lib/i18n/LangContext";
 import fr from "@/lib/i18n/fr.json";
 import AuthorCredit from "@/components/AuthorCredit";
@@ -22,6 +22,7 @@ export default function SiteFooter({ fixedFrench = false }: { fixedFrench?: bool
           <h2>{f.discover}</h2>
           <Link href="/#audit">{t.nav.audit}</Link>
           <Link href="/ressources">{f.resources}</Link>
+          <Link href="/exemple-rapport">{f.exampleReport}</Link>
           <Link href="/faq">{f.faq}</Link>
         </nav>
         <nav className={s.footerGroup} aria-label={f.learn}>

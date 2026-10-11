@@ -22,33 +22,34 @@ export default function ScoreGrid({
   completeness?: number | null;
   coverage?: Coverage | null;
 }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const ts = t.report.scoreGrid;
   const catInfo = t.report.categoryInfo as Record<string, string>;
+  const catLabels = t.report.priorityCards.domains as Record<string, string>;
   const cats = [...(categories || [])].sort((a, b) => a.score - b.score);
   const global = clamp(globalScore);
   // Analyse partielle : un ou plusieurs modules n'ont pas pu être évalués (issue #101).
   const isPartial = typeof completeness === "number" && completeness < 100;
 
   return (
-    <section className={s.section}>
+    <section className={s.section} id="scores" aria-labelledby="scores-title">
       <div className={s.sectionHead}>
-        <div className={s.titleBlock}>
-          <h2 className={s.sectionTitle}>{ts.title}</h2>
+        <div>
+          <h2 className={s.sectionTitle} id="scores-title">{ts.title}</h2>
           <p className={s.sectionDesc}>{ts.desc}</p>
           <Link href="/methodologie-score" className={s.methodLink}>{ts.methodologyLink}</Link>
           {isPartial && (
             <p className={s.partialNote} title={ts.partialTooltip}>
-              ⚠︎ {ts.partial.replace("{n}", String(completeness))}
+              {ts.partial.replace("{n}", clamp(completeness!).toLocaleString(lang === "en" ? "en-US" : "fr-FR", { maximumFractionDigits: 0 }))}
             </p>
           )}
         </div>
-        <div className={`${s.globalChip} ${globalAvailable === false ? s.unavailable : ""}`}>
+        <div className={s.globalChip}>
           {ts.globalLabel}
           {coverage?.provisional && <span>{t.report.measurementCoverage.provisional}</span>}
           {globalAvailable !== false ? (
             <>
-              <span className={s.globalValue} style={{ color: scoreColor(global) }}>{global}</span>
+              <span className={s.globalValue}>{global}</span>
               /100
             </>
           ) : <span className={s.globalValue}>{t.report.hero.scoreUnavailable}</span>}
@@ -59,21 +60,22 @@ export default function ScoreGrid({
         {cats.map((c) => {
           const sc = clamp(c.score);
           const color = scoreColor(sc);
+          const available = coverage?.domains.find((domain) => domain.key === c.key)?.available !== false;
           return (
             <a key={c.key} href={`#cat-${encodeURIComponent(c.key)}`} className={s.card}>
               <div className={s.cardTop}>
                 <div>
-                  <p className={s.catLabel}>{c.label}</p>
+                  <p className={s.catLabel}>{catLabels[c.key] ?? c.label}</p>
                   <p className={s.catIssues}>{c.issues} {ts.issueCount}</p>
                 </div>
-                <span className={s.scoreValue} style={{ color }}>{sc}</span>
+                {available ? <span className={s.scoreValue}>{sc}<small>/100</small></span> : <span className={s.unavailableScore}>{t.report.hero.scoreUnavailable}</span>}
               </div>
 
               <p className={s.catDesc}>{catInfo[c.key] ?? catInfo.fallback}</p>
 
-              <div className={s.track}>
+              {available && <div className={s.track} aria-hidden="true">
                 <div className={s.fill} style={{ width: `${sc}%`, background: color }} />
-              </div>
+              </div>}
 
               <span className={s.detailLink}>{ts.seeDetail}</span>
             </a>

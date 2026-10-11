@@ -1,159 +1,26 @@
 @use '../../styles/tokens' as t;
 
-.section {
-  background: t.$surface;
-  border: 1px solid t.$border;
-  border-radius: t.$radius-2xl;
-  padding: t.$space-6;
-  box-shadow: t.$shadow-sm;
-}
-
-.sectionHead {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: t.$space-4;
-  flex-wrap: wrap;
-  margin-bottom: t.$space-5;
-}
-
-.titleBlock {}
-.sectionTitle {
-  font-size: t.$text-2xl;
-  font-weight: 700;
-  margin: 0 0 t.$space-1;
-  color: t.$text;
-}
-.sectionDesc {
-  font-size: t.$text-base;
-  color: t.$text-muted;
-  margin: 0;
-}
-
-.methodLink {
-  display: inline-block;
-  margin-top: t.$space-2;
-  color: t.$text;
-  text-underline-offset: 3px;
-
-  &:focus-visible {
-    outline: 3px solid t.$color-indigo;
-    outline-offset: 3px;
-  }
-}
-
-.partialNote {
-  margin: t.$space-2 0 0;
-  font-size: t.$text-sm;
-  font-weight: 600;
-  color: t.$color-amber;
-  cursor: help;
-}
-
-.globalChip {
-  display: flex;
-  align-items: center;
-  gap: t.$space-2;
-  border: 1px solid t.$border;
-  border-radius: t.$radius-pill;
-  padding: 6px 14px;
-  font-size: t.$text-base;
-  color: t.$text-muted;
-  font-weight: 600;
-  white-space: nowrap;
-
-  .globalValue {
-    font-weight: 800;
-    font-size: t.$text-xl;
-  }
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: t.$space-4;
-}
-
-.unavailable {
-  max-width: 100%;
-  white-space: normal;
-  flex-wrap: wrap;
-
-  .globalValue { font-size: t.$text-base; }
-}
-
-.card {
-  border: 1px solid t.$border-subtle;
-  border-radius: t.$radius-xl;
-  padding: t.$space-5;
-  background: t.$surface-2;
-  text-decoration: none;
-  display: block;
-  transition: box-shadow 0.15s, border-color 0.15s;
-
-  &:hover {
-    box-shadow: t.$shadow-md;
-    border-color: t.$border;
-  }
-}
-
-.cardTop {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: t.$space-2;
-  margin-bottom: t.$space-4;
-}
-
-.catLabel {
-  font-size: t.$text-lg;
-  font-weight: 600;
-  color: t.$text;
-  margin: 0;
-}
-
-.catIssues {
-  font-size: t.$text-xs;
-  color: t.$text-subtle;
-  margin-top: 2px;
-}
-
-.scoreValue {
-  font-size: 28px;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 1;
-  flex-shrink: 0;
-}
-
-.catDesc {
-  font-size: t.$text-xs;
-  line-height: 1.45;
-  color: t.$text-subtle;
-  margin: 0 0 t.$space-4;
-}
-
-.track {
-  height: 6px;
-  background: t.$border;
-  border-radius: 999px;
-  overflow: hidden;
-  margin-bottom: t.$space-3;
-}
-
-.fill {
-  height: 100%;
-  border-radius: 999px;
-  transition: width 0.4s ease;
-}
-
-.detailLink {
-  font-size: t.$text-sm;
-  color: t.$text-subtle;
-  font-weight: 500;
-}
-
-@media (max-width: 640px) {
-  .section { padding: t.$panel-space-mobile; }
-  .card { padding: t.$panel-space-mobile; }
-}
+.section { scroll-margin-top: 76px; }
+.sectionHead { display: flex; justify-content: space-between; align-items: flex-start; gap: t.$space-5; flex-wrap: wrap; margin-bottom: t.$space-6; }
+.sectionTitle { font-size: t.$text-3xl; font-weight: 650; letter-spacing: -.025em; color: t.$text; }
+.sectionDesc { font-size: t.$text-md; color: t.$text-muted; margin-top: t.$space-2; line-height: 1.6; }
+.methodLink { display: inline-block; margin-top: t.$space-3; font-size: t.$text-sm; color: t.$brand; text-decoration: underline; text-underline-offset: 4px; }
+.partialNote { margin-top: t.$space-2; font-size: t.$text-base; color: t.$text-muted; }
+.globalChip { display: flex; flex-wrap: wrap; align-items: center; gap: t.$space-2; font-size: t.$text-sm; color: t.$text-muted; }
+.globalValue { font-size: t.$text-xl; font-weight: 600; }
+.grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: t.$space-3; }
+.card { display: flex; flex-direction: column; background: t.$surface; border: 1px solid t.$border; border-radius: t.$radius-sm; padding: t.$space-5; text-decoration: none; transition: border-color .15s; min-width: 0; }
+.card:hover { border-color: t.$brand; }
+.cardTop { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: t.$space-2; min-height: 48px; margin-bottom: t.$space-4; }
+.catLabel { font-size: t.$text-lg; font-weight: 600; color: t.$text; }
+.catIssues { margin-top: t.$space-1; font-size: t.$text-sm; color: t.$text-muted; }
+.scoreValue { font-size: 28px; font-weight: 650; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.scoreValue small { font-size: t.$text-xs; font-weight: 400; color: t.$text-muted; margin-left: 2px; }
+.unavailableScore { max-width: 9ch; text-align: right; font-size: t.$text-sm; color: t.$text-muted; }
+.catDesc { font-size: t.$text-sm; line-height: 1.6; color: t.$text-muted; margin-bottom: t.$space-5; flex: 1; }
+.track { height: 4px; background: t.$border; border-radius: 2px; overflow: hidden; margin-bottom: t.$space-4; }
+.fill { height: 100%; }
+.detailLink { font-size: t.$text-sm; font-weight: 500; color: t.$brand; }
+.methodLink:focus-visible, .card:focus-visible { outline: 3px solid t.$brand; outline-offset: 3px; }
+@media (max-width: 1000px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .grid { grid-template-columns: 1fr; } .card { padding: t.$space-4; } }

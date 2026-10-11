@@ -66,6 +66,20 @@ describe("AccessibilitySection (#263)", () => {
     const label = screen.getByText(fr.report.accessibility.lighthouseScore);
     expect(label.nextElementSibling).toHaveTextContent(fr.report.accessibility.unknown);
   });
+  it("does not display a category score marked unavailable by measurement coverage", () => {
+    const report = fixture();
+    const unavailable = { measuredWeight: 0, expectedWeight: 100, ratio: 0, available: false, sufficient: false };
+    report.scores.coverage = {
+      version: "test", threshold: .8, provisional: true,
+      global: { key: "global", ...unavailable }, domains: [{ key: "a11y", ...unavailable }], checks: [],
+    };
+    render(<AccessibilitySection report={report} />);
+    expect(screen.getByText(fr.report.accessibility.technicalScore).nextElementSibling)
+      .toHaveTextContent(fr.report.accessibility.unknown);
+    expect(screen.queryByText("100/100")).not.toBeInTheDocument();
+    // Lighthouse is an independent raw measurement; its available value stays visible.
+    expect(screen.getByText("93/100")).toBeInTheDocument();
+  });
   it.each([null, -1, 101, NaN, Infinity])("does not present an invalid raw Lighthouse score: %s", score => {
     const report = fixture();
     report.accessibilityEvidence!.lighthouseScore = score;

@@ -2,6 +2,7 @@
 
 import { useLang } from "@/lib/i18n/LangContext";
 import AuthorCredit from "@/components/AuthorCredit";
+import ShareReportButton from "./ShareReportButton";
 import s from "./ReportFooterCta.module.scss";
 
 export default function ReportFooterCta() {
@@ -9,10 +10,6 @@ export default function ReportFooterCta() {
   const tf = t.report.footerCta;
   const calendly = process.env.NEXT_PUBLIC_CALENDLY_URL || "";
   const hasCalendly = Boolean(calendly);
-
-  function copyLink() {
-    try { navigator.clipboard.writeText(window.location.href); } catch {}
-  }
 
   return (
     <footer className={s.footer}>
@@ -30,21 +27,22 @@ export default function ReportFooterCta() {
           >
             {tf.cta}
           </a>
-          <button type="button" className={s.btnSecondary} onClick={copyLink}>
-            {tf.copyLink}
-          </button>
+          <ShareReportButton compact />
           {!hasCalendly && <span className={s.soon}>{tf.calendlyComingSoon}</span>}
         </div>
 
-        <p className={s.note}>{tf.footerNote}</p>
-        <p className={s.author}><AuthorCredit className={s.authorLink} /></p>
-
-        <p className={s.ciNote}>
-          Vous voulez intégrer cette analyse dans votre CI ?{" "}
-          <a href="mailto:a.lelouet.freelance@gmail.com" className={s.ciLink}>
-            Contactez-moi
-          </a>
-        </p>
+        <div className={s.details}>
+          <p className={s.note}>{tf.footerNote}</p>
+          <div className={s.credits}>
+            <p className={s.author}><AuthorCredit className={s.authorLink} /></p>
+            <p className={s.ciNote}>
+              {tf.ciNote}{" "}
+              <a href="mailto:a.lelouet.freelance@gmail.com" className={s.ciLink}>
+                {tf.contact}
+              </a>
+            </p>
+          </div>
+        </div>
       </div>
     </footer>
   );

@@ -5,10 +5,9 @@
   align-items: flex-start;
   gap: t.$space-3;
   padding: t.$space-4 t.$space-5;
-  margin-bottom: t.$space-6;
   border: 1px solid t.$border;
   border-left: 3px solid t.$color-amber;
-  border-radius: t.$radius-md;
+  border-radius: t.$radius-sm;
   background: t.$surface-2;
 }
 
@@ -19,6 +18,8 @@
 }
 
 .body {
+  min-width: 0;
+  overflow-wrap: anywhere;
   display: flex;
   flex-direction: column;
   gap: t.$space-1;

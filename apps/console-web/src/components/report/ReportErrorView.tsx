@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/LocalizedLink";
 import AuditForm from "@/components/AuditForm";
 import { useLang } from "@/lib/i18n/LangContext";
 import s from "./ReportErrorView.module.scss";
@@ -23,12 +23,10 @@ export default function ReportErrorView({ kind }: Props) {
   const { t } = useLang();
   const tu = t.report.unavailable;
   const copy = kind === "failed" ? tu.failed : tu.notFound;
-  const icon = kind === "failed" ? "⚠️" : "🔍";
 
   return (
     <div className={s.wrapper}>
       <div className={s.card}>
-        <div className={s.icon} aria-hidden>{icon}</div>
         <h1 className={s.title}>{copy.title}</h1>
         <p className={s.description}>{copy.description}</p>
 

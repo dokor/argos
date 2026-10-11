@@ -20,6 +20,7 @@
 }
 
 .brand {
+  min-height: 44px;
   display: flex;
   align-items: center;
   gap: t.$space-2;
@@ -34,8 +35,8 @@
 }
 
 .brandName {
-  font-size: t.$text-xl;
-  font-weight: 800;
+  font-size: t.$text-2xl;
+  font-weight: 700;
   letter-spacing: -0.02em;
 }
 

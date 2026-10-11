@@ -1,0 +1,19 @@
+@use 'tokens' as t;
+
+// Shared geometry for neighbouring text CTAs; colours express their hierarchy.
+@mixin cta-geometry {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: t.$space-2;
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: t.$space-2 t.$space-4;
+  border-width: 1px;
+  border-style: solid;
+  border-radius: t.$radius-sm;
+  font-family: inherit;
+  font-size: t.$text-md;
+  font-weight: 600;
+  line-height: 1.5;
+}

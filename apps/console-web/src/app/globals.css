@@ -67,11 +67,14 @@ ul, ol {
   --argos-surface: #ffffff;
   --argos-surface-2: #f8fafc;
   --argos-text: #0f172a;
-  --argos-text-muted: #64748b;
-  --argos-text-subtle: #94a3b8;
+  --argos-text-muted: #475569;
+  --argos-text-subtle: #64748b;
   --argos-border: #e2e8f0;
   --argos-border-subtle: #f1f5f9;
   --argos-header-bg: rgba(255, 255, 255, 0.92);
+  --argos-brand: #4f46e5;
+  --argos-brand-soft: #eef2ff;
+  --argos-on-brand: #ffffff;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -82,10 +85,13 @@ ul, ol {
     --argos-surface-2: #1e293b;
     --argos-text: #e2e8f0;
     --argos-text-muted: #94a3b8;
-    --argos-text-subtle: #64748b;
+    --argos-text-subtle: #94a3b8;
     --argos-border: #334155;
     --argos-border-subtle: #1e293b;
     --argos-header-bg: rgba(11, 18, 32, 0.85);
+    --argos-brand: #a5b4fc;
+    --argos-brand-soft: #1e2547;
+    --argos-on-brand: #0f172a;
   }
 }
 
@@ -96,10 +102,13 @@ ul, ol {
   --argos-surface-2: #1e293b;
   --argos-text: #e2e8f0;
   --argos-text-muted: #94a3b8;
-  --argos-text-subtle: #64748b;
+  --argos-text-subtle: #94a3b8;
   --argos-border: #334155;
   --argos-border-subtle: #1e293b;
   --argos-header-bg: rgba(11, 18, 32, 0.85);
+  --argos-brand: #a5b4fc;
+  --argos-brand-soft: #1e2547;
+  --argos-on-brand: #0f172a;
 }
 
 body {

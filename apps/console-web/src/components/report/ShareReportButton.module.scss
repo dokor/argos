@@ -1,0 +1,31 @@
+@use '../../styles/tokens' as t;
+@use '../../styles/controls' as controls;
+
+.share {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: t.$space-2;
+  width: 280px;
+  max-width: 100%;
+}
+
+.button {
+  @include controls.cta-geometry;
+  background: t.$surface;
+  color: t.$text;
+  border-color: t.$border;
+  cursor: pointer;
+
+  &:hover { background: t.$surface-2; }
+  &:focus-visible { outline: 2px solid t.$brand; outline-offset: 3px; }
+}
+
+.status {
+  margin: 0;
+  font-size: t.$text-sm;
+  color: var(--argos-share-status-color, #{t.$text-muted});
+  line-height: 1.5;
+  text-align: left;
+  min-height: 3em;
+}

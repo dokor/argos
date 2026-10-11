@@ -16,7 +16,6 @@ import { LangProvider } from "@/lib/i18n/LangContext";
 describe("AuditForm (soumission d'audit)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    window.localStorage.clear();
     // Le dashboard ouvre le rapport dans un nouvel onglet (#169) : on simule un
     // window.open réussi (jsdom ne l'implémente pas nativement).
     vi.spyOn(window, "open").mockReturnValue({} as Window);
@@ -91,9 +90,8 @@ describe("AuditForm (soumission d'audit)", () => {
   });
 
   it("annonce en anglais une erreur de création sans exposer le message serveur", async () => {
-    window.localStorage.setItem("argos-lang", "en");
     vi.mocked(argosApi.createAudit).mockRejectedValue(new Error("Service temporarily unavailable"));
-    render(<LangProvider><AuditForm mode="public" sourceRoute="/ressources/audit-site-pme" /></LangProvider>);
+    render(<LangProvider initialLang="en"><AuditForm mode="public" sourceRoute="/ressources/audit-site-pme" /></LangProvider>);
     await screen.findByRole("button", { name: "Run a free audit" });
     fireEvent.change(screen.getByRole("textbox"), { target: { value: "https://example.com" } });
     fireEvent.click(screen.getByRole("button", { name: "Run a free audit" }));

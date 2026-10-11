@@ -12,25 +12,19 @@
   flex-direction: column;
   align-items: center;
   padding: t.$section-space t.$page-gutter-mobile;
-  text-align: center;
+  text-align: left;
 }
 
 .card {
   width: 100%;
   border: 1px solid var(--argos-border);
-  border-radius: 16px; // rounded-2xl
+  border-radius: t.$radius-sm;
   background: var(--argos-surface);
   padding: t.$space-8;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04); // shadow-sm
-}
-
-.icon {
-  font-size: 2.25rem; // text-4xl
-  line-height: 1;
 }
 
 .title {
-  margin-top: t.$space-4;
+  margin-top: 0;
   font-size: 1.5rem; // text-2xl
   font-weight: 600;
   color: var(--argos-text);
@@ -47,6 +41,7 @@
   border-top: 1px solid var(--argos-border);
   padding-top: t.$space-6;
   text-align: left;
+  form { padding: 0; border: 0; background: transparent; }
 }
 
 .rerunTitle {
@@ -68,7 +63,7 @@
   align-items: center;
   min-height: 44px;
   border: 1px solid var(--argos-border);
-  border-radius: 14px; // rounded-xl
+  border-radius: t.$radius-sm;
   background: var(--argos-bg);
   padding: t.$space-2 t.$space-4;
   font-size: 0.875rem; // text-sm
@@ -78,6 +73,10 @@
 
   &:hover {
     background: var(--argos-surface-2); // hover:bg-muted
+  }
+  &:focus-visible {
+    outline: 3px solid t.$brand;
+    outline-offset: 3px;
   }
 }
 

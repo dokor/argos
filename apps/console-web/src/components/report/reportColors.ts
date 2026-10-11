@@ -97,7 +97,7 @@ export type SeverityColor = {
  */
 export const SEVERITY_COLORS: Record<SeverityKey, SeverityColor> = {
   critical:    { color: "#dc2626", bg: "#fef2f2", dot: "#ef4444" },
-  important:   { color: "#d97706", bg: "#fffbeb", dot: "#f59e0b" },
+  important:   { color: "#92400e", bg: "#fffbeb", dot: "#f59e0b" },
   info:        { color: "#64748b", bg: "#f8fafc", dot: "#94a3b8" },
-  opportunity: { color: "#059669", bg: "#f0fdf4", dot: "#10b981" },
+  opportunity: { color: "#047857", bg: "#f0fdf4", dot: "#10b981" },
 };

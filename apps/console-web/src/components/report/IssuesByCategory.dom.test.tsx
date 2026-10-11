@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
-import { render, within } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import IssuesByCategory from "./IssuesByCategory";
 import type { Report } from "./types";
 
@@ -27,6 +28,22 @@ const report = {
 } satisfies Report;
 
 describe("IssuesByCategory", () => {
+  it("expose le filtre actif, annonce le résultat et distingue un filtre vide", async () => {
+    const user = userEvent.setup();
+    render(<IssuesByCategory report={report} />);
+    const all = screen.getByRole("button", { name: "Tous 3" });
+    const critical = screen.getByRole("button", { name: "Critiques 1" });
+    expect(all).toHaveAttribute("aria-pressed", "true");
+    await user.click(critical);
+    expect(critical).toHaveAttribute("aria-pressed", "true");
+    expect(all).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByRole("status")).toHaveTextContent("Constats affichés : 1 sur 3");
+    expect(screen.queryByText("Color contrast")).not.toBeInTheDocument();
+    expect(within(document.querySelector("#cat-security")!).getByText(/Aucun constat ne correspond/)).toBeInTheDocument();
+    await user.click(all);
+    expect(screen.getByText("Color contrast")).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("Constats affichés : 3 sur 3");
+  });
   it("renders every issue in its canonical business category", () => {
     render(<IssuesByCategory report={report} />);
 

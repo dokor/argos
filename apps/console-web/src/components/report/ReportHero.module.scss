@@ -1,185 +1,39 @@
 @use '../../styles/tokens' as t;
 
-// ─── Hero card ────────────────────────────────────────────────────────────────
-.hero {
-  background: t.$color-navy;
-  position: relative;
-  overflow: hidden;
-}
-
-.accentBar {
-  height: 4px;
-  width: 100%;
-}
-
-.heroInner {
-  max-width: t.$container-width;
-  margin: 0 auto;
-  padding: t.$space-10 t.$page-gutter 0;
-}
-
-// ─── Top row ──────────────────────────────────────────────────────────────────
-.topRow {
-  display: flex;
-  align-items: flex-start;
-  gap: t.$space-10;
-  flex-wrap: wrap;
-}
-
-.identity {
-  flex: 1 1 340px;
-  min-width: 0;
-}
-
-.avatar {
-  width: 64px;
-  height: 64px;
-  border-radius: t.$radius-xl;
-  background: t.$color-slate-800;
-  border: 1px solid t.$color-slate-700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 26px;
-  font-weight: 700;
-  color: t.$color-slate-300;
-  margin-bottom: t.$space-4;
-  flex-shrink: 0;
-  overflow: hidden;
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-  }
-}
-
-.siteName {
-  font-size: clamp(20px, 3vw, 28px);
-  font-weight: 800;
-  color: t.$color-slate-50;
-  letter-spacing: -0.02em;
-  margin: 0 0 t.$space-2;
-}
-
-.meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: t.$space-2;
-  margin-bottom: t.$space-4;
-}
-
-.metaText {
-  font-size: t.$text-base;
-  color: t.$color-slate-400;
-}
-
-.techPill {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: t.$radius-pill;
-  padding: 2px 10px;
-  font-size: t.$text-sm;
-  color: t.$color-slate-300;
-  font-weight: 500;
-}
-
-.oneLiner {
-  font-size: t.$text-xl;
-  color: t.$color-slate-400;
-  line-height: 1.6;
-  margin: 0;
-  max-width: 560px;
-}
-
-// ─── Score ring ───────────────────────────────────────────────────────────────
-.scoreBlock {
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: t.$space-3;
-  padding-top: t.$space-2;
-}
-
-.scoreLabel {
-  font-size: t.$text-base;
-  font-weight: 700;
-  border-radius: t.$radius-pill;
-  padding: 3px 12px;
-  letter-spacing: 0.02em;
-}
-
-// ─── Stats row ────────────────────────────────────────────────────────────────
-.statsRow {
-  display: flex;
-  gap: 0;
-  margin-top: t.$space-10;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.stat {
-  flex: 1;
-  padding: t.$space-5;
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
-  text-align: center;
-
-  &:last-child {
-    border-right: none;
-  }
-}
-
-// Couleurs de l'anneau de score et du compteur total, sur le hero navy
-// (clair-sur-sombre volontaire). Tokens de palette fixe aux mêmes valeurs
-// qu'auparavant (#f8fafc / #94a3b8) — plus de hex en dur (issue #192).
-.ringScore {
-  fill: t.$color-slate-50;
-}
-.ringUnit {
-  fill: t.$color-slate-400;
-}
-.statTotalValue {
-  color: t.$color-slate-400;
-}
-
-.statValue {
-  font-size: 28px;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 1;
-}
-
-.statLabel {
-  font-size: t.$text-sm;
-  color: t.$color-slate-500;
-  margin-top: 4px;
-  font-weight: 500;
-}
-
-// ─── Responsive ───────────────────────────────────────────────────────────────
+.hero { background: t.$surface; border-bottom: 1px solid t.$border; position: relative; }
+.accentBar { height: 3px; }
+.heroInner { max-width: t.$container-width; margin: auto; padding: t.$space-10 t.$page-gutter 0; }
+.topRow { display: flex; align-items: flex-start; justify-content: space-between; gap: t.$space-10; }
+.identity { flex: 1; min-width: 0; }
+.eyebrow { font-size: t.$text-sm; color: t.$brand; font-weight: 600; margin-bottom: t.$space-5; }
+.avatar { width: 44px; height: 44px; border-radius: t.$radius-sm; background: t.$surface-2; border: 1px solid t.$border; display: grid; place-items: center; font-size: t.$text-2xl; font-weight: 600; color: t.$text-muted; margin-bottom: t.$space-3; overflow: hidden; }
+.avatar img { width: 100%; height: 100%; object-fit: contain; }
+.siteName { font-size: clamp(26px, 3.5vw, 40px); line-height: 1.2; font-weight: 650; letter-spacing: -.035em; color: t.$text; overflow-wrap: anywhere; }
+.meta { display: flex; flex-wrap: wrap; align-items: center; gap: t.$space-2; margin-block: t.$space-3; }
+.metaText { font-size: t.$text-base; color: t.$text-muted; }
+.techPill { border: 1px solid t.$border; border-radius: 4px; padding: 2px 8px; font-size: t.$text-xs; color: t.$text-muted; }
+.analyzedUrl { font-size: t.$text-sm; color: t.$text-muted; overflow-wrap: anywhere; }
+.analyzedUrl span { display: block; margin-top: 2px; color: t.$text; }
+.oneLiner { font-size: t.$text-lg; line-height: 1.65; color: t.$text-muted; max-width: 60ch; margin-top: t.$space-4; }
+.actions { display: flex; flex-wrap: wrap; align-items: flex-start; gap: t.$space-3; margin-top: t.$space-6; }
+.scoreBlock { flex: 0 0 190px; display: flex; flex-direction: column; align-items: center; gap: t.$space-3; padding: t.$space-5; border-left: 1px solid t.$border; }
+.scoreHeading { font-size: t.$text-base; font-weight: 600; color: t.$text-muted; }
+.scoreLabel { font-size: t.$text-sm; font-weight: 600; border-radius: 4px; padding: 4px 10px; text-align: center; }
+.ringScore { fill: t.$text; font-variant-numeric: tabular-nums; }
+.ringUnit { fill: t.$text-muted; }
+.statsRow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: t.$space-8; border-top: 1px solid t.$border; }
+.stat { padding: t.$space-5 0; }
+.stat + .stat { padding-left: t.$space-5; border-left: 1px solid t.$border; }
+.statValue { font-size: 28px; font-weight: 650; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.statTotalValue { color: t.$text; }
+.statLabel { font-size: t.$text-sm; color: t.$text-muted; margin-top: t.$space-1; }
 @media (max-width: 640px) {
-  .heroInner {
-    padding: t.$space-6 t.$space-4 0;
-  }
-
-  .topRow {
-    gap: t.$space-7;
-  }
-
-  .scoreBlock {
-    flex-direction: row;
-    align-items: center;
-    width: 100%;
-    justify-content: flex-start;
-    padding-top: 0;
-  }
-
-  .stat {
-    padding: t.$space-4 t.$space-3;
-  }
-
-  .statValue {
-    font-size: 22px;
-  }
+  .heroInner { padding: t.$space-6 t.$page-gutter-mobile 0; }
+  .topRow { flex-direction: column; gap: t.$space-6; }
+  .scoreBlock { flex: auto; width: 100%; flex-direction: row; flex-wrap: wrap; justify-content: flex-start; border-left: 0; border-top: 1px solid t.$border; padding: t.$space-4 0 0; }
+  .scoreBlock svg { width: 100px; height: 100px; }
+  .scoreHeading { width: 100%; }
+  .statsRow { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: t.$space-5; }
+  .stat:nth-child(3) { border-left: 0; padding-left: 0; }
+  .stat:nth-child(n+3) { border-top: 1px solid t.$border; }
 }

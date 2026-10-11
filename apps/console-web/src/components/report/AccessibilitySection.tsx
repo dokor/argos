@@ -25,6 +25,7 @@ export default function AccessibilitySection({ report }: { report: Report }) {
   const qualification = report.accessibilityCompliance;
   if (!evidence && !qualification) return null;
   const score = report.scores.byCategory.find(c => c.key === "a11y")?.score;
+  const scoreAvailable = report.scores.coverage?.domains.find(c => c.key === "a11y")?.available !== false;
   const coverage = evidence?.coverage ?? "UNAVAILABLE";
   const lighthouseScore = coverage !== "UNAVAILABLE" && typeof evidence?.lighthouseScore === "number"
     && Number.isFinite(evidence.lighthouseScore) && evidence.lighthouseScore >= 0 && evidence.lighthouseScore <= 100
@@ -54,7 +55,7 @@ export default function AccessibilitySection({ report }: { report: Report }) {
           <p>{copy.testsDescription}</p>
         </div>
         <dl className={s.facts}>
-          <div><dt>{copy.technicalScore}</dt><dd>{score == null ? unknown : `${score}/100`}</dd></div>
+          <div><dt>{copy.technicalScore}</dt><dd>{score == null || !scoreAvailable ? unknown : `${score}/100`}</dd></div>
           <div><dt>{copy.lighthouseScore}</dt><dd>{lighthouseScore == null ? unknown : `${lighthouseScore}/100`}</dd></div>
           <div><dt>{copy.coverageTitle}</dt><dd>{translated(copy.coverage, coverage, unknown)}</dd></div>
         </dl>
