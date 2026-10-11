@@ -1,21 +1,25 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAccountSession } from "@/components/account/AccountSession";
 
 /**
- * Returns true if the current user has the argos_admin cookie set.
- * Returns null while hydrating (server-side or before first effect).
+ * Resolve legacy admin sessions on the server: their cookie is HttpOnly.
+ * Modern account pages already provide their verified administrator role.
  */
 export function useIsAdmin(): boolean | null {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const session = useAccountSession();
 
   useEffect(() => {
-    const has = document.cookie
-      .split(";")
-      .some((c) => c.trim().startsWith("argos_admin="));
-    const timerId = window.setTimeout(() => setIsAdmin(has), 0);
-    return () => window.clearTimeout(timerId);
+    const controller = new AbortController();
+    void fetch("/api/auth/status", { cache: "no-store", signal: controller.signal })
+      .then(async response => response.ok && (await response.json()).isAdmin === true)
+      .then(value => { if (!controller.signal.aborted) setIsAdmin(value); })
+      .catch(() => { if (!controller.signal.aborted) setIsAdmin(false); });
+    return () => controller.abort();
   }, []);
 
-  return isAdmin;
+  return session.ready && !session.denied && session.profile?.verified && session.profile.admin
+    ? true : isAdmin;
 }

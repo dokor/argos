@@ -24,7 +24,7 @@ export default function PriorityCards({ priorities, model, onSelectFinding, limi
       {list.length === 0 ? (
         <p className={s.empty}>{tp.empty}</p>
       ) : (
-        <div className={s.grid}>
+        <ol className={s.grid}>
           {list.map((p, i) => {
             const resolution = model?.priorities[i];
             const grouped = new Set([p.findingKey, ...(p.relatedFindingKeys ?? [])].filter(Boolean)).size > 1;
@@ -33,17 +33,12 @@ export default function PriorityCards({ priorities, model, onSelectFinding, limi
             const domain = p.categoryKey ?? resolution?.findings[0]?.domain;
             const sev = SEVERITY_COLORS[p.severity as SevKey] ?? SEVERITY_COLORS.opportunity;
             return (
-              <div
+              <li
                 key={`${p.findingKey ?? "priority"}-${i}`}
                 className={s.card}
                 style={{ ["--accent" as string]: sev.color }}
               >
                 <p className={s.rank}>{tp.rankLabel} {Number.isInteger(p.rank) && p.rank! > 0 ? p.rank : i + 1}</p>
-                {/* Left accent */}
-                <span style={{
-                  position: "absolute", left: 0, top: 0, bottom: 0, width: 3,
-                  background: sev.color, borderRadius: "3px 0 0 3px",
-                }} aria-hidden="true" />
 
                 <div className={s.cardTop}>
                   <span
@@ -65,13 +60,14 @@ export default function PriorityCards({ priorities, model, onSelectFinding, limi
                 <p>{tp.sourcesLabel} : {sources.map(cleanEvidence).join(", ") || "—"}</p>
                 <p>{tp.confidenceLabel} {p.confidence && Object.hasOwn(tp.confidence, p.confidence) ? tp.confidence[p.confidence] : tp.confidence.UNKNOWN}</p>
                 {p.rankReason && (
-                  <div className={s.explanation}>
+                  <details className={s.explanation}>
+                    <summary>{tp.rankingDetails}</summary>
                     <p>{tp.rankReasons[p.rankReason]}</p>
                     {p.rankReason === "MODELLED_SCORE_GAIN" && typeof p.globalScoreGain === "number" && Number.isFinite(p.globalScoreGain) && (
                       <p>{tp.gainLabel} {p.globalScoreGain.toLocaleString(lang === "en" ? "en-US" : "fr-FR", { maximumFractionDigits: 2 })} {tp.gainUnit}</p>
                     )}
                     <p className={s.modelLimit}>{tp.modelLimit}</p>
-                  </div>
+                  </details>
                 )}
                 {grouped && <p>{tp.groupedLabel} {resolution ? resolution.findings.length : new Set([p.findingKey, ...(p.relatedFindingKeys ?? [])].filter(Boolean)).size}</p>}
                 <p className={s.modelLimit}>{tp.confirmNext}</p>
@@ -88,10 +84,10 @@ export default function PriorityCards({ priorities, model, onSelectFinding, limi
                     {resolution.status !== "resolved" && <p>{resolution.status === "partial" ? tp.partialFindings : tp.missingFinding}</p>}
                   </div>
                 )}
-              </div>
+              </li>
             );
           })}
-        </div>
+        </ol>
       )}
     </section>
   );

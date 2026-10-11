@@ -1,4 +1,5 @@
 @use '../../../../styles/tokens' as t;
+@use "../../../../styles/editorial" as editorial;
 
 .page {
   min-height: 100vh;
@@ -8,7 +9,7 @@
 
 .container,
 .narrow {
-  width: min(100% - 40px, 1100px);
+  width: min(100% - 48px, t.$container-width - 48px);
   margin-inline: auto;
 }
 
@@ -59,6 +60,7 @@
   h2 {
     margin: 0 0 14px;
     font-size: 1.2rem;
+    font-weight: 600;
   }
 
   form {
@@ -155,6 +157,7 @@
 }
 
 .limits {
+  list-style: disc;
   display: grid;
   gap: 14px;
   margin: 26px 0 0;
@@ -221,4 +224,4 @@
   }
 }
 
-.page { @include t.public-type; }
+@include editorial.intro;

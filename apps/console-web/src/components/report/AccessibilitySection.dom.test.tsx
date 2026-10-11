@@ -6,6 +6,7 @@ import AccessibilitySection, { safeAccessibilitySource } from "./AccessibilitySe
 import type { Report } from "./types";
 import fr from "@/lib/i18n/fr.json";
 import en from "@/lib/i18n/en.json";
+import { decisionCopy } from "./decisionCopy";
 
 let locale: "fr" | "en" = "fr";
 vi.mock("@/lib/i18n/LangContext", () => ({ useLang: () => ({ t: locale === "fr" ? fr : en, lang: locale }) }));
@@ -65,6 +66,20 @@ describe("AccessibilitySection (#263)", () => {
     expect(screen.getAllByText("100/100")).toHaveLength(1);
     const label = screen.getByText(fr.report.accessibility.lighthouseScore);
     expect(label.nextElementSibling).toHaveTextContent(fr.report.accessibility.unknown);
+  });
+  it("does not display a category score marked unavailable by measurement coverage", () => {
+    const report = fixture();
+    const unavailable = { measuredWeight: 0, expectedWeight: 100, ratio: 0, available: false, sufficient: false };
+    report.scores.coverage = {
+      version: "test", threshold: .8, provisional: true,
+      global: { key: "global", ...unavailable }, domains: [{ key: "a11y", ...unavailable }], checks: [],
+    };
+    render(<AccessibilitySection report={report} />);
+    expect(screen.getByText(fr.report.accessibility.technicalScore).nextElementSibling)
+      .toHaveTextContent(decisionCopy.fr.notEvaluated);
+    expect(screen.queryByText("100/100")).not.toBeInTheDocument();
+    // Lighthouse is an independent raw measurement; its available value stays visible.
+    expect(screen.getByText("93/100")).toBeInTheDocument();
   });
   it.each([null, -1, 101, NaN, Infinity])("does not present an invalid raw Lighthouse score: %s", score => {
     const report = fixture();

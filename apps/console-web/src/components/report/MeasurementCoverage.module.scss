@@ -4,11 +4,14 @@
   margin-top: t.$space-6;
   padding: t.$panel-space-mobile;
   border: 1px solid var(--argos-border);
-  border-radius: .75rem;
+  border-radius: t.$radius-sm;
   color: var(--argos-text);
-  background: var(--argos-surface);
-  h2 { font-size: 1rem; margin: 0 0 t.$space-2; }
+  background: t.$surface-2;
+  font-size: t.$text-base;
+  h2 { font-size: t.$text-base; font-weight: 600; margin: 0 0 t.$space-2; }
   p { margin: t.$space-2 0; }
-  summary { cursor: pointer; }
+  summary { cursor: pointer; padding-block: t.$space-2; color: t.$brand; width: fit-content; }
+  summary:focus-visible { outline: 3px solid t.$brand; outline-offset: 3px; }
+  details p { max-width: 75ch; line-height: 1.65; color: t.$text-muted; }
 }
 .domains { display: flex; flex-wrap: wrap; gap: t.$space-2 t.$space-6; padding: 0; list-style: none; }

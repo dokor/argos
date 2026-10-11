@@ -65,14 +65,14 @@ export default function AdminView({runId}:{runId?:string}) {
  const table=<div className={s.table} tabIndex={0} role="region" aria-label={c[tab]}><table>
   <caption>{c[tab]}</caption><thead><tr>{(tab==="users"?[c.user,c.state,c.offer,c.actions]:tab==="runs"?[c.site,c.user,c.status,c.date,c.actions]:[c.actor,c.target,c.change,c.date]).map(label=><th key={label} scope="col">{label}</th>)}</tr></thead>
   <tbody>{list.data?.items.map(row=><tr key={row.id}>{tab==="users"?<>
-   <td>{row.displayName}<br/>{row.email}<br/><small>{row.id}</small></td><td>{stateLabel(row.state,c)}<br/>{stateLabel(row.role,c)}</td><td>{row.offer}</td><td><button id={"admin-user-"+row.id} onClick={()=>setUserId(row.id)} aria-label={c.profile+" "+row.displayName}>{c.profile}</button></td>
+   <td>{row.displayName}<br/>{row.email}<br/><small>{row.id}</small></td><td>{stateLabel(row.state,c)}<br/>{stateLabel(row.role,c)}</td><td>{row.offer}</td><td><button id={"admin-user-"+row.id} onClick={()=>setUserId(row.id)} aria-label={c.profile+" "+(row.displayName??row.email??row.id)}>{c.profile}</button></td>
   </>:tab==="runs"?<>
    <td>{row.site??"—"}<br/><small>{row.id}</small></td><td>{row.userId??c.anonymous}</td><td>{stateLabel(row.status,c)}</td><td>{date(row.createdAt,lang)}</td><td><Link href={"/account/admin/runs/"+row.id}>{c.detail}</Link></td>
   </>:<>
    <td>{row.actorId}</td><td>{row.targetId}</td><td>{row.oldOffer} / {row.oldLimit??c.defaultLimit} → {row.newOffer} / {row.newLimit??c.defaultLimit}</td><td>{date(row.createdAt,lang)}</td>
   </>}</tr>)}</tbody>
  </table></div>;
- if(allowed&&report.data)return <><div className={s.page}><Link href="/account/admin">{c.back}</Link></div><ReportPage params={{report:report.data}}/></>;
+ if(allowed&&report.data)return <><div className={s.returnBar}><Link href="/account/admin">{c.back}</Link></div><ReportPage params={{report:report.data}}/></>;
  return <><SiteNav/><PersonalNavigation/><main className={s.page}>
   <h1>{c.title}</h1><p>{c.intro}</p>{allowed && <Link href="/account/admin/feedback">{feedbackCopy[lang].admin}</Link>}
   {!session.ready?<p role="status">{c.loading}</p>:!allowed?<><p role="alert">{c.denied}</p><Link href="/account/sign-in">{c.signIn}</Link></>:runId?<>

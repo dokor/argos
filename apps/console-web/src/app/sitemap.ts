@@ -21,6 +21,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${SITE_URL}/faq`,
     },
     {
+      url: `${SITE_URL}/exemple-rapport`,
+    },
+    {
       url: `${SITE_URL}/ressources`,
     },
     {

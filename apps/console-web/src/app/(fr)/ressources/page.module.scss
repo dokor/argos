@@ -1,4 +1,5 @@
 @use '../../../styles/tokens' as t;
+@use "../../../styles/editorial" as editorial;
 
 .page {
   min-height: 100vh;
@@ -7,7 +8,7 @@
 }
 
 .container {
-  width: min(100% - 40px, t.$container-width);
+  width: min(100% - 48px, t.$container-width - 48px);
   margin-inline: auto;
 }
 
@@ -62,10 +63,16 @@
   gap: 20px;
 }
 
+.starter { margin-top: 32px; padding: t.$panel-space; border: 1px solid t.$border; border-radius: 8px; background: t.$surface; }
+.starter h2 { margin: 0 0 16px; font-size: t.$text-2xl; }
+.starter ol { display: grid; gap: 12px; margin: 0; padding-left: 24px; list-style: decimal; line-height: 1.6; }
+.starter a { text-underline-offset: 3px; &:focus-visible { outline: 3px solid t.$brand; outline-offset: 3px; } }
+.card .cardMeta { font-size: t.$text-sm; margin-bottom: 16px; }
+
 .card {
   display: flex;
   flex-direction: column;
-  padding: 28px;
+  padding: t.$panel-space;
   border: 1px solid t.$border;
   border-radius: t.$radius-lg;
   background: t.$surface;
@@ -95,6 +102,9 @@
 }
 
 @media (max-width: 700px) {
+  .container { width: min(100% - 32px, t.$container-width - 48px); }
+  .card { padding: t.$panel-space-mobile; }
+  .starter { padding: t.$panel-space-mobile; }
   .hero {
     padding-block: 54px;
   }
@@ -108,13 +118,4 @@
   }
 }
 
-.page { @include t.public-type; }
-
-.hero { padding-block: 2.5rem; }
-
-.starter { margin-top: 1.5rem; padding: 1.5rem; border: 1px solid t.$border; border-radius: t.$radius-lg; background: t.$surface-2; }
-.starter ol { display: grid; gap: 0.75rem; margin-top: 1rem; }
-.starter a { text-decoration: underline; text-underline-offset: 3px; }
-.starter a:focus-visible { outline: 3px solid t.$text; outline-offset: 3px; }
-.section { padding-block: 2rem; }
-.cardMeta { font-size: 0.85rem; color: t.$text-muted; }
+@include editorial.intro;

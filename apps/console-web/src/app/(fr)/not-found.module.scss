@@ -1,8 +1,8 @@
 @use '../../styles/tokens' as t;
+@use '../../styles/controls' as controls;
 
 // ─── Root ─────────────────────────────────────────────────────────────────────
 .page {
-  font-family: 'Inter', system-ui, sans-serif;
   color: t.$text;
   background: t.$bg;
   min-height: 100vh;
@@ -25,8 +25,8 @@
 
 .badge {
   display: inline-block;
-  background: t.$color-indigo-dim;
-  color: t.$color-indigo;
+  background: t.$brand-soft;
+  color: t.$brand;
   font-size: t.$text-base;
   font-weight: 600;
   padding: t.$space-1 t.$space-3;
@@ -39,10 +39,7 @@
   font-weight: 800;
   line-height: 1;
   letter-spacing: -0.04em;
-  background: linear-gradient(135deg, t.$text 0%, t.$color-indigo 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: t.$brand;
   margin-bottom: t.$space-4;
 }
 
@@ -70,14 +67,11 @@
 }
 
 .primaryCta {
-  display: inline-block;
-  background: t.$text;
-  color: t.$bg;
+  @include controls.cta-geometry;
+  border-color: t.$brand;
+  background: t.$brand;
+  color: t.$on-brand;
   text-decoration: none;
-  padding: t.$space-3 t.$space-6;
-  border-radius: t.$radius-sm;
-  font-size: t.$text-xl;
-  font-weight: 600;
   transition: opacity 0.15s ease;
 
   &:hover {
@@ -91,15 +85,11 @@
 }
 
 .secondaryCta {
-  display: inline-block;
+  @include controls.cta-geometry;
   background: t.$surface;
   color: t.$text;
   text-decoration: none;
-  padding: t.$space-3 t.$space-6;
-  border: 1px solid t.$border;
-  border-radius: t.$radius-sm;
-  font-size: t.$text-xl;
-  font-weight: 600;
+  border-color: t.$border;
   transition: border-color 0.15s ease;
 
   &:hover {

@@ -37,3 +37,13 @@
   .statsRow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .stat { padding: t.$space-3; }
 }
+.siteName { font-weight: 650; line-height: 1.2; }
+.verdict,.criticalVerdict { font-weight: 650; }
+.scoreBlock { border-radius: 8px; display: grid; gap: 12px; grid-template-columns: minmax(0,1fr); }
+.scoreBlock p { margin: 0; }
+.actions { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 12px 24px; margin-top: 16px; }
+.actions > * { max-width: 100%; }
+.scoreNumber strong { font-weight: 650; font-variant-numeric: tabular-nums; }
+.links a { display: inline-flex; align-items: center; min-height: 44px; }
+.stat:first-child { padding-left: 0; }
+@media(max-width:640px) { .stat { padding-inline: 0 12px; } .stat:nth-child(2) { border-right: 0; } }

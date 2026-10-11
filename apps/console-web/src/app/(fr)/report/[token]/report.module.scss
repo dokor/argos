@@ -1,18 +1,26 @@
 @use '../../../../styles/tokens' as t;
+@use '../../../../styles/editorial' as editorial;
 
 .page {
-  font-family: 'Inter', system-ui, sans-serif;
-  background: t.$canvas;
+  background: t.$bg;
   min-height: 100vh;
   color: t.$text;
 }
+
+.contents { border-bottom: 1px solid t.$border; background: t.$surface; }
+.contentsInner { max-width: t.$container-width; margin: auto; display: flex; gap: t.$space-6; padding: t.$space-3 t.$page-gutter; flex-wrap: wrap; }
+.contents a { display: inline-flex; align-items: center; min-height: 44px; padding-block: t.$space-2; color: t.$text-muted; font-size: t.$text-base; font-weight: 600; }
+.contents a:hover { color: t.$brand; }
+.contents a:focus-visible, .dataSummary:focus-visible { outline: 3px solid t.$brand; outline-offset: 3px; }
+.contents span { font-variant-numeric: tabular-nums; margin-left: t.$space-1; }
 
 .main {
   max-width: t.$container-width;
   margin: 0 auto;
   padding: t.$space-10 t.$page-gutter t.$space-16;
   display: grid;
-  gap: t.$space-8;
+  grid-template-columns: minmax(0, 1fr);
+  gap: t.$space-10;
 }
 
 .view { display: grid; gap: t.$space-6; min-width: 0; }
@@ -21,7 +29,7 @@
 .dataPanel {
   background: t.$surface;
   border: 1px solid t.$border;
-  border-radius: t.$radius-2xl;
+  border-radius: t.$radius-sm;
   padding: t.$panel-space;
 
   &[open] .dataChevron { transform: rotate(180deg); }
@@ -37,6 +45,7 @@
   font-weight: 600;
   color: t.$text-muted;
   user-select: none;
+  min-height: 44px;
 
   &::-webkit-details-marker { display: none; }
 }
@@ -59,7 +68,7 @@
   color: t.$color-slate-200;
   border-radius: t.$radius-lg;
   padding: t.$space-5;
-  font-size: 11px;
+  font-size: t.$text-sm;
   font-family: 'Fira Code', 'Cascadia Code', monospace;
   max-height: 500px;
   overflow: auto;
@@ -67,10 +76,13 @@
 }
 
 @media (max-width: 640px) {
+  .contentsInner { padding-inline: t.$page-gutter-mobile; gap: t.$space-4; }
   .main {
     padding: t.$space-5 t.$page-gutter-mobile t.$space-12;
-    gap: t.$space-5;
+    gap: t.$space-8;
   }
 
   .dataPanel { padding: t.$panel-space-mobile; }
 }
+
+.main { @include editorial.headings; }

@@ -23,6 +23,7 @@
 }
 
 .logo {
+  min-height: 44px;
   display: inline-flex;
   align-items: center;
   gap: t.$space-2;
@@ -32,7 +33,7 @@
 }
 
 .logoIcon { flex-shrink: 0; }
-.logoText { flex: 1; font-size: t.$text-2xl; font-weight: 700; letter-spacing: -0.02em; }
+.logoText { flex: 1; font-size: t.$text-2xl; font-weight: 700; letter-spacing: -0.02em; white-space: nowrap; }
 
 .navLinks,
 .navActions {
@@ -77,7 +78,7 @@
   &:hover,
   &[aria-current] { color: t.$text; }
 
-  &[aria-current] { box-shadow: inset 0 -2px t.$color-indigo; }
+  &[aria-current] { box-shadow: inset 0 -2px t.$brand; }
 }
 
 .navCta {
@@ -261,9 +262,14 @@
     .navPreferences { display: flex; }
   }
 }
+@media (max-width: 360px) {
+  // Leave room for the brand beside the account and menu, including scrollbars.
+  .logo { gap: t.$space-1; }
+}
 @media (max-width: 300px) {
   .navInner { padding-inline: t.$space-2; grid-template-columns: minmax(0, 1fr) 116px 44px; }
   .logo { gap: t.$space-1; }
   .logoText { font-size: t.$text-md; }
   .accountLink { width: 116px; gap: t.$space-1; padding-inline: t.$space-2; }
 }
+.consoleSlot { width: 44px; height: 44px; }

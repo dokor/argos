@@ -1,8 +1,9 @@
 @use '../../../styles/tokens' as t;
+@use '../../../styles/editorial' as editorial;
+@use '../../../styles/controls' as controls;
 
 // ─── Root ─────────────────────────────────────────────────────────────────────
 .page {
-  font-family: 'Inter', system-ui, sans-serif;
   color: t.$text;
   background: t.$bg;
   min-height: 100vh;
@@ -15,20 +16,21 @@
 // ─── Hero ─────────────────────────────────────────────────────────────────────
 .hero {
   position: relative;
-  background: linear-gradient(135deg, t.$color-navy 0%, t.$color-slate-800 60%, t.$color-navy 100%);
+  background: t.$canvas;
+  border-bottom: 1px solid t.$border;
   padding: t.$section-space t.$page-gutter;
-  text-align: center;
+  text-align: left;
 }
 
 .heroInner {
-  max-width: 720px;
+  max-width: 712px;
   margin: 0 auto;
 }
 
 .badge {
   display: inline-block;
-  background: t.$color-indigo-dim;
-  color: t.$color-indigo-muted;
+  background: t.$brand-soft;
+  color: t.$brand;
   font-size: t.$text-base;
   font-weight: 500;
   padding: t.$space-1 t.$space-3;
@@ -37,15 +39,15 @@
 }
 
 .title {
-  color: t.$color-white;
-  font-size: clamp(28px, 4vw, 40px);
+  color: t.$text;
+  font-size: clamp(32px, 4vw, 48px);
   font-weight: 700;
   letter-spacing: -0.02em;
   margin: 0 0 t.$space-4;
 }
 
 .sub {
-  color: t.$color-slate-400;
+  color: t.$text-muted;
   font-size: t.$text-2xl;
   line-height: 1.6;
   margin: 0;
@@ -127,6 +129,8 @@
 
 .questionText {
   flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .chevron {
@@ -193,25 +197,25 @@
 }
 
 .ctaButton {
-  display: inline-block;
-  background: t.$text;
-  color: t.$bg;
+  @include controls.cta-geometry;
+  background: t.$brand;
+  color: t.$on-brand;
+  border-color: t.$brand;
   text-decoration: none;
-  padding: t.$space-3 t.$space-6;
-  border-radius: t.$radius-sm;
-  font-size: t.$text-xl;
-  font-weight: 600;
   transition: opacity 0.15s ease;
 
   &:hover {
     opacity: 0.9;
   }
 }
+.ctaButton:focus-visible, .backHome:focus-visible { outline: 3px solid t.$brand; outline-offset: 3px; }
 
 .backHomeWrap {
   margin-top: t.$space-8;
   text-align: center;
 }
+
+@include editorial.anchors;
 
 .backHome {
   color: t.$text-muted;

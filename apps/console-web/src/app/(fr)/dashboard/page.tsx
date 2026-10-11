@@ -30,7 +30,7 @@ export default function DashboardPage() {
 
     const scores = items
       .filter((i) => i.status === "COMPLETED")
-      .map((i) => getGlobalScore(i.resultJson))
+      .map((i) => i.globalScore ?? getGlobalScore(i.resultJson))
       .filter((s): s is number => s !== null);
 
     const avgScore = scores.length > 0
@@ -48,7 +48,10 @@ export default function DashboardPage() {
       <SiteNav />
 
       <main className={styles.main}>
-        <a href="/dashboard/analytics">Mesure produit</a>
+        <header className={styles.intro}>
+          <h1>{td.title}</h1>
+          <a href="/dashboard/analytics">Mesure produit</a>
+        </header>
         <div className={styles.kpiGrid}>
           <KpiCard label={td.stats.analyzed}   value={stats.analyzed}   icon="✓" accent="#16a34a" bg="#dcfce7" description={td.stats.analyzedDesc} />
           <KpiCard label={td.stats.inProgress} value={stats.inProgress} icon="↻" accent="#0284c7" bg="#e0f2fe" description={td.stats.inProgressDesc} highlight={stats.inProgress > 0} />
@@ -57,7 +60,7 @@ export default function DashboardPage() {
         </div>
 
         <div className={styles.formSection}>
-          <div className={styles.sectionLabel}>{td.newAudit}</div>
+          <h2 className={styles.sectionLabel}>{td.newAudit}</h2>
           <AuditForm onCreated={onCreated} />
         </div>
 

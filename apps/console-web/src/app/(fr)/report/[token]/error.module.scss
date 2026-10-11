@@ -1,3 +1,6 @@
+@use '../../../../styles/tokens' as t;
+@use '../../../../styles/controls' as controls;
+
 // Frontière d'erreur de la route rapport, réécrite en SCSS Modules
 // (retrait de Tailwind/shadcn - issue #124). Tokens --argos-* théma-aware.
 
@@ -10,7 +13,7 @@
 
 .card {
   border: 1px solid var(--argos-border);
-  border-radius: 16px; // rounded-2xl
+  border-radius: t.$radius-sm;
   background: var(--argos-surface);
   padding: 1.5rem; // p-6
 }
@@ -28,14 +31,11 @@
 }
 
 .back {
+  @include controls.cta-geometry;
   margin-top: 1rem; // mt-4
-  display: inline-block;
-  border: 1px solid var(--argos-border);
-  border-radius: 14px; // rounded-xl
+  border-color: var(--argos-border);
   background: var(--argos-bg);
-  padding: 0.5rem 1rem; // py-2 px-4
-  font-size: 0.875rem; // text-sm
-  font-weight: 600;
   color: var(--argos-text);
   text-decoration: none;
 }
+.back:focus-visible { outline: 3px solid t.$brand; outline-offset: 3px; }

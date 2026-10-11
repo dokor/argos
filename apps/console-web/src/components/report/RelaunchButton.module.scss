@@ -1,4 +1,5 @@
 @use '../../styles/tokens' as t;
+@use '../../styles/controls' as controls;
 
 .wrap {
   display: flex;
@@ -7,18 +8,12 @@
   gap: t.$space-2;
 }
 
-// The decision summary uses semantic surfaces in both themes.
+// Secondary report action, themed with the report surface.
 .btn {
-  display: inline-flex;
-  align-items: center;
-  gap: t.$space-2;
-  padding: 8px t.$space-4;
-  border-radius: t.$radius-pill;
-  border: 1px solid t.$border;
+  @include controls.cta-geometry;
+  border-color: t.$border;
   background: t.$surface;
   color: t.$text;
-  font-size: t.$text-md;
-  font-weight: 600;
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
   max-width: 100%;
@@ -30,7 +25,7 @@
   }
 
   &:focus-visible {
-    outline: 2px solid t.$text;
+    outline: 2px solid t.$brand;
     outline-offset: 2px;
   }
 
@@ -62,9 +57,7 @@
 
 .error {
   font-size: t.$text-sm;
-  color: t.$text;
-  border-left: 3px solid t.$color-red;
-  padding-left: t.$space-2;
+  color: t.$color-red;
   text-align: center;
   max-width: 200px;
 }

@@ -1,74 +1,10 @@
 @use '../../styles/tokens' as t;
-
-.header {
-  position: sticky;
-  top: 0;
-  z-index: t.$z-sticky;
-  background: t.$header-bg;
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid t.$border-subtle;
-}
-
-.inner {
-  max-width: t.$container-width;
-  margin: 0 auto;
-  padding: 0 t.$space-6;
-  height: 52px;
-  display: flex;
-  align-items: center;
-  gap: t.$space-4;
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: t.$space-2;
-  text-decoration: none;
-  color: t.$text;
-  flex-shrink: 0;
-}
-
-.brandIcon {
-  display: block;
-  flex-shrink: 0;
-}
-
-.brandName {
-  font-size: t.$text-xl;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-
-.sep {
-  color: t.$text-subtle;
-  font-size: t.$text-xl;
-  flex-shrink: 0;
-}
-
-.domain {
-  font-size: t.$text-base;
-  color: t.$text-muted;
-  font-weight: 500;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.right {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: t.$space-4;
-  flex-shrink: 0;
-}
-
-@media (max-width: 640px) {
-  .inner {
-    padding: 0 t.$space-4;
-  }
-}
-@media (max-width: 320px) {
-  .inner { height: 96px; padding: 8px; flex-wrap: wrap; gap: 8px; }
-  .right { width: 100%; justify-content: space-between; gap: 8px; min-width: 0; }
-}
+.header { position: sticky; top: 0; z-index: t.$z-sticky; background: t.$header-bg; backdrop-filter: blur(12px); border-bottom: 1px solid t.$border; }
+.inner { max-width: t.$container-width; margin: 0 auto; min-height: 60px; padding: 8px t.$page-gutter; display: flex; align-items: center; gap: 16px; }
+.brand { min-height: 44px; display: flex; align-items: center; gap: 8px; text-decoration: none; color: t.$text; flex-shrink: 0; }
+.brandIcon { display: block; flex-shrink: 0; }
+.brandName { font-size: 22px; font-weight: 700; letter-spacing: -.02em; }
+.right { margin-left: auto; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.brand:focus-visible { outline: 3px solid t.$brand; outline-offset: 3px; }
+@media(max-width:640px) { .inner { padding-inline: 16px; } }
+@media(max-width:280px) { .inner { flex-wrap: wrap; } .right { width: 100%; justify-content: space-between; } }

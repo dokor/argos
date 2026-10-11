@@ -38,6 +38,7 @@ type Translations = {
   scoreUnavailable: string;
   viewReport: string;
   reportPending: string;
+  reportUnavailable: string;
   noJson: string;
   resultPending: string;
   copyJson: string;
@@ -116,13 +117,13 @@ export default function AuditCard({
   }
 
   return (
-    <div className={styles.card}>
+    <article className={styles.card}>
       {/* Header */}
       <div className={styles.header}>
         <div className={styles.headerLeft}>
-          <div className={styles.url}>
+          <h3 className={styles.url}>
             {item.hostname ?? item.normalizedUrl}
-          </div>
+          </h3>
           {item.hostname && (() => {
             const path = item.normalizedUrl.replace(/^https?:\/\/[^/]+/, "") || "/";
             return path !== "/" ? (
@@ -154,7 +155,7 @@ export default function AuditCard({
           {reportHref ? (
             <Link href={reportHref} className={styles.linkBtn}>{tl.viewReport}</Link>
           ) : (
-            <span className={styles.linkBtnDisabled}>{tl.reportPending}</span>
+            <span className={styles.linkBtnDisabled}>{item.status === "FAILED" ? tl.reportUnavailable : tl.reportPending}</span>
           )}
         </div>
       </div>
@@ -229,7 +230,7 @@ export default function AuditCard({
             >
               {copiedRunId === item.runId ? tl.copied : tl.copyJson}
             </button>
-            <details>
+            <details className={styles.jsonDetails}>
               <summary className={styles.summary}>{tl.showJson}</summary>
               <pre className={styles.pre}>{prettyJson(item.resultJson!)}</pre>
             </details>
@@ -282,6 +283,6 @@ export default function AuditCard({
           </ul>
         )}
       </details>
-    </div>
+    </article>
   );
 }

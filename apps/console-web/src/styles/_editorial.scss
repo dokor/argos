@@ -1,0 +1,35 @@
+@use 'tokens' as t;
+
+@mixin headings {
+  h2 { font-weight: 650; line-height: 1.25; }
+  h3, h4 { font-weight: 600; line-height: 1.4; }
+}
+
+// Leave room for the public navigation, which occupies two rows on mobile.
+@mixin anchors {
+  .page { --argos-anchor-offset: 88px; }
+  .page main [id] { scroll-margin-top: var(--argos-anchor-offset); }
+  @media (max-width: 800px) {
+    .page { --argos-anchor-offset: 136px; }
+  }
+}
+
+// Shared introduction rhythm for the public resource pages.
+@mixin intro {
+  @include anchors;
+  .page main { @include headings; }
+  .hero {
+    background: t.$canvas;
+    border-bottom: 1px solid t.$border;
+    text-align: left;
+    padding-block: t.$section-space;
+  }
+  .eyebrow {
+    color: t.$brand;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+  .hero h1 { font-weight: 650; text-wrap: balance; font-size: clamp(32px, 4.5vw, 56px); line-height: 1.15; }
+  .lead { max-width: 65ch; }
+  @media (max-width: 700px) { .hero { padding-block: t.$section-space-mobile; } }
+}

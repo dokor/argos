@@ -47,6 +47,10 @@ export default function ReportHero({ report, model = buildReportModel(report), o
             <a href="?view=actions" onClick={event => { if (onActions) { event.preventDefault(); onActions(); } }}>{copy.actions}</a>
             <a href="#report-method" onClick={event => { if (onMethod) { event.preventDefault(); onMethod(); } }}>{copy.methodLink}</a>
           </div>
+          <div className={s.actions}>
+            <RelaunchButton url={report.url} />
+            <ShareReportButton />
+          </div>
         </div>
         <div className={s.scoreBlock}>
           <h2 className={s.scoreTitle}>{reading.score}</h2>
@@ -56,8 +60,6 @@ export default function ReportHero({ report, model = buildReportModel(report), o
           <p className={s.coverage}><strong>{reading.coverage}</strong><br />{coverage
             ? `${Math.round(coverage.global.ratio * 100)} % — ${coverage.global.sufficient ? t.report.measurementCoverage.sufficient : copy.insufficient}`
             : copy.coverageUnknown}</p>
-          <RelaunchButton url={report.url} />
-          <ShareReportButton />
         </div>
       </div>
       <div className={s.statsRow}>

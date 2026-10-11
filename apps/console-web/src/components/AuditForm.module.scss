@@ -1,7 +1,10 @@
 @use '../styles/tokens' as t;
+@use '../styles/controls' as controls;
 
 .form {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
   gap: t.$space-3;
   padding: t.$space-4;
   border: 1px solid t.$border;
@@ -11,6 +14,7 @@
 
 .fieldGroup {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   min-width: 0;
   gap: t.$space-2;
 }
@@ -22,8 +26,8 @@
 }
 
 .input {
-  min-width: 0;
   width: 100%;
+  min-width: 0;
   padding: t.$space-3 t.$space-4;
   min-height: 44px;
   border-radius: t.$radius-md;
@@ -34,8 +38,8 @@
   outline: none;
 
   &:focus-visible {
-    border-color: t.$color-indigo;
-    outline: 3px solid t.$color-indigo-muted;
+    border-color: t.$brand;
+    outline: 3px solid t.$brand;
     outline-offset: 2px;
   }
 
@@ -45,12 +49,14 @@
 }
 
 .submitBtn {
+  width: 100%;
+  min-width: 0;
   padding: t.$space-3 t.$space-4;
   min-height: 44px;
   border-radius: t.$radius-md;
-  border: 1px solid t.$text;
-  background: t.$text;
-  color: t.$bg;
+  border: 1px solid t.$brand;
+  background: t.$brand;
+  color: t.$on-brand;
   font-weight: 600;
   font-size: t.$text-lg;
   cursor: pointer;
@@ -61,7 +67,7 @@
   }
 
   &:focus-visible {
-    outline: 3px solid t.$color-indigo;
+    outline: 3px solid t.$brand;
     outline-offset: 3px;
   }
 }
@@ -86,8 +92,9 @@
 
 .publicForm {
   max-width: 660px;
-  padding: t.$space-6;
-  box-shadow: t.$shadow-md;
+  padding: 0;
+  border: 0;
+  background: transparent;
 }
 
 .statusMsg,
@@ -96,9 +103,5 @@
   font-size: t.$text-base;
   line-height: 1.5;
 }
-
-@media (max-width: 600px) {
-  .publicForm {
-    padding: t.$space-4;
-  }
-}
+.input { height: 44px; padding: 8px 12px; font-size: 15px; }
+.submitBtn { @include controls.cta-geometry; border-color: t.$brand; }

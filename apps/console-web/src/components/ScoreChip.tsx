@@ -21,12 +21,12 @@ export function ScoreChip({ label, ratio, title, active = false, onClick }: Chip
       title,
       className: `${styles.chip} ${onClick ? styles["chip--clickable"] : ""}`,
       style: {
-        border: active ? "2px solid " + fg : "1px solid " + border,
-        background: active ? fg : bg,
-        color: active ? "#fff" : fg,
+        border: "1px solid " + (active ? "var(--argos-text)" : border),
+        background: active ? "var(--argos-text)" : bg,
+        color: active ? "var(--argos-bg)" : fg,
       },
   };
-  return onClick ? <button type="button" onClick={onClick} {...props}>{content}</button>
+  return onClick ? <button type="button" aria-pressed={active} onClick={onClick} {...props}>{content}</button>
     : <div {...props}>{content}</div>;
 }
 
@@ -37,7 +37,7 @@ export function ScoreBubbles({ ratio }: BubblesProps) {
   const filled = Math.round(r * 5);
   const { dot } = scoreChipTheme(r);
   return (
-    <div className={styles.bubbles}>
+    <div className={styles.bubbles} aria-hidden="true">
       {Array.from({ length: 5 }, (_, i) => (
         <span
           key={i}

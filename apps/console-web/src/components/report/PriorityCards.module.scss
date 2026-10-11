@@ -132,3 +132,16 @@
 
 .rank { font-weight: 700; margin: 0; color: t.$text; }
 .card { overflow-wrap: anywhere; }
+.section { padding: 0; background: transparent; border: 0; border-radius: 0; box-shadow: none; }
+.sectionTitle { font-weight: 650; }
+.grid { grid-template-columns: minmax(0,1fr); gap: 0; list-style: none; }
+.card { border: 0; border-top: 1px solid t.$border; border-radius: 0; padding: 24px 0; display: grid; grid-template-columns: 72px minmax(0,1fr); gap: 12px 24px; background: transparent; }
+.card > :not(.rank) { grid-column: 2; }
+.card > p { margin: 0; font-size: 14px; line-height: 1.6; color: t.$text-muted; }
+.card .rank { grid-column: 1; grid-row: 1; font-size: 14px; font-weight: 600; color: t.$text; }
+.cardTop { flex-wrap: wrap; justify-content: flex-start; }
+.severityBadge,.effortBadge { box-sizing: border-box; min-height: 26px; padding: 3px 9px; line-height: 18px; border: 1px solid transparent; font-size: 12px; }
+.effortBadge { border-color: t.$border; }
+.findingLinks a { display: inline-flex; align-items: center; min-height: 44px; }
+@media(max-width:600px) { .card { padding: 20px 0; grid-template-columns: minmax(0,1fr); gap: 12px; } .card > :not(.rank) { grid-column: 1; } }
+.explanation summary { cursor: pointer; min-height: 44px; padding-block: 10px; font-size: 15px; font-weight: 600; } .explanation summary:focus-visible { outline: 3px solid t.$brand; outline-offset: 3px; }

@@ -1,233 +1,34 @@
 @use '../styles/tokens' as t;
-
-.card {
-  padding: t.$space-5;
-  border: 1px solid t.$border;
-  border-radius: t.$radius-xl;
-  background: t.$surface;
-  box-shadow: t.$shadow-sm;
-  display: grid;
-  gap: t.$space-4;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  gap: t.$space-4;
-  flex-wrap: wrap;
-  align-items: flex-start;
-}
-
-.headerLeft {
-  display: grid;
-  gap: t.$space-1;
-  min-width: 0;
-  flex: 1;
-}
-
-.url {
-  font-weight: 900;
-  color: t.$text;
-  font-size: t.$text-md;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 700px;
-}
-
-.urlPath {
-  font-size: t.$text-sm;
-  color: t.$text-subtle;
-  font-weight: 500;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 700px;
-}
-
-.meta {
-  display: flex;
-  gap: t.$space-2;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.metaText {
-  font-size: t.$text-xs;
-  color: t.$text-subtle;
-}
-
-.techBadge {
-  font-size: 10px;
-  font-weight: 700;
-  color: t.$color-purple;
-  background: t.$color-purple-bg;
-  border: 1px solid t.$color-purple-border;
-  padding: 2px 7px;
-  border-radius: t.$radius-pill;
-}
-
-.headerRight {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: t.$space-2;
-  flex-shrink: 0;
-}
-
-.scoreRow {
-  display: flex;
-  align-items: center;
-  gap: t.$space-2;
-}
-
-.scoreText {
-  font-size: t.$text-base;
-  font-weight: 900;
-  color: t.$text;
-}
-
-.mutedSmall {
-  font-size: t.$text-xs;
-  color: t.$text-subtle;
-}
-
-.linkBtn {
-  font-size: t.$text-sm;
-  font-weight: 800;
-  color: t.$color-blue;
-  text-decoration: none;
-  padding: 5px 10px;
-  border-radius: t.$radius-sm;
-  border: 1px solid t.$color-blue-border;
-  background: t.$color-blue-light;
-}
-
-.linkBtnDisabled {
-  font-size: t.$text-sm;
-  font-weight: 600;
-  color: t.$text-subtle;
-  padding: 5px 10px;
-  border-radius: t.$radius-sm;
-  border: 1px solid t.$border;
-}
-
-.scoreSection {
-  display: grid;
-  gap: 7px;
-}
-
-.sectionLabel {
-  font-size: t.$text-xs;
-  font-weight: 800;
-  color: t.$text-muted;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.chips {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.actions {
-  display: flex;
-  gap: t.$space-3;
-  flex-wrap: wrap;
-  align-items: center;
-  padding-top: t.$space-1;
-  border-top: 1px solid t.$border-subtle;
-}
-
-.muted {
-  font-size: t.$text-base;
-  color: t.$text-subtle;
-}
-
-.copyBtn {
-  padding: t.$space-3 t.$space-4;
-  min-height: 44px;
-  border-radius: t.$radius-sm;
-  border: 1px solid t.$text;
-  background: t.$text;
-  color: t.$bg;
-  font-weight: 800;
-  font-size: t.$text-sm;
-  cursor: pointer;
-}
-
-.summary {
-  cursor: pointer;
-  font-weight: 700;
-  font-size: t.$text-base;
-  color: t.$text-muted;
-}
-
-.pre {
-  margin-top: t.$space-2;
-  white-space: pre-wrap;
-  word-break: break-word;
-  padding: t.$space-3;
-  border-radius: t.$radius-md;
-  background: #0b1220;
-  color: t.$color-slate-200;
-  border: 1px solid #1f2a44;
-  font-size: t.$text-xs;
-  line-height: 1.5;
-}
-
-.historySection {
-  padding-top: t.$space-1;
-  border-top: 1px solid t.$border-subtle;
-}
-
-.historyList {
-  list-style: none;
-  margin: t.$space-2 0 0;
-  padding: 0;
-  display: grid;
-  gap: t.$space-2;
-}
-
-.historyRow {
-  display: flex;
-  align-items: center;
-  gap: t.$space-3;
-  flex-wrap: wrap;
-  padding: t.$space-2 t.$space-3;
-  border-radius: t.$radius-sm;
-  background: t.$surface-2;
-}
-
-.historyDate {
-  font-size: t.$text-sm;
-  color: t.$text-muted;
-  min-width: 150px;
-}
-
-.historyScore {
-  font-size: t.$text-base;
-  font-weight: 900;
-}
-
-.historyScoreNa {
-  font-size: t.$text-base;
-  color: t.$text-subtle;
-}
-
-.historyCurrent {
-  font-size: t.$text-xs;
-  font-weight: 800;
-  color: t.$text-muted;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.historyLink {
-  margin-left: auto;
-  font-size: t.$text-sm;
-  font-weight: 800;
-  color: t.$color-blue;
-  text-decoration: none;
-}
+@use '../styles/controls' as controls;
+.card { padding: 24px; border: 1px solid t.$border; border-radius: 8px; background: t.$surface; display: grid; grid-template-columns: minmax(0,1fr); gap: 24px; min-width: 0; }
+.header { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 24px; align-items: start; }
+.headerLeft { display: grid; gap: 8px; min-width: 0; }
+.url { font-weight: 600; font-size: 18px; color: t.$text; overflow-wrap: anywhere; line-height: 1.4; }
+.urlPath { font-size: 14px; color: t.$text-muted; overflow-wrap: anywhere; }
+.meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.metaText, .mutedSmall { font-size: 13px; color: t.$text-muted; }
+.techBadge { font-size: 13px; color: t.$text-muted; background: t.$surface-2; border: 1px solid t.$border; padding: 2px 8px; border-radius: 4px; overflow-wrap: anywhere; }
+.headerRight { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; min-width: 0; }
+.scoreRow { display: flex; align-items: center; gap: 8px; }
+.scoreText { font-size: 22px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.linkBtn, .linkBtnDisabled, .copyBtn { @include controls.cta-geometry; text-decoration: none; border-color: t.$border; background: t.$surface; color: t.$text; }
+.linkBtn { background: t.$brand; color: t.$on-brand; border-color: t.$brand; }
+.linkBtnDisabled { color: t.$text-muted; }
+.scoreSection { display: grid; gap: 8px; }
+.sectionLabel { font-size: 13px; font-weight: 600; color: t.$text-muted; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: start; padding-top: 16px; border-top: 1px solid t.$border; }
+.muted { font-size: 14px; color: t.$text-muted; overflow-wrap: anywhere; }
+.copyBtn { cursor: pointer; min-width: 180px; }
+.summary { cursor: pointer; font-weight: 600; font-size: 15px; color: t.$text-muted; min-height: 44px; padding-block: 10px; }
+.jsonDetails { flex: 1 1 100%; min-width: 0; }
+.pre { margin-top: 8px; white-space: pre-wrap; overflow-wrap: anywhere; padding: 16px; border-radius: 8px; background: t.$surface-2; color: t.$text; border: 1px solid t.$border; font-size: 13px; line-height: 1.6; }
+.historySection { padding-top: 16px; border-top: 1px solid t.$border; min-width: 0; }
+.historyList { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 12px; }
+.historyRow { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 16px; border: 1px solid t.$border; border-radius: 8px; background: t.$surface-2; min-width: 0; }
+.historyDate { font-size: 14px; color: t.$text-muted; flex: 1 1 180px; }
+.historyScore { font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.historyScoreNa, .historyCurrent { font-size: 13px; color: t.$text-muted; }
+.historyLink { display: inline-flex; align-items: center; min-height: 44px; font-size: 15px; color: t.$text; text-decoration: underline; text-underline-offset: 3px; }
+.card :is(a,button,summary):focus-visible { outline: 3px solid t.$brand; outline-offset: 3px; }
+@media(max-width:600px) { .card { padding: 16px; gap: 16px; } .header { grid-template-columns: minmax(0,1fr); gap: 16px; } .headerRight { flex-direction: row; align-items: center; justify-content: flex-start; flex-wrap: wrap; } .headerRight > a, .linkBtnDisabled { flex-basis: 100%; } .copyBtn { width: 100%; } .historyRow { padding: 12px; } }

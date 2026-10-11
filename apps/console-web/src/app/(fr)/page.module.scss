@@ -1,8 +1,8 @@
 @use '../../styles/tokens' as t;
+@use '../../styles/editorial' as editorial;
 
 // ─── Root ─────────────────────────────────────────────────────────────────────
 .page {
-  font-family: 'Inter', system-ui, sans-serif;
   color: t.$text;
   background: t.$bg;
 }
@@ -10,12 +10,14 @@
 // ─── Hero ─────────────────────────────────────────────────────────────────────
 .heroSection {
   position: relative;
-  background: linear-gradient(135deg, t.$color-navy 0%, t.$color-slate-800 60%, t.$color-navy 100%);
+  background: t.$canvas;
+  border-bottom: 1px solid t.$border;
   overflow: hidden;
-  padding: t.$space-20 t.$page-gutter t.$space-24;
+  padding: t.$space-16 t.$page-gutter;
 }
 
 .dotPattern {
+  display: none;
   position: absolute;
   inset: 0;
   background-image: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
@@ -25,13 +27,13 @@
 }
 
 .heroInner {
-  max-width: t.$container-width;
+  max-width: t.$container-width - 2 * t.$page-gutter;
   margin: 0 auto;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: t.$space-12;
   flex-wrap: wrap;
-  padding-bottom: t.$space-16;
+  padding-bottom: 0;
   position: relative;
   z-index: 1;
 }
@@ -41,6 +43,7 @@
   display: flex;
   flex-direction: column;
   gap: t.$space-5;
+  min-width: 0;
 }
 
 .heroRight {
@@ -48,11 +51,12 @@
   min-width: 280px;
 
   .mockCard {
-    animation: slideInRight 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+    animation: none;
   }
 }
 
 .heroFade {
+  display: none;
   position: absolute;
   bottom: 0;
   left: 0;
@@ -63,11 +67,8 @@
 
 .badge {
   display: inline-block;
-  background: t.$color-indigo-dim;
-  border: 1px solid rgba(99, 102, 241, 0.3);
-  color: t.$color-indigo-muted;
-  border-radius: t.$radius-pill;
-  padding: t.$space-1 14px;
+  color: t.$brand;
+  padding: 0;
   font-size: t.$text-sm;
   font-weight: 500;
   letter-spacing: 0.02em;
@@ -75,24 +76,24 @@
 
 .headline {
   font-size: clamp(28px, 5vw, 48px);
-  font-weight: 800;
+  font-weight: 650;
   line-height: 1.15;
   letter-spacing: -0.03em;
-  color: t.$color-slate-50;
+  color: t.$text;
   margin: 0;
 }
 
 .slogan {
   font-size: t.$text-lg;
   font-weight: 600;
-  color: t.$color-indigo-muted;
+  color: t.$text;
   letter-spacing: -0.01em;
   margin: 0;
 }
 
 .sub {
   font-size: t.$text-xl;
-  color: t.$color-slate-400;
+  color: t.$text-muted;
   line-height: 1.7;
   margin: 0;
   max-width: 500px;
@@ -100,9 +101,8 @@
 
 .audience {
   font-size: t.$text-md;
-  color: t.$color-slate-500;
+  color: t.$text-muted;
   margin: 0;
-  font-style: italic;
   letter-spacing: 0.01em;
 }
 
@@ -120,24 +120,23 @@
 }
 
 .input {
-  border: 1px solid t.$color-slate-700;
-  background: t.$color-slate-800;
-  color: t.$color-slate-50;
+  border: 1px solid t.$border;
+  background: t.$surface;
+  color: t.$text;
   border-radius: t.$radius-md;
   padding: 0 t.$space-4;
-  outline: none;
   font-size: t.$text-lg;
   flex: 1 1 220px;
   min-width: 0;
 
   &::placeholder {
-    color: t.$color-slate-500;
+    color: t.$text-subtle;
   }
 }
 
 .btn {
-  background: t.$color-indigo;
-  color: t.$color-white;
+  background: t.$brand;
+  color: t.$on-brand;
   border: none;
   border-radius: t.$radius-md;
   padding: 0 t.$space-6;
@@ -154,8 +153,18 @@
 .hint {
   margin: t.$space-2 0 0;
   font-size: t.$text-base;
-  color: t.$color-slate-400;
+  color: t.$text-muted;
 }
+
+.inputLabel { display: block; font-size: t.$text-base; font-weight: 600; margin-bottom: t.$space-2; }
+.input:focus-visible, .btn:focus-visible, .retryBtn:focus-visible { outline: 3px solid t.$brand; outline-offset: 3px; }
+.previewNote { margin-top: t.$space-3; color: t.$text-muted; font-size: t.$text-sm; max-width: 400px; }
+.sectionDark .inputLabel, .sectionDark .hint { color: t.$color-slate-300; }
+.sectionDark .input { background: t.$color-slate-800; border-color: t.$color-slate-500; color: t.$color-slate-50; }
+.sectionDark .input::placeholder { color: t.$color-slate-400; }
+.sectionDark .btn { background: t.$color-indigo; color: t.$color-white; }
+.sectionDark .input:focus-visible, .sectionDark .btn:focus-visible { outline-color: t.$color-indigo-muted; }
+.sectionDark .formErrorMsg { color: t.$color-red-border; }
 
 .formErrorMsg {
   color: t.$color-red;
@@ -171,8 +180,8 @@
   align-items: center;
   gap: t.$space-3;
   padding: t.$space-3 t.$space-4;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: t.$surface;
+  border: 1px solid t.$border;
   border-radius: t.$radius-md;
   min-height: 52px;
 }
@@ -189,7 +198,7 @@
 
 .analyzingText {
   font-size: t.$text-md;
-  color: t.$color-slate-300;
+  color: t.$text;
   font-weight: 500;
 }
 
@@ -373,7 +382,7 @@
 }
 
 .container {
-  max-width: t.$container-width;
+  max-width: t.$container-width - 2 * t.$page-gutter;
   margin: 0 auto;
 }
 
@@ -384,7 +393,7 @@
 }
 
 .sectionHeader {
-  text-align: center;
+  text-align: left;
   margin-bottom: t.$space-8;
 }
 
@@ -437,16 +446,14 @@
 }
 
 .moduleCard {
-  background: t.$surface-2;
-  border: 1px solid t.$border;
-  border-radius: 14px;
-  padding: t.$panel-space;
+  border-top: 1px solid t.$border;
+  padding: t.$space-5 0;
   display: flex;
   flex-direction: column;
   gap: t.$space-3;
 }
 
-.moduleIcon  { font-size: 26px; }
+.moduleIcon  { font-size: t.$text-sm; color: t.$brand; font-variant-numeric: tabular-nums; }
 .moduleLabel { font-size: t.$text-lg; font-weight: 600; margin: 0; }
 .moduleDesc  { font-size: t.$text-base; color: t.$text-muted; line-height: 1.6; margin: 0; }
 
@@ -468,7 +475,7 @@
 .stepNumber {
   font-size: 36px;
   font-weight: 800;
-  color: t.$border;
+  color: t.$brand;
   letter-spacing: -0.04em;
   line-height: 1;
   margin-bottom: t.$space-3;
@@ -493,11 +500,8 @@
 }
 
 .whyCard {
-  padding: t.$space-6;
-  border: 1px solid t.$border-subtle;
-  border-radius: 14px;
-  background: t.$surface;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  padding: t.$space-5 0;
+  border-top: 1px solid t.$border;
   display: flex;
   flex-direction: column;
   gap: t.$space-3;
@@ -560,7 +564,7 @@
 
   .heroInner {
     gap: t.$space-8;
-    padding-bottom: t.$space-12;
+    padding-bottom: 0;
   }
 
   // Sections
@@ -601,16 +605,14 @@
 
 }
 
-.exampleLink { display: inline-block; margin-top: 1rem; color: #c7d2fe; text-underline-offset: 0.2em; }
-.exampleLink:focus-visible { outline: 3px solid #c7d2fe; outline-offset: 4px; }
-.heroLeft, .heroRight { min-width: 0; }
-.sub { color: #cbd5e1; font-size: 1rem; line-height: 1.6; }
-.heroSection { padding-top: 2.5rem; padding-bottom: 3rem; }
-.heroInner { padding-bottom: 1rem; }
+@media (max-width: 400px) {
+  .heroRight { min-width: 0; width: 100%; }
+  .mockCard { padding: t.$space-4; }
+  .mockHeader { flex-wrap: wrap; }
+  .mockRings { gap: t.$space-1; flex-wrap: wrap; }
+  .formRow .btn { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { .analyzingSpinner { animation: none; } }
 
-.heroFormWrap, .sectionAlt { scroll-margin-top: 300px; }
-
-.page { @include t.public-type; }
-
-.whyCard a { color: t.$text; text-decoration: underline; }
-.whyCard a:focus-visible { outline: 3px solid t.$text; outline-offset: 3px; }
+@include editorial.anchors;
+.exampleLink { display: inline-flex; align-items: center; min-height: 44px; margin-top: 16px; color: #c7d2fe; text-underline-offset: 3px; &:focus-visible { outline: 3px solid #c7d2fe; outline-offset: 4px; } }
