@@ -172,7 +172,7 @@
     },
     "footer": {
       "builtPrefix": "Fait par",
-      "maltProfile": "Antoine LE LOUËT sur Malt",
+      "maltProfile": "Antoine LE LOUËT",
       "copy": "© 2026 Antoine LE LOUËT · Licence BSL 1.1"
     }
   },
@@ -585,12 +585,13 @@
       "desc": "Passez en revue les priorités et faites estimer les corrections avec un professionnel.",
       "cta": "Parler des corrections",
       "copyLink": "Copier le lien",
+      "shareReport": "Partager ce rapport",
       "calendlyComingSoon": "Lien Calendly à venir.",
       "footerNote": "Le lien donne accès au rapport sans connexion. La consigne de non-indexation ne protège pas son accès.",
       "copied": "Lien copié. Toute personne qui le possède peut lire ce rapport.",
       "copyFailed": "Copie impossible. Vous pouvez copier le lien depuis la barre d’adresse.",
       "copying": "Copie en cours…",
-      "ciNote": "Pour intégrer Argos à votre CI, contactez Antoine.",
+      "ciNote": "Pour intégrer Argos à votre CI :",
       "ciContact": "Contacter Antoine"
     },
     "priorityCards": {

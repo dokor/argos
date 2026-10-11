@@ -8,6 +8,7 @@ import { reportReadingCopy } from "./reportReadingCopy";
 import { globalScore, reportScope } from "./reportSummaryModel";
 import ReportSummary from "./ReportSummary";
 import RelaunchButton from "./RelaunchButton";
+import ShareReportButton from "./ShareReportButton";
 import s from "./ReportHero.module.scss";
 
 export default function ReportHero({ report, model = buildReportModel(report), onActions, onMethod }: {
@@ -56,6 +57,7 @@ export default function ReportHero({ report, model = buildReportModel(report), o
             ? `${Math.round(coverage.global.ratio * 100)} % — ${coverage.global.sufficient ? t.report.measurementCoverage.sufficient : copy.insufficient}`
             : copy.coverageUnknown}</p>
           <RelaunchButton url={report.url} />
+          <ShareReportButton />
         </div>
       </div>
       <div className={s.statsRow}>
