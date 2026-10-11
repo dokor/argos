@@ -63,6 +63,12 @@
   gap: 20px;
 }
 
+.starter { margin-top: 32px; padding: t.$panel-space; border: 1px solid t.$border; border-radius: 8px; background: t.$surface; }
+.starter h2 { margin: 0 0 16px; font-size: t.$text-2xl; }
+.starter ol { display: grid; gap: 12px; margin: 0; padding-left: 24px; list-style: decimal; line-height: 1.6; }
+.starter a { text-underline-offset: 3px; &:focus-visible { outline: 3px solid t.$brand; outline-offset: 3px; } }
+.card .cardMeta { font-size: t.$text-sm; margin-bottom: 16px; }
+
 .card {
   display: flex;
   flex-direction: column;
@@ -98,6 +104,7 @@
 @media (max-width: 700px) {
   .container { width: min(100% - 32px, t.$container-width - 48px); }
   .card { padding: t.$panel-space-mobile; }
+  .starter { padding: t.$panel-space-mobile; }
   .hero {
     padding-block: 54px;
   }

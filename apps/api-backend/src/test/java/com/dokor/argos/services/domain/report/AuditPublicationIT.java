@@ -35,7 +35,7 @@ class AuditPublicationIT extends MariaDbReportFixture {
         var composer = mock(PublicReportComposer.class); var summary = mock(AiReportSummaryService.class);
         when(composer.compose(any())).thenReturn(mapper.readValue("{\"domain\":\"example.com\"}", ReportDto.class));
         when(summary.enrich(any())).thenAnswer(call -> call.getArgument(0));
-        return new ReportPublishService(transactions(),runDao,reportDao,composer,summary,mapper);
+        return new ReportPublishService(transactions(),runDao,reportDao,composer,summary,mock(AhrefsDomainRatingClient.class),mapper);
     }
     private Audit audit() { var audit = new Audit(); audit.setId(1L); audit.setNormalizedUrl("https://example.com"); return audit; }
     private com.dokor.argos.services.domain.audit.model.QueuedRun claimedRun() throws Exception {
@@ -99,10 +99,7 @@ class AuditPublicationIT extends MariaDbReportFixture {
     }
     @Test void migrationReconcilesHistoricalCompletedOrphans() throws Exception {
         // Replay V8 from its historical boundary with a credential-bearing orphan.
-        sql("ALTER TABLE ARG_AUDIT_REPORT DROP INDEX idx_report_global_score, "
-            + "DROP COLUMN scoring_version, DROP COLUMN global_score");
-        sql("DELETE FROM flyway_schema_history WHERE version='9'");
-        sql("DELETE FROM flyway_schema_history WHERE version='8'");
+        migrateHistoricalRowsTo("7");
         sql("INSERT INTO ARG_AUDIT_RUN(id,audit_id,status,report_token_hash) VALUES(6,1,'COMPLETED',UNHEX(SHA2('synthetic-orphan',256)))");
         org.flywaydb.core.Flyway.configure().dataSource(source).load().migrate();
         assertEquals("FAILED",runs.getRun(6).orElseThrow().getStatus());

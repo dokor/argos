@@ -39,7 +39,7 @@ class ReportGlobalScoreMigrationIT extends MariaDbReportFixture {
         when(composer.compose(any())).thenReturn(dto);
         when(summaries.enrich(any())).thenAnswer(call -> call.getArgument(0));
         var publisher = new ReportPublishService(transactions, new AuditRunDao(transactions),
-            new AuditReportDao(transactions), composer, summaries, mapper);
+            new AuditReportDao(transactions), composer, summaries, mock(AhrefsDomainRatingClient.class), mapper);
         Audit audit = new Audit();
         audit.setId(1L);
         audit.setNormalizedUrl("https://example.com");

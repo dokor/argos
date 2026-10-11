@@ -19,24 +19,38 @@ public class SchedulerJobs {
     private static final Logger logger = LoggerFactory.getLogger(SchedulerJobs.class);
 
     private final Scheduler scheduler;
+    private final com.dokor.argos.services.domain.report.ReportRetentionService retention;
+    private final com.dokor.argos.services.analytics.ProductAnalyticsService analytics;
     private final ConfigurationService configurationService;
     private final AuditQueueService auditQueueService;
     private final StuckAuditRunReaper stuckAuditRunReaper;
+    private final com.dokor.argos.services.feedback.FeedbackService feedback;
 
+    public SchedulerJobs(Scheduler scheduler,ConfigurationService configuration,AuditQueueService queue,StuckAuditRunReaper reaper){this(scheduler,configuration,queue,reaper,null);}
+    public SchedulerJobs(Scheduler scheduler,ConfigurationService configuration,AuditQueueService queue,StuckAuditRunReaper reaper,com.dokor.argos.services.analytics.ProductAnalyticsService analytics){this(scheduler,configuration,queue,reaper,analytics,null);}
+    public SchedulerJobs(Scheduler scheduler,ConfigurationService configuration,AuditQueueService queue,StuckAuditRunReaper reaper,com.dokor.argos.services.analytics.ProductAnalyticsService analytics,com.dokor.argos.services.domain.report.ReportRetentionService retention) {this(scheduler,configuration,queue,reaper,analytics,retention,null);}
     @Inject
     public SchedulerJobs(
         Scheduler scheduler,
         ConfigurationService configurationService,
         AuditQueueService auditQueueService,
-        StuckAuditRunReaper stuckAuditRunReaper
+        StuckAuditRunReaper stuckAuditRunReaper, com.dokor.argos.services.analytics.ProductAnalyticsService analytics,
+        com.dokor.argos.services.domain.report.ReportRetentionService retention,
+        com.dokor.argos.services.feedback.FeedbackService feedback
     ) {
         this.scheduler = scheduler;
+        this.feedback = feedback;
+        this.retention = retention;
+        this.analytics = analytics;
         this.configurationService = configurationService;
         this.auditQueueService = auditQueueService;
         this.stuckAuditRunReaper = stuckAuditRunReaper;
     }
 
     public void scheduleJobs() {
+        if(feedback!=null) scheduler.schedule("Purge private feedback", feedback::purge, Schedules.fixedDelaySchedule(Duration.ofHours(1)));
+        if(retention!=null) scheduler.schedule("Purge expired reports", retention::purgeExpiredReports, Schedules.fixedDelaySchedule(Duration.ofHours(1)));
+        if(analytics!=null) scheduler.schedule("Purge product telemetry", analytics::purgeTelemetry, Schedules.fixedDelaySchedule(Duration.ofHours(1)));
 
         scheduler.schedule(
             "Process queued audit runs",

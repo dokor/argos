@@ -35,14 +35,17 @@ abstract class MariaDbReportFixture {
         source.setUser(System.getenv("ARGOS_TEST_CREDENTIALS_USER"));
         source.setPassword(System.getenv("ARGOS_TEST_CREDENTIALS_PASSWORD"));
     }
-    @BeforeEach void migrateHistoricalRows() throws Exception {
+    @BeforeEach void migrateHistoricalRows() throws Exception { migrateHistoricalRowsTo(null); }
+    protected void migrateHistoricalRowsTo(String target) throws Exception {
         var baseline = Flyway.configure().dataSource(source).cleanDisabled(false).target(MigrationVersion.fromVersion("6")).load();
         baseline.clean(); baseline.migrate();
         sql("INSERT INTO ARG_DOMAIN(id,hostname) VALUES(1,'example.com')");
         sql("INSERT INTO ARG_AUDIT(id,input_url,normalized_url,domain_id) VALUES(1,'https://example.com','https://example.com',1)");
         sql("INSERT INTO ARG_AUDIT_RUN(id,audit_id,status,report_token) VALUES(1,1,'COMPLETED','synthetic-existing'),(2,1,'QUEUED','synthetic-pending'),(3,1,'COMPLETED','synthetic-expired'),(4,1,'COMPLETED',NULL),(5,1,'QUEUED',NULL)");
         legacyReport(1,1,"synthetic-existing",false); legacyReport(3,3,"synthetic-expired",true); legacyReport(4,4,"synthetic-before-v5",false);
-        Flyway.configure().dataSource(source).load().migrate();
+        var migration = Flyway.configure().dataSource(source);
+        if(target != null) migration.target(MigrationVersion.fromVersion(target));
+        migration.load().migrate();
         var transactions = new TransactionManagerQuerydsl(source,new Configuration(MySQLTemplates.DEFAULT));
         reports = new AuditReportDao(transactions);
         runs = new AuditRunService(new AuditRunDao(transactions),tokens,mapper);
@@ -50,7 +53,7 @@ abstract class MariaDbReportFixture {
         var composer = mock(PublicReportComposer.class); var summary = mock(AiReportSummaryService.class);
         var dto = mapper.readValue("{\"domain\":\"example.com\"}",ReportDto.class);
         when(composer.compose(any())).thenReturn(dto); when(summary.enrich(any())).thenAnswer(call -> call.getArgument(0));
-        publisher = new ReportPublishService(transactions,new AuditRunDao(transactions),reports,composer,summary,mapper);
+        publisher = new ReportPublishService(transactions,new AuditRunDao(transactions),reports,composer,summary,org.mockito.Mockito.mock(AhrefsDomainRatingClient.class),mapper);
     }
     protected void sql(String text) throws Exception { try(var connection=source.getConnection();var statement=connection.createStatement()){statement.execute(text);} }
     protected void legacyReport(long id,long run,String token,boolean expired) throws Exception {

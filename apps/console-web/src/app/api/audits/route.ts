@@ -1,81 +1,32 @@
+import { ssrfError } from "@/lib/audit-url-validation";
 /**
  * BFF validation layer for POST /api/audits.
  *
- * This Next.js route takes priority over the next.config.ts afterFiles rewrite,
+ * This Next.js route takes priority over the next.config.ts fallback rewrite,
  * intercepting audit creation requests to validate the URL before proxying to
  * the Java backend.
  *
  * GET /api/audits (list) is also proxied here so the rewrite remains consistent.
  */
 
+import { attribution, count } from "@/lib/analytics/server";
 import { NextRequest, NextResponse } from "next/server";
 import { adminReadProxy } from "@/lib/admin-read-proxy";
+import { accountHeaders, SESSION_COOKIE, saveRunProof } from "@/lib/account-proxy";
 import { createLogger, safeError, sanitizeText, sanitizeUrl } from "@/lib/logger";
 
 const API_BASE = process.env.API_BASE ?? "http://api-backend:8081";
 const logger = createLogger("api", { route: "/api/audits" });
 
 const MAX_URL_LENGTH = 2048;
-
-// Only http and https are accepted.
-const ALLOWED_SCHEMES = /^https?:\/\//i;
-
-// Hostnames that map to internal/private resources.
-const BLOCKED_HOSTNAME = /^(localhost|.*\.local|.*\.internal|.*\.localhost|.*\.localdomain)$/i;
-
-// Private IPv4 ranges (loopback, link-local, RFC-1918, AWS metadata).
-const PRIVATE_IPV4 =
-  /^(127\.|169\.254\.|10\.|172\.(1[6-9]|2[0-9]|30|31)\.|192\.168\.|0\.0\.0\.0)/;
-
-// Private/loopback IPv6.
-const PRIVATE_IPV6 = /^(::1$|::$|fc[0-9a-f]{2}:|fd[0-9a-f]{2}:|fe80:)/i;
-
-/**
- * Returns an error message if the URL targets a private/internal resource,
- * or null if it looks safe.
- */
-function ssrfError(raw: string): string | null {
-  let parsed: URL;
-  try {
-    // Prepend https:// when the user omitted the scheme (same logic as backend).
-    const withScheme = /^[a-zA-Z][a-zA-Z0-9+\-.]*:\/\//.test(raw)
-      ? raw
-      : `https://${raw}`;
-    parsed = new URL(withScheme);
-  } catch {
-    return "Invalid URL format";
-  }
-
-  const scheme = parsed.protocol.replace(/:$/, "");
-  if (!ALLOWED_SCHEMES.test(parsed.href)) {
-    return `Scheme '${scheme}' is not allowed - only http and https are accepted`;
-  }
-
-  const host = parsed.hostname.toLowerCase();
-
-  if (BLOCKED_HOSTNAME.test(host)) {
-    return "Internal or local hostnames are not allowed";
-  }
-
-  if (PRIVATE_IPV4.test(host)) {
-    return "Private IPv4 addresses are not allowed";
-  }
-
-  // IPv6 literals are wrapped in brackets by the URL parser; strip them.
-  const bare = host.startsWith("[") ? host.slice(1, -1) : host;
-  if (PRIVATE_IPV6.test(bare)) {
-    return "Private IPv6 addresses are not allowed";
-  }
-
-  return null;
-}
-
 /** Sanitizes a string for safe logging (prevents CRLF injection). */
 function sanitize(s: string): string {
   return sanitizeText(s) ?? "";
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  const personal = request.cookies.has(SESSION_COOKIE) ? accountHeaders(request, true) : null;
+  if (personal instanceof NextResponse) return personal;
   const startedAt = Date.now();
   logger.info("audit_bff_request_received", {
     action: "create_audit",
@@ -104,7 +55,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Request body must be a JSON object" }, { status: 400 });
   }
 
-  const { url, sourceRoute } = body as Record<string, unknown>;
+  const { url, sourceRoute, lang } = body as Record<string, unknown>;
+  if ((body as Record<string,unknown>).personal === true && !request.cookies.has(SESSION_COOKIE)) return NextResponse.json({error:"session_invalid"},{status:401,headers:{"Cache-Control":"private, no-store"}});
+  const analytics = attribution(request,{route:sourceRoute,lang,placement:"form"});
+  const rejected=async(errorCategory:"validation"|"service"|"rate_limit")=>{if(analytics)await count({event:"audit_submission_rejected",dimensions:analytics,errorCategory});};
   // A fixed allowlist keeps untrusted values out of structured logs.
   const auditSource = sourceRoute === "/guides/checklist-audit-site-web"
     ? sourceRoute
@@ -116,6 +70,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         durationMs: Date.now() - startedAt,
       },
     });
+    await rejected("validation");
     return NextResponse.json({ error: "Field 'url' is required" }, { status: 400 });
   }
 
@@ -128,6 +83,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         url: sanitizeUrl(trimmed),
       },
     });
+    await rejected("validation");
     return NextResponse.json(
       { error: `URL must not exceed ${MAX_URL_LENGTH} characters` },
       { status: 400 }
@@ -145,6 +101,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         url: sanitizeUrl(trimmed),
       },
     });
+    await rejected("validation");
     return NextResponse.json({ error: err }, { status: 400 });
   }
 
@@ -152,8 +109,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     backendRes = await fetch(`${API_BASE}/api/audits`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url: trimmed }),
+      headers: { "Content-Type": "application/json", ...(analytics ? {Authorization:"Bearer "+process.env.ADMIN_API_TOKEN} : {}),
+        ...(personal ? { "X-Argos-Account-Session": personal.get("Authorization") ?? "", Origin: personal.get("Origin") ?? "",
+          "X-Argos-CSRF": personal.get("X-Argos-CSRF") ?? "", Cookie: personal.get("Cookie") ?? "" } : {}) },
+      body: JSON.stringify({ url: trimmed, ...(analytics ? {analytics} : {}) }),
     });
   } catch (error) {
     logger.error("audit_bff_backend_unreachable", {
@@ -164,10 +123,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         url: sanitizeUrl(trimmed),
       },
     });
+    await rejected("service");
     return NextResponse.json({ error: "Service temporarily unavailable" }, { status: 503 });
   }
 
   const text = await backendRes.text();
+  if(!backendRes.ok)await rejected(backendRes.status===429?"rate_limit":backendRes.status<500?"validation":"service");
   if (backendRes.ok) {
     logger.info("audit_bff_backend_response_ok", {
       action: "create_audit",
@@ -189,11 +150,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     });
   }
 
-  return new NextResponse(text, {
+  const response = new NextResponse(text, {
     status: backendRes.status,
     headers: { "Content-Type": "application/json", "Cache-Control": "no-store",
       ...(backendRes.status === 429 && backendRes.headers.get("retry-after") ? { "Retry-After": backendRes.headers.get("retry-after")! } : {}) },
   });
+  const proof = backendRes.headers.get("x-argos-run-proof");
+  if (backendRes.ok && proof) {
+    try { const created = JSON.parse(text); saveRunProof(request, response, String(created.runId), created.reportToken, proof); } catch { /* Invalid upstream response cannot issue a proof. */ }
+  }
+  return response;
 }
 
 export async function GET(request: NextRequest): Promise<NextResponse> {

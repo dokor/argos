@@ -65,6 +65,8 @@ export default function FilterBar({
           const active = filterStatus === s;
           return (
             <button
+              type="button"
+              aria-pressed={active}
               key={s}
               onClick={() => setFilterStatus(s)}
               className={styles.chip}
@@ -72,7 +74,7 @@ export default function FilterBar({
                 background: active ? "var(--argos-text)" : "var(--argos-surface-2)",
                 color: active ? "var(--argos-bg)" : "var(--argos-text-muted)",
                 border: active ? "1px solid var(--argos-text)" : "1px solid var(--argos-border)",
-                fontWeight: active ? 800 : 600,
+                fontWeight: 600,
               }}
             >
               {s === "ALL" ? tl.filters.all : tl.status[s]}
@@ -132,9 +134,9 @@ export default function FilterBar({
 
 function SelectBox({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className={styles.selectBox}>
+    <label className={styles.selectBox}>
       <span className={styles.selectLabel}>{label}</span>
       {children}
-    </div>
+    </label>
   );
 }

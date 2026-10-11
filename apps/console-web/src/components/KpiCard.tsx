@@ -24,6 +24,7 @@ export default function KpiCard({ label, value, icon, accent, bg, description, h
         <span className={styles.label}>{label}</span>
         <span
           className={styles.icon}
+          aria-hidden="true"
           style={{ "--icon-bg": bg, "--icon-color": accent } as React.CSSProperties}
         >
           {icon}

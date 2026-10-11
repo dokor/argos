@@ -23,6 +23,7 @@ Argos est un outil de diagnostic : le visiteur doit comprendre ce qui a été me
 - Les états chargement, succès et erreur ne doivent pas déplacer les CTA voisins. Réserver une place aux icônes et placer les messages hors du bouton ; garder un focus visible sans masquer le contenu.
 - Vérifier la graisse réellement rendue des titres : le reset global neutralise les styles natifs des titres et des listes. Définir explicitement la hiérarchie dans les modules (`editorial.headings` pour les ressources) et restaurer les puces ou la numérotation des listes de prose.
 - Aligner les bords extérieurs du contenu avec les gouttières de navigation ; ne pas ajouter une seconde marge mobile à une section déjà contenue dans une grille. Réserver une seule séparation entre deux sections et contrôler les cartes aux largeurs intermédiaires, où un score peut repousser un libellé.
+- Sur les lignes de constats, donner au titre une largeur lisible : les badges et chevrons passent sur une ligne distincte quand ils compriment le texte. Un écran sans débordement peut néanmoins avoir des mots coupés presque lettre par lettre ; vérifier la capture, pas seulement `scrollWidth`.
 - Adapter les marges d’ancrage à la hauteur réellement rendue des en-têtes fixes, y compris leurs deux lignes sur mobile. Les introductions publiques partagent `editorial.anchors`.
 
 ## Mise en pratique
@@ -33,9 +34,8 @@ Conserver les tokens sémantiques `--argos-*`, les thèmes clair/sombre, l’i18
 
 ## Rapport
 
-Organiser la lecture : identité et périmètre → score et couverture → actions prioritaires → domaines → preuves et recommandations. Prévoir des liens d’accès direct aux sections. Garder les informations de couverture et les scores indisponibles visibles ; ne pas présenter l’absence de mesure comme un zéro ou une réussite.
+Conserver les trois modes de lecture du rapport : vue d’ensemble, plan d’action et constats techniques. L’identité, le périmètre, le score et la couverture donnent le contexte commun ; les actions et leurs liens ouvrent le constat canonique correspondant. Prévoir des liens d’accès direct aux sections. Garder les informations de couverture et les scores indisponibles visibles ; ne pas présenter l’absence de mesure comme un zéro ou une réussite.
 
-Les compteurs proviennent de `report.issues`, les actions de `summary.priorities`. Respecter le classement backend et limiter l’affichage à six actions. Les gains sont théoriques : garder leur libellé et leurs limites à proximité. Les détails peuvent être repliés, mais le titre et l’impact de l’action restent visibles.
+Les compteurs proviennent des constats canoniques construits depuis `report.issues`, les actions de `summary.priorities`. Respecter le classement du modèle courant, avec trois actions dans la vue d’ensemble et au plus six dans le plan d’action. Les gains sont théoriques : garder leur libellé et leurs limites à proximité. Les détails peuvent être repliés, mais le titre et l’impact de l’action restent visibles.
 
 Valider la composition au moyen du skill `argos-visual-review` lorsqu’il est disponible, sinon avec une inspection équivalente du navigateur. Signaler les limites de vérification effectivement rencontrées.
-

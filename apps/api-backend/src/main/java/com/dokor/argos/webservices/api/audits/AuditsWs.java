@@ -49,14 +49,27 @@ public class AuditsWs {
     private final AuditQueryService auditQueryService;
     private final AdminReadAccess adminReadAccess;
     private final ReportReadService reportReadService;
+    private final com.dokor.argos.services.analytics.ProductAnalyticsService analytics;
+    private com.dokor.argos.services.account.AccountRunsService accountRuns;
+    private com.dokor.argos.services.account.AccountSettings accountSettings;
+    private com.dokor.argos.services.account.AccountCsrf accountCsrf;
+    @jakarta.ws.rs.core.Context private jakarta.inject.Provider<jakarta.ws.rs.container.ContainerRequestContext> requestContext;
 
-    @Inject
+    public AuditsWs(AuditService audits, AuditQueryService query, AdminReadAccess access, ReportReadService reports) { this(audits,query,access,reports,null); }
     public AuditsWs(AuditService auditService, AuditQueryService auditQueryService,
-                    AdminReadAccess adminReadAccess, ReportReadService reportReadService) {
+                    AdminReadAccess adminReadAccess, ReportReadService reportReadService, com.dokor.argos.services.analytics.ProductAnalyticsService analytics) {
         this.auditService = auditService;
         this.auditQueryService = auditQueryService;
         this.adminReadAccess = adminReadAccess;
         this.reportReadService = reportReadService;
+        this.analytics = analytics;
+    }
+    @Inject
+    public AuditsWs(AuditService auditService,AuditQueryService query,AdminReadAccess access,ReportReadService reports,
+        com.dokor.argos.services.analytics.ProductAnalyticsService analytics,
+        com.dokor.argos.services.account.AccountRunsService accountRuns,
+        com.dokor.argos.services.account.AccountSettings settings,com.dokor.argos.services.account.AccountCsrf csrf) {
+        this(auditService,query,access,reports,analytics);this.accountRuns=accountRuns;this.accountSettings=settings;this.accountCsrf=csrf;
     }
 
     /**
@@ -68,10 +81,12 @@ public class AuditsWs {
      *
      * @return 200 avec le run créé, ou 400 si l'URL est absente/invalide
      */
+    public Response createAudit(CreateAuditRequest request) { return createAudit(request,null); }
+
     @POST
     @Operation(description = "Crée un audit (idempotent sur normalizedUrl) et crée un run en status QUEUED.")
     public Response createAudit(
-        @Parameter(required = true) @RequestBody(required = true) @Valid CreateAuditRequest request
+        @Parameter(required = true) @RequestBody(required = true) @Valid CreateAuditRequest request, @HeaderParam("Authorization") String authorization
     ) {
         if (request == null || request.url() == null || request.url().isBlank()) {
             return Response.status(Response.Status.BAD_REQUEST)
@@ -83,7 +98,14 @@ public class AuditsWs {
         logger.info("Create audit requested: url={}", sanitizeForLog(request.url()));
 
         try {
-            return Response.ok(AuditResponseMapper.created(auditService.createAudit(request.url()))).build();
+            String credential=requestContext==null?null:requestContext.get().getHeaderString("X-Argos-Account-Session");
+            com.dokor.argos.services.account.AccountRunsService.Created personal = accountRuns!=null && (accountSettings.enabled()||credential!=null)
+                ? accountRuns.create(request.url(),credential,credential==null?null:accountCsrf.require(requestContext.get())) : null;
+            var created=personal==null?auditService.createAudit(request.url()):personal.audit();
+            if(analytics!=null) analytics.attribute(created.runId(),request.analytics(),authorization);
+            var response=Response.ok(AuditResponseMapper.created(created)).header("Cache-Control","private, no-store");
+            if(personal!=null&&personal.proof()!=null)response.header("X-Argos-Run-Proof",personal.proof());
+            return response.build();
         } catch (IllegalArgumentException e) {
             logger.warn("Invalid URL submitted url={} error={}", sanitizeForLog(request.url()), e.getMessage());
             return Response.status(Response.Status.BAD_REQUEST)

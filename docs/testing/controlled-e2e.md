@@ -1,6 +1,6 @@
 # Controlled audit E2E (#64)
 
-The `Controlled audit E2E` CI job runs a production Next build, actual Jersey HTTP resources, production audit orchestration, real Flyway/MariaDB 11.4, two competing queue workers, Chromium, and the runtime/Lighthouse HTTP apps. A separate browser harness submits the public form, opens progression, observes QUEUED → RUNNING → COMPLETED, waits for rendered report coverage, and checks private reads are denied. Eight completed runs must each have one claim attempt and exactly one published report.
+The `Controlled audit E2E` CI job runs a production Next build, actual Jersey HTTP resources, production audit orchestration, real Flyway/MariaDB 11.4, two competing queue workers, Chromium, and the runtime/Lighthouse HTTP apps. A separate browser harness submits the public form, opens progression, observes QUEUED → RUNNING → COMPLETED, verifies the domain heading and persisted weighted coverage beside the Argos score, opens measurement details from the summary with focus transfer, distinguishes module completeness from weighted coverage, and checks private reads are denied. Eight completed runs must each have one claim attempt and exactly one published report.
 
 ## Fixtures and boundaries
 

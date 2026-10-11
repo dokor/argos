@@ -19,9 +19,8 @@ export default function ReportHeader() {
         </Link>
 
         <div className={s.right}>
-          <span className={s.privateBadge}>{t.report.page.private}</span>
           <ThemeToggle />
-            <LangToggle />
+          <LangToggle />
         </div>
       </div>
     </header>

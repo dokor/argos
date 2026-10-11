@@ -1,15 +1,15 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/LocalizedLink";
+import { useState } from "react";
 import AuditForm from "@/components/AuditForm";
+import EditorialMeta from "@/components/marketing/EditorialMeta";
 import SiteNav from "@/components/site/SiteNav";
 import SiteFooter from "@/components/site/SiteFooter";
 import ChoosingArgos from "@/components/marketing/ChoosingArgos";
 import { useLang } from "@/lib/i18n/LangContext";
 import s from "./page.module.scss";
 
-// The French copy is rendered during prerendering and is the canonical content.
-// The language toggle changes the article after hydration, as on other resources.
 const copy = {
   fr: {
     eyebrow: "Guide pratique · 6 étapes",
@@ -78,6 +78,8 @@ const copy = {
     exampleEnd: "L’ordre réel dépend de l’impact sur vos utilisateurs, de votre objectif et du coût de correction. Un score global ne remplace pas ce jugement.",
     nextTitle: "Approfondir un point",
     links: [
+      { href: "/exemple-rapport", label: "Lire un exemple de rapport commenté" },
+      { href: "/methodologie-score#resume", label: "Comprendre le calcul du score" },
       { href: "/ressources/audit-technique-gratuit#result-title", label: "Comprendre les résultats et les limites du score Argos" },
       { href: "/ressources/accessibilite-numerique", label: "Approfondir l’accessibilité numérique" },
       { href: "/ressources/audit-site-ecommerce", label: "Appliquer la méthode à un site e-commerce" },
@@ -118,6 +120,8 @@ const copy = {
     exampleEnd: "The actual order depends on user impact, your goals, and the cost of each fix. An overall score cannot replace that judgment.",
     nextTitle: "Explore further",
     links: [
+      { href: "/exemple-rapport", label: "Read a commented example report" },
+      { href: "/methodologie-score#resume", label: "Understand score calculation" },
       { href: "/ressources/audit-technique-gratuit#result-title", label: "Understand Argos results and score limits" },
       { href: "/ressources/accessibilite-numerique", label: "Learn more about digital accessibility" },
       { href: "/ressources/audit-site-ecommerce", label: "Apply the method to an e-commerce site" },
@@ -138,6 +142,19 @@ const copy = {
 export default function ChecklistAuditPage() {
   const { lang } = useLang();
   const c = copy[lang];
+  const [checked, setChecked] = useState<Set<string>>(() => new Set());
+  const toggle = (id: string) => setChecked(previous => {
+    const next = new Set(previous);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
+  const controls = lang === "fr" ? {
+    note: "Les cases servent à suivre votre lecture : elles ne valident aucun contrôle technique. La progression est remise à zéro au rechargement.",
+    done: "étapes marquées", print: "Imprimer la checklist", reset: "Réinitialiser", audit: "Lancer un audit pour les contrôles automatisables",
+  } : {
+    note: "Tick boxes track your review; they do not validate any technical check. Progress resets when you reload the page.",
+    done: "steps marked", print: "Print the checklist", reset: "Reset", audit: "Run an audit for automated checks",
+  };
 
   return (
     <div className={s.page}>
@@ -147,12 +164,22 @@ export default function ChecklistAuditPage() {
           <div className={s.container}>
             <p className={s.eyebrow}>{c.eyebrow}</p>
             <h1>{c.title}</h1>
+            <EditorialMeta route="/guides/checklist-audit-site-web" />
             <p className={s.lead}>{c.lead}</p>
             <p className={s.scope}>{c.scope}</p>
+            <p className={s.earlyCta}><a href="#audit-gratuit">{controls.audit}</a></p>
           </div>
         </header>
 
         <div className={s.container}>
+          <div className={s.controls}>
+            <p>{controls.note}</p>
+            <p role="status" aria-live="polite">{checked.size} / {c.steps.length} {controls.done}</p>
+            <div className={s.buttons}>
+              <button type="button" onClick={() => window.print()}>{controls.print}</button>
+              <button type="button" onClick={() => setChecked(new Set())}>{controls.reset}</button>
+            </div>
+          </div>
           <nav className={s.contents} aria-label={c.contents}>
             <h2>{c.contents}</h2>
             <ol>{c.steps.map((step) => <li key={step.id}><a href={`#${step.id}`}>{step.title}</a></li>)}</ol>
@@ -164,7 +191,8 @@ export default function ChecklistAuditPage() {
                 <li className={s.step} id={step.id} key={step.id}>
                   <div className={s.stepHeading}>
                     <span className={s.stepNumber} aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
-                    <h2>{step.title}</h2>
+                    <input className={s.checkbox} id={`check-${step.id}`} type="checkbox" checked={checked.has(step.id)} onChange={() => toggle(step.id)} />
+                    <h2><label htmlFor={`check-${step.id}`}>{step.title}</label></h2>
                   </div>
                   <dl className={s.fields}>
                     <div><dt>{c.labels.why}</dt><dd>{step.why}</dd></div>
@@ -188,7 +216,7 @@ export default function ChecklistAuditPage() {
           <section className={s.more} aria-labelledby="more-title">
             <h2 id="more-title">{c.nextTitle}</h2>
             <ul>{c.links.map((link) => <li key={link.href}><Link href={link.href}>{link.label}</Link></li>)}</ul>
-            <h3>{c.sourcesTitle}</h3>
+            <h3 id="references">{c.sourcesTitle}</h3>
             <ul>{c.sources.map((source) => <li key={source.href}><a href={source.href}>{source.label}</a></li>)}</ul>
           </section>
 
@@ -198,7 +226,7 @@ export default function ChecklistAuditPage() {
             <AuditForm mode="public" sourceRoute="/guides/checklist-audit-site-web" />
           </section>
         </div>
-        <ChoosingArgos />
+        <ChoosingArgos context="checklist" />
       </main>
       <SiteFooter />
     </div>

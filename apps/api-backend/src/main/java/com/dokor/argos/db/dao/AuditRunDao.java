@@ -23,10 +23,17 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
     private static final QAuditRun RUN = QAuditRun.auditRun;
 
 
-    @Inject
+    private final com.dokor.argos.services.account.UsageService usage;
     public AuditRunDao(TransactionManagerQuerydsl transactionManager) {
-        super(transactionManager, QAuditRun.auditRun);
+        this(transactionManager,new com.dokor.argos.services.account.UsageService(transactionManager,
+            new com.dokor.argos.services.account.UsagePolicy(com.typesafe.config.ConfigFactory.empty()),java.time.Clock.systemUTC()));
     }
+    @Inject
+    public AuditRunDao(TransactionManagerQuerydsl transactionManager, com.dokor.argos.services.account.UsageService usage) {
+        super(transactionManager, QAuditRun.auditRun);
+        this.usage=usage;
+    }
+    public com.dokor.argos.services.account.UsageService usage() { return usage; }
 
     public Optional<AuditRun> findNextQueuedRun() {
         return Optional.ofNullable(
@@ -130,12 +137,21 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
      */
     public boolean markFailed(long runId, Instant finishedAt, String lastError, String claimToken) {
         if (claimToken == null) return false;
-        return transactionManager.update(RUN)
+        return failAndRelease(runId,finishedAt,lastError,claimToken);
+    }
+    private boolean failAndRelease(long runId,Instant finishedAt,String lastError,String claimToken) {
+        return transactionManager.executeAndReturn(c -> {
+            var run=lockForPublication(runId,c).orElse(null);
+            if(run==null || !"RUNNING".equals(run.getStatus()) || claimToken!=null && !claimToken.equals(run.getClaimToken())) return false;
+            long updated=transactionManager.update(RUN,c)
             .set(RUN.status, AuditRunStatus.FAILED.name())
             .set(RUN.finishedAt, finishedAt)
             .set(RUN.lastError, lastError)
-            .where(RUN.id.eq(runId), RUN.status.eq("RUNNING"), RUN.claimToken.eq(claimToken))
-            .execute() == 1;
+            .where(RUN.id.eq(runId), RUN.status.eq("RUNNING"))
+            .execute();
+            if(updated==1) usage.release(run,c);
+            return updated==1;
+        });
     }
 
     /**
@@ -203,17 +219,7 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
      * @return true si le run a bien été marqué FAILED, false sinon
      */
     public boolean markStuckFailed(long runId, Instant finishedAt, String lastError) {
-        long updated = transactionManager.update(RUN)
-            .set(RUN.status, AuditRunStatus.FAILED.name())
-            .set(RUN.finishedAt, finishedAt)
-            .set(RUN.lastError, lastError)
-            .where(
-                RUN.id.eq(runId),
-                RUN.status.eq(AuditRunStatus.RUNNING.name())
-            )
-            .execute();
-
-        return updated == 1;
+        return failAndRelease(runId,finishedAt,lastError,null);
     }
 
     /**

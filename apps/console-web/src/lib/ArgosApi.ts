@@ -1,5 +1,6 @@
 import { Report } from "@/components/report/types";
 import { createLogger, safeError } from "@/lib/logger";
+import { accountAuditHeaders } from "@/lib/account-client";
 
 /**
  * Erreur HTTP portant le code de statut, pour permettre aux appelants de
@@ -9,18 +10,22 @@ import { createLogger, safeError } from "@/lib/logger";
  */
 export class ApiError extends Error {
   readonly status: number;
+  readonly code: string | null;
 
   constructor(status: number, statusText: string, body: string) {
     super(`HTTP ${status} ${statusText} - ${body}`);
     this.name = "ApiError";
     this.status = status;
+    try { this.code = JSON.parse(body).error ?? null; } catch { this.code = null; }
   }
 }
 
 export type CreateAuditRequest = {
+  personal?: boolean;
   url: string;
-  /** Attribution BFF uniquement ; jamais transmise au backend Java. */
+  /** Route fixe, attribuée uniquement avec consentement validé côté BFF. */
   sourceRoute?: string;
+  lang?: "fr" | "en";
 };
 
 export type CreateAuditResponse = {
@@ -143,9 +148,10 @@ export async function http<T>(path: string, init?: RequestInit): Promise<T> {
 const limit = 100;
 
 export const argosApi = {
-  createAudit: (body: CreateAuditRequest): Promise<CreateAuditResponse> =>
+  createAudit: async (body: CreateAuditRequest): Promise<CreateAuditResponse> =>
     http<CreateAuditResponse>("/api/audits", {
       method: "POST",
+      headers: typeof window === "undefined" ? {} : await accountAuditHeaders(),
       body: JSON.stringify(body),
     }),
 

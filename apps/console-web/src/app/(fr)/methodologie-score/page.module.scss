@@ -43,6 +43,13 @@
   line-height: 1.65;
 }
 
+.summary { margin-top: 24px; padding: 24px; background: t.$surface; border: 1px solid t.$border; border-radius: 8px; scroll-margin-top: 96px;
+  h2 { margin: 0 0 16px; font-size: t.$text-2xl; }
+  ol { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 24px; padding-left: 20px; list-style: decimal; }
+  span { display: block; margin-top: 8px; color: t.$text-muted; }
+  p,li { line-height: 1.6; }
+}
+
 .contents {
   display: flex;
   flex-wrap: wrap;
@@ -57,7 +64,7 @@
   }
 }
 
-.page a {
+.page main a {
   color: t.$text;
   text-underline-offset: 3px;
 
@@ -212,6 +219,7 @@
 }
 
 @media (max-width: 700px) {
+  .summary { padding: 16px; ol { grid-template-columns: 1fr; } }
   .hero {
     padding-block: 52px;
   }

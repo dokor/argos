@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, waitFor } from "@testing-library/react";
+vi.mock("@/components/account/RunClaim", () => ({ default: () => null }));
+import { render, screen, waitFor } from "@testing-library/react";
 
 const { refresh } = vi.hoisted(() => ({ refresh: vi.fn() }));
 vi.mock("next/navigation", () => ({
@@ -41,6 +42,7 @@ describe("AuditProgressView (polling de progression)", () => {
 
     const { findByText } = render(<AuditProgressView token="tok" />);
     expect(await findByText("HTTP")).toBeInTheDocument();
+    expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "0");
     // Un run non terminé ne déclenche pas de refresh.
     expect(refresh).not.toHaveBeenCalled();
   });

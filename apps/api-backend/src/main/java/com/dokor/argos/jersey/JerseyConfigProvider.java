@@ -6,7 +6,6 @@ import jakarta.inject.Singleton;
 
 import org.glassfish.jersey.server.ResourceConfig;
 
-import com.coreoz.plume.jersey.errors.WsJacksonJsonProvider;
 import com.coreoz.plume.jersey.errors.WsResultExceptionMapper;
 import com.coreoz.plume.jersey.java8.TimeParamProvider;
 import com.coreoz.plume.jersey.security.permission.PublicApi;
@@ -22,7 +21,6 @@ public class JerseyConfigProvider implements Provider<ResourceConfig> {
 
     private final ResourceConfig config;
 
-    @Inject
     public JerseyConfigProvider(ObjectMapper objectMapper) {
         config = new ResourceConfig();
 
@@ -35,7 +33,7 @@ public class JerseyConfigProvider implements Provider<ResourceConfig> {
         // Limit request body size to 500kb
         config.register(ContentSizeLimitFeature.class);
         // require explicit access control on API
-        config.register(RequireExplicitAccessControlFeature.accessControlAnnotations(PublicApi.class));
+        config.register(RequireExplicitAccessControlFeature.accessControlAnnotations(PublicApi.class, com.dokor.argos.webservices.api.account.AccountAccess.class));
         // to debug web-service requests
 //        config.register(LoggingFeature.class);
 
@@ -51,9 +49,18 @@ public class JerseyConfigProvider implements Provider<ResourceConfig> {
         config.property("jersey.config.server.headers.location.relative.resolution.disabled", true);
 
         // jackson mapper configuration
-        WsJacksonJsonProvider jacksonProvider = new WsJacksonJsonProvider();
+        SafeJsonProvider jacksonProvider = new SafeJsonProvider();
         jacksonProvider.setMapper(objectMapper);
         config.register(jacksonProvider);
+    }
+    @Inject
+    public JerseyConfigProvider(ObjectMapper mapper,com.dokor.argos.webservices.api.account.AccountPermissionProvider provider,
+                                com.dokor.argos.services.account.AccountSessionService sessions) {
+        this(mapper);
+        config.register(com.dokor.argos.webservices.api.account.AccountContextFactory.binding(sessions));
+        config.register(new com.coreoz.plume.jersey.security.permission.PermissionFeature<>(
+            provider,com.dokor.argos.webservices.api.account.AccountAccess.class,
+            com.dokor.argos.webservices.api.account.AccountAccess::value));
     }
 
     @Override

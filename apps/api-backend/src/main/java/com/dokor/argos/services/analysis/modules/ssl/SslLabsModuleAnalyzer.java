@@ -16,9 +16,11 @@ import org.slf4j.Logger;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Singleton
 public class SslLabsModuleAnalyzer {
@@ -53,20 +55,67 @@ public class SslLabsModuleAnalyzer {
             throw new ModuleUnavailableException("SSL Labs API unavailable", e);
         }
 
-        // Pick the best/first endpoint
+        // Assess every address; aggregate each control independently.
         if (result == null || result.isNull()) {
             throw new ModuleUnavailableException("SSL Labs response is empty");
         }
         JsonNode endpoints = result.path("endpoints");
-        JsonNode endpoint = endpoints.isArray() && endpoints.size() > 0 ? endpoints.get(0) : null;
-        if (endpoint == null && JsonNodes.text(result.path("status")) == null) {
+        if ((!endpoints.isArray() || endpoints.isEmpty()) && JsonNodes.text(result.path("status")) == null) {
             throw new ModuleUnavailableException("SSL Labs response has no usable measurements");
         }
 
+        long nowMs = Instant.now().toEpochMilli();
+        String hostStatus = JsonNodes.text(result.path("status"));
+        List<EndpointObservation> observations = new ArrayList<>();
+        if (endpoints.isArray()) {
+            for (JsonNode item : endpoints) {
+                String statusMessage = textField(item, "statusMessage");
+                JsonNode progress = item.get("progress");
+                boolean pending = progress != null && progress.isNumber() && progress.intValue() < 100;
+                boolean failed = "READY".equals(hostStatus) && statusMessage != null
+                    && !"Ready".equalsIgnoreCase(statusMessage);
+                var analysis = analyzeEndpoint(host, hostStatus, pending || failed ? null : item, nowMs);
+                observations.add(new EndpointObservation(item, analysis,
+                    failed ? "ASSESSMENT_FAILED" : pending ? "NOT_EVALUATED"
+                        : analysis.checks().stream().anyMatch(c -> c.status() != AuditStatus.INFO)
+                            ? "EVALUATED" : "NOT_EVALUATED"));
+            }
+        }
+        observations.sort(Comparator.comparing(EndpointObservation::identity).thenComparing(o -> o.raw().toString()));
+        // An empty response retains explicit unknown checks, with zero measured endpoints.
+        var template = analyzeEndpoint(host, hostStatus, null, nowMs);
+        List<AuditCheckResult> checks = new ArrayList<>();
+        for (var unknown : template.checks()) checks.add(aggregate(unknown, observations));
+
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("host", host);
+        data.put("status", hostStatus);
+        data.put("aggregation", "worst-measured-endpoint-v1");
+        data.put("endpoints", observations.stream().map(EndpointObservation::evidence).toList());
+        boolean partial = observations.isEmpty() || checks.stream().anyMatch(c ->
+            Boolean.TRUE.equals(c.details().get("endpointCoveragePartial")));
+        data.put("partial", partial);
+        data.put("endpointCoveragePartial", partial);
+        data.put("grade", value(checks, "ssl.grade"));
+        data.put("tls13", value(checks, "ssl.protocols.tls13"));
+        data.put("tls12", value(checks, "ssl.protocols.tls12"));
+        Object legacyDisabled = value(checks, "ssl.protocols.legacy_disabled");
+        data.put("legacyProtocolsEnabled", legacyDisabled instanceof Boolean disabled ? !disabled : null);
+        var certificate = checks.stream().filter(c -> c.key().equals("ssl.certificate.valid")).findFirst().orElseThrow();
+        data.put("certIssues", certificate.details().get("issues"));
+        data.put("hstsPresent", value(checks, "http.security.hsts"));
+        data.put("hasWarnings", observations.stream().anyMatch(o -> Boolean.TRUE.equals(o.analysis().data().get("hasWarnings"))));
+        String summary = "host=" + host + " endpoints=" + observations.size() + " partial=" + partial;
+        logger.info("SSL Labs module done: {}", summary);
+        return new AuditModuleResult(moduleId(), "SSL Labs", summary, data, checks);
+    }
+
+    private AuditModuleResult analyzeEndpoint(String host, String hostStatus, JsonNode endpoint, long nowMs) {
         List<AuditCheckResult> checks = new ArrayList<>();
 
         // ssl.grade
-        String grade = endpoint != null ? JsonNodes.text(endpoint.path("grade")) : null;
+        String grade = endpoint != null ? textField(endpoint, "grade") : null;
+        if (grade != null && !Set.of("A+", "A", "A-", "B", "C", "D", "E", "F", "T", "M").contains(grade)) grade = null;
         boolean hasWarnings = endpoint != null && endpoint.path("hasWarnings").asBoolean(false);
 
         // Grade indisponible (SSL Labs en cours, endpoint absent, erreur amont) => INFO
@@ -89,21 +138,23 @@ public class SslLabsModuleAnalyzer {
             gradeStatus,
             gradeStatus == AuditStatus.FAIL ? AuditSeverity.HIGH
                 : gradeStatus == AuditStatus.WARN ? AuditSeverity.MEDIUM : AuditSeverity.LOW,
-            true,
+            grade != null,
             0.0,
             List.of(),
             grade,
             grade != null ? Map.of("grade", grade, "hasWarnings", hasWarnings) : Map.of(),
             grade != null ? "Note SSL Labs : " + grade + (hasWarnings ? " (avec avertissements)" : "") : "Note SSL Labs indisponible.",
-            gradeStatus != AuditStatus.PASS ? "Corrigez la configuration SSL/TLS signalée par SSL Labs." : null
+            gradeStatus != AuditStatus.PASS && gradeStatus != AuditStatus.INFO ? "Corrigez la configuration SSL/TLS signalée par SSL Labs." : null
         ));
 
         // ssl.certificate.valid & ssl.certificate.expiry_days
         JsonNode details = endpoint != null ? endpoint.path("details") : null;
         JsonNode cert = details != null ? details.path("cert") : null;
 
-        int certIssues = JsonNodes.intValue(cert, "issues", -1);
-        long notAfterMs = cert != null && !cert.isMissingNode() ? cert.path("notAfter").asLong(0L) : 0L;
+        Long issues = nonNegativeLongField(cert, "issues");
+        int certIssues = issues != null && issues <= Integer.MAX_VALUE ? issues.intValue() : -1;
+        Long expiry = nonNegativeLongField(cert, "notAfter");
+        long notAfterMs = expiry != null ? expiry : 0L;
 
         // Validité indéterminée (pas de détails de cert) => INFO non scoré plutôt que WARN :
         // "inconnu" ≠ "certificat problématique". Cf. issue #100 - point "SSL unknown".
@@ -119,7 +170,7 @@ public class SslLabsModuleAnalyzer {
             "Validité du certificat SSL",
             certValidStatus,
             certValidStatus == AuditStatus.FAIL ? AuditSeverity.HIGH : AuditSeverity.LOW,
-            true,
+            certIssues >= 0,
             0.0,
             List.of(),
             certIssues >= 0 ? certIssues == 0 : null,
@@ -132,7 +183,6 @@ public class SslLabsModuleAnalyzer {
 
         // ssl.certificate.expiry_days
         if (notAfterMs > 0) {
-            long nowMs = Instant.now().toEpochMilli();
             long diffMs = notAfterMs - nowMs;
             long expiryDays = diffMs / (1000L * 60 * 60 * 24);
 
@@ -185,20 +235,25 @@ public class SslLabsModuleAnalyzer {
         boolean hasTls11 = false;
         boolean hasSsl3 = false;
         boolean hasProtocolData = protocols != null && protocols.isArray() && protocols.size() > 0;
+        boolean completeProtocols = hasProtocolData;
 
         if (hasProtocolData) {
             for (JsonNode proto : protocols) {
-                String name = JsonNodes.text(proto.path("name"));
-                String version = JsonNodes.text(proto.path("version"));
+                String name = textField(proto, "name");
+                String version = textField(proto, "version");
+                if (!knownProtocol(name, version)) completeProtocols = false;
                 if ("TLS".equals(name) && "1.3".equals(version)) hasTls13 = true;
                 if ("TLS".equals(name) && "1.2".equals(version)) hasTls12 = true;
                 if ("TLS".equals(name) && "1.1".equals(version)) hasTls11 = true;
                 if ("TLS".equals(name) && "1.0".equals(version)) hasTls10 = true;
-                if ("SSL".equals(name)) hasSsl3 = true;
+                if ("SSL".equals(name) && ("2.0".equals(version) || "3.0".equals(version))) hasSsl3 = true;
             }
         }
 
-        if (hasProtocolData) checks.add(AuditCheckResult.of(
+        // Presence is evidence even in a partial list; absence requires a complete readable list.
+        Boolean tls13 = hasTls13 ? Boolean.TRUE : completeProtocols ? Boolean.FALSE : null;
+        Boolean tls12 = hasTls12 ? Boolean.TRUE : completeProtocols ? Boolean.FALSE : null;
+        if (tls13 != null) checks.add(AuditCheckResult.of(
             "ssl.protocols.tls13",
             "Prise en charge de TLS 1.3",
             hasTls13 ? AuditStatus.PASS : AuditStatus.WARN,
@@ -212,7 +267,9 @@ public class SslLabsModuleAnalyzer {
             hasTls13 ? null : "Activez TLS 1.3 pour améliorer la sécurité et les performances."
         ));
 
-        if (hasProtocolData) checks.add(AuditCheckResult.of(
+        else checks.add(unknown("ssl.protocols.tls13", "Prise en charge de TLS 1.3", "Prise en charge de TLS 1.3 indéterminée."));
+
+        if (tls12 != null) checks.add(AuditCheckResult.of(
             "ssl.protocols.tls12",
             "Prise en charge de TLS 1.2",
             hasTls12 ? AuditStatus.PASS : AuditStatus.FAIL,
@@ -226,13 +283,16 @@ public class SslLabsModuleAnalyzer {
             hasTls12 ? null : "TLS 1.2 doit être pris en charge pour la compatibilité avec la majorité des navigateurs."
         ));
 
+        else checks.add(unknown("ssl.protocols.tls12", "Prise en charge de TLS 1.2", "Prise en charge de TLS 1.2 indéterminée."));
+
         // ssl.protocols.legacy_disabled — présence de protocoles obsolètes (SSL 2/3, TLS 1.0/1.1).
         // Ces versions sont dépréciées (RFC 8996) et vulnérables (POODLE, BEAST…). Distinct de
         // "TLS 1.2/1.3 activés" : un serveur peut proposer 1.3 tout en gardant 1.0 actif.
         // Sans données de protocoles (SSL Labs incomplet) => INFO non scoré ("inconnu" ≠ "défaut").
         boolean hasLegacy = hasSsl3 || hasTls10 || hasTls11;
-        AuditStatus legacyStatus = !hasProtocolData ? AuditStatus.INFO
-            : hasLegacy ? AuditStatus.FAIL : AuditStatus.PASS;
+        boolean legacyMeasured = hasLegacy || completeProtocols;
+        AuditStatus legacyStatus = hasLegacy ? AuditStatus.FAIL
+            : completeProtocols ? AuditStatus.PASS : AuditStatus.INFO;
         List<String> legacyProtos = new ArrayList<>();
         if (hasSsl3) legacyProtos.add("SSL");
         if (hasTls10) legacyProtos.add("TLS 1.0");
@@ -243,12 +303,12 @@ public class SslLabsModuleAnalyzer {
             "Désactivation des protocoles obsolètes",
             legacyStatus,
             legacyStatus == AuditStatus.FAIL ? AuditSeverity.HIGH : AuditSeverity.LOW,
-            hasProtocolData,
+            legacyMeasured,
             0.0,
             List.of(),
-            hasProtocolData ? !hasLegacy : null,
-            hasProtocolData ? Map.of("legacyEnabled", hasLegacy, "protocols", legacyProtos) : Map.of(),
-            !hasProtocolData ? "Liste des protocoles TLS indisponible."
+            legacyMeasured ? !hasLegacy : null,
+            legacyMeasured ? Map.of("legacyEnabled", hasLegacy, "protocols", legacyProtos) : Map.of(),
+            !legacyMeasured ? "Liste des protocoles TLS indisponible."
                 : hasLegacy ? "Des protocoles obsolètes sont encore activés : " + String.join(", ", legacyProtos) + "."
                 : "Aucun protocole obsolète (SSL, TLS 1.0/1.1) n'est activé.",
             hasLegacy ? "Désactivez SSL 2/3 et TLS 1.0/1.1 : ces versions sont dépréciées et vulnérables." : null
@@ -256,13 +316,13 @@ public class SslLabsModuleAnalyzer {
 
         // http.security.hsts - reuses existing key, will be merged by CheckMergerService
         JsonNode hstsPolicy = details != null ? details.path("hstsPolicy") : null;
-        String hstsStatus = hstsPolicy != null && !hstsPolicy.isMissingNode()
-            ? JsonNodes.text(hstsPolicy.path("status")) : null;
-        long hstsMaxAge = hstsPolicy != null && !hstsPolicy.isMissingNode()
-            ? hstsPolicy.path("maxAge").asLong(0L) : 0L;
-        boolean hstsPresent = "present".equalsIgnoreCase(hstsStatus);
+        String hstsStatus = textField(hstsPolicy, "status");
+        boolean hstsMeasured = hstsStatus != null
+            && Set.of("present", "absent", "invalid", "disabled").contains(hstsStatus);
+        Long hstsMaxAge = nonNegativeLongField(hstsPolicy, "maxAge");
+        Boolean hstsPresent = hstsMeasured ? "present".equals(hstsStatus) : null;
 
-        if (hstsStatus != null) checks.add(AuditCheckResult.of(
+        if (hstsMeasured) checks.add(AuditCheckResult.of(
             "http.security.hsts",
             "HSTS (Strict-Transport-Security)",
             hstsPresent ? AuditStatus.PASS : AuditStatus.WARN,
@@ -272,33 +332,125 @@ public class SslLabsModuleAnalyzer {
             List.of(),
             hstsPresent,
             buildHstsDetails(hstsStatus, hstsMaxAge),
-            hstsPresent ? "HSTS est actif (max-age=" + hstsMaxAge + ")." : "HSTS n'est pas actif.",
+            hstsPresent ? "HSTS est actif." : "HSTS n'est pas actif.",
             hstsPresent ? null : "Activez HSTS pour forcer les connexions HTTPS."
         ));
-
+        else checks.add(unknown("http.security.hsts", "HSTS (Strict-Transport-Security)", "Politique HSTS indisponible."));
         // Build data
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("host", host);
-        data.put("status", JsonNodes.text(result.path("status")));
+        data.put("status", hostStatus);
         data.put("grade", grade);
         data.put("hasWarnings", hasWarnings);
-        data.put("tls13", hasTls13);
-        data.put("tls12", hasTls12);
-        data.put("legacyProtocolsEnabled", hasProtocolData ? hasLegacy : null);
+        data.put("tls13", tls13);
+        data.put("tls12", tls12);
+        data.put("legacyProtocolsEnabled", legacyMeasured ? hasLegacy : null);
         data.put("certIssues", certIssues >= 0 ? certIssues : null);
         data.put("hstsPresent", hstsPresent);
-        data.put("partial", endpoint == null || grade == null || certIssues < 0 || !hasProtocolData);
+        data.put("partial", endpoint == null || grade == null || certIssues < 0 || notAfterMs <= 0 || !completeProtocols || !hstsMeasured);
 
-        String summary = "host=" + host + " grade=" + grade + " tls13=" + hasTls13 + " tls12=" + hasTls12;
-        logger.info("SSL Labs module done: {}", summary);
-
+        String summary = "host=" + host + " grade=" + grade + " tls13=" + tls13 + " tls12=" + tls12;
         return new AuditModuleResult(moduleId(), "SSL Labs", summary, data, checks);
     }
 
-    private static Map<String, Object> buildHstsDetails(String status, long maxAge) {
+    private record EndpointObservation(JsonNode raw, AuditModuleResult analysis, String assessmentState) {
+        String identity() {
+            String ip = textField(raw, "ipAddress");
+            return ip != null ? ip : "endpoint-" + Integer.toUnsignedString(raw.hashCode(), 16);
+        }
+        Map<String, Object> evidence() {
+            Map<String, Object> evidence = new LinkedHashMap<>();
+            evidence.put("endpointId", identity());
+            evidence.put("ipAddress", textField(raw, "ipAddress"));
+            evidence.put("serverName", textField(raw, "serverName"));
+            evidence.put("assessmentState", assessmentState);
+            evidence.put("statusMessage", textField(raw, "statusMessage"));
+            evidence.put("checks", analysis.checks());
+            return evidence;
+        }
+        AuditCheckResult check(String key) {
+            return analysis.checks().stream().filter(c -> key.equals(c.key())).findFirst().orElseThrow();
+        }
+    }
+
+    private static AuditCheckResult aggregate(AuditCheckResult unknown, List<EndpointObservation> endpoints) {
+        var measured = endpoints.stream().filter(o -> o.check(unknown.key()).status() != AuditStatus.INFO).toList();
+        // Worst status, then worst grade/expiry, then stable address: never input order.
+        var selected = measured.stream().min(Comparator
+            .comparingInt((EndpointObservation o) -> -statusRank(o.check(unknown.key()).status()))
+            .thenComparingDouble(o -> detailRank(o.check(unknown.key())))
+            .thenComparing(EndpointObservation::identity).thenComparing(o -> o.raw().toString())).orElse(null);
+        var base = selected == null ? unknown : selected.check(unknown.key());
+        boolean partial = measured.size() < endpoints.size() || endpoints.isEmpty();
+        // A healthy observed address cannot establish a healthy hostname while another is unknown.
+        boolean unknownConclusion = selected == null || (partial && base.status() == AuditStatus.PASS);
+        Map<String, Object> details = new LinkedHashMap<>(unknownConclusion ? Map.of() : base.details());
+        details.put("aggregation", "worst-measured-endpoint-v1");
+        details.put("endpointCount", endpoints.size());
+        details.put("measuredEndpointCount", measured.size());
+        details.put("endpointCoveragePartial", partial);
+        if (selected != null) details.put("selectedEndpoint", selected.identity());
+        details.put("endpoints", endpoints.stream().map(o -> {
+            var check = o.check(unknown.key());
+            Map<String, Object> evidence = new LinkedHashMap<>();
+            evidence.put("endpointId", o.identity());
+            evidence.put("ipAddress", textField(o.raw(), "ipAddress"));
+            evidence.put("serverName", textField(o.raw(), "serverName"));
+            evidence.put("assessmentState", o.assessmentState());
+            evidence.put("statusMessage", textField(o.raw(), "statusMessage"));
+            evidence.put("status", check.status());
+            evidence.put("value", check.value());
+            evidence.put("details", check.details());
+            return evidence;
+        }).toList());
+        String message = unknownConclusion ? unknown.message() : base.message() + " — endpoint " + selected.identity() + ".";
+        if (partial) message += " Couverture partielle : " + measured.size() + "/" + endpoints.size() + " endpoint(s) mesuré(s).";
+        return new AuditCheckResult(base.key(), base.title(), unknownConclusion ? AuditStatus.INFO : base.status(),
+            unknownConclusion ? AuditSeverity.LOW : base.severity(), !unknownConclusion && base.scorable(),
+            base.weight(), base.tags(), unknownConclusion ? null : base.value(), details, message,
+            unknownConclusion ? null : base.recommendation(), base.sources(), base.scoreRatio());
+    }
+
+    private static int statusRank(AuditStatus status) {
+        return switch (status) { case FAIL -> 3; case WARN -> 2; case PASS -> 1; case INFO -> 0; };
+    }
+
+    private static double detailRank(AuditCheckResult check) {
+        if ("ssl.certificate.expiry_days".equals(check.key()) && check.value() instanceof Number days)
+            return days.doubleValue();
+        if ("ssl.grade".equals(check.key()) && check.value() instanceof String grade)
+            return -List.of("A+", "A", "A-", "B", "C", "D", "E", "F", "T", "M").indexOf(grade);
+        return 0;
+    }
+
+    private static Object value(List<AuditCheckResult> checks, String key) {
+        return checks.stream().filter(c -> key.equals(c.key())).findFirst().orElseThrow().value();
+    }
+    private static AuditCheckResult unknown(String key, String title, String message) {
+        return AuditCheckResult.of(key, title, AuditStatus.INFO, AuditSeverity.LOW,
+            false, 0.0, List.of(), null, Map.of(), message, null);
+    }
+
+    private static String textField(JsonNode object, String field) {
+        JsonNode value = object == null ? null : object.get(field);
+        return value != null && value.isTextual() ? JsonNodes.text(value) : null;
+    }
+
+    private static Long nonNegativeLongField(JsonNode object, String field) {
+        JsonNode value = object == null ? null : object.get(field);
+        return value != null && value.isIntegralNumber() && value.canConvertToLong() && value.longValue() >= 0
+            ? value.longValue() : null;
+    }
+
+    private static boolean knownProtocol(String name, String version) {
+        if (name == null || version == null) return false;
+        return ("TLS".equals(name) && Set.of("1.0", "1.1", "1.2", "1.3").contains(version))
+            || ("SSL".equals(name) && Set.of("2.0", "3.0").contains(version));
+    }
+    private static Map<String, Object> buildHstsDetails(String status, Long maxAge) {
         Map<String, Object> m = new LinkedHashMap<>();
         if (status != null) m.put("status", status);
-        if (maxAge > 0) m.put("maxAge", maxAge);
+        if (maxAge != null) m.put("maxAge", maxAge);
         return m;
     }
 }

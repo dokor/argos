@@ -26,7 +26,14 @@ public record ReportDto(
                      AccessibilityEvidence accessibilityEvidence) {
         this(generatedAt, domain, url, site, scores, summary, issues, tech, antiBot, accessibilityEvidence, null);
     }
-    public record Site(String title, String logoUrl) {
+    public record Site(String title, String logoUrl, DomainRating domainRating) {
+        public Site(String title, String logoUrl) {
+            this(title, logoUrl, null);
+        }
+    }
+
+    /** Ahrefs backlink metric, separate from the Argos audit score. */
+    public record DomainRating(double score, String fetchedAt) {
     }
 
     /** Signale une protection anti-bot (Cloudflare…) : l'analyse peut être partielle. */
@@ -177,13 +184,23 @@ public record ReportDto(
         String evidence,
         String recommendation,
         Effort effort,
-        String confidence
+        String confidence,
+        @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+        StructuredEvidence structuredEvidence
     ) {
+        public Issue(String id,String category,List<String> categories,String module,IssueSeverity severity,
+            String title,String impact,String evidence,String recommendation,Effort effort,String confidence) {
+            this(id,category,categories,module,severity,title,impact,evidence,recommendation,effort,confidence,null);
+        }
         public Issue(String id,String category,List<String> categories,String module,IssueSeverity severity,
             String title,String impact,String evidence,String recommendation,Effort effort) {
             this(id,category,categories,module,severity,title,impact,evidence,recommendation,effort,"UNKNOWN");
         }
     }
+
+    public record StructuredEvidence(String source, Measurement measurement, List<EvidenceDetail> details) {}
+    public record Measurement(double value, String unit) {}
+    public record EvidenceDetail(String key, String text) {}
 
     public enum Severity {critical, important, opportunity}
 

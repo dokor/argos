@@ -16,7 +16,8 @@
   color: t.$text;
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
-  white-space: nowrap;
+  max-width: 100%;
+  text-align: center;
 
   &:hover:not(:disabled) {
     background: t.$surface-2;

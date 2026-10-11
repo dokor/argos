@@ -283,14 +283,14 @@ export default function AuditList({ items, setItems }: Props) {
   const statusCounts: Record<string, number> = { ALL: items.length };
   items.forEach((i) => { statusCounts[i.status] = (statusCounts[i.status] ?? 0) + 1; });
 
-  if (loading) return <div className={styles.helper}>{tl.loading}</div>;
-  if (error)   return <div className={styles.errorBox}>{error}</div>;
+  if (loading) return <div role="status" className={styles.helper}>{tl.loading}</div>;
+  if (error)   return <div role="alert" className={styles.errorBox}>{error}</div>;
 
   return (
     <div className={styles.root}>
       <div className={styles.titleRow}>
-        <div className={styles.sectionLabel}>{tl.title}</div>
-        <div className={styles.count}>
+        <h2 className={styles.sectionLabel}>{tl.title}</h2>
+        <div className={styles.count} role="status">
           {displayItems.length !== items.length ? displayItems.length + " / " + items.length : items.length}
         </div>
       </div>
@@ -328,7 +328,7 @@ export default function AuditList({ items, setItems }: Props) {
       )}
 
       {displayItems.length === 0 ? (
-        <div className={styles.emptyCard}>
+        <div className={styles.emptyCard} role="status">
           {items.length === 0 ? tl.empty : tl.filters.noResults}
         </div>
       ) : (

@@ -1,9 +1,17 @@
 {
+  "account": {"usage":{"title":"Consommation mensuelle","offer":"Offre","used":"Rapports produits","reserved":"Analyses en cours","unlimited":"Sans plafond","limit":"Plafond mensuel","reset":"Prochaine remise à zéro","timezone":"Fuseau de référence","reached":"La capacité mensuelle est atteinte. Vos sites et rapports restent accessibles. Réessayez après la remise à zéro ou la fin d’une analyse en cours.","refresh":"Actualiser la consommation","unavailable":"La consommation est indisponible. Le serveur vérifiera le quota au lancement.","hint":"Chaque rapport produit compte une fois, même partiel. Un échec sans rapport ne compte pas."},"sites":{"scoreUnavailable":"Score non disponible","title":"Mes sites","intro":"Retrouvez les URL que vous suivez et leurs derniers rapports.","add":"Ajouter un site","addUrl":"Ajouter une URL","analyse":"Nouvelle analyse","again":"Analyser","url":"URL à suivre","hint":"Par exemple https://example.com/page. Chaque hostname est un site distinct. Le suivi ne vérifie pas la propriété du site.","noAudit":"Ajouter une URL ne lance aucune analyse.","empty":"Vous ne suivez encore aucun site.","none":"Aucune analyse","urls":"URL suivies","latest":"Dernière tentative","report":"Dernier rapport disponible","unavailable":"Non disponible ou expiré","partial":"Score provisoire / analyse partielle","unknown":"Couverture inconnue","next":"Page suivante","refresh":"Actualiser","retry":"Réessayer la lecture","added":"URL suivie. Aucune analyse lancée.","existing":"Cette URL est déjà suivie.","mismatch":"Cette URL appartient à un autre hostname. Ajoutez un site pour la suivre.","lost":"Le lancement peut avoir réussi. Vérifiez Mes sites avant de réessayer.","back":"Retour au site","progress":"Ouvrir la progression"},"title":"Mon compte","signIn":"Se connecter","register":"Créer un compte","name":"Nom d’affichage","email":"Adresse email","password":"Mot de passe","passwordHint":"15 à 128 caractères. Les phrases de passe sont acceptées.","forgot":"Mot de passe oublié","verify":"Vérifier mon adresse","reset":"Réinitialiser mon mot de passe","send":"Envoyer","save":"Enregistrer","logout":"Se déconnecter","pending":"Vérifiez votre adresse email pour accéder à vos analyses.","sent":"Si cette adresse est éligible, un email a été envoyé. Consultez votre boîte de réception.","done":"Opération effectuée.","working":"En cours…","methods":"Méthodes de connexion","sessions":"Sessions","current":"Session actuelle","revoke":"Révoquer","others":"Révoquer les autres sessions","remove":"Retirer","add":"Associer","reauth":"Confirmer mon identité","reauthHint":"Saisissez votre mot de passe actuel ou demandez un code à votre adresse email vérifiée.","code":"Code reçu par email","sendCode":"Recevoir un code","archive":"Fermer mon compte","archiveHint":"Votre compte sera archivé : les accès seront révoqués. Le compte et les statistiques seront conservés ; les liens de rapport déjà partagés resteront lisibles jusqu’à leur expiration habituelle.","confirmArchive":"Je confirme la fermeture de mon compte.","confirmRemove":"Confirmer le retrait de cette méthode ?","readonly":"L’adresse de connexion est en lecture seule.","social":"Ou continuer avec","unavailable":"La création de comptes est momentanément indisponible.","runs":"Mes analyses récentes","noRuns":"Aucune analyse personnelle. Lancez un audit ou rattachez celui que vous venez de réaliser.","openReport":"Ouvrir le rapport","resend":"Renvoyer l’email de vérification","claim":"Conserver cette analyse dans mon compte","claimHint":"Connectez-vous et vérifiez votre adresse pour conserver l’analyse lancée dans ce navigateur.","claimMissing":"La preuve de rattachement est absente ou expirée. Un lien partagé permet seulement de lire le rapport.","claimDone":"Cette analyse est rattachée à votre compte.","back":"Retour au site","tokenMissing":"Ouvrez le lien reçu par email pour poursuivre.","errors":{"session_invalid":"Votre session est absente ou expirée. Connectez-vous à nouveau.","email_unverified":"Vérifiez d’abord votre adresse email.","csrf_invalid":"La confirmation de sécurité a expiré. Réessayez.","reauth_required":"Confirmez votre identité avant cette action.","last_method":"Conservez au moins une méthode de connexion.","token_invalid":"Ce lien ou code est invalide, expiré ou déjà utilisé.","oauth_invalid":"La connexion au fournisseur a échoué. Réessayez.","use_existing_account":"Connectez-vous à votre compte existant pour associer cette méthode.","method_unavailable":"Cette méthode est déjà associée à un autre compte.","email_unavailable":"Cette adresse ne peut pas être associée à ce compte.","email_readonly":"Cette adresse est en lecture seule.","email_required":"Ajoutez et vérifiez une adresse email.","email_invalid":"Saisissez une adresse email valide.","password_policy":"Le mot de passe doit contenir entre 15 et 128 caractères.","name_invalid":"Saisissez un nom de 1 à 100 caractères.","mail_unavailable":"L’email n’a pas pu être envoyé. Réessayez plus tard.","rate_limited":"Trop de tentatives. Réessayez dans 15 minutes.","resource_unavailable":"Cette ressource est indisponible ou ne vous appartient pas.","account_unavailable":"Le service est momentanément indisponible.","confirmation_required":"Confirmez explicitement cette action.","payload_invalid":"Vérifiez les champs saisis.","provider_unavailable":"Ce fournisseur n’est pas configuré.","quota_exceeded":"La capacité mensuelle est atteinte. Vos sites et rapports restent accessibles. Réessayez après la remise à zéro ou la fin d’une analyse en cours."},"statuses":{"QUEUED":"En attente","RUNNING":"En cours","COMPLETED":"Terminée","FAILED":"Échouée"}},
   "layout": {
-    "title": "Argos - Analyseur de site web",
-    "description": "Argos est un outil gratuit d'audit technique d'une URL publique, sans compte, qui fournit un rapport privé avec des scores et des recommandations en performance, sécurité, SEO et accessibilité."
+    "title": "Audit de site web gratuit, sans compte | Argos",
+    "description": "Analysez gratuitement une page : performance, sécurité, SEO et accessibilité. Obtenez vos scores et des corrections prioritaires, sans compte."
   },
   "nav": {
+    "freeAudit": "Audit gratuit",
+    "signUp": "S’inscrire",
+    "openMenu": "Ouvrir le menu",
+    "closeMenu": "Fermer le menu",
+    "how": "Comment ça marche",
+    "example": "Exemple de rapport",
+    "guides": "Guides",
     "logo": "Argos",
     "primary": "Navigation principale",
     "audit": "Auditer un site",
@@ -27,16 +35,19 @@
     "limits": "Limites de l'analyse",
     "source": "Code source sur GitHub"
   },
+  "publicPromises": {
+    "duration": "Le délai dépend de la file d’attente et des services d’analyse. La progression se met à jour automatiquement."
+  },
   "landing": {
     "hero": {
-      "badge": "Audit de site web · Gratuit · Sans compte",
+      "badge": "Audit de site web gratuit",
       "slogan": "Votre site, passé au crible.",
-      "headline": "Un diagnostic clair.\nDes actions concrètes.",
-      "sub": "Analysez une page publique en performance, sécurité, SEO et accessibilité. Obtenez un rapport privé pour savoir quoi examiner et corriger.",
+      "headline": "Identifiez les problèmes techniques à corriger en priorité.",
+      "sub": "Analysez une page en performance, sécurité, SEO et accessibilité. Obtenez vos scores et des recommandations dans un rapport privé.",
       "audience": "Pour les devs, les équipes growth et les agences.",
       "inputPlaceholder": "https://monsite.com",
       "inputAriaLabel": "URL du site à analyser",
-      "cta": "Analyser maintenant →",
+      "cta": "Analyser gratuitement",
       "ctaLoading": "Soumission…",
       "hint": "Gratuit · Sans compte · Rapport privé, non indexé",
       "analyzing": "Analyse en cours",
@@ -50,7 +61,7 @@
       "errorMsg": "Erreur : vérifiez l'URL et réessayez.",
       "errorFailed": "L'analyse a échoué. Essayez avec une URL publique.",
       "retry": "Réessayer",
-      "previewNote": "Aperçu illustratif · Les résultats dépendent de la page analysée."
+      "exampleLink": "Voir un exemple de rapport"
     },
     "mockReport": {
       "url": "votresite.fr",
@@ -72,7 +83,7 @@
       "items": [
         {
           "icon": "⚡",
-          "label": "~20 sec en moyenne"
+          "label": "Progression en direct"
         },
         {
           "icon": "🔒",
@@ -140,22 +151,22 @@
         {
           "icon": "🔗",
           "label": "Privé par défaut",
-          "desc": "Chaque rapport est accessible via un token unique. Pas d'index, pas de SEO."
+          "desc": "Le rapport est accessible aux personnes qui possèdent son lien. Partagez-le uniquement avec des personnes de confiance."
         },
         {
           "icon": "🚫",
           "label": "Sans login",
-          "desc": "Pas de compte, pas de tracking. Soumettez une URL, récupérez votre rapport."
+          "desc": "Soumettez une page publique et consultez votre rapport sans créer de compte."
         },
         {
           "icon": "🎯",
           "label": "Rapport actionnable",
-          "desc": "Chaque point détecté est priorisé par impact réel. Vous savez exactement quoi corriger en premier - sans tout lire."
+          "desc": "Les constats associent preuve, recommandation et priorité pour préparer vos corrections."
         },
         {
           "icon": "📈",
-          "label": "Scoring actionnable",
-          "desc": "Chaque point détecté est pondéré, priorisé et accompagné d'une recommandation concrète - pas juste un chiffre."
+          "label": "Une méthode explicite",
+          "desc": "Comprenez le calcul des scores, la couverture des mesures et les limites du diagnostic."
         }
       ]
     },
@@ -195,7 +206,7 @@
           },
           {
             "q": "Combien de temps prend une analyse ?",
-            "a": "Une analyse complète prend environ 20 à 30 secondes. La page de rapport se met à jour automatiquement une fois l'audit terminé."
+            "a": "Le délai varie selon la file d’attente, la page et les services disponibles. Le rapport affiche la progression et se met à jour à la fin des contrôles."
           },
           {
             "q": "Quels sites puis-je analyser ?",
@@ -213,7 +224,7 @@
           },
           {
             "q": "Mon rapport est-il public ?",
-            "a": "Non. Chaque rapport est accessible via une URL contenant un token unique. Il n'est pas indexé par les moteurs de recherche et reste privé tant que vous ne partagez pas le lien."
+            "a": "Le rapport n’est pas listé publiquement. Toute personne disposant de son lien peut le consulter sans compte ; gardez ce lien confidentiel."
           },
           {
             "q": "Puis-je partager mon rapport ?",
@@ -221,7 +232,7 @@
           },
           {
             "q": "Pendant combien de temps un rapport reste-t-il accessible ?",
-            "a": "Les rapports ont une date d'expiration. Passé ce délai, le lien n'est plus valide et il faut relancer une analyse pour obtenir un rapport à jour."
+            "a": "Le lien cesse de fonctionner après trois ans par défaut, ou à une expiration antérieure attribuée au rapport. L’expiration ne supprime pas les données en base ; consultez la page de confidentialité."
           }
         ]
       },
@@ -253,15 +264,15 @@
         "items": [
           {
             "q": "Quelles données Argos conserve-t-il ?",
-            "a": "Argos conserve l'URL analysée et le rapport généré, le temps nécessaire à son affichage. Aucune donnée personnelle n'est requise pour lancer une analyse."
+            "a": "Argos enregistre l’URL, le domaine, les états et dates de traitement ainsi que les résultats techniques pour produire et afficher le rapport. L’accès au rapport expire après trois ans par défaut, sans effacement automatique en base ; consultez la page de confidentialité."
           },
           {
             "q": "Qui peut consulter mes rapports ?",
-            "a": "Uniquement les personnes disposant du lien contenant le token du rapport. Les rapports ne sont ni listés publiquement ni indexés."
+            "a": "Toute personne possédant le lien peut consulter le rapport. L’opérateur dispose également d’un accès administrateur."
           },
           {
             "q": "Mes rapports apparaissent-ils dans Google ?",
-            "a": "Non. Les pages de rapport sont marquées comme non indexables et protégées par un token, elles n'apparaissent donc pas dans les résultats de recherche."
+            "a": "Les pages de rapport demandent aux moteurs de ne pas les indexer. Cette directive n’est pas une authentification et ne garantit pas absolument l’absence d’un lien dans les résultats."
           }
         ]
       },
@@ -526,12 +537,6 @@
       "dataTab": {
         "title": "JSON du rapport",
         "desc": "Utile pour debug et pour l'export PDF plus tard."
-      },
-      "navigation": {
-        "label": "Navigation du rapport",
-        "priorities": "Plan d’action",
-        "scores": "Scores par domaine",
-        "findings": "Tous les constats"
       }
     },
     "header": {
@@ -553,12 +558,14 @@
       "scoreMaintain": "maintenir",
       "scoreQuickwins": "prioriser les quick wins",
       "oneLiner": {
-        "high": "Les contrôles réalisés donnent de bons résultats. Consultez les pistes d’amélioration.",
-        "good": "Les résultats sont globalement bons. Quelques points restent à améliorer.",
-        "fair": "Plusieurs points méritent votre attention. Commencez par les actions prioritaires.",
-        "low": "Le diagnostic révèle des points à corriger en priorité."
+        "high": "Note globale élevée parmi les contrôles mesurés ; consulter les constats et les limites.",
+        "good": "Note globale favorable parmi les contrôles mesurés ; des points peuvent rester à traiter.",
+        "fair": "Plusieurs contrôles mesurés méritent une revue ; confirmer les priorités avant de corriger.",
+        "low": "Des contrôles mesurés demandent une attention prioritaire ; confirmer leur périmètre."
       },
       "analyzedAt": "Analysé",
+      "domainRatingFetchedAt": "mesuré le",
+      "domainRatingTooltip": "Domain Rating d’Ahrefs : popularité relative du profil de liens du domaine, distincte du score d’audit Argos.",
       "relaunch": "Relancer l'analyse",
       "relaunching": "Relance en cours…",
       "relaunchError": "Échec de la relance. Réessayez.",
@@ -579,25 +586,29 @@
     },
     "footerCta": {
       "title": "Planifier un échange",
-      "desc": "15 minutes pour prioriser les optimisations, estimer l'effort, et identifier les quick wins.",
-      "cta": "Prendre RDV",
+      "desc": "Passez en revue les priorités et faites estimer les corrections avec un professionnel.",
+      "cta": "Parler des corrections",
       "copyLink": "Copier le lien",
       "shareReport": "Partager ce rapport",
-      "linkCopied": "Lien copié. Toute personne qui le possède peut lire ce rapport.",
-      "copyError": "Copie impossible. Copiez le lien depuis la barre d’adresse.",
-      "ciNote": "Pour intégrer Argos à votre CI :",
-      "contact": "Contacter Antoine",
       "calendlyComingSoon": "Lien Calendly à venir.",
-      "footerNote": "Rapport privé • non indexable • généré automatiquement"
+      "footerNote": "Le lien donne accès au rapport sans connexion. La consigne de non-indexation ne protège pas son accès.",
+      "copied": "Lien copié. Toute personne qui le possède peut lire ce rapport.",
+      "copyFailed": "Copie impossible. Vous pouvez copier le lien depuis la barre d’adresse.",
+      "copying": "Copie en cours…",
+      "ciNote": "Pour intégrer Argos à votre CI :",
+      "ciContact": "Contacter Antoine"
     },
     "priorityCards": {
+      "seeFinding": "Voir le constat",
+      "missingFinding": "Le lien détaillé vers le constat manque dans ce rapport. Le contexte de l’action reste disponible ci-dessus.",
+      "partialFindings": "Certains constats de cette action ne sont pas disponibles dans ce rapport.",
       "title": "Priorités recommandées",
-      "desc": "Jusqu’à six actions classées selon leur contribution au score, puis leur gravité et les informations disponibles.",
-      "gainLabel": "Gain maximal théorique :",
+      "desc": "Actions classées selon leur contribution au score, puis leur gravité et les informations disponibles.",
+      "gainLabel": "Gain de score modélisé :",
       "domains": {
         "performance": "Performance",
         "security": "Sécurité",
-        "seo": "SEO",
+        "seo": "Référencement",
         "a11y": "Accessibilité"
       },
       "gainUnit": "points globaux",
@@ -623,8 +634,12 @@
         "important": "Important",
         "opportunity": "Opportunité"
       },
+      "rankLabel": "Priorité",
       "rankingDetails": "Comprendre le classement",
-      "seeFindings": "Voir les constats du domaine"
+      "effortUnknown": "À estimer",
+      "unknownDomain": "Domaine non renseigné",
+      "sourcesLabel": "Sources",
+      "confirmNext": "Confirmez le constat, estimez la correction puis relancez une mesure dans des conditions comparables."
     },
     "categoryInfo": {
       "fallback": "Ce que cette catégorie mesure et son impact sur la qualité de votre site.",
@@ -649,6 +664,9 @@
       "partialTooltip": "Un ou plusieurs modules n'ont pas pu être évalués (service momentanément indisponible). Le score porte sur les modules réellement analysés - le site n'est pas pénalisé."
     },
     "issuesByCategory": {
+      "unknownDomain": "Domaine non renseigné",
+      "sourcesLabel": "Sources",
+      "resultCount": "{n} constats sur {total}",
       "title": "Détail par catégorie",
       "desc": "Filtre par sévérité, puis explore les points par catégorie (tri critique → info).",
       "filterLabel": "Sévérité",
@@ -666,19 +684,17 @@
       "scoreLabel": "Score",
       "scoreSuffix": "/100",
       "backToTop": "Retour en haut ↑",
-      "noIssues": "Aucun point pour cette catégorie.",
+      "noIssues": "Aucun constat remonté dans le périmètre mesuré. Cela ne certifie ni conformité ni absence de problème.",
       "evidenceLabel": "Preuve / Contexte",
       "recommendationLabel": "Recommandation",
-      "detailsLabel": "Détails",
-      "resultCount": "Constats affichés : {n} sur {total}",
-      "noMatch": "Aucun constat ne correspond à ce filtre dans ce domaine."
+      "detailsLabel": "Détails"
     },
     "progress": {
       "titleQueued": "Analyse en attente…",
       "titleRunning": "Analyse en cours…",
       "titleFailed": "Analyse échouée",
       "subtitle": "Argos analyse votre site. Le rapport s'affichera automatiquement.",
-      "estimate": "Analyse typique : ~20 à 30 secondes.",
+      "estimate": "Le délai dépend de la file d’attente et des services d’analyse. La progression se met à jour automatiquement.",
       "retryLink": "Lancer une nouvelle analyse",
       "genericError": "L'analyse a échoué.",
       "connectionError": "Erreur de connexion. Nouvelle tentative…",
@@ -742,7 +758,7 @@
       "errorUrlMissing": "Saisissez l'adresse d'une page publique.",
       "errorInvalidUrl": "Saisissez une URL HTTP ou HTTPS valide.",
       "errorRequest": "L'audit n'a pas pu démarrer. Vérifiez l'adresse ou réessayez.",
-      "hint": "Une seule URL publique est analysée. Le rapport reste privé et non indexé."
+      "hint": "Sans compte · Une page publique analysée"
     },
     "landing": {
       "title": "Un audit adapté à votre site",
@@ -891,14 +907,15 @@
     "title": "Audits",
     "loading": "Chargement…",
     "empty": "Aucun audit pour le moment.",
-    "copyJson": "📋 Copier le JSON",
-    "copied": "✅ Copié",
+    "copyJson": "Copier le JSON",
+    "copied": "Copié",
     "showJson": "Voir le JSON",
     "loadDetails": "Charger le détail technique",
     "loadingDetails": "Chargement du détail…",
     "detailsError": "Impossible de charger le détail.",
-    "viewReport": "🔎 Voir le rapport",
+    "viewReport": "Voir le rapport",
     "reportPending": "Rapport en attente…",
+    "reportUnavailable": "Rapport indisponible",
     "scorePending": "Score en attente…",
     "scoreUnavailable": "Score indisponible",
     "noJson": "Pas de JSON disponible.",

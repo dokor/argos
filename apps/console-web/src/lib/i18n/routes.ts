@@ -1,10 +1,27 @@
 export type Lang = "fr" | "en";
 
 // Only pages with a complete English version belong in this map.
+export const accountRoutes: Record<string, string> = {
+  "/feedback": "/en/feedback",
+  "/account/admin/feedback": "/en/account/admin/feedback",
+  "/account/admin": "/en/account/admin",
+  "/account/sites": "/en/account/sites",
+  "/account": "/en/account",
+  "/account/sign-in": "/en/account/sign-in",
+  "/account/register": "/en/account/register",
+  "/account/verify": "/en/account/verify",
+  "/account/forgot": "/en/account/forgot",
+  "/account/reset": "/en/account/reset",
+};
 export const languageRoutes: Record<string, string> = {
-  "/exemple-rapport": "/en/example-report",
   "/": "/en",
+  "/exemple-rapport": "/en/example-report",
   "/faq": "/en/faq",
+  "/a-propos": "/en/about",
+  "/guides/checklist-audit-site-web": "/en/guides/website-audit-checklist",
+  "/methodologie-score": "/en/scoring-method",
+  "/ressources/audit-technique-gratuit": "/en/resources/free-technical-audit",
+  "/ressources/accessibilite-numerique": "/en/resources/digital-accessibility",
   "/ressources": "/en/resources",
   "/ressources/audit-site-pme": "/en/resources/small-business-website-audit",
   "/ressources/audit-site-ecommerce": "/en/resources/ecommerce-website-audit",
@@ -13,7 +30,9 @@ export const languageRoutes: Record<string, string> = {
 export function frenchPath(path: string): string {
   const pathname = path.replace(/\/+$/, "") || "/";
   if (pathname.startsWith("/en/report/")) return pathname.slice(3);
-  return Object.entries(languageRoutes).find(([, en]) => en === pathname)?.[0] ?? pathname;
+  if (pathname.startsWith("/en/account/admin/")) return pathname.slice(3);
+  if ((pathname.startsWith("/en/account/runs/") || pathname.startsWith("/en/account/sites/"))) return pathname.slice(3);
+  return Object.entries({ ...languageRoutes, ...accountRoutes }).find(([, en]) => en === pathname)?.[0] ?? pathname;
 }
 
 export function localizedPath(path: string, lang: Lang): string {
@@ -22,5 +41,7 @@ export function localizedPath(path: string, lang: Lang): string {
   const suffix = index < 0 ? "" : path.slice(index);
   const fr = frenchPath(pathname);
   if (fr.startsWith("/report/")) return (lang === "en" ? "/en" : "") + fr + suffix;
-  return (lang === "en" ? languageRoutes[fr] ?? fr : fr) + suffix;
+  if (fr.startsWith("/account/admin/")) return (lang === "en" ? "/en" : "") + fr + suffix;
+  if ((fr.startsWith("/account/runs/") || fr.startsWith("/account/sites/"))) return (lang === "en" ? "/en" : "") + fr + suffix;
+  return (lang === "en" ? accountRoutes[fr] ?? languageRoutes[fr] ?? fr : fr) + suffix;
 }

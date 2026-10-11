@@ -22,7 +22,7 @@ Le statut public n'écho pas le credential et les routes rapport ne le journalis
 pas. Aucun cache partagé ne doit conserver les lectures privées.
 
 Traefik : console-web-api priorité 200 intercepte /api, devant api-backend priorité
-100. Les Route Handlers audit interceptent également le rewrite afterFiles. Même
+100. Le rewrite générique est un fallback, après tous les Route Handlers y compris dynamiques. Même
 en cas de routage direct vers Java ou d'accès réseau interne, son contrôle Bearer
 reste obligatoire. La config Traefik déployée est à confronter aux compose du dépôt.
 

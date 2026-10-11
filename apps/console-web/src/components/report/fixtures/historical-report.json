@@ -1,0 +1,31 @@
+{
+  "generatedAt": "2026-09-23T12:00:00Z",
+  "domain": "audit-demo.example",
+  "url": "https://audit-demo.example/",
+  "site": {},
+  "scores": {
+    "global": 73,
+    "byCategory": [
+      { "key": "performance", "label": "Performance", "score": 62, "issues": 2 },
+      { "key": "security", "label": "Security", "score": 75, "issues": 1 },
+      { "key": "seo", "label": "Seo", "score": 90, "issues": 0 },
+      { "key": "a11y", "label": "A11y", "score": 65, "issues": 0 }
+    ]
+  },
+  "summary": {
+    "oneLiner": "good",
+    "priorities": [
+      { "severity": "critical", "title": "Accessible controls", "impact": "Check control names" },
+      { "severity": "important", "title": "Load resources", "impact": "Review loading", "findingKey": "runtime.load", "relatedFindingKeys": ["runtime.load", "lighthouse.lcp", "runtime.load", "absent.key"] }
+    ]
+  },
+  "issues": [
+    { "id": "runtime.load", "categoryKey": "runtime", "categoryKeys": ["runtime", "performance"], "module": "runtime", "severity": "important", "title": "Load resources", "impact": "Loading", "recommendation": "Inspect resources" },
+    { "id": "runtime.load", "categoryKey": "performance", "module": "lighthouse", "severity": "important", "title": "Load resources", "impact": "Loading", "recommendation": "Inspect resources" },
+    { "id": "lighthouse.lcp", "categoryKey": "performance", "module": "lighthouse", "severity": "critical", "title": "Main content", "impact": "Loading", "recommendation": "Inspect loading" },
+    { "id": "lighthouse.button-name", "categoryKey": "lighthouse", "categoryKeys": ["lighthouse", "a11y"], "severity": "critical", "title": "Accessible controls", "impact": "Control names", "recommendation": "Check names" },
+    { "id": "http.hsts", "categoryKey": "security", "categoryKeys": ["security", "ssl", "observatory"], "severity": "important", "title": "HTTPS policy", "impact": "Browser policy", "recommendation": "Verify policy" },
+    { "id": "legacy.check", "categoryKey": "old-engine", "severity": "info", "title": "Legacy observation", "impact": "Context", "recommendation": "Review context" },
+    { "categoryKey": "html", "severity": "info", "title": "No identifier", "impact": "Context", "recommendation": "Review context" }
+  ]
+}

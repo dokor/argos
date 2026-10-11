@@ -72,7 +72,38 @@ createServer((req, res) => {
   res.setHeader("Cache-Control", "no-store");
   if (req.method !== "GET") { res.writeHead(405); res.end(JSON.stringify({ error: "Read-only visual fixtures" })); return; }
   const path = new URL(req.url, "http://127.0.0.1:3018").pathname;
-  const match = path.match(/^\/api\/reports\/(review-[a-z]+)(\/status)?$/);
+  const params = new URL(req.url, "http://127.0.0.1:3018").searchParams;
+  const send = data => res.end(JSON.stringify(data));
+  const usage = { offer: "DEMO", period: "2026-10", timezone: "UTC", startsAt: "2026-10-01T00:00:00Z", resetsAt: "2026-11-01T00:00:00Z", used: 12, reserved: 2, limit: 50, canLaunch: true };
+  // Account roles below are fictional fixture responses, never production access.
+  if (path === "/api/account/me") return send({ displayName: "Administration démo", email: "admin@atelier.example", verified: true, admin: true });
+  if (path === "/api/account/usage") return send(usage);
+  if (path === "/api/account/admin/queue") return send({ queued: 3, running: 2 });
+  const users = [{ id: "101", displayName: "Camille · Atelier de démonstration au nom volontairement long", email: "contact-avec-une-adresse-volontairement-longue@atelier.example", state: "ACTIVE", role: "USER", offer: "DEMO", createdAt: "2026-10-11T10:00:00Z" }, { id: "102", displayName: "Morgan", email: "morgan@atelier.example", state: "ARCHIVED", role: "USER", offer: "DEMO", createdAt: "2026-10-10T09:00:00Z" }];
+  if (path === "/api/account/admin/users") return send({ items: users.filter(u => (!params.get("q") || (u.displayName+u.email).toLowerCase().includes(params.get("q").toLowerCase())) && (!params.get("state") || u.state === params.get("state"))), nextCursor: null });
+  const userMatch = path.match(/^\/api\/account\/admin\/users\/(101|102)$/);
+  if (userMatch) return send({ ...users.find(u => u.id === userMatch[1]), usage, monthlyLimit: null, offers: ["DEMO", "STANDARD"] });
+  const runs = ["COMPLETED", "FAILED", "RUNNING", "QUEUED"].map((status,i) => ({ id: String(401-i), userId: i%2 ? null : "101", site: "atelier.example", status, createdAt: "2026-10-11T10:00:00Z", reportAvailable: status === "COMPLETED", modules: { http: "COMPLETED", html: "COMPLETED", runtime: status === "FAILED" ? "FAILED" : status === "COMPLETED" ? "COMPLETED" : "RUNNING", lighthouse: status === "COMPLETED" ? "COMPLETED" : "PENDING" }, failureCode: status === "FAILED" ? "VISUAL_FIXTURE" : null, attempts: 1 }));
+  if (path === "/api/account/admin/runs") return send({ items: runs.filter(r => (!params.get("status") || r.status === params.get("status")) && (!params.get("site") || r.site === params.get("site"))), nextCursor: null });
+  const runMatch = path.match(/^\/api\/account\/admin\/runs\/(\d+)(\/report)?$/);
+  if (runMatch) return send(runMatch[2] ? fixture("review-details") : runs.find(r => r.id === runMatch[1]) ?? runs[0]);
+  if (path === "/api/account/admin/events") return send({ items: [{ id: "1", actorId: "900", targetId: "101", oldOffer: "DEMO", newOffer: "STANDARD", oldLimit: null, newLimit: 100, createdAt: "2026-10-11T10:00:00Z" }], nextCursor: null });
+  const feedback = [{ id: "701", type: "BUG", status: "OPEN", createdAt: "2026-10-11T10:00:00Z", updatedAt: "2026-10-11T10:00:00Z" }];
+  if (path === "/api/account/admin/feedback") return send({ items: feedback.filter(f => (!params.get("status") || f.status === params.get("status")) && (!params.get("type") || f.type === params.get("type"))), nextCursor: null });
+  if (path === "/api/account/admin/feedback/701") return send({ ...feedback[0], description: "Texte fictif très long pour vérifier les retours et la lecture des détails. ".repeat(12), page: "REPORT", expected: "Des boutons alignés et de même hauteur.", observed: "Le libellé revient à la ligne.", steps: "Ouvrir le rapport sur un écran étroit.", runId: "401", findingKey: "html.images.alt_coverage", events: [] });
+  if (path === "/api/product-analytics/metrics") {
+    const counts = { accepted: 24, started: 22, completed: 18, failed: 2, pending: 4, viewed: 15, completedViewed: 14 };
+    const delay = { sample: 18, excluded: 0, medianMs: 19000, p90Ms: 28000, p95Ms: 32000 };
+    return send({ enabled: false, capped: false, from: "2026-10-01", until: "2026-10-11", cohort: counts, bySource: [{ route: "/ressources/audit-technique-gratuit", lang: "fr", placement: "hero", counts }], queue: { ...delay, medianMs: 2000 }, processing: delay, endToEnd: delay, events: [{ event: "cta_clicked", route: "/", lang: "fr", placement: "hero", error: "", count: 24 }] });
+  }
+  const raw = { schemaVersion: 2, score: { scoringVersion: 9, global: { id: "global", score: 64, maxScore: 100, ratio: .64 }, byModule: [{ id: "html", score: 72, maxScore: 100, ratio: .72 }, { id: "lighthouse", score: 48, maxScore: 100, ratio: .48 }], byTag: [{ id: "performance", score: 48, maxScore: 100, ratio: .48 }, { id: "a11y", score: 72, maxScore: 100, ratio: .72 }] }, modules: [{ id: "tech", data: { cms: { name: "Commerce démo" } } }], evidence: "https://atelier.example/" + "produit-".repeat(60) };
+  const audits = runs.map(r => ({ auditId: 201, runId: Number(r.id), hostname: r.site, inputUrl: "https://atelier.example/collection/" + "produit-".repeat(24), normalizedUrl: "https://atelier.example/collection/" + "produit-".repeat(24), status: r.status, createdAt: r.createdAt, globalScore: r.status === "COMPLETED" ? 64 : null, reportUrl: r.status === "COMPLETED" ? "/dashboard/report/401" : null }));
+  if (path === "/api/audits") return send(audits);
+  const legacyRun = path.match(/^\/api\/audits\/runs\/(\d+)(\/report)?$/);
+  if (legacyRun) return send(legacyRun[2] ? fixture("review-details") : { ...audits.find(a => a.runId === Number(legacyRun[1])), resultJson: Number(legacyRun[1]) === 401 ? JSON.stringify(raw) : null });
+  if (/^\/api\/audits\/\d+\/history$/.test(path)) return send([{ runId: 401, status: "COMPLETED", globalScore: 64, createdAt: "2026-10-11T10:00:00Z", reportUrl: "/dashboard/report/401" }, { runId: 390, status: "COMPLETED", globalScore: 60, createdAt: "2026-10-10T09:00:00Z", reportUrl: "/dashboard/report/390" }]);
+  if (/\/comparison$/.test(path)) return send({ calculation: { scoringVersion: 9, scoringFingerprint: "visual-fixture" }, coverage: fixture("review-complete").scores.coverage, comparison: { reason: "COMPARABLE", globalDelta: 4, domains: [{ domain: "performance", points: 8 }], contributions: [{ key: "runtime.lcp", module: "runtime", domain: "performance", domainPoints: 8, globalPoints: 4 }], coverageChanged: false } });
+  const match = path.match(/^\/api\/reports\/(review-[a-z]+)(?:-fixture)?(\/status)?$/);
   if (!match) { res.writeHead(404); res.end("{}"); return; }
   const [, token, status] = match;
   if (status && (tokens.has(token) || token === "review-running" || token === "review-failed")) {
@@ -83,4 +114,3 @@ createServer((req, res) => {
   } else if (!status && tokens.has(token)) res.end(JSON.stringify(fixture(token)));
   else { res.writeHead(404); res.end("{}"); }
 }).listen(3018, "127.0.0.1", () => console.log("Visual fixtures: http://127.0.0.1:3018 (GET only)"));
-

@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { LangProvider } from "@/lib/i18n/LangContext";
 import { ThemeProvider } from "@/lib/theme/ThemeContext";
+import ProductAnalytics from "@/components/analytics/ProductAnalytics";
 import ClientErrorLogger from "@/components/ClientErrorLogger";
 import fr from "@/lib/i18n/fr.json";
 import en from "@/lib/i18n/en.json";
@@ -16,6 +17,7 @@ const themeInitScript = `(function(){try{var t=localStorage.getItem('argos-theme
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: "optional",
 });
 
 const geistMono = Geist_Mono({
@@ -43,7 +45,7 @@ export const frenchMetadata: Metadata = {
     "analyse URL",
     "rapport gratuit",
   ],
-  authors: [{ name: "Antoine LE LOUËT", url: "https://www.linkedin.com/in/antoinelelouet/" }],
+  authors: [{ name: "Antoine LE LOUËT", url: "https://www.linkedin.com/in/antoine-le-lou%C3%ABt" }],
   creator: "Antoine LE LOUËT",
   robots: {
     index: true,
@@ -105,7 +107,7 @@ const jsonLd = {
   author: {
     "@type": "Person",
     name: "Antoine LE LOUËT",
-    url: "https://www.linkedin.com/in/antoinelelouet/",
+    url: "https://www.linkedin.com/in/antoine-le-lou%C3%ABt",
   },
 };
 
@@ -128,7 +130,7 @@ export default function SiteDocument({
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <ClientErrorLogger />
         <ThemeProvider>
-          <LangProvider initialLang={lang}>{children}</LangProvider>
+          <LangProvider initialLang={lang}><ProductAnalytics />{children}</LangProvider>
         </ThemeProvider>
       </body>
     </html>

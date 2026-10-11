@@ -1,91 +1,12 @@
 @use '../styles/tokens' as t;
-
-.bar {
-  background: t.$surface;
-  border: 1px solid t.$border;
-  border-radius: t.$radius-xl;
-  padding: t.$panel-space-mobile;
-  display: grid;
-  gap: t.$space-3;
-  box-shadow: t.$shadow-sm;
-}
-
-.row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: t.$space-2;
-  align-items: center;
-}
-
-.groupLabel {
-  font-size: t.$text-xs;
-  font-weight: 700;
-  color: t.$text-subtle;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-right: 2px;
-}
-
-.chip {
-  padding: t.$space-2 t.$space-3;
-  min-height: 40px;
-  border-radius: t.$radius-pill;
-  font-size: t.$text-sm;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-}
-
-.chipCount {
-  font-size: 10px;
-  opacity: 0.7;
-  font-weight: 700;
-}
-
-.selectBox {
-  display: flex;
-  align-items: center;
-  gap: t.$space-2;
-  background: t.$surface-2;
-  border: 1px solid t.$border;
-  border-radius: t.$radius-sm;
-  padding: t.$space-2 t.$space-3;
-}
-
-.selectLabel {
-  font-size: t.$text-xs;
-  font-weight: 700;
-  color: t.$text-subtle;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  white-space: nowrap;
-}
-
-.select {
-  border: none;
-  background: transparent;
-  font-size: t.$text-sm;
-  font-weight: 700;
-  color: t.$text;
-  cursor: pointer;
-  outline: none;
-  padding: 2px 0;
-
-  &:focus-visible {
-    outline: 2px solid t.$color-indigo;
-    outline-offset: 2px;
-  }
-}
-
-.clearBtn {
-  padding: t.$space-2 t.$space-3;
-  min-height: 40px;
-  border-radius: t.$radius-sm;
-  border: 1px solid t.$color-red-border;
-  background: t.$color-red-light;
-  color: t.$color-red;
-  font-size: t.$text-sm;
-  font-weight: 700;
-  cursor: pointer;
-}
+@use '../styles/controls' as controls;
+.bar { background: t.$surface; border: 1px solid t.$border; border-radius: 8px; padding: 16px; display: grid; gap: 16px; min-width: 0; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; min-width: 0; }
+.groupLabel { flex-basis: 100%; font-size: 13px; font-weight: 600; color: t.$text-muted; }
+.chip, .clearBtn { @include controls.cta-geometry; cursor: pointer; }
+.chipCount { font-size: 13px; font-variant-numeric: tabular-nums; }
+.selectBox { display: grid; gap: 8px; flex: 1 1 180px; min-width: 0; }
+.selectLabel { font-size: 13px; font-weight: 600; color: t.$text-muted; }
+.select { height: 44px; width: 100%; min-width: 0; max-width: 100%; padding: 8px 12px; border: 1px solid t.$border; border-radius: 8px; background: t.$surface; color: t.$text; font-size: 15px; }
+.clearBtn { background: t.$surface; color: t.$text; border-color: t.$border; }
+.bar :is(button, select):focus-visible { outline: 3px solid t.$brand; outline-offset: 3px; }

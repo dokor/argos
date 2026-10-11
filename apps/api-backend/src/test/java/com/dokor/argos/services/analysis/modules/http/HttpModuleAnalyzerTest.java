@@ -4,6 +4,12 @@ import com.dokor.argos.services.analysis.model.AuditCheckResult;
 import com.dokor.argos.services.analysis.model.AuditContext;
 import com.dokor.argos.services.analysis.model.AuditModuleResult;
 import com.dokor.argos.services.analysis.model.enums.AuditStatus;
+import com.dokor.argos.services.analysis.model.enums.AuditSeverity;
+import com.dokor.argos.services.analysis.model.AuditReportJson;
+import com.dokor.argos.services.analysis.CheckMergerService;
+import com.dokor.argos.services.analysis.scoring.*;
+import com.dokor.argos.services.domain.report.PublicReportComposer;
+import java.time.Instant;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 
@@ -285,7 +291,7 @@ class HttpModuleAnalyzerTest {
     @Test
     void analyze_detectsCloudflareChallengeAndDoesNotPenalize() throws Exception {
         HttpModuleAnalyzer a = new HttpModuleAnalyzer(stubClient(
-            resp(403, "<html><title>Just a moment...</title></html>",
+            resp(403, "<html><title>Just a moment...</title><script>window._cf_chl_opt = {};</script></html>",
                 Map.of("cf-ray", List.of("abc123"), "server", List.of("cloudflare")),
                 HttpClient.Version.HTTP_2),
             resp(404, "x"), resp(404, "x")));
@@ -335,6 +341,119 @@ class HttpModuleAnalyzerTest {
     void checkStatusCode_challengeIsInfoNotFail() {
         assertEquals(AuditStatus.INFO, HttpModuleAnalyzer.checkStatusCode(403, true).status());
         assertEquals(AuditStatus.FAIL, HttpModuleAnalyzer.checkStatusCode(403, false).status());
+    }
+
+    @Test
+    void cloudflareMaintenanceForbiddenAndQuotaResponsesRemainMeasuredFailures() throws Exception {
+        for (int status : List.of(503, 403, 429)) {
+            String body = switch (status) {
+                case 503 -> "<html>Service unavailable - maintenance</html>";
+                case 403 -> "<html>Forbidden: account has no access</html>";
+                default -> "<html>API quota exceeded</html>";
+            };
+            var result = fixtureAnalysis(status, body, Map.of("server", List.of("cloudflare"), "cf-ray", List.of("fixture")));
+            assertEquals(false, result.data().get("antiBotDetected"));
+            assertEquals("cloudflare", result.data().get("cdnProvider"));
+            assertEquals("HTTP_ERROR_WITHOUT_CHALLENGE_EVIDENCE", result.data().get("antiBotReason"));
+            assertEquals(List.of(), result.data().get("antiBotEvidence"));
+            assertFalse(result.data().containsKey("antiBotVendor"));
+            assertEquals(status, result.data().get("statusCode"));
+            assertEquals(AuditStatus.FAIL, checkByKey(result, "http.status_code").status());
+            assertFalse(result.checks().stream().anyMatch(c -> c.key().equals("http.antibot.challenge")));
+            assertScoringAndCoverage(result, false);
+        }
+    }
+
+    @Test
+    void explicitCloudflareHeaderConfirmsChallengesIncludingHttp200() throws Exception {
+        for (int status : List.of(200, 403, 429, 503)) {
+            var result = fixtureAnalysis(status, "<html>Custom challenge</html>", Map.of("cf-mitigated", List.of("challenge")));
+            assertEquals(true, result.data().get("antiBotDetected"));
+            assertEquals("cloudflare", result.data().get("antiBotVendor"));
+            assertEquals("CF_MITIGATED_CHALLENGE", result.data().get("antiBotReason"));
+            assertEquals(List.of("header:cf-mitigated=challenge"), result.data().get("antiBotEvidence"));
+            assertEquals(result.data().get("antiBotEvidence"), checkByKey(result, "http.antibot.challenge").details().get("evidence"));
+            assertEquals(AuditStatus.INFO, checkByKey(result, "http.status_code").status());
+            assertScoringAndCoverage(result, true);
+        }
+    }
+
+    @Test
+    void challengeHtmlIsRecognizedWithoutInferringItFromCdnOrStatus() throws Exception {
+        for (String body : List.of("<html><script>window._cf_chl_opt = {cType:'managed'};</script></html>",
+            "<html><form id='cf-browser-verification'>Verify</form></html>")) {
+            var result = fixtureAnalysis(200, body, Map.of());
+            assertEquals(true, result.data().get("antiBotDetected"));
+            assertEquals("cloudflare", result.data().get("antiBotVendor"));
+            assertFalse(result.data().containsKey("cdnProvider"));
+            assertEquals("CLOUDFLARE_CHALLENGE_HTML", result.data().get("antiBotReason"));
+            assertScoringAndCoverage(result, true);
+        }
+    }
+
+    @Test
+    void ambiguousTextInvalidMitigationAndEmbeddedTurnstileNeverConfirmChallenge() throws Exception {
+        for (String body : List.of("<html><title>Just a moment...</title>Maintenance</html>",
+            "<html><h1>Attention required</h1>Renew your subscription</html>",
+            "<html>Checking your browser compatibility</html>",
+            "<html><script src='https://challenges.cloudflare.com/turnstile/v0/api.js'></script><form>Contact us</form></html>",
+            "<html><script src='/cdn-cgi/challenge-platform/scripts/jsd/main.js'></script>Welcome</html>")) {
+            var result = fixtureAnalysis(503, body, Map.of("server", List.of("cloudflare"), "cf-mitigated", List.of("guardrails")));
+            assertEquals(false, result.data().get("antiBotDetected"));
+            assertEquals(AuditStatus.FAIL, checkByKey(result, "http.status_code").status());
+            assertScoringAndCoverage(result, false);
+        }
+    }
+
+    @Test
+    void genericVerificationKeepsCdnProviderSeparateFromChallengeVendor() throws Exception {
+        var result = fixtureAnalysis(403, "Checking your browser before accessing the site",
+            Map.of("server", List.of("cloudflare")));
+        assertEquals("cloudflare", result.data().get("cdnProvider"));
+        assertEquals("generic", result.data().get("antiBotVendor"));
+        assertEquals("BROWSER_VERIFICATION_PAGE", result.data().get("antiBotReason"));
+        assertScoringAndCoverage(result, true);
+    }
+
+    private AuditModuleResult fixtureAnalysis(int status, String body, Map<String, List<String>> headers) throws Exception {
+        var analyzer = new HttpModuleAnalyzer(stubClient(resp(status, body, headers, HttpClient.Version.HTTP_2),
+            resp(404, "missing"), resp(404, "missing")));
+        return analyzer.analyze(new AuditContext("https://example.com", "https://example.com", 0L), LoggerFactory.getLogger("test"));
+    }
+
+    private void assertScoringAndCoverage(AuditModuleResult http, boolean challenge) {
+        var policy = new DefaultScorePolicy();
+        var raw = List.of(http, dependent("html", "html.title"), dependent("runtime", "runtime.console.errors"),
+            dependent("lighthouse", "lighthouse.score.performance"), dependent("tech", "tech.security.version_disclosure"),
+            dependent("ssl", "ssl.grade"));
+        var enriched = new ScoreEnricherService(policy).enrich(new CheckMergerService().merge(raw));
+        var score = new ScoreService(policy).compute(policy.version(), policy.fingerprint(), enriched);
+        for (String key : List.of("http.status_code", "http.security.hsts", "html.title", "runtime.console.errors",
+            "lighthouse.score.performance", "tech.security.version_disclosure")) {
+            var covered = score.coverage().checks().stream().filter(c -> c.key().equals(key)).findFirst().orElseThrow();
+            assertEquals(challenge ? MeasurementCoverage.State.BLOCKED_BY_ANTIBOT : MeasurementCoverage.State.MEASURED, covered.state(), key);
+            var scored = score.checks().stream().filter(c -> c.key().equals(key)).findFirst().orElseThrow();
+            assertEquals(!challenge, scored.scorable(), key);
+            if (challenge) assertEquals(0, scored.weight(), key);
+            else assertTrue(scored.weight() > 0, key);
+        }
+        assertEquals(MeasurementCoverage.State.MEASURED, score.coverage().checks().stream()
+            .filter(c -> c.key().equals("ssl.grade")).findFirst().orElseThrow().state());
+        var meta = challenge ? Map.of("antiBotDetected", "true", "antiBotVendor", (String) http.data().get("antiBotVendor"))
+            : Map.<String, String>of();
+        var report = new PublicReportComposer().compose(new AuditReportJson(6, "https://example.com", "https://example.com",
+            Instant.now(), meta, enriched, score));
+        if (challenge) assertTrue(report.antiBot().detected());
+        else {
+            assertNull(report.antiBot());
+            assertTrue(report.issues().stream().anyMatch(i -> i.id().equals("http.status_code")));
+        }
+    }
+
+    private AuditModuleResult dependent(String module, String key) {
+        var check = AuditCheckResult.of(key, key, AuditStatus.FAIL, AuditSeverity.MEDIUM, false, 0,
+            List.of(), false, Map.of(), "fixture", "fix");
+        return new AuditModuleResult(module, module, null, Map.of(), List.of(check));
     }
 
     // -------------------------
@@ -498,6 +617,110 @@ class HttpModuleAnalyzerTest {
     // -------------------------
     // Cookies & HTTP/2 (issue #151)
     // -------------------------
+
+    @Test
+    void cookieFlagsDoNotTransferBetweenCookies() throws Exception {
+        var result = analyzeCookies(List.of("good=1; Secure; HttpOnly", "session=secret-marker"));
+        var check = checkByKey(result, "http.security.cookie_flags");
+        assertEquals(AuditStatus.WARN, check.status());
+        assertEquals(2, check.details().get("cookieCount"));
+        assertEquals(1, check.details().get("missingSecureCount"));
+        assertEquals(1, check.details().get("missingHttpOnlyCount"));
+        assertEquals(List.of(Map.of("index", 1, "secure", true, "httpOnly", true),
+            Map.of("index", 2, "secure", false, "httpOnly", false)), check.details().get("cookies"));
+        assertFalse(result.toString().contains("secret-marker"));
+        assertFalse(check.toString().contains("session" + "="));
+    }
+
+    @Test
+    void cookieFlagsRequireExactStandaloneAttributesOutsideValues() {
+        for (String cookie : List.of("session=secure-httponly", "secure-httponly=1",
+            "session=1; Path=/secure/httponly", "session=1; NotSecure; X-HttpOnly",
+            "session=1; Secure=yes; HttpOnly=yes", "session=\"abc; Secure; HttpOnly\"",
+            "session=1; extension=\"abc; Secure; HttpOnly\"")) {
+            var check = HttpModuleAnalyzer.checkCookieFlags(List.of(cookie));
+            assertEquals(AuditStatus.WARN, check.status(), cookie);
+            assertEquals(false, check.details().get("secure"), cookie);
+            assertEquals(false, check.details().get("httpOnly"), cookie);
+        }
+    }
+
+    @Test
+    void complementaryCookieFlagsStillWarnAndAffectSecurityScore() throws Exception {
+        var result = analyzeCookies(List.of("a=1; Secure", "b=2; HttpOnly"));
+        var check = checkByKey(result, "http.security.cookie_flags");
+        assertEquals(AuditStatus.WARN, check.status());
+        assertEquals(1, check.details().get("missingSecureCount"));
+        assertEquals(1, check.details().get("missingHttpOnlyCount"));
+        var policy = new DefaultScorePolicy();
+        var enriched = new ScoreEnricherService(policy).enrich(List.of(result));
+        var score = new ScoreService(policy).compute(policy.version(), policy.fingerprint(), enriched);
+        var scored = score.checks().stream().filter(c -> c.key().equals("http.security.cookie_flags"))
+            .findFirst().orElseThrow();
+        assertEquals(6.0, scored.weight());
+        assertEquals(3.0, scored.score());
+    }
+
+    @Test
+    void cookieFlagsKeepExpiresCommasAndIgnoreAttributeCase() throws Exception {
+        var result = analyzeCookies(List.of(
+            "a=expires-secret; Expires=Wed, 21 Oct 2037 07:28:00 GMT; sEcUrE; hTtPoNlY",
+            "b=other-secret; HTTPONLY ; SECURE"));
+        var check = checkByKey(result, "http.security.cookie_flags");
+        assertEquals(AuditStatus.PASS, check.status());
+        assertEquals(2, check.details().get("cookieCount"));
+        assertEquals(0, check.details().get("missingSecureCount"));
+        assertEquals(0, check.details().get("missingHttpOnlyCount"));
+        assertFalse(result.toString().contains("expires-secret"));
+        assertFalse(result.toString().contains("other-secret"));
+    }
+
+    @Test
+    void cookieFlagsWithoutCookiesPassAndBlankFieldsDoNotPass() throws Exception {
+        var check = checkByKey(analyzeCookies(List.of()), "http.security.cookie_flags");
+        assertEquals(AuditStatus.PASS, check.status());
+        assertEquals(false, check.value());
+        assertEquals(AuditStatus.WARN, HttpModuleAnalyzer.checkCookieFlags(List.of("")).status());
+    }
+
+    @Test
+    void javascriptReadableCookieNeedsManualReviewAndStillRequiresSecure() {
+        var check = HttpModuleAnalyzer.checkCookieFlags(List.of(
+            "session=secret; Secure; HttpOnly", "XSRF-TOKEN=public; Secure"));
+        assertEquals(AuditStatus.WARN, check.status());
+        assertEquals(0, check.details().get("missingSecureCount"));
+        assertEquals(1, check.details().get("missingHttpOnlyCount"));
+        assertEquals("REQUIRE_ALL_REVIEW_JAVASCRIPT_EXCEPTIONS", check.details().get("httpOnlyPolicy"));
+        assertTrue(check.recommendation().contains("JavaScript"));
+        var insecure = HttpModuleAnalyzer.checkCookieFlags(List.of("XSRF-TOKEN=public; HttpOnly"));
+        assertEquals(AuditStatus.WARN, insecure.status());
+        assertEquals(1, insecure.details().get("missingSecureCount"));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void cookieValuesAreRedactedInRedirectDiagnosticsAndEnrichedContext() throws Exception {
+        HttpClient client = mock(HttpClient.class);
+        var redirect = resp(302, "", Map.of(
+            "location", List.of("http://127.0.0.1/"),
+            "set-cookie", List.of("JSESSIONID=redirect-secret; Secure; HttpOnly")), HttpClient.Version.HTTP_1_1);
+        when(client.<String>send(any(), any())).thenReturn(redirect);
+        var result = analyzeWith(client);
+        assertFalse(result.toString().contains("redirect-secret"));
+        var last = (Map<String, Object>) result.data().get("lastResponse");
+        assertEquals("JSESSIONID=[redacted]", ((Map<?, ?>) last.get("headers")).get("set-cookie"));
+        assertEquals(false, checkByKey(result, "http.security.cookie_flags").value());
+
+        var terminal = analyzeCookies(List.of("JSESSIONID=terminal-secret; Secure; HttpOnly"));
+        var context = HttpModuleAnalyzer.enrichContext(new AuditContext("https://example.com", "https://example.com", 0L), terminal);
+        assertEquals("JSESSIONID=[redacted]", context.headers().get("set-cookie"));
+        assertFalse(context.headers().toString().contains("terminal-secret"));
+    }
+
+    private AuditModuleResult analyzeCookies(List<String> cookies) throws Exception {
+        return analyzeWith(stubClient(resp(200, "<html></html>", Map.of("Set-Cookie", cookies),
+            HttpClient.Version.HTTP_2), resp(404, "missing"), resp(404, "missing")));
+    }
 
     @Test
     void analyze_shouldWarnWhenCookiesLackSecurityFlags() throws Exception {

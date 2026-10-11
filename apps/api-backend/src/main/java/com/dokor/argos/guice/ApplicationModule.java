@@ -23,6 +23,10 @@ public class ApplicationModule extends AbstractModule {
     protected void configure() {
         install(new GuiceConfModule());
         install(new GuiceJacksonModule());
+        bind(java.time.Clock.class).toInstance(java.time.Clock.systemUTC());
+        bind(com.dokor.argos.services.account.AccountSessionSigner.class).in(Singleton.class);
+        bind(com.dokor.argos.webservices.api.account.AccountPermissionProvider.class).in(Singleton.class);
+        bind(com.dokor.argos.services.account.AccountMail.class).to(com.dokor.argos.services.account.SmtpAccountMail.class);
         // Database & Querydsl installation
         install(new GuiceQuerydslModule());
 

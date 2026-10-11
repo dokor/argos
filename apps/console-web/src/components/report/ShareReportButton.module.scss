@@ -16,10 +16,13 @@
   color: t.$text;
   border-color: t.$border;
   cursor: pointer;
+  min-width: 180px;
 
   &:hover { background: t.$surface-2; }
   &:focus-visible { outline: 2px solid t.$brand; outline-offset: 3px; }
 }
+
+.compact .button { min-width: 140px; }
 
 .status {
   margin: 0;

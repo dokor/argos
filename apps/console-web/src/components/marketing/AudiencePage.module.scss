@@ -232,3 +232,12 @@
 }
 
 @include editorial.intro;
+
+.brief { display: grid; gap: 16px; margin-block: 16px; dt { font-weight: 600; } dd { margin: 4px 0 0; line-height: 1.6; } }
+.example pre,.annotations pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: t.$text-sm; line-height: 1.6; margin-block: 16px; }
+.productDemo { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 24px; }
+.product { min-width: 0; border: 1px solid t.$border; border-radius: 8px; padding: 24px; background: t.$surface; }
+.product img { margin-inline: auto; width: 100%; max-width: 320px; height: auto; }
+.product figcaption { line-height: 1.65; }
+.annotations { min-width: 0; display: grid; gap: 16px; li { min-width: 0; padding: 16px; border-left: 3px solid t.$border; } p { margin-block: 12px; line-height: 1.6; } }
+@media (max-width: 700px) { .productDemo { grid-template-columns: 1fr; } .product { padding: 16px; } }

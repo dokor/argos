@@ -21,20 +21,35 @@ public class ReportPublishService {
     private final AuditReportDao reports;
     private final PublicReportComposer composer;
     private final AiReportSummaryService summaries;
+    private final AhrefsDomainRatingClient domainRatings;
     private final ObjectMapper mapper;
+    private final ReportRetentionPolicy retention;
 
+    public ReportPublishService(TransactionManagerQuerydsl transactions, AuditRunDao runs,
+        AuditReportDao reports, PublicReportComposer composer, AiReportSummaryService summaries,
+        AhrefsDomainRatingClient domainRatings, ObjectMapper mapper) {
+        this(transactions, runs, reports, composer, summaries, domainRatings, mapper, ReportRetentionPolicy.defaults());
+    }
     @Inject
     public ReportPublishService(TransactionManagerQuerydsl transactions, AuditRunDao runs,
-        AuditReportDao reports, PublicReportComposer composer, AiReportSummaryService summaries, ObjectMapper mapper) {
+        AuditReportDao reports, PublicReportComposer composer, AiReportSummaryService summaries,
+        AhrefsDomainRatingClient domainRatings, ObjectMapper mapper, ReportRetentionPolicy retention) {
+        this.retention = retention;
         this.transactions = transactions; this.runs = runs; this.reports = reports;
-        this.composer = composer; this.summaries = summaries; this.mapper = mapper;
+        this.composer = composer; this.summaries = summaries; this.domainRatings = domainRatings; this.mapper = mapper;
     }
 
     public long completeAndPublish(long runId, Audit audit, AuditReportJson internal,
                                    String resultJson, String claimToken) {
         if (claimToken == null || claimToken.isBlank()) throw new IllegalArgumentException("Missing worker claim");
         // Composition, remote AI enrichment and serialization precede the database lock.
-        ReportDto dto = summaries.enrich(composer.compose(internal));
+        ReportDto composed = summaries.enrich(composer.compose(internal));
+        ReportDto.DomainRating rating = domainRatings.get(composed.domain());
+        ReportDto.Site site = composed.site();
+        ReportDto dto = new ReportDto(composed.generatedAt(), composed.domain(), composed.url(),
+            new ReportDto.Site(site == null ? null : site.title(), site == null ? null : site.logoUrl(), rating),
+            composed.scores(), composed.summary(), composed.issues(), composed.tech(), composed.antiBot(),
+            composed.accessibilityEvidence(), composed.accessibilityCompliance());
         Integer globalScore = publishedGlobalScore(internal, dto);
         AuditReport entity = new AuditReport();
         entity.setAuditId(audit.getId()); entity.setRunId(runId);
@@ -43,10 +58,12 @@ public class ReportPublishService {
         entity.setSiteTitle(dto.site() == null ? null : dto.site().title());
         entity.setLogoUrl(dto.site() == null ? null : dto.site().logoUrl());
         entity.setGlobalScore(globalScore);
+        entity.setProvisional(dto.scores()==null || dto.scores().coverage()==null ? null : dto.scores().coverage().provisional());
         entity.setScoringVersion(globalScore == null ? null : internal.score().scoringVersion());
         try { entity.setReportJson(mapper.writeValueAsString(dto)); }
         catch (Exception error) { throw new IllegalStateException("Report serialization failed", error); }
         entity.setCreatedAt(Instant.now());
+        entity.setExpiresAt(retention.expiresAt(entity.getCreatedAt()));
 
         return transactions.executeAndReturn(connection -> {
             var run = runs.lockForPublication(runId, connection).orElseThrow(() -> new IllegalStateException("Run missing"));
@@ -63,6 +80,7 @@ public class ReportPublishService {
             if (!runs.markCompleted(runId, claimToken, Instant.now(), resultJson, connection)) {
                 throw new IllegalStateException("Run completion rejected");
             }
+            if(run.getOwnerUserId()!=null) runs.usage().published(run,entity.getCreatedAt(),connection);
             return reportId;
         });
     }

@@ -48,16 +48,21 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
+      { source: "/report/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] },
+      { source: "/en/report/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] },
       {
         source: "/:path*",
         headers: securityHeaders,
       },
+      { source: "/account/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }, { key: "Referrer-Policy", value: "no-referrer" }] },
+      { source: "/en/account/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }, { key: "Referrer-Policy", value: "no-referrer" }] },
     ];
   },
   async rewrites() {
     const apiBase = process.env.API_BASE ?? "http://api-backend:8081";
     return {
-      afterFiles: [
+      // Dynamic account/admin Route Handlers must run before the generic Java proxy.
+      fallback: [
         {
           source: "/api/:path*",
           destination: `${apiBase}/api/:path*`,

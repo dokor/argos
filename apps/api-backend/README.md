@@ -19,6 +19,14 @@ Configuration
 The configuration file is located in `src/main/resources/application.conf`.
 If you have any doubt, check out the [configuration documentation](https://github.com/Coreoz/Plume/tree/master/plume-conf). 
 
+The optional `AHREFS_API_KEY` environment variable enables the Ahrefs Domain Rating
+badge in newly published reports. Create a free APIv3 key in Ahrefs account settings
+and supply it to the backend process (the production Compose file forwards this
+variable). Without a key, or when Ahrefs is unavailable, reports are published
+without the badge. Successful ratings are cached in memory per domain for 24 hours;
+the badge shows the retrieval date and the required Ahrefs attribution. The rating
+does not affect Argos scoring. Existing reports are not retroactively enriched.
+
 Database
 --------
 To generate classes corresponding to the database tables,

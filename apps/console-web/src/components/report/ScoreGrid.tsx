@@ -1,87 +1,49 @@
 "use client";
 
 import { CategoryScore, Coverage } from "./types";
-import Link from "next/link";
 import { useLang } from "@/lib/i18n/LangContext";
+import { BUSINESS_DOMAINS, type ReportModel } from "./reportModel";
+import { domainScore } from "./reportSummaryModel";
+import { decisionCopy } from "./decisionCopy";
 import s from "./ScoreGrid.module.scss";
 
-import { scoreColor } from "./reportColors";
-
-function clamp(n: number) { return Math.max(0, Math.min(100, n ?? 0)); }
-
-export default function ScoreGrid({
-  categories,
-  globalScore,
-  globalAvailable,
-  completeness,
-  coverage,
-}: {
-  categories: CategoryScore[];
-  globalScore: number;
-  globalAvailable?: boolean | null;
-  completeness?: number | null;
-  coverage?: Coverage | null;
+export default function ScoreGrid({ categories, model, coverage, onSelectDomain }: {
+  categories: CategoryScore[]; model?: ReportModel; coverage?: Coverage | null;
+  onSelectDomain?: (domain: string) => void;
 }) {
   const { t, lang } = useLang();
   const ts = t.report.scoreGrid;
-  const catInfo = t.report.categoryInfo as Record<string, string>;
-  const catLabels = t.report.priorityCards.domains as Record<string, string>;
-  const cats = [...(categories || [])].sort((a, b) => a.score - b.score);
-  const global = clamp(globalScore);
-  // Analyse partielle : un ou plusieurs modules n'ont pas pu être évalués (issue #101).
-  const isPartial = typeof completeness === "number" && completeness < 100;
-
-  return (
-    <section className={s.section} id="scores" aria-labelledby="scores-title">
-      <div className={s.sectionHead}>
-        <div>
-          <h2 className={s.sectionTitle} id="scores-title">{ts.title}</h2>
-          <p className={s.sectionDesc}>{ts.desc}</p>
-          <Link href="/methodologie-score" className={s.methodLink}>{ts.methodologyLink}</Link>
-          {isPartial && (
-            <p className={s.partialNote} title={ts.partialTooltip}>
-              {ts.partial.replace("{n}", clamp(completeness!).toLocaleString(lang === "en" ? "en-US" : "fr-FR", { maximumFractionDigits: 0 }))}
-            </p>
-          )}
-        </div>
-        <div className={s.globalChip}>
-          {ts.globalLabel}
-          {coverage?.provisional && <span>{t.report.measurementCoverage.provisional}</span>}
-          {globalAvailable !== false ? (
-            <>
-              <span className={s.globalValue}>{global}</span>
-              /100
-            </>
-          ) : <span className={s.globalValue}>{t.report.hero.scoreUnavailable}</span>}
-        </div>
-      </div>
-
-      <div className={s.grid}>
-        {cats.map((c) => {
-          const sc = clamp(c.score);
-          const color = scoreColor(sc);
-          const available = coverage?.domains.find((domain) => domain.key === c.key)?.available !== false;
-          return (
-            <a key={c.key} href={`#cat-${encodeURIComponent(c.key)}`} className={s.card}>
-              <div className={s.cardTop}>
-                <div>
-                  <p className={s.catLabel}>{catLabels[c.key] ?? c.label}</p>
-                  <p className={s.catIssues}>{c.issues} {ts.issueCount}</p>
-                </div>
-                {available ? <span className={s.scoreValue}>{sc}<small>/100</small></span> : <span className={s.unavailableScore}>{t.report.hero.scoreUnavailable}</span>}
-              </div>
-
-              <p className={s.catDesc}>{catInfo[c.key] ?? catInfo.fallback}</p>
-
-              {available && <div className={s.track} aria-hidden="true">
-                <div className={s.fill} style={{ width: `${sc}%`, background: color }} />
-              </div>}
-
-              <span className={s.detailLink}>{ts.seeDetail}</span>
-            </a>
-          );
-        })}
-      </div>
-    </section>
-  );
+  const copy = decisionCopy[lang];
+  const domains = t.report.priorityCards.domains as Record<string, string>;
+  const unknown = model?.groups.find(group => group.key === "unknown");
+  const href = (key: string) => onSelectDomain ? `?view=technical&domain=${key}` : `#cat-${key}`;
+  const select = (event: React.MouseEvent<HTMLAnchorElement>, key: string) => {
+    if (onSelectDomain) { event.preventDefault(); onSelectDomain(key); }
+  };
+  return <section className={s.section} aria-labelledby="report-domains">
+    <div className={s.sectionHead}>
+      <div><h2 id="report-domains" className={s.sectionTitle}>{ts.title}</h2><p className={s.sectionDesc}>{ts.desc}</p></div>
+    </div>
+    <div className={s.grid}>
+      {BUSINESS_DOMAINS.map(key => {
+        const category = categories?.find(category => category.key === key);
+        const score = domainScore(category?.score, key, coverage);
+        const issues = model?.groups.find(group => group.key === key)?.findings.length ?? category?.issues ?? 0;
+        const measurement = coverage?.domains.find(domain => domain.key === key);
+        return <a key={key} href={href(key)} onClick={event => select(event, key)} className={s.card}>
+          <div className={s.cardTop}>
+            <div><h3 className={s.catLabel}>{domains[key]}</h3><p className={s.catIssues}>{issues} {ts.issueCount}</p></div>
+            <span className={score === undefined ? s.missingScore : s.scoreValue}>{score === undefined ? copy.notEvaluated : `${score}/100`}</span>
+          </div>
+          <p className={s.catDesc}>{copy.domainDescriptions[key]}</p>
+          {score !== undefined && <p className={s.availability}>{copy.domainScore}</p>}
+          {measurement && <p className={s.availability}>{copy.domainCoverage}: {Math.round(measurement.ratio * 100)} %{!measurement.sufficient && ` — ${copy.insufficient}`}</p>}
+          <span className={s.detailLink}>{ts.seeDetail}</span>
+        </a>;
+      })}
+    </div>
+    {!!unknown?.findings.length && <a className={s.unknownLink} href={href("unknown")} onClick={event => select(event, "unknown")}>
+      {t.report.issuesByCategory.unknownDomain}: {unknown.findings.length} — {ts.seeDetail}
+    </a>}
+  </section>;
 }

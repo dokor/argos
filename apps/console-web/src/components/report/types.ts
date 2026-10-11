@@ -5,6 +5,7 @@ export type Report = {
   site: {
     title?: string;
     logoUrl?: string;
+    domainRating?: { score: number; fetchedAt: string } | null;
   };
   scores: {
     global: number;
@@ -139,11 +140,18 @@ export type PriorityItem = {
 };
 
 export type Issue = {
+  structuredEvidence?: {
+    source: string;
+    measurement?: { value: number; unit: "ms" | "bytes" | "count" | "days" | "score/100" | "ratio" | "unitless" } | null;
+    details?: Array<{ key: string; text: string }>;
+  } | null;
   confidence?: "HIGH" | "MEDIUM" | "LOW" | "UNKNOWN" | null;
-  id: string;
-  categoryKey: string;
-  /** Toutes les catégories métier auxquelles le point appartient (ex. ["security","ssl"]). */
+  /** Canonical check key; some historical reports omit it. */
+  id?: string | null;
+  categoryKey?: string | null;
+  /** Historical metadata may mix business domains and engine provenance. */
   categoryKeys?: string[];
+  tags?: string[];
   module?: string;
   severity: "critical" | "important" | "info";
   title: string;

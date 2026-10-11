@@ -1,11 +1,12 @@
 import Link from "next/link";
+import EditorialMeta from "@/components/marketing/EditorialMeta";
 import SiteNav from "@/components/site/SiteNav";
 import SiteFooter from "@/components/site/SiteFooter";
 import s from "./page.module.scss";
 
 // À mettre à jour avec DefaultScorePolicy.VERSION, ses poids et ScoreService
 // lors de tout changement de barème. Les anciens rapports gardent leur version.
-const POLICY_VERSION = 11;
+const POLICY_VERSION = 12;
 
 const domains = [
   { name: "Performance", description: "Chargement et comportement observé dans le navigateur, avec les mesures Argos et le score Performance de Lighthouse." },
@@ -24,13 +25,20 @@ const example = [
 export default function ScoreMethodologyPage() {
   return (
     <div className={s.page} lang="fr">
-      <SiteNav fixedFrench />
+      <SiteNav />
       <main lang="fr">
         <header className={s.hero}>
           <div className={s.container}>
             <p className={s.eyebrow}>Méthode de calcul · Barème v{POLICY_VERSION}</p>
             <h1>Comment est calculé le score d&apos;audit Argos&nbsp;?</h1>
+            <EditorialMeta route="/methodologie-score" fixedFrench />
             <p className={s.lead}>Le score résume les contrôles techniques effectués sur une URL à un moment donné. Il aide à repérer les points à examiner, sans remplacer la lecture des constats et de la couverture des mesures.</p>
+            <section className={s.summary} id="resume" aria-labelledby="resume-title">
+              <h2 id="resume-title">Du contrôle à la décision</h2>
+              <ol><li><strong>Contrôles applicables</strong><span>Les mesures disponibles sur cette URL.</span></li><li><strong>Points pondérés</strong><span>Un score pour chacun des quatre domaines mesurables.</span></li><li><strong>Score global</strong><span>La moyenne des domaines, à lire avec les constats.</span></li></ol>
+              <p><strong>Vérifiez aussi la couverture.</strong> Une mesure absente ne vaut pas zéro. Une couverture insuffisante rend le score provisoire ; elle mesure des poids de contrôles, pas le pourcentage de modules terminés.</p>
+              <a href="#calcul">Voir le calcul et la couverture</a>
+            </section>
           </div>
         </header>
 
@@ -107,6 +115,7 @@ export default function ScoreMethodologyPage() {
             <h2 id="next-title">Approfondir le diagnostic</h2>
             <p>La méthode donne le contexte&nbsp;; les constats détaillés du rapport indiquent quoi vérifier et corriger.</p>
             <div className={s.links}>
+              <Link href="/exemple-rapport">Lire un exemple de rapport commenté</Link>
               <Link href="/ressources/audit-technique-gratuit">Comprendre l&apos;audit technique</Link>
               <Link href="/ressources/accessibilite-numerique">Vérifier l&apos;accessibilité numérique</Link>
               <Link href="/ressources">Parcourir les autres guides</Link>

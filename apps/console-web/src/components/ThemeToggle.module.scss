@@ -4,8 +4,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
+  width: 44px;
+  height: 44px;
   border-radius: t.$radius-pill;
   border: 1px solid var(--argos-border);
   background: transparent;
@@ -20,3 +20,5 @@
     border-color: var(--argos-text-muted);
   }
 }
+
+.toggle:focus-visible { outline: 3px solid t.$brand; outline-offset: 3px; }

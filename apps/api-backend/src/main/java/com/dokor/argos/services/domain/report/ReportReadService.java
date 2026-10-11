@@ -20,16 +20,22 @@ public class ReportReadService {
     private final AuditReportDao auditReportDao;
     private final TokenService tokenService;
     private final ObjectMapper objectMapper;
+    private final ReportRetentionPolicy retention;
+
+    public ReportReadService(AuditReportDao reports, TokenService tokens, ObjectMapper mapper) {
+        this(reports, tokens, mapper, ReportRetentionPolicy.defaults());
+    }
 
     @Inject
     public ReportReadService(
         AuditReportDao auditReportDao,
         TokenService tokenService,
-        ObjectMapper objectMapper
+        ObjectMapper objectMapper, ReportRetentionPolicy retention
     ) {
         this.auditReportDao = auditReportDao;
         this.tokenService = tokenService;
         this.objectMapper = objectMapper;
+        this.retention = retention;
     }
 
     public Optional<ReportDto> getByToken(String token) {
@@ -52,8 +58,7 @@ public class ReportReadService {
     }
 
     private boolean notExpired(AuditReport entity) {
-        if (entity.getExpiresAt() == null) return true;
-        return entity.getExpiresAt().isAfter(Instant.now());
+        return !retention.expired(entity, Instant.now());
     }
 
     private Optional<ReportDto> deserialize(AuditReport entity) {

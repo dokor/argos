@@ -1,26 +1,30 @@
 @use '../../styles/tokens' as t;
-
-.section { scroll-margin-top: 76px; }
-.sectionHead { display: flex; justify-content: space-between; align-items: flex-start; gap: t.$space-5; flex-wrap: wrap; margin-bottom: t.$space-6; }
-.sectionTitle { font-size: t.$text-3xl; font-weight: 650; letter-spacing: -.025em; color: t.$text; }
-.sectionDesc { font-size: t.$text-md; color: t.$text-muted; margin-top: t.$space-2; line-height: 1.6; }
-.methodLink { display: inline-block; margin-top: t.$space-3; font-size: t.$text-sm; color: t.$brand; text-decoration: underline; text-underline-offset: 4px; }
-.partialNote { margin-top: t.$space-2; font-size: t.$text-base; color: t.$text-muted; }
-.globalChip { display: flex; flex-wrap: wrap; align-items: center; gap: t.$space-2; font-size: t.$text-sm; color: t.$text-muted; }
-.globalValue { font-size: t.$text-xl; font-weight: 600; }
-.grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: t.$space-3; }
-.card { display: flex; flex-direction: column; background: t.$surface; border: 1px solid t.$border; border-radius: t.$radius-sm; padding: t.$space-5; text-decoration: none; transition: border-color .15s; min-width: 0; }
-.card:hover { border-color: t.$brand; }
-.cardTop { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: t.$space-2; min-height: 48px; margin-bottom: t.$space-4; }
-.catLabel { font-size: t.$text-lg; font-weight: 600; color: t.$text; }
-.catIssues { margin-top: t.$space-1; font-size: t.$text-sm; color: t.$text-muted; }
-.scoreValue { font-size: 28px; font-weight: 650; font-variant-numeric: tabular-nums; line-height: 1.2; }
-.scoreValue small { font-size: t.$text-xs; font-weight: 400; color: t.$text-muted; margin-left: 2px; }
-.unavailableScore { max-width: 9ch; text-align: right; font-size: t.$text-sm; color: t.$text-muted; }
-.catDesc { font-size: t.$text-sm; line-height: 1.6; color: t.$text-muted; margin-bottom: t.$space-5; flex: 1; }
-.track { height: 4px; background: t.$border; border-radius: 2px; overflow: hidden; margin-bottom: t.$space-4; }
-.fill { height: 100%; }
-.detailLink { font-size: t.$text-sm; font-weight: 500; color: t.$brand; }
-.methodLink:focus-visible, .card:focus-visible { outline: 3px solid t.$brand; outline-offset: 3px; }
-@media (max-width: 1000px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 600px) { .grid { grid-template-columns: 1fr; } .card { padding: t.$space-4; } }
+.section { background: t.$surface; border: 1px solid t.$border; border-radius: t.$radius-xl; padding: t.$space-6; }
+.sectionHead { margin-bottom: t.$space-5; }
+.sectionTitle { font-size: 22px; margin: 0 0 t.$space-2; }
+.sectionDesc { font-size: t.$text-md; color: t.$text-muted; margin: 0; }
+.grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: t.$space-4; }
+.card { border: 1px solid t.$border; border-radius: t.$radius-lg; padding: t.$space-4; background: t.$surface-2; text-decoration: none; display: flex; flex-direction: column; color: t.$text;
+  &:hover { box-shadow: t.$shadow-sm; }
+}
+.cardTop { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: t.$space-2; }
+.catLabel { font-size: t.$text-xl; font-weight: 600; margin: 0; }
+.catIssues { font-size: t.$text-md; color: t.$text-muted; margin: t.$space-1 0 t.$space-3; }
+.scoreValue { font-size: 24px; font-weight: 700; }
+.missingScore { font-size: t.$text-md; font-weight: 600; }
+.catDesc, .availability { font-size: t.$text-md; line-height: 1.5; margin: t.$space-2 0; }
+.catDesc { color: t.$text-muted; }
+.detailLink { font-size: t.$text-md; margin-top: auto; padding-top: t.$space-3; text-decoration: underline; text-underline-offset: 3px; }
+.unknownLink { display: inline-block; color: t.$text; font-size: t.$text-md; margin-top: t.$space-4; text-underline-offset: 3px; }
+.section a:focus-visible { outline: 3px solid t.$text; outline-offset: 4px; }
+@media (max-width: 1024px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .section { padding: t.$panel-space-mobile; } }
+@media (max-width: 420px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+.section { border: 0; border-radius: 0; padding: 0; background: transparent; }
+.sectionTitle { font-weight: 650; line-height: 1.3; }
+.card { border-radius: 8px; background: t.$surface; }
+.cardTop { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: start; min-height: 56px; }
+.scoreValue { font-size: 22px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.missingScore { max-width: 9ch; text-align: right; }
+.catLabel { font-size: 18px; }
+@media(max-width:600px) { .grid { grid-template-columns: minmax(0,1fr); } }

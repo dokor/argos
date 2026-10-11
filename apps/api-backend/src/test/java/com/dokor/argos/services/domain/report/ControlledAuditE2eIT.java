@@ -59,7 +59,11 @@ class ControlledAuditE2eIT extends MariaDbReportFixture {
             int status=path.equals("/antibot")?403:200;
             exchange.getResponseHeaders().set("Content-Type","text/html; charset=utf-8");
             exchange.getResponseHeaders().set("X-Content-Type-Options","nosniff");
-            if(path.equals("/antibot")) exchange.getResponseHeaders().set("Server","cloudflare");
+            if(path.equals("/antibot")) {
+                exchange.getResponseHeaders().set("Server","cloudflare");
+                // Explicit challenge evidence; a CDN header and generic wording are insufficient.
+                exchange.getResponseHeaders().set("cf-mitigated","challenge");
+            }
             String body="<!doctype html><html lang='fr'><head><title>Controlled Argos fixture</title><meta name='description' content='Page locale contrôlée'><meta name='viewport' content='width=device-width'><meta charset='utf-8'></head><body><main><h1>Controlled fixture</h1><p>Local fixture content.</p>";
             if(path.equals("/errors")) body+="<img src='/missing.png'><script>console.error('Synthetic fixture error');throw new Error('Synthetic fixture error')</script>";
             if(path.equals("/antibot")) body+="<p>Just a moment… Verify you are human</p>";
@@ -90,7 +94,7 @@ class ControlledAuditE2eIT extends MariaDbReportFixture {
         var observatory=mock(ObservatoryClient.class);when(observatory.scan(anyString())).thenReturn(mapper.readTree("{\"score\":100,\"grade\":\"A+\",\"tests_passed\":10,\"tests_failed\":0,\"tests_quantity\":10}"));
         var zap=mock(ZapClient.class);when(zap.analyze(org.mockito.ArgumentMatchers.any(com.dokor.argos.services.analysis.model.AuditContext.class))).thenReturn(mapper.readTree("{\"alerts\":[]}"));
         var summary=mock(AiReportSummaryService.class);when(summary.enrich(any())).thenAnswer(call->call.getArgument(0));
-        var publish=new ReportPublishService(tx,runDao,reports,new PublicReportComposer(),summary,mapper);
+        var publish=new ReportPublishService(tx,runDao,reports,new PublicReportComposer(),summary,mock(AhrefsDomainRatingClient.class),mapper);
         var processor=new AuditProcessorService(runs,auditDao,urls,httpAnalyzer,new HtmlModuleAnalyzer(),new RuntimeModuleAnalyzer(runtime),new LighthouseModuleAnalyzer(lighthouse),new ObservatoryModuleAnalyzer(observatory),new SslLabsModuleAnalyzer(ssl),new ZapModuleAnalyzer(zap),
             new DomainAnalysisService(new DomainAnalysisDao(tx),new TechModuleAnalyzer(new NextJsDetectorService()),mapper),new CheckMergerService(),new ScoreEnricherService(policy),new ScoreService(policy),mapper,publish);
         var audits=new AuditService(auditDao,runs,urls,new DomainService(new DomainDao(tx)));

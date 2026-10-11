@@ -6,9 +6,10 @@ import AccessibilitySection, { safeAccessibilitySource } from "./AccessibilitySe
 import type { Report } from "./types";
 import fr from "@/lib/i18n/fr.json";
 import en from "@/lib/i18n/en.json";
+import { decisionCopy } from "./decisionCopy";
 
 let locale: "fr" | "en" = "fr";
-vi.mock("@/lib/i18n/LangContext", () => ({ useLang: () => ({ t: locale === "fr" ? fr : en }) }));
+vi.mock("@/lib/i18n/LangContext", () => ({ useLang: () => ({ t: locale === "fr" ? fr : en, lang: locale }) }));
 
 function fixture(): Report {
   return {
@@ -75,7 +76,7 @@ describe("AccessibilitySection (#263)", () => {
     };
     render(<AccessibilitySection report={report} />);
     expect(screen.getByText(fr.report.accessibility.technicalScore).nextElementSibling)
-      .toHaveTextContent(fr.report.accessibility.unknown);
+      .toHaveTextContent(decisionCopy.fr.notEvaluated);
     expect(screen.queryByText("100/100")).not.toBeInTheDocument();
     // Lighthouse is an independent raw measurement; its available value stays visible.
     expect(screen.getByText("93/100")).toBeInTheDocument();

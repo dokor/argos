@@ -1,0 +1,86 @@
+[
+  {
+    "route": "/report/fixture-valid",
+    "status": 200,
+    "xRobots": "noindex, nofollow",
+    "meta": "noindex, nofollow",
+    "canonical": false
+  },
+  {
+    "route": "/report/fixture-queued",
+    "status": 200,
+    "xRobots": "noindex, nofollow",
+    "meta": "noindex, nofollow",
+    "canonical": false
+  },
+  {
+    "route": "/report/fixture-running",
+    "status": 200,
+    "xRobots": "noindex, nofollow",
+    "meta": "noindex, nofollow",
+    "canonical": false
+  },
+  {
+    "route": "/report/fixture-failed",
+    "status": 200,
+    "xRobots": "noindex, nofollow",
+    "meta": "noindex, nofollow",
+    "canonical": false
+  },
+  {
+    "route": "/report/fixture-expired",
+    "status": 200,
+    "xRobots": "noindex, nofollow",
+    "meta": "noindex, nofollow",
+    "canonical": false
+  },
+  {
+    "route": "/report/fixture-unknown",
+    "status": 200,
+    "xRobots": "noindex, nofollow",
+    "meta": "noindex, nofollow",
+    "canonical": false
+  },
+  {
+    "route": "/en/report/fixture-valid",
+    "status": 200,
+    "xRobots": "noindex, nofollow",
+    "meta": "noindex, nofollow",
+    "canonical": false
+  },
+  {
+    "route": "/en/report/fixture-queued",
+    "status": 200,
+    "xRobots": "noindex, nofollow",
+    "meta": "noindex, nofollow",
+    "canonical": false
+  },
+  {
+    "route": "/en/report/fixture-running",
+    "status": 200,
+    "xRobots": "noindex, nofollow",
+    "meta": "noindex, nofollow",
+    "canonical": false
+  },
+  {
+    "route": "/en/report/fixture-failed",
+    "status": 200,
+    "xRobots": "noindex, nofollow",
+    "meta": "noindex, nofollow",
+    "canonical": false
+  },
+  {
+    "route": "/en/report/fixture-expired",
+    "status": 200,
+    "xRobots": "noindex, nofollow",
+    "meta": "noindex, nofollow",
+    "canonical": false
+  },
+  {
+    "route": "/en/report/fixture-unknown",
+    "status": 200,
+    "xRobots": "noindex, nofollow",
+    "meta": "noindex, nofollow",
+    "canonical": false
+  }
+]
