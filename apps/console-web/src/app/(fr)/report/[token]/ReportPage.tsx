@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { buildReportModel, FindingSelection } from "@/components/report/reportModel";
 import ReportHeader from "@/components/report/ReportHeader";
 import ReportHero from "@/components/report/ReportHero";
@@ -23,6 +23,7 @@ type Params = { params: { report: Report } };
 
 export default function ReportPage({ params }: Readonly<Params>) {
   const { report } = params;
+  useEffect(()=>{window.dispatchEvent(new Event("argos-report-displayed"));},[]);
   const { t, lang } = useLang();
   const tp = t.report.page;
   const isAdmin = useIsAdmin();

@@ -4,12 +4,12 @@
 |---|---|
 | Opérateur/hébergeur Antoine Le Louët, serveur France métropolitaine | Réponse de l’opérateur dans cette tâche |
 | URL, domaine, états, dates, résultats enregistrés | AuditService, AuditRunService, entités ARG_AUDIT/ARG_AUDIT_RUN/ARG_AUDIT_REPORT |
-| Expiration optionnelle, pas un effacement | ReportReadService.notExpired accepte expiresAt null ; ReportPublishService ne fixe pas expiresAt ; aucune purge trouvée |
+| Accès par défaut : 3 années calendaires UTC, expiration antérieure prioritaire, pas un effacement | Réponse opérateur du 11 octobre ; ReportRetentionPolicy ; ReportPublishService écrit expiresAt ; ReportReadService applique aussi le défaut aux historiques |
 | SSL Labs/Observatory reçoivent le domaine | Clients correspondants et ConfigurationService URL par défaut ; configuration production non inspectée |
-| Journaux console et durée inconnue | logback.xml STDOUT ; rotation Docker, proxy et sauvegardes non qualifiés |
+| Journaux : cible de 90 jours ; application et sauvegardes non vérifiées | Réponse opérateur du 11 octobre ; logback.xml STDOUT ; rotations Docker/proxy et sauvegardes non inspectées |
 | Email newsletter | route BFF newsletter et NewsletterSubscriber |
 | Préférence thème/cookie admin | SiteDocument/ThemeContext existants et login BFF |
-| Pas d’analytics ajouté | #42 plan uniquement |
+| Mesure interne optionnelle, désactivée par défaut, accord explicite, cookie de session, tables propres 90 jours | ProductAnalyticsService, BFF /api/product-analytics, migration V10 ; pas de fournisseur tiers |
 
 ## Compléments nécessaires avant clôture
 
@@ -17,4 +17,4 @@ La page informations-legales publie les seuls faits confirmés, sans prétendre 
 
 Références officielles : [mentions d’un entrepreneur](https://entreprendre.service-public.gouv.fr/vosdroits/F31228), [information des personnes](https://www.cnil.fr/fr/informer-les-personnes), [durées de conservation](https://www.cnil.fr/fr/passer-laction/les-durees-de-conservation-des-donnees). Ces obligations ne sont pas déduites d’une simple localisation du serveur.
 
-La FAQ est corrigée pour ne promettre ni TTL ni purge absents. L’accès par possession d’un lien est distinct des directives moteurs (#395). Toute instrumentation future (#42) doit actualiser cet inventaire avant activation.
+La durée d’accès par défaut est désormais implémentée ; aucune purge des données métier n’est ajoutée. L’accès par possession d’un lien est distinct des directives moteurs (#395). L’instrumentation #42 est décrite dans product-analytics.md et la page de confidentialité. Aucune collecte n’est activée en production par la PR.

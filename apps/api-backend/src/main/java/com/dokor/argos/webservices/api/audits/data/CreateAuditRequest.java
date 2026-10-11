@@ -6,5 +6,5 @@ import jakarta.validation.constraints.Size;
 public record CreateAuditRequest(
     @NotBlank
     @Size(max = 2048, message = "URL must not exceed 2048 characters")
-    String url
-) {}
+    String url, com.dokor.argos.services.analytics.AnalyticsDimensions analytics
+) { public CreateAuditRequest(String url) { this(url,null); } }

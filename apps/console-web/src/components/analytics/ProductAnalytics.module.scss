@@ -1,0 +1,4 @@
+.banner { position: fixed; bottom: 0; inset-inline: 0; z-index: 100; padding: 16px; background: var(--argos-surface); color: var(--argos-text); border-top: 2px solid var(--argos-border); box-shadow: 0 -4px 20px #0002; } .banner p {max-width: 900px;margin: 0 auto 12px;} .banner div {display:flex;gap:12px;flex-wrap:wrap;} .banner button,.settings {padding:10px 14px;min-height:44px;background:var(--argos-bg);color:var(--argos-text);border:1px solid var(--argos-border);border-radius:8px;cursor:pointer;} .banner a {color:var(--argos-text);text-decoration:underline;} .banner button:focus-visible,.settings:focus-visible {outline:3px solid var(--argos-text);outline-offset:3px;} .settings {position:fixed;bottom:8px;right:8px;z-index:100;font-size:12px;}
+
+.banner { max-height: calc(100dvh - 16px); overflow-y: auto; }
+.settings { max-width: calc(100vw - 16px); overflow-wrap: anywhere; }
