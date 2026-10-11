@@ -93,8 +93,10 @@ export default function IssuesByCategory({ report, model = buildReportModel(repo
         ))}</div>
       </div>
 
-      <p role="status">{ti.resultCount.replace("{n}", String(visibleCount)).replace("{total}", String(model.counts.total))}</p>
-      {visibleCount === 0 && model.counts.total > 0 && onFilterChange && <button type="button" onClick={() => onFilterChange("all", "all")}>{copy.clear}</button>}
+      <div className={s.resultsBar}>
+        <p className={s.resultCount} role="status">{ti.resultCount.replace("{n}", String(visibleCount)).replace("{total}", String(model.counts.total))}</p>
+        {visibleCount === 0 && model.counts.total > 0 && onFilterChange && <button className={s.filterBtn} type="button" onClick={() => onFilterChange("all", "all")}>{copy.clear}</button>}
+      </div>
 
       {/* Categories */}
       {model.groups.filter(group => (domain === "all" || group.key === domain) && (group.key !== "unknown" || group.findings.length > 0)).map((cat) => {

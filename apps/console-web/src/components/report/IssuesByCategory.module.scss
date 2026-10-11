@@ -25,6 +25,21 @@
   flex-wrap: wrap;
 }
 
+.resultsBar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: t.$space-2;
+  padding: t.$space-3 t.$space-6 0;
+}
+
+.resultCount {
+  margin: 0;
+  font-size: t.$text-sm;
+  line-height: 1.5;
+  color: t.$text-muted;
+}
+
 .filterLabel {
   font-size: t.$text-xs;
   font-weight: 800;
@@ -282,6 +297,10 @@
 
   .catBlock {
     padding: t.$space-4 t.$space-4;
+  }
+
+  .resultsBar {
+    padding-inline: t.$space-4;
   }
 
   .issueSummary {
