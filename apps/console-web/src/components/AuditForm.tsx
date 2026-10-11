@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useRef } from "react";
 import { AuditListItem, CreateAuditResponse } from "@/lib/ArgosApi";
 import { useLang } from "@/lib/i18n/LangContext";
 import { createLogger } from "@/lib/logger";
@@ -10,10 +10,11 @@ import s from "./AuditForm.module.scss";
 
 type Props = {
   onCreated?: (item: AuditListItem) => void;
-  mode?: "dashboard" | "public";
+  mode?: "dashboard" | "public" | "personal";
   sourceRoute?: string;
   idPrefix?: string;
   submitLabel?: string;
+  initialUrl?: string;
 };
 
 function isValidPublicUrl(raw: string): boolean {
@@ -27,7 +28,7 @@ function isValidPublicUrl(raw: string): boolean {
   }
 }
 
-export default function AuditForm({ onCreated, mode = "dashboard", sourceRoute, idPrefix, submitLabel }: Props) {
+export default function AuditForm({ onCreated, mode = "dashboard", sourceRoute, idPrefix, submitLabel, initialUrl = "" }: Props) {
   const { t } = useLang();
   const publicMode = mode === "public";
   const tf = publicMode ? t.marketing.form : t.auditForm;
@@ -36,7 +37,8 @@ export default function AuditForm({ onCreated, mode = "dashboard", sourceRoute, 
     [publicMode, sourceRoute]
   );
 
-  const [url, setUrl] = useState("");
+  const inputRef=useRef<HTMLInputElement>(null);
+  const [url, setUrl] = useState(initialUrl);
   const [inputError, setInputError] = useState<string | null>(null);
 
   // Le dashboard ouvre le rapport dans un nouvel onglet (#169) ; les pages
@@ -44,7 +46,8 @@ export default function AuditForm({ onCreated, mode = "dashboard", sourceRoute, 
   const { phase, error, submit } = useAuditSubmit({
     logger,
     sourceRoute,
-    openInNewTab: !publicMode,
+    openInNewTab: mode === "dashboard",
+    personal: mode === "personal",
     onCreated: (res: CreateAuditResponse, normalizedUrl: string) => {
       onCreated?.({
         auditId: Number(res.auditId),
@@ -60,7 +63,7 @@ export default function AuditForm({ onCreated, mode = "dashboard", sourceRoute, 
 
   const submitting = phase === "submitting" || phase === "polling" || phase === "redirecting";
   const errorMsg = inputError ?? (phase === "error"
-    ? publicMode ? t.marketing.form.errorRequest : error?.message ?? t.auditForm.errorUnknown
+    ? publicMode || mode === "personal" ? t.marketing.form.errorRequest : error?.message ?? t.auditForm.errorUnknown
     : null);
   const inputId = idPrefix ? `${idPrefix}-audit-url` : publicMode ? "public-audit-url" : "url";
 
@@ -68,11 +71,11 @@ export default function AuditForm({ onCreated, mode = "dashboard", sourceRoute, 
     e.preventDefault();
     setInputError(null);
     if (!url.trim()) {
-      setInputError(tf.errorUrlMissing);
+      setInputError(tf.errorUrlMissing);inputRef.current?.focus();
       return;
     }
-    if (publicMode && !isValidPublicUrl(url)) {
-      setInputError(t.marketing.form.errorInvalidUrl);
+    if ((publicMode || mode === "personal") && !isValidPublicUrl(url)) {
+      setInputError(t.marketing.form.errorInvalidUrl);inputRef.current?.focus();
       return;
     }
     submit(url);
@@ -83,6 +86,8 @@ export default function AuditForm({ onCreated, mode = "dashboard", sourceRoute, 
       <div className={s.fieldGroup}>
         <label htmlFor={inputId} className={s.label}>{tf.urlLabel}</label>
         <input
+          ref={inputRef}
+          maxLength={2048}
           id={inputId}
           type="text"
           inputMode="url"

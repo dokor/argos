@@ -1,4 +1,5 @@
 "use client";
+import { useAccountSession, PersonalNavigation } from "./AccountSession";
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "@/components/LocalizedLink";
@@ -11,26 +12,27 @@ import s from "./AccountView.module.scss";
 type Mode = "me" | "sign-in" | "register" | "verify" | "forgot" | "reset";
 type Method = { id: string; provider: string };
 type Session = { id: string; createdAt: string; current: boolean };
-type Run = { runId: string; status: string; createdAt: string };
+
 export default function AccountView({ mode = "me" }: { mode?: Mode }) {
+  const sharedSession=useAccountSession();
   const { t, lang } = useLang(), copy = t.account, router = useRouter();
   const [profile, setProfile] = useState<AccountProfile | null>(null), [providers, setProviders] = useState<string[]>([]);
   const [enabled, setEnabled] = useState(true), [busy, setBusy] = useState(false), [message, setMessage] = useState(""), [error, setError] = useState("");
-  const [methods, setMethods] = useState<Method[]>([]), [sessions, setSessions] = useState<Session[]>([]), [runs, setRuns] = useState<Run[]>([]);
-  const [token, setToken] = useState(""), [returnTo, setReturnTo] = useState("/account");
+  const [methods, setMethods] = useState<Method[]>([]), [sessions, setSessions] = useState<Session[]>([]);
+  const [token, setToken] = useState(""), [returnTo, setReturnTo] = useState("/account/sites");
   const [name, setName] = useState(""), [email, setEmail] = useState(""), [password, setPassword] = useState(""), [code, setCode] = useState(""), [confirmed, setConfirmed] = useState(false);
   function fail(reason: unknown) { const key = reason instanceof AccountClientError ? reason.code : "account_unavailable"; setError(copy.errors[key as keyof typeof copy.errors] ?? copy.errors.account_unavailable); }
   async function load() {
     const current = await accountFetch<AccountProfile>("me"); setProfile(current); setName(current.displayName); setEmail(current.email ?? "");
-    if (current.verified) { const [m, ss, rr] = await Promise.all([accountFetch<Method[]>("methods"), accountFetch<Session[]>("sessions"), accountFetch<Run[]>("runs")]); setMethods(m); setSessions(ss); setRuns(rr); }
+    if (current.verified) { const [m, ss] = await Promise.all([accountFetch<Method[]>("methods"), accountFetch<Session[]>("sessions")]); setMethods(m); setSessions(ss); }
   }
   useEffect(() => {
     // Read fragment tokens after hydration, then remove them before further navigation.
     const initialize = () => {
     const raw = new URLSearchParams(window.location.search).get("returnTo");
-    const safe = raw && /^\/(?:en\/)?(?:account|report\/[A-Za-z0-9_-]{20,512})$/.test(raw) ? raw : localizedPath("/account", lang);
+    const safe = raw && /^\/(?:en\/)?(?:account(?:\/(?:sites(?:\/[1-9]\d{0,18})?|runs\/[1-9]\d{0,18}))?|report\/[A-Za-z0-9_-]{20,512})$/.test(raw) ? raw : localizedPath("/account/sites", lang);
     if (raw) setReturnTo(safe);
-    else void accountFetch<{ returnTo: string }>("return").then(value => setReturnTo(value.returnTo === "/account" ? localizedPath("/account", lang) : value.returnTo)).catch(() => setReturnTo(safe));
+    else void accountFetch<{ returnTo: string }>("return").then(value => setReturnTo(value.returnTo === "/account/sites" ? localizedPath("/account/sites", lang) : value.returnTo)).catch(() => setReturnTo(safe));
     const value = new URLSearchParams(window.location.hash.slice(1)).get("token");
     if (value) { setToken(value); window.history.replaceState(null, "", window.location.pathname + window.location.search); }
     if (new URLSearchParams(window.location.search).has("error")) setError(copy.errors.oauth_invalid);
@@ -42,11 +44,9 @@ export default function AccountView({ mode = "me" }: { mode?: Mode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, lang]);
   useEffect(() => {
-    if (!profile) return;
-    const interval = setInterval(() => { void accountFetch("auth/renew", "POST", {}).catch(reason => { if (reason instanceof AccountClientError && reason.status === 401) { setProfile(null); fail(reason); } }); }, 600000);
-    return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile]);
+    if(!sharedSession.denied) return;
+    queueMicrotask(()=>{setProfile(null);setMethods([]);setSessions([]);setError(copy.errors.session_invalid);});
+  },[sharedSession.denied,copy.errors.session_invalid]);
   async function act(work: () => Promise<void>) { if (busy) return; setBusy(true); setMessage(""); setError(""); try { await work(); } catch (reason) { fail(reason); } finally { setBusy(false); } }
   async function social(provider: string, intent = "login") {
     await act(async () => { const result = await accountFetch<{ url: string }>("auth/oauth/" + provider + "/start", "POST", { intent, returnTo: intent === "link" ? localizedPath("/account", lang) : returnTo }); window.location.assign(result.url); });
@@ -63,7 +63,7 @@ export default function AccountView({ mode = "me" }: { mode?: Mode }) {
   }
   const title = mode === "me" ? copy.title : mode === "sign-in" ? copy.signIn : mode === "register" ? copy.register : mode === "verify" ? copy.verify : mode === "reset" ? copy.reset : copy.forgot;
   const field = (id: string, label: string, value: string, set: (v: string) => void, type = "text", autoComplete?: string) => <div className={s.field}><label htmlFor={id}>{label}</label><input className={s.input} id={id} type={type} value={value} onChange={e => set(e.target.value)} autoComplete={autoComplete} required disabled={busy} maxLength={type === "password" ? 256 : 254} /></div>;
-  return <><SiteNav /><main className={s.page}><h1>{title}</h1>
+  return <><div className={s.chrome}><SiteNav /></div>{mode === "me" && <PersonalNavigation/>}<main className={s.page}><h1>{title}</h1>
     {error && <p className={s.notice} role="alert">{error}</p>}{message && <p className={s.notice} role="status">{message}</p>}
     {!enabled && <p role="status">{copy.unavailable}</p>}
     {mode !== "me" && <form className={s.form} onSubmit={submit}>
@@ -104,7 +104,7 @@ export default function AccountView({ mode = "me" }: { mode?: Mode }) {
           </form>
         </section>
         <section className={s.card}><h2>{copy.sessions}</h2><ul className={s.list}>{sessions.map(session => <li key={session.id}><span>{new Date(session.createdAt).toLocaleString(lang)} {session.current ? "— " + copy.current : ""}</span><button className={s.button} disabled={busy} onClick={() => void act(async () => { await accountFetch("sessions/" + session.id, "DELETE", {}); if (session.current) { setProfile(null); router.push(localizedPath("/account/sign-in", lang)); } else await load(); })}>{copy.revoke}</button></li>)}</ul><button className={s.button} disabled={busy} onClick={() => void act(async () => { await accountFetch("sessions/revoke-others", "POST", {}); await load(); setMessage(copy.done); })}>{copy.others}</button></section>
-        <section className={s.card}><h2>{copy.runs}</h2>{runs.length === 0 && <p>{copy.noRuns}</p>}<ul className={s.list}>{runs.map(run => <li key={run.runId}><span>{new Date(run.createdAt).toLocaleString(lang)} — {copy.statuses[run.status as keyof typeof copy.statuses] ?? copy.working}</span><Link href={"/account/runs/" + run.runId}>{copy.openReport}</Link></li>)}</ul></section>
+        <section className={s.card}><h2>{copy.sites.title}</h2><Link href="/account/sites">{copy.sites.title}</Link></section>
       </>}
       <section className={s.card}><h2>{copy.archive}</h2><p>{copy.archiveHint}</p><label className={s.check}><input type="checkbox" checked={confirmed} onChange={e => setConfirmed(e.target.checked)} disabled={busy}/>{copy.confirmArchive}</label><button className={s.button} disabled={busy || !confirmed} onClick={() => void act(async () => { await accountFetch("me/archive", "POST", { confirmed }); setProfile(null); setMessage(copy.done); router.push(localizedPath("/account/sign-in", lang)); })}>{copy.archive}</button></section>
     </>}

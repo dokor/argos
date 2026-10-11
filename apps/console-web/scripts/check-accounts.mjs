@@ -52,7 +52,7 @@ try {
   assert.ok(cookies.find(c => c.name === "argos_account_csrf")?.httpOnly);
   assert.ok(!(await page.evaluate(() => document.cookie)).includes("argos_account="));
   await claim.getByRole("link", { name: copy.title, exact: true }).click();
-  await page.getByRole("heading", { name: copy.runs }).waitFor();
+  await page.getByRole("heading", { name: copy.sites.title }).waitFor();
   const runs = await (await context.request.get("/api/account/runs")).json();
   assert.equal(runs.length, 1); assert.equal(runs[0].runId, String(run.runId));
   assert.match(runs[0].createdAt, /^\d{4}-\d{2}-\d{2}T/);
@@ -63,7 +63,7 @@ try {
   await otherPage.getByLabel(copy.email, { exact: true }).fill(email);
   await otherPage.getByLabel(copy.password, { exact: true }).fill(password);
   await otherPage.getByRole("button", { name: copy.signIn, exact: true }).click();
-  await otherPage.getByRole("heading", { name: copy.title, exact: true }).waitFor();
+  await otherPage.getByRole("heading", { name: copy.sites.title, exact: true }).waitFor();
   await page.reload();
   await page.getByRole("button", { name: copy.others, exact: true }).click();
   await page.getByRole("status").filter({ hasText: copy.done }).waitFor();

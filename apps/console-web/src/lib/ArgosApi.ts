@@ -19,6 +19,7 @@ export class ApiError extends Error {
 }
 
 export type CreateAuditRequest = {
+  personal?: boolean;
   url: string;
   /** Route fixe, attribuée uniquement avec consentement validé côté BFF. */
   sourceRoute?: string;

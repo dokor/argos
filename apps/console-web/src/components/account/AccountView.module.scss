@@ -14,3 +14,11 @@
 .notice { padding: .75rem; border: 1px solid var(--argos-border); border-radius: .5rem; overflow-wrap: anywhere; }
 .check { display: flex; gap: .6rem; align-items: flex-start; }
 @media (max-width: 480px) { .page { margin: 1.5rem auto; } .card { padding: 1rem; } .button { min-height: 44px; } }
+
+.personalNav { display:flex;flex-wrap:wrap;gap:1rem;padding:1rem 1.25rem;max-width:48rem;margin:auto; }
+.personalNav a:focus-visible,.page a:focus-visible { outline:3px solid var(--argos-text);outline-offset:3px; }
+.page { overflow-wrap:anywhere; }
+.urlList { list-style:none;padding:0; }
+.urlList h3 { font-weight:600;margin:1rem 0 .5rem; }
+
+.chrome a[href$="#audit"] { height:auto;min-height:44px;overflow-wrap:anywhere; }

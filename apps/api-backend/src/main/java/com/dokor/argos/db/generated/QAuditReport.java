@@ -32,6 +32,8 @@ public class QAuditReport extends com.querydsl.sql.RelationalPathBase<AuditRepor
 
     public final DateTimePath<java.time.Instant> expiresAt = createDateTime("expiresAt", java.time.Instant.class);
 
+    public final BooleanPath provisional = createBoolean("provisional");
+
     public final NumberPath<Integer> globalScore = createNumber("globalScore", Integer.class);
 
     public final NumberPath<Integer> scoringVersion = createNumber("scoringVersion", Integer.class);
@@ -82,6 +84,7 @@ public class QAuditReport extends com.querydsl.sql.RelationalPathBase<AuditRepor
     }
 
     public void addMetadata() {
+        addMetadata(provisional, ColumnMetadata.named("provisional").ofType(Types.BOOLEAN));
         addMetadata(auditId, ColumnMetadata.named("audit_id").withIndex(3).ofType(Types.BIGINT).withSize(19).notNull());
         addMetadata(createdAt, ColumnMetadata.named("created_at").withIndex(10).ofType(Types.TIMESTAMP).withSize(23).notNull());
         addMetadata(domain, ColumnMetadata.named("domain").withIndex(5).ofType(Types.VARCHAR).withSize(255).notNull());

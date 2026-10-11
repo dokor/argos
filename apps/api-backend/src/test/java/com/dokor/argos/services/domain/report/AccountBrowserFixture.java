@@ -95,7 +95,7 @@ public class AccountBrowserFixture extends MariaDbReportFixture {
                         fixture.reader,
                         fixture.tokens,
                         clock,
-                        settings);
+                        settings, new AccountSitesService(dao,sessions,new UrlNormalizer(),new DomainService(new DomainDao(dao.transactions)),new AuditDao(dao.transactions),clock));
         var oauth =
                 new AccountOAuthService(
                         dao,
@@ -139,8 +139,7 @@ public class AccountBrowserFixture extends MariaDbReportFixture {
                                         auth,
                                         personal,
                                         new AccountCsrf(settings),
-                                        new AccountRateLimiter(
-                                                dao, fixture.tokens, clock, settings)))
+                                        new AccountRateLimiter(dao, fixture.tokens, clock, settings), new AccountSitesService(dao,sessions,new UrlNormalizer(),new DomainService(new DomainDao(dao.transactions)),new AuditDao(dao.transactions),clock)))
                         .register(
                                 new com.dokor.argos.webservices.api.report.ReportsWs(
                                         fixture.reader, fixture.runs));
