@@ -1,5 +1,6 @@
 import { Report } from "@/components/report/types";
 import { createLogger, safeError } from "@/lib/logger";
+import { accountAuditHeaders } from "@/lib/account-client";
 
 /**
  * Erreur HTTP portant le code de statut, pour permettre aux appelants de
@@ -144,9 +145,10 @@ export async function http<T>(path: string, init?: RequestInit): Promise<T> {
 const limit = 100;
 
 export const argosApi = {
-  createAudit: (body: CreateAuditRequest): Promise<CreateAuditResponse> =>
+  createAudit: async (body: CreateAuditRequest): Promise<CreateAuditResponse> =>
     http<CreateAuditResponse>("/api/audits", {
       method: "POST",
+      headers: typeof window === "undefined" ? {} : await accountAuditHeaders(),
       body: JSON.stringify(body),
     }),
 

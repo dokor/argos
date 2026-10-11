@@ -101,7 +101,7 @@ export function useAuditSubmit(options: UseAuditSubmitOptions): UseAuditSubmitRe
       const href = localizedPath(`/report/${reportToken}`, lang);
       logger.info("audit_submit_redirect", {
         action: "redirect_to_report",
-        details: { reason, reportToken, runId: runIdRef.current, polls, openInNewTab },
+        details: { reason, runId: runIdRef.current, polls, openInNewTab },
       });
 
       if (openInNewTab && typeof window !== "undefined") {

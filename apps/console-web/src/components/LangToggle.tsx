@@ -3,7 +3,7 @@
 import { Fragment, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { frenchPath, languageRoutes, localizedPath } from "@/lib/i18n/routes";
+import { accountRoutes, frenchPath, languageRoutes, localizedPath } from "@/lib/i18n/routes";
 import { useLang, Lang } from "@/lib/i18n/LangContext";
 import s from "./LangToggle.module.scss";
 import { readingSnapshot, subscribeReading } from "./report/reportReading";
@@ -17,7 +17,7 @@ export default function LangToggle({ className, variant = "light" }: Props) {
   const { lang, setLang } = useLang();
   const pathname = usePathname();
   const suffix = useSyncExternalStore(subscribeReading, readingSnapshot, () => "");
-  const hasLanguageRoute = Boolean(languageRoutes[frenchPath(pathname)]) || /^\/(en\/)?report\//.test(pathname);
+  const hasLanguageRoute = Boolean(languageRoutes[frenchPath(pathname)] || accountRoutes[frenchPath(pathname)]) || /^\/(en\/)?(?:report|account\/runs)\//.test(pathname);
 
   if (!hasLanguageRoute && !/^\/(dashboard|login)(\/|$)/.test(pathname)) return <div className={`${s.toggle} ${s[variant]}${className ? ` ${className}` : ""}`} role="group" aria-label="Language"><span className={`${s.option} ${s.active}`} aria-current="page" lang="fr">FR</span><span className={s.sep} aria-hidden="true" /><Link href="/en/resources" hrefLang="en" lang="en" className={`${s.option} ${s.fallback}`} aria-label="English guides — this page is available in French only" title="English guides — this page is available in French only"><span>EN</span><small>guides</small></Link></div>;
 

@@ -31,6 +31,7 @@ export default function SiteNav() {
           <Link href="/#audit" className={s.auditCta}>{t.landing.hero.cta}</Link>
         </div>
         <div className={s.navActions}>
+          <Link href="/account" className={s.navLink}>{t.account.title}</Link>
           <ThemeToggle />
           <LangToggle />
           <div className={s.consoleSlot}>

@@ -1,0 +1,16 @@
+.page { max-width: 48rem; margin: 3rem auto; padding: 0 1.25rem; color: var(--argos-text); }
+.page h1 { font-size: clamp(1.8rem, 5vw, 2.5rem); font-weight: 700; line-height: 1.2; margin-bottom: 1.5rem; }
+.page h2 { font-size: 1.2rem; font-weight: 600; margin-bottom: 1rem; }
+.card { padding: 1.5rem; margin: 1rem 0; border: 1px solid var(--argos-border); border-radius: 1rem; background: var(--argos-surface); }
+.form { display: grid; gap: .85rem; max-width: 34rem; }
+.field { display: grid; gap: .35rem; }
+.input { padding: .8rem; border: 1px solid var(--argos-border); border-radius: .5rem; color: var(--argos-text); background: var(--argos-bg); font: inherit; width: 100%; box-sizing: border-box; }
+.button { padding: .75rem 1rem; border-radius: .5rem; border: 1px solid var(--argos-border); background: var(--argos-surface-2); color: var(--argos-text); font: inherit; cursor: pointer; }
+.button:disabled { opacity: .65; cursor: wait; }
+.button:focus-visible, .input:focus-visible, .links a:focus-visible { outline: 3px solid var(--argos-text); outline-offset: 3px; }
+.actions, .links { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1rem; align-items: center; }
+.list { list-style: none; padding: 0; }
+.list li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .75rem; padding: .8rem 0; border-bottom: 1px solid var(--argos-border); align-items: center; }
+.notice { padding: .75rem; border: 1px solid var(--argos-border); border-radius: .5rem; overflow-wrap: anywhere; }
+.check { display: flex; gap: .6rem; align-items: flex-start; }
+@media (max-width: 480px) { .page { margin: 1.5rem auto; } .card { padding: 1rem; } .button { min-height: 44px; } }

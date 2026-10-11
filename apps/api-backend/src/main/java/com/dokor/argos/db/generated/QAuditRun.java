@@ -47,6 +47,7 @@ public class QAuditRun extends com.querydsl.sql.RelationalPathBase<AuditRun> {
     public final StringPath status = createString("status");
 
     public final NumberPath<Integer> attemptCount = createNumber("attemptCount", Integer.class);
+    public final NumberPath<Long> ownerUserId = createNumber("ownerUserId", Long.class);
 
     public final com.querydsl.sql.PrimaryKey<AuditRun> primary = createPrimaryKey(id);
 
@@ -80,6 +81,7 @@ public class QAuditRun extends com.querydsl.sql.RelationalPathBase<AuditRun> {
     }
 
     public void addMetadata() {
+        addMetadata(ownerUserId, ColumnMetadata.named("owner_user_id").withIndex(13).ofType(Types.BIGINT));
         addMetadata(auditId, ColumnMetadata.named("audit_id").withIndex(2).ofType(Types.BIGINT).withSize(19).notNull());
         addMetadata(claimToken, ColumnMetadata.named("claim_token").withIndex(9).ofType(Types.VARCHAR).withSize(64));
         addMetadata(reportTokenHash, ColumnMetadata.named("report_token_hash").withIndex(10).ofType(Types.BINARY).withSize(32));

@@ -47,6 +47,10 @@ public class AuditRun extends com.coreoz.plume.db.querydsl.crud.CrudEntityQueryd
 
     @Column("attempt_count")
     private Integer attemptCount;
+    @Column("owner_user_id")
+    private Long ownerUserId;
+    public Long getOwnerUserId() { return ownerUserId; }
+    public void setOwnerUserId(Long ownerUserId) { this.ownerUserId = ownerUserId; }
 
     public Long getAuditId() {
         return auditId;
