@@ -63,19 +63,9 @@
   flex-shrink: 0;
 }
 
-.privateBadge {
-  font-size: t.$text-md;
-  color: t.$text-muted;
-  font-weight: 500;
-  white-space: nowrap;
-}
-
 @media (max-width: 640px) {
   .inner {
     padding: 0 t.$space-4;
-  }
-  .privateBadge {
-    display: none;
   }
 }
 @media (max-width: 320px) {
