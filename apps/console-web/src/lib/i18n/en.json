@@ -5,6 +5,10 @@
     "description": "Audit a public page for free: performance, security, SEO and accessibility. Get scores and priority corrections with no account needed."
   },
   "nav": {
+    "freeAudit": "Free audit",
+    "signUp": "Sign up",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
     "how": "How it works",
     "example": "Example report",
     "guides": "Guides",

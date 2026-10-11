@@ -1,8 +1,10 @@
-# Public header regression (#357)
+# Public header regression
 
 All ten French marketing pages and six existing English counterparts use SiteNav and SiteChrome.module.scss. Report pages intentionally use ReportHeader. Guides without English content remain French; the language control is present on every public header. Labels come from the shared language context.
 
-The header sets its own Geist typography because landing/FAQ wrappers override the body font. Geist uses optional display to avoid a late font swap. Stable logo/link columns and a reserved admin slot prevent language, active-state or cookie hydration from moving controls. Below 560px the admin action uses an accessible dashboard icon. The root reserves the vertical scrollbar, including on short pages.
+The header sets its own Geist typography because landing/FAQ wrappers override the body font. The primary action uses a short single-line label (Audit gratuit / Free audit). An outlined account button retains its text on mobile. The session is verified with the same-origin account/me endpoint: a 401 links to registration, an authenticated profile links to the account, and loading or service errors retain the account entry. Login, invalidation, window focus and route changes refresh the state; cancelled requests cannot restore a revoked session.
+
+Both actions have stable widths and 44px targets. The admin shortcut reserves a compact icon slot. At 760px and below, the audit and account actions remain visible while a disclosure contains discovery links and preferences. The disclosure exposes aria-expanded and aria-controls, closes on navigation, and returns focus to its toggle on Escape. The root reserves the vertical scrollbar, including on short pages.
 
 ## Run locally
 
@@ -14,4 +16,6 @@ node scripts/e2e/public-header.mjs
 
 HEADER_BASE_URL optionally selects another local port. The harness refuses remote targets. No backend, real admin credential or audit submission is needed; a synthetic argos_admin cookie only exercises the header's UI state.
 
-The suite covers 1280, 390 and 320px viewports, FR/EN, light/dark, visitor/admin, exact element coordinates between routes and states, client navigation, active links, actual language/theme toggles, short/tall content, delayed fonts and admin hydration. It also visits either side of the 560/900px breakpoints. Native screenshots and geometry evidence are written to outputs/public-header. Within each viewport/language/theme/admin state, header pixels are compared between routes after neutralizing only the intended active-link decoration. Compositor rounding is allowed on at most 0.2% of pixels with a maximum channel delta of 20/255; all element coordinates must match exactly. No screenshot baseline from another OS/font renderer is needed. CI retains captures for review, including on failure.
+The suite covers 280, 320, 390, 760, 761, 1100, 1101, 1182 and 1280px viewports, FR/EN, light/dark, signed-out and signed-in states (including unverified profiles), and the admin shortcut. It checks that action labels stay on one line, their text remains visible, and the header never overflows. Action coordinates must remain identical between public routes and login/logout. It exercises mobile disclosure, Escape/focus restoration and client navigation. Session responses are synthetic; no personal data or backend is needed. Native screenshots and geometry evidence are written to outputs/public-header.
+
+SiteNav.dom.test.tsx covers localized destinations, session transitions, API failures, focus refresh, stale response cancellation, unmount cleanup and keyboard disclosure. Run npm test in apps/console-web.
