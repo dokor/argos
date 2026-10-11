@@ -24,6 +24,7 @@ public class AccountRunsService {
     private final TokenService tokens;
     private final Clock clock;
     private final AccountSettings settings;
+    private final AccountSitesService sites;
 
     @Inject
     public AccountRunsService(
@@ -34,7 +35,7 @@ public class AccountRunsService {
             ReportReadService reports,
             TokenService tokens,
             Clock clock,
-            AccountSettings settings) {
+            AccountSettings settings, AccountSitesService sites) {
         this.dao = dao;
         this.sessions = sessions;
         this.audits = audits;
@@ -43,6 +44,7 @@ public class AccountRunsService {
         this.tokens = tokens;
         this.clock = clock;
         this.settings = settings;
+        this.sites = sites;
     }
 
     public Created create(String url, String authorization, String csrf) {
@@ -55,7 +57,7 @@ public class AccountRunsService {
                     var created =
                             audits.createAudit(
                                     url, context == null ? null : context.user().getId(), c);
-                    if (context != null) return new Created(created, null);
+                    if (context != null) { sites.follow(context.user().getId(),created.auditId(),c); return new Created(created, null); }
                     String secret = tokens.generateToken();
                     var claim = new AccountRunClaim();
                     claim.setRunId(created.runId());
@@ -109,7 +111,7 @@ public class AccountRunsService {
                 null,
                 true,
                 true,
-                (context, c) -> status(owned(id, context.user().getId(), c)));
+                (context, c) -> { var run=owned(id,context.user().getId(),c); var result=status(run); result.put("siteId",sites.siteForRun(context.user().getId(),run.getAuditId(),c)); return result; });
     }
 
     public Object report(String authorization, long id) {
@@ -179,6 +181,7 @@ public class AccountRunsService {
                                     QAuditRun.auditRun.id.eq(id),
                                     QAuditRun.auditRun.ownerUserId.isNull())
                             .execute();
+                    sites.follow(context.user().getId(),run.getAuditId(),c);
                     claim.setConsumedBy(context.user().getId());
                     dao.save(claim, c);
                     sessions.event(

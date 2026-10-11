@@ -26,6 +26,7 @@ public class AccountWs {
     private final AccountSessionService sessions;
     private final AccountAuthService auth;
     private final AccountRunsService runs;
+    private final AccountSitesService sites;
     private final AccountCsrf csrf;
     private final AccountRateLimiter rate;
     @Context private Provider<ContainerRequestContext> requests;
@@ -42,17 +43,37 @@ public class AccountWs {
             AccountAuthService auth,
             AccountRunsService runs,
             AccountCsrf csrf,
-            AccountRateLimiter rate) {
+            AccountRateLimiter rate, AccountSitesService sites) {
         this.dao = dao;
         this.sessions = sessions;
         this.auth = auth;
         this.runs = runs;
         this.csrf = csrf;
-        this.rate = rate;
+        this.rate = rate; this.sites=sites;
     }
 
     private String auth() {
         return request().getHeaderString("Authorization");
+    }
+
+    public record SiteInput(String url) {}
+    @GET @Path("/sites") @AccountAccess("verified")
+    public Response sites(@QueryParam("limit") @DefaultValue("20") int limit,@QueryParam("cursor") String cursor) {
+        return AccountAuthWs.ok(sites.list(auth(),limit,cursor));
+    }
+    @GET @Path("/sites/{id}") @AccountAccess("verified")
+    public Response site(@PathParam("id") long id) { return AccountAuthWs.ok(sites.get(auth(),id)); }
+    @GET @Path("/sites/{id}/urls") @AccountAccess("verified")
+    public Response urls(@PathParam("id") long id,@QueryParam("limit") @DefaultValue("20") int limit,@QueryParam("cursor") String cursor) {
+        return AccountAuthWs.ok(sites.urls(auth(),id,limit,cursor));
+    }
+    @POST @Path("/sites") @AccountAccess("verified")
+    public Response addSite(SiteInput body) { return addUrl(null,body); }
+    @POST @Path("/sites/{id}/urls") @AccountAccess("verified")
+    public Response addSiteUrl(@PathParam("id") long id,SiteInput body) { return addUrl(id,body); }
+    private Response addUrl(Long id,SiteInput body) {
+        if(body==null || body.url()==null || body.url().length()>2048) throw new AccountError(400,"url_invalid");
+        return AccountAuthWs.ok(sites.add(auth(),csrf.require(request()),id,body.url()));
     }
 
     @GET

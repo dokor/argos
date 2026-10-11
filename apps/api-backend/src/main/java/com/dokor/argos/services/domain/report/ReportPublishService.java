@@ -58,6 +58,7 @@ public class ReportPublishService {
         entity.setSiteTitle(dto.site() == null ? null : dto.site().title());
         entity.setLogoUrl(dto.site() == null ? null : dto.site().logoUrl());
         entity.setGlobalScore(globalScore);
+        entity.setProvisional(dto.scores()==null || dto.scores().coverage()==null ? null : dto.scores().coverage().provisional());
         entity.setScoringVersion(globalScore == null ? null : internal.score().scoringVersion());
         try { entity.setReportJson(mapper.writeValueAsString(dto)); }
         catch (Exception error) { throw new IllegalStateException("Report serialization failed", error); }

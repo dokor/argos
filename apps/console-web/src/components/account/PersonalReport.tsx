@@ -1,27 +1,51 @@
 "use client";
 import { useEffect, useState } from "react";
 import { accountFetch, AccountClientError } from "@/lib/account-client";
+import { useAccountSession, PersonalNavigation } from "./AccountSession";
 import { useLang } from "@/lib/i18n/LangContext";
 import ReportPage from "@/app/(fr)/report/[token]/ReportPage";
 import type { Report } from "@/components/report/types";
 import Link from "@/components/LocalizedLink";
+import s from "./AccountView.module.scss";
 export default function PersonalReport({ runId }: { runId: string }) {
-  const [report, setReport] = useState<Report | null>(null), [status, setStatus] = useState(""), [error, setError] = useState(""), { t } = useLang();
-  useEffect(() => {
-    let alive = true;
-    const interval = setInterval(() => { void poll(); }, 1500);
+  const [report,setReport]=useState<{runId:string;data:Report}|null>(null),[status,setStatus]=useState(""),[error,setError]=useState(""),[siteId,setSiteId]=useState<string|null>(null);
+  const {t}=useLang(),session=useAccountSession();
+  const allowed=session.profile?.verified && !session.denied;
+  const invalidate=session.invalidate;
+  useEffect(()=>{
+    let alive=true,terminal=false,inflight=false,retries=0;
+    let timer:ReturnType<typeof setTimeout>|undefined;
+    const controller=new AbortController();
+    queueMicrotask(()=>{if(alive){setReport(null);setSiteId(null);setError("");setStatus("");}});
+    if(!allowed) return ()=>{alive=false;};
+    const schedule=(delay:number)=>{if(alive&&!terminal&&!document.hidden) timer=setTimeout(poll,delay);};
     async function poll() {
+      if(!alive||terminal||inflight||document.hidden) return;
+      inflight=true;
       try {
-        const run = await accountFetch<{ status: string }>("runs/" + runId);
-        if (!alive) return;
-        setStatus(t.account.statuses[run.status as keyof typeof t.account.statuses] ?? t.account.working);
-        if (run.status === "COMPLETED") { const data = await accountFetch<Report>("runs/" + runId + "/report"); if (alive) setReport(data); clearInterval(interval); }
-        if (run.status === "FAILED") clearInterval(interval);
-      } catch (reason) { if (alive) { const code = reason instanceof AccountClientError ? reason.code : "account_unavailable"; setError(t.account.errors[code as keyof typeof t.account.errors] ?? t.account.errors.account_unavailable); } clearInterval(interval); }
+        const run=await accountFetch<{status:string;siteId:string|null}>("runs/"+runId,"GET",undefined,controller.signal);
+        if(!alive) return;
+        setSiteId(run.siteId);setStatus(t.account.statuses[run.status as keyof typeof t.account.statuses]??t.account.working);
+        if(run.status==="COMPLETED") {
+          const data=await accountFetch<Report>("runs/"+runId+"/report","GET",undefined,controller.signal);
+          if(alive) setReport({runId,data});terminal=true;
+        } else if(run.status==="FAILED") terminal=true;
+        retries=0;schedule(1500);
+      } catch(reason) {
+        if(!alive) return;
+        invalidate(reason);
+        const transient=!(reason instanceof AccountClientError) || reason.status===429 || reason.status>=500;
+        if(transient && ++retries<=3) schedule(Math.max(reason instanceof AccountClientError ? reason.retryAfter*1000 : 0,1500*2**retries));
+        else {terminal=true;setError(reason instanceof AccountClientError ? reason.code : "account_unavailable");}
+      } finally {inflight=false;}
     }
-    void poll();
-    return () => { alive = false; clearInterval(interval); };
-  }, [runId, t]);
-  if (report) return <ReportPage params={{ report }} />;
-  return <main><h1>{t.account.openReport}</h1><p role={error ? "alert" : "status"}>{error || status || t.account.working}</p><Link href="/account">{t.account.title}</Link></main>;
+    const visibility=()=>{clearTimeout(timer);if(!document.hidden) void poll();};
+    document.addEventListener("visibilitychange",visibility);void poll();
+    return ()=>{alive=false;controller.abort();clearTimeout(timer);document.removeEventListener("visibilitychange",visibility);};
+  },[runId,t,allowed,invalidate]);
+  const back=<Link href={allowed && siteId ? "/account/sites/"+siteId : "/account/sites"}>{allowed && siteId ? t.account.sites.back : t.account.sites.title}</Link>;
+  if(!session.ready) return <main className={s.page}><p role="status">{t.account.working}</p></main>;
+  if(!allowed) return <main className={s.page}><h1>{t.account.openReport}</h1><p role="alert">{session.profile ? t.account.pending : t.account.errors.session_invalid}</p><Link href={"/account/sign-in?returnTo="+encodeURIComponent("/account/runs/"+runId)}>{t.account.signIn}</Link>{back}</main>;
+  if(report?.runId===runId) return <><PersonalNavigation/><div className={s.personalNav}>{back}</div><ReportPage params={{report:report.data}}/></>;
+  return <><PersonalNavigation/><main className={s.page}><h1>{t.account.openReport}</h1><p role={error ? "alert" : "status"}>{error==="resource_unavailable" ? t.account.sites.unavailable : error ? t.account.errors[error as keyof typeof t.account.errors]??t.account.errors.account_unavailable : status||t.account.working}</p>{back}<Link href="/account/sites?analyse=1">{t.account.sites.analyse}</Link></main></>;
 }

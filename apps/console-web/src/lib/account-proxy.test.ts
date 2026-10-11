@@ -3,6 +3,32 @@ import { NextRequest, NextResponse } from "next/server";
 import { accountProxy, accountHeaders, safeAccountReturn, saveRunProof, claimContext } from "./account-proxy";
 import { GET as csrfRoute } from "@/app/api/account/csrf/route";
 import { POST as create } from "@/app/api/audits/route";
+it.each(["/account/sites","/account/sites/42","/en/account/sites/42","/account/runs/42","/en/account/runs/42"])("accepts only concrete private return destinations %s", path => {
+  expect(safeAccountReturn(path)).toBe(path);
+});
+it.each(["/account/sites/../42","/account/sites/%34%32","/account/sites/42?owner=7","//evil.example/account/sites","/account/sites/0"])("rejects ambiguous private return destinations %s", path => {
+  expect(safeAccountReturn(path)).toBe("/account/sites");
+});
+it("forwards bounded site pagination without identity parameters",async()=>{
+  fetchMock.mockResolvedValue(new Response('{"items":[],"nextCursor":null}'));
+  const response=await accountProxy(request("sites?limit=25&cursor=42"),["sites"]);
+  expect(response.status).toBe(200);
+  expect(fetchMock.mock.calls[0][0]).toBe("http://fixture-backend/api/account/sites?limit=25&cursor=42");
+  expect(response.headers.get("cache-control")).toContain("no-store");
+});
+it.each(["sites?limit=101","sites?limit=2.5","sites?cursor=-1","sites?ownerId=42"])("rejects invalid site query %s",async path=>{
+  expect((await accountProxy(request(path),["sites"])).status).toBe(400);
+  expect(fetchMock).not.toHaveBeenCalled();
+});
+it.each([{url:"http://127.0.0.1"},{url:"https://example.com",ownerId:"victim"},{url:"file:///etc/passwd"}])("rejects unsafe site additions before forwarding",async body=>{
+  expect((await accountProxy(request("sites","POST",body),["sites"])).status).toBe(400);
+  expect(fetchMock).not.toHaveBeenCalled();
+});
+it("requires CSRF for additions and never permits deletion",async()=>{
+  expect((await accountProxy(request("sites","POST",{url:"https://example.com"},false),["sites"])).status).toBe(403);
+  expect((await accountProxy(request("sites/42","DELETE",{}),["sites","42"])).status).toBe(404);
+  expect(fetchMock).not.toHaveBeenCalled();
+});
 const csrf = "c".repeat(43), jwt = "synthetic.signed.credential", fetchMock = vi.fn();
 beforeEach(() => { vi.stubEnv("ACCOUNT_ORIGIN", "https://argos.example"); vi.stubEnv("API_BASE", "http://fixture-backend"); vi.stubEnv("ADMIN_API_TOKEN", "synthetic-admin"); vi.stubGlobal("fetch", fetchMock); fetchMock.mockReset(); });
 afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
@@ -111,10 +137,15 @@ it("OAuth uses a browser cookie per transaction and keeps report tokens out of b
   const completed = await accountProxy(callback, ["auth", "oauth", "google", "callback"]);
   expect(completed.headers.get("location")).toBe("https://argos.example/report/" + report); expect(completed.cookies.get("argos_oauth_" + state)?.maxAge).toBe(0);
 });
-it.each(["https://evil.example", "//evil.example", "/\\evil", "/account?token=secret", "/api/audits", "/report/token#secret"])("rejects unsafe return paths %s", path => { expect(safeAccountReturn(path)).toBe("/account"); });
+it.each(["https://evil.example", "//evil.example", "/\\evil", "/account?token=secret", "/api/audits", "/report/token#secret"])("rejects unsafe return paths %s", path => { expect(safeAccountReturn(path)).toBe("/account/sites"); });
 it("audit creation never silently drops a presented invalid session or exposes claim secrets", async () => {
   const r = new NextRequest("https://argos.example/api/audits", { method: "POST", body: JSON.stringify({ url: "https://example.com", ownerId: "victim" }), headers: { Cookie: "argos_account=" + jwt + ";argos_account_csrf=" + csrf, Origin: "https://argos.example", "X-Argos-CSRF": csrf } });
   fetchMock.mockResolvedValue(new Response('{"error":"session_invalid"}', { status: 401 }));
   expect((await create(r)).status).toBe(401); expect(fetchMock.mock.calls[0][1].headers["X-Argos-Account-Session"]).toBe("Bearer " + jwt);
   expect(fetchMock.mock.calls[0][1].body).not.toContain("ownerId");
+});
+
+it("never downgrades an explicitly personal audit to anonymous when its cookie expired",async()=>{
+ const r=new NextRequest("https://argos.example/api/audits",{method:"POST",body:JSON.stringify({url:"https://example.com",personal:true})});
+ expect((await create(r)).status).toBe(401);expect(fetchMock).not.toHaveBeenCalled();
 });

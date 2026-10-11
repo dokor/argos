@@ -121,7 +121,7 @@ class AccountLifecycleIT extends MariaDbReportFixture {
                         reader,
                         tokens,
                         clock,
-                        settings);
+                        settings, new AccountSitesService(dao,sessions,new UrlNormalizer(),new DomainService(new DomainDao(dao.transactions)),new AuditDao(dao.transactions),clock));
         oauthClient = mock(AccountOAuthClient.class);
         when(oauthClient.configured(anyString())).thenReturn(true);
         when(oauthClient.authorize(anyString(), anyString(), anyString(), anyString()))
@@ -1012,7 +1012,7 @@ class AccountLifecycleIT extends MariaDbReportFixture {
                                             auth,
                                             personal,
                                             new AccountCsrf(settings),
-                                            new AccountRateLimiter(dao, tokens, clock, settings)));
+                                            new AccountRateLimiter(dao, tokens, clock, settings), new AccountSitesService(dao,sessions,new UrlNormalizer(),new DomainService(new DomainDao(dao.transactions)),new AuditDao(dao.transactions),clock)));
             var admin = mock(com.dokor.argos.services.configuration.ConfigurationService.class);
             when(admin.adminApiToken()).thenReturn("synthetic-server-credential");
             config.register(
@@ -1083,5 +1083,130 @@ class AccountLifecycleIT extends MariaDbReportFixture {
         public void close() {
             server.shutdownNow();
         }
+    }
+
+    AccountSitesService sites() { return new AccountSitesService(dao,sessions,new UrlNormalizer(),new DomainService(new DomainDao(dao.transactions)),new AuditDao(dao.transactions),clock); }
+    @Test void personalSitesSeparateOwnersAndDoNotLaunchRuns() throws Exception {
+        var a=user("sites-a@example.com",true);var b=user("sites-b@example.com",true);var service=sites();
+        var first=service.add(bearer(a),CSRF,null,"https://example.com/path?q=1#fragment");
+        var second=service.add(bearer(b),CSRF,null,"https://example.com/path?q=1");
+        assertNotEquals(first.site().siteId(),second.site().siteId());
+        assertTrue(first.created());assertFalse(service.add(bearer(a),CSRF,null,"https://example.com/path?q=1").created());
+        assertEquals(1,service.list(bearer(a),20,null).items().size());
+        var page=service.urls(bearer(a),Long.parseLong(first.site().siteId()),20,null);
+        assertNull(page.items().getFirst().latestAttempt());assertNull(page.items().getFirst().latestAvailableReport());
+        error(404,()->service.get(bearer(a),Long.parseLong(second.site().siteId())));
+        error(404,()->service.add(bearer(a),CSRF,Long.parseLong(second.site().siteId()),"https://example.com/other"));
+        error(400,()->service.add(bearer(a),CSRF,Long.parseLong(first.site().siteId()),"https://www.example.com/"));
+        error(400,()->service.add(bearer(a),CSRF,null,"http://127.0.0.1/"));
+        error(403,()->service.add(bearer(a),"wrong",null,"https://example.com/"));
+        try(var c=source.getConnection();var s=c.createStatement();var r=s.executeQuery("SELECT COUNT(*) FROM ARG_AUDIT_RUN")){r.next();assertEquals(5,r.getInt(1));}
+    }
+    @Test void personalLastReportSurvivesLaterFailureAndIgnoresOtherOwner() throws Exception {
+        var a=user("latest-a@example.com",true);var b=user("latest-b@example.com",true);var service=sites();
+        var old=personal.create("https://example.com",bearer(a),CSRF).audit();
+        sql("UPDATE ARG_AUDIT_RUN SET status='COMPLETED',created_at='2026-10-10 08:00:00' WHERE id="+old.runId());
+        sql("INSERT INTO ARG_AUDIT_REPORT(id,audit_id,run_id,token_hash,domain,target_url,report_json) VALUES(100,"+old.auditId()+","+old.runId()+",UNHEX(SHA2('synthetic-site-report',256)),'example.com','https://example.com','{}')");
+        sql("UPDATE ARG_AUDIT_REPORT SET global_score=81,provisional=1 WHERE id=100");
+        var failed=personal.create("https://example.com",bearer(a),CSRF).audit();
+        sql("UPDATE ARG_AUDIT_RUN SET status='FAILED',created_at='2026-10-11 08:00:00' WHERE id="+failed.runId());
+        var foreign=personal.create("https://example.com",bearer(b),CSRF).audit();
+        sql("UPDATE ARG_AUDIT_RUN SET created_at='2026-10-12 08:00:00' WHERE id="+foreign.runId());
+        var site=service.list(bearer(a),20,null).items().getFirst();
+        var row=service.urls(bearer(a),Long.parseLong(site.siteId()),20,null).items().getFirst();
+        assertEquals(Long.toString(failed.runId()),row.latestAttempt().runId());assertEquals("FAILED",row.latestAttempt().status());
+        assertEquals(Long.toString(old.runId()),row.latestAvailableReport().runId());assertEquals(81,row.latestAvailableReport().globalScore());assertTrue(row.latestAvailableReport().provisional());
+        sql("UPDATE ARG_AUDIT_REPORT SET global_score=NULL WHERE id=100");
+        assertNull(service.urls(bearer(a),Long.parseLong(site.siteId()),20,null).items().getFirst().latestAvailableReport().globalScore());
+        sql("UPDATE ARG_AUDIT_REPORT SET expires_at='2000-01-01' WHERE id=100");
+        assertNull(service.urls(bearer(a),Long.parseLong(site.siteId()),20,null).items().getFirst().latestAvailableReport());
+    }
+    @Test void personalUrlPaginationPreservesNormalizerIdentity() {
+        var a=user("pagination@example.com",true);var service=sites();
+        var site=service.add(bearer(a),CSRF,null,"https://example.com").site();long id=Long.parseLong(site.siteId());
+        for(int n=0;n<24;n++) service.add(bearer(a),CSRF,id,"https://example.com/path?q="+n);
+        service.add(bearer(a),CSRF,id,"http://example.com/path?q=0");
+        var one=service.urls(bearer(a),id,20,null);var two=service.urls(bearer(a),id,20,one.nextCursor());
+        assertEquals(20,one.items().size());assertEquals(6,two.items().size());assertNull(two.nextCursor());
+        var ids=new HashSet<String>();one.items().forEach(r->assertTrue(ids.add(r.siteUrlId())));two.items().forEach(r->assertTrue(ids.add(r.siteUrlId())));
+        error(400,()->service.urls(bearer(a),id,20,"-1"));error(400,()->service.list(bearer(a),101,null));
+        auth.archive(bearer(a),CSRF,true);error(401,()->service.get(bearer(a),id));
+    }
+    @Test void concurrentFollowIsUniqueAndClaimCreatesPersonalRelations() throws Exception {
+        var a=user("concurrent-sites@example.com",true);var service=sites();var pool=Executors.newFixedThreadPool(2);
+        try {var tasks=pool.invokeAll(List.<Callable<AccountSitesService.Added>>of(()->service.add(bearer(a),CSRF,null,"https://example.com"),()->service.add(bearer(a),CSRF,null,"https://example.com")));
+            assertEquals(tasks.get(0).get().site().siteId(),tasks.get(1).get().site().siteId());
+        } finally {pool.shutdownNow();}
+        var anonymous=personal.create("https://example.com/claimed",null,null);
+        personal.claim(bearer(a),CSRF,anonymous.audit().runId(),anonymous.proof());
+        var site=service.list(bearer(a),20,null).items().getFirst();assertEquals(2,site.urlCount());
+        assertEquals(2,service.urls(bearer(a),Long.parseLong(site.siteId()),20,null).items().size());
+    }
+
+    @Test void sitesHttpRequiresSessionCsrfAndOwnership() throws Exception {
+        var a=user("sites-http-a@example.com",true);var b=user("sites-http-b@example.com",true);
+        try(var http=new HttpFixture()) {
+            assertEquals(401,http.call("GET","/account/sites",null,null,false).statusCode());
+            assertEquals(403,http.call("POST","/account/sites",bearer(a),"{\"url\":\"https://example.com\"}",false).statusCode());
+            var added=http.call("POST","/account/sites",bearer(a),"{\"url\":\"https://example.com\"}",true);
+            assertEquals(200,added.statusCode());assertTrue(added.headers().firstValue("cache-control").orElse("").contains("no-store"));
+            String id=mapper.readTree(added.body()).path("site").path("siteId").asText();
+            assertEquals(404,http.call("GET","/account/sites/"+id,bearer(b),null,false).statusCode());
+            assertEquals(200,http.call("GET","/account/sites/"+id+"/urls",bearer(a),null,false).statusCode());
+            assertEquals(400,http.call("GET","/account/sites?cursor=-1",bearer(a),null,false).statusCode());
+            assertEquals(400,http.call("POST","/account/sites",bearer(a),"{\"url\":\"http://localhost\"}",true).statusCode());
+        }
+    }
+    @Test void migrationBackfillsAllOwnersIncludingArchivedButNeverAnonymous() throws Exception {
+        migrateHistoricalRowsTo("11");
+        var a=user("backfill-a@example.com",true);var b=user("backfill-b@example.com",true);
+        long aid=a.context().user().getId(),bid=b.context().user().getId();
+        sql("UPDATE ARG_AUDIT_RUN SET owner_user_id="+aid+" WHERE id IN (1,2)");
+        sql("UPDATE ARG_AUDIT_RUN SET owner_user_id="+bid+" WHERE id=3");
+        try(var c=source.getConnection();var s=c.prepareStatement("INSERT INTO ARG_AUDIT_RUN(id,audit_id,status,owner_user_id,created_at) VALUES(?,1,'FAILED',?,'2026-10-09')")) {
+            for(int n=0;n<1005;n++){s.setLong(1,1000+n);s.setLong(2,aid);s.addBatch();}s.executeBatch();
+        }
+        auth.archive(bearer(b),CSRF,true);
+        org.flywaydb.core.Flyway.configure().dataSource(source).load().migrate();
+        org.flywaydb.core.Flyway.configure().dataSource(source).load().migrate();
+        try(var connection=source.getConnection()) {
+            new db.migration.V13__backfill_account_sites().migrate(new org.flywaydb.core.api.migration.Context() {
+                public java.sql.Connection getConnection(){return connection;}
+                public org.flywaydb.core.api.configuration.Configuration getConfiguration(){return null;}
+            });
+        }
+        assertEquals(1,sites().list(bearer(a),20,null).items().size());
+        try(var c=source.getConnection();var s=c.createStatement();var r=s.executeQuery("SELECT COUNT(*) FROM ARG_ACCOUNT_SITE")){r.next();assertEquals(2,r.getInt(1));}
+        error(401,()->sites().list(bearer(b),20,null));
+    }
+
+    @Test void manySitesUseBoundedProjectionsAndDeterministicPages() throws Exception {
+        var a=user("many-sites@example.com",true);long owner=a.context().user().getId();
+        for(int n=0;n<25;n++) {
+            int id=1000+n;
+            sql("INSERT INTO ARG_DOMAIN(id,hostname) VALUES("+id+",'site"+n+".example.com')");
+            sql("INSERT INTO ARG_ACCOUNT_SITE(id,owner_user_id,domain_id,created_at) VALUES("+id+","+owner+","+id+",'2026-10-11')");
+        }
+        var statements=new ArrayList<String>();
+        var monitored=(javax.sql.DataSource)java.lang.reflect.Proxy.newProxyInstance(getClass().getClassLoader(),new Class[]{javax.sql.DataSource.class},(proxy,method,args)->{
+            try {
+                var result=method.invoke(source,args);
+                if(result instanceof java.sql.Connection connection) return java.lang.reflect.Proxy.newProxyInstance(getClass().getClassLoader(),new Class[]{java.sql.Connection.class},(cp,cm,ca)->{
+                    if(cm.getName().equals("prepareStatement")) statements.add((String)ca[0]);
+                    try{return cm.invoke(connection,ca);}catch(java.lang.reflect.InvocationTargetException e){throw e.getCause();}
+                });
+                return result;
+            } catch(java.lang.reflect.InvocationTargetException e){throw e.getCause();}
+        });
+        var countedDao=new AccountDao(new com.coreoz.plume.db.querydsl.transaction.TransactionManagerQuerydsl(monitored,new com.querydsl.sql.Configuration(com.querydsl.sql.MySQLTemplates.DEFAULT)));
+        var countedSessions=new AccountSessionService(countedDao,signer,tokens,settings,clock);
+        var countedSites=new AccountSitesService(countedDao,countedSessions,new UrlNormalizer(),new DomainService(new DomainDao(countedDao.transactions)),new AuditDao(countedDao.transactions),clock);
+        var first=countedSites.list(bearer(a),20,null);
+        long reads=statements.stream().filter(s->s.stripLeading().toLowerCase().startsWith("select")).count();
+        assertEquals(3,reads,"Two auth locks plus one bounded projection; no per-site query");
+        assertTrue(statements.stream().noneMatch(s->s.contains("report_json")||s.contains("result_json")));
+        assertTrue(mapper.writeValueAsBytes(first).length<10000);
+        var second=countedSites.list(bearer(a),20,first.nextCursor());assertEquals(20,first.items().size());assertEquals(5,second.items().size());assertNull(second.nextCursor());
+        var ids=new HashSet<String>();first.items().forEach(s->assertTrue(ids.add(s.siteId())));second.items().forEach(s->assertTrue(ids.add(s.siteId())));
     }
 }

@@ -13,6 +13,27 @@ import AuditForm from "./AuditForm";
 import { argosApi } from "@/lib/ArgosApi";
 import { LangProvider } from "@/lib/i18n/LangContext";
 
+it("submits a personal audit once and navigates using runId without a report token", async () => {
+  push.mockReset();vi.mocked(argosApi.createAudit).mockReset();
+  let finish:(value:never)=>void=()=>{};
+  vi.mocked(argosApi.createAudit).mockReturnValue(new Promise(resolve=>{finish=resolve;}));
+  render(<AuditForm mode="personal" initialUrl="https://example.com/path"/>);
+  const form=screen.getByRole("textbox").closest("form")!;
+  fireEvent.submit(form);fireEvent.submit(form);
+  expect(argosApi.createAudit).toHaveBeenCalledTimes(1);
+  expect(argosApi.createAudit).toHaveBeenCalledWith(expect.objectContaining({personal:true,url:"https://example.com/path"}));
+  finish({runId:"42",status:"QUEUED"} as never);
+  await waitFor(()=>expect(push).toHaveBeenCalledWith("/account/runs/42"));
+});
+it("invalidates the shared private session when audit creation rejects it",async()=>{
+  const rejected=vi.fn();window.addEventListener("argos-account-invalid",rejected);
+  vi.mocked(argosApi.createAudit).mockRejectedValue(Object.assign(new Error("HTTP 401"),{status:401}));
+  render(<AuditForm mode="personal" initialUrl="https://example.com"/>);
+  fireEvent.submit(screen.getByRole("textbox").closest("form")!);
+  await waitFor(()=>expect(rejected).toHaveBeenCalledTimes(1));
+  window.removeEventListener("argos-account-invalid",rejected);
+});
+
 describe("AuditForm (soumission d'audit)", () => {
   beforeEach(() => {
     vi.clearAllMocks();

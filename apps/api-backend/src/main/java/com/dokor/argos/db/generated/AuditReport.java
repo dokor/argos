@@ -23,6 +23,11 @@ public class AuditReport extends com.coreoz.plume.db.querydsl.crud.CrudEntityQue
     @Column("expires_at")
     private java.time.Instant expiresAt;
 
+    @Column("provisional")
+    private Boolean provisional;
+    public Boolean getProvisional() { return provisional; }
+    public void setProvisional(Boolean value) { provisional=value; }
+
     @Column("global_score")
     private Integer globalScore;
 
