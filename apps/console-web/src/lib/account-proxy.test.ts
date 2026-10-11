@@ -3,6 +3,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { accountProxy, accountHeaders, safeAccountReturn, saveRunProof, claimContext } from "./account-proxy";
 import { GET as csrfRoute } from "@/app/api/account/csrf/route";
 import { POST as create } from "@/app/api/audits/route";
+it.each(["/account/urls/9/history","/en/account/urls/9/history"])("preserves history return destination %s",path=>expect(safeAccountReturn(path)).toBe(path));
+it("forwards history pagination with cookie identity only",async()=>{
+  fetchMock.mockResolvedValue(new Response('{"items":[],"nextCursor":null}'));
+  const response=await accountProxy(request("urls/9/history?limit=1&cursor=42"),["urls","9","history"]);
+  expect(response.status).toBe(200);expect(response.headers.get("cache-control")).toContain("no-store");
+  expect(fetchMock.mock.calls[0][0]).toBe("http://fixture-backend/api/account/urls/9/history?limit=1&cursor=42");
+  expect(fetchMock.mock.calls[0][1].headers.get("authorization")).toBe("Bearer "+jwt);
+});
+it.each(["ownerId=2","limit=101","cursor=-1"])("rejects forged history pagination %s",async query=>{
+  expect((await accountProxy(request("urls/9/history?"+query),["urls","9","history"])).status).toBe(400);expect(fetchMock).not.toHaveBeenCalled();
+});
 it.each(["/account/sites","/account/sites/42","/en/account/sites/42","/account/runs/42","/en/account/runs/42"])("accepts only concrete private return destinations %s", path => {
   expect(safeAccountReturn(path)).toBe(path);
 });

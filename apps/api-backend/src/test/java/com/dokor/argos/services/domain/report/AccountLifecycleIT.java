@@ -1012,7 +1012,7 @@ class AccountLifecycleIT extends MariaDbReportFixture {
                                             auth,
                                             personal,
                                             new AccountCsrf(settings),
-                                            new AccountRateLimiter(dao, tokens, clock, settings), new AccountSitesService(dao,sessions,new UrlNormalizer(),new DomainService(new DomainDao(dao.transactions)),new AuditDao(dao.transactions),clock)));
+                                            new AccountRateLimiter(dao, tokens, clock, settings), new AccountSitesService(dao,sessions,new UrlNormalizer(),new DomainService(new DomainDao(dao.transactions)),new AuditDao(dao.transactions),clock),new AccountHistoryService(dao,sessions,mapper,clock)));
             var admin = mock(com.dokor.argos.services.configuration.ConfigurationService.class);
             when(admin.adminApiToken()).thenReturn("synthetic-server-credential");
             config.register(
@@ -1263,5 +1263,71 @@ class AccountLifecycleIT extends MariaDbReportFixture {
         personal.usage(bearer(a));
         var stored=dao.transaction(c->dao.session(a.context().session().getId(),c,false));
         assertEquals(clock.instant().minusSeconds(60),stored.getLastActivityAt());
+    }
+
+    @Test void historyScopesEveryPageAndCursorToOwnerAndUrl() throws Exception {
+        var a=user("history-a@example.com",true);var b=user("history-b@example.com",true);
+        var first=personal.create("https://example.com",bearer(a),CSRF).audit();
+        var foreign=personal.create("https://example.com",bearer(b),CSRF).audit();
+        var second=personal.create("https://example.com",bearer(a),CSRF).audit();
+        var other=personal.create("https://example.com/other",bearer(a),CSRF).audit();
+        sql("UPDATE ARG_AUDIT_RUN SET created_at='2026-10-11 07:00:00' WHERE id IN ("+first.runId()+","+second.runId()+")");
+        var history=new AccountHistoryService(dao,sessions,mapper,clock);
+        var context=(AccountHistoryService.Context)personal.get(bearer(a),first.runId()).get("historyContext");
+        long id=Long.parseLong(context.siteUrlId());
+        var page=history.history(bearer(a),id,1,null);
+        assertEquals(Long.toString(second.runId()),page.items().getFirst().runId());
+        assertEquals(Long.toString(second.runId()),page.nextCursor());
+        var older=history.history(bearer(a),id,1,page.nextCursor());
+        assertEquals(Long.toString(first.runId()),older.items().getFirst().runId());assertNull(older.nextCursor());
+        error(404,()->history.history(bearer(b),id,20,null));
+        error(400,()->history.history(bearer(a),id,20,Long.toString(foreign.runId())));
+        error(400,()->history.history(bearer(a),id,20,Long.toString(other.runId())));
+        error(400,()->history.history(bearer(a),id,101,null));
+        error(400,()->history.history(bearer(a),id,20,"9223372036854775808"));
+        var empty=sites().add(bearer(a),CSRF,null,"https://example.com/empty");
+        assertTrue(history.history(bearer(a),Long.parseLong(empty.siteUrlId()),20,null).items().isEmpty());
+        try(var http=new HttpFixture()) {
+            String path="/account/urls/"+id+"/history";
+            assertEquals(401,http.call("GET",path,null,null,false).statusCode());
+            assertEquals(404,http.call("GET",path,bearer(b),null,false).statusCode());
+            var response=http.call("GET",path,bearer(a),null,false);
+            assertEquals(200,response.statusCode());assertTrue(response.headers().firstValue("cache-control").orElse("").contains("no-store"));
+            assertFalse(response.body().contains("token"));assertFalse(response.body().contains("report_json"));
+        }
+    }
+
+    private String historyReport(long run, int score, String fingerprint) throws Exception {
+        String token=tokens.generateToken();
+        var coverage=new com.dokor.argos.services.analysis.scoring.MeasurementCoverage("v1",.8,
+            new com.dokor.argos.services.analysis.scoring.MeasurementCoverage.Aggregate("global",10,10,1,true,true),List.of(),
+            List.of(new com.dokor.argos.services.analysis.scoring.MeasurementCoverage.Check("ssl.grade","security","ssl",10,com.dokor.argos.services.analysis.scoring.MeasurementCoverage.State.MEASURED,"fixture","MEASURED")),false);
+        var calc=new ReportDto.ScoreCalculation(11,fingerprint,List.of(new ReportDto.DomainCalculation("security",score/10.0,10,score/100.0,1)),Map.of("security",1.0),List.of(new ReportDto.CheckCalculation("ssl.grade","ssl","security",10,score/10.0)));
+        var report=new ReportDto("2026-10-11","example.com","https://example.com",null,new ReportDto.Scores(score,100,List.of(),true,calc,coverage),null,List.of(),null,null);
+        try(var c=source.getConnection();var s=c.prepareStatement("INSERT INTO ARG_AUDIT_REPORT(audit_id,run_id,token_hash,domain,target_url,report_json,created_at) SELECT audit_id,id,?,'example.com','https://example.com',?,'2026-10-11 07:00:00' FROM ARG_AUDIT_RUN WHERE id=?")) {
+            s.setBytes(1,tokens.sha256(token));s.setString(2,mapper.writeValueAsString(report));s.setLong(3,run);s.executeUpdate();
+        }
+        sql("UPDATE ARG_AUDIT_RUN SET status='COMPLETED',created_at='2026-10-11 07:00:00' WHERE id="+run);
+        return token;
+    }
+
+    @Test void historyUsesFrozenEvidenceAndSharedTokensNeverGrantHistory() throws Exception {
+        var a=user("frozen-a@example.com",true);var b=user("frozen-b@example.com",true);
+        var first=personal.create("https://example.com",bearer(a),CSRF).audit();historyReport(first.runId(),50,"method-a");
+        var second=personal.create("https://example.com",bearer(a),CSRF).audit();String token=historyReport(second.runId(),80,"method-a");
+        var history=new AccountHistoryService(dao,sessions,mapper,clock);
+        var context=history.reportContext(bearer(a),token);long id=Long.parseLong(context.siteUrlId());
+        var item=history.history(bearer(a),id,1,null).items().getFirst();
+        assertEquals(80,item.globalScore());assertEquals(11,item.scoringVersion());assertEquals(1.0,item.coverage());
+        assertEquals(30.0,item.comparison().globalDelta());assertTrue(item.reportAvailable());
+        assertEquals(50,history.history(bearer(a),id,1,Long.toString(second.runId())).items().getFirst().globalScore());
+        error(404,()->history.reportContext(bearer(b),token));
+        var third=personal.create("https://example.com",bearer(a),CSRF).audit();historyReport(third.runId(),90,"method-b");
+        item=history.history(bearer(a),id,1,null).items().getFirst();
+        assertEquals(AuditComparisonService.Reason.METHODOLOGY_CHANGED,item.comparison().reason());assertNull(item.comparison().globalDelta());
+        sql("UPDATE ARG_AUDIT_REPORT SET expires_at='2026-10-10' WHERE run_id="+third.runId());
+        item=history.history(bearer(a),id,1,null).items().getFirst();assertFalse(item.reportAvailable());assertNull(item.globalScore());assertNull(item.comparison().globalDelta());
+        sql("UPDATE ARG_AUDIT_REPORT SET expires_at='2026-10-10' WHERE run_id="+second.runId());
+        error(404,()->history.reportContext(bearer(a),token));
     }
 }

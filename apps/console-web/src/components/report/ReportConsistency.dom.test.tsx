@@ -32,7 +32,7 @@ describe("historical report consistency", () => {
     const { container } = render(<Reader />);
     const hero = screen.getByRole("heading", { level: 1 }).closest("section")!;
     expect(within(hero).getByText("6")).toBeInTheDocument();
-    expect(screen.getByRole("status")).toHaveTextContent("6 constats sur 6");
+    expect(screen.getByText("6 constats sur 6")).toHaveAttribute("role", "status");
     expect(container.querySelectorAll("details[id^='finding-']")).toHaveLength(6);
     expect(within(container.querySelector("#cat-a11y")!).getByText("Accessible controls")).toBeInTheDocument();
     expect(within(container.querySelector("#cat-unknown")!).getByText("No identifier")).toBeInTheDocument();
@@ -49,14 +49,14 @@ describe("historical report consistency", () => {
     const user = userEvent.setup();
     render(<Reader />);
     await user.click(screen.getByRole("button", { name: "Critiques" }));
-    expect(screen.getByRole("status")).toHaveTextContent("2 constats sur 6");
+    expect(screen.getByText("2 constats sur 6")).toHaveAttribute("role", "status");
     const link = screen.getByRole("link", { name: "Voir le constat: Load resources" });
     await user.click(link);
     const finding = buildReportModel(report).findings.find(item => item.key === "runtime.load")!;
     const detail = document.getElementById(finding.anchor) as HTMLDetailsElement;
     expect(detail.open).toBe(true);
     expect(detail.querySelector("summary")).toHaveFocus();
-    expect(screen.getByRole("status")).toHaveTextContent("6 constats sur 6");
+    expect(screen.getByText("6 constats sur 6")).toHaveAttribute("role", "status");
     await user.click(screen.getByRole("button", { name: "Critiques" }));
     await user.click(link);
     expect(document.getElementById(finding.anchor)?.querySelector("summary")).toHaveFocus();

@@ -1,0 +1,9 @@
+.chart { width:100%; height:auto; max-height:18rem; color:var(--argos-text); }
+.chart text { fill:currentColor; font-size:12px; }
+.chart line { stroke:currentColor; }
+.chart circle { fill:var(--argos-surface); stroke:currentColor; stroke-width:3; }
+.facts { display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,12rem),1fr));gap:.8rem; }
+.facts dt { color:var(--argos-text-muted); }
+.facts dd { margin:.25rem 0 0; }
+.list { list-style:none; padding:0; }
+.heading { overflow-wrap:anywhere; }

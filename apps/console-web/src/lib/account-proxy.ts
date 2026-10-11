@@ -8,7 +8,7 @@ const origin = () => (process.env.ACCOUNT_ORIGIN ?? process.env.NEXT_PUBLIC_SITE
 export function accountCookieOptions(maxAge: number) { return { httpOnly: true, secure: origin().startsWith("https:"), sameSite: "lax" as const, path: "/", maxAge }; }
 export function privateError(error: string, status: number) { return NextResponse.json({ error }, { status, headers: { "Cache-Control": "private, no-store" } }); }
 export function safeAccountReturn(raw: unknown): string {
-  return typeof raw === "string" && raw.length <= 600 && /^\/(?:en\/)?(?:account(?:\/(?:sites(?:\/[1-9]\d{0,18})?|runs\/[1-9]\d{0,18}))?|report\/[A-Za-z0-9_-]{20,512})$/.test(raw) ? raw : "/account/sites";
+  return typeof raw === "string" && raw.length <= 600 && /^\/(?:en\/)?(?:account(?:\/(?:sites(?:\/[1-9]\d{0,18})?|runs\/[1-9]\d{0,18}|urls\/[1-9]\d{0,18}\/history))?|report\/[A-Za-z0-9_-]{20,512})$/.test(raw) ? raw : "/account/sites";
 }
 export function validCsrf(request: NextRequest): boolean {
   const cookie = request.cookies.get(CSRF_COOKIE)?.value ?? "", header = request.headers.get("x-argos-csrf") ?? "";
@@ -51,7 +51,7 @@ export function claimContext(request: NextRequest, reportToken: unknown): string
   return claims(request).find(item => item.hash === hash && request.cookies.has("argos_run_" + item.id))?.id ?? null;
 }
 const allowed: Record<string, RegExp> = {
-  GET: /^(?:auth\/providers|me|usage|sessions|methods|sites(?:\/\d{1,19}(?:\/urls)?)?|runs|runs\/\d{1,19}(?:\/report)?|auth\/oauth\/(?:google|github|linkedin)\/callback)$/,
+  GET: /^(?:auth\/providers|me|usage|sessions|methods|urls\/\d{1,19}\/history|report-context\/[A-Za-z0-9_-]{20,512}|sites(?:\/\d{1,19}(?:\/urls)?)?|runs|runs\/\d{1,19}(?:\/report)?|auth\/oauth\/(?:google|github|linkedin)\/callback)$/,
   POST: /^(?:auth\/(?:register|login|verify|resend|forgot|reset|renew|logout|reauth|confirm-email)|auth\/oauth\/(?:google|github|linkedin)\/start|sessions\/revoke-others|methods\/password|methods\/\d{1,19}\/remove|me\/archive|sites(?:\/\d{1,19}\/urls)?|runs\/\d{1,19}\/claim)$/,
   PATCH: /^me$/,
   DELETE: /^sessions\/\d{1,19}$/,
@@ -100,7 +100,7 @@ export async function accountProxy(request: NextRequest, parts: string[]): Promi
   if (callback) {
     query.set("state", state!);
     const code = request.nextUrl.searchParams.get("code"); if (code) query.set("code", code);
-  } else if (/^sites(?:\/\d{1,19}\/urls)?$/.test(path)) {
+  } else if (/^(?:sites(?:\/\d{1,19}\/urls)?|urls\/\d{1,19}\/history)$/.test(path)) {
     if ([...request.nextUrl.searchParams.keys()].some(key => !["limit","cursor"].includes(key))) return privateError("payload_invalid",400);
     const limit=request.nextUrl.searchParams.get("limit") ?? "20", cursor=request.nextUrl.searchParams.get("cursor");
     if (!/^[1-9]\d{0,2}$/.test(limit) || Number(limit)>100) return privateError("limit_invalid",400);
