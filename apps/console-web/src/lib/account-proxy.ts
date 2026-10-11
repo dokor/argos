@@ -1,4 +1,5 @@
 import { ssrfError } from "./audit-url-validation";
+import { adminPath, adminQuery, adminEntitlement } from "./admin-request";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 export const SESSION_COOKIE = "argos_account";
@@ -58,7 +59,7 @@ const allowed: Record<string, RegExp> = {
 };
 export async function accountProxy(request: NextRequest, parts: string[]): Promise<NextResponse> {
   const path = parts.join("/"), mutation = request.method !== "GET", callback = /^auth\/oauth\/(google|github|linkedin)\/callback$/.test(path);
-  if (!allowed[request.method]?.test(path)) return privateError("resource_unavailable", 404);
+  if (!allowed[request.method]?.test(path) && !adminPath(request.method,path)) return privateError("resource_unavailable", 404);
   const headers = accountHeaders(request, mutation);
   if (headers instanceof NextResponse) return headers;
   let body: string | undefined, returnTo = "/account", preserveReturn = false;
@@ -68,6 +69,7 @@ export async function accountProxy(request: NextRequest, parts: string[]): Promi
     try {
       const parsed = text ? JSON.parse(text) : {};
       if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) return privateError("payload_invalid", 400);
+      if(path.startsWith("admin/") && !adminEntitlement(parsed)) return privateError("payload_invalid",400);
       if (path.endsWith("/start") || path === "auth/register" || path === "auth/confirm-email") {
         returnTo = safeAccountReturn(parsed.returnTo);
         preserveReturn = !path.endsWith("/start");
@@ -95,7 +97,9 @@ export async function accountProxy(request: NextRequest, parts: string[]): Promi
     if (!proof) return privateError("resource_unavailable", 404);
     headers.set("X-Argos-Run-Proof", proof);
   }
-  const query = new URLSearchParams();
+  const adminParams=path.startsWith("admin/") ? adminQuery(path,request.nextUrl.searchParams) : undefined;
+  if(adminParams===null) return privateError("filter_invalid",400);
+  const query = adminParams ?? new URLSearchParams();
   if(path === "usage" && request.nextUrl.searchParams.size) return privateError("payload_invalid",400);
   if (callback) {
     query.set("state", state!);

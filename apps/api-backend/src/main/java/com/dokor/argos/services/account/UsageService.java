@@ -22,7 +22,7 @@ public class UsageService {
     public <T> T transaction(java.util.function.Function<Connection,T> work) {
         return transactions.executeAndReturn(work::apply);
     }
-    private void lock(long user, Connection c) {
+    public void lock(long user, Connection c) {
         execute(c,"INSERT INTO ARG_USAGE_ACCOUNT(id) VALUES(?) ON DUPLICATE KEY UPDATE id=VALUES(id)",user);
         try(var s=c.prepareStatement("SELECT id FROM ARG_USAGE_ACCOUNT WHERE id=? FOR UPDATE")) {
             s.setLong(1,user);try(var r=s.executeQuery()) { if(!r.next()) throw new IllegalStateException("Usage lock missing"); }
@@ -42,7 +42,8 @@ public class UsageService {
             s.setLong(1,user);s.setString(2,month.toString());
             try(var r=s.executeQuery()) { while(r.next()) { if(r.getString(1).equals("COUNTED")) used=r.getLong(2);else reserved=r.getLong(2); } }
         } catch(SQLException e) { throw new IllegalStateException("Usage unavailable",e); }
-        Long limit=policy.limit(offer);
+        Long override=override(user,c);
+        Long limit=override==null ? policy.limit(offer) : override;
         return new Snapshot(offer,month.toString(),policy.zone().getId(),policy.start(month).toString(),policy.reset(month).toString(),used,reserved,limit,limit==null || used<limit && reserved<limit-used);
     }
     public void admit(long user, Connection c) {
@@ -78,6 +79,15 @@ public class UsageService {
     public void claimed(AuditRun run, Instant publishedAt, Connection c) {
         if(publishedAt!=null) published(run,publishedAt,c);
         else if(List.of("QUEUED","RUNNING").contains(run.getStatus())) { admit(run.getOwnerUserId(),c);reserve(run,c); }
+    }
+    public Long override(long user, Connection c) {
+        try(var s=c.prepareStatement("SELECT monthly_limit FROM ARG_USAGE_ACCOUNT WHERE id=?")) {
+            s.setLong(1,user);try(var r=s.executeQuery()) { return r.next() ? r.getObject(1,Long.class) : null; }
+        } catch(SQLException e) { throw new IllegalStateException("Usage limit unavailable",e); }
+    }
+    /** Caller holds the same usage lock used by admission/publication. */
+    public void setOverride(long user, Long limit, Connection c) {
+        execute(c,"UPDATE ARG_USAGE_ACCOUNT SET monthly_limit=? WHERE id=?",limit,user);
     }
     private static void execute(Connection c,String sql,Object... values) {
         try(var s=c.prepareStatement(sql)) { for(int i=0;i<values.length;i++) s.setObject(i+1,values[i]);s.executeUpdate(); }

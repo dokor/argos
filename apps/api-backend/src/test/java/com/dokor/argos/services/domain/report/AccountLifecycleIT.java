@@ -1013,6 +1013,7 @@ class AccountLifecycleIT extends MariaDbReportFixture {
                                             personal,
                                             new AccountCsrf(settings),
                                             new AccountRateLimiter(dao, tokens, clock, settings), new AccountSitesService(dao,sessions,new UrlNormalizer(),new DomainService(new DomainDao(dao.transactions)),new AuditDao(dao.transactions),clock),new AccountHistoryService(dao,sessions,mapper,clock)));
+            config.register(new com.dokor.argos.webservices.api.account.AdminWs(administration(),new AccountCsrf(settings)));
             var admin = mock(com.dokor.argos.services.configuration.ConfigurationService.class);
             when(admin.adminApiToken()).thenReturn("synthetic-server-credential");
             config.register(
@@ -1085,6 +1086,130 @@ class AccountLifecycleIT extends MariaDbReportFixture {
         }
     }
 
+@Test void administrationQuotaChangeRacingAdmissionSerializesWithoutLosingUsage() throws Exception {
+        usagePolicy("usage.offers.FREE.monthly-limit=2");var a=administrator();var u=user("quota-race@example.com",true);
+        var admin=administration();long target=u.context().user().getId();var barrier=new CyclicBarrier(2);
+        try(var pool=Executors.newFixedThreadPool(2)) {
+            var change=pool.submit(()->{barrier.await();return admin.entitlement(bearer(a),CSRF,target,new AdminService.Entitlement("FREE",0L,true));});
+            var launch=pool.submit(()->{
+                barrier.await();
+                try {personal.create("https://example.com",bearer(u),CSRF);return true;}
+                catch(jakarta.ws.rs.WebApplicationException e) {assertEquals(429,e.getResponse().getStatus());return false;}
+            });
+            assertEquals(true,change.get(15,TimeUnit.SECONDS).get("changed"));
+            boolean accepted=launch.get(15,TimeUnit.SECONDS);
+            var view=personal.usage(bearer(u));assertEquals(0,view.limit());assertFalse(view.canLaunch());
+            assertEquals(accepted?1:0,view.reserved());assertEquals(0,view.used());
+            assertEquals(1,count("ARG_ADMIN_EVENT"));assertEquals(accepted?1:0,count("ARG_AUDIT_RUN WHERE owner_user_id="+target));
+        }
+    }
+    AdminService administration() {
+        var policy=new UsagePolicy(ConfigFactory.parseString("usage.offers.FREE.monthly-limit=2\nusage.offers.PRO.monthly-limit=10"));
+        return new AdminService(dao,sessions,new UsageService(dao.transactions,policy,clock),policy,reader,mapper,clock);
+    }
+    AccountSessionService.Issued administrator() throws Exception {
+        var a=user("admin@example.com",true);
+        sql("UPDATE ARG_ACCOUNT_USER SET role='ADMIN' WHERE id="+a.context().user().getId());
+        return a;
+    }
+    @Test void administrationHttpDeniesEveryReadToNonAdminsAndHonorsRevocation() throws Exception {
+        var a=administrator();var regular=user("regular@example.com",true);var pending=user("pending-admin@example.com",false);
+        sql("UPDATE ARG_ACCOUNT_USER SET role='ADMIN' WHERE id="+pending.context().user().getId());
+        try(var http=new HttpFixture()) {
+            for(String route:List.of("queue","users","users/"+regular.context().user().getId(),"runs","runs/1","runs/1/report","events")) {
+                String path="/account/admin/"+route;
+                assertEquals(401,http.call("GET",path,null,null,false).statusCode(),path);
+                assertEquals(403,http.call("GET",path,bearer(regular),null,false).statusCode(),path);
+                assertEquals(403,http.call("GET",path,bearer(pending),null,false).statusCode(),path);
+                var response=http.call("GET",path,bearer(a),null,false);
+                assertEquals(200,response.statusCode(),response.body());
+                assertTrue(response.headers().firstValue("cache-control").orElse("").contains("no-store"));
+            }
+            sql("UPDATE ARG_ACCOUNT_USER SET role='USER' WHERE id="+a.context().user().getId());
+            assertEquals(403,http.call("GET","/account/admin/users",bearer(a),null,false).statusCode());
+            sql("UPDATE ARG_ACCOUNT_USER SET role='ADMIN' WHERE id="+a.context().user().getId());
+            sessions.with(bearer(a),CSRF,true,false,(ctx,c)->{sessions.revoke(ctx.session(),c);return null;});
+            assertEquals(401,http.call("GET","/account/admin/users",bearer(a),null,false).statusCode());
+        }
+    }
+    @Test void administrationPaginationFiltersQueueAndSafeFailureDetail() throws Exception {
+        var a=administrator();var u=user("find-me@example.com",true);var admin=administration();String token=bearer(a);
+        var page=admin.users(token,"FIND-ME","ACTIVE","FREE",1,null);
+        assertEquals(1,page.items().size());assertEquals(u.context().user().getId().toString(),page.items().getFirst().get("id"));
+        page=admin.users(token,null,null,null,1,null);assertNotNull(page.nextCursor());
+        assertEquals(1,admin.users(token,null,null,null,1,page.nextCursor()).items().size());
+        assertTrue(admin.users(token,"%' OR 1=1 --",null,null,20,null).items().isEmpty());
+        assertEquals(1,((Number)admin.queue(token).get("queued")).longValue());
+        sql("UPDATE ARG_AUDIT_RUN SET owner_user_id="+u.context().user().getId()+",status='FAILED',last_error='secret URL https://example.com/?token=hidden',module_statuses='{\"http\":\"FAILED\",\"html\":\"secret\",\"injected\":\"hidden\"}' WHERE id=2");
+        var filtered=admin.runs(token,u.context().user().getId().toString(),"example.com","FAILED",null,null,20,null);
+        assertEquals(1,filtered.items().size());assertEquals("2",filtered.items().getFirst().get("id"));
+        String json=mapper.writeValueAsString(admin.run(token,2));assertTrue(json.contains("analysis_failed"));assertTrue(json.contains("FAILED"));
+        assertFalse(json.contains("hidden"));assertFalse(json.contains("secret"));assertFalse(json.contains("last_error"));
+        assertFalse(mapper.writeValueAsString(admin.runs(token,null,null,null,null,null,20,null)).contains("token"));
+        assertEquals(4,admin.runs(token,"anonymous",null,null,null,null,20,null).items().size());
+        assertTrue(admin.runs(token,null,null,null,"2000-01-01","2000-01-02",20,null).items().isEmpty());
+        error(400,()->admin.runs(token,null,null,null,"2026-11-01","2026-10-01",20,null));
+        error(400,()->admin.users(token,null,null,null,101,null));
+        error(400,()->admin.users(token,null,null,null,20,"9223372036854775808"));
+        error(404,()->admin.report(token,3));
+        error(404,()->admin.run(token,999999));
+    }
+    @Test void administrationEntitlementsRequireCsrfRecentSessionAndStrictFieldsOverHttp() throws Exception {
+        var a=administrator();var u=user("target@example.com",true);String path="/account/admin/users/"+u.context().user().getId()+"/entitlement";
+        String body="{\"offer\":\"PRO\",\"monthlyLimit\":0,\"confirmed\":true}";
+        try(var http=new HttpFixture()) {
+            assertEquals(403,http.call("PATCH",path,bearer(u),body,true).statusCode());
+            assertEquals(403,http.call("PATCH",path,bearer(a),body,false).statusCode());
+            for(String bad:List.of(body.replace("\"PRO\"","\"NOPE\""),body.replace(":0",":-1"),body.replace(":0",":1.5"),body.replace("true","false"),body.replace("\"offer\"","\"role\""),body.replace("}",",\"role\":\"ADMIN\"}"))) {
+                assertEquals(400,http.call("PATCH",path,bearer(a),bad,true).statusCode(),bad);
+            }
+            assertEquals(200,http.call("PATCH",path,bearer(a),body,true).statusCode());
+            assertEquals("USER",dao.transaction(c->dao.user(u.context().user().getId(),c,false)).getRole());
+            assertEquals(1,count("ARG_ADMIN_EVENT"));
+            clock.now=clock.now.plus(settings.recentTtl()).plusSeconds(1);
+            assertEquals(403,http.call("PATCH",path,bearer(a),body,true).statusCode());
+        }
+    }
+    @Test void administrationLimitChangesAreAtomicAuditedAndAppliedToAdmission() throws Exception {
+        usagePolicy("usage.offers.FREE.monthly-limit=2");var a=administrator();var u=user("quota-admin@example.com",true);
+        var admin=administration();long target=u.context().user().getId();String token=bearer(a);
+        var created=personal.create("https://example.com",bearer(u),CSRF);
+        var modules=(Map<?,?>)admin.run(token,created.audit().runId()).get("modules");
+        assertEquals(com.dokor.argos.services.analysis.AuditModule.ordered().size(),modules.size());
+        assertTrue(modules.values().stream().allMatch("PENDING"::equals));
+        admin.entitlement(token,CSRF,target,new AdminService.Entitlement("FREE",0L,true));
+        assertFalse(personal.usage(bearer(u)).canLaunch());assertEquals(1,personal.usage(bearer(u)).reserved());
+        assertEquals(429,assertThrows(jakarta.ws.rs.WebApplicationException.class,()->personal.create("https://example.com",bearer(u),CSRF)).getResponse().getStatus());
+        assertEquals(false,admin.entitlement(token,CSRF,target,new AdminService.Entitlement("FREE",0L,true)).get("changed"));
+        assertEquals(1,count("ARG_ADMIN_EVENT"));
+        var event=admin.events(token,20,null).items().getFirst();
+        assertEquals(a.context().user().getId().toString(),event.get("actorId"));assertEquals(Long.toString(target),event.get("targetId"));
+        assertFalse(mapper.writeValueAsString(event).contains("example.com"));
+        admin.entitlement(token,CSRF,target,new AdminService.Entitlement("FREE",null,true));
+        assertTrue(personal.usage(bearer(u)).canLaunch());assertEquals(2,personal.usage(bearer(u)).limit());
+        assertNotNull(created);
+        var failing=spy(dao);
+        doThrow(new IllegalStateException("synthetic journal failure")).when(failing).save(any(AdminEvent.class),eq(QAdminEvent.table),any(java.sql.Connection.class));
+        var policy=new UsagePolicy(ConfigFactory.parseString("usage.offers.PRO.monthly-limit=10"));
+        var broken=new AdminService(failing,sessions,new UsageService(dao.transactions,policy,clock),policy,reader,mapper,clock);
+        assertThrows(IllegalStateException.class,()->broken.entitlement(token,CSRF,target,new AdminService.Entitlement("PRO",5L,true)));
+        assertEquals("FREE",dao.transaction(c->dao.user(target,c,false)).getOffer());
+        assertEquals(2,count("ARG_ADMIN_EVENT"));assertNull(admin.user(token,target).get("monthlyLimit"));
+        sql("UPDATE ARG_ADMIN_EVENT SET created_at='2000-01-01'");
+        assertTrue(admin.events(token,20,null).items().isEmpty());
+        admin.entitlement(token,CSRF,target,new AdminService.Entitlement("PRO",null,true));
+        assertEquals(1,count("ARG_ADMIN_EVENT"));
+        assertEquals(1,dao.transactions.selectQuery().select(QAdminEvent.table).from(QAdminEvent.table).fetch().size());
+        assertNotNull(dao.transactions.selectQuery().select(QUsageAccount.table).from(QUsageAccount.table).where(QUsageAccount.table.id.eq(target)).fetchOne());
+    }
+    @Test void administrationCannotChangeArchivedUsersOrOtherAdmins() throws Exception {
+        var a=administrator();var b=user("other-admin@example.com",true);var admin=administration();
+        long id=b.context().user().getId();sql("UPDATE ARG_ACCOUNT_USER SET role='ADMIN' WHERE id="+id);
+        error(403,()->admin.entitlement(bearer(a),CSRF,id,new AdminService.Entitlement("FREE",0L,true)));
+        sql("UPDATE ARG_ACCOUNT_USER SET role='USER',state='ARCHIVED' WHERE id="+id);
+        error(403,()->admin.entitlement(bearer(a),CSRF,id,new AdminService.Entitlement("FREE",0L,true)));
+        assertEquals(0,count("ARG_ADMIN_EVENT"));
+    }
     AccountSitesService sites() { return new AccountSitesService(dao,sessions,new UrlNormalizer(),new DomainService(new DomainDao(dao.transactions)),new AuditDao(dao.transactions),clock); }
     @Test void personalSitesSeparateOwnersAndDoNotLaunchRuns() throws Exception {
         var a=user("sites-a@example.com",true);var b=user("sites-b@example.com",true);var service=sites();

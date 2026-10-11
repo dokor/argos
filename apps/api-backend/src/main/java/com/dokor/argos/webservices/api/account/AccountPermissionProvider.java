@@ -29,6 +29,8 @@ public class AccountPermissionProvider implements PermissionRequestProvider {
                 false,
                 (context, c) -> {
                     request.setProperty(AccountSessionService.Context.class.getName(), context);
+                    if ("ACTIVE".equals(context.user().getState()) && "ADMIN".equals(context.user().getRole()))
+                        return List.of("session", "verified", "admin");
                     return "ACTIVE".equals(context.user().getState())
                             ? List.of("session", "verified")
                             : List.of("session");

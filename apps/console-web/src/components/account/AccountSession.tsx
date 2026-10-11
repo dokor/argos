@@ -54,5 +54,6 @@ export function PersonalNavigation() {
   if(!profile || denied) return null;
   return <nav className={s.personalNav} aria-label={t.account.sites.title}>
     <Link href="/account/sites">{t.account.sites.title}</Link><Link href="/account">{t.account.title}</Link><Link href="/account/sites?analyse=1">{t.account.sites.analyse}</Link>
+    {profile.admin && <Link href="/account/admin">Administration</Link>}
   </nav>;
 }

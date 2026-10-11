@@ -1,0 +1,24 @@
+.page { max-width: 76rem; margin: 2rem auto; padding: 0 1.25rem; color: var(--argos-text); overflow-wrap: anywhere; }
+.page h1 { font-size: clamp(1.8rem,5vw,2.7rem); font-weight: 700; }
+.page h2 { font-size: 1.3rem; font-weight: 650; margin: 1rem 0; }
+.page p { margin: .75rem 0; }
+.nav,.actions { display: flex; flex-wrap: wrap; gap: .7rem; margin: 1rem 0; align-items: center; }
+.page button,.page input,.page select { font: inherit; color: var(--argos-text); background: var(--argos-surface); border: 1px solid var(--argos-border); border-radius: .5rem; padding: .65rem .8rem; min-height: 44px; max-width: 100%; box-sizing: border-box; }
+.page button { cursor: pointer; }
+.page button:disabled { opacity: .6; cursor: default; }
+.page button[aria-pressed="true"] { border: 2px solid var(--argos-text); font-weight: 700; }
+.page :is(button,input,select,a):focus-visible { outline: 3px solid var(--argos-text); outline-offset: 3px; }
+.filters { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,12rem),1fr)); gap: 1rem; align-items: end; margin: 1.25rem 0; }
+.filters label { display: grid; gap: .4rem; min-width: 0; }
+.filters input,.filters select { min-width: 0; width: 100%; }
+.table { overflow: auto; border: 1px solid var(--argos-border); border-radius: .75rem; margin: 1rem 0; }
+.table table { border-collapse: collapse; width: 100%; min-width: 45rem; }
+.table th,.table td { padding: .8rem 1rem; text-align: left; vertical-align: top; border-bottom: 1px solid var(--argos-border); }
+.table th { font-weight: 650; background: var(--argos-surface); }
+.card { padding: 1.25rem; border: 1px solid var(--argos-border); border-radius: .75rem; background: var(--argos-surface); margin: 1rem 0; }
+.metrics { display: flex; flex-wrap: wrap; gap: 1.5rem; }
+.metrics dt { color: var(--argos-text-muted); }
+.metrics dd { margin: .3rem 0; font-size: 1.2rem; font-weight: 650; }
+.check { display: flex; gap: .65rem; align-items: center; }
+.check input { flex-shrink: 0; }
+.notice { border-left: 3px solid var(--argos-text-muted); padding: .75rem; }
