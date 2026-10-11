@@ -31,7 +31,13 @@ export default function SiteNav() {
           <Link href="/#audit" className={s.auditCta}>{t.landing.hero.cta}</Link>
         </div>
         <div className={s.navActions}>
-          <Link href="/account" className={s.navLink}>{t.account.title}</Link>
+          <Link href="/account" className={s.accountLink} aria-label={t.account.title} title={t.account.title}>
+            <svg className={s.accountIcon} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <circle cx="12" cy="8" r="4" />
+              <path d="M4 21v-2a8 8 0 0 1 16 0v2" />
+            </svg>
+            <span className={s.accountText}>{t.account.title}</span>
+          </Link>
           <ThemeToggle />
           <LangToggle />
           <div className={s.consoleSlot}>

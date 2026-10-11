@@ -17,6 +17,8 @@ Résultats : suite unitaire Java 653 tests, zéro échec, un test conditionnel i
 
 La recette a révélé et corrigé le rewrite `afterFiles` qui précédait les Route Handlers dynamiques : le proxy Java est maintenant un **fallback**. Elle a aussi conduit à rendre explicitement les dates compte en ISO et à prendre en charge les routes privées dans le sélecteur de langue. Captures inspectées : FR clair, EN sombre mobile 390 × 844 et focus clavier visible ; sorties locales ignorées sous `outputs/accounts/`.
 
+Le contrôle E2E existant du header passe également sur 192 captures : routes FR/EN, thèmes clair/sombre, visiteur/admin, largeurs 1280/390/320 px, breakpoints intermédiaires, navigation client, scrollbar, chargement des polices et bascules de thème/langue. Le lien compte réserve une largeur identique dans les deux langues, devient une icône avec nom accessible sur mobile, et le header conserve sa géométrie pendant l'hydratation. Build et lint repassés après cette correction.
+
 ## Rejouer la recette navigateur
 
 1. Lancer MariaDB jetable en UTC et exporter les trois variables `ARGOS_TEST_CREDENTIALS_*` décrites dans [mariadb.md](../testing/mariadb.md).
