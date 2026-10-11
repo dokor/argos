@@ -45,9 +45,9 @@ export default function AccountView({ mode = "me" }: { mode?: Mode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, lang]);
   useEffect(() => {
-    if(!sharedSession.denied) return;
+    if(mode !== "me" || !sharedSession.denied) return;
     queueMicrotask(()=>{setProfile(null);setMethods([]);setSessions([]);setError(copy.errors.session_invalid);});
-  },[sharedSession.denied,copy.errors.session_invalid]);
+  },[mode,sharedSession.denied,copy.errors.session_invalid]);
   async function act(work: () => Promise<void>) { if (busy) return; setBusy(true); setMessage(""); setError(""); try { await work(); } catch (reason) { fail(reason); } finally { setBusy(false); } }
   async function social(provider: string, intent = "login") {
     await act(async () => { const result = await accountFetch<{ url: string }>("auth/oauth/" + provider + "/start", "POST", { intent, returnTo: intent === "link" ? localizedPath("/account", lang) : returnTo }); window.location.assign(result.url); });
