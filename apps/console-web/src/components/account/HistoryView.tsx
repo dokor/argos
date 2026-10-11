@@ -23,8 +23,8 @@ export function HistoryChart({ items }: { items: HistoryItem[] }) {
         {previous && previous.item.globalScore !== null && p.item.globalScore !== null && comparableDelta(p.item) !== null && <line data-segment="comparable" x1={previous.x} y1={previous.y} x2={p.x} y2={p.y} strokeWidth="2"/>}
         {p.item.globalScore !== null && <circle cx={p.x} cy={p.y} r="5"><title>{new Date(p.item.createdAt).toLocaleString(lang)}: {p.item.globalScore}/100</title></circle>}
       </g>; })}
-      {points.length>0 && <><text x="40" y="217">{new Date(points[0].item.createdAt).toLocaleDateString(lang)}</text><text x="560" y="217" textAnchor="end">{new Date(points[points.length-1].item.createdAt).toLocaleDateString(lang)}</text></>}
     </svg>
+    {points.length>0 && <div className={h.chartDates}><time dateTime={points[0].item.createdAt}>{new Date(points[0].item.createdAt).toLocaleDateString(lang)}</time><time dateTime={points[points.length-1].item.createdAt}>{new Date(points[points.length-1].item.createdAt).toLocaleDateString(lang)}</time></div>}
   </figure>;
 }
 

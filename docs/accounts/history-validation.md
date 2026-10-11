@@ -46,14 +46,26 @@ Aucune migration, recalculation ni modification d’un ancien rapport.
 ## Validation
 
 - Build Next.js de production exécuté avec succès le 11 octobre 2026.
-- 68 tests frontend ciblés réussis : BFF, historique, navigation, relance,
+- 322 tests frontend réussis, dont 68 tests ciblés : BFF, historique, navigation, relance,
   révocation, pagination, courbe interrompue, FR/EN, états vides et erreurs.
 - ESLint ciblé sur les nouveaux composants et contrats : réussi.
-- `mvn test` : réussi. Les tests MariaDB ne sont pas exécutés par cette commande.
+- `mvn test` : 638 tests réussis, 1 test conditionnel ignoré. Les tests MariaDB ne sont pas exécutés par cette commande.
 - Deux scénarios ajoutés à `AccountLifecycleIT`, inclus dans le workflow MariaDB :
   isolation compte/URL/curseur, dates identiques, limites, absence de session,
   confidentialité de la réponse, scores figés, comparaison entre pages,
   changement de méthode et expiration.
+- CI sur `008c856` : backend, frontend et intégration MariaDB réussis.
+- Huit scénarios Playwright : 320/1280 px × FR/EN × clair/sombre ; absence de
+  débordement horizontal et d’erreur JavaScript, formulaire prérempli activé au
+  clavier, pagination, révocation et zéro violation axe WCAG A/AA sur `main`.
+  Les API sont simulées dans ce test visuel ; les contrôles SQL sont testés
+  séparément dans MariaDB. Script `scripts/e2e/account-history.mjs`, captures et
+  résultat JSON conservés par le workflow Controlled audit E2E.
+
+La suite globale contenait deux échecs préexistants dans ReportConsistency : le
+statut de partage ajouté dans le hero rendait les sélecteurs `getByRole("status")`
+ambigus. Les tests ciblent maintenant le texte du compteur et vérifient son rôle,
+sans modifier le comportement du rapport.
 
 Pour exécuter ces scénarios, préparer la base jetable de
 [mariadb.md](../testing/mariadb.md), puis lancer
