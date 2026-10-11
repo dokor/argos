@@ -1,7 +1,7 @@
 /**
  * BFF validation layer for POST /api/audits.
  *
- * This Next.js route takes priority over the next.config.ts afterFiles rewrite,
+ * This Next.js route takes priority over the next.config.ts fallback rewrite,
  * intercepting audit creation requests to validate the URL before proxying to
  * the Java backend.
  *
@@ -11,6 +11,7 @@
 import { attribution, count } from "@/lib/analytics/server";
 import { NextRequest, NextResponse } from "next/server";
 import { adminReadProxy } from "@/lib/admin-read-proxy";
+import { accountHeaders, SESSION_COOKIE, saveRunProof } from "@/lib/account-proxy";
 import { createLogger, safeError, sanitizeText, sanitizeUrl } from "@/lib/logger";
 
 const API_BASE = process.env.API_BASE ?? "http://api-backend:8081";
@@ -77,6 +78,8 @@ function sanitize(s: string): string {
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  const personal = request.cookies.has(SESSION_COOKIE) ? accountHeaders(request, true) : null;
+  if (personal instanceof NextResponse) return personal;
   const startedAt = Date.now();
   logger.info("audit_bff_request_received", {
     action: "create_audit",
@@ -158,7 +161,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     backendRes = await fetch(`${API_BASE}/api/audits`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", ...(analytics ? {Authorization:"Bearer "+process.env.ADMIN_API_TOKEN} : {}) },
+      headers: { "Content-Type": "application/json", ...(analytics ? {Authorization:"Bearer "+process.env.ADMIN_API_TOKEN} : {}),
+        ...(personal ? { "X-Argos-Account-Session": personal.get("Authorization") ?? "", Origin: personal.get("Origin") ?? "",
+          "X-Argos-CSRF": personal.get("X-Argos-CSRF") ?? "", Cookie: personal.get("Cookie") ?? "" } : {}) },
       body: JSON.stringify({ url: trimmed, ...(analytics ? {analytics} : {}) }),
     });
   } catch (error) {
@@ -197,11 +202,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     });
   }
 
-  return new NextResponse(text, {
+  const response = new NextResponse(text, {
     status: backendRes.status,
     headers: { "Content-Type": "application/json", "Cache-Control": "no-store",
       ...(backendRes.status === 429 && backendRes.headers.get("retry-after") ? { "Retry-After": backendRes.headers.get("retry-after")! } : {}) },
   });
+  const proof = backendRes.headers.get("x-argos-run-proof");
+  if (backendRes.ok && proof) {
+    try { const created = JSON.parse(text); saveRunProof(request, response, String(created.runId), created.reportToken, proof); } catch { /* Invalid upstream response cannot issue a proof. */ }
+  }
+  return response;
 }
 
 export async function GET(request: NextRequest): Promise<NextResponse> {

@@ -1,6 +1,14 @@
 export type Lang = "fr" | "en";
 
 // Only pages with a complete English version belong in this map.
+export const accountRoutes: Record<string, string> = {
+  "/account": "/en/account",
+  "/account/sign-in": "/en/account/sign-in",
+  "/account/register": "/en/account/register",
+  "/account/verify": "/en/account/verify",
+  "/account/forgot": "/en/account/forgot",
+  "/account/reset": "/en/account/reset",
+};
 export const languageRoutes: Record<string, string> = {
   "/": "/en",
   "/exemple-rapport": "/en/example-report",
@@ -18,7 +26,8 @@ export const languageRoutes: Record<string, string> = {
 export function frenchPath(path: string): string {
   const pathname = path.replace(/\/+$/, "") || "/";
   if (pathname.startsWith("/en/report/")) return pathname.slice(3);
-  return Object.entries(languageRoutes).find(([, en]) => en === pathname)?.[0] ?? pathname;
+  if (pathname.startsWith("/en/account/runs/")) return pathname.slice(3);
+  return Object.entries({ ...languageRoutes, ...accountRoutes }).find(([, en]) => en === pathname)?.[0] ?? pathname;
 }
 
 export function localizedPath(path: string, lang: Lang): string {
@@ -27,5 +36,6 @@ export function localizedPath(path: string, lang: Lang): string {
   const suffix = index < 0 ? "" : path.slice(index);
   const fr = frenchPath(pathname);
   if (fr.startsWith("/report/")) return (lang === "en" ? "/en" : "") + fr + suffix;
-  return (lang === "en" ? languageRoutes[fr] ?? fr : fr) + suffix;
+  if (fr.startsWith("/account/runs/")) return (lang === "en" ? "/en" : "") + fr + suffix;
+  return (lang === "en" ? accountRoutes[fr] ?? languageRoutes[fr] ?? fr : fr) + suffix;
 }

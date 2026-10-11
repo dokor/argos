@@ -109,6 +109,10 @@
 	</build>
 
 	<dependencies>
+        <dependency><groupId>com.coreoz</groupId><artifactId>plume-admin-security</artifactId></dependency>
+        <dependency><groupId>de.mkammerer</groupId><artifactId>argon2-jvm</artifactId><version>2.12</version></dependency>
+        <dependency><groupId>com.nimbusds</groupId><artifactId>oauth2-oidc-sdk</artifactId><version>11.37</version></dependency>
+        <dependency><groupId>org.eclipse.angus</groupId><artifactId>jakarta.mail</artifactId><version>2.0.4</version></dependency>
         <dependency>
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>

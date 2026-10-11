@@ -1,4 +1,5 @@
 "use client";
+import RunClaim from "@/components/account/RunClaim";
 
 import React, { useEffect, useRef, useState } from "react";
 import Link from "@/components/LocalizedLink";
@@ -195,6 +196,7 @@ export default function AuditProgressView({ token }: Props) {
 
   return (
     <div className={s.wrapper}>
+      <RunClaim />
       <div className={s.card}>
 
         {/* En-tête */}

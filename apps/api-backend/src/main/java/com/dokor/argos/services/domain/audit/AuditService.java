@@ -34,6 +34,9 @@ public class AuditService {
 
     /** Normalizes the URL, reuses its audit and creates an independent queued run. */
     public CreatedAudit createAudit(String inputUrl) {
+        return createAudit(inputUrl,null,null);
+    }
+    public CreatedAudit createAudit(String inputUrl,Long ownerUserId,java.sql.Connection connection) {
         logger.info("AuditService.createAudit inputUrl={}", UrlNormalizer.sanitizeForLog(inputUrl));
         String normalizedUrl = urlNormalizer.normalize(inputUrl);
         String hostname = urlNormalizer.extractHostname(normalizedUrl);
@@ -47,7 +50,7 @@ public class AuditService {
         candidate.setCreatedAt(now);
         Audit audit = auditDao.findOrCreate(candidate);
 
-        var created = auditRunService.createQueuedRun(audit.getId(), now);
+        var created = connection==null ? auditRunService.createQueuedRun(audit.getId(),now) : auditRunService.createQueuedRun(audit.getId(), now,ownerUserId,connection);
         AuditRun run = created.run();
         logger.info("Run created: auditId={}, runId={}, status={}", audit.getId(), run.getId(), run.getStatus());
         return new CreatedAudit(run.getId(), run.getAuditId(), run.getStatus(),

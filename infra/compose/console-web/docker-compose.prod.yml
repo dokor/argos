@@ -31,6 +31,20 @@ services:
       - traefik.http.routers.console-web-api.priority=200
       - traefik.http.routers.console-web-api.tls.options=modern@file
 
+      # Account authentication: edge budget per TCP client, Java retains persistent quotas.
+      - traefik.http.routers.argos-account-auth.rule=Host(`argos.lelouet.fr`) && PathPrefix(`/api/account/auth/`)
+      - traefik.http.routers.argos-account-auth.entrypoints=websecure
+      - traefik.http.routers.argos-account-auth.tls=true
+      - traefik.http.routers.argos-account-auth.tls.certresolver=le
+      - traefik.http.routers.argos-account-auth.tls.options=modern@file
+      - traefik.http.routers.argos-account-auth.service=console-web
+      - traefik.http.routers.argos-account-auth.priority=210
+      - traefik.http.routers.argos-account-auth.middlewares=argos-account-auth-limit
+      - traefik.http.middlewares.argos-account-auth-limit.ratelimit.average=60
+      - traefik.http.middlewares.argos-account-auth-limit.ratelimit.period=15m
+      - traefik.http.middlewares.argos-account-auth-limit.ratelimit.burst=10
+      - traefik.http.middlewares.argos-account-auth-limit.ratelimit.sourcecriterion.ipstrategy.depth=0
+
       # Public writes: TCP peer only; never accept a browser-supplied forwarded IP.
       - traefik.http.routers.argos-audit-write.rule=Host(`argos.lelouet.fr`) && Method(`POST`) && (Path(`/api/audits`) || Path(`/api/audits/`))
       - traefik.http.routers.argos-audit-write.entrypoints=websecure

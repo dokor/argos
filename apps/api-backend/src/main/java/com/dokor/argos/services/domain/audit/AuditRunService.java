@@ -62,6 +62,9 @@ public class AuditRunService {
      * et les statuts de modules initialisés à PENDING.
      */
     public QueuedRun createQueuedRun(long auditId, Instant now) {
+        return createQueuedRun(auditId,now,null,null);
+    }
+    public QueuedRun createQueuedRun(long auditId, Instant now, Long ownerUserId, java.sql.Connection connection) {
         logger.info("Creating QUEUED run for auditId={}", auditId);
 
         String reportToken = tokenService.generateToken();
@@ -69,12 +72,13 @@ public class AuditRunService {
 
         AuditRun run = new AuditRun();
         run.setAuditId(auditId);
+        run.setOwnerUserId(ownerUserId);
         run.setStatus(AuditRunStatus.QUEUED.name());
         run.setCreatedAt(now);
         run.setReportTokenHash(tokenService.sha256(reportToken));
         run.setModuleStatuses(moduleStatusesJson);
 
-        AuditRun saved = auditRunDao.save(run);
+        AuditRun saved = connection == null ? auditRunDao.save(run) : auditRunDao.save(run,connection);
         logger.debug("Run persisted: runId={}", saved.getId());
         return new QueuedRun(saved, reportToken);
     }

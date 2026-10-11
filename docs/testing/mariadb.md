@@ -2,7 +2,7 @@
 
 Production uses MariaDB 11.4. The `MariaDB integration (11.4)` CI job runs the
 Failsafe suites for report credentials, publication and claims, newsletter
-privacy, audit progress, and domain analysis concurrency. One disposable
+privacy, accounts/authentication, audit progress, and domain analysis concurrency. One disposable
 MariaDB container holds three isolated schemas: `argos_credentials_test`,
 `argos_progress_test`, and `argos_domain_cache_test`. Only synthetic credentials
 are used.
@@ -17,7 +17,7 @@ named `argos_credentials_test`, export ARGOS_TEST_CREDENTIALS_URL,
 ARGOS_TEST_CREDENTIALS_USER and ARGOS_TEST_CREDENTIALS_PASSWORD, then execute:
 
 ```sh
-mvn -P mariadb-integration -Dit.test=ReportCredentialMigrationIT,AuditPublicationIT,AuditClaimIT verify
+mvn -P mariadb-integration -Dit.test=AccountLifecycleIT,ReportCredentialMigrationIT,AuditPublicationIT,AuditClaimIT verify
 ```
 
 CI retains Failsafe reports as an artifact. Earlier compatibility runs on
