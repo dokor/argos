@@ -13,13 +13,13 @@
 }
 
 .navInner {
-  max-width: t.$container-width;
+  max-width: 1280px;
   margin: 0 auto;
-  min-height: 60px;
-  padding: t.$space-2 t.$page-gutter;
+  min-height: 72px;
+  padding: t.$space-3 t.$page-gutter;
   display: flex;
   align-items: center;
-  gap: t.$space-8;
+  gap: t.$space-6;
 }
 
 .logo {
@@ -44,7 +44,7 @@
 .navLinks {
   // Reserve the same columns for both translations and active states.
   display: grid;
-  grid-template-columns: 128px 96px 36px;
+  grid-template-columns: 144px 144px 48px;
   flex-shrink: 0;
 }
 
@@ -57,10 +57,16 @@
 }
 
 // The cookie is read after hydration: keep the controls in place throughout.
-.consoleSlot { width: 190px; height: 34px; }
-.consoleIcon { display: none; }
+.consoleSlot { width: 34px; height: 34px; }
+.consoleIcon { flex-shrink: 0; }
+.consoleText { display: none; }
+.navPreferences { display: flex; align-items: center; gap: t.$space-2; margin-left: t.$space-2; }
+.menuToggle { display: none; }
 
 .navLink {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
   color: t.$text-muted;
   text-decoration: none;
   font-size: t.$text-md;
@@ -79,10 +85,10 @@
   align-items: center;
   justify-content: center;
   height: 100%;
+  width: 100%;
   background: t.$text;
   color: t.$bg;
   text-decoration: none;
-  padding: t.$space-2 t.$space-3;
   border-radius: t.$radius-sm;
   font-size: t.$text-base;
   font-weight: 600;
@@ -91,9 +97,12 @@
 
 .navLink:focus-visible,
 .navCta:focus-visible,
+.accountLink:focus-visible,
+.auditCta:focus-visible,
+.menuToggle:focus-visible,
 .logo:focus-visible,
 .footer a:focus-visible {
-  outline: 3px solid t.$color-indigo;
+  outline: 3px solid t.$text;
   outline-offset: 3px;
 }
 
@@ -161,7 +170,7 @@
   font-size: t.$text-base;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1100px) and (min-width: 761px) {
   .navInner { flex-wrap: wrap; gap: t.$space-2 t.$space-4; }
   .navLinks { order: 3; width: 100%; justify-content: space-between; }
 }
@@ -171,52 +180,90 @@
 }
 
 @media (max-width: 560px) {
-  .navInner { padding: t.$space-3 t.$page-gutter-mobile; column-gap: t.$space-2; }
-  .navActions { gap: t.$space-1; }
-  .consoleSlot { width: 34px; }
-  .navCta { padding: t.$space-2; }
-  .consoleIcon { display: block; flex-shrink: 0; }
-  .consoleText { display: none; }
-  .navLinks { grid-template-columns: minmax(0, 1fr) 96px 36px; gap: t.$space-2; font-size: t.$text-base; }
-  .navLink { font-size: t.$text-base; }
   .footerInner { padding: t.$space-10 t.$page-gutter-mobile; gap: t.$space-8 t.$space-4; }
   .footerBrand { grid-column: 1 / -1; }
   .footerBottom { padding-inline: t.$page-gutter-mobile; }
 }
 
-.navLinks { grid-template-columns: 144px 152px 64px 172px; }
-.auditCta { display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 0.5rem 0.75rem; background: #4f46e5; color: #fff; border-radius: 0.5rem; font-size: 0.9rem; font-weight: 700; text-decoration: none; }
-.auditCta:focus-visible { outline: 3px solid var(--argos-text); outline-offset: 3px; }
-@media (max-width: 1250px) { .navInner { flex-wrap: wrap; } .navLinks { order: 3; width: 100%; justify-content: space-between; } }
-@media (max-width: 640px) { .navLinks { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0.25rem 1rem; min-height: 88px; } .navLink, .auditCta { white-space: normal; overflow-wrap: anywhere; } }
-@media (max-width: 300px) { .navLinks { grid-template-columns: minmax(0,1fr); } }
-@media (max-width: 300px) { .navInner { padding-inline: 8px; } }
-@media (max-width: 300px) { .navActions { flex-wrap: wrap; flex-shrink: 1; margin-left: 0; } }
-
-// Reserve two lines for the French CTA in both languages.
-.auditCta { height: 60px; box-sizing: border-box; }
-.navLink { display: flex; align-items: center; height: 60px; box-sizing: border-box; }
-
-// Keep account controls in fixed slots across language and authentication changes.
-.navInner { max-width: 1280px; }
-.accountLink {
-  display: flex;
+.auditCta, .accountLink {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 96px;
-  height: 34px;
-  color: var(--argos-text-muted);
+  gap: t.$space-2;
+  height: 44px;
+  padding: t.$space-2 t.$space-3;
+  border-radius: t.$radius-sm;
   font-size: t.$text-md;
-  font-weight: 600;
+  font-weight: 700;
   text-decoration: none;
   white-space: nowrap;
-
-  &:hover { color: var(--argos-text); }
-  &:focus-visible { outline: 3px solid var(--argos-text); outline-offset: 3px; }
+  flex-shrink: 0;
 }
-.accountIcon { display: none; }
-@media (max-width: 560px) {
-  .accountLink { width: 34px; }
-  .accountIcon { display: block; }
-  .accountText { display: none; }
+.auditCta {
+  width: 128px;
+  background: var(--argos-action-bg);
+  color: var(--argos-action-text);
+  &:hover { background: var(--argos-action-hover); }
+}
+.accountLink {
+  // Stable across languages and while the HttpOnly session is resolved.
+  width: 132px;
+  color: t.$text;
+  background: t.$surface;
+  border: 1px solid t.$text-muted;
+  &:hover, &[aria-current] { background: t.$surface-2; border-color: t.$text; }
+}
+.accountIcon { flex-shrink: 0; }
+
+@media (max-width: 760px) {
+  .navInner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 132px 44px;
+    gap: t.$space-2;
+    padding: t.$space-3 t.$page-gutter-mobile;
+  }
+  .logo { grid-column: 1; grid-row: 1; }
+  .navActions { display: contents; }
+  .accountLink { grid-column: 2; grid-row: 1; }
+  .menuToggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    grid-column: 3;
+    grid-row: 1;
+    border: 1px solid t.$border;
+    border-radius: t.$radius-sm;
+    color: t.$text;
+    background: t.$surface;
+  }
+  .auditCta { grid-column: 1 / -1; grid-row: 2; width: 100%; }
+  .navLinks {
+    display: none;
+    grid-column: 1 / -1;
+    grid-row: 3;
+    grid-template-columns: 1fr;
+    gap: 0;
+    padding-top: t.$space-2;
+    border-top: 1px solid t.$border;
+  }
+  .navPreferences {
+    display: none;
+    grid-column: 1 / -1;
+    grid-row: 4;
+    margin-left: 0;
+    min-height: 44px;
+    gap: t.$space-3;
+  }
+  .nav[data-menu-open='true'] {
+    .navLinks { display: grid; }
+    .navPreferences { display: flex; }
+  }
+}
+@media (max-width: 300px) {
+  .navInner { padding-inline: t.$space-2; grid-template-columns: minmax(0, 1fr) 116px 44px; }
+  .logo { gap: t.$space-1; }
+  .logoText { font-size: t.$text-md; }
+  .accountLink { width: 116px; gap: t.$space-1; padding-inline: t.$space-2; }
 }
