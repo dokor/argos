@@ -15,6 +15,7 @@ type Props = {
   idPrefix?: string;
   submitLabel?: string;
   initialUrl?: string;
+  launchBlocked?: boolean;
 };
 
 function isValidPublicUrl(raw: string): boolean {
@@ -28,7 +29,7 @@ function isValidPublicUrl(raw: string): boolean {
   }
 }
 
-export default function AuditForm({ onCreated, mode = "dashboard", sourceRoute, idPrefix, submitLabel, initialUrl = "" }: Props) {
+export default function AuditForm({ onCreated, mode = "dashboard", sourceRoute, idPrefix, submitLabel, initialUrl = "", launchBlocked = false }: Props) {
   const { t } = useLang();
   const publicMode = mode === "public";
   const tf = publicMode ? t.marketing.form : t.auditForm;
@@ -63,12 +64,13 @@ export default function AuditForm({ onCreated, mode = "dashboard", sourceRoute, 
 
   const submitting = phase === "submitting" || phase === "polling" || phase === "redirecting";
   const errorMsg = inputError ?? (phase === "error"
-    ? publicMode || mode === "personal" ? t.marketing.form.errorRequest : error?.message ?? t.auditForm.errorUnknown
+    ? error && "code" in error && error.code === "quota_exceeded" ? t.account.usage.reached : publicMode || mode === "personal" ? t.marketing.form.errorRequest : error?.message ?? t.auditForm.errorUnknown
     : null);
   const inputId = idPrefix ? `${idPrefix}-audit-url` : publicMode ? "public-audit-url" : "url";
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if(launchBlocked) return;
     setInputError(null);
     if (!url.trim()) {
       setInputError(tf.errorUrlMissing);inputRef.current?.focus();
@@ -104,7 +106,7 @@ export default function AuditForm({ onCreated, mode = "dashboard", sourceRoute, 
         />
       </div>
 
-      <button type="submit" disabled={submitting} className={s.submitBtn}>
+      <button type="submit" disabled={submitting || launchBlocked} className={s.submitBtn}>
         {submitting ? tf.submitting : submitLabel ?? tf.submit}
       </button>
 

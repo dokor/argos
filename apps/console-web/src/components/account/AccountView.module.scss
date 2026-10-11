@@ -22,3 +22,6 @@
 .urlList h3 { font-weight:600;margin:1rem 0 .5rem; }
 
 .chrome a[href$="#audit"] { height:auto;min-height:44px;overflow-wrap:anywhere; }
+.usage { display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,13rem),1fr));gap:1rem; }
+.usage dt { color:var(--argos-text-muted); }
+.usage dd { margin:.25rem 0 0;font-weight:600; }

@@ -1,5 +1,6 @@
 "use client";
 import { useAccountSession, PersonalNavigation } from "./AccountSession";
+import UsagePanel from "./UsagePanel";
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "@/components/LocalizedLink";
@@ -97,6 +98,7 @@ export default function AccountView({ mode = "me" }: { mode?: Mode }) {
         </form>
       </section>
       {profile.verified && <>
+        <UsagePanel/>
         <section className={s.card}><h2>{copy.methods}</h2><ul className={s.list}>{methods.map(method => <li key={method.id}><span>{method.provider === "password" ? copy.password : method.provider === "github" ? "GitHub" : method.provider === "linkedin" ? "LinkedIn" : "Google"}</span><button className={s.button} disabled={busy || methods.length < 2} onClick={() => { if (window.confirm(copy.confirmRemove)) void act(async () => { await accountFetch("methods/" + method.id + "/remove", "POST", { confirmed: true }); await load(); setMessage(copy.done); }); }}>{copy.remove}</button></li>)}</ul>
           <div className={s.actions}>{providers.map(provider => <button key={provider} className={s.button} disabled={busy} onClick={() => void social(provider, "link")}>{copy.add} {provider}</button>)}</div>
           <form className={s.form} onSubmit={e => { e.preventDefault(); const data = new FormData(e.currentTarget); const form = e.currentTarget; void act(async () => { await accountFetch("methods/password", "POST", { password: data.get("newPassword") }); form.reset(); await load(); setMessage(copy.done); }); }}>

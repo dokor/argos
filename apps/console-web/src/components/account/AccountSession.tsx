@@ -5,10 +5,13 @@ import { useLang } from "@/lib/i18n/LangContext";
 import Link from "@/components/LocalizedLink";
 import s from "./AccountView.module.scss";
 
-const Context = createContext<{ profile: AccountProfile | null; ready: boolean; denied: boolean; error: string; invalidate: (reason: unknown) => void }>({profile:null,ready:false,denied:false,error:"",invalidate:()=>{}});
+export type MonthlyUsage={offer:string;period:string;timezone:string;startsAt:string;resetsAt:string;used:number;reserved:number;limit:number|null;canLaunch:boolean};
+const Context = createContext<{ profile: AccountProfile | null; ready: boolean; denied: boolean; error: string; invalidate: (reason: unknown) => void; usage:MonthlyUsage|null;usageError:boolean;refreshUsage:()=>void }>({profile:null,ready:false,denied:false,error:"",invalidate:()=>{},usage:null,usageError:false,refreshUsage:()=>{}});
 export const useAccountSession = () => useContext(Context);
 export default function AccountSession({ children }: { children: React.ReactNode }) {
   const [profile,setProfile]=useState<AccountProfile|null>(null), [ready,setReady]=useState(false), [denied,setDenied]=useState(false), [error,setError]=useState("");
+  const [usage,setUsage]=useState<MonthlyUsage|null>(null),[usageError,setUsageError]=useState(false),[usageRevision,setUsageRevision]=useState(0);
+  const refreshUsage=useCallback(()=>setUsageRevision(v=>v+1),[]);
   const invalidate=useCallback((reason:unknown)=>{
     if(reason instanceof AccountClientError && reason.status === 401) { setProfile(null); setDenied(true); setError(reason.code); }
     else if(reason instanceof AccountClientError && reason.code === "email_unverified") { setProfile(p=>p ? {...p,verified:false} : null); setError(reason.code); }
@@ -28,7 +31,23 @@ export default function AccountSession({ children }: { children: React.ReactNode
     timer=setTimeout(renew,600000);
     return ()=>{alive=false;clearTimeout(timer);};
   },[profile,invalidate]);
-  return <Context.Provider value={{profile,ready,denied,error,invalidate}}>{children}</Context.Provider>;
+  useEffect(()=>{
+    let alive=true;const controller=new AbortController();
+    if(!profile?.verified || denied) {queueMicrotask(()=>{if(alive){setUsage(null);setUsageError(false);}});return ()=>{alive=false;};}
+    void accountFetch<MonthlyUsage>("usage","GET",undefined,controller.signal).then(data=>{if(alive){setUsage(data);setUsageError(false);}}).catch(reason=>{if(alive){setUsage(null);setUsageError(true);invalidate(reason);}});
+    return ()=>{alive=false;controller.abort();};
+  },[profile,denied,usageRevision,invalidate]);
+  useEffect(()=>{window.addEventListener("argos-usage-refresh",refreshUsage);return ()=>window.removeEventListener("argos-usage-refresh",refreshUsage);},[refreshUsage]);
+  useEffect(()=>{
+    if(!usage) return;
+    // A one-shot refresh at the calendar boundary; no periodic activity reads.
+    const deadline=new Date(usage.resetsAt).getTime()+100;
+    if(!Number.isFinite(deadline) || deadline<Date.now()) return;
+    let timer:ReturnType<typeof setTimeout>;
+    const arm=()=>{const wait=deadline-Date.now();timer=setTimeout(()=>{if(Date.now()>=deadline) refreshUsage();else arm();},Math.min(Math.max(1,wait),2147483647));};
+    arm();return ()=>clearTimeout(timer);
+  },[usage,refreshUsage]);
+  return <Context.Provider value={{profile,ready,denied,error,invalidate,usage,usageError,refreshUsage}}>{children}</Context.Provider>;
 }
 export function PersonalNavigation() {
   const {profile,denied}=useAccountSession(),{t}=useLang();

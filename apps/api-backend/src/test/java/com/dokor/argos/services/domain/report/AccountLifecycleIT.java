@@ -1209,4 +1209,59 @@ class AccountLifecycleIT extends MariaDbReportFixture {
         var second=countedSites.list(bearer(a),20,first.nextCursor());assertEquals(20,first.items().size());assertEquals(5,second.items().size());assertNull(second.nextCursor());
         var ids=new HashSet<String>();first.items().forEach(s->assertTrue(ids.add(s.siteId())));second.items().forEach(s->assertTrue(ids.add(s.siteId())));
     }
+
+    private void usagePolicy(String config) {
+        var usage=new UsageService(dao.transactions,new UsagePolicy(ConfigFactory.parseString(config)),clock);
+        var runDao=new AuditRunDao(dao.transactions,usage);
+        auditService=new AuditService(new AuditDao(dao.transactions),new AuditRunService(runDao,tokens,mapper),new UrlNormalizer(),new DomainService(new DomainDao(dao.transactions)));
+        personal=new AccountRunsService(dao,sessions,auditService,runDao,reader,tokens,clock,settings,sites());
+    }
+    private long count(String table) throws Exception {
+        try(var c=source.getConnection();var s=c.createStatement();var r=s.executeQuery("SELECT COUNT(*) FROM "+table)) {r.next();return r.getLong(1);}
+    }
+    @Test void claimedPublishedAnonymousReportIsCountedOnceAtOriginalMonthEvenAtZeroQuota() throws Exception {
+        usagePolicy("usage.offers.FREE.monthly-limit=0");
+        var a=user("usage-claim-a@example.com",true);var b=user("usage-claim-b@example.com",true);
+        var anon=personal.create("https://example.com",null,null);
+        assertTrue(new AuditRunDao(dao.transactions).claimRun(anon.audit().runId(),"worker",clock.instant()));
+        publisher.completeAndPublish(anon.audit().runId(),new AuditDao(dao.transactions).findById(anon.audit().auditId()),mock(com.dokor.argos.services.analysis.model.AuditReportJson.class),"{}","worker");
+        sql("UPDATE ARG_AUDIT_REPORT SET created_at='2026-09-15 10:00:00' WHERE run_id="+anon.audit().runId());
+        personal.claim(bearer(a),CSRF,anon.audit().runId(),anon.proof());personal.claim(bearer(a),CSRF,anon.audit().runId(),anon.proof());
+        error(404,()->personal.claim(bearer(b),CSRF,anon.audit().runId(),anon.proof()));
+        assertEquals(0,personal.usage(bearer(a)).used());assertEquals(0,personal.usage(bearer(a)).reserved());
+        assertEquals(1,count("ARG_USAGE_RUN WHERE state='COUNTED' AND period='2026-09'"));
+        assertNotNull(personal.report(bearer(a),anon.audit().runId()));
+    }
+    @Test void queuedClaimCannotBypassQuotaAndRollsBackOwnershipAndProofConsumption() throws Exception {
+        usagePolicy("usage.offers.FREE.monthly-limit=0");var a=user("usage-queued@example.com",true);
+        var anon=personal.create("https://example.com",null,null);
+        var denied=assertThrows(jakarta.ws.rs.WebApplicationException.class,()->personal.claim(bearer(a),CSRF,anon.audit().runId(),anon.proof()));
+        assertEquals(429,denied.getResponse().getStatus());assertNull(new AuditRunDao(dao.transactions).findById(anon.audit().runId()).getOwnerUserId());
+        assertEquals(0,count("ARG_ACCOUNT_SITE"));assertEquals(0,count("ARG_USAGE_RUN"));
+        usagePolicy("");personal.claim(bearer(a),CSRF,anon.audit().runId(),anon.proof());assertEquals(1,personal.usage(bearer(a)).reserved());
+    }
+    @Test void usageHttpRequiresVerifiedSessionAndQuotaDoesNotBlockReadsOrFollowing() throws Exception {
+        usagePolicy("usage.offers.FREE.monthly-limit=0");var a=user("usage-http-a@example.com",true);var b=user("usage-http-b@example.com",true);var pending=user("usage-http-pending@example.com",false);
+        try(var http=new HttpFixture()) {
+            assertEquals(401,http.call("GET","/account/usage",null,null,false).statusCode());
+            assertEquals(403,http.call("GET","/account/usage",bearer(pending),null,false).statusCode());
+            var usage=http.call("GET","/account/usage",bearer(a),null,false);assertEquals(200,usage.statusCode());
+            assertTrue(mapper.readTree(usage.body()).get("resetsAt").isTextual());assertEquals("2026-11-01T00:00:00Z",mapper.readTree(usage.body()).get("resetsAt").asText());
+            assertEquals(0,mapper.readTree(usage.body()).get("limit").asInt());assertFalse(mapper.readTree(usage.body()).get("canLaunch").asBoolean());
+            var denied=http.create(bearer(a));assertEquals(429,denied.statusCode());
+            assertTrue(denied.body().contains("quota_exceeded"));assertTrue(denied.headers().firstValue("retry-after").isPresent());
+            assertEquals(200,http.call("POST","/account/sites",bearer(a),"{\"url\":\"https://example.com\"}",true).statusCode());
+            assertEquals(200,http.call("GET","/account/sites",bearer(a),null,false).statusCode());
+            assertEquals(0,count("ARG_AUDIT_RUN WHERE owner_user_id IS NOT NULL"));
+            var anonymous=http.call("POST","/audits",null,"{\"url\":\"https://example.com\"}",false);assertEquals(200,anonymous.statusCode());
+            assertEquals(0,personal.usage(bearer(b)).used());
+        }
+        auth.archive(bearer(a),CSRF,true);error(401,()->personal.usage(bearer(a)));
+    }
+    @Test void usageReadDoesNotRenewIdleActivity() throws Exception {
+        usagePolicy("");var a=user("usage-idle@example.com",true);clock.now=clock.now.plusSeconds(60);
+        personal.usage(bearer(a));
+        var stored=dao.transaction(c->dao.session(a.context().session().getId(),c,false));
+        assertEquals(clock.instant().minusSeconds(60),stored.getLastActivityAt());
+    }
 }

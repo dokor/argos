@@ -9,6 +9,7 @@ import Link from "@/components/LocalizedLink";
 import SiteNav from "@/components/site/SiteNav";
 import SiteFooter from "@/components/site/SiteFooter";
 import AuditForm from "@/components/AuditForm";
+import UsagePanel from "./UsagePanel";
 import s from "./AccountView.module.scss";
 type Site={siteId:string;hostname:string;urlCount:number;latestActivityAt:string|null;latestRunStatus:string|null};
 type SiteUrl={siteUrlId:string;auditId:string;normalizedUrl:string;latestAttempt:{runId:string;status:string;createdAt:string;finishedAt:string|null}|null;latestAvailableReport:{runId:string;publishedAt:string;expiresAt:string|null;globalScore:number|null;provisional:boolean|null}|null};
@@ -59,8 +60,9 @@ export default function SitesView({siteId}:{siteId?:string}) {
     {session.ready && !session.profile && !session.denied && <p role="alert">{t.account.errors.account_unavailable}</p>}
     {session.profile && !session.profile.verified && <><p>{t.account.pending}</p><Link href="/account">{t.account.verify}</Link></>}
     {allowed && <>
+      <UsagePanel/>
       <p>{copy.intro}</p><div className={s.actions}><button className={s.button} onClick={()=>setAnalyse("")}>{copy.analyse}</button><button className={s.button} onClick={()=>input.current?.focus()}>{siteId ? copy.addUrl : copy.add}</button><button className={s.button} disabled={loading} onClick={()=>setRevision(v=>v+1)}>{copy.refresh}</button></div>
-      {showAnalysis && <section className={s.card}><h2>{copy.analyse}</h2><AuditForm key={analyse??"new"} mode="personal" initialUrl={analyse??""} submitLabel={copy.again}/><p>{copy.lost}</p></section>}
+      {showAnalysis && <section className={s.card}><h2>{copy.analyse}</h2><AuditForm key={analyse??"new"} mode="personal" initialUrl={analyse??""} submitLabel={copy.again} launchBlocked={session.usage?.canLaunch===false}/><p>{copy.lost}</p></section>}
       <section className={s.card}><h2>{siteId ? copy.addUrl : copy.add}</h2><p id="follow-hint">{copy.hint} {copy.noAudit}</p>
         <form className={s.form} onSubmit={add}><label htmlFor="follow-url">{copy.url}</label><input ref={input} className={s.input} id="follow-url" inputMode="url" value={url} onChange={e=>setUrl(e.target.value)} maxLength={2048} required disabled={busy} aria-describedby="follow-hint follow-feedback" aria-invalid={Boolean(error)}/><button className={s.button} disabled={busy}>{busy ? t.account.working : siteId ? copy.addUrl : copy.add}</button></form>
         <p id="follow-feedback" role={error ? "alert" : "status"}>{error ? failure : message}</p>

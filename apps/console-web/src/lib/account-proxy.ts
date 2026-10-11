@@ -51,7 +51,7 @@ export function claimContext(request: NextRequest, reportToken: unknown): string
   return claims(request).find(item => item.hash === hash && request.cookies.has("argos_run_" + item.id))?.id ?? null;
 }
 const allowed: Record<string, RegExp> = {
-  GET: /^(?:auth\/providers|me|sessions|methods|sites(?:\/\d{1,19}(?:\/urls)?)?|runs|runs\/\d{1,19}(?:\/report)?|auth\/oauth\/(?:google|github|linkedin)\/callback)$/,
+  GET: /^(?:auth\/providers|me|usage|sessions|methods|sites(?:\/\d{1,19}(?:\/urls)?)?|runs|runs\/\d{1,19}(?:\/report)?|auth\/oauth\/(?:google|github|linkedin)\/callback)$/,
   POST: /^(?:auth\/(?:register|login|verify|resend|forgot|reset|renew|logout|reauth|confirm-email)|auth\/oauth\/(?:google|github|linkedin)\/start|sessions\/revoke-others|methods\/password|methods\/\d{1,19}\/remove|me\/archive|sites(?:\/\d{1,19}\/urls)?|runs\/\d{1,19}\/claim)$/,
   PATCH: /^me$/,
   DELETE: /^sessions\/\d{1,19}$/,
@@ -96,6 +96,7 @@ export async function accountProxy(request: NextRequest, parts: string[]): Promi
     headers.set("X-Argos-Run-Proof", proof);
   }
   const query = new URLSearchParams();
+  if(path === "usage" && request.nextUrl.searchParams.size) return privateError("payload_invalid",400);
   if (callback) {
     query.set("state", state!);
     const code = request.nextUrl.searchParams.get("code"); if (code) query.set("code", code);

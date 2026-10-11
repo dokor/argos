@@ -50,7 +50,7 @@ public class AuditService {
         candidate.setCreatedAt(now);
         Audit audit = auditDao.findOrCreate(candidate);
 
-        var created = connection==null ? auditRunService.createQueuedRun(audit.getId(),now) : auditRunService.createQueuedRun(audit.getId(), now,ownerUserId,connection);
+        var created = auditRunService.createQueuedRun(audit.getId(), now,ownerUserId,connection);
         AuditRun run = created.run();
         logger.info("Run created: auditId={}, runId={}, status={}", audit.getId(), run.getId(), run.getStatus());
         return new CreatedAudit(run.getId(), run.getAuditId(), run.getStatus(),

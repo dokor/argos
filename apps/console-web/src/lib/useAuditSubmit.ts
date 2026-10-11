@@ -237,7 +237,7 @@ export function useAuditSubmit(options: UseAuditSubmitOptions): UseAuditSubmitRe
           details: { runId: res.runId, status: res.status },
         });
 
-        if (personal) { setPhase("redirecting"); router.push(localizedPath("/account/runs/"+res.runId,lang)); return; }
+        if (personal) { window.dispatchEvent(new Event("argos-usage-refresh"));setPhase("redirecting"); router.push(localizedPath("/account/runs/"+res.runId,lang)); return; }
         if (maxWaitMs > 0) {
           // Landing : poll puis redirection (tôt si terminé, sinon après la fenêtre).
           setPhase("polling");
@@ -251,6 +251,7 @@ export function useAuditSubmit(options: UseAuditSubmitOptions): UseAuditSubmitRe
       } catch (err) {
         submittingRef.current = false;
         if (personal && err instanceof Error && "status" in err && err.status === 401) window.dispatchEvent(new Event("argos-account-invalid"));
+        if (personal) window.dispatchEvent(new Event("argos-usage-refresh"));
         setPhase("error");
         setErrorKind("create");
         setError(err instanceof Error ? err : new Error(String(err)));

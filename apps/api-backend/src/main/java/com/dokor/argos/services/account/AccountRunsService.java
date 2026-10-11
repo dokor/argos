@@ -182,6 +182,8 @@ public class AccountRunsService {
                                     QAuditRun.auditRun.ownerUserId.isNull())
                             .execute();
                     sites.follow(context.user().getId(),run.getAuditId(),c);
+                    run.setOwnerUserId(context.user().getId());
+                    runs.usage().claimed(run,report==null ? null : report.getCreatedAt(),c);
                     claim.setConsumedBy(context.user().getId());
                     dao.save(claim, c);
                     sessions.event(
@@ -192,5 +194,10 @@ public class AccountRunsService {
                             c);
                     return null;
                 });
+    }
+
+    public UsageService.Snapshot usage(String authorization) {
+        return sessions.with(authorization,null,true,false,(context,c) ->
+            runs.usage().snapshot(context.user().getId(),context.user().getOffer(),c));
     }
 }

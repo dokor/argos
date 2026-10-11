@@ -30,6 +30,22 @@ it("requires CSRF for additions and never permits deletion",async()=>{
   expect(fetchMock).not.toHaveBeenCalled();
 });
 const csrf = "c".repeat(43), jwt = "synthetic.signed.credential", fetchMock = vi.fn();
+it("exposes only the current owner's read-only usage and rejects identity queries",async()=>{
+  fetchMock.mockResolvedValue(new Response('{"used":2,"limit":null}'));
+  expect((await accountProxy(request("usage"),["usage"])).status).toBe(200);
+  expect(fetchMock.mock.calls[0][0]).toBe("http://fixture-backend/api/account/usage");
+  fetchMock.mockReset();expect((await accountProxy(request("usage?userId=42"),["usage"])).status).toBe(400);
+  expect((await accountProxy(request("usage","POST",{}),["usage"])).status).toBe(404);expect(fetchMock).not.toHaveBeenCalled();
+});
+it("preserves quota errors and reset retry while keeping the account cookie",async()=>{
+  fetchMock.mockResolvedValue(new Response('{"error":"quota_exceeded"}',{status:429,headers:{"Retry-After":"12345"}}));
+  const response=await accountProxy(request("runs/42/claim","POST",{}),["runs","42","claim"]);
+  // Claim requires a browser proof; use the usage read to verify general error forwarding.
+  expect(response.status).toBe(404);
+  const usage=await accountProxy(request("usage"),["usage"]);expect(usage.status).toBe(429);
+  expect(usage.headers.get("retry-after")).toBe("12345");expect(usage.cookies.has("argos_account")).toBe(false);
+  expect(await usage.json()).toEqual({error:"quota_exceeded"});
+});
 beforeEach(() => { vi.stubEnv("ACCOUNT_ORIGIN", "https://argos.example"); vi.stubEnv("API_BASE", "http://fixture-backend"); vi.stubEnv("ADMIN_API_TOKEN", "synthetic-admin"); vi.stubGlobal("fetch", fetchMock); fetchMock.mockReset(); });
 afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
 function request(path: string, method = "GET", body?: unknown, secure = true, cookie = true) {
