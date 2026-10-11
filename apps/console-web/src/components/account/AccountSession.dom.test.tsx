@@ -3,6 +3,7 @@ import { afterEach, beforeEach, it, expect, vi } from "vitest";
 import { act, render, screen, waitFor, fireEvent } from "@testing-library/react";
 import AccountSession, { useAccountSession } from "./AccountSession";
 import { accountFetch, AccountClientError } from "@/lib/account-client";
+vi.mock("./AccountView.module.scss", () => ({ default: {} }));
 vi.mock("@/lib/account-client",()=>({accountFetch:vi.fn(),AccountClientError:class extends Error {constructor(public code:string,public status:number){super(code);}}}));
 const profile={verified:true,displayName:"Fixture",email:"fixture@example.com"};
 const usage={offer:"FREE",used:0,reserved:1,limit:null,canLaunch:true,period:"2026-10",timezone:"UTC",startsAt:"2026-10-01T00:00:00Z",resetsAt:"2026-11-01T00:00:00Z"};
