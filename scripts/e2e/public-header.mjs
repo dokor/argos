@@ -52,7 +52,9 @@ try {
         const context = await browser.newContext({ viewport: { width, height: 900 }, colorScheme: theme });
         let signedIn = false;
         await context.route('**/api/account/me', route => route.fulfill({ status: signedIn ? 200 : 401, contentType: 'application/json', body: JSON.stringify(signedIn ? { displayName: 'Fixture', email: null, verified: false } : { error: 'session_invalid' }) }));
-        await context.addCookies([{ name: 'argos_admin', value: 'synthetic-header-fixture', url: base }]);
+        // Header visibility follows the verified session response, not cookie presence.
+        // Server-side validation of real HttpOnly cookies is covered by auth/status tests.
+        await context.route('**/api/auth/status', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ isAdmin: true }) }));
         const page = await context.newPage();
         const errors = [];
         page.on('pageerror', error => errors.push(error.message));
@@ -82,7 +84,9 @@ try {
           assert.equal(await toggle.getAttribute('aria-expanded'), 'true');
           await nav.getByRole('link', { name: copy.nav.guides, exact: true }).waitFor();
           assert.ok(await nav.getByRole('group', { name: 'Language' }).isVisible());
-          assert.ok(await nav.getByRole('link', { name: copy.nav.openConsole }).isVisible());
+          const consoleLink = nav.getByRole('link', { name: copy.nav.openConsole });
+          await consoleLink.waitFor({ state: 'visible' });
+          assert.ok(await consoleLink.isVisible());
           assert.ok(await nav.evaluate(el => el.scrollWidth <= el.clientWidth));
           await nav.screenshot({ path: output + '/' + state + '-menu.png' });
           await page.keyboard.press('Escape');
