@@ -27,6 +27,7 @@ public class AccountWs {
     private final AccountAuthService auth;
     private final AccountRunsService runs;
     private final AccountSitesService sites;
+    private final AccountHistoryService history;
     private final AccountCsrf csrf;
     private final AccountRateLimiter rate;
     @Context private Provider<ContainerRequestContext> requests;
@@ -43,13 +44,13 @@ public class AccountWs {
             AccountAuthService auth,
             AccountRunsService runs,
             AccountCsrf csrf,
-            AccountRateLimiter rate, AccountSitesService sites) {
+            AccountRateLimiter rate, AccountSitesService sites, AccountHistoryService history) {
         this.dao = dao;
         this.sessions = sessions;
         this.auth = auth;
         this.runs = runs;
         this.csrf = csrf;
-        this.rate = rate; this.sites=sites;
+        this.rate = rate; this.sites=sites; this.history=history;
     }
 
     private String auth() {
@@ -57,6 +58,14 @@ public class AccountWs {
     }
 
     public record SiteInput(String url) {}
+    @GET @Path("/urls/{id}/history") @AccountAccess("verified")
+    public Response history(@PathParam("id") long id,@QueryParam("limit") @DefaultValue("20") int limit,@QueryParam("cursor") String cursor) {
+        return AccountAuthWs.ok(history.history(auth(),id,limit,cursor));
+    }
+    @GET @Path("/report-context/{token}") @AccountAccess("verified")
+    public Response reportContext(@PathParam("token") String token) {
+        return AccountAuthWs.ok(history.reportContext(auth(),token));
+    }
     @GET @Path("/sites") @AccountAccess("verified")
     public Response sites(@QueryParam("limit") @DefaultValue("20") int limit,@QueryParam("cursor") String cursor) {
         return AccountAuthWs.ok(sites.list(auth(),limit,cursor));

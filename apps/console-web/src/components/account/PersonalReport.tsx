@@ -7,7 +7,10 @@ import ReportPage from "@/app/(fr)/report/[token]/ReportPage";
 import type { Report } from "@/components/report/types";
 import Link from "@/components/LocalizedLink";
 import s from "./AccountView.module.scss";
+import HistoryActions from "./HistoryActions";
+import type { HistoryContext } from "./history";
 export default function PersonalReport({ runId }: { runId: string }) {
+  const [history,setHistory]=useState<{runId:string;context:HistoryContext}|null>(null);
   const [report,setReport]=useState<{runId:string;data:Report}|null>(null),[status,setStatus]=useState(""),[error,setError]=useState(""),[siteId,setSiteId]=useState<string|null>(null);
   const {t}=useLang(),session=useAccountSession();
   const allowed=session.profile?.verified && !session.denied;
@@ -23,8 +26,9 @@ export default function PersonalReport({ runId }: { runId: string }) {
       if(!alive||terminal||inflight||document.hidden) return;
       inflight=true;
       try {
-        const run=await accountFetch<{status:string;siteId:string|null}>("runs/"+runId,"GET",undefined,controller.signal);
+        const run=await accountFetch<{status:string;siteId:string|null;historyContext?:HistoryContext}>("runs/"+runId,"GET",undefined,controller.signal);
         if(!alive) return;
+        setHistory(run.historyContext ? {runId,context:run.historyContext} : null);
         setSiteId(run.siteId);setStatus(t.account.statuses[run.status as keyof typeof t.account.statuses]??t.account.working);
         if(run.status==="COMPLETED") {
           const data=await accountFetch<Report>("runs/"+runId+"/report","GET",undefined,controller.signal);
@@ -46,6 +50,6 @@ export default function PersonalReport({ runId }: { runId: string }) {
   const back=<Link href={allowed && siteId ? "/account/sites/"+siteId : "/account/sites"}>{allowed && siteId ? t.account.sites.back : t.account.sites.title}</Link>;
   if(!session.ready) return <main className={s.page}><p role="status">{t.account.working}</p></main>;
   if(!allowed) return <main className={s.page}><h1>{t.account.openReport}</h1><p role="alert">{session.profile ? t.account.pending : t.account.errors.session_invalid}</p><Link href={"/account/sign-in?returnTo="+encodeURIComponent("/account/runs/"+runId)}>{t.account.signIn}</Link>{back}</main>;
-  if(report?.runId===runId) return <><PersonalNavigation/><div className={s.personalNav}>{back}</div><ReportPage params={{report:report.data}}/></>;
-  return <><PersonalNavigation/><main className={s.page}><h1>{t.account.openReport}</h1><p role={error ? "alert" : "status"}>{error==="resource_unavailable" ? t.account.sites.unavailable : error ? t.account.errors[error as keyof typeof t.account.errors]??t.account.errors.account_unavailable : status||t.account.working}</p>{back}<Link href="/account/sites?analyse=1">{t.account.sites.analyse}</Link></main></>;
+  if(report?.runId===runId) return <><PersonalNavigation/><div className={s.personalNav}>{back}</div>{history?.runId===runId && <div className={s.page}><HistoryActions context={history.context} launchBlocked={session.usage?.canLaunch===false}/></div>}<ReportPage params={{report:report.data}}/></>;
+  return <><PersonalNavigation/><main className={s.page}><h1>{t.account.openReport}</h1><p role={error ? "alert" : "status"}>{error==="resource_unavailable" ? t.account.sites.unavailable : error ? t.account.errors[error as keyof typeof t.account.errors]??t.account.errors.account_unavailable : status||t.account.working}</p>{back}{history?.runId===runId ? <HistoryActions context={history.context} launchBlocked={session.usage?.canLaunch===false}/> : <Link href="/account/sites?analyse=1">{t.account.sites.analyse}</Link>}</main></>;
 }

@@ -10,6 +10,7 @@ import SiteNav from "@/components/site/SiteNav";
 import SiteFooter from "@/components/site/SiteFooter";
 import AuditForm from "@/components/AuditForm";
 import UsagePanel from "./UsagePanel";
+import { historyCopy } from "./historyCopy";
 import s from "./AccountView.module.scss";
 type Site={siteId:string;hostname:string;urlCount:number;latestActivityAt:string|null;latestRunStatus:string|null};
 type SiteUrl={siteUrlId:string;auditId:string;normalizedUrl:string;latestAttempt:{runId:string;status:string;createdAt:string;finishedAt:string|null}|null;latestAvailableReport:{runId:string;publishedAt:string;expiresAt:string|null;globalScore:number|null;provisional:boolean|null}|null};
@@ -75,7 +76,7 @@ export default function SitesView({siteId}:{siteId?:string}) {
         <h2>{item.normalizedUrl}</h2><h3>{copy.latest}</h3>
         {item.latestAttempt ? <><p>{date(item.latestAttempt.createdAt)} — {status(item.latestAttempt.status)}</p><Link href={"/account/runs/"+item.latestAttempt.runId}>{copy.progress}</Link></> : <p>{copy.none}</p>}
         <h3>{copy.report}</h3>{item.latestAvailableReport ? <><p>{date(item.latestAvailableReport.publishedAt)} — {item.latestAvailableReport.globalScore===null ? copy.scoreUnavailable : item.latestAvailableReport.globalScore+"/100"}</p>{item.latestAvailableReport.provisional && <p>{copy.partial}</p>}{item.latestAvailableReport.provisional===null && <p>{copy.unknown}</p>}<Link href={"/account/runs/"+item.latestAvailableReport.runId}>{t.account.openReport}</Link></> : <p>{copy.unavailable}</p>}
-        <div className={s.actions}><button className={s.button} onClick={()=>{setAnalyse(item.normalizedUrl);window.scrollTo({top:0});}}>{copy.again}</button></div>
+        <div className={s.actions}><Link href={"/account/urls/"+item.siteUrlId+"/history"}>{historyCopy[lang].title}</Link><button className={s.button} onClick={()=>{setAnalyse(item.normalizedUrl);window.scrollTo({top:0});}}>{copy.again}</button></div>
       </li>)}</ul>}
       {next && !loading && <button className={s.button} onClick={()=>setCursor(next)}>{copy.next}</button>}
     </>}

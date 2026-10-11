@@ -125,6 +125,9 @@ public class AccountSitesService {
     public String siteForRun(long owner,long auditId,Connection c) {
         return query(c,"SELECT s.id FROM ARG_ACCOUNT_SITE s JOIN ARG_ACCOUNT_SITE_URL u ON u.site_id=s.id WHERE s.owner_user_id=? AND u.audit_id=?",r->r.getString(1),owner,auditId).stream().findFirst().orElse(null);
     }
+    public AccountHistoryService.Context contextForRun(long owner,long auditId,Connection c) {
+        return query(c,"SELECT s.id,u.id,a.normalized_url FROM ARG_ACCOUNT_SITE s JOIN ARG_ACCOUNT_SITE_URL u ON u.site_id=s.id JOIN ARG_AUDIT a ON a.id=u.audit_id WHERE s.owner_user_id=? AND u.audit_id=?",r->new AccountHistoryService.Context(r.getString(1),r.getString(2),r.getString(3)),owner,auditId).stream().findFirst().orElse(null);
+    }
     static int limit(int n) { if(n<1 || n>100) throw new AccountError(400,"limit_invalid"); return n; }
     static long cursor(String raw) {
         if(raw==null) return 0;

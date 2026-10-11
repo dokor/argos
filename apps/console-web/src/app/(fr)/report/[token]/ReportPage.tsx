@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { buildReportModel, FindingSelection } from "@/components/report/reportModel";
 import ReportHeader from "@/components/report/ReportHeader";
 import RunClaim from "@/components/account/RunClaim";
+import PublicReportHistory from "@/components/account/PublicReportHistory";
 import ReportHero from "@/components/report/ReportHero";
 import AccessibilitySection from "@/components/report/AccessibilitySection";
 import ReportMethod from "@/components/report/ReportMethod";
@@ -50,6 +51,7 @@ export default function ReportPage({ params }: Readonly<Params>) {
 
       <main className={s.main}>
         <RunClaim />
+        <PublicReportHistory />
         <ReportExport />
         <ReportNavigation view={reading.view} onChange={view => reading.navigate({ view, anchor: "" })} />
         {reading.missing && <p role="status">{copy.missing}</p>}

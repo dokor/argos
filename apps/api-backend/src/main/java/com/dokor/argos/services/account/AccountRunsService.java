@@ -111,7 +111,7 @@ public class AccountRunsService {
                 null,
                 true,
                 true,
-                (context, c) -> { var run=owned(id,context.user().getId(),c); var result=status(run); result.put("siteId",sites.siteForRun(context.user().getId(),run.getAuditId(),c)); return result; });
+                (context, c) -> { var run=owned(id,context.user().getId(),c); var result=status(run); result.put("siteId",sites.siteForRun(context.user().getId(),run.getAuditId(),c)); result.put("historyContext",sites.contextForRun(context.user().getId(),run.getAuditId(),c)); return result; });
     }
 
     public Object report(String authorization, long id) {
