@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { usePathname } from "next/navigation";
+import ReportFeedback, { FeedbackReportContext } from "@/components/feedback/ReportFeedback";
+import type { FeedbackReference } from "@/lib/feedback-request";
 import { buildReportModel, FindingSelection } from "@/components/report/reportModel";
 import ReportHeader from "@/components/report/ReportHeader";
 import RunClaim from "@/components/account/RunClaim";
@@ -21,10 +24,13 @@ import { useLang } from "@/lib/i18n/LangContext";
 import { useIsAdmin } from "@/lib/useIsAdmin";
 import s from "./report.module.scss";
 
-type Params = { params: { report: Report } };
+type Params = { params: { report: Report }; feedbackReference?: FeedbackReference };
 
-export default function ReportPage({ params }: Readonly<Params>) {
+export default function ReportPage({ params, feedbackReference }: Readonly<Params>) {
   const { report } = params;
+  const pathname = usePathname();
+  const token = /^\/(?:en\/)?report\/([A-Za-z0-9_-]{20,512})$/.exec(pathname ?? "")?.[1];
+  const reference = feedbackReference ?? (token ? { reportToken: token } : undefined);
   useEffect(()=>{window.dispatchEvent(new Event("argos-report-displayed"));},[]);
   const { t, lang } = useLang();
   const tp = t.report.page;
@@ -45,7 +51,7 @@ export default function ReportPage({ params }: Readonly<Params>) {
   const copy = reportReadingCopy[lang];
 
   return (
-    <div className={s.page} id="top">
+    <FeedbackReportContext.Provider value={reference}><div className={s.page} id="top">
       <ReportHeader />
       <ReportHero report={report} model={model} onActions={() => reading.navigate({ view: "actions", anchor: "" })} onMethod={showMethod} />
 
@@ -69,6 +75,7 @@ export default function ReportPage({ params }: Readonly<Params>) {
         </section>}
         <AccessibilitySection report={report} />
         <ReportMethod report={report} model={model} open={methodOpen} onToggle={setMethodOpen} />
+        <ReportFeedback />
 
         {/* Raw JSON - admin only */}
         {isAdmin && (
@@ -84,6 +91,6 @@ export default function ReportPage({ params }: Readonly<Params>) {
       </main>
 
       <ReportFooterCta />
-    </div>
+    </div></FeedbackReportContext.Provider>
   );
 }

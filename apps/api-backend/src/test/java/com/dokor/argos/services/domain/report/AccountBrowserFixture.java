@@ -107,7 +107,8 @@ public class AccountBrowserFixture extends MariaDbReportFixture {
              "scores":{"global":0,"globalAvailable":false,"completeness":0,"byCategory":[],
                "coverage":{"version":"fixture","threshold":0.8,"global":{"key":"global","measuredWeight":0,"expectedWeight":100,"ratio":0,"available":false,"sufficient":false},"domains":[],"checks":[],"provisional":true}},
              "summary":{"oneLiner":"low","priorities":[]},"issues":[]}
-            """.formatted(clock.instant()),ReportDto.class));
+            """.formatted(clock.instant()).replace("\"issues\":[]",Boolean.getBoolean("argos.feedback.browser.fixture")
+                ? "\"issues\":[{\"id\":\"http.hsts\",\"categoryKey\":\"security\",\"categoryKeys\":[\"security\"],\"module\":\"http\",\"severity\":\"important\",\"title\":\"Controlled HSTS fixture\",\"impact\":\"Synthetic finding\",\"effort\":\"S\"}]" : "\"issues\":[]"),ReportDto.class));
         when(summary.enrich(any())).thenAnswer(call->call.getArgument(0));
         fixture.publisher=new ReportPublishService(transactions,runDao,fixture.reports,composer,summary,mock(AhrefsDomainRatingClient.class),fixture.mapper);
         var audits =
@@ -175,6 +176,9 @@ public class AccountBrowserFixture extends MariaDbReportFixture {
                                 new com.dokor.argos.webservices.api.report.ReportsWs(
                                         fixture.reader, fixture.runs));
         config.register(new AdminWs(new AdminService(dao,sessions,usage,new UsagePolicy(ConfigFactory.empty()),fixture.reader,fixture.mapper,clock),new AccountCsrf(settings)));
+        var feedback=new com.dokor.argos.services.feedback.FeedbackService(dao,new FeedbackDao(dao),sessions,fixture.reports,fixture.reader,fixture.tokens,clock);
+        config.register(new com.dokor.argos.webservices.api.feedback.FeedbackWs(feedback,new AccountCsrf(settings),new AccountRateLimiter(dao,fixture.tokens,clock,settings)));
+        config.register(new com.dokor.argos.webservices.api.feedback.FeedbackAdminWs(feedback,new AccountCsrf(settings)));
         if(Boolean.getBoolean("argos.admin.browser.fixture")) {
             auth.register("admin@example.com","a long synthetic fixture passphrase","Admin fixture");
             auth.verify(mail.last("admin@example.com").get("token"));

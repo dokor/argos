@@ -1,0 +1,29 @@
+.form, .panel { display: grid; gap: 1rem; color: var(--argos-text); }
+.form label { display: grid; gap: .4rem; }
+.form input, .form select, .form textarea, .panel select, .filters select { width: 100%; padding: .7rem; border: 1px solid var(--argos-border); border-radius: .5rem; background: var(--argos-surface); color: var(--argos-text); font: inherit; }
+.form textarea { resize: vertical; min-height: 7rem; }
+.form button, .panel button, .trigger { padding: .65rem 1rem; border: 1px solid var(--argos-border); border-radius: .5rem; background: var(--argos-surface-2); color: var(--argos-text); font: inherit; cursor: pointer; }
+.form button:disabled, .panel button:disabled { opacity: .6; cursor: wait; }
+.form :focus-visible, .panel :focus-visible, .trigger:focus-visible { outline: 2px solid var(--argos-action-bg); outline-offset: 3px; }
+.form .check { display: flex; align-items: flex-start; gap: .7rem; }
+.check input { width: auto; margin-top: .3rem; }
+.trap { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+.panel { margin: 1rem 0; padding: 1rem; border: 1px solid var(--argos-border); border-radius: .75rem; background: var(--argos-surface); }
+.page { max-width: 760px; margin: 2rem auto; padding: 1rem; }
+.page h1 { font-size: 2rem; font-weight: 700; margin-bottom: 1rem; }
+.page h2 { font-size: 1.3rem; font-weight: 600; }
+.page h3 { font-weight: 600; }
+.page > a, .panel a { color: var(--argos-text); text-decoration: underline; }
+.page > form, .page > button { margin: 1rem 0; }
+.page > button, .filters button, .actions button, .table button { padding: .65rem 1rem; border: 1px solid var(--argos-border); border-radius: .5rem; background: var(--argos-surface-2); }
+.page :focus-visible { outline: 2px solid var(--argos-action-bg); outline-offset: 3px; }
+.panel dd { margin: .25rem 0 1rem; }
+.panel code { overflow-wrap: anywhere; }
+.panel h2 { overflow-wrap: anywhere; }
+.actions, .filters { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; }
+.filters label { display: grid; gap: .4rem; flex: 1; min-width: 140px; }
+.table { overflow-x: auto; }
+.table table { width: 100%; border-collapse: collapse; }
+.table th, .table td { text-align: left; padding: .75rem; border-bottom: 1px solid var(--argos-border); }
+.text { white-space: pre-wrap; overflow-wrap: anywhere; }
+@media (max-width: 540px) { .actions > * { flex: 1; } .panel .actions h2 { flex: 0 0 100%; } }

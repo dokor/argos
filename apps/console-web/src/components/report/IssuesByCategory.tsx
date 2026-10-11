@@ -7,6 +7,7 @@ import { scoreChipTheme, SEVERITY_COLORS } from "./reportColors";
 import { buildReportModel, FindingSelection, ReportModel } from "./reportModel";
 import s from "./IssuesByCategory.module.scss";
 import FindingDetails from "./FindingDetails";
+import ReportFeedback from "@/components/feedback/ReportFeedback";
 import { findingContent } from "./findingCatalogue";
 import { reportReadingCopy } from "./reportReadingCopy";
 import { domainScore } from "./reportSummaryModel";
@@ -153,6 +154,7 @@ export default function IssuesByCategory({ report, model = buildReportModel(repo
                       </summary>
 
                       <FindingDetails finding={finding} />
+                      {issue.id && <ReportFeedback findingKey={issue.id} />}
                     </details>
                   );
                 })

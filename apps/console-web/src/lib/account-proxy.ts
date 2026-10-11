@@ -1,5 +1,6 @@
 import { ssrfError } from "./audit-url-validation";
 import { adminPath, adminQuery, adminEntitlement } from "./admin-request";
+import { feedbackTreatment } from "./feedback-request";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 export const SESSION_COOKIE = "argos_account";
@@ -69,7 +70,7 @@ export async function accountProxy(request: NextRequest, parts: string[]): Promi
     try {
       const parsed = text ? JSON.parse(text) : {};
       if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) return privateError("payload_invalid", 400);
-      if(path.startsWith("admin/") && !adminEntitlement(parsed)) return privateError("payload_invalid",400);
+      if(path.startsWith("admin/") && !(path.startsWith("admin/feedback/") ? feedbackTreatment(parsed) : adminEntitlement(parsed))) return privateError("payload_invalid",400);
       if (path.endsWith("/start") || path === "auth/register" || path === "auth/confirm-email") {
         returnTo = safeAccountReturn(parsed.returnTo);
         preserveReturn = !path.endsWith("/start");
