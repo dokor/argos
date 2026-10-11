@@ -14,6 +14,7 @@ public class ReportRetentionPolicy {
         if(years<1 || years>10) throw new IllegalArgumentException("report.retention-years must be between 1 and 10");
     }
     public static ReportRetentionPolicy defaults() { return new ReportRetentionPolicy(ConfigFactory.empty()); }
+    public int retentionYears() { return years; }
     public Instant expiresAt(Instant createdAt) { return createdAt.atZone(ZoneOffset.UTC).plusYears(years).toInstant(); }
     public boolean expired(AuditReport report, Instant now) {
         if(report.getExpiresAt()!=null && !report.getExpiresAt().isAfter(now)) return true;
