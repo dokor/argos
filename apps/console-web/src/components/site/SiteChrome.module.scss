@@ -33,7 +33,7 @@
 }
 
 .logoIcon { flex-shrink: 0; }
-.logoText { flex: 1; font-size: t.$text-2xl; font-weight: 700; letter-spacing: -0.02em; }
+.logoText { flex: 1; font-size: t.$text-2xl; font-weight: 700; letter-spacing: -0.02em; white-space: nowrap; }
 
 .navLinks,
 .navActions {
@@ -261,6 +261,10 @@
     .navLinks { display: grid; }
     .navPreferences { display: flex; }
   }
+}
+@media (max-width: 360px) {
+  // Leave room for the brand beside the account and menu, including scrollbars.
+  .logo { gap: t.$space-1; }
 }
 @media (max-width: 300px) {
   .navInner { padding-inline: t.$space-2; grid-template-columns: minmax(0, 1fr) 116px 44px; }
