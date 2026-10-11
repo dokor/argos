@@ -70,6 +70,18 @@ services:
       - traefik.http.middlewares.argos-newsletter-limit.ratelimit.period=15m
       - traefik.http.middlewares.argos-newsletter-limit.ratelimit.burst=5
       - traefik.http.middlewares.argos-newsletter-limit.ratelimit.sourcecriterion.ipstrategy.depth=0
+      - traefik.http.routers.argos-feedback-write.rule=Host(`argos.lelouet.fr`) && Method(`POST`) && (Path(`/api/feedback`) || Path(`/api/feedback/`))
+      - traefik.http.routers.argos-feedback-write.entrypoints=websecure
+      - traefik.http.routers.argos-feedback-write.tls=true
+      - traefik.http.routers.argos-feedback-write.tls.certresolver=le
+      - traefik.http.routers.argos-feedback-write.tls.options=modern@file
+      - traefik.http.routers.argos-feedback-write.service=console-web
+      - traefik.http.routers.argos-feedback-write.priority=210
+      - traefik.http.routers.argos-feedback-write.middlewares=argos-feedback-limit
+      - traefik.http.middlewares.argos-feedback-limit.ratelimit.average=5
+      - traefik.http.middlewares.argos-feedback-limit.ratelimit.period=15m
+      - traefik.http.middlewares.argos-feedback-limit.ratelimit.burst=3
+      - traefik.http.middlewares.argos-feedback-limit.ratelimit.sourcecriterion.ipstrategy.depth=0
 
       - traefik.http.routers.console-web.tls.certresolver=le
       - traefik.http.routers.console-web.tls.options=modern@file

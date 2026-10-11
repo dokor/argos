@@ -8,6 +8,7 @@
 | SSL Labs/Observatory reçoivent le domaine | Clients correspondants et ConfigurationService URL par défaut ; configuration production non inspectée |
 | Journaux : cible de 90 jours ; application et sauvegardes non vérifiées | Réponse opérateur du 11 octobre ; logback.xml STDOUT ; rotations Docker/proxy et sauvegardes non inspectées |
 | Email newsletter | route BFF newsletter et NewsletterSubscriber |
+| Retours Bug/Suggestion/Faux positif privés, textes saisis et référence facultative de rapport ; historique de statut avec ID admin ; 90 jours puis purge horaire | FeedbackService, ARG_FEEDBACK/ARG_FEEDBACK_EVENT, migration V16 ; aucun token, URL ou cookie collecté automatiquement |
 | Préférence thème/cookie admin | SiteDocument/ThemeContext existants et login BFF |
 | Mesure interne optionnelle, désactivée par défaut, accord explicite, cookie de session, tables propres 90 jours | ProductAnalyticsService, BFF /api/product-analytics, migration V10 ; pas de fournisseur tiers |
 

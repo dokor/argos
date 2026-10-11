@@ -1014,6 +1014,8 @@ class AccountLifecycleIT extends MariaDbReportFixture {
                                             new AccountCsrf(settings),
                                             new AccountRateLimiter(dao, tokens, clock, settings), new AccountSitesService(dao,sessions,new UrlNormalizer(),new DomainService(new DomainDao(dao.transactions)),new AuditDao(dao.transactions),clock),new AccountHistoryService(dao,sessions,mapper,clock)));
             config.register(new com.dokor.argos.webservices.api.account.AdminWs(administration(),new AccountCsrf(settings)));
+            config.register(new com.dokor.argos.webservices.api.feedback.FeedbackWs(feedback(),new AccountCsrf(settings),new AccountRateLimiter(dao,tokens,clock,settings)));
+            config.register(new com.dokor.argos.webservices.api.feedback.FeedbackAdminWs(feedback(),new AccountCsrf(settings)));
             var admin = mock(com.dokor.argos.services.configuration.ConfigurationService.class);
             when(admin.adminApiToken()).thenReturn("synthetic-server-credential");
             config.register(
@@ -1420,6 +1422,82 @@ class AccountLifecycleIT extends MariaDbReportFixture {
             assertEquals(200,response.statusCode());assertTrue(response.headers().firstValue("cache-control").orElse("").contains("no-store"));
             assertFalse(response.body().contains("token"));assertFalse(response.body().contains("report_json"));
         }
+    }
+
+    com.dokor.argos.services.feedback.FeedbackService feedback() {
+        return new com.dokor.argos.services.feedback.FeedbackService(dao,new FeedbackDao(dao),sessions,reports,reader,tokens,clock);
+    }
+    private com.dokor.argos.services.feedback.FeedbackService.Submission feedbackBody(String type,String token,String run,String key) {
+        return new com.dokor.argos.services.feedback.FeedbackService.Submission(type,"<script>controlled fixture</script>","REPORT",null,null,null,token,run,key,"");
+    }
+    private String feedbackReport(long owner) throws Exception {
+        String token=tokens.generateToken();
+        sql("UPDATE ARG_AUDIT_RUN SET owner_user_id="+owner+" WHERE id=1");
+        try(var c=source.getConnection();var s=c.prepareStatement("UPDATE ARG_AUDIT_REPORT SET token_hash=?,report_json=? WHERE run_id=1")) {
+            s.setBytes(1,tokens.sha256(token));s.setString(2,"{\"domain\":\"example.com\",\"scores\":{\"global\":75},\"issues\":[{\"id\":\"http.hsts\"}]}");s.executeUpdate();
+        }
+        return token;
+    }
+    @Test void feedbackRequiresReportAccessAndNeverChangesScoresOrStoresBearerTokens() throws Exception {
+        var owner=user("feedback-owner@example.com",true);var stranger=user("feedback-stranger@example.com",true);var a=administrator();
+        String token=feedbackReport(owner.context().user().getId());var service=feedback();
+        var before=mapper.writeValueAsString(reader.getByRunId(1).orElseThrow());
+        error(404,()->service.submit(bearer(stranger),CSRF,feedbackBody("FALSE_POSITIVE",null,"1","http.hsts")));
+        error(404,()->service.submit(null,CSRF,feedbackBody("FALSE_POSITIVE",null,"1","http.hsts")));
+        error(404,()->service.submit(null,CSRF,feedbackBody("FALSE_POSITIVE",token,null,"forged")));
+        var submitted=service.submit(bearer(owner),CSRF,feedbackBody("FALSE_POSITIVE",null,"1","http.hsts"));
+        long id=Long.parseLong(submitted.get("receipt").toString());
+        assertEquals("1",service.detail(bearer(a),id).get("runId"));
+        var shared=service.submit(null,CSRF,feedbackBody("FALSE_POSITIVE",token,null,"http.hsts"));
+        assertTrue((boolean)shared.get("accepted"));
+        assertFalse(mapper.writeValueAsString(service.detail(bearer(a),id)).contains(token));
+        service.treat(bearer(a),CSRF,id,new com.dokor.argos.services.feedback.FeedbackService.Treatment("CONFIRMED","OPEN"));
+        assertEquals(before,mapper.writeValueAsString(reader.getByRunId(1).orElseThrow()));
+        sql("UPDATE ARG_ACCOUNT_USER SET state='PENDING' WHERE id="+owner.context().user().getId());
+        error(404,()->service.submit(bearer(owner),CSRF,feedbackBody("FALSE_POSITIVE",null,"1","http.hsts")));
+        sql("UPDATE ARG_AUDIT_REPORT SET expires_at='2026-10-10' WHERE run_id=1");
+        error(404,()->service.submit(null,CSRF,feedbackBody("FALSE_POSITIVE",token,null,"http.hsts")));
+    }
+    @Test void feedbackHttpChecksCsrfAdminRolesAndPersistentSpamBudget() throws Exception {
+        var a=administrator();var u=user("feedback-regular@example.com",true);String body="{\"type\":\"BUG\",\"description\":\"Click fixture button\"}";
+        try(var http=new HttpFixture()) {
+            assertEquals(403,http.call("POST","/feedback",null,body,false).statusCode());
+            var accepted=http.call("POST","/feedback",null,body,true);assertEquals(200,accepted.statusCode(),accepted.body());
+            String id=mapper.readTree(accepted.body()).path("receipt").asText(),path="/account/admin/feedback/"+id;
+            for(String route:List.of("/account/admin/feedback",path)) {
+                assertEquals(401,http.call("GET",route,null,null,false).statusCode());
+                assertEquals(403,http.call("GET",route,bearer(u),null,false).statusCode());
+                var detail=http.call("GET",route,bearer(a),null,false);assertEquals(200,detail.statusCode(),detail.body());
+                assertTrue(detail.headers().firstValue("cache-control").orElse("").contains("no-store"));
+            }
+            String treatment="{\"status\":\"PENDING\",\"expectedStatus\":\"OPEN\"}";
+            assertEquals(403,http.call("PATCH",path,bearer(a),treatment,false).statusCode());
+            assertEquals(403,http.call("PATCH",path,bearer(u),treatment,true).statusCode());
+            assertEquals(200,http.call("PATCH",path,bearer(a),treatment,true).statusCode());
+            assertEquals(409,http.call("PATCH",path,bearer(a),treatment,true).statusCode());
+            for(int i=1;i<5;i++)assertEquals(200,http.call("POST","/feedback",null,body,true).statusCode());
+            var limited=http.call("POST","/feedback",null,body,true);assertEquals(429,limited.statusCode());assertTrue(limited.headers().firstValue("retry-after").isPresent());
+            sql("UPDATE ARG_ACCOUNT_USER SET role='USER' WHERE id="+a.context().user().getId());
+            assertEquals(403,http.call("GET",path,bearer(a),null,false).statusCode());
+        }
+    }
+    @Test void feedbackFiltersPaginationAndRetentionDeleteEventsTogether() throws Exception {
+        var a=administrator();var service=feedback();
+        long first=Long.parseLong(service.submit(null,CSRF,feedbackBody("BUG",null,null,null)).get("receipt").toString());
+        long second=Long.parseLong(service.submit(null,CSRF,feedbackBody("SUGGESTION",null,null,null)).get("receipt").toString());
+        var page=service.list(bearer(a),null,null,1,null);assertEquals(Long.toString(second),page.items().getFirst().get("id"));
+        assertEquals(Long.toString(first),service.list(bearer(a),null,null,1,page.nextCursor()).items().getFirst().get("id"));
+        service.treat(bearer(a),CSRF,first,new com.dokor.argos.services.feedback.FeedbackService.Treatment("PENDING","OPEN"));
+        assertEquals(1,service.list(bearer(a),"BUG","PENDING",20,null).items().size());
+        assertEquals(1,((List<?>)service.detail(bearer(a),first).get("events")).size());
+        sql("UPDATE ARG_FEEDBACK SET created_at='2026-01-01' WHERE id="+first);
+        error(404,()->service.detail(bearer(a),first));service.purge();assertEquals(0,count("ARG_FEEDBACK_EVENT"));assertEquals(1,count("ARG_FEEDBACK"));
+    }
+    @Test void feedbackTreatmentRollsBackWhenTraceCannotBeWritten() throws Exception {
+        var a=administrator();var service=feedback();long id=Long.parseLong(service.submit(null,CSRF,feedbackBody("BUG",null,null,null)).get("receipt").toString());
+        sql("DROP TABLE ARG_FEEDBACK_EVENT");
+        assertThrows(RuntimeException.class,()->service.treat(bearer(a),CSRF,id,new com.dokor.argos.services.feedback.FeedbackService.Treatment("RESOLVED","OPEN")));
+        var stored=dao.transaction(c->new FeedbackDao(dao).get(id,clock.instant().minusSeconds(60),c,false));assertEquals("OPEN",stored.getStatus());
     }
 
     private String historyReport(long run, int score, String fingerprint) throws Exception {
