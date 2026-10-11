@@ -1,4 +1,29 @@
 import { beforeEach, afterEach, it, expect, vi } from "vitest";
+it("forwards admin reads with the Argos session, never the legacy admin secret",async()=>{
+ fetchMock.mockResolvedValue(new Response('{"items":[],"nextCursor":null}'));
+ const response=await accountProxy(request("admin/runs?user=42&site=example.com&status=FAILED&from=2026-10-01&until=2026-10-11&limit=20"),["admin","runs"]);
+ expect(response.status).toBe(200);expect(response.headers.get("cache-control")).toContain("no-store");
+ const [url,init]=fetchMock.mock.calls[0];expect(url).toContain("/api/account/admin/runs?user=42&site=example.com");
+ expect(init.headers.get("authorization")).toBe("Bearer "+jwt);expect(init.headers.has("x-user-id")).toBe(false);
+});
+it.each(["role=ADMIN","limit=101","limit=1&limit=2","cursor=-1"])("rejects forged admin parameters %s",async query=>{
+ expect((await accountProxy(request("admin/users?"+query),["admin","users"])).status).toBe(400);expect(fetchMock).not.toHaveBeenCalled();
+});
+it("allows only explicit entitlement changes with CSRF",async()=>{
+ const path=["admin","users","42","entitlement"],body={offer:"FREE",monthlyLimit:0,confirmed:true};
+ expect((await accountProxy(request(path.join("/"),"PATCH",body,false),path)).status).toBe(403);
+ for(const bad of [{...body,role:"ADMIN"},{...body,monthlyLimit:-1},{...body,monthlyLimit:1.5},{...body,confirmed:false},{...body,monthlyLimit:Number.MAX_SAFE_INTEGER+1}]) {
+  expect((await accountProxy(request(path.join("/"),"PATCH",bad),path)).status).toBe(400);
+ }
+ expect(fetchMock).not.toHaveBeenCalled();
+ fetchMock.mockResolvedValue(new Response('{"changed":true}'));
+ expect((await accountProxy(request(path.join("/"),"PATCH",body),path)).status).toBe(200);
+ expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual(body);
+ expect(fetchMock.mock.calls[0][1].headers.get("x-argos-csrf")).toBe(csrf);
+});
+it.each([["POST","admin/users"],["PATCH","admin/users/42/role"],["DELETE","admin/runs/42"]])("rejects unimplemented admin action %s %s",async(method,path)=>{
+ expect((await accountProxy(request(path,method,{}),path.split("/"))).status).toBe(404);expect(fetchMock).not.toHaveBeenCalled();
+});
 import { NextRequest, NextResponse } from "next/server";
 import { accountProxy, accountHeaders, safeAccountReturn, saveRunProof, claimContext } from "./account-proxy";
 import { GET as csrfRoute } from "@/app/api/account/csrf/route";

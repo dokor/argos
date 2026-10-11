@@ -84,6 +84,7 @@ public class AccountAuthWs {
         p.put("displayName", u.getDisplayName());
         p.put("email", u.getEmail());
         p.put("verified", "ACTIVE".equals(u.getState()));
+        p.put("admin", "ACTIVE".equals(u.getState()) && "ADMIN".equals(u.getRole()));
         return p;
     }
 

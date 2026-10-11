@@ -6,9 +6,11 @@ import java.sql.Types;
 public class QUsageAccount extends RelationalPathBase<UsageAccount> {
     public static final QUsageAccount table=new QUsageAccount("ARG_USAGE_ACCOUNT");
     public final NumberPath<Long> id=createNumber("id",Long.class);
+    public final NumberPath<Long> monthlyLimit=createNumber("monthlyLimit",Long.class);
     public final PrimaryKey<UsageAccount> primary=createPrimaryKey(id);
     public QUsageAccount(String variable) {
         super(UsageAccount.class,forVariable(variable),null,"ARG_USAGE_ACCOUNT");
         addMetadata(id,ColumnMetadata.named("id").ofType(Types.BIGINT));
+        addMetadata(monthlyLimit,ColumnMetadata.named("monthly_limit").ofType(Types.BIGINT));
     }
 }

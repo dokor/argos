@@ -102,7 +102,12 @@ public class AccountBrowserFixture extends MariaDbReportFixture {
         var runDao=new AuditRunDao(transactions,usage);
         fixture.runs=new AuditRunService(runDao,fixture.tokens,fixture.mapper);
         var composer=mock(PublicReportComposer.class);var summary=mock(AiReportSummaryService.class);
-        when(composer.compose(any())).thenReturn(fixture.mapper.readValue("{\"domain\":\"example.com\",\"scores\":{\"coverage\":{\"provisional\":true}}}",ReportDto.class));
+        when(composer.compose(any())).thenReturn(fixture.mapper.readValue("""
+            {"generatedAt":"%s","domain":"example.com","url":"https://example.com/admin-test",
+             "scores":{"global":0,"globalAvailable":false,"completeness":0,"byCategory":[],
+               "coverage":{"version":"fixture","threshold":0.8,"global":{"key":"global","measuredWeight":0,"expectedWeight":100,"ratio":0,"available":false,"sufficient":false},"domains":[],"checks":[],"provisional":true}},
+             "summary":{"oneLiner":"low","priorities":[]},"issues":[]}
+            """.formatted(clock.instant()),ReportDto.class));
         when(summary.enrich(any())).thenAnswer(call->call.getArgument(0));
         fixture.publisher=new ReportPublishService(transactions,runDao,fixture.reports,composer,summary,mock(AhrefsDomainRatingClient.class),fixture.mapper);
         var audits =
@@ -169,6 +174,18 @@ public class AccountBrowserFixture extends MariaDbReportFixture {
                         .register(
                                 new com.dokor.argos.webservices.api.report.ReportsWs(
                                         fixture.reader, fixture.runs));
+        config.register(new AdminWs(new AdminService(dao,sessions,usage,new UsagePolicy(ConfigFactory.empty()),fixture.reader,fixture.mapper,clock),new AccountCsrf(settings)));
+        if(Boolean.getBoolean("argos.admin.browser.fixture")) {
+            auth.register("admin@example.com","a long synthetic fixture passphrase","Admin fixture");
+            auth.verify(mail.last("admin@example.com").get("token"));
+            fixture.sql("UPDATE ARG_ACCOUNT_USER SET role='ADMIN' WHERE email='admin@example.com'");
+            for(int i=1;i<=24;i++) {
+                var user=new com.dokor.argos.db.generated.AccountUser();
+                user.setEmail("user"+i+"@example.com");user.setDisplayName("User "+i);user.setState("ACTIVE");
+                user.setRole("USER");user.setOffer("FREE");user.setCreatedAt(clock.instant());
+                dao.transaction(c->dao.save(user,c));
+            }
+        }
         var admin = mock(com.dokor.argos.services.configuration.ConfigurationService.class);
         when(admin.adminApiToken()).thenReturn("synthetic-server-credential");
         config.register(
