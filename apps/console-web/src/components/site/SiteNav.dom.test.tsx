@@ -2,7 +2,7 @@
 import { beforeEach, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { LangProvider } from "@/lib/i18n/LangContext";
-import { accountFetch, AccountClientError, type AccountProfile } from "@/lib/account-client";
+import { accountFetch, AccountClientError } from "@/lib/account-client";
 import SiteNav from "./SiteNav";
 
 vi.mock("next/navigation", () => ({ usePathname: () => "/" }));
@@ -13,23 +13,24 @@ vi.mock("@/lib/account-client", async importOriginal => ({
   ...await importOriginal<typeof import("@/lib/account-client")>(), accountFetch: vi.fn(),
 }));
 
-const profile: AccountProfile = { displayName: "Test", email: "test@example.com", verified: false };
+const session = { signedIn: true };
 beforeEach(() => { vi.mocked(accountFetch).mockReset(); });
 
 it.each(["fr", "en"] as const)("links signed-out visitors directly to registration in %s", async lang => {
-  vi.mocked(accountFetch).mockRejectedValue(new AccountClientError("session_invalid", 401));
+  vi.mocked(accountFetch).mockResolvedValue({ signedIn: false });
   render(<LangProvider initialLang={lang}><SiteNav /></LangProvider>);
   expect(await screen.findByRole("link", { name: lang === "fr" ? "S’inscrire" : "Sign up" }))
     .toHaveAttribute("href", lang === "fr" ? "/account/register" : "/en/account/register");
   expect(screen.getByRole("link", { name: lang === "fr" ? "Audit gratuit" : "Free audit" }))
     .toHaveAttribute("href", lang === "fr" ? "/#audit" : "/en#audit");
+  expect(accountFetch).toHaveBeenCalledWith("session", "GET", undefined, expect.any(AbortSignal));
 });
 
 it("updates after login and logout, including accounts awaiting email verification", async () => {
-  vi.mocked(accountFetch).mockRejectedValueOnce(new AccountClientError("session_invalid", 401));
+  vi.mocked(accountFetch).mockResolvedValueOnce({ signedIn: false });
   render(<SiteNav />);
   await screen.findByRole("link", { name: "S’inscrire" });
-  vi.mocked(accountFetch).mockResolvedValue(profile);
+  vi.mocked(accountFetch).mockResolvedValue(session);
   act(() => window.dispatchEvent(new Event("argos-account-login")));
   expect(await screen.findByRole("link", { name: "Mon compte" })).toHaveAttribute("href", "/account");
   act(() => window.dispatchEvent(new Event("argos-account-invalid")));
@@ -41,19 +42,19 @@ it("retains the account entry on service errors and retries on window focus", as
   render(<SiteNav />);
   await waitFor(() => expect(accountFetch).toHaveBeenCalledTimes(1));
   expect(screen.getByRole("link", { name: "Mon compte" })).toHaveAttribute("href", "/account");
-  vi.mocked(accountFetch).mockRejectedValue(new AccountClientError("session_invalid", 401));
+  vi.mocked(accountFetch).mockResolvedValue({ signedIn: false });
   act(() => window.dispatchEvent(new Event("focus")));
   await screen.findByRole("link", { name: "S’inscrire" });
 });
 
 it("ignores a stale session response after logout and aborts on unmount", async () => {
-  let resolve!: (profile: AccountProfile) => void;
+  let resolve!: (status: { signedIn: boolean }) => void;
   vi.mocked(accountFetch).mockImplementation(() => new Promise(done => { resolve = done; }));
   const view = render(<SiteNav />);
   const signal = vi.mocked(accountFetch).mock.calls[0][3];
   act(() => window.dispatchEvent(new Event("argos-account-invalid")));
   expect(signal?.aborted).toBe(true);
-  await act(async () => resolve(profile));
+  await act(async () => resolve(session));
   expect(screen.getByRole("link", { name: "S’inscrire" })).toBeInTheDocument();
   act(() => window.dispatchEvent(new Event("argos-account-login")));
   const nextSignal = vi.mocked(accountFetch).mock.calls[1][3];
@@ -62,7 +63,7 @@ it("ignores a stale session response after logout and aborts on unmount", async 
 });
 
 it("opens the disclosure and restores focus to its toggle on Escape", () => {
-  vi.mocked(accountFetch).mockResolvedValue(profile);
+  vi.mocked(accountFetch).mockResolvedValue(session);
   render(<SiteNav />);
   const toggle = screen.getByRole("button", { name: "Ouvrir le menu" });
   fireEvent.click(toggle);
