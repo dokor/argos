@@ -16,6 +16,48 @@ beforeEach(() => {
   vi.mocked(accountFetch).mockImplementation(async path => path === "auth/providers" ? { providers: [], enabled: true } : path === "return" ? { returnTo: "/account" } : path === "me" ? { displayName: "Fixture", email: "fixture@example.com", verified: true } : []);
 });
 describe("account screens", () => {
+  it.each(["fr", "en"] as const)("offers contextual registration navigation and preserves the destination in %s", async lang => {
+    const destination = lang === "fr" ? "/account/sites/42" : "/en/account/sites/42";
+    window.history.replaceState(null, "", "/account/register?returnTo=" + encodeURIComponent(destination));
+    render(<LangProvider initialLang={lang}><AccountView mode="register" /></LangProvider>);
+    const signIn = screen.getByRole("link", { name: lang === "fr" ? "Se connecter" : "Sign in" });
+    await waitFor(() => expect(signIn).toHaveAttribute("href", (lang === "fr" ? "" : "/en") + "/account/sign-in?returnTo=" + encodeURIComponent(destination)));
+    expect(signIn.parentElement).toHaveTextContent(lang === "fr" ? "Vous avez déjà un compte ?" : "Already have an account?");
+    expect(screen.queryByRole("link", { name: /oublié|Forgot password|Retour au site|Back to the site/ })).not.toBeInTheDocument();
+  });
+  it.each(["forgot", "reset", "verify"] as const)("offers only a return to sign-in on the %s screen", async mode => {
+    render(<AccountView mode={mode} />);
+    await waitFor(() => expect(accountFetch).toHaveBeenCalledWith("auth/providers"));
+    expect(screen.getAllByRole("link")).toHaveLength(1);
+    expect(screen.getByRole("link", { name: "Revenir à la connexion" })).toHaveAttribute("href", "/account/sign-in?returnTo=%2Faccount");
+  });
+  it("offers password recovery and contextual registration on sign-in", async () => {
+    render(<AccountView mode="sign-in" />);
+    await waitFor(() => expect(accountFetch).toHaveBeenCalledWith("auth/providers"));
+    expect(screen.getByRole("link", { name: "Mot de passe oublié" })).toHaveAttribute("href", "/account/forgot?returnTo=%2Faccount");
+    expect(screen.getByRole("link", { name: "Créer un compte" }).parentElement).toHaveTextContent("Vous n’avez pas encore de compte ?");
+  });
+  it.each(["fr", "en"] as const)("explains an expired form and lets the user resubmit without retyping in %s", async lang => {
+    let attempts = 0;
+    vi.mocked(accountFetch).mockImplementation(async path => {
+      if (path === "auth/register" && attempts++ === 0) throw new AccountClientError("csrf_invalid", 403);
+      return path === "auth/providers" ? { providers: [], enabled: true } : { returnTo: "/account/sites" };
+    });
+    render(<LangProvider initialLang={lang}><AccountView mode="register" /></LangProvider>);
+    const email = screen.getByLabelText(lang === "fr" ? "Adresse email" : "Email address");
+    const password = screen.getByLabelText(lang === "fr" ? "Mot de passe" : "Password");
+    fireEvent.change(screen.getByLabelText(lang === "fr" ? "Nom d’affichage" : "Display name"), { target: { value: "Fixture" } });
+    fireEvent.change(email, { target: { value: "fixture@example.com" } });
+    fireEvent.change(password, { target: { value: "synthetic long password" } });
+    const form = screen.getByRole("button", { name: lang === "fr" ? "Créer un compte" : "Create an account" }).closest("form")!;
+    fireEvent.submit(form);
+    expect(await screen.findByRole("alert")).toHaveTextContent(lang === "fr" ? "Le formulaire a expiré. Envoyez-le à nouveau." : "The form has expired. Submit it again.");
+    expect(email).toHaveValue("fixture@example.com"); expect(password).toHaveValue("synthetic long password");
+    fireEvent.submit(form);
+    await screen.findByRole("status");
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(attempts).toBe(2);
+  });
   it.each(["register", "sign-in", "forgot", "verify", "reset"] as const)("does not warn about a missing session on the public %s screen", async mode => {
     vi.mocked(accountFetch).mockImplementation(async path => {
       if (path === "me") throw new AccountClientError("session_invalid", 401);

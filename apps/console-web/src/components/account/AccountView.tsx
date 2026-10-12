@@ -65,7 +65,7 @@ export default function AccountView({ mode = "me" }: { mode?: Mode }) {
   const title = mode === "me" ? copy.title : mode === "sign-in" ? copy.signIn : mode === "register" ? copy.register : mode === "verify" ? copy.verify : mode === "reset" ? copy.reset : copy.forgot;
   const field = (id: string, label: string, value: string, set: (v: string) => void, type = "text", autoComplete?: string) => <div className={s.field}><label htmlFor={id}>{label}</label><input className={s.input} id={id} type={type} value={value} onChange={e => set(e.target.value)} autoComplete={autoComplete} required disabled={busy} maxLength={type === "password" ? 256 : 254} /></div>;
   return <><div className={s.chrome}><SiteNav /></div>{mode === "me" && <PersonalNavigation/>}<main className={s.page}><h1>{title}</h1>
-    {error && <p className={s.notice} role="alert">{error}</p>}{message && <p className={s.notice} role="status">{message}</p>}
+    {error && <p className={`${s.notice} ${s.error}`} role="alert">{error}</p>}{message && <p className={s.notice} role="status">{message}</p>}
     {!enabled && <p role="status">{copy.unavailable}</p>}
     {mode !== "me" && <form className={s.form} onSubmit={submit}>
       {mode === "register" && field("name", copy.name, name, setName, "text", "name")}
@@ -110,6 +110,12 @@ export default function AccountView({ mode = "me" }: { mode?: Mode }) {
       </>}
       <section className={s.card}><h2>{copy.archive}</h2><p>{copy.archiveHint}</p><label className={s.check}><input type="checkbox" checked={confirmed} onChange={e => setConfirmed(e.target.checked)} disabled={busy}/>{copy.confirmArchive}</label><button className={s.button} disabled={busy || !confirmed} onClick={() => void act(async () => { await accountFetch("me/archive", "POST", { confirmed }); setProfile(null); setMessage(copy.done); router.push(localizedPath("/account/sign-in", lang)); })}>{copy.archive}</button></section>
     </>}
-    <div className={s.links}>{mode !== "sign-in" && <Link href={"/account/sign-in?returnTo=" + encodeURIComponent(returnTo)}>{copy.signIn}</Link>}{mode !== "register" && <Link href={"/account/register?returnTo=" + encodeURIComponent(returnTo)}>{copy.register}</Link>}<Link href="/account/forgot">{copy.forgot}</Link><Link href="/">{copy.back}</Link></div>
+    {(mode !== "me" || !profile) && <div className={s.links}>
+      {mode === "sign-in" && <Link href={"/account/forgot?returnTo=" + encodeURIComponent(returnTo)}>{copy.forgot}</Link>}
+      {mode === "register" && <p>{copy.alreadyRegistered} <Link href={"/account/sign-in?returnTo=" + encodeURIComponent(returnTo)}>{copy.signIn}</Link></p>}
+      {["sign-in", "me"].includes(mode) && <p>{copy.noAccount} <Link href={"/account/register?returnTo=" + encodeURIComponent(returnTo)}>{copy.register}</Link></p>}
+      {mode === "me" && <p>{copy.alreadyRegistered} <Link href={"/account/sign-in?returnTo=" + encodeURIComponent(returnTo)}>{copy.signIn}</Link></p>}
+      {["forgot", "reset", "verify"].includes(mode) && <Link href={"/account/sign-in?returnTo=" + encodeURIComponent(returnTo)}>{copy.backToSignIn}</Link>}
+    </div>}
   </main><SiteFooter /></>;
 }
