@@ -5,7 +5,7 @@ export function createLighthouseCollector({ launch, lighthouse, chromeFlags, chr
   return async (url, { signal, timeoutMs = 60000 } = {}) => {
     let chrome, cleanup, puppeteerBrowser;
     const close = () => {
-      if (chrome && !cleanup) cleanup = Promise.resolve(chrome.kill());
+      if (chrome && !cleanup) cleanup = Promise.resolve().then(() => chrome.kill());
       return cleanup ?? Promise.resolve();
     };
     const cancel = () => { void close().catch(() => {}); };
@@ -32,8 +32,8 @@ export function createLighthouseCollector({ launch, lighthouse, chromeFlags, chr
         locale: 'fr', maxWaitForLoad: Math.min(45000, timeoutMs) }, undefined, protectedPage);
     } finally {
       signal?.removeEventListener('abort', cancel);
-      await puppeteerBrowser?.disconnect();
-      await close();
+      try { await puppeteerBrowser?.disconnect(); }
+      finally { await close(); }
     }
   };
 }

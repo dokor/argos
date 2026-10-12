@@ -76,3 +76,11 @@ test('policy copies are identical across independently deployed build contexts',
   for(const path of ['../playwright-service/policy.mjs','../lighthouse-service/policy.mjs','../console-web/src/lib/audit-url-policy.mjs'])
     assert.equal(await readFile(new URL(path,import.meta.url),'utf8'),source,path);
 });
+test('oversized upstream HTTP bodies terminate the socket and release admission',async t=>{
+  const fixture=http.createServer((_req,res)=>res.end('x'.repeat(1024)));
+  const fixturePort=await listen(t,fixture);
+  const proxy=await listen(t,createEgressProxy({maxBytes:16,maxConnections:1,resolve:async()=>[{address:'8.8.8.8'}],
+    request:(options,callback)=>http.request({...options,host:'127.0.0.1',port:fixturePort},callback)}));
+  await assert.rejects(fetchProxy(proxy,'http://example.com/'));
+  assert.equal((await fetchProxy(proxy,'http://10.0.0.1/')).status,403);
+});
