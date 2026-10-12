@@ -22,6 +22,7 @@ workflows restent les références pour les valeurs configurées.
 | Interface | [Conventions publiques](ux/public-design.md), [espacements](ux/spacing.md) |
 | Performance du service | [Pools HTTP/DB](performance/resource-pools.md), [projections de listes](performance/listing-projections.md) |
 | Vérifier une modification | [CI et diagnostic](testing/ci.md), [MariaDB](testing/mariadb.md), [E2E contrôlé](testing/controlled-e2e.md), [comptes et retours](testing/accounts.md), [rapport web/PDF](testing/report.md), [header public](testing/public-header.md) |
+| Nettoyer le code et les dépendances | [Inventaire, éléments conservés et suivis](maintenance.md) |
 | Préparer une release | [Révision des images](release/runtime-provenance.md), [dossier V1 daté](release/v1-readiness-2026-10-05.md), [preuves du snapshot V1](release/v1-evidence-2026-10-05.json) |
 
 ## Historique et décisions en attente

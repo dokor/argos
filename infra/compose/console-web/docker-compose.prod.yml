@@ -15,8 +15,6 @@ services:
     environment:
       - NODE_ENV=production
       - ACCOUNT_ORIGIN=https://argos.lelouet.fr
-      - NEXT_PUBLIC_API_URL=https://argos.lelouet.fr
-      - NEXT_PUBLIC_ARGOS_API_BASE=/api
     labels:
       - traefik.enable=true
       - traefik.docker.network=proxy

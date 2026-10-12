@@ -15,11 +15,6 @@
 // than us producing a mangled `https://ftp://…`.
 const HAS_SCHEME = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//;
 
-/** Returns true if the raw input already starts with an explicit scheme. */
-export function hasUrlScheme(raw: string): boolean {
-  return HAS_SCHEME.test(raw.trim());
-}
-
 /**
  * Normalizes a user-typed URL for submission: trims it and prepends `https://`
  * when no protocol is present. Returns an empty string for blank input.
