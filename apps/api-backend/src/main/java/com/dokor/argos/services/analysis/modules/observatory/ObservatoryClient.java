@@ -35,6 +35,7 @@ public class ObservatoryClient {
      * Uses POST with empty body (application/x-www-form-urlencoded).
      */
     public JsonNode scan(String hostname) throws Exception {
+        com.dokor.argos.services.analysis.RemoteScanPolicy.requireAllowed(hostname);
         return ExternalServiceCall.timed(logger, "observatory", hostname, () -> {
             URI endpoint = URI.create(apiBase + "/scan?host="
                 + URLEncoder.encode(hostname, StandardCharsets.UTF_8) + "&rescan=false");

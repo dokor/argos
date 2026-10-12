@@ -5,6 +5,7 @@ on:
     branches: ["main"]
     paths:
       - "apps/lighthouse-service/**"
+      - "apps/audit-egress/**"
       - "infra/compose/lighthouse-service/**"
       - ".github/workflows/deploy-lighthouse-service.yml"
 
@@ -17,6 +18,7 @@ jobs:
     runs-on: self-hosted
     env:
       ARGOS_REVISION: ${{ github.sha }}
+      ARGOS_CHROMIUM_SECCOMP_PROFILE: /srv/apps/lighthouse-service/chromium-seccomp.json
 
     steps:
       - name: Checkout
@@ -28,10 +30,16 @@ jobs:
           rsync -a --delete ./apps/lighthouse-service/ /srv/apps/lighthouse-service/src/
           chown -R $USER:$USER /srv/apps/lighthouse-service
 
+      - name: Sync security gateway sources
+        run: |
+          mkdir -p /srv/apps/lighthouse-service/egress
+          rsync -a --delete ./apps/audit-egress/ /srv/apps/lighthouse-service/egress/
+
       - name: Sync compose to /srv/apps
         run: |
           mkdir -p /srv/apps/lighthouse-service
           rsync -a ./infra/compose/lighthouse-service/docker-compose.prod.yml /srv/apps/lighthouse-service/docker-compose.prod.yml
+          rsync -a ./infra/compose/lighthouse-service/chromium-seccomp.json /srv/apps/lighthouse-service/chromium-seccomp.json
           chown -R $USER:$USER /srv/apps/lighthouse-service
 
       - name: Ensure network exists (argos_internal)

@@ -26,8 +26,7 @@ export function sanitizeText(value: string | null | undefined): string | null {
 }
 
 /**
- * Returns only `host + pathname` of a URL, dropping query-string and fragment
- * to avoid leaking sensitive parameters.
+ * Returns only the host. Paths can contain report credentials and reset tokens.
  */
 export function sanitizeUrl(raw: string | null | undefined): string | null {
   if (!raw) return null;
@@ -37,10 +36,9 @@ export function sanitizeUrl(raw: string | null | undefined): string | null {
       ? raw
       : `https://${raw}`;
     const url = new URL(withScheme);
-    return `${url.host}${url.pathname}`;
+    return url.host;
   } catch {
-    const withoutQuery = raw.replace(/[?#].*$/, "");
-    return sanitizeText(withoutQuery);
+    return "[invalid URL]";
   }
 }
 

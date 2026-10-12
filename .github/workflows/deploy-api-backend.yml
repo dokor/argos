@@ -5,6 +5,7 @@ on:
     branches: ["main"]
     paths:
       - "apps/api-backend/**"
+      - "apps/audit-egress/**"
       - "infra/compose/api-backend/**"
       - ".github/workflows/deploy-api-backend.yml"
 
@@ -41,6 +42,11 @@ jobs:
           mkdir -p /srv/apps/api-backend/src
           rsync -a --delete ./apps/api-backend/ /srv/apps/api-backend/src/
           chown -R $USER:$USER /srv/apps/api-backend
+
+      - name: Sync security gateway sources
+        run: |
+          mkdir -p /srv/apps/api-backend/egress
+          rsync -a --delete ./apps/audit-egress/ /srv/apps/api-backend/egress/
 
       - name: Sync compose to /srv/apps
         run: |

@@ -39,7 +39,7 @@ public class ObservatoryModuleAnalyzer {
         String hostname = Urls.host(url);
 
         if (hostname == null) {
-            logger.warn("Observatory module: could not extract hostname from url={}", url);
+            logger.warn("Observatory module: could not extract hostname from url={}", com.dokor.argos.services.domain.audit.UrlNormalizer.sanitizeForLog(url));
             throw new ModuleUnavailableException("Could not extract hostname from URL");
         }
 
@@ -49,7 +49,7 @@ public class ObservatoryModuleAnalyzer {
         try {
             result = client.scan(hostname);
         } catch (Exception e) {
-            logger.warn("Observatory module: API call failed hostname={} error={}", hostname, e.getMessage());
+            logger.warn("Observatory module: API call failed hostname={} error={}", hostname, e.getClass().getSimpleName());
             throw new ModuleUnavailableException("Observatory API unavailable", e);
         }
 
@@ -100,7 +100,7 @@ public class ObservatoryModuleAnalyzer {
                 try {
                     failedTests = parseFailedTests(client.tests(scanId));
                 } catch (Exception e) {
-                    logger.warn("Observatory module: tests detail unavailable scanId={} error={}", scanId, e.getMessage());
+                    logger.warn("Observatory module: tests detail unavailable scanId={} error={}", scanId, e.getClass().getSimpleName());
                 }
             }
         }

@@ -39,7 +39,7 @@ import static org.mockito.Mockito.*;
 /** Real HTTP/Jersey, DAO claims/publication, browser UI and headless collectors on controlled sites. */
 @EnabledIfEnvironmentVariable(named="ARGOS_E2E",matches="true")
 class ControlledAuditE2eIT extends MariaDbReportFixture {
-    private static final String PUBLIC_FIXTURE="http://203.0.113.10:3020";
+    private static final String PUBLIC_FIXTURE="http://8.8.8.8";
     private static String local(String target) {
         if(!target.startsWith(PUBLIC_FIXTURE+"/")) throw new IllegalArgumentException("Only the controlled fixture transport may be mapped");
         return "http://127.0.0.1:3020"+URI.create(target).getRawPath();
@@ -76,7 +76,7 @@ class ControlledAuditE2eIT extends MariaDbReportFixture {
         var tx=new TransactionManagerQuerydsl(source,new Configuration(MySQLTemplates.DEFAULT));
         var auditDao=new AuditDao(tx);var runDao=new AuditRunDao(tx);
         var policy=new DefaultScorePolicy();var urls=new UrlNormalizer();
-        // The production validator sees a literal documentation IP (no third-party DNS).
+        // The production validator sees a literal public surrogate IP (no third-party DNS).
         // A fixture-only transport adapter maps that exact origin onto the local sample server.
         var http=mock(HttpClient.class);var transport=HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build();
         when(http.send(any(HttpRequest.class),any(HttpResponse.BodyHandler.class))).thenAnswer(call -> {
@@ -87,9 +87,9 @@ class ControlledAuditE2eIT extends MariaDbReportFixture {
         var constructor=HttpModuleAnalyzer.class.getDeclaredConstructor(HttpClient.class);constructor.setAccessible(true);
         var httpAnalyzer=constructor.newInstance(http);
         var runtimeTransport=new PlaywrightRuntimeClient(mapper);var runtime=mock(PlaywrightRuntimeClient.class);
-        when(runtime.analyzeRuntime(anyString())).thenAnswer(call -> runtimeTransport.analyzeRuntime(local(call.getArgument(0))));
+        when(runtime.analyzeRuntime(anyString())).thenAnswer(call -> runtimeTransport.analyzeRuntime(call.getArgument(0)));
         var lighthouseTransport=new LighthouseClient(mapper);var lighthouse=mock(LighthouseClient.class);
-        when(lighthouse.analyze(anyString())).thenAnswer(call -> lighthouseTransport.analyze(local(call.getArgument(0))));
+        when(lighthouse.analyze(anyString())).thenAnswer(call -> lighthouseTransport.analyze(call.getArgument(0)));
         var ssl=mock(SslLabsClient.class);when(ssl.analyze(anyString())).thenReturn(mapper.readTree("{\"status\":\"READY\",\"endpoints\":[{\"grade\":\"A\",\"details\":{\"cert\":{\"issues\":0,\"notAfter\":4102444800000},\"protocols\":[{\"name\":\"TLS\",\"version\":\"1.2\"},{\"name\":\"TLS\",\"version\":\"1.3\"}]}}]}"));
         var observatory=mock(ObservatoryClient.class);when(observatory.scan(anyString())).thenReturn(mapper.readTree("{\"score\":100,\"grade\":\"A+\",\"tests_passed\":10,\"tests_failed\":0,\"tests_quantity\":10}"));
         var zap=mock(ZapClient.class);when(zap.analyze(org.mockito.ArgumentMatchers.any(com.dokor.argos.services.analysis.model.AuditContext.class))).thenReturn(mapper.readTree("{\"alerts\":[]}"));
@@ -112,7 +112,7 @@ class ControlledAuditE2eIT extends MariaDbReportFixture {
             var evidence=root.resolve("outputs/controlled-e2e.json");Files.createDirectories(evidence.getParent());
             browser=new ProcessBuilder("node",root.resolve("scripts/e2e/browser.mjs").toString()).directory(root.toFile()).redirectOutput(evidence.toFile()).redirectError(root.resolve("outputs/controlled-e2e-error.log").toFile()).start();
             assertTrue(browser.waitFor(8,TimeUnit.MINUTES),"Controlled browser suite must terminate");assertEquals(0,browser.exitValue(),"Controlled browser assertions must pass; sanitized diagnostics in outputs");assertTrue(failures.isEmpty(),"Workers must not fail outside module degradation");
-            try(var connection=source.getConnection();var statement=connection.createStatement();var result=statement.executeQuery("SELECT COUNT(*),COUNT(DISTINCT r.run_id),MIN(ar.attempt_count),MAX(ar.attempt_count) FROM ARG_AUDIT_REPORT r JOIN ARG_AUDIT_RUN ar ON ar.id=r.run_id JOIN ARG_AUDIT a ON a.id=ar.audit_id WHERE a.normalized_url LIKE 'http://203.0.113.10:3020/%'")) {
+            try(var connection=source.getConnection();var statement=connection.createStatement();var result=statement.executeQuery("SELECT COUNT(*),COUNT(DISTINCT r.run_id),MIN(ar.attempt_count),MAX(ar.attempt_count) FROM ARG_AUDIT_REPORT r JOIN ARG_AUDIT_RUN ar ON ar.id=r.run_id JOIN ARG_AUDIT a ON a.id=ar.audit_id WHERE a.normalized_url LIKE 'http://8.8.8.8/%'")) {
                 assertTrue(result.next());assertEquals(8,result.getInt(1));assertEquals(8,result.getInt(2));assertEquals(1,result.getInt(3));assertEquals(1,result.getInt(4));
             }
         } finally {if(browser!=null && browser.isAlive()) browser.destroyForcibly();workers.shutdownNow();workers.awaitTermination(10,TimeUnit.SECONDS);api.shutdownNow();samples.stop(0);sampleWorkers.shutdownNow();}

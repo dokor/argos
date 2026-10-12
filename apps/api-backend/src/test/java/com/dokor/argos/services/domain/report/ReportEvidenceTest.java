@@ -39,7 +39,7 @@ class ReportEvidenceTest {
         String clean = ReportEvidence.clean("\u0001https://user:secret@example.com/path/$x?token=private#fragment");
         assertFalse(clean.contains("secret")); assertFalse(clean.contains("private"));
         assertFalse(clean.contains("fragment")); assertFalse(clean.contains("\u0001"));
-        assertTrue(clean.contains("/path/$x"));
+        assertFalse(clean.contains("/path/$x"));
     }
     @Test void deserialisesHistoricalIssueWithoutOptionalEvidence() throws Exception {
         var old = new ObjectMapper().readValue("{\"id\":\"old\",\"title\":\"Original\",\"severity\":\"important\"}", ReportDto.Issue.class);

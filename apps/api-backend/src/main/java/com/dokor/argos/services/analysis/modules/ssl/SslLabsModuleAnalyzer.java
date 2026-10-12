@@ -41,7 +41,7 @@ public class SslLabsModuleAnalyzer {
         String host = Urls.host(url);
 
         if (host == null) {
-            logger.warn("SSL Labs module: could not extract host from url={}", url);
+            logger.warn("SSL Labs module: could not extract host from url={}", com.dokor.argos.services.domain.audit.UrlNormalizer.sanitizeForLog(url));
             throw new ModuleUnavailableException("Could not extract host from URL");
         }
 
@@ -51,7 +51,7 @@ public class SslLabsModuleAnalyzer {
         try {
             result = client.analyze(host);
         } catch (Exception e) {
-            logger.warn("SSL Labs module: API failed host={} error={}", host, e.getMessage());
+            logger.warn("SSL Labs module: API failed host={} error={}", host, e.getClass().getSimpleName());
             throw new ModuleUnavailableException("SSL Labs API unavailable", e);
         }
 

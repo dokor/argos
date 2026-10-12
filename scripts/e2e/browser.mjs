@@ -17,7 +17,7 @@ try {
     });
     await page.goto(base);
     const input=page.getByRole('textbox').first();
-    await input.fill(`http://203.0.113.10:3020/${scenario}`);
+    await input.fill(`http://8.8.8.8/${scenario}`);
     const submitted=page.waitForResponse(response=>response.url().endsWith('/api/audits') && response.request().method()==='POST');
     await input.press('Enter');
     const response=await submitted;

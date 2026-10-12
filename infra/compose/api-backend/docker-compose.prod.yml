@@ -17,17 +17,22 @@ services:
       - argos_ai
       - argos_zap
     environment:
+      - AUDIT_EGRESS_PROXY=http://audit-egress:3128
+      # Third-party scanners cannot share the pinned connection guarantee.
+      - ARGOS_EXTERNAL_SCANS_ENABLED=false
       - JAVA_OPTS=-Xms256m -Xmx512m
       - NODE_ENV=production
       - JAVA_TOOL_OPTIONS=-Dconfig.file=/config/prod.conf
       - PLAYWRIGHT_SERVICE_URL=http://playwright-service:3016
       - LIGHTHOUSE_SERVICE_URL=http://lighthouse-service:3017
       - ZAP_API_URL=http://zap:8080
-      - CODEX_SUMMARY_ENABLED=${CODEX_SUMMARY_ENABLED:-true}
+      - CODEX_SUMMARY_ENABLED=false
       - CODEX_SUMMARY_SERVICE_URL=http://codex-summary:3010
       - CODEX_SUMMARY_TIMEOUT_SECONDS=${CODEX_SUMMARY_TIMEOUT_SECONDS:-45}
       - AHREFS_API_KEY=${AHREFS_API_KEY:-}
     depends_on:
+      audit-egress:
+        condition: service_healthy
       zap:
         condition: service_healthy
     labels:
@@ -38,6 +43,24 @@ services:
       - traefik.http.routers.api-backend.tls=true
       - traefik.http.routers.api-backend.priority=100
       - traefik.http.services.api-backend.loadbalancer.server.port=8081
+
+  audit-egress:
+    build:
+      context: /srv/apps/api-backend/egress
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    cap_add: [NET_ADMIN, SETUID, SETGID, SETPCAP]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 128m
+    pids_limit: 64
+    networks: [argos_internal]
+    healthcheck:
+      test: [CMD, node, -e, "const s=require('net').connect(3128,'127.0.0.1',()=>{s.end();process.exit(0)});s.on('error',()=>process.exit(1))"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
 
   # Offline passive scanner: only this backend can reach its API; no host ports or egress.
   # Both amd64 and arm64 manifests are available for this official version.

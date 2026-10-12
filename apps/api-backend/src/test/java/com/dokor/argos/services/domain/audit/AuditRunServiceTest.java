@@ -64,7 +64,7 @@ class AuditRunServiceTest {
         AuditRunDao dao = mock(AuditRunDao.class);
         TokenService tokenService = spy(new TokenService());
         doReturn("PREGEN_TOKEN_123456").when(tokenService).generateToken();
-        when(dao.save(any(AuditRun.class))).thenAnswer(inv -> {
+        when(dao.saveQueued(any(AuditRun.class), isNull())).thenAnswer(inv -> {
             AuditRun r = inv.getArgument(0);
             r.setId(42L);
             return r;

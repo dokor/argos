@@ -4,7 +4,7 @@ import { once } from 'node:events';
 import { createRuntimeApp } from './app.mjs';
 
 async function serverFor(t, chromium) {
-  const server = createRuntimeApp({ chromium }).listen(0, '127.0.0.1');
+  const server = createRuntimeApp({ chromium, proxy: 'http://127.0.0.1:3128' }).listen(0, '127.0.0.1');
   await once(server, 'listening');
   t.after(() => new Promise(resolve => { server.close(resolve); server.closeAllConnections(); }));
   return 'http://127.0.0.1:' + server.address().port;
@@ -36,7 +36,7 @@ function collector({ navigationFailure = false, contextFailure = false } = {}) {
     return {
       newContext: async () => {
         if (contextFailure) throw new Error('private context failure');
-        return { newPage: async () => page };
+        return { route: async () => {}, routeWebSocket: async () => {}, on: () => {}, newPage: async () => page };
       },
       close: async () => { closed++; }
     };
@@ -54,8 +54,8 @@ test('health and invalid inputs never launch Chromium', async t => {
   assert.deepEqual(await (await fetch(base + '/health')).json(),
     { status: 'ok', service: 'playwright-service' });
   assert.equal((await fetch(base + '/unknown')).status, 404);
-  for (const body of ['{}', 'null', '{"url":3}', '{"url":"ftp://example.test"}',
-    '{"url":"https://user:secret@example.test"}', '{']) {
+  for (const body of ['{}', 'null', '{"url":3}', '{"url":"ftp://example.com"}',
+    '{"url":"https://user:secret@example.com"}', '{']) {
     assert.equal((await fetch(base + '/analyze/runtime', { method: 'POST',
       headers: { 'content-type': 'application/json' }, body })).status, 400);
   }
@@ -69,7 +69,7 @@ test('runtime contract retains metrics and partitions errors using the final dom
   assert.equal(response.status, 200);
   const report = await response.json();
   assert.equal(report.url, 'https://example.co.uk');
-  assert.equal(report.finalUrl, 'https://www.example.co.uk/final');
+  assert.equal(report.finalUrl, 'https://www.example.co.uk');
   assert.deepEqual(report.navigation, { status: 'COMPLETED', reason: null });
   assert.equal(report.console.errors, 2);
   assert.equal(report.console.errorsFirstParty, 1);
@@ -108,13 +108,13 @@ test('context and launch failures return a generic error and release acquired br
 });
 test('global request timeout closes the active browser rather than leaving navigation running', async t => {
   let rejectNavigation, closed = 0;
-  const page = { on: () => {}, url: () => 'https://example.test',
+  const page = { on: () => {}, url: () => 'https://example.com',
     goto: () => new Promise((_resolve, reject) => { rejectNavigation = reject; }) };
   const base = await serverFor(t, { launch: async () => ({
-    newContext: async () => ({ newPage: async () => page }),
+    newContext: async () => ({ route: async () => {}, routeWebSocket: async () => {}, on: () => {}, newPage: async () => page }),
     close: async () => { closed++; rejectNavigation?.(new Error('Browser closed')); }
   }) });
   const response = await fetch(base + '/analyze/runtime', { method: 'POST', headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ url: 'https://example.test', timeoutMs: 100 }) });
+    body: JSON.stringify({ url: 'https://example.com', timeoutMs: 100 }) });
   assert.equal(response.status, 504); assert.ok(closed >= 1);
 });

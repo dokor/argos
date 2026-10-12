@@ -1,4 +1,5 @@
 import { ssrfError } from "@/lib/audit-url-validation";
+import { boundedJson } from "@/lib/bounded-request";
 /**
  * BFF validation layer for POST /api/audits.
  *
@@ -13,16 +14,12 @@ import { attribution, count } from "@/lib/analytics/server";
 import { NextRequest, NextResponse } from "next/server";
 import { adminReadProxy } from "@/lib/admin-read-proxy";
 import { accountHeaders, SESSION_COOKIE, saveRunProof } from "@/lib/account-proxy";
-import { createLogger, safeError, sanitizeText, sanitizeUrl } from "@/lib/logger";
+import { createLogger, safeError, sanitizeUrl } from "@/lib/logger";
 
 const API_BASE = process.env.API_BASE ?? "http://api-backend:8081";
 const logger = createLogger("api", { route: "/api/audits" });
 
 const MAX_URL_LENGTH = 2048;
-/** Sanitizes a string for safe logging (prevents CRLF injection). */
-function sanitize(s: string): string {
-  return sanitizeText(s) ?? "";
-}
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const personal = request.cookies.has(SESSION_COOKIE) ? accountHeaders(request, true) : null;
@@ -34,8 +31,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   let body: unknown;
   try {
-    body = await request.json();
-  } catch {
+    body = await boundedJson(request);
+  } catch (error) {
+    if (error instanceof RangeError) return NextResponse.json({ error: "Payload too large" }, { status: 413 });
     logger.warn("audit_bff_invalid_json", {
       action: "create_audit",
       details: {
@@ -92,7 +90,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   const err = ssrfError(trimmed);
   if (err) {
-    console.warn("[BFF] Blocked audit request:", sanitize(trimmed), "-", err);
     logger.warn("audit_bff_request_blocked", {
       action: "validate_url",
       details: {
@@ -109,6 +106,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     backendRes = await fetch(`${API_BASE}/api/audits`, {
       method: "POST",
+      redirect: "error",
+      signal: AbortSignal.timeout(15000),
       headers: { "Content-Type": "application/json", ...(analytics ? {Authorization:"Bearer "+process.env.ADMIN_API_TOKEN} : {}),
         ...(personal ? { "X-Argos-Account-Session": personal.get("Authorization") ?? "", Origin: personal.get("Origin") ?? "",
           "X-Argos-CSRF": personal.get("X-Argos-CSRF") ?? "", Cookie: personal.get("Cookie") ?? "" } : {}) },

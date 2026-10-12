@@ -82,7 +82,7 @@ public class AuditRunService {
         run.setReportTokenHash(tokenService.sha256(reportToken));
         run.setModuleStatuses(moduleStatusesJson);
 
-        AuditRun saved = connection == null ? auditRunDao.save(run) : auditRunDao.save(run,connection);
+        AuditRun saved = auditRunDao.saveQueued(run, connection);
         if(ownerUserId!=null) auditRunDao.usage().reserve(saved,connection);
         logger.debug("Run persisted: runId={}", saved.getId());
         return new QueuedRun(saved, reportToken);

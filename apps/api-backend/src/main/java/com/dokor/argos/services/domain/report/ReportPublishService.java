@@ -60,7 +60,7 @@ public class ReportPublishService {
         entity.setGlobalScore(globalScore);
         entity.setProvisional(dto.scores()==null || dto.scores().coverage()==null ? null : dto.scores().coverage().provisional());
         entity.setScoringVersion(globalScore == null ? null : internal.score().scoringVersion());
-        try { entity.setReportJson(mapper.writeValueAsString(dto)); }
+        try { entity.setReportJson(mapper.writeValueAsString(com.dokor.argos.services.analysis.AuditOutputSanitizer.tree(dto, mapper))); }
         catch (Exception error) { throw new IllegalStateException("Report serialization failed", error); }
         entity.setCreatedAt(Instant.now());
         entity.setExpiresAt(retention.expiresAt(entity.getCreatedAt()));

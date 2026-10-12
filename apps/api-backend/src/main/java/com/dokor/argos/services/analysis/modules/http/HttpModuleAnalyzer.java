@@ -41,6 +41,7 @@ public class HttpModuleAnalyzer {
     @Inject
     public HttpModuleAnalyzer() {
         this(HttpClient.newBuilder()
+            .proxy(com.dokor.argos.services.analysis.AuditEgress.configured())
             .followRedirects(HttpClient.Redirect.NEVER)
             .connectTimeout(Duration.ofSeconds(10))
             .build());

@@ -42,15 +42,15 @@ describe("sanitizeUrl", () => {
   });
 
   it("strips query-string and fragment", () => {
-    expect(sanitizeUrl("https://example.com/path?secret=abc#frag")).toBe("example.com/path");
+    expect(sanitizeUrl("https://example.com/path?secret=abc#frag")).toBe("example.com");
   });
 
   it("prepends https:// when scheme is missing", () => {
-    expect(sanitizeUrl("example.com/path")).toBe("example.com/path");
+    expect(sanitizeUrl("example.com/path")).toBe("example.com");
   });
 
-  it("keeps the pathname", () => {
-    expect(sanitizeUrl("https://argos.lelouet.fr/report/tok")).toBe("argos.lelouet.fr/report/tok");
+  it("removes credentials from the pathname", () => {
+    expect(sanitizeUrl("https://argos.lelouet.fr/report/tok")).toBe("argos.lelouet.fr");
   });
 
   it("falls back to sanitizeText for unparseable input", () => {
@@ -144,7 +144,7 @@ describe("redactScalar", () => {
   });
 
   it("sanitizes URL fields", () => {
-    expect(redactScalar("inputUrl", "https://example.com/path?q=1")).toBe("example.com/path");
+    expect(redactScalar("inputUrl", "https://example.com/path?q=1")).toBe("example.com");
   });
 
   it("sanitizes generic string values", () => {
@@ -186,7 +186,7 @@ describe("redactDetails", () => {
     const result = redactDetails({
       meta: { inputUrl: "https://example.com/path?q=1", count: 3 },
     }) as Record<string, Record<string, unknown>>;
-    expect(result.meta.inputUrl).toBe("example.com/path");
+    expect(result.meta.inputUrl).toBe("example.com");
     expect(result.meta.count).toBe(3);
   });
 
@@ -208,6 +208,6 @@ describe("redactDetails", () => {
   it("does not apply redactScalar twice to string values in objects", () => {
     // sanitizeUrl("example.com") should be applied exactly once, not produce a double-sanitized artefact
     const result = redactDetails({ inputUrl: "https://example.com/path?secret=1" }) as Record<string, unknown>;
-    expect(result.inputUrl).toBe("example.com/path");
+    expect(result.inputUrl).toBe("example.com");
   });
 });
