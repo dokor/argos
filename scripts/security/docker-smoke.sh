@@ -41,6 +41,11 @@ for attempt in $(seq 1 30); do
   sleep 1
 done
 docker exec argos-security-runtime node --input-type=module -e "
+  import {chromium} from 'playwright';import {browserFlags} from './browser-policy.mjs';
+  const browser=await chromium.launch({chromiumSandbox:true,args:browserFlags('http://127.0.0.1:3128')});
+  await browser.close();
+"
+docker exec argos-security-runtime node --input-type=module -e "
   import assert from 'node:assert/strict';
   await assert.rejects(fetch('http://8.8.8.8',{signal:AbortSignal.timeout(2000)}));
   for(const url of ['http://8.8.8.8/','http://8.8.8.8/redirect']) {

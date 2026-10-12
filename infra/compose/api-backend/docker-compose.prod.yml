@@ -6,6 +6,9 @@ services:
       args:
         ARGOS_REVISION: ${ARGOS_REVISION:-unknown}
     image: api-backend:local
+    mem_limit: 1g
+    cpus: 2
+    pids_limit: 256
     container_name: api-backend
     restart: unless-stopped
     volumes:
@@ -67,6 +70,9 @@ services:
   zap:
     image: ghcr.io/zaproxy/zaproxy:2.17.0
     container_name: argos-zap
+    mem_limit: 768m
+    cpus: 1
+    pids_limit: 128
     restart: unless-stopped
     command:
       - zap.sh
