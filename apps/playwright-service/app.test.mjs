@@ -9,9 +9,11 @@ async function serverFor(t, chromium) {
   t.after(() => new Promise(resolve => { server.close(resolve); server.closeAllConnections(); }));
   return 'http://127.0.0.1:' + server.address().port;
 }
-function collector({ navigationFailure = false, contextFailure = false } = {}) {
+function collector({ navigationFailure = false, contextFailure = false, cdpFailure = null } = {}) {
   let closed = 0, launched = 0;
   const handlers = {};
+  const contextHandlers = {};
+  let rejectInstrumentation;
   const page = {
     on: (name, handler) => { handlers[name] = handler; },
     url: () => 'https://www.example.co.uk/final',
@@ -36,9 +38,26 @@ function collector({ navigationFailure = false, contextFailure = false } = {}) {
     return {
       newContext: async () => {
         if (contextFailure) throw new Error('private context failure');
-        return { route: async () => {}, routeWebSocket: async () => {}, on: () => {}, newPage: async () => page };
+        return {
+          route: async () => {}, routeWebSocket: async () => {},
+          on: (name, handler) => { contextHandlers[name] = handler; },
+          newCDPSession: async () => {
+            if (cdpFailure === 'active') throw new Error('Instrumentation unavailable');
+            return { send: () => new Promise((_resolve, reject) => { rejectInstrumentation = reject; }) };
+          },
+          newPage: async () => {
+            if (cdpFailure) void contextHandlers.page(page);
+            return page;
+          }
+        };
       },
-      close: async () => { closed++; }
+      close: async () => {
+        closed++;
+        if (rejectInstrumentation) {
+          rejectInstrumentation(new Error('Target closed'));
+          await new Promise(resolve => setImmediate(resolve));
+        }
+      }
     };
   } };
   return { chromium, closed: () => closed, launched: () => launched };
@@ -117,4 +136,26 @@ test('global request timeout closes the active browser rather than leaving navig
   const response = await fetch(base + '/analyze/runtime', { method: 'POST', headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ url: 'https://example.com', timeoutMs: 100 }) });
   assert.equal(response.status, 504); assert.ok(closed >= 1);
+});
+
+for (const navigationFailure of [false, true]) {
+  test(`closing a browser with pending CDP setup preserves ${navigationFailure ? 'failed' : 'completed'} navigation`, async t => {
+    const fake = collector({ navigationFailure, cdpFailure: 'cleanup' });
+    const response = await analyze(await serverFor(t, fake.chromium));
+    assert.equal(response.status, 200);
+    const report = await response.json();
+    assert.deepEqual(report.navigation, navigationFailure
+      ? { status: 'FAILED', reason: 'NAVIGATION_ERROR' }
+      : { status: 'COMPLETED', reason: null });
+    assert.equal(report.console.errors, 2);
+    assert.equal(fake.closed(), 1);
+  });
+}
+
+test('CDP setup failures during collection still cancel the analysis', async t => {
+  const fake = collector({ cdpFailure: 'active' });
+  const response = await analyze(await serverFor(t, fake.chromium));
+  assert.equal(response.status, 504);
+  assert.deepEqual(await response.json(), { error: 'Analysis timeout' });
+  assert.ok(fake.closed() >= 1);
 });

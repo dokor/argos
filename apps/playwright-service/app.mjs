@@ -53,7 +53,11 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
       browser = await chromium.launch({ chromiumSandbox: true, args: browserFlags(endpoint), timeout: remaining() });
       if (cancelled) throw new Error('Analysis timeout');
       const context = await browser.newContext({ serviceWorkers: 'block', acceptDownloads: false });
-      await protectContext(context, cancel);
+      await protectContext(context, () => {
+        // Pending CDP setup can reject during intentional browser cleanup.
+        // Keep cancelling active collection, but preserve an already collected result.
+        if (browser) cancel();
+      });
       const page = await context.newPage();
 
       const consoleSamples = [];
