@@ -56,9 +56,11 @@ export default function PriorityCards({ priorities, model, onSelectFinding, limi
 
                 <h3 className={s.cardTitle}>{content?.recommendation ?? cleanEvidence(p.title)}</h3>
                 <p className={s.cardImpact}>{content?.impact ?? cleanEvidence(p.impact)}</p>
-                <p>{domain ? (tp.domains as Record<string, string>)[domain] ?? tp.unknownDomain : tp.unknownDomain}</p>
-                <p>{tp.sourcesLabel} : {sources.map(cleanEvidence).join(", ") || "—"}</p>
-                <p>{tp.confidenceLabel} {p.confidence && Object.hasOwn(tp.confidence, p.confidence) ? tp.confidence[p.confidence] : tp.confidence.UNKNOWN}</p>
+                <div className={s.metadata}>
+                  <p>{domain ? (tp.domains as Record<string, string>)[domain] ?? tp.unknownDomain : tp.unknownDomain}</p>
+                  <p>{tp.sourcesLabel} : {sources.map(cleanEvidence).join(", ") || "—"}</p>
+                  <p>{tp.confidenceLabel} {p.confidence && Object.hasOwn(tp.confidence, p.confidence) ? tp.confidence[p.confidence] : tp.confidence.UNKNOWN}</p>
+                </div>
                 {p.rankReason && (
                   <details className={s.explanation}>
                     <summary>{tp.rankingDetails}</summary>

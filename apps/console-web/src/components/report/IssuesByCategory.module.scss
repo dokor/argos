@@ -321,14 +321,14 @@
 @media (max-width: 320px) { .filterBar { top: 96px; } }
 
 .domainFilter { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.section { border-radius: 8px; box-shadow: none; }
+.section { border-radius: 8px; box-shadow: none; container-type: inline-size; }
 .section select,.filterBtn { min-height: 44px; padding-block: 8px; border-radius: 8px; }
 .sectionTitle { font-weight: 650; }
 .filterLabel { font-weight: 600; text-transform: none; letter-spacing: normal; }
 .filterBar { top: 60px; } .catBlock { scroll-margin-top: 180px; }
 .issueSummary { display: grid; grid-template-columns: 8px max-content minmax(0,1fr) minmax(0,1fr) 12px; min-height: 44px; }
 .issueSummary > * { min-width: 0; }
-@media (max-width: 900px) {
+@container (max-width: 1000px) {
   .issueSummary { grid-template-columns: minmax(0,1fr) 12px; align-items: start; }
   .sevDot { display: none; }
   .issueTags { grid-column: 1; grid-row: 1; }

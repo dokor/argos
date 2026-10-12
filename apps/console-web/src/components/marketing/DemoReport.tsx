@@ -20,7 +20,7 @@ export default function DemoReport() {
     <h2 id="demo-title">{fr ? "Prévisualisez le rapport Argos" : "Preview the Argos report"}</h2>
     <p className={s.notice}>{fr ? "Exemple illustratif : les scores et la couverture sont synthétiques, sans exécution mesurée. Les trois preuves HTML proviennent de la boutique fictive ci-dessous." : "Illustrative example: scores and coverage are synthetic, with no measured run. The three HTML examples come from the fictional store below."} <small>{DEMO_VERSION}</small></p>
     <fieldset className={s.scenarios}><legend>{fr ? "Scénario illustré" : "Illustrated scenario"}</legend>
-      {[false, true].map(value => <label key={String(value)}><input type="radio" name="demo-scenario" checked={partial === value} onChange={() => { setPartial(value); setSelection(undefined); }} />{value ? fr ? "Couverture partielle" : "Partial coverage" : fr ? "Couverture complète" : "Complete coverage"}</label>)}
+      {[false, true].map(value => <label key={String(value)}><input type="radio" name="demo-scenario" checked={partial === value} onChange={() => { setPartial(value); setSelection(undefined); }} /><span>{value ? fr ? "Couverture partielle" : "Partial coverage" : fr ? "Couverture complète" : "Complete coverage"}</span></label>)}
     </fieldset>
     <div className={s.summary}><ReportSummary report={report} model={model} /><p><strong>{fr ? "Score illustratif" : "Illustrative score"}: {report.scores.global}/100</strong> — {partial ? fr ? "provisoire" : "provisional" : fr ? "scénario complet" : "complete scenario"}</p></div>
     <ScoreGrid categories={report.scores.byCategory} coverage={report.scores.coverage} model={model} />

@@ -1,6 +1,5 @@
 @use '../../../../styles/tokens' as t;
 @use "../../../../styles/editorial" as editorial;
-@use "../../../../styles/controls" as controls;
 
 .page {
   min-height: 100vh;
@@ -43,10 +42,6 @@
 }
 
 .earlyCta { margin-top: 24px; }
-.controls { margin-block: 32px; display: grid; gap: 12px; p { margin: 0; line-height: 1.6; } }
-.buttons { display: flex; flex-wrap: wrap; gap: 12px; button { @include controls.cta-geometry; background: t.$surface; color: t.$text; border-color: t.$border; cursor: pointer; &:focus-visible { outline: 3px solid t.$brand; outline-offset: 3px; } } }
-.checkbox { width: 18px; height: 18px; flex: 0 0 18px; accent-color: t.$brand; &:focus-visible { outline: 3px solid t.$brand; outline-offset: 4px; } }
-.stepHeading label { display: inline-flex; align-items: center; min-height: 44px; cursor: pointer; }
 
 .scope {
   max-width: 760px;

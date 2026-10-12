@@ -5,10 +5,10 @@ import { editorialPages } from "@/lib/editorial";
 import EditorialMeta from "./EditorialMeta";
 
 describe("editorial dates", () => {
-  it("renders the same documented ISO dates in both languages, independent of a build clock", () => {
+  it("renders attribution and references without editorial date labels in either language", () => {
     for (const lang of ["fr", "en"] as const) {
       const html = renderToStaticMarkup(<LangProvider initialLang={lang}><EditorialMeta route="/methodologie-score" /></LangProvider>);
-      expect(html).toContain('dateTime="2026-10-07"'); expect(html).toContain('dateTime="2026-10-10"');
+      expect(html).not.toContain("<time");
       expect(html).toContain("Antoine Le Louët"); expect(html).toContain('href="#limites"');
       expect(html).toContain(lang === "fr" ? "Lecture estimée" : "Estimated reading");
     }

@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "@/components/LocalizedLink";
-import { useState } from "react";
 import AuditForm from "@/components/AuditForm";
 import EditorialMeta from "@/components/marketing/EditorialMeta";
 import SiteNav from "@/components/site/SiteNav";
@@ -142,19 +141,7 @@ const copy = {
 export default function ChecklistAuditPage() {
   const { lang } = useLang();
   const c = copy[lang];
-  const [checked, setChecked] = useState<Set<string>>(() => new Set());
-  const toggle = (id: string) => setChecked(previous => {
-    const next = new Set(previous);
-    if (next.has(id)) next.delete(id); else next.add(id);
-    return next;
-  });
-  const controls = lang === "fr" ? {
-    note: "Les cases servent à suivre votre lecture : elles ne valident aucun contrôle technique. La progression est remise à zéro au rechargement.",
-    done: "étapes marquées", print: "Imprimer la checklist", reset: "Réinitialiser", audit: "Lancer un audit pour les contrôles automatisables",
-  } : {
-    note: "Tick boxes track your review; they do not validate any technical check. Progress resets when you reload the page.",
-    done: "steps marked", print: "Print the checklist", reset: "Reset", audit: "Run an audit for automated checks",
-  };
+  const auditLabel = lang === "fr" ? "Lancer un audit pour les contrôles automatisables" : "Run an audit for automated checks";
 
   return (
     <div className={s.page}>
@@ -167,19 +154,11 @@ export default function ChecklistAuditPage() {
             <EditorialMeta route="/guides/checklist-audit-site-web" />
             <p className={s.lead}>{c.lead}</p>
             <p className={s.scope}>{c.scope}</p>
-            <p className={s.earlyCta}><a href="#audit-gratuit">{controls.audit}</a></p>
+            <p className={s.earlyCta}><a href="#audit-gratuit">{auditLabel}</a></p>
           </div>
         </header>
 
         <div className={s.container}>
-          <div className={s.controls}>
-            <p>{controls.note}</p>
-            <p role="status" aria-live="polite">{checked.size} / {c.steps.length} {controls.done}</p>
-            <div className={s.buttons}>
-              <button type="button" onClick={() => window.print()}>{controls.print}</button>
-              <button type="button" onClick={() => setChecked(new Set())}>{controls.reset}</button>
-            </div>
-          </div>
           <nav className={s.contents} aria-label={c.contents}>
             <h2>{c.contents}</h2>
             <ol>{c.steps.map((step) => <li key={step.id}><a href={`#${step.id}`}>{step.title}</a></li>)}</ol>
@@ -191,8 +170,7 @@ export default function ChecklistAuditPage() {
                 <li className={s.step} id={step.id} key={step.id}>
                   <div className={s.stepHeading}>
                     <span className={s.stepNumber} aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
-                    <input className={s.checkbox} id={`check-${step.id}`} type="checkbox" checked={checked.has(step.id)} onChange={() => toggle(step.id)} />
-                    <h2><label htmlFor={`check-${step.id}`}>{step.title}</label></h2>
+                    <h2>{step.title}</h2>
                   </div>
                   <dl className={s.fields}>
                     <div><dt>{c.labels.why}</dt><dd>{step.why}</dd></div>
