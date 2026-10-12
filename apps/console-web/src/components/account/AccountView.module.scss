@@ -1,3 +1,5 @@
+@use '../../styles/controls';
+
 .page { max-width: 48rem; margin: 3rem auto; padding: 0 1.25rem; color: var(--argos-text); font-size: 1rem; line-height: 1.5; }
 .page h1 { font-size: clamp(1.8rem, 5vw, 2.5rem); font-weight: 700; line-height: 1.2; margin-bottom: 1.5rem; }
 .page h2 { font-size: 1.2rem; font-weight: 600; margin-bottom: 1rem; }
@@ -32,3 +34,32 @@
 .personalNav { width: 100%; max-width: 1100px; padding: 12px 24px; gap: 8px 24px; border-bottom: 1px solid var(--argos-border); }
 .personalNav a { display: inline-flex; align-items: center; min-height: 44px; font-size: 15px; font-weight: 600; }
 @media(max-width:600px) { .personalNav { padding-inline: 16px; gap: 8px 16px; } }
+
+.social { max-width: 34rem; margin-top: 1.5rem; }
+.socialDivider { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; color: var(--argos-text-muted); font-size: .875rem; }
+.socialDivider::before, .socialDivider::after { content: ""; height: 1px; flex: 1; background: var(--argos-border); }
+.socialActions { display: grid; gap: .75rem; }
+.socialButton {
+  @include controls.cta-geometry;
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) 20px;
+  width: 100%;
+  padding: .75rem 1rem;
+  font: inherit;
+  background: var(--argos-surface);
+}
+.socialButton:hover:not(:disabled) { background: var(--argos-surface-2); }
+.socialIcon { position: relative; display: grid; place-items: center; width: 20px; height: 20px; }
+.socialIcon img { object-fit: contain; }
+// The official Google icon includes 10px clear space around its 20px mark.
+.googleIcon { overflow: hidden; background: #fff; }
+.googleIcon img { position: absolute; width: 40px; height: 40px; max-width: none; left: -10px; top: -10px; }
+.githubDark { display: none; }
+:global(html[data-theme="dark"]) .githubLight { display: none; }
+:global(html[data-theme="dark"]) .githubDark { display: block; }
+@media (prefers-color-scheme: dark) {
+  :global(html:not([data-theme="light"])) .githubLight { display: none; }
+  :global(html:not([data-theme="light"])) .githubDark { display: block; }
+}
+.linkedinIcon { background: #fff; border-radius: 2px; }
+@media (max-width: 360px) { .socialButton { padding-inline: .75rem; column-gap: .25rem; } }

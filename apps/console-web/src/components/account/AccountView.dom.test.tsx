@@ -97,7 +97,7 @@ describe("account screens", () => {
   it("does not render unconfigured social buttons", async () => {
     render(<AccountView mode="sign-in" />);
     await waitFor(() => expect(accountFetch).toHaveBeenCalledWith("auth/providers"));
-    expect(screen.queryByRole("button", { name: "Google" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "Ou continuer avec" })).not.toBeInTheDocument();
   });
   it("disables archival until its explicit confirmation and keeps email read-only", async () => {
     render(<AccountView />);
@@ -114,4 +114,24 @@ describe("account screens", () => {
     await waitFor(() => expect(accountFetch).toHaveBeenCalledWith("runs/42/claim", "POST", {}));
     expect(await screen.findByRole("status")).toHaveTextContent("rattachée");
   });
+});
+
+it.each([
+  ["fr", "sign-in"], ["fr", "register"], ["en", "sign-in"], ["en", "register"],
+] as const)("offers labelled social actions and preserves the OAuth destination on %s %s", async (lang, mode) => {
+  const returnTo = "/report/" + "r".repeat(43);
+  window.history.replaceState(null, "", "/account/" + mode + "?returnTo=" + returnTo);
+  vi.mocked(accountFetch).mockImplementation(async path => {
+    if (path === "auth/providers") return { providers: ["google", "github", "linkedin"], enabled: true };
+    if (path.startsWith("auth/oauth/")) throw new AccountClientError("oauth_invalid", 400);
+    return {};
+  });
+  render(<LangProvider initialLang={lang}><AccountView mode={mode} /></LangProvider>);
+  const prefix = lang === "fr" ? "Continuer avec " : "Continue with ";
+  for (const provider of ["Google", "GitHub", "LinkedIn"]) {
+    expect(await screen.findByRole("button", { name: prefix + provider })).toBeEnabled();
+  }
+  fireEvent.click(screen.getByRole("button", { name: prefix + "GitHub" }));
+  await waitFor(() => expect(accountFetch).toHaveBeenCalledWith("auth/oauth/github/start", "POST", { intent: "login", returnTo }));
+  expect(await screen.findByRole("alert")).toHaveTextContent(lang === "fr" ? "La connexion au fournisseur a échoué." : "Provider sign-in failed.");
 });
