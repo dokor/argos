@@ -19,7 +19,7 @@ workflows restent les références pour les valeurs configurées.
 | Accessibilité | [Contrat technique](accessibility/contract.md), [matrice proposée](accessibility/rules-v1.md), [registre de revue](accessibility/review-v1.json), [acceptation et validations restantes](accessibility/acceptance.md) |
 | Produit et confidentialité | [Contenus et promesses](product/public-content.md), [analytics](product/product-analytics.md), [inventaire de confidentialité](product/privacy-inventory.md), [provenance éditoriale](product/editorial-provenance.md) |
 | SEO et langues | [Intentions des pages](seo/public-page-intents.md), [pages d'acquisition](seo/acquisition-page-contract.md), [guides anglais](seo/english-public-guides.md), [liens de correction](seo/correction-guide-links.md), [suivi checklist](seo/checklist-audit-site-web.md), [non-indexation des rapports](seo/report-indexing-decision.md) |
-| Interface | [Conventions publiques](ux/public-design.md), [espacements](ux/spacing.md) |
+| Interface | [Conventions publiques](ux/public-design.md), [espacements](ux/spacing.md), [méthode de design et sources des skills](ux/design-skills.md), [évaluation des skills](testing/design-skills.md) |
 | Performance du service | [Pools HTTP/DB](performance/resource-pools.md), [projections de listes](performance/listing-projections.md) |
 | Vérifier une modification | [CI et diagnostic](testing/ci.md), [MariaDB](testing/mariadb.md), [E2E contrôlé](testing/controlled-e2e.md), [comptes et retours](testing/accounts.md), [rapport web/PDF](testing/report.md), [header public](testing/public-header.md) |
 | Nettoyer le code et les dépendances | [Inventaire, éléments conservés et suivis](maintenance.md) |
