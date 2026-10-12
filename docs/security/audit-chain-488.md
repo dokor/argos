@@ -88,6 +88,10 @@ are not rewritten by this change. Review historical retention/access separately.
 
 ## Validation and rollout
 
+The [Raspberry validation procedure](raspberry-audit-validation.md) provides the
+native ARM64 fixture commands, deployed-container checks, queue observations and
+closure evidence template. It is a procedure, not evidence of a completed host run.
+
 Local validation is performed on synthetic fixtures only, with no offensive tests
 against third parties. The Node proxy tests assert zero transport calls for denied
 destinations and check mixed/changing DNS answers, pinned connection addresses,
