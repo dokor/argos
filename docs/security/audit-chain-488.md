@@ -24,7 +24,7 @@ are refused. It never follows redirects itself.
 
 Browser contexts intercept requests before navigation, including frames, workers
 and new pages. GET/HEAD only; WebSockets refused; service workers blocked in the
-runtime context; downloads cancelled. Chromium has an explicit proxy, no implicit
+both collector contexts; downloads cancelled. Chromium has an explicit proxy, no implicit
 loopback bypass, no QUIC, no direct hostname resolution and no unproxied WebRTC UDP.
 The proxy, rather than interception/DNS prechecks alone, checks actual connections.
 
@@ -35,7 +35,11 @@ health endpoints. IPv4 and IPv6 destination rules provide another private-range
 barrier. Firewall installation failure prevents proxy readiness. The serving
 process drops root and all capabilities after installing rules. Workers have no
 capabilities, no writable root filesystem, no secrets/host mounts, an ephemeral
-home/profile, the Chromium sandbox and the versioned Playwright seccomp profile.
+home/profile, the Chromium sandbox and a versioned Playwright seccomp profile.
+The profile additionally permits `chroot`: Chromium uses it inside its new user
+namespace. Outside that namespace the non-root collector has no SYS_CHROOT
+capability; container capabilities remain fully dropped. The default seccomp
+action remains ERRNO, and neither SYS_ADMIN nor an unconfined profile is granted.
 Each audit launches a fresh browser and closes it on completion/failure/deadline
 or client disconnect. Linux/ARM64 sandbox compatibility must be verified on the
 deployment host; there is no production `--no-sandbox` fallback.
