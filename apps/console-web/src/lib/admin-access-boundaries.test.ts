@@ -3,7 +3,7 @@ import { NextRequest } from "next/server";
 import { accountProxy } from "./account-proxy";
 import { adminReadProxy } from "./admin-read-proxy";
 import { GET as metrics } from "@/app/api/product-analytics/metrics/route";
-import { middleware } from "@/middleware";
+import { proxy } from "@/proxy";
 import { localizedPath } from "./i18n/routes";
 
 const fetchMock = vi.fn();
@@ -74,16 +74,16 @@ it.each(["fr", "en"] as const)("preserves localized account destinations and leg
   for (const path of ["/account/admin", "/account/admin/runs/42", "/account/admin/feedback"]) {
     const localized = localizedPath(path, lang);
     expect(localized).toBe((lang === "en" ? "/en" : "") + path);
-    // Account pages perform their own session checks; middleware does not substitute the legacy cookie.
-    expect(middleware(request(localized)).headers.get("x-middleware-next")).toBe("1");
+    // Account pages perform their own session checks; proxy does not substitute the legacy cookie.
+    expect(proxy(request(localized)).headers.get("x-middleware-next")).toBe("1");
   }
   // The legacy dashboard has no /en route today, even when linked from English navigation.
   for (const path of ["/dashboard", "/dashboard/analytics", "/dashboard/report/42"]) {
     expect(localizedPath(path, lang)).toBe(path);
-    const response = middleware(request(path, "argos_account=synthetic-admin"));
+    const response = proxy(request(path, "argos_account=synthetic-admin"));
     const location = new URL(response.headers.get("location")!);
     expect(location.pathname).toBe("/login");
     expect(location.searchParams.get("from")).toBe(path);
-    expect(middleware(request(path, "argos_admin=synthetic-legacy")).headers.get("x-middleware-next")).toBe("1");
+    expect(proxy(request(path, "argos_admin=synthetic-legacy")).headers.get("x-middleware-next")).toBe("1");
   }
 });
