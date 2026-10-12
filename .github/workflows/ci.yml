@@ -98,7 +98,14 @@ jobs:
       - name: Test CI and release helpers
         run: node --test ../../scripts/ci/changed-paths.test.mjs ../../scripts/check-release-evidence.test.mjs ../../scripts/release/inspect-runtime.test.mjs
       - run: npm run test
-      - run: npm run build
+      - name: Build without workspace or proxy convention warnings
+        run: |
+          npm run build 2>&1 | tee "$RUNNER_TEMP/console-web-build.log"
+          ! grep -Ei 'inferred your workspace root|middleware.*deprecated' "$RUNNER_TEMP/console-web-build.log"
+      - name: Build the standalone console-web Docker context
+        run: |
+          docker build --progress=plain --target build . 2>&1 | tee "$RUNNER_TEMP/console-web-docker-build.log"
+          ! grep -Ei 'inferred your workspace root|middleware.*deprecated' "$RUNNER_TEMP/console-web-docker-build.log"
       - name: Verify test failure propagates
         run: node ../../scripts/verify-ci-failures.mjs frontend
 
