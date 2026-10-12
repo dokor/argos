@@ -1,6 +1,7 @@
 "use client";
 import { useAccountSession, PersonalNavigation } from "./AccountSession";
 import UsagePanel from "./UsagePanel";
+import SocialProviderLogo, { socialProviderNames } from "./SocialProviderLogo";
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "@/components/LocalizedLink";
@@ -76,7 +77,13 @@ export default function AccountView({ mode = "me" }: { mode?: Mode }) {
       {["verify", "reset"].includes(mode) && !token && !message && <p>{copy.tokenMissing}</p>}
       <button className={s.button} disabled={busy || !enabled || ["verify", "reset"].includes(mode) && !token}>{busy ? copy.working : title}</button>
     </form>}
-    {["register", "sign-in"].includes(mode) && providers.length > 0 && <section className={s.card}><h2>{copy.social}</h2><div className={s.actions}>{providers.map(provider => <button className={s.button} disabled={busy} key={provider} onClick={() => void social(provider)}>{provider === "linkedin" ? "LinkedIn" : provider === "github" ? "GitHub" : "Google"}</button>)}</div></section>}
+    {["register", "sign-in"].includes(mode) && providers.length > 0 && <section className={s.social} aria-label={copy.social}>
+      <p className={s.socialDivider} aria-hidden="true">{copy.socialSeparator}</p>
+      <div className={s.socialActions}>{providers.map(provider => <button type="button" className={`${s.button} ${s.socialButton}`} disabled={busy || !enabled} key={provider} onClick={() => void social(provider)}>
+        <SocialProviderLogo provider={provider} />
+        <span>{copy.continueWith.replace("{provider}", socialProviderNames[provider] ?? provider)}</span>
+      </button>)}</div>
+    </section>}
     {mode === "me" && profile && <>
       <section className={s.card}><h2>{copy.name}</h2>
         {!profile.verified && <p>{copy.pending}</p>}
