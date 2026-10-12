@@ -19,7 +19,7 @@ export default function AccountView({ mode = "me" }: { mode?: Mode }) {
   const { t, lang } = useLang(), copy = t.account, router = useRouter();
   const [profile, setProfile] = useState<AccountProfile | null>(null), [providers, setProviders] = useState<string[]>([]);
   const [enabled, setEnabled] = useState(true), [busy, setBusy] = useState(false), [message, setMessage] = useState(""), [error, setError] = useState("");
-  const [methods, setMethods] = useState<Method[]>([]), [sessions, setSessions] = useState<Session[]>([]);
+  const [methods, setMethods] = useState<Method[] | null>(null), [sessions, setSessions] = useState<Session[]>([]);
   const [token, setToken] = useState(""), [returnTo, setReturnTo] = useState("/account/sites");
   const [name, setName] = useState(""), [email, setEmail] = useState(""), [password, setPassword] = useState(""), [code, setCode] = useState(""), [confirmed, setConfirmed] = useState(false);
   function fail(reason: unknown) { const key = reason instanceof AccountClientError ? reason.code : "account_unavailable"; setError(copy.errors[key as keyof typeof copy.errors] ?? copy.errors.account_unavailable); }
@@ -46,7 +46,7 @@ export default function AccountView({ mode = "me" }: { mode?: Mode }) {
   }, [mode, lang]);
   useEffect(() => {
     if(mode !== "me" || !sharedSession.denied) return;
-    queueMicrotask(()=>{setProfile(null);setMethods([]);setSessions([]);setError(copy.errors.session_invalid);});
+    queueMicrotask(()=>{setProfile(null);setMethods(null);setSessions([]);setError(copy.errors.session_invalid);});
   },[mode,sharedSession.denied,copy.errors.session_invalid]);
   async function act(work: () => Promise<void>) { if (busy) return; setBusy(true); setMessage(""); setError(""); try { await work(); } catch (reason) { fail(reason); } finally { setBusy(false); } }
   async function social(provider: string, intent = "login") {
@@ -62,6 +62,7 @@ export default function AccountView({ mode = "me" }: { mode?: Mode }) {
       if (mode === "reset") { await accountFetch("auth/reset", "POST", { token, password }); setMessage(copy.done); setPassword(""); setToken(""); }
     });
   }
+  const unlinkedProviders = methods === null ? [] : providers.filter(provider => !methods.some(method => method.provider === provider));
   const title = mode === "me" ? copy.title : mode === "sign-in" ? copy.signIn : mode === "register" ? copy.register : mode === "verify" ? copy.verify : mode === "reset" ? copy.reset : copy.forgot;
   const field = (id: string, label: string, value: string, set: (v: string) => void, type = "text", autoComplete?: string) => <div className={s.field}><label htmlFor={id}>{label}</label><input className={s.input} id={id} type={type} value={value} onChange={e => set(e.target.value)} autoComplete={autoComplete} required disabled={busy} maxLength={type === "password" ? 256 : 254} /></div>;
   return <><div className={s.chrome}><SiteNav /></div>{mode === "me" && <PersonalNavigation/>}<main className={s.page}><h1>{title}</h1>
@@ -99,8 +100,8 @@ export default function AccountView({ mode = "me" }: { mode?: Mode }) {
       </section>
       {profile.verified && <>
         <UsagePanel/>
-        <section className={s.card}><h2>{copy.methods}</h2><ul className={s.list}>{methods.map(method => <li key={method.id}><span>{method.provider === "password" ? copy.password : method.provider === "github" ? "GitHub" : method.provider === "linkedin" ? "LinkedIn" : "Google"}</span><button className={s.button} disabled={busy || methods.length < 2} onClick={() => { if (window.confirm(copy.confirmRemove)) void act(async () => { await accountFetch("methods/" + method.id + "/remove", "POST", { confirmed: true }); await load(); setMessage(copy.done); }); }}>{copy.remove}</button></li>)}</ul>
-          <div className={s.actions}>{providers.map(provider => <button key={provider} className={s.button} disabled={busy} onClick={() => void social(provider, "link")}>{copy.add} {provider}</button>)}</div>
+        <section className={s.card}><h2>{copy.methods}</h2><ul className={s.list}>{methods?.map(method => <li key={method.id}><span>{method.provider === "password" ? copy.password : method.provider === "github" ? "GitHub" : method.provider === "linkedin" ? "LinkedIn" : "Google"}</span><button className={s.button} disabled={busy || methods.length < 2} onClick={() => { if (window.confirm(copy.confirmRemove)) void act(async () => { await accountFetch("methods/" + method.id + "/remove", "POST", { confirmed: true }); await load(); setMessage(copy.done); }); }}>{copy.remove}</button></li>)}</ul>
+          {unlinkedProviders.length > 0 && <div className={s.actions}>{unlinkedProviders.map(provider => <button key={provider} className={s.button} disabled={busy} onClick={() => void social(provider, "link")}>{copy.add} {provider}</button>)}</div>}
           <form className={s.form} onSubmit={e => { e.preventDefault(); const data = new FormData(e.currentTarget); const form = e.currentTarget; void act(async () => { await accountFetch("methods/password", "POST", { password: data.get("newPassword") }); form.reset(); await load(); setMessage(copy.done); }); }}>
             <label htmlFor="new-password">{copy.password}</label><input className={s.input} name="newPassword" id="new-password" type="password" autoComplete="new-password" required maxLength={256} disabled={busy}/><p>{copy.passwordHint}</p><button className={s.button} disabled={busy}>{copy.save}</button>
           </form>

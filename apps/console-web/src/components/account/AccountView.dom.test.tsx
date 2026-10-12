@@ -99,6 +99,55 @@ describe("account screens", () => {
     await waitFor(() => expect(accountFetch).toHaveBeenCalledWith("auth/providers"));
     expect(screen.queryByRole("button", { name: "Google" })).not.toBeInTheDocument();
   });
+  it.each(["fr", "en"] as const)("offers only social providers that are not already linked in %s", async lang => {
+    const fallback = vi.mocked(accountFetch).getMockImplementation()!;
+    vi.mocked(accountFetch).mockImplementation(async (path, ...args) => {
+      if (path === "auth/providers") return { providers: ["google", "github", "linkedin"], enabled: true };
+      if (path === "methods") return [{ id: "1", provider: "github" }, { id: "2", provider: "google" }];
+      return fallback(path, ...args);
+    });
+    render(<LangProvider initialLang={lang}><AccountView /></LangProvider>);
+    const add = lang === "fr" ? "Associer" : "Link";
+    expect(await screen.findByRole("button", { name: add + " linkedin" })).toBeEnabled();
+    expect(screen.queryByRole("button", { name: add + " github" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: add + " google" })).not.toBeInTheDocument();
+    expect(screen.getByText("GitHub")).toBeInTheDocument();
+    expect(screen.getByText("Google")).toBeInTheDocument();
+  });
+  it("waits for the linked methods before offering an association", async () => {
+    const fallback = vi.mocked(accountFetch).getMockImplementation()!;
+    let resolveMethods!: (value: { id: string; provider: string }[]) => void;
+    const pendingMethods = new Promise<{ id: string; provider: string }[]>(resolve => { resolveMethods = resolve; });
+    vi.mocked(accountFetch).mockImplementation(async (path, ...args) => {
+      if (path === "auth/providers") return { providers: ["github"], enabled: true };
+      if (path === "methods") return pendingMethods;
+      return fallback(path, ...args);
+    });
+    render(<AccountView />);
+    await waitFor(() => expect(accountFetch).toHaveBeenCalledWith("methods"));
+    expect(screen.queryByRole("button", { name: "Associer github" })).not.toBeInTheDocument();
+    resolveMethods([{ id: "1", provider: "github" }]);
+    await screen.findByText("GitHub");
+    expect(screen.queryByRole("button", { name: "Associer github" })).not.toBeInTheDocument();
+  });
+  it("offers a provider again after its method is removed", async () => {
+    const fallback = vi.mocked(accountFetch).getMockImplementation()!;
+    let methods = [{ id: "1", provider: "github" }, { id: "2", provider: "password" }];
+    vi.mocked(accountFetch).mockImplementation(async (path, ...args) => {
+      if (path === "auth/providers") return { providers: ["github"], enabled: true };
+      if (path === "methods") return methods;
+      if (path === "methods/1/remove") { methods = methods.filter(method => method.id !== "1"); return { accepted: true }; }
+      return fallback(path, ...args);
+    });
+    vi.spyOn(window, "confirm").mockReturnValueOnce(true);
+    render(<AccountView />);
+    const github = await screen.findByText("GitHub");
+    expect(screen.queryByRole("button", { name: "Associer github" })).not.toBeInTheDocument();
+    fireEvent.click(github.closest("li")!.querySelector("button")!);
+    expect(await screen.findByRole("button", { name: "Associer github" })).toBeEnabled();
+    expect(screen.queryByText("GitHub")).not.toBeInTheDocument();
+    expect(accountFetch).toHaveBeenCalledWith("methods/1/remove", "POST", { confirmed: true });
+  });
   it("disables archival until its explicit confirmation and keeps email read-only", async () => {
     render(<AccountView />);
     const close = await screen.findByRole("button", { name: "Fermer mon compte" }); expect(close).toBeDisabled();
