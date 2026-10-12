@@ -51,9 +51,9 @@ try {
         const copy = translations[lang], mobile = width <= 760;
         const context = await browser.newContext({ viewport: { width, height: 900 }, colorScheme: theme });
         let signedIn = false;
-        await context.route('**/api/account/me', route => route.fulfill({ status: signedIn ? 200 : 401, contentType: 'application/json', body: JSON.stringify(signedIn ? { displayName: 'Fixture', email: null, verified: false } : { error: 'session_invalid' }) }));
+        await context.route('**/api/account/session', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ signedIn }) }));
         // Header visibility follows the verified session response, not cookie presence.
-        // Server-side validation of real HttpOnly cookies is covered by auth/status tests.
+        // Server-side validation of real HttpOnly cookies is covered by account/session tests.
         await context.route('**/api/auth/status', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ isAdmin: true }) }));
         const page = await context.newPage();
         const errors = [];

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { accountFetch, AccountClientError, type AccountProfile } from "./account-client";
+import { accountFetch, AccountClientError } from "./account-client";
 
 /** Verify the HttpOnly session through the BFF, including after auth transitions. */
 export function useAccountNav(): boolean | null {
@@ -15,8 +15,8 @@ export function useAccountNav(): boolean | null {
       controller?.abort();
       const request = new AbortController();
       controller = request;
-      void accountFetch<AccountProfile>("me", "GET", undefined, request.signal)
-        .then(() => { if (!request.signal.aborted) setSignedIn(true); })
+      void accountFetch<{ signedIn: boolean }>("session", "GET", undefined, request.signal)
+        .then(status => { if (!request.signal.aborted) setSignedIn(status.signedIn); })
         .catch(reason => {
           if (!request.signal.aborted) {
             // A service failure must not masquerade as a signed-out session.
