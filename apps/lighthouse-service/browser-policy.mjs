@@ -9,7 +9,7 @@ export function proxyEndpoint(value = process.env.AUDIT_EGRESS_PROXY) {
 }
 export function browserFlags(proxy) {
   return [`--proxy-server=${proxy}`, '--proxy-bypass-list=<-loopback>',
-    '--host-resolver-rules=MAP * ~NOTFOUND', '--disable-quic',
+    `--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE ${new URL(proxy).hostname}`, '--disable-quic',
     '--force-webrtc-ip-handling-policy=disable_non_proxied_udp',
     '--disable-background-networking', '--disable-extensions', '--disable-component-update'];
 }

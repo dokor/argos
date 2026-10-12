@@ -6,6 +6,7 @@ root=$(pwd)
 cleanup() {
   result=$?
   if [ "$result" -ne 0 ]; then
+    docker exec argos-security-gateway iptables -nvL OUTPUT 2>&1 || true
     docker logs --tail 80 argos-security-gateway 2>&1 || true
     docker logs --tail 80 argos-security-runtime 2>&1 || true
     docker logs --tail 80 argos-security-lighthouse 2>&1 || true
