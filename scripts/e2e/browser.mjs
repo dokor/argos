@@ -58,7 +58,8 @@ try {
     const methodCoverage=method.locator('dl > div').filter({has:page.getByText('Couverture pondérée du barème',{exact:true})});
     assert.equal(await methodCoverage.locator('dd').textContent(),weightedCoverage,'Method must retain the same weighted coverage');
     if(typeof report.scores.completeness==='number') {
-      const completeness=method.locator('dl > div').filter({has:page.getByText('Complétude opérationnelle des modules',{exact:true})});
+      const completeness=method.locator('dl > div').filter({has:page.getByText('Modules terminés, échoués ou ignorés',{exact:true})});
+      assert.equal(await completeness.count(),1,'Measurement details must expose exactly one module completeness row');
       assert.equal(await completeness.locator('dd').textContent(),`${report.scores.completeness} %`,'Module completeness must remain distinct from weighted coverage');
     }
     if(scenario==='errors') assert.ok(report.issues.some(issue=>issue.id.startsWith('runtime.')),'Runtime errors must surface');
