@@ -106,11 +106,11 @@ createServer((req, res) => {
   const match = path.match(/^\/api\/reports\/(review-[a-z]+)(?:-fixture)?(\/status)?$/);
   if (!match) { res.writeHead(404); res.end("{}"); return; }
   const [, token, status] = match;
-  if (status && (tokens.has(token) || token === "review-running" || token === "review-failed")) {
+  if (status && (tokens.has(token) || token === "review-running" || token === "review-finalizing" || token === "review-failed")) {
     const modules = ["http", "html", "runtime", "lighthouse", "ssl", "observatory", "zap", "tech"].map((id, n) => ({
-      id, label: id, status: n < 2 ? "COMPLETED" : n === 2 ? "RUNNING" : "PENDING",
+      id, label: id, status: token === "review-finalizing" ? (n === 6 ? "SKIPPED" : "COMPLETED") : n < 2 ? "COMPLETED" : n === 2 ? "RUNNING" : "PENDING",
     }));
-    res.end(JSON.stringify({ status: token === "review-running" ? "RUNNING" : token === "review-failed" ? "FAILED" : "COMPLETED", moduleStatuses: JSON.stringify(modules) }));
+    res.end(JSON.stringify({ status: token === "review-running" || token === "review-finalizing" ? "RUNNING" : token === "review-failed" ? "FAILED" : "COMPLETED", moduleStatuses: JSON.stringify(modules) }));
   } else if (!status && tokens.has(token)) res.end(JSON.stringify(fixture(token)));
   else { res.writeHead(404); res.end("{}"); }
 }).listen(3018, "127.0.0.1", () => console.log("Visual fixtures: http://127.0.0.1:3018 (GET only)"));
