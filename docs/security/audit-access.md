@@ -7,6 +7,12 @@ admin, avant l'accès aux services/DB. Il ne fait confiance ni au cookie, ni à 
 identité fournie dans un header du navigateur. Comparaison en temps constant.
 Ce choix maintient l'auth mono-admin actuelle ; OAuth/multi-utilisateur est séparé.
 
+La [préparation de transition #516](../accounts/legacy-admin-transition.md)
+cartographie les consommateurs et les prérequis opérateur de bascule. Ces
+contrôles restent actifs jusqu'à validation de la parité et du secours.
+`ADMIN_API_TOKEN` sert aussi à la collecte analytics serveur consentie ;
+il ne doit pas être supprimé avec le cookie de l'administration historique.
+
 | Route | Next/BFF | Java | Credential |
 |---|---|---|---|
 | POST /api/audits | validation URL publique | validation URL publique | aucun |
