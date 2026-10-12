@@ -36,7 +36,7 @@ export async function protectContext(context, cancel) {
         bytes += event.dataLength;
         if (bytes > 20 * 1024 * 1024) cancel();
       });
-    } catch { cancel(); }
+    } catch (error) { cancel(error); }
   });
 }
 export function safeOrigin(value) { try { return new URL(value).origin; } catch { return '[invalid URL]'; } }

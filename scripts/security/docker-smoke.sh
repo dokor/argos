@@ -41,8 +41,11 @@ for attempt in $(seq 1 30); do
   sleep 1
 done
 docker exec argos-security-runtime node --input-type=module -e "
-  import {chromium} from 'playwright';import {browserFlags} from './browser-policy.mjs';
+  import {chromium} from 'playwright';import {browserFlags,protectContext} from './browser-policy.mjs';
   const browser=await chromium.launch({chromiumSandbox:true,args:browserFlags('http://127.0.0.1:3128')});
+  const context=await browser.newContext({serviceWorkers:'block',acceptDownloads:false});
+  await protectContext(context,error=>{if(error)console.error('fixture_setup',error);});
+  const page=await context.newPage();await page.goto('http://8.8.8.8/',{timeout:10000});
   await browser.close();
 "
 docker exec argos-security-runtime node --input-type=module -e "
