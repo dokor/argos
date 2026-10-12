@@ -226,6 +226,11 @@ Le one-liner du rapport est retourné comme clé (`"high"` | `"good"` | `"fair"`
 
 ## Conventions de développement
 
+### Livraison dans une pull request
+- Toute modification de code Argos doit être livrée dans une PR : créer une branche dédiée ou mettre à jour la PR pertinente, exécuter les vérifications adaptées, pousser les changements et ouvrir la PR avant de considérer le travail terminé.
+- Fournir le lien de la PR dans la réponse finale. La création ou la mise à jour de la PR est autorisée pour les changements demandés ; sa fusion et le déploiement nécessitent une demande explicite.
+- Si l'accès distant empêche la création de la PR, conserver les changements et signaler précisément le blocage.
+
 ### Nommage Java
 - Classes de service : `XxxService` (logique métier), `XxxDao` (accès DB), `XxxWs` (endpoint REST)
 - Entités QueryDSL générées : ne pas modifier manuellement sauf pour ajouter des champs après migration Flyway
