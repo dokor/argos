@@ -20,6 +20,20 @@ Les liens utilisent un fragment `#token=` retiré après hydratation. Ouvrir le 
 
 ## Applications sociales
 
+### Liens publics pour Google Auth Platform
+
+Dans **Branding → App domain**, renseigner après fusion et déploiement :
+
+- Page d’accueil : `https://argos.lelouet.fr/`
+- Conditions d’utilisation : `https://argos.lelouet.fr/conditions-utilisation`
+- Règles de confidentialité : `https://argos.lelouet.fr/confidentialite`
+
+Ces pages françaises doivent répondre sans session ni restriction d’accès. Elles sont liées depuis le footer public et les écrans de connexion/inscription ; en anglais, les libellés indiquent la langue française. La page `/informations-legales` reste une présentation de l’opérateur, distincte des CGU. La confidentialité explicite les données d’identité utilisées par Google (`openid email profile`), leur usage, leur conservation et le retrait du moyen de connexion.
+
+Le domaine autorisé est `lelouet.fr`. Vérifier la propriété de ce domaine dans Google Search Console avec un compte associé au projet Google. Conserver le callback OAuth configuré exactement comme indiqué ci-dessous. Consulter les [exigences de marque et de liens publics de Google](https://developers.google.com/identity/protocols/oauth2/production-readiness/brand-verification). L’ajout de ces pages ne publie pas l’application OAuth et n’active pas les comptes.
+
+### Clients et callbacks
+
 Créer des applications de test distinctes de la production et enregistrer exactement ces callbacks sur l'origine utilisée :
 
 | Fournisseur | Callback | Permissions |

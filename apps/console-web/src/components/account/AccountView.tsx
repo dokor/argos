@@ -69,6 +69,9 @@ export default function AccountView({ mode = "me" }: { mode?: Mode }) {
   return <><div className={s.chrome}><SiteNav /></div>{mode === "me" && <PersonalNavigation/>}<main className={s.page}><h1>{title}</h1>
     {error && <p className={`${s.notice} ${s.error}`} role="alert">{error}</p>}{message && <p className={s.notice} role="status">{message}</p>}
     {!enabled && <p role="status">{copy.unavailable}</p>}
+    {["register", "sign-in"].includes(mode) && <p className={s.policies}>
+      {copy.policyIntro} <Link href="/conditions-utilisation">{copy.policyTerms}</Link> {copy.policyAnd} <Link href="/confidentialite">{copy.policyPrivacy}</Link>.
+    </p>}
     {mode !== "me" && <form className={s.form} onSubmit={submit}>
       {mode === "register" && field("name", copy.name, name, setName, "text", "name")}
       {["register", "sign-in", "forgot"].includes(mode) && field("email", copy.email, email, setEmail, "email", "email")}

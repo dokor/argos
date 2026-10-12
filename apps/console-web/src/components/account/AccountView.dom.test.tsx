@@ -16,6 +16,15 @@ beforeEach(() => {
   vi.mocked(accountFetch).mockImplementation(async path => path === "auth/providers" ? { providers: [], enabled: true } : path === "return" ? { returnTo: "/account" } : path === "me" ? { displayName: "Fixture", email: "fixture@example.com", verified: true } : []);
 });
 describe("account screens", () => {
+  it.each(["fr", "en"] as const)("makes public policy links available before either sign-in method in %s", async lang => {
+    for (const mode of ["sign-in", "register"] as const) {
+      const view = render(<LangProvider initialLang={lang}><AccountView mode={mode} /></LangProvider>);
+      await waitFor(() => expect(accountFetch).toHaveBeenCalledWith("auth/providers"));
+      expect(screen.getByRole("link", { name: lang === "fr" ? "conditions d’utilisation" : "terms of use (French)" })).toHaveAttribute("href", "/conditions-utilisation");
+      expect(screen.getByRole("link", { name: lang === "fr" ? "politique de confidentialité" : "privacy policy (French)" })).toHaveAttribute("href", "/confidentialite");
+      view.unmount();
+    }
+  });
   it.each(["fr", "en"] as const)("offers contextual registration navigation and preserves the destination in %s", async lang => {
     const destination = lang === "fr" ? "/account/sites/42" : "/en/account/sites/42";
     window.history.replaceState(null, "", "/account/register?returnTo=" + encodeURIComponent(destination));

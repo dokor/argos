@@ -9,9 +9,9 @@ Depuis `apps/console-web` : `npm run lint`, `npm run test`,
 `API_BASE=http://127.0.0.1:3018 npm run build` (adapter la variable à PowerShell).
 Le test frontend exécute aussi les tests du contrôle éditorial et ce contrôle.
 
-Résultats finaux : lint réussi ; 60 fichiers et 434 tests Vitest réussis ;
-3 tests du contrôle éditorial réussis ; contrôle FR/EN réussi (62 routes et
-3 128 candidats) ; build de production réussi ; `git diff --check` réussi.
+Résultats finaux : lint réussi ; 60 fichiers et 436 tests Vitest réussis ;
+3 tests du contrôle éditorial réussis ; contrôle FR/EN réussi (63 routes et
+3 181 candidats) ; build de production réussi ; `git diff --check` réussi.
 Les premières exécutions ont
 permis de corriger les assertions d’anciens libellés, un remplacement trop large,
 des accords au singulier et le correctif de recommandation. Aucune assertion de
@@ -59,3 +59,11 @@ validation juridique n’est inventé. Le mainteneur suit le
 [guide court](../product/editorial-guide.md) et consigne dans la PR le relecteur,
 la date, les parcours relus et les réserves avant publication. Les tests de
 structure ne prétendent pas détecter toutes les formulations artificielles.
+
+## Mise à jour après intégration de main
+
+`main` à `d70a80d` (#513) a ajouté les conditions d’utilisation et les liens
+de confidentialité avant connexion. Les conflits des deux dictionnaires ont
+été résolus en gardant toutes les corrections éditoriales et les quatre nouvelles
+clés de compte par langue. L’inventaire inclut désormais cette page française.
+Les validations automatisées ci-dessus ont été relancées sur cette résolution.

@@ -24,8 +24,9 @@ restent celles du [contrat public](../seo/public-page-intents.md).
 | `/test-accessibilite-site-web` | Aucune | Limites automatiques et vérification humaine conservées. |
 | `/confidentialite` | Aucune | Contrat de conservation lu pour corriger la FAQ ; page juridique inchangée. |
 | `/informations-legales` | Aucune | Identité et informations encore à qualifier conservées. |
+| `/conditions-utilisation` | Aucune | Page et liens de connexion ajoutés par #513, conservés lors de la résolution des conflits avec `main`. |
 
-Les six pages françaises sans version anglaise restent ainsi identifiées : pas
+Les sept pages françaises sans version anglaise restent ainsi identifiées : pas
 de faux lien de traduction ni de hreflang ajouté. Les routes, canonical,
 métadonnées et intentions de recherche sont préservés.
 
@@ -47,7 +48,7 @@ métadonnées et intentions de recherche sont préservés.
   les pages ; auparavant le bouton anglais gardait un nom français.
 
 `npm run check:editorial -- --inventory ../../outputs/editorial-inventory.json`
-énumère 62 routes, dont les 30 routes publiques ci-dessus, et les chaînes
+énumère 63 routes, dont les 31 routes publiques ci-dessus, et les chaînes
 candidates des pages, composants et bibliothèques. Ce fichier est régénérable et
 reste dans les sorties locales. L’extraction inclut du code technique ; les
 chaînes des dictionnaires sont listées séparément par leurs sources. Le contrôle
