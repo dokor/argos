@@ -42,7 +42,7 @@ Les nombres employés par les tests sont uniquement des fixtures.
 
 La configuration est chargée au démarrage ; son activation ou l'affectation
 d'une offre à des comptes relève d'une décision d'exploitation et produit.
-Ce lot ne crée pas d'interface d'attribution commerciale ou de facturation.
+L’[administration](administration-contract.md) permet de modifier l’offre et le plafond individuel ; aucune facturation n’est ajoutée.
 Le quota est vérifié dans `AuditRunService.createQueuedRun`, point commun du
 moteur, même lorsqu'un appelant n'a pas fourni de connexion JDBC. Les futurs
 points d'entrée API/CI/programmation devront utiliser ce moteur avec le

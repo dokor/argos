@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class AccessibilityReviewContractTest {
     @Test void eachRuleHasDatedSourcesInputsAndTraceableFixturesOrAnExplicitCoverageGap() throws Exception {
         var mapper = new ObjectMapper();
-        JsonNode review = mapper.readTree(Path.of("../../docs/accessibility-review-v1.json").toFile());
+        JsonNode review = mapper.readTree(Path.of("../../docs/accessibility/review-v1.json").toFile());
         assertEquals("PROPOSED", review.path("status").asText());
         assertTrue(review.path("reviewer").isNull());
         assertTrue(review.path("reviewedAt").isNull());

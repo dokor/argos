@@ -87,7 +87,7 @@ restent dans ce document de revue, jamais dans le rapport public.
 
 ## Fixtures et contrat avec #262/#263
 
-[qualification-v1.json](../apps/api-backend/src/test/resources/accessibility/qualification-v1.json)
+[qualification-v1.json](../../apps/api-backend/src/test/resources/accessibility/qualification-v1.json)
 sépare :
 - `legalReview` : faits synthétiques et résultat proposé pour une revue humaine ;
 - `runtime` : HTML/faits abstraits déjà acceptés par le service #262 et sorties attendues.
@@ -116,7 +116,7 @@ informations manquantes. Ne pas promettre « conforme », « sans risque » ou u
 
 ## Publication et maintenance
 
-Le [registre de revue v1](accessibility-review-v1.json) identifie les douze
+Le [registre de revue v1](review-v1.json) identifie les douze
 règles de cette matrice avec cadre, date, sources, informations requises et
 fixtures liées. Il signale explicitement les lacunes de couverture des organismes
 d'intérêt général, associations et exceptions documentées. Les tests de contrat

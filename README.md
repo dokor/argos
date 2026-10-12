@@ -93,6 +93,11 @@ npm run dev
 
 ---
 
+## Documentation
+
+Le [sommaire de docs](docs/README.md) relie les contrats, procédures de test,
+décisions produit et références d’exploitation.
+
 ## Déploiement
 
 Chaque application dispose de son propre workflow GitHub Actions (`/.github/workflows/`) et d'un `Dockerfile`.

@@ -6,4 +6,8 @@ Synthèse : identité et date UTC, périmètre sans query/credentials, verdict c
 
 La fenêtre n’a ni token dans son URL ni lien de retour privé dans le PDF. Son titre générique Argos-format-date sert de nom de sauvegarde proposé. Aucun logo distant, QR de rapport, JSON admin, analytics ou lien de partage privé n’y est rendu. Les liens éditoriaux sont publics. Un lecteur ayant déjà sauvegardé un rapport ne peut être empêché de conserver sa copie ; l’export vérifie seulement l’accès au moment de sa préparation.
 
-Validation : scripts/e2e/report-pdf.mjs bâtit Next avec un backend local contrôlé puis produit 16 PDF (quatre fixtures × FR/EN × deux formats), dont données longues, groupe et priorité orpheline. 42 pages rendues avec Poppler ; revue de la planche des pages et inspection détaillée de pages longues/finales, accents et numéros de page. Textes et métadonnées extraits avec pypdf, aucun token ; PDF textuels/taggés Chromium, sans revendication de conformité PDF/UA. Résultats dans docs/testing/report/pdf-contract.json et pdf-rendering.json ; fichiers et PNG locaux sous output/pdf/report-fixtures. 10 tests de contrat/navigation, lint et build réussis.
+## Vérification
+
+La [recette web/PDF](../testing/report.md) décrit les fixtures, commandes, sorties
+et contrôles de rendu. Les PDF et images générés restent dans outputs, sans
+résultats de recette versionnés dans ce contrat.

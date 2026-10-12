@@ -20,7 +20,7 @@ Leur pool partagé a deux threads, une queue de deux tâches et refuse les trava
 supplémentaires en mode dégradé. HTML, Playwright, Lighthouse, ZAP et Tech restent
 séquentiels sur le worker d'audit. Le rapport assemble les résultats dans l'ordre
 historique et effectue une seule tentative de publication par traitement.
-L'atomicité complete/publication globale reste le sujet distinct #228.
+L’atomicité globale est décrite dans [la publication](../security/audit-publication.md).
 
 `audit.remote-modules.timeout` règle le délai par appel distant, queue comprise
 (défaut : 2 minutes, durée strictement positive). Les deux deadlines démarrent à
@@ -55,16 +55,4 @@ Ces timings comprennent les connexions de test ; ils ne mesurent ni le Raspberry
 ni le parcours réseau réel. La matrice historique 10.11/11.4 a établi la
 compatibilité initiale ; la CI courante cible la version 11.4 déployée.
 
-Première exécution CI (commit `865ea0c`) : les huit tests d'intégration réussissent
-sur les deux versions. La fixture mesure 57 → 87 ms sur 10.11 et 74 → 84 ms sur
-11.4. Elle démontre la réduction de statements et la correction concurrente,
-pas un gain de latence SQL sur une base locale ; l'expression JSON a un coût.
-
-`syntheticLatencyFixtureMeasuresSerialStagesAndParallelRun` mesure aussi trois
-étapes de 200 ms (HTML et deux appels distants mockés), d'abord en séquence puis
-dans le vrai processeur parallèle, avec publication du rapport. Il imprime
-`remote_fixture` dans les résultats Surefire. Ces durées ne sont pas des seuils
-de test et ne représentent pas un audit réseau réel ; les tests par latch
-vérifient séparément que le chevauchement a effectivement lieu.
-Exécution locale Java 21 : 610 ms pour les trois étapes séquentielles, 232 ms
-pour le traitement parallèle avec composition/publication mockée du rapport.
+Les timings de fixtures ne mesurent pas la latence en production. Conserver les résultats de chaque exécution dans les artefacts CI associés au SHA.

@@ -1,3 +1,5 @@
+> Snapshot du 5 octobre 2026 conservé comme preuve du dossier V1. Les versions et résultats de scan ci-dessous ne décrivent pas les dépendances actuelles.
+
 # Dependency remediation — 5 October 2026 (#259)
 
 Fresh npm advisory scans found frontend 19 affected package entries (2 critical, 12 high, 5 moderate), Lighthouse 25 (9 high, 16 moderate), runtime 3 (1 high, 1 moderate, 1 low). Counts include transitive propagation, not that many distinct exploits or proof of exploitation.

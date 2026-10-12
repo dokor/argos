@@ -32,8 +32,9 @@ Les journaux métier de sécurité contiennent seulement action/résultat/date/I
 
 Mesurer Argon2id sur l'hôte cible avec la charge et la mémoire disponibles ; minimum 19 MiB, 2 passes, parallélisme 1. Les mesures de tests Windows ne constituent pas un dimensionnement du Raspberry de production. Évaluer la concurrence maximale et le coût des tentatives invalides avant activation.
 
-## État de validation
+## Recette avant activation
 
-Code et tests locaux préparés pour #439–#444, après lecture de #8. Les tests MariaDB exercent migrations, contraintes, courses, archivage et droits sur le vrai moteur. Les tests HTTP démarrent le vrai serveur Jersey/Grizzly, et les tests BFF contrôlent cookies, CSRF, filtrage des headers et secrets. Les tests crypto signent de vrais JWT/OIDC de fixture ; l'échange des fournisseurs est simulé dans les courses DB.
-
-La demande utilisateur est « configuration à préparer ; tests locaux d'abord ». Les essais avec applications OAuth et SMTP réels, HTTPS déployé, charge Argon2 sur l'hôte cible et revue indépendante restent des critères de recette avant clôture et activation. Aucun déploiement ni clôture automatique des issues.
+La [procédure commune](../testing/accounts.md) couvre les tests locaux, les
+fixtures MariaDB et les parcours navigateur. Les échanges fournisseurs y sont
+simulés. Applications OAuth et SMTP réels, HTTPS déployé, charge Argon2 sur l'hôte
+cible et revue indépendante restent à vérifier avant activation.

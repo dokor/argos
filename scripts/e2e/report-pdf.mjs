@@ -22,7 +22,7 @@ const server=spawn(process.execPath,[path.join(root,'node_modules/next/dist/bin/
 let browser;
 try{
  let ready=false;for(let i=0;i<100;i++){try{const r=await fetch('http://localhost:3090/robots.txt');if(r.ok){ready=true;break;}}catch{}await new Promise(r=>setTimeout(r,200));}assert.ok(ready,diagnostics);
- browser=await chromium.launch({headless:true});const context=await browser.newContext();const page=await context.newPage();const output='output/pdf/report-fixtures';fs.mkdirSync(output,{recursive:true});const rows=[];
+ browser=await chromium.launch({headless:true});const context=await browser.newContext();const page=await context.newPage();const output='outputs/pdf/report-fixtures';fs.mkdirSync(output,{recursive:true});const rows=[];
 
  if(webOnly){
   const directory='outputs/report-validation';fs.mkdirSync(directory,{recursive:true});const checks=[];
@@ -58,7 +58,7 @@ try{
    assert.deepEqual(errors,[]);await viewContext.close();
    if(width===1440&&theme==='dark')console.log('Validated report views: '+fixture+' '+lang);
   }
-  fs.writeFileSync('docs/testing/report/web-matrix.json',JSON.stringify(checks,null,2)+'\n');
+  fs.writeFileSync('outputs/report-validation/web-matrix.json',JSON.stringify(checks,null,2)+'\n');
   for(const lang of ['fr','en']){
    const prefix=lang==='en'?'/en':'';await page.goto('http://localhost:3090'+prefix+'/report/fixture-historical?view=actions');
    await page.getByRole('link',{name:(lang==='fr'?'Voir le constat':'View finding')+': Load resources',exact:true}).click();
@@ -67,7 +67,7 @@ try{
    await page.getByLabel(lang==='fr'?'Domaine':'Domain',{exact:true}).selectOption('seo');await page.getByRole('button',{name:lang==='fr'?'Critiques':'Critical',exact:true}).click();
    await page.getByRole('button',{name:lang==='fr'?'Afficher tous les constats':'Show all findings',exact:true}).click();assert.ok(!page.url().includes('domain='));
   }
-  fs.writeFileSync('docs/testing/report/web-matrix.json',JSON.stringify(checks,null,2)+'\n');const failures=checks.filter(r=>r.contrastFailures.length);console.log(failures.slice(0,15));assert.equal(failures.length,0,'Text contrast');console.log(checks.length+' report view/layout/keyboard/reflow cases passed.');
+  fs.writeFileSync('outputs/report-validation/web-matrix.json',JSON.stringify(checks,null,2)+'\n');const failures=checks.filter(r=>r.contrastFailures.length);console.log(failures.slice(0,15));assert.equal(failures.length,0,'Text contrast');console.log(checks.length+' report view/layout/keyboard/reflow cases passed.');
  }else{
  for(const lang of ['fr','en'])for(const [fixture,report] of Object.entries(fixtures))for(const format of ['summary','full']){
   await page.goto('http://localhost:3090'+(lang==='en'?'/en':'')+'/report/fixture-'+fixture+'?view=technical&domain=security&severity=critical');
@@ -80,6 +80,6 @@ try{
   await popup.screenshot({path:output+'/'+name+'.png',fullPage:true});rows.push({fixture,lang,format,findings:count,title:await popup.title(),url:'about:blank'});await popup.close();
  }
  await page.goto('http://localhost:3090/report/fixture-expiring');await page.getByRole('button',{name:'Exporter en PDF',exact:true}).click();await page.getByText('Export impossible',{exact:false}).waitFor();
- fs.mkdirSync('docs/testing/report',{recursive:true});fs.writeFileSync('docs/testing/report/pdf-contract.json',JSON.stringify(rows,null,2)+'\n');console.log('16 PDF fixtures exported; same-origin access, expiration, formats, unique counts and token-free previews verified.');
+ fs.mkdirSync(output,{recursive:true});fs.writeFileSync('outputs/pdf/report-fixtures/pdf-contract.json',JSON.stringify(rows,null,2)+'\n');console.log('16 PDF fixtures exported; same-origin access, expiration, formats, unique counts and token-free previews verified.');
  }
 }finally{await browser?.close();server.kill();await new Promise(resolve=>api.close(resolve));}

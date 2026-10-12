@@ -2,10 +2,9 @@
 
 `buildReportModel(report)` est une projection pure du DTO stocké. La page FR et
 son équivalent EN réutilisent la même projection pour la synthèse, la grille des
-domaines, les filtres, les constats et les liens des actions. Les futurs exports
+domaines, les filtres, les constats et les liens des actions. Les exports
 doivent utiliser `findings`, `groups`, `counts` et `priorities` de cette projection,
-sans exporter seulement les éléments visibles sous le filtre courant. Aucun export
-PDF n'est ajouté dans ce lot (#43).
+sans exporter seulement les éléments visibles sous le filtre courant. L’[export PDF](pdf.md) applique ce contrat.
 
 ## Identité et domaines
 
