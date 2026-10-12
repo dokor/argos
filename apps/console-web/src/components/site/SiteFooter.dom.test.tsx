@@ -18,6 +18,7 @@ describe("shared footer (#317)", () => {
       "/ressources/audit-technique-gratuit",
       "/guides/checklist-audit-site-web",
       "/ressources/accessibilite-numerique",
+      "/conditions-utilisation",
       "/confidentialite",
       "/informations-legales",
       "/a-propos",
@@ -31,6 +32,7 @@ describe("shared footer (#317)", () => {
   it("links translated guides in English and labels French-only service information", () => {
     render(<LangProvider initialLang="en"><SiteFooter /></LangProvider>);
     expect(screen.getByRole("link", { name: "Website audit checklist" })).toHaveAttribute("href", "/en/guides/website-audit-checklist");
+    expect(screen.getByRole("link", { name: "Terms of use (French)" })).toHaveAttribute("href", "/conditions-utilisation");
     expect(screen.getByRole("link", { name: "Privacy (French)" })).toHaveAttribute("href", "/confidentialite");
     expect(screen.getByRole("link", { name: "About Argos" })).toHaveAttribute("href", "/en/about");
   });

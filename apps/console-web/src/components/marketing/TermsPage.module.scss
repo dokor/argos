@@ -1,0 +1,19 @@
+@use "../../styles/tokens" as t;
+
+.page {
+  @include t.public-type;
+  min-height: 100vh;
+  background: t.$bg;
+  color: t.$text;
+}
+.main { max-width: t.$container-width; margin: auto; padding: 48px t.$page-gutter 64px; }
+.content { max-width: 72ch; }
+.intro { padding-bottom: 32px; }
+.content p { margin-top: 16px; }
+.content section { border-top: 1px solid t.$border; padding-block: 32px; }
+.content a { color: t.$brand; text-decoration: underline; text-underline-offset: .2em; }
+.content a:focus-visible { outline: 3px solid t.$brand; outline-offset: 3px; }
+@media (max-width: 600px) {
+  .main { padding: 32px t.$page-gutter-mobile 48px; }
+  .content section { padding-block: 24px; }
+}
