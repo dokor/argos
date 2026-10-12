@@ -8,8 +8,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "test": "npm run test:editorial && npm run check:editorial && vitest run",
+    "test:watch": "vitest",
+    "check:editorial": "node scripts/check-editorial.mjs",
+    "test:editorial": "node --test scripts/check-editorial.test.mjs"
   },
   "dependencies": {
     "next": "16.3.8",

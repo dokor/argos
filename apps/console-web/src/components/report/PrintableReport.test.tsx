@@ -15,7 +15,7 @@ describe('PDF contract',()=>{
  });
  it('keeps provisional coverage and limitations in summary, without findings details',()=>{
   const html=renderToStaticMarkup(<PrintableReport report={demoReport('fr',true)} lang="fr" format="summary"/>);
-  expect(html).toContain('Note provisoire');expect(html).toContain('50 %');expect(html).toContain('ne certifie');expect(html).not.toContain('id="finding-');
+  expect(html).toContain('Score provisoire');expect(html).toContain('50 %');expect(html).toContain('ne certifie');expect(html).not.toContain('id="finding-');
  });
  it('never exports inaccessible or invalid report responses',async()=>{
   for(const status of [404,410,500])await expect(loadExportReport('fixture-private',vi.fn().mockResolvedValue(new Response('{}',{status})))).rejects.toThrow('Export unavailable');

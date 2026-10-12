@@ -41,7 +41,7 @@ describe("historical report consistency", () => {
     expect(screen.getByText(/Certains constats de cette action/)).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: /^Voir le constat/ })).toHaveLength(2);
     expect(screen.getByText("Constats regroupés : 2")).toBeInTheDocument();
-    const gridLink = screen.getByRole("link", { name: /Accessibilité.*1 point/ });
+    const gridLink = screen.getByRole("link", { name: /Accessibilité.*1 constat/ });
     expect(gridLink).toHaveTextContent("65/100");
   });
 

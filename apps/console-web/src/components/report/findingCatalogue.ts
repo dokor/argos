@@ -1,7 +1,7 @@
 import type { Issue } from "./types";
 import type { Lang } from "@/lib/i18n/routes";
 
-export const CATALOGUE_VERSION = "report-content-v1";
+export const CATALOGUE_VERSION = "report-content-v2";
 export type FindingContent = { title: string; observation: string; impact: string; recommendation: string; verification: string };
 type Copy = [title: string, impact: string, recommendation: string, verification: string];
 const catalogue: Record<string, Record<Lang, Copy>> = {};
@@ -156,11 +156,12 @@ export function findingContent(issue: Issue, lang: Lang): FindingContent {
   const copy = issue.id ? catalogue[issue.id]?.[lang] : undefined;
   const uncertain = issue.confidence !== "HIGH" && issue.confidence !== "MEDIUM";
   const confirm = lang === "fr" ? "Confirmer le signal et son périmètre avant toute correction. " : "Confirm the signal and its scope before making changes. ";
+  const recommendation = copy?.[2] ?? cleanEvidence(issue.recommendation);
   return {
     title: copy?.[0] ?? (cleanEvidence(issue.title) || (lang === "fr" ? "Constat à examiner" : "Finding to review")),
     observation: lang === "fr" ? "Le contrôle a signalé un point à examiner dans le périmètre mesuré." : "The check flagged a point to review within the measured scope.",
     impact: copy?.[1] ?? (cleanEvidence(issue.impact) || (lang === "fr" ? "Impact non renseigné." : "Impact not provided.")),
-    recommendation: (uncertain ? confirm : "") + (copy?.[2] ?? (cleanEvidence(issue.recommendation) || confirm)),
+    recommendation: recommendation ? (uncertain ? confirm : "") + recommendation : confirm.trim(),
     verification: copy?.[3] ?? (lang === "fr" ? "Reproduire l’observation puis relancer le contrôle dans les mêmes conditions." : "Reproduce the observation, then repeat the check under the same conditions."),
   };
 }

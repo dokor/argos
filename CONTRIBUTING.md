@@ -65,3 +65,12 @@ Toute copie ou version modifiée d'Argos, ainsi que tout travail dérivé, reste
 soumise à la BSL 1.1 et doit **afficher la licence de façon visible** (conserver
 le fichier `LICENSE`). Ces conditions s'appliquent aussi si vous recevez Argos
 d'un tiers.
+
+### Relecture des textes visibles
+
+Toute modification de texte public, d’interface ou de rapport suit le
+[guide rédactionnel FR/EN](docs/product/editorial-guide.md). L’inventaire des
+routes et sources est dans [editorial-inventory.md](docs/product/editorial-inventory.md).
+Le contrôle de structure fait partie de `npm run test` ; il ne remplace pas la
+relecture humaine avant publication. Consigner dans la PR le relecteur, la date,
+les parcours relus et les réserves ; indiquer clairement si cette revue est en attente.

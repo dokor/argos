@@ -39,7 +39,7 @@ metric name and shows milliseconds only if the producer actually supplied them.
 | Other check details (headers, TLS endpoints, samples, scores, weights) | `structuredEvidence.details` | Up to 20 named text entries, 4,000 characters per entry. Nested provenance remains text; no inferred units. |
 | Carrier module and `measurementProvenance.module` | `structuredEvidence.source` | Actual observation source takes precedence over carrier. |
 | Explicit measurement confidence and effort (#48/#250) | Existing `Issue`/`Priority` fields | No inferred confidence, owner, cost or effort. Unknown/low confidence requests confirmation first. |
-| Editorial content | `findingCatalogue.ts`, `report-content-v1` | Exact bilingual check keys; guidance may be reused but does not group causes. |
+| Editorial content | `findingCatalogue.ts`, `report-content-v2` | Exact bilingual check keys; guidance may be reused but does not group causes. |
 | Free-form `summary.ai` | Retained in stored DTO | No verifiable grounding metadata exists; the page uses the deterministic factual summary. |
 
 The catalogue covers every statically emitted site check from current module
