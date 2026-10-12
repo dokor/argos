@@ -5,7 +5,7 @@ import type { NextConfig } from "next";
 // XSS / clickjacking (voir issue #103).
 // Note : 'unsafe-inline' est requis pour les scripts JSON-LD injectés via
 // dangerouslySetInnerHTML (layout.tsx, faq/layout.tsx) et le bootstrap Next.js.
-// À resserrer ultérieurement avec une CSP à nonce (middleware).
+// À resserrer ultérieurement avec une CSP à nonce (proxy).
 const contentSecurityPolicy = [
   "default-src 'self'",
   "base-uri 'self'",
@@ -36,6 +36,9 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // console-web has its own dependencies and lockfile, separate from root ADE tooling.
+  // The config directory also resolves to /app in the console-web Docker context.
+  turbopack: { root: __dirname },
   experimental: { globalNotFound: true },
   reactCompiler: true,
   async redirects() {
