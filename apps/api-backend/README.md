@@ -58,12 +58,48 @@ Préserver toutes les migrations historiques de `src/main/resources/db/migration
 Pour une évolution, ajouter une migration et mettre à jour l'entité ainsi que la
 classe `Q*` correspondantes dans `db.generated`.
 
-`db.QuerydslGenerator` est un outil de développement conservé, pas du code mort :
-son `main` est lancé explicitement depuis l'IDE. Il écrit dans
-`apps/api-backend/src/main/java` relativement à la racine du dépôt. Ne pas le lancer
-pour une migration courante : il pourrait écraser les adaptations existantes.
-Le profil `querydsl-code-generation` ne constitue pas encore une séparation du
-classpath runtime ; voir l'[inventaire de maintenance](../../docs/maintenance.md).
+Les entités et `Q*` restent maintenues manuellement après chaque nouvelle
+migration. Aucune génération n'est exécutée par `mvn clean verify` ou `package`.
+
+Le générateur de comparaison est dans `src/querydsl/java`, ajouté **aux sources
+de test uniquement** par le profil `querydsl-code-generation`. Ce profil ajoute
+`plume-db-querydsl-codegen` et ses transitifs en scope `test` ; ils ne sont inclus
+ni dans le JAR applicatif ni dans `target/dist/api-backend/lib`, même si le profil
+est actif. Guice utilise `jakarta.inject` ; `javax.inject` est un transitif du
+codegen. Voir les preuves dans l'[inventaire de maintenance](../../docs/maintenance.md).
+
+Depuis `apps/api-backend`, compilation et tests du seul outil :
+
+```sh
+mvn -Pquerydsl-code-generation -Dtest=QuerydslGeneratorTest test
+```
+
+Pour lancer explicitement la génération, préparer une **base MariaDB jetable**
+avec le schéma à examiner (par exemple appliquer les migrations en démarrant le
+backend sur cette base locale, puis l'arrêter). Fournir son URL et son utilisateur
+explicitement ; le générateur ne lit pas `application.conf`/`config.file`, ne
+lance pas Flyway et ne démarre pas le scheduler. Le mot de passe vient uniquement
+de `QUERYDSL_DB_PASSWORD`, à fournir dans l'environnement du processus.
+
+```sh
+mvn -Pquerydsl-code-generation test-compile exec:java \
+  -Dquerydsl.jdbc.url=jdbc:mariadb://127.0.0.1:3306/argos_querydsl_test \
+  -Dquerydsl.jdbc.user=argos_fixture
+```
+
+Les classes sont écrites dans `target/querydsl-preview`, hors des sources
+courantes. `-Dquerydsl.output=...` permet de choisir un autre dossier neuf/vide,
+hors d'un répertoire `src`. Une sortie non vide est refusée ; conserver chaque
+prévisualisation ou choisir un nouveau dossier pour relancer. Les erreurs de
+connexion/génération font échouer la commande. Comparer les fichiers produits
+aux entités maintenues ; ne pas les recopier automatiquement.
+
+Dans IntelliJ, activer le profil et recharger Maven, puis lancer le `main` avec
+trois arguments : URL JDBC, utilisateur, dossier de prévisualisation absolu.
+La CI MariaDB exécute `bash scripts/querydsl-smoke.sh` sur son schéma dédié
+`argos_querydsl_test` : démarrage du backend depuis le classpath distribué,
+réponse HTTP authentifiée, prévisualisation et compilation des classes produites.
+Les logs et la prévisualisation sont conservés avec les artefacts d'intégration.
 
 ## Tests et packaging
 

@@ -147,23 +147,6 @@
 			<groupId>com.coreoz</groupId>
 			<artifactId>plume-db-querydsl</artifactId>
 		</dependency>
-        <!-- Querydsl code generation, using the provided scope to avoid compilation error in the IDE -->
-        <dependency>
-            <groupId>com.coreoz</groupId>
-            <artifactId>plume-db-querydsl-codegen</artifactId>
-            <exclusions>
-                <!-- Querydsl codegen still relies on javax.inject for now -->
-                <exclusion>
-                    <artifactId>javax.inject</artifactId>
-                    <groupId>javax.inject</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>javax.inject</groupId>
-            <artifactId>javax.inject</artifactId>
-            <version>1</version>
-        </dependency>
 		<!-- PUT YOUR DATABASE CONNECTOR HERE -->
         <dependency>
             <groupId>org.mariadb.jdbc</groupId>
@@ -249,15 +232,52 @@
                 </plugins>
             </build>
         </profile>
-        <!-- Profile for querydsl code generation -->
+        <!-- Development tool only: neither sources nor dependencies enter the runtime JAR/dist. -->
         <profile>
             <id>querydsl-code-generation</id>
+            <properties>
+                <querydsl.output>${project.build.directory}/querydsl-preview</querydsl.output>
+            </properties>
             <dependencies>
                 <dependency>
                     <groupId>com.coreoz</groupId>
                     <artifactId>plume-db-querydsl-codegen</artifactId>
+                    <scope>test</scope>
                 </dependency>
             </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+                        <version>3.6.1</version>
+                        <executions>
+                            <execution>
+                                <id>querydsl-tool-sources</id>
+                                <phase>generate-test-sources</phase>
+                                <goals><goal>add-test-source</goal></goals>
+                                <configuration>
+                                    <sources><source>src/querydsl/java</source></sources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>3.5.0</version>
+                        <configuration>
+                            <mainClass>com.dokor.argos.db.QuerydslGenerator</mainClass>
+                            <classpathScope>test</classpathScope>
+                            <arguments>
+                                <argument>${querydsl.jdbc.url}</argument>
+                                <argument>${querydsl.jdbc.user}</argument>
+                                <argument>${querydsl.output}</argument>
+                            </arguments>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
     </profiles>
 

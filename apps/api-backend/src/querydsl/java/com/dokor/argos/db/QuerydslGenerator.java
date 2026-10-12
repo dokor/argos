@@ -1,15 +1,12 @@
 package com.dokor.argos.db;
 
-import java.io.File;
-import java.sql.SQLException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.sql.DriverManager;
 import java.util.Locale;
+import java.util.Properties;
 
-import com.coreoz.plume.conf.guice.GuiceConfModule;
-import com.coreoz.plume.db.guice.DataSourceModule;
 import com.coreoz.plume.db.querydsl.generation.IdBeanSerializer;
-import com.coreoz.plume.db.transaction.TransactionManager;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.querydsl.codegen.EntityType;
 import com.querydsl.sql.Configuration;
 import com.querydsl.sql.SQLTemplates;
@@ -21,21 +18,37 @@ import com.querydsl.sql.types.JSR310LocalTimeType;
 import com.querydsl.sql.types.JSR310ZonedDateTimeType;
 import com.querydsl.sql.types.Type;
 
-import lombok.SneakyThrows;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
- * Generate Querydsl classes for the database layer.
- *
- * Run the {@link #main()} method from your IDE to regenerate Querydsl classes.
+ * Explicit development-only preview against a disposable database. See the backend README.
+ * Never reads application.conf or runs migrations; output must be a new or empty directory.
  */
 public class QuerydslGenerator {
-    private static final Logger logger = LoggerFactory.getLogger(QuerydslGenerator.class);
-
     private static final String TABLES_PREFIX = "ARG_";
 
-	public static void main(String... args) {
+	public static void main(String... args) throws Exception {
+        if (args.length != 3 || !args[0].startsWith("jdbc:") || args[1].isBlank()
+            || args[2].isBlank() || args[2].contains("${")) {
+            throw new IllegalArgumentException("Expected explicit JDBC URL, user and empty preview directory");
+        }
+        Path output = Path.of(args[2]).toAbsolutePath().normalize();
+        for (Path part : output) {
+            if (part.toString().equalsIgnoreCase("src")) {
+                throw new IllegalArgumentException("Preview output cannot be under a src directory");
+            }
+        }
+        Files.createDirectories(output);
+        output = output.toRealPath();
+        for (Path part : output) {
+            if (part.toString().equalsIgnoreCase("src")) {
+                throw new IllegalArgumentException("Preview output cannot be under a src directory");
+            }
+        }
+        try (var files = Files.list(output)) {
+            if (files.findAny().isPresent()) {
+                throw new IllegalArgumentException("Preview directory must be empty");
+            }
+        }
+
 		Configuration configuration = new Configuration(SQLTemplates.DEFAULT);
 		configuration.register(classType(JSR310InstantType.class));
 		configuration.register(classType(JSR310LocalDateType.class));
@@ -47,15 +60,11 @@ public class QuerydslGenerator {
 
 		MetaDataExporter exporter = new MetaDataExporter();
 		exporter.setPackageName("com.dokor.argos.db.generated");
-		exporter.setTargetFolder(new File("apps/api-backend/src/main/java"));
+		exporter.setTargetFolder(output.toFile());
 		exporter.setTableNamePattern(TABLES_PREFIX + "%");
 		exporter.setNamingStrategy(new DefaultNamingStrategy() {
 			@Override
 			public String getClassName(String tableName) {
-				// uncomment if you are using plume file
-//				if("plm_file".equalsIgnoreCase(tableName)) {
-//					return FileEntityQuerydsl.class.getName();
-//				}
 				return super.getClassName(tableName.substring(TABLES_PREFIX.length()));
 			}
 
@@ -71,18 +80,17 @@ public class QuerydslGenerator {
 		exporter.setColumnAnnotations(true);
 		exporter.setConfiguration(configuration);
 
-		Injector injector = Guice.createInjector(new GuiceConfModule(), new DataSourceModule());
-		injector.getInstance(TransactionManager.class).execute(connection -> {
-			try {
-				exporter.export(connection.getMetaData());
-			} catch (SQLException e) {
-                logger.error("Querydsl database objects generation failed", e);
-			}
-		});
+        Properties connectionProperties = new Properties();
+        connectionProperties.setProperty("user", args[1]);
+        connectionProperties.setProperty("password", System.getenv().getOrDefault("QUERYDSL_DB_PASSWORD", ""));
+        try (var connection = DriverManager.getConnection(args[0], connectionProperties)) {
+            exporter.setCatalogPattern(connection.getCatalog());
+            exporter.setSchemaPattern(connection.getSchema());
+            exporter.export(connection.getMetaData());
+        }
 	}
 
-    @SneakyThrows
-    private static Type<?> classType(Class<?> classType) {
+    private static Type<?> classType(Class<?> classType) throws ReflectiveOperationException {
         return (Type<?>) classType.getConstructor().newInstance();
     }
 }

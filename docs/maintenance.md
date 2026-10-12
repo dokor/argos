@@ -20,12 +20,13 @@ et dépendances transitives. Une absence d'import seule ne suffit pas.
 | `public/{file,globe,next,vercel,window}.svg` | Fichiers du modèle Next.js, sans référence dans le dépôt. Supprimer ces cinq assets. Conserver OG, manifest, logos sociaux et fixtures de démonstration utilisés. |
 | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_ARGOS_API_BASE` | Définies uniquement dans le Compose frontend, jamais lues. Retirer ces entrées ; le proxy et SSR utilisent `API_BASE` côté serveur. |
 | README backend/frontend et démarrage racine | Instructions Plume/create-next-app, commandes d'installation non reproductibles et configuration locale manquante. Remplacer par les commandes réellement disponibles, variables obligatoires, exemple frontend sans secret et liens vers les contrats existants. |
+| Générateur QueryDSL (#515) | Déplacé de `src/main/java` vers `src/querydsl/java`, ajouté aux sources de test uniquement par le profil explicite. Codegen et `javax.inject` deviennent des dépendances de test du profil ; aucun générateur dans le JAR/distribution. Connexion explicite à une base jetable, sortie vide hors `src`, sans lecture de la configuration applicative ni migration. Entités et Q* toujours maintenus manuellement. |
 
 ## Éléments conservés et sujets à traiter
 
 | Sujet | Motif de conservation / suivi |
 | --- | --- |
-| Générateur QueryDSL et dépendances de codegen | `QuerydslGenerator.main` est lancé explicitement, avec imports compile-time ; il ne peut pas être supprimé sur la base d'un graphe d'appels applicatif. Isoler ce tooling du runtime dans [#515](https://github.com/dokor/argos/issues/515). |
+| Générateur QueryDSL de développement | Conservé dans le profil `querydsl-code-generation` pour une prévisualisation explicite ; [commandes et limites](../apps/api-backend/README.md#base-de-données). Aucun écrasement automatique des classes maintenues. |
 | Authentification admin historique | Middleware, dashboard, navigation et détails techniques des rapports utilisent encore `argos_admin` / `ADMIN_TOKEN`. Les comptes ont un autre mécanisme d'autorisation. Transition dédiée dans [#516](https://github.com/dokor/argos/issues/516), avec prérequis opérateur et tests d'accès. |
 | Middleware Next et lockfile racine | Points d'entrée et outillage actifs. Les avertissements de build relatifs à la convention middleware et à la racine Turbopack sont traités dans [#517](https://github.com/dokor/argos/issues/517), sans supprimer le lockfile ADE. |
 | Dépendances headless | Express est utilisé par Playwright ; Lighthouse, chrome-launcher, Playwright et puppeteer-core sont importés par le service Lighthouse. Le double pilotage du navigateur sert notamment à la politique réseau ; aucune suppression opportuniste. |
@@ -41,6 +42,39 @@ existants : diagnostic backend #128, refactoring #475, couverture composants
 ne sont pas recréés ni considérés comme réalisés par ce nettoyage.
 
 ## Validation d'un nettoyage
+
+### Comparaison QueryDSL (#515, 12 octobre 2026)
+
+Baseline : `4799e7b`, JDK 21.0.11, `mvn dependency:tree package -DskipTests`.
+Après isolation : `mvn clean verify dependency:tree` sans profil (686 tests,
+aucun échec, un test optionnel ignoré), puis
+`mvn -Pquerydsl-code-generation -Dtest=QuerydslGeneratorTest package dependency:tree`
+(trois tests du générateur réussis). Comparaison des arbres complets et des noms
+de JAR dans `target/dist/api-backend/lib` :
+
+| Artefact | Avant, scope compile / distribué | Sans profil après | Profil après |
+| --- | --- | --- | --- |
+| `plume-db-querydsl-codegen:5.0.1` | Oui | Absent | Test, non distribué |
+| `querydsl-sql-codegen:5.1.0` | Oui | Absent | Test, non distribué |
+| `querydsl-codegen:5.1.0` | Oui | Absent | Test, non distribué |
+| `codegen-utils:5.1.0` | Oui | Absent | Test, non distribué |
+| `ecj:3.26.0` | Oui | Absent | Test, non distribué |
+| `javax.inject:1` | Oui, déclaration directe | Absent | Transitif de `querydsl-codegen`, test |
+
+La distribution passe de 109 à 103 JAR, exactement ces six retraits ; activer le
+profil ne change pas les 103 JAR. `QuerydslGenerator` est absent du JAR applicatif.
+`querydsl-sql`, `querydsl-core`, Guice/Jersey et `jakarta.inject:2.0.1` restent
+dans l'arbre runtime. `classgraph:4.8.177` reste requis par
+`plume-web-jersey-monitoring` ; il n'est pas supprimé avec le codegen.
+
+Le lancement explicite `test-compile exec:java` a généré une prévisualisation sur
+une base H2 locale jetable ; les fichiers générés compilent avec le seul classpath
+distribué. La recette MariaDB de CI complète cette vérification : démarrage de
+`WebApplication` depuis la distribution, migrations dans un schéma CI neuf,
+requête HTTP authentifiée à Jersey, génération hors sources et compilation.
+Aucune migration historique, entité/Q* maintenue ou donnée existante n'est modifiée.
+
+### Procédure générale
 
 1. Vérifier les consommateurs sur le SHA de départ et documenter les exceptions.
 2. Installer le lockfile final avec `npm ci`, puis exécuter lint, tests et build
