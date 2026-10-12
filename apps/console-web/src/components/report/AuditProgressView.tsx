@@ -12,7 +12,17 @@ import s from "./AuditProgressView.module.scss";
 // Intervalle de polling et plafond global (évite un polling infini si le run
 // reste bloqué en QUEUED/RUNNING - scheduler down, module qui hang…).
 const POLL_INTERVAL_MS = 1500;
-const MAX_POLLS = 160; // ~4 min à 1,5 s
+const FINALIZING_POLL_INTERVAL_MS = 500;
+const MAX_WAIT_MS = 4 * 60 * 1000;
+
+const isTerminal = (status: ModuleStatus["status"]) =>
+  status === "COMPLETED" || status === "FAILED" || status === "SKIPPED";
+
+function isFinalizing(status: PublicReportStatusResponse) {
+  const modules = parseModuleStatuses(status.moduleStatuses);
+  return status.status === "COMPLETED" ||
+    (status.status === "RUNNING" && modules.length > 0 && modules.every(m => isTerminal(m.status)));
+}
 
 type ErrorKind = "failed" | "connection" | "timeout";
 
@@ -48,15 +58,16 @@ function parseModuleStatuses(raw: string | null | undefined): ModuleStatus[] {
 
 // ─── Composant principal ──────────────────────────────────────────────────────
 
-type Props = { token: string };
+type Props = { token: string; initialStatus?: PublicReportStatusResponse | null };
 
-export default function AuditProgressView({ token }: Props) {
+export default function AuditProgressView({ token, initialStatus = null }: Props) {
   const router = useRouter();
   const { t } = useLang();
   const tp = t.report.progress;
 
-  const [runStatus, setRunStatus] = useState<PublicReportStatusResponse | null>(null);
+  const [runStatus, setRunStatus] = useState<PublicReportStatusResponse | null>(initialStatus);
   const [errorKind, setErrorKind] = useState<ErrorKind | null>(null);
+  const [reportReady, setReportReady] = useState(false);
   const loggerRef = useRef(
     createLogger("report", {
       route: "/report/[token]",
@@ -69,6 +80,8 @@ export default function AuditProgressView({ token }: Props) {
   useEffect(() => {
     let cancelled = false;
     let polls = 0;
+    const startedAt = Date.now();
+    setReportReady(false);
 
     loggerRef.current.info("report_progress_opened", {
       action: "poll_report_status",
@@ -77,14 +90,14 @@ export default function AuditProgressView({ token }: Props) {
       },
     });
 
-    function scheduleNext(fn: () => void) {
-      timeoutRef.current = setTimeout(fn, POLL_INTERVAL_MS);
+    function scheduleNext(fn: () => void, interval = POLL_INTERVAL_MS) {
+      timeoutRef.current = setTimeout(fn, interval);
     }
 
     async function poll() {
       if (cancelled) return;
 
-      if (polls >= MAX_POLLS) {
+      if (Date.now() - startedAt >= MAX_WAIT_MS) {
         loggerRef.current.warn("report_progress_timeout", {
           action: "poll_report_status",
           details: { reportToken: maskToken(token), polls },
@@ -121,10 +134,11 @@ export default function AuditProgressView({ token }: Props) {
             await argosApi.getReport(token);
           } catch {
             if (cancelled) return;
-            scheduleNext(poll);
+            scheduleNext(poll, FINALIZING_POLL_INTERVAL_MS);
             return;
           }
           if (cancelled) return;
+          setReportReady(true);
           loggerRef.current.info("report_progress_completed", {
             action: "refresh_report_page",
             details: { reportToken: maskToken(token) },
@@ -146,7 +160,7 @@ export default function AuditProgressView({ token }: Props) {
           return;
         }
 
-        scheduleNext(poll);
+        scheduleNext(poll, isFinalizing(status) ? FINALIZING_POLL_INTERVAL_MS : POLL_INTERVAL_MS);
       } catch (err) {
         if (cancelled) return;
         loggerRef.current.warn("report_progress_poll_failed", {
@@ -172,9 +186,8 @@ export default function AuditProgressView({ token }: Props) {
   const modules = parseModuleStatuses(runStatus?.moduleStatuses);
   const globalStatus = runStatus?.status ?? "QUEUED";
   // Operational completion only. RUNNING has no invented fractional progress.
-  const isTerminal = (st: ModuleStatus["status"]) =>
-    st === "COMPLETED" || st === "FAILED" || st === "SKIPPED";
   const terminalCount = modules.filter(m => isTerminal(m.status)).length;
+  const finalizing = runStatus !== null && isFinalizing(runStatus);
   const progress = modules.length > 0
     ? Math.round((terminalCount / modules.length) * 100)
     : 0;
@@ -190,6 +203,8 @@ export default function AuditProgressView({ token }: Props) {
 
   const title = isBlockingError
     ? tp.titleFailed
+    : reportReady ? tp.titleReady
+    : finalizing ? tp.titleFinalizing
     : globalStatus === "QUEUED"
       ? tp.titleQueued
       : tp.titleRunning;
@@ -204,19 +219,21 @@ export default function AuditProgressView({ token }: Props) {
           <div className={s.headerIcon} aria-hidden>
             {isBlockingError ? "✗" : globalStatus === "QUEUED" ? "⏳" : <Spinner />}
           </div>
-          <div>
+          <div role="status" aria-live="polite" aria-atomic="true">
             <h1 className={s.title}>{title}</h1>
             <p className={s.subtitle}>
-              {isBlockingError ? errorMessage : tp.subtitle}
+              {isBlockingError ? errorMessage : reportReady ? tp.subtitleReady : finalizing ? tp.subtitleFinalizing : tp.subtitle}
             </p>
             {/* Estimation de durée pour rassurer pendant l'attente (U1). */}
-            {!isBlockingError && <p className={s.estimate}>{t.publicPromises.duration}</p>}
+            {!isBlockingError && !finalizing && <p className={s.estimate}>{t.publicPromises.duration}</p>}
             {/* Lien de repli en cas d'échec pour relancer une analyse (U1). */}
             {isBlockingError && (
               <Link href="/" className={s.retryLink}>{tp.retryLink}</Link>
             )}
           </div>
         </div>
+
+        {errorKind === "connection" && <p className={s.connectionError} role="status">{errorMessage}</p>}
 
         {/* Barre de progression globale */}
         {!isBlockingError && modules.length > 0 && (
