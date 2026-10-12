@@ -31,3 +31,8 @@ describe("versioned bilingual content", () => {
     expect(cleanEvidence("\u0001https://user:secret@example.com/page?token=private#fragment")).toBe("https://example.com/page");
   });
 });
+
+for (const lang of ["fr", "en"] as const) it(`does not repeat the confirmation when guidance is missing in ${lang}`, () => {
+  const text = findingContent({ ...issue, id: "future.check", recommendation: "", confidence: "UNKNOWN" }, lang).recommendation;
+  expect(text.split(lang === "fr" ? "Confirmer le signal" : "Confirm the signal")).toHaveLength(2);
+});

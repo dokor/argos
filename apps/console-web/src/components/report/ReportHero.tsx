@@ -67,7 +67,7 @@ export default function ReportHero({ report, model = buildReportModel(report), o
           <strong className={key === "critical" && model.counts.critical ? s.criticalCount : s.statValue}>{model.counts[key]}</strong>
           <span className={s.statLabel}>{t.report.hero.severity[key]}</span>
         </div>)}
-        <div className={s.stat}><strong className={s.statValue}>{model.counts.total}</strong><span className={s.statLabel}>{t.report.hero.issues}</span></div>
+        <div className={s.stat}><strong className={s.statValue}>{model.counts.total}</strong><span className={s.statLabel}>{model.counts.total === 1 ? t.report.hero.issuesOne : t.report.hero.issues}</span></div>
       </div>
     </div>
   </section>;

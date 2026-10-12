@@ -1,5 +1,6 @@
 "use client";
 
+import { useLang } from "@/lib/i18n/LangContext";
 import { useTheme } from "@/lib/theme/ThemeContext";
 import s from "./ThemeToggle.module.scss";
 
@@ -9,6 +10,7 @@ import s from "./ThemeToggle.module.scss";
  */
 export default function ThemeToggle({ className }: { className?: string }) {
   const { theme, toggle } = useTheme();
+  const { t } = useLang();
   const isDark = theme === "dark";
 
   return (
@@ -17,8 +19,8 @@ export default function ThemeToggle({ className }: { className?: string }) {
       onClick={toggle}
       className={`${s.toggle}${className ? " " + className : ""}`}
       aria-pressed={isDark}
-      aria-label={isDark ? "Passer en thème clair" : "Passer en thème sombre"}
-      title={isDark ? "Thème clair" : "Thème sombre"}
+      aria-label={isDark ? t.themeToggle.light : t.themeToggle.dark}
+      title={isDark ? t.themeToggle.lightTitle : t.themeToggle.darkTitle}
     >
       <span aria-hidden="true">{isDark ? "☀︎" : "☾"}</span>
     </button>

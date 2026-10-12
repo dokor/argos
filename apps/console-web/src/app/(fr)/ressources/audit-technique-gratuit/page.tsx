@@ -83,7 +83,7 @@ const copy = {
       "Performance and some signals vary with time, network, browser and site changes.",
     ],
     privacyTitle: "A report accessible through its link",
-    privacyText: "No account is required. Anyone with the unique link can access the report, so keep it private if the findings are sensitive. Report pages are excluded from indexing and are not published as examples.",
+    privacyText: "No account is required. Anyone with the unique link can access the report, so keep it private if the findings are sensitive. Report pages ask search engines not to index them and are not published as examples.",
     moreTitle: "Explore further",
     moreText: "Read the FAQ for practical questions and our digital accessibility guide to understand what requires a human audit.",
     homeLink: "Explore Argos",

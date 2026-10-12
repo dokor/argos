@@ -1,5 +1,5 @@
 {
-  "account": {"usage":{"title":"Monthly usage","offer":"Offer","used":"Reports produced","reserved":"Analyses in progress","unlimited":"No limit","limit":"Monthly limit","reset":"Next reset","timezone":"Reference timezone","reached":"Monthly capacity has been reached. Your sites and reports remain available. Try again after the reset or when an analysis finishes.","refresh":"Refresh usage","unavailable":"Usage is unavailable. The server will check the quota when launching an analysis.","hint":"Each produced report counts once, including partial reports. Failures without a report do not count."},"sites":{"scoreUnavailable":"Score unavailable","title":"My sites","intro":"Find the URLs you follow and their latest reports.","add":"Add a site","addUrl":"Add a URL","analyse":"New analysis","again":"Analyse","url":"URL to follow","hint":"For example https://example.com/page. Each hostname is a separate site. Following a site does not verify ownership.","noAudit":"Adding a URL does not start an analysis.","empty":"You are not following any sites yet.","none":"No analysis","urls":"followed URLs","latest":"Latest attempt","report":"Latest available report","unavailable":"Unavailable or expired","partial":"Provisional score / partial analysis","unknown":"Coverage unknown","next":"Next page","refresh":"Refresh","retry":"Retry reading","added":"URL followed. No analysis started.","existing":"This URL is already followed.","mismatch":"This URL belongs to another hostname. Add a site to follow it.","lost":"The analysis may have started. Check My sites before trying again.","back":"Back to site","progress":"Open progress"},"title":"My account","alreadyRegistered":"Already have an account?","noAccount":"Don’t have an account yet?","backToSignIn":"Back to sign in","signIn":"Sign in","register":"Create an account","name":"Display name","email":"Email address","password":"Password","passwordHint":"15 to 128 characters.","forgot":"Forgot password","verify":"Verify my email","reset":"Reset my password","send":"Send","save":"Save","logout":"Sign out","pending":"Verify your email address to access your audits.","sent":"If this address is eligible, an email has been sent. Check your inbox.","done":"Action completed.","working":"Working…","methods":"Sign-in methods","sessions":"Sessions","current":"Current session","revoke":"Revoke","others":"Revoke other sessions","remove":"Remove","add":"Link","reauth":"Confirm my identity","reauthHint":"Enter your current password or request a code at your verified email address.","code":"Email confirmation code","sendCode":"Send me a code","archive":"Close my account","archiveHint":"Your account will be archived and access revoked. The account and statistics will be retained; previously shared report links will remain readable until their usual expiry.","confirmArchive":"I confirm that I want to close my account.","confirmRemove":"Confirm removal of this sign-in method?","readonly":"Your sign-in email is read-only.","social":"Or continue with","socialSeparator":"or","continueWith":"Continue with {provider}","unavailable":"Account registration is temporarily unavailable.","runs":"My recent audits","noRuns":"No personal audits yet. Start an audit or claim the one you just created.","openReport":"Open report","resend":"Resend verification email","claim":"Save this audit to my account","claimHint":"Sign in and verify your email to save the audit started in this browser.","claimMissing":"The claim proof is missing or expired. A shared link only grants report reading.","claimDone":"This audit is now linked to your account.","back":"Back to the site","tokenMissing":"Open the link from your email to continue.","errors":{"session_invalid":"Your session is missing or expired. Sign in again.","email_unverified":"Verify your email address first.","csrf_invalid":"The form has expired. Submit it again.","reauth_required":"Confirm your identity before this action.","last_method":"Keep at least one usable sign-in method.","token_invalid":"This link or code is invalid, expired or already used.","oauth_invalid":"Provider sign-in failed. Try again.","use_existing_account":"Sign in to your existing account to link this method.","method_unavailable":"This method is linked to another account.","email_unavailable":"This address cannot be linked to this account.","email_readonly":"This address is read-only.","email_required":"Add and verify an email address.","email_invalid":"Enter a valid email address.","password_policy":"Use a password with 15 to 128 characters.","name_invalid":"Enter a name with 1 to 100 characters.","mail_unavailable":"The email could not be sent. Try again later.","rate_limited":"Too many attempts. Try again in 15 minutes.","resource_unavailable":"This resource is unavailable or belongs to someone else.","account_unavailable":"The service is temporarily unavailable.","confirmation_required":"Explicitly confirm this action.","payload_invalid":"Check the fields.","provider_unavailable":"This provider is not configured.","quota_exceeded":"Monthly capacity has been reached. Your sites and reports remain available. Try again after the reset or when an analysis finishes."},"statuses":{"QUEUED":"Queued","RUNNING":"Running","COMPLETED":"Completed","FAILED":"Failed"}},
+  "account": {"usage":{"title":"Monthly usage","offer":"Offer","used":"Reports produced","reserved":"Analyses in progress","unlimited":"No limit","limit":"Monthly limit","reset":"Next reset","timezone":"Reference timezone","reached":"The monthly limit is reached or reserved by analyses in progress. Your sites and reports remain accessible. Try again when an analysis finishes or the limit resets.","refresh":"Refresh usage","unavailable":"Usage could not be loaded. The limit will be checked when you start an analysis.","hint":"The counter follows calendar months in the displayed time zone. Each produced report counts once, including partial reports. A failure without a report does not count."},"sites":{"scoreUnavailable":"Score unavailable","title":"My sites","intro":"Find the URLs you follow and their latest reports.","add":"Add a site","addUrl":"Add a URL","analyse":"New analysis","again":"Analyse","url":"URL to follow","hint":"For example https://example.com/page. URLs with the same host name, such as example.com, are grouped as one site. A subdomain is a separate site. Following a site does not verify that you own it.","noAudit":"Adding a URL does not start an analysis.","empty":"You are not following any sites yet.","none":"No analysis","urls":"followed URLs","latest":"Latest attempt","report":"Latest available report","unavailable":"Unavailable or expired","partial":"Provisional score / partial analysis","unknown":"Coverage unknown","next":"Next page","refresh":"Refresh","retry":"Try again","added":"URL followed. No analysis started.","existing":"This URL is already followed.","mismatch":"This URL has a different host name. Add it from My sites to follow it separately.","lost":"The analysis may have started. Check My sites before trying again.","back":"Back to site","progress":"Open progress"},"title":"My account","alreadyRegistered":"Already have an account?","noAccount":"Don’t have an account yet?","backToSignIn":"Back to sign in","signIn":"Sign in","register":"Create an account","name":"Display name","email":"Email address","password":"Password","passwordHint":"15 to 128 characters. You can use a passphrase.","forgot":"Forgot password","verify":"Verify my email","reset":"Reset my password","send":"Send","save":"Save","logout":"Sign out","pending":"Verify your email address to access your audits.","sent":"If this request is available for this address, you will receive an email. Check your inbox and spam folder.","done":"Action completed.","working":"Working…","methods":"Sign-in methods","sessions":"Sessions","current":"Current session","revoke":"Revoke","others":"Revoke other sessions","remove":"Remove","add":"Link","reauth":"Confirm my identity","reauthHint":"Enter your current password or request a code at your verified email address.","code":"Email confirmation code","sendCode":"Send me a code","archive":"Close my account","archiveHint":"Your account will be archived and access revoked. The account and statistics will be retained; previously shared report links will remain readable until their usual expiry.","confirmArchive":"I confirm that I want to close my account.","confirmRemove":"Confirm removal of this sign-in method?","readonly":"Your sign-in email is read-only.","social":"Or continue with","socialSeparator":"or","continueWith":"Continue with {provider}","unavailable":"Account registration is temporarily unavailable.","runs":"My recent audits","noRuns":"No analyses saved in this account yet. Start an analysis or save the one you just completed.","openReport":"Open report","resend":"Resend verification email","claim":"Save this audit to my account","claimHint":"Sign in and verify your email to save the audit started in this browser.","claimMissing":"This analysis cannot be saved from this browser: its launch proof is missing or expired. The shared link lets you read the report.","claimDone":"This audit is now linked to your account.","back":"Back to the site","tokenMissing":"Open the link from your email to continue.","errors":{"session_invalid":"Your session is missing or expired. Sign in again.","email_unverified":"Verify your email address first.","csrf_invalid":"The form has expired. Submit it again.","reauth_required":"Confirm your identity before this action.","last_method":"Keep at least one usable sign-in method.","token_invalid":"This link or code is invalid, expired or already used.","oauth_invalid":"Provider sign-in failed. Try again.","use_existing_account":"Sign in to your existing account to link this method.","method_unavailable":"This method is linked to another account.","email_unavailable":"This address cannot be linked to this account.","email_readonly":"This address is read-only.","email_required":"Add and verify an email address.","email_invalid":"Enter a valid email address.","password_policy":"Use a password with 15 to 128 characters.","name_invalid":"Enter a name with 1 to 100 characters.","mail_unavailable":"The email could not be sent. Try again later.","rate_limited":"Too many attempts. Try again in 15 minutes.","resource_unavailable":"This resource is unavailable or belongs to someone else.","account_unavailable":"The service is temporarily unavailable.","confirmation_required":"Explicitly confirm this action.","payload_invalid":"Check the fields.","provider_unavailable":"This provider is not configured.","quota_exceeded":"The monthly limit is reached or reserved by analyses in progress. Your sites and reports remain accessible. Try again when an analysis finishes or the limit resets."},"statuses":{"QUEUED":"Queued","RUNNING":"Running","COMPLETED":"Completed","FAILED":"Failed"}},
   "layout": {
     "title": "Free website audit, no account needed | Argos",
     "description": "Audit a public page for free: performance, security, SEO and accessibility. Get scores and priority corrections with no account needed."
@@ -14,7 +14,7 @@
     "guides": "Guides",
     "logo": "Argos",
     "primary": "Main navigation",
-    "audit": "Audit a website",
+    "audit": "Analyse a page",
     "openConsole": "Open console →",
     "faq": "FAQ",
     "resources": "Resources",
@@ -22,7 +22,7 @@
   },
   "siteFooter": {
     "exampleReport": "Public example report",
-    "description": "Argos is a free technical audit tool for a public URL, with no account required, that provides a private report with scores and recommendations for performance, security, SEO and accessibility.",
+    "description": "Argos analyses a public page and brings together scores, findings and suggested corrections. You can start an analysis without an account.",
     "discover": "Explore",
     "resources": "Resources and guides",
     "faq": "Frequently asked questions",
@@ -41,15 +41,15 @@
   "landing": {
     "hero": {
       "badge": "Free website audit",
-      "slogan": "Your site, under every eye.",
+      "slogan": "Your page’s technical findings in one report.",
       "headline": "Find the technical problems to fix first.",
       "sub": "Analyse one page for performance, security, SEO and accessibility. Get your scores and recommendations in a private report.",
-      "audience": "For developers, growth teams, and agencies.",
+      "audience": "For website owners, developers and agencies.",
       "inputPlaceholder": "https://yoursite.com",
-      "inputAriaLabel": "Website URL to analyze",
+      "inputAriaLabel": "Public page URL to analyse",
       "cta": "Analyse for free",
-      "ctaLoading": "Submitting…",
-      "hint": "Free · No account · Private report, not indexed",
+      "ctaLoading": "Submitting your request…",
+      "hint": "Free · No account required · Report accessible by link",
       "analyzing": "Analyzing",
       "analyzeSteps": [
         "Performance",
@@ -68,11 +68,11 @@
       "urlDetail": "https://yoursite.com · Private report",
       "score": "Score 74 / 100",
       "checks": {
-        "httpsEnforced": "HTTPS enforced",
-        "hstsPresent": "HSTS present",
-        "cspMissing": "CSP missing",
+        "httpsEnforced": "Redirect to HTTPS",
+        "hstsPresent": "HSTS header present",
+        "cspMissing": "CSP policy missing",
         "metaDescMissing": "Missing meta description",
-        "titlePresent": "Title present",
+        "titlePresent": "HTML title present",
         "h1Found": "H1 detected",
         "nextjsDetected": "Next.js detected",
         "lcpScore": "LCP · 1.8 s",
@@ -130,18 +130,18 @@
       "steps": [
         {
           "n": "01",
-          "label": "Submit a URL",
-          "desc": "Any public site. Paste the URL and launch the analysis in one click."
+          "label": "Choose a page",
+          "desc": "Enter the address of a public HTTP or HTTPS page."
         },
         {
           "n": "02",
           "label": "Technical analysis",
-          "desc": "Automated checks examine the submitted page for performance, security, SEO and accessibility."
+          "desc": "Follow the checks as they progress; some may be unavailable."
         },
         {
           "n": "03",
-          "label": "Scored report",
-          "desc": "A private, non-indexable report with an overall score, scores by area and prioritized recommendations."
+          "label": "Read the report",
+          "desc": "Review the scores and findings, then the actions to check with your team."
         }
       ]
     },
@@ -155,24 +155,24 @@
         },
         {
           "icon": "🚫",
-          "label": "No login required",
-          "desc": "Submit a public page and view your report without creating an account."
+          "label": "No account required",
+          "desc": "An account lets you save analyses and follow multiple sites and URLs."
         },
         {
           "icon": "🎯",
-          "label": "Actionable report",
+          "label": "Corrections to plan",
           "desc": "Findings connect evidence, recommendations and priorities to help plan corrections."
         },
         {
           "icon": "📈",
-          "label": "An explicit method",
+          "label": "Scoring explained",
           "desc": "Understand how scores are calculated, what was measured and the limits of the diagnosis."
         }
       ]
     },
     "cta": {
-      "title": "Ready to see what's hiding in your site?",
-      "sub": "Free · No account · Private report · Source available"
+      "title": "Which page would you like to analyse?",
+      "sub": "Choose a page that matters to your business."
     },
     "footer": {
       "builtPrefix": "Made by",
@@ -188,7 +188,7 @@
     "hero": {
       "badge": "Help center",
       "title": "Frequently asked questions",
-      "sub": "Everything you need to know about Argos, reports, analysis limits and how your data is handled."
+      "sub": "Learn how analyses work, how to access reports and where the service has limits."
     },
     "backHome": "← Back to home",
     "categories": [
@@ -210,7 +210,7 @@
           },
           {
             "q": "Which sites can I analyze?",
-            "a": "Any public site reachable over HTTP or HTTPS. For security reasons, local or private addresses (localhost, internal networks) are blocked."
+            "a": "A public page reachable over HTTP or HTTPS. Local and private addresses are blocked. Anti-bot protection or restricted access may prevent some checks."
           }
         ]
       },
@@ -220,7 +220,7 @@
         "items": [
           {
             "q": "What does a report contain?",
-            "a": "An overall score, detailed scores per category (performance, security, SEO, accessibility) and a list of prioritized issues, sorted by severity, with recommended actions."
+            "a": "Scores by domain, a global score when it can be calculated, technical findings and an action plan. Each finding explains its impact, the evidence observed and a correction to check. Coverage shows what could be measured."
           },
           {
             "q": "Is my report public?",
@@ -232,7 +232,7 @@
           },
           {
             "q": "How long does a report stay available?",
-            "a": "The link stops working after three years by default, or at an earlier assigned expiry. Expiration does not delete stored data; see the privacy information."
+            "a": "Access expires after three years by default, or sooner if an earlier expiry applies. A scheduled task then deletes the expired report and detailed results. Some metadata is retained; see the privacy page."
           }
         ]
       },
@@ -242,7 +242,7 @@
         "items": [
           {
             "q": "What does Argos analyze?",
-            "a": "Four areas: performance, security, SEO and accessibility. Checks include HTTP headers, HTML structure, the TLS certificate, browser metrics and Lighthouse results. Runtime is a source of performance measurements, not an additional area."
+            "a": "Performance, security, SEO and accessibility of the submitted page. Checks examine HTTP headers, HTML, the TLS certificate, browser loading and Lighthouse results. They do not crawl the whole website."
           },
           {
             "q": "Does Argos replace a manual audit?",
@@ -254,7 +254,7 @@
           },
           {
             "q": "Is there a limit on the number of analyses?",
-            "a": "There is no strict quota for normal use. Reasonable usage is expected to keep the service fast and reliable for everyone."
+            "a": "Rate limits protect the service from excessive requests. Accounts may have a configured monthly limit, shown in their usage summary. Each produced report counts once, including partial reports; a failure without a report does not count."
           }
         ]
       },
@@ -264,7 +264,7 @@
         "items": [
           {
             "q": "What data does Argos keep?",
-            "a": "Argos records the URL, domain, processing states and dates, and technical results to produce and display the report. No fixed deletion period is currently established; see the privacy page."
+            "a": "Argos stores the URL, domain, analysis dates and states, and results. Expired reports and detailed results are deleted by a scheduled task; analysis metadata and some other data are retained. The privacy page explains the limits of this deletion."
           },
           {
             "q": "Who can view my reports?",
@@ -278,26 +278,26 @@
       },
       {
         "id": "future",
-        "title": "What's next",
+        "title": "Accounts and updates",
         "items": [
           {
-            "q": "Will Argos stay free?",
-            "a": "Basic analysis is meant to stay free. Advanced features may be offered later as part of a dedicated plan."
+            "q": "Do I need an account to use Argos?",
+            "a": "No. You can analyse a public page without an account. An account lets you save analyses, follow multiple sites and URLs and view their history. No pricing or paid-only access is announced here."
           },
           {
-            "q": "What features are planned?",
-            "a": "Ideas under consideration include tracking score changes over time, comparing analyses, exporting reports and API access. Nothing is set in stone yet."
+            "q": "Can I track results and save a PDF?",
+            "a": "Your account provides history for each URL. Reports are compared only when their method and measurements allow it. The report’s export opens a print view; choose Save as PDF in your browser."
           },
           {
             "q": "How can I stay informed about new features?",
-            "a": "You can subscribe to the newsletter from the home page to be notified about updates and new features."
+            "a": "Check updates in the GitHub repository linked in the footer. You can also contact the creator through the About page."
           }
         ]
       }
     ],
     "stillQuestions": {
       "title": "Still have a question?",
-      "sub": "The easiest way is often to try it. Run a free analysis of your site.",
+      "sub": "Contact the creator with a question about Argos.",
       "cta": "Analyze my site →"
     }
   },
@@ -346,7 +346,7 @@
       "notApplicable": "Not applicable",
       "explanation": "Weighted share of the scoring catalogue actually measured. Below 80% overall or in an applicable domain, the score remains provisional and must not be compared with a complete audit.",
       "statesTitle": "Measurement states",
-      "confidenceExplanation": "Unavailable or blocked measurements are not site defects. Finding confidence remains separate from score coverage.",
+      "confidenceExplanation": "An unavailable or blocked measurement is not a site defect. Confidence describes a finding’s reliability; coverage describes the share of checks measured.",
       "domains": {
         "performance": "Performance",
         "security": "Security",
@@ -521,14 +521,14 @@
       },
       "failed": {
         "title": "The analysis failed",
-        "description": "Something went wrong while analyzing this site. Sorry for the inconvenience."
+        "description": "The analysis could not produce a report. Check that the page is publicly accessible before trying again."
       },
       "rerunTitle": "Run a new analysis, for free",
-      "rerunHint": "Enter a URL to start a new analysis - it's on us.",
+      "rerunHint": "Enter the address of a public page to analyse.",
       "backHome": "Back to home"
     },
     "page": {
-      "private": "Private report • Not indexed",
+      "private": "Report accessible by link · Search engines asked not to index",
       "tabs": {
         "overview": "Overview",
         "details": "Details",
@@ -536,7 +536,7 @@
       },
       "dataTab": {
         "title": "Report JSON",
-        "desc": "Useful for debugging and for the upcoming PDF export."
+        "desc": "Technical report data for inspecting results."
       }
     },
     "header": {
@@ -550,13 +550,13 @@
         "excellent": "Excellent",
         "good": "Good",
         "improve": "Needs work",
-        "priority": "Critical"
+        "priority": "Needs priority attention"
       },
       "scoreGlobal": "Global score",
       "scoreTooltip": "Aggregated score (0-100) based on detected issues.",
       "scoreObjectivePrefix": "Goal:",
       "scoreMaintain": "maintain",
-      "scoreQuickwins": "focus on quick wins",
+      "scoreQuickwins": "review priority corrections",
       "oneLiner": {
         "high": "High global score among measured checks; review findings and limits.",
         "good": "Favourable global score among measured checks; some points may still need attention.",
@@ -570,13 +570,14 @@
       "relaunching": "Re-running…",
       "relaunchError": "Re-run failed. Please try again.",
       "priorities": "priority(ies)",
-      "issues": "issue(s)",
+      "issues": "findings",
+      "issuesOne": "finding",
       "urlAnalyzed": "Analyzed URL",
       "prioritiesDetected": "Detected priorities",
       "prioritiesFirst": "No priorities detected",
-      "issuesTotal": "Total issues",
-      "issuesDesc": "Includes info / important / critical",
-      "severityBreakdown": "Priorities by level",
+      "issuesTotal": "Total findings",
+      "issuesDesc": "Critical findings, important findings and opportunities",
+      "severityBreakdown": "Findings by severity",
       "byCategoryTitle": "Scores by category",
       "severity": {
         "critical": "Critical",
@@ -612,7 +613,7 @@
       },
       "gainLabel": "Modelled score gain:",
       "gainUnit": "global points",
-      "modelLimit": "Rubric estimate with constant measurements and denominators. Actual improvement depends on the fix and a new audit.",
+      "modelLimit": "Theoretical gain if the correction resolves the affected checks and other measurements stay the same. Only a new analysis can establish the resulting score.",
       "groupedLabel": "Grouped findings:",
       "confidenceLabel": "Measurement confidence:",
       "confidence": {
@@ -622,7 +623,7 @@
         "UNKNOWN": "unknown"
       },
       "rankReasons": {
-        "MODELLED_SCORE_GAIN": "Ranked by avoidable score loss in its domain.",
+        "MODELLED_SCORE_GAIN": "Ranked by the points theoretically recoverable in its domain.",
         "NO_DIRECT_SCORE_GAIN": "Explanatory action without a direct score gain.",
         "SCORE_UNAVAILABLE": "Score contribution unavailable; ranked by severity."
       },
@@ -643,44 +644,47 @@
     },
     "categoryInfo": {
       "fallback": "What this category measures and how it affects your site's quality.",
-      "security": "HTTP security: protection headers (HSTS, CSP…), information exposure and common vulnerabilities. A good score lowers attack risks (XSS, clickjacking).",
+      "security": "Observed HTTPS connection, protection headers and security signals. These checks do not prove that the site is secure.",
       "ssl": "TLS/HTTPS certificate and encryption: supported protocol versions and configuration strength. Protects the confidentiality of exchanges.",
       "observatory": "Mozilla Observatory analysis: recommended security headers and Content-Security-Policy. Reflects hardening best practices.",
-      "seo": "Search engine optimization: meta tags, heading structure and indexability. A good score improves visibility on search engines.",
-      "a11y": "Accessibility: how usable the site is for everyone, including assistive technologies (screen readers, keyboard navigation).",
-      "performance": "Loading speed and perceived smoothness (Core Web Vitals, resource weight). Directly impacts user experience and SEO.",
+      "seo": "Page headings, metadata and indexing directives. The score does not predict search engine rankings.",
+      "a11y": "Automatically detectable accessibility issues on the page. Keyboard and screen reader journeys also need human checks.",
+      "performance": "Loading, resources and page behaviour under the test conditions. These measurements do not describe every visitor’s experience.",
       "runtime": "Behavior in a real browser: console errors, failed requests and rendering metrics (LCP, FCP). Surfaces issues visible to visitors.",
       "lighthouse": "Google Lighthouse scores (performance, accessibility, best practices, SEO) measured on a real page load."
     },
     "scoreGrid": {
-      "title": "Scores by category",
-      "desc": "Synthetic view for prioritization. Click a category to see details.",
+      "title": "Scores by domain",
+      "desc": "Select a domain to view its findings.",
       "globalLabel": "Global",
-      "methodologyLink": "How is the score calculated? (French)",
+      "methodologyLink": "How is the score calculated?",
       "globalTooltip": "Aggregated global score (0-100) based on detected issues.",
-      "issueCount": "issue(s)",
+      "issueCount": "findings",
+      "issueCountOne": "finding",
       "seeDetail": "See details →",
-      "partial": "Partial analysis · {n}% module completeness",
+      "partial": "Partial analysis · {n}% of modules processed",
       "partialTooltip": "One or more modules could not be evaluated (service temporarily unavailable). The score covers the modules actually analyzed - the site is not penalized."
     },
     "issuesByCategory": {
       "unknownDomain": "Domain not provided",
       "sourcesLabel": "Sources",
+      "resultCountOne": "{n} finding of {total}",
       "resultCount": "{n} findings of {total}",
-      "title": "Details by category",
-      "desc": "Filter by severity, then explore issues by category (sorted critical → info).",
+      "title": "Findings by domain",
+      "desc": "Filter findings by severity and domain to review corrections.",
       "filterLabel": "Severity",
       "filterAll": "All",
       "filterCritical": "Critical",
       "filterImportant": "Important",
-      "filterInfo": "Info",
+      "filterInfo": "Opportunities",
       "severity": {
         "critical": "Critical",
         "important": "Important",
-        "info": "Info"
+        "info": "Opportunity"
       },
       "effortLabel": "Effort",
-      "issueCount": "issue(s)",
+      "issueCount": "findings",
+      "issueCountOne": "finding",
       "scoreLabel": "Score",
       "scoreSuffix": "/100",
       "backToTop": "Back to top ↑",
@@ -697,7 +701,7 @@
       "titleReady": "Opening your report…",
       "subtitleReady": "Your report is ready. The results will appear shortly.",
       "titleFailed": "Analysis failed",
-      "subtitle": "Argos is analysing your site. The report will appear automatically.",
+      "subtitle": "Argos is analysing the submitted page. The report will appear automatically.",
       "estimate": "Timing depends on the queue and analysis services. Progress updates automatically.",
       "retryLink": "Start a new analysis",
       "genericError": "The analysis failed.",
@@ -809,7 +813,7 @@
           "description": "Start with issues shown in the report, then check their effect against your own metrics."
         },
         {
-          "title": "Support trust",
+          "title": "Review trust signals",
           "description": "Spot technical signals that may hinder navigation or credibility, without promising more leads."
         }
       ],
@@ -865,7 +869,7 @@
         }
       ],
       "exampleTitle": "A public product page",
-      "exampleText": "A product page with a missing description, slow loading, and images without alternative text may yield issues to review. This example covers one URL and is not drawn from a client report.",
+      "exampleText": "A product page with a missing description, slow loading and images without text alternatives may produce findings to review. This example covers one URL and uses fictional data.",
       "limits": [
         "The audit checks only the submitted public page; it does not visit every product and category.",
         "No product is added to a cart; no order, sign-in, or payment step is tested.",
@@ -881,8 +885,8 @@
     "submit": "Run audit",
     "submitting": "Sending…",
     "successPrefix": "Audit created",
-    "errorUrlMissing": "URL is missing",
-    "errorUnknown": "Unknown error"
+    "errorUrlMissing": "Enter the address of a public page.",
+    "errorUnknown": "The request failed. Try again."
   },
   "auditList": {
     "comparison": {
@@ -908,9 +912,9 @@
         "SCORE_UNAVAILABLE": "Comparison unavailable: score not measured."
       }
     },
-    "title": "Audits",
+    "title": "Analyses",
     "loading": "Loading…",
-    "empty": "No audits yet.",
+    "empty": "No analyses yet.",
     "copyJson": "Copy JSON",
     "copied": "Copied",
     "showJson": "Show JSON",
@@ -960,6 +964,7 @@
       "scoreNa": "-"
     }
   },
+  "themeToggle": {"light":"Switch to light theme","dark":"Switch to dark theme","lightTitle":"Light theme","darkTitle":"Dark theme"},
   "langToggle": {
     "label": "🇫🇷 FR",
     "targetLang": "fr"

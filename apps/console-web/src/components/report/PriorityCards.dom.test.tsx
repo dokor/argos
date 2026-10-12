@@ -47,7 +47,7 @@ describe("PriorityCards", () => {
     expect(screen.getByText(/Gain de score modélisé : 3,13 points globaux/)).toBeInTheDocument();
     expect(screen.getByText("Confiance de mesure : inconnue")).toBeInTheDocument();
     expect(screen.getByText("Constats regroupés : 2")).toBeInTheDocument();
-    expect(screen.getByText(/Le gain réel dépend/)).toBeInTheDocument();
+    expect(screen.getByText(/Seule une nouvelle analyse/)).toBeInTheDocument();
     expect(screen.getByText("Effort À estimer")).toBeInTheDocument();
   });
   it("restitue la raison et les limites en anglais", () => {
@@ -56,7 +56,7 @@ describe("PriorityCards", () => {
     expect(screen.getByText("Security")).toBeInTheDocument();
     expect(screen.getByText(/Modelled score gain: 3.13 global points/)).toBeInTheDocument();
     expect(screen.getByText("Measurement confidence: unknown")).toBeInTheDocument();
-    expect(screen.getByText(/Actual improvement depends/)).toBeInTheDocument();
+    expect(screen.getByText(/Only a new analysis/)).toBeInTheDocument();
   });
   it("n'annonce aucun gain pour un finding explicatif de poids nul", () => {
     render(<PriorityCards priorities={[{ ...action, rankReason: "NO_DIRECT_SCORE_GAIN", globalScoreGain: 12 }]} />);

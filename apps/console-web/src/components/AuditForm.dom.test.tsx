@@ -22,7 +22,7 @@ it("shows quota errors distinctly and keeps the session valid",async()=>{
   const invalid=vi.fn();window.addEventListener("argos-account-invalid",invalid);
   vi.mocked(argosApi.createAudit).mockRejectedValue(Object.assign(new Error("HTTP 429"),{status:429,code:"quota_exceeded"}));
   render(<AuditForm mode="personal" initialUrl="https://example.com"/>);fireEvent.submit(screen.getByRole("textbox").closest("form")!);
-  expect(await screen.findByRole("alert")).toHaveTextContent("capacité mensuelle");expect(invalid).not.toHaveBeenCalled();
+  expect(await screen.findByRole("alert")).toHaveTextContent("plafond mensuel");expect(invalid).not.toHaveBeenCalled();
   expect(push).not.toHaveBeenCalled();window.removeEventListener("argos-account-invalid",invalid);
 });
 

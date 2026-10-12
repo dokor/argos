@@ -24,7 +24,7 @@ it("loads owner history, pages older runs and pre-fills a personal rerun",async(
   render(<HistoryView urlId="9"/>);
   expect(await screen.findByText("+30 points")).toBeInTheDocument();
   expect(screen.getByRole("link",{name:"Ouvrir le rapport"})).toHaveAttribute("href","/account/runs/2");
-  fireEvent.click(screen.getByRole("button",{name:"Relancer cette URL"}));
+  fireEvent.click(screen.getByRole("button",{name:"Analyser à nouveau cette URL"}));
   expect(screen.getByTestId("audit-form")).toHaveTextContent("personal: https://example.com/path");
   fireEvent.click(screen.getByRole("button",{name:"Plus anciennes"}));
   await waitFor(()=>expect(screen.getByRole("link",{name:"Ouvrir le rapport"})).toHaveAttribute("href","/account/runs/1"));

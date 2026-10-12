@@ -95,7 +95,7 @@ export default function IssuesByCategory({ report, model = buildReportModel(repo
       </div>
 
       <div className={s.resultsBar}>
-        <p className={s.resultCount} role="status">{ti.resultCount.replace("{n}", String(visibleCount)).replace("{total}", String(model.counts.total))}</p>
+        <p className={s.resultCount} role="status">{(visibleCount === 1 ? ti.resultCountOne : ti.resultCount).replace("{n}", String(visibleCount)).replace("{total}", String(model.counts.total))}</p>
         {visibleCount === 0 && model.counts.total > 0 && onFilterChange && <button className={s.filterBtn} type="button" onClick={() => onFilterChange("all", "all")}>{copy.clear}</button>}
       </div>
 
@@ -113,7 +113,7 @@ export default function IssuesByCategory({ report, model = buildReportModel(repo
                 <p className={s.catLabel}>{domains[cat.key] ?? ti.unknownDomain}</p>
                 <p className={s.catDesc}>{catInfo[cat.key] ?? catInfo.fallback}</p>
                 <p className={s.catInfo}>
-                  {issues.length} {ti.issueCount}
+                  {issues.length} {issues.length === 1 ? ti.issueCountOne : ti.issueCount}
                 </p>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
