@@ -63,3 +63,6 @@
 }
 .linkedinIcon { background: #fff; border-radius: 2px; }
 @media (max-width: 360px) { .socialButton { padding-inline: .75rem; column-gap: .25rem; } }
+
+.policies { max-width: 34rem; margin-bottom: 1.5rem; color: var(--argos-text-muted); }
+.policies a { color: var(--argos-brand); text-decoration: underline; text-underline-offset: .2em; }
