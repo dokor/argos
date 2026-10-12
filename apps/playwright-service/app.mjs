@@ -149,6 +149,10 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
 
       try {
         const response = await page.goto(url, { waitUntil: 'load', timeout: remaining() });
+        if (response?.headers()['x-argos-egress-blocked'] === '1') {
+          navigation = { status: 'FAILED', reason: 'TARGET_BLOCKED' };
+          throw new Error('Target blocked');
+        }
         finalUrl = page.url();
 
         // timings best effort
@@ -164,7 +168,7 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
         await page.waitForTimeout(Math.min(1500, remaining()));
       } catch (e) {
         // si le site bloque, on renvoie ce qu’on a
-        navigation = { status: 'FAILED', reason: 'NAVIGATION_ERROR' };
+        if (navigation.reason !== 'TARGET_BLOCKED') navigation = { status: 'FAILED', reason: 'NAVIGATION_ERROR' };
         log('analyze.navigation_error', { url: safeUrl, error: 'Navigation failed' });
       } finally {
         // page.url() reflète aussi la dernière URL atteinte si la navigation échoue

@@ -113,6 +113,11 @@ public class HttpModuleAnalyzer {
 
                 lastRequestedUrl = currentUrl;
                 HttpResponse<String> response = client.send(request, BoundedBodyHandlers.ofString(BoundedBodyHandlers.MAX_PAGE_BYTES));
+                if ("1".equals(response.headers().firstValue("x-argos-egress-blocked").orElse(""))) {
+                    fetchOutcome = "TARGET_BLOCKED";
+                    errors.add("EgressTargetBlocked");
+                    break;
+                }
 
                 lastResponseUrl = currentUrl;
                 body = response.body();

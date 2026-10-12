@@ -27,6 +27,10 @@ export function createLighthouseCollector({ launch, lighthouse, chromeFlags, chr
       puppeteerBrowser = await connectPuppeteer({ browserURL: `http://127.0.0.1:${chrome.port}` });
       const protectedPage = (await puppeteerBrowser.pages()).find(candidate => candidate.url() === 'about:blank#argos-lighthouse');
       if (!protectedPage) throw new Error('Protected Lighthouse page unavailable');
+      protectedPage.on('response', response => {
+        if (response.headers()['x-argos-egress-blocked'] === '1'
+            && response.request().isNavigationRequest() && response.frame() === protectedPage.mainFrame()) cancel();
+      });
       if (signal?.aborted) throw new Error('Analysis timeout');
       return await lighthouse(url, { port: chrome.port, output: 'json', logLevel: 'error',
         locale: 'fr', maxWaitForLoad: Math.min(45000, timeoutMs) }, undefined, protectedPage);

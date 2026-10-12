@@ -12,7 +12,7 @@ test('abort kills Chrome, releases the collector and cannot double-kill during c
     chromium: { connectOverCDP: async () => ({ newContext: async () => ({
       route: async () => {}, routeWebSocket: async () => {}, on: () => {}, newPage: async () => ({ goto: async () => {} })
     }) }) },
-    connectPuppeteer: async () => ({ pages: async () => [{ url: () => 'about:blank#argos-lighthouse' }], disconnect: async () => {} }) });
+    connectPuppeteer: async () => ({ pages: async () => [{ url: () => 'about:blank#argos-lighthouse', on: () => {} }], disconnect: async () => {} }) });
   const controller = new AbortController();
   const result = collect('https://example.com', { signal: controller.signal, timeoutMs: 100 });
   await entered; controller.abort();

@@ -47,7 +47,7 @@ export function createEgressProxy({ resolve, connect = net.connect, request = ht
         response.on('error',stop);response.pipe(measured).pipe(res);
       });
       upstream.on('error',stop);upstream.end();
-    }catch{if(!res.headersSent&&!res.destroyed)res.writeHead(403).end('Target unavailable');}
+    }catch{if(!res.headersSent&&!res.destroyed)res.writeHead(403,{'X-Argos-Egress-Blocked':'1'}).end('Target unavailable');}
   });
   server.on('connect',async(req,client,head)=>{
     let release, upstream, timer;
