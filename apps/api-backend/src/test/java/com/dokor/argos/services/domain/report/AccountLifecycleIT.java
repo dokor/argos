@@ -1118,9 +1118,11 @@ class AccountLifecycleIT extends MariaDbReportFixture {
         var a=administrator();var regular=user("regular@example.com",true);var pending=user("pending-admin@example.com",false);
         sql("UPDATE ARG_ACCOUNT_USER SET role='ADMIN' WHERE id="+pending.context().user().getId());
         try(var http=new HttpFixture()) {
-            for(String route:List.of("queue","users","users/"+regular.context().user().getId(),"runs","runs/1","runs/1/report","events")) {
+            var routes=List.of("queue","users","users/"+regular.context().user().getId(),"runs","runs/1","runs/1/report","events");
+            for(String route:routes) {
                 String path="/account/admin/"+route;
                 assertEquals(401,http.call("GET",path,null,null,false).statusCode(),path);
+                assertEquals(401,http.call("GET",path,"Bearer synthetic-server-credential",null,false).statusCode(),path);
                 assertEquals(403,http.call("GET",path,bearer(regular),null,false).statusCode(),path);
                 assertEquals(403,http.call("GET",path,bearer(pending),null,false).statusCode(),path);
                 var response=http.call("GET",path,bearer(a),null,false);
@@ -1128,10 +1130,16 @@ class AccountLifecycleIT extends MariaDbReportFixture {
                 assertTrue(response.headers().firstValue("cache-control").orElse("").contains("no-store"));
             }
             sql("UPDATE ARG_ACCOUNT_USER SET role='USER' WHERE id="+a.context().user().getId());
-            assertEquals(403,http.call("GET","/account/admin/users",bearer(a),null,false).statusCode());
+            for(String route:routes) assertEquals(403,http.call("GET","/account/admin/"+route,bearer(a),null,false).statusCode(),route);
             sql("UPDATE ARG_ACCOUNT_USER SET role='ADMIN' WHERE id="+a.context().user().getId());
             sessions.with(bearer(a),CSRF,true,false,(ctx,c)->{sessions.revoke(ctx.session(),c);return null;});
-            assertEquals(401,http.call("GET","/account/admin/users",bearer(a),null,false).statusCode());
+            for(String route:routes) assertEquals(401,http.call("GET","/account/admin/"+route,bearer(a),null,false).statusCode(),route);
+            var fresh=dao.transaction(c->sessions.create(dao.user(a.context().user().getId(),c,true),CSRF,c));
+            clock.now=clock.now.plus(settings.jwtTtl()).plusSeconds(1);
+            for(String route:routes) assertEquals(401,http.call("GET","/account/admin/"+route,bearer(fresh),null,false).statusCode(),route);
+            var archived=dao.transaction(c->sessions.create(dao.user(a.context().user().getId(),c,true),CSRF,c));
+            sql("UPDATE ARG_ACCOUNT_USER SET state='ARCHIVED' WHERE id="+a.context().user().getId());
+            for(String route:routes) assertEquals(401,http.call("GET","/account/admin/"+route,bearer(archived),null,false).statusCode(),route);
         }
     }
     @Test void administrationPaginationFiltersQueueAndSafeFailureDetail() throws Exception {

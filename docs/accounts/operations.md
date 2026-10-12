@@ -4,6 +4,17 @@ Le jalon reste désactivé par défaut (`account.enabled=false`). V11 ajoute les
 
 Le fichier [application.example.conf](application.example.conf) contient les paramètres, sans secrets. Générer un secret JWT aléatoire d'au moins 64 octets UTF-8, distinct de `ADMIN_API_TOKEN`, conservé dans le gestionnaire de secrets ou la configuration montée. Sa rotation invalide les JWT existants ; aucune période avec deux clés n'est implémentée. Conserver JWT 15 min et cookie BFF 900 s synchronisés ; changer la durée JWT exige aussi d'adapter le cookie et l'intervalle frontend. Idem pour les preuves 24 h et transactions OAuth 10 min. Le renouvellement ne prolonge pas la limite absolue ni l'inactivité métier. Aucun refresh token longue durée.
 
+## Accès opérateur et transition historique
+
+Les comptes et l'administration historique restent deux mécanismes distincts.
+La [matrice et procédure de transition #516](legacy-admin-transition.md)
+décrit les consommateurs, le provisionnement ADMIN hors API publique,
+la récupération et les conditions de bascule/retour arrière. Garder `/login`
+et ses secrets tant que l'accès opérateur avec comptes désactivés n'a pas de
+remplacement validé. `ADMIN_API_TOKEN` reste nécessaire à la collecte analytics
+serveur lorsqu'elle est activée ; son retrait n'est pas couplé à celui de
+`ADMIN_PASSWORD`, `ADMIN_TOKEN` ou `argos_admin`.
+
 ## Origine du frontend en production
 
 Le Compose de `console-web` fixe `ACCOUNT_ORIGIN=https://argos.lelouet.fr`, en accord avec son routage Traefik. Le BFF prend cette variable serveur au runtime ; modifier uniquement `account.origin` dans le fichier Java `prod.conf` ne configure pas Next. Hors de ce Compose, définir `ACCOUNT_ORIGIN` dans l'environnement de Next. Sans origine explicite ni `NEXT_PUBLIC_SITE_URL`, le BFF utilise le domaine HTTPS Argos en production et `http://localhost:3000` en développement. Il ne déduit jamais une origine de confiance des headers du navigateur ou du proxy.

@@ -2,6 +2,10 @@
 
 L'administration des comptes utilise exclusivement une session Argos ACTIVE avec rôle ADMIN relu côté serveur. L'ancien accès mono-admin reste distinct et ne donne aucun droit sur ces routes.
 
+La [préparation du retrait historique #516](legacy-admin-transition.md) détaille
+les routes encore dépendantes du secret partagé, les écarts de parité et les
+prérequis opérateur. La transition n'est pas activée par la présence de ces routes.
+
 - `/api/account/admin/users` : recherche nom/email, filtres état/offre, pagination par identifiant décroissant (20 par défaut, 100 maximum).
 - `/api/account/admin/users/{id}` : profil minimal, consommation du mois calendaire configuré, plafond individuel éventuel.
 - `PATCH /api/account/admin/users/{id}/entitlement` : offre configurée et plafond individuel entier positif ou nul ; `null` rétablit le plafond de l'offre. Le rôle ne peut jamais être modifié. Connexion récente, CSRF et confirmation explicite requis. Compte archivé non modifiable. Effet immédiat sur les nouvelles admissions ; les réservations et rapports existants sont conservés.
