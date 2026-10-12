@@ -45,7 +45,7 @@ public final class ExternalServiceCall {
             return result;
         } catch (Exception e) {
             logger.warn("external_call_failed service={} target={} durationMs={} error={}",
-                service, safeTarget, System.currentTimeMillis() - start, e.toString());
+                service, safeTarget, System.currentTimeMillis() - start, e.getClass().getSimpleName());
             throw e;
         }
     }
@@ -53,7 +53,6 @@ public final class ExternalServiceCall {
     /** Retire les CRLF/tabulations (anti log-injection) et tronque les cibles trop longues. */
     private static String sanitize(String target) {
         if (target == null) return "null";
-        String cleaned = target.replaceAll("[\\r\\n\\t]", " ");
-        return cleaned.length() > 200 ? cleaned.substring(0, 200) + "…" : cleaned;
+        return com.dokor.argos.services.domain.audit.UrlNormalizer.sanitizeForLog(target);
     }
 }

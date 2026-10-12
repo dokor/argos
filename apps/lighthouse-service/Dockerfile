@@ -11,7 +11,7 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm ci --omit=dev
 
-COPY server.mjs app.mjs collector.mjs .
+COPY server.mjs app.mjs collector.mjs policy.mjs browser-policy.mjs .
 
 # L'image Playwright embarque Chromium dans /ms-playwright. On crée un chemin
 # stable afin que chrome-launcher puisse le lancer explicitement.
@@ -22,6 +22,11 @@ RUN CHROME_BINARY="$(find /ms-playwright -type f -name chrome -perm -111 | head 
 ENV NODE_ENV=production
 ENV PORT=3017
 ENV CHROME_PATH=/usr/local/bin/lighthouse-chromium
+RUN (getent group 1001 || groupadd -g 1001 auditor) \
+  && (getent passwd 1001 || useradd -u 1001 -g 1001 -m auditor) \
+  && mkdir -p /home/auditor && chown 1001:1001 /home/auditor
+ENV HOME=/home/auditor
+USER 1001:1001
 
 EXPOSE 3017
 

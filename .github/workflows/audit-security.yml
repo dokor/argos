@@ -1,0 +1,32 @@
+name: Audit security
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: audit-security-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  security:
+    name: Audit egress and browser isolation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.21.0'
+      - run: node --test apps/audit-egress/proxy.test.mjs
+      - name: Real Chromium sandbox, egress firewall and secondary request fixtures
+        run: bash scripts/security/docker-smoke.sh
+      - name: Diagnostics
+        if: failure()
+        run: |
+          docker ps -a
+          docker logs argos-security-gateway 2>&1 || true
+          docker logs argos-security-runtime 2>&1 || true

@@ -27,19 +27,21 @@ public class SslLabsClient {
     private final Duration budget;
     private final Duration initialPoll;
     private final Duration runningPoll;
+    private final boolean externalScansEnabled;
 
     @Inject
     public SslLabsClient(ExternalHttpClient http, ConfigurationService config) {
         this(http, config.sslLabsApiUrl(), config.sslLabsTimeout(),
-            Duration.ofSeconds(5), Duration.ofSeconds(10));
+            Duration.ofSeconds(5), Duration.ofSeconds(10), "true".equals(System.getenv("ARGOS_EXTERNAL_SCANS_ENABLED")));
     }
 
     SslLabsClient(ObjectMapper mapper, String apiBase, Duration budget, Duration initialPoll, Duration runningPoll) {
-        this(new ExternalHttpClient(mapper), apiBase, budget, initialPoll, runningPoll);
+        this(new ExternalHttpClient(mapper), apiBase, budget, initialPoll, runningPoll, true);
     }
 
     private SslLabsClient(ExternalHttpClient http, String apiBase, Duration budget,
-                          Duration initialPoll, Duration runningPoll) {
+                          Duration initialPoll, Duration runningPoll, boolean externalScansEnabled) {
+        this.externalScansEnabled = externalScansEnabled;
         if (budget.isZero() || budget.isNegative()) throw new IllegalArgumentException("SSL Labs timeout must be positive");
         this.http = http;
         this.apiBase = apiBase;
@@ -50,6 +52,7 @@ public class SslLabsClient {
 
     /** Prefer cached reports; a cache miss can start an assessment. Never force startNew. */
     public JsonNode analyze(String host) throws Exception {
+        com.dokor.argos.services.analysis.RemoteScanPolicy.requireAllowed(host, externalScansEnabled);
         var parent = AuditDeadline.current();
         var deadline = parent == null ? new AuditDeadline(budget) : parent.child(budget);
         try (var scope = deadline.enter()) {

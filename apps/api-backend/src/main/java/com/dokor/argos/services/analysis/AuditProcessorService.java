@@ -174,10 +174,10 @@ public class AuditProcessorService {
         if (normalizedUrl == null || normalizedUrl.isBlank()) {
             try {
                 normalizedUrl = urlNormalizer.normalize(inputUrl);
-                logger.info("Normalized URL computed inputUrl={} normalizedUrl={}", inputUrl, normalizedUrl);
+                logger.info("Normalized URL computed inputUrl={} normalizedUrl={}", UrlNormalizer.sanitizeForLog(inputUrl), UrlNormalizer.sanitizeForLog(normalizedUrl));
             } catch (Exception e) {
                 auditRunService.fail(runId, "URL_NORMALIZATION_FAILED", run.getClaimToken());
-                logger.warn("Run failed (normalization) runId={} error={}", runId, e.getMessage(), e);
+                logger.warn("Run failed (normalization) runId={} error={}", runId, e.getClass().getSimpleName());
                 return;
             }
         }
@@ -306,7 +306,7 @@ public class AuditProcessorService {
                     score
                 );
 
-                String json = objectMapper.writeValueAsString(report);
+                String json = objectMapper.writeValueAsString(AuditOutputSanitizer.tree(report, objectMapper));
 
                 try (var publicationBudget=AuditDeadline.current().publication().enter()) {
                     reportPublishService.completeAndPublish(runId, audit, report, json, run.getClaimToken());
@@ -323,7 +323,7 @@ public class AuditProcessorService {
             if (auditRunService.fail(runId, "AUDIT_PROCESSING_FAILED", run.getClaimToken())) {
                 auditRunService.failRunningModules(runId);
             }
-            logger.warn("Run failed runId={} error={}", runId, e.getMessage(), e);
+            logger.warn("Run failed runId={} error={}", runId, e.getClass().getSimpleName());
         }
     }
 
@@ -467,7 +467,7 @@ public class AuditProcessorService {
             statuses.put(moduleId, outcome.name());
             auditRunService.updateModuleStatus(runId, moduleId, outcome.liveStatus());
             logger.warn("module_failed module={} status={} durationMs={} error={}", moduleId,
-                outcome, System.currentTimeMillis() - start, e.getMessage(), e);
+                outcome, System.currentTimeMillis() - start, e.getClass().getSimpleName());
             return annotateWithSource(fallbackModule(moduleId, title, outcome, e));
         } finally {
             MDC.remove("module");
@@ -516,7 +516,6 @@ public class AuditProcessorService {
     }
 
     private static String safeMsg(Throwable e) {
-        String m = e.getMessage();
-        return (m == null || m.isBlank()) ? e.getClass().getSimpleName() : m;
+        return e.getClass().getSimpleName();
     }
 }

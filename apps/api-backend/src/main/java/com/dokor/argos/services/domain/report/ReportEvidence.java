@@ -49,14 +49,6 @@ final class ReportEvidence {
     }
 
     static String clean(Object value) {
-        String text = String.valueOf(value).replaceAll("[\\p{Cntrl}\\u202a-\\u202e\\u2066-\\u2069]", " ");
-        text = URL.matcher(text).replaceAll(match -> {
-            try {
-                URI uri = URI.create(match.group());
-                if (uri.getHost() == null) return "[URL]";
-                return Matcher.quoteReplacement(new URI(uri.getScheme(), null, uri.getHost(), uri.getPort(), uri.getPath(), null, null).toASCIIString());
-            } catch (Exception ignored) { return "[URL]"; }
-        });
-        return text.substring(0, Math.min(text.length(), 4000));
+        return com.dokor.argos.services.analysis.AuditOutputSanitizer.text(String.valueOf(value));
     }
 }

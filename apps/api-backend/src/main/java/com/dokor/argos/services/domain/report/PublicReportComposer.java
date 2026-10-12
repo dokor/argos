@@ -28,7 +28,7 @@ public class PublicReportComposer {
     public ReportDto compose(AuditReportJson internalReport) {
         logger.info("Composing public report from schemaVersion={}", internalReport.schemaVersion());
 
-        String url = internalReport.normalizedUrl();
+        String url = com.dokor.argos.services.domain.audit.UrlNormalizer.sanitizeForLog(internalReport.normalizedUrl());
         String domain = Urls.host(url, url);
 
         AuditScoreReport score = internalReport.score();

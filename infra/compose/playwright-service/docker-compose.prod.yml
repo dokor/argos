@@ -1,4 +1,23 @@
 services:
+  playwright-egress:
+    build:
+      context: /srv/apps/playwright-service/egress
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    cap_drop: [ALL]
+    cap_add: [NET_ADMIN, SETUID, SETGID, SETPCAP]
+    read_only: true
+    security_opt: [no-new-privileges:true]
+    mem_limit: 128m
+    pids_limit: 64
+    healthcheck:
+      test: [CMD, node, -e, "const s=require('net').connect(3128,'127.0.0.1',()=>{s.end();process.exit(0)});s.on('error',()=>process.exit(1))"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    networks:
+      argos_internal:
+        aliases: [playwright-service]
   playwright-service:
     build:
       context: /srv/apps/playwright-service/src
@@ -7,21 +26,34 @@ services:
         ARGOS_REVISION: ${ARGOS_REVISION:-unknown}
     container_name: playwright-service
     restart: unless-stopped
+    network_mode: service:playwright-egress
+    depends_on:
+      playwright-egress:
+        condition: service_healthy
+    user: "1001:1001"
+    cap_drop: [ALL]
+    read_only: true
+    init: true
+    security_opt:
+      - no-new-privileges:true
+      - seccomp=${ARGOS_CHROMIUM_SECCOMP_PROFILE:?Install the reviewed Playwright seccomp profile}
+    tmpfs:
+      - /tmp:size=256m,nosuid,nodev
+      - /home/auditor:size=16m,nosuid,nodev,uid=1001,gid=1001
+    shm_size: 128m
+    mem_limit: 1g
+    cpus: 2
+    pids_limit: 256
     environment:
       - PORT=3016
       - NODE_ENV=production
-      # optionnel : limites / timeouts
-      - MAX_CONCURRENCY=2
-      - NAV_TIMEOUT_MS=45000
+      - AUDIT_EGRESS_PROXY=http://127.0.0.1:3128
     healthcheck:
-      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:3016/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3016/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 30s
       timeout: 5s
       retries: 3
       start_period: 40s
-    networks:
-      - argos_internal
-
 networks:
   argos_internal:
     external: true

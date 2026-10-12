@@ -5,6 +5,7 @@ on:
     branches: ["main"]
     paths:
       - "apps/playwright-service/**"
+      - "apps/audit-egress/**"
       - "infra/compose/playwright-service/**"
       - ".github/workflows/deploy-playwright-service.yml"
 
@@ -17,6 +18,7 @@ jobs:
     runs-on: self-hosted
     env:
       ARGOS_REVISION: ${{ github.sha }}
+      ARGOS_CHROMIUM_SECCOMP_PROFILE: /srv/apps/playwright-service/chromium-seccomp.json
 
     steps:
       - name: Checkout
@@ -28,10 +30,16 @@ jobs:
           rsync -a --delete ./apps/playwright-service/ /srv/apps/playwright-service/src/
           chown -R $USER:$USER /srv/apps/playwright-service
 
+      - name: Sync security gateway sources
+        run: |
+          mkdir -p /srv/apps/playwright-service/egress
+          rsync -a --delete ./apps/audit-egress/ /srv/apps/playwright-service/egress/
+
       - name: Sync compose to /srv/apps
         run: |
           mkdir -p /srv/apps/playwright-service
           rsync -a ./infra/compose/playwright-service/docker-compose.prod.yml /srv/apps/playwright-service/docker-compose.prod.yml
+          rsync -a ./infra/compose/playwright-service/chromium-seccomp.json /srv/apps/playwright-service/chromium-seccomp.json
           chown -R $USER:$USER /srv/apps/playwright-service
 
       - name: Ensure network exists (argos_internal)

@@ -1,4 +1,5 @@
 import { ssrfError } from "./audit-url-validation";
+import { boundedJson } from "./bounded-request";
 import { adminPath, adminQuery, adminEntitlement } from "./admin-request";
 import { feedbackTreatment } from "./feedback-request";
 import { createHash, timingSafeEqual } from "node:crypto";
@@ -65,11 +66,10 @@ export async function accountProxy(request: NextRequest, parts: string[]): Promi
   if (headers instanceof NextResponse) return headers;
   let body: string | undefined, returnTo = "/account", preserveReturn = false;
   if (mutation) {
-    const text = await request.text();
-    if (text.length > 8192) return privateError("payload_invalid", 400);
     try {
-      const parsed = text ? JSON.parse(text) : {};
-      if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) return privateError("payload_invalid", 400);
+      const value = request.body ? await boundedJson(request) : {};
+      if (value === null || typeof value !== "object" || Array.isArray(value)) return privateError("payload_invalid", 400);
+      const parsed = value as Record<string, unknown>;
       if(path.startsWith("admin/") && !(path.startsWith("admin/feedback/") ? feedbackTreatment(parsed) : adminEntitlement(parsed))) return privateError("payload_invalid",400);
       if (path.endsWith("/start") || path === "auth/register" || path === "auth/confirm-email") {
         returnTo = safeAccountReturn(parsed.returnTo);

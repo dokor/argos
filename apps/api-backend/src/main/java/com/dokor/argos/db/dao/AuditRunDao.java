@@ -35,6 +35,19 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
     }
     public com.dokor.argos.services.account.UsageService usage() { return usage; }
 
+    /** Global durable admission, including anonymous and personal runs, before inserting the run. */
+    public AuditRun saveQueued(AuditRun run, Connection connection) {
+        if (connection == null) return usage.transaction(c -> saveQueued(run, c));
+        try (var statement = connection.prepareStatement(
+            "UPDATE ARG_AUDIT_ADMISSION SET pending=pending+1 WHERE id=1 AND pending<100")) {
+            if (statement.executeUpdate() != 1) throw new jakarta.ws.rs.WebApplicationException(
+                jakarta.ws.rs.core.Response.status(429).type("application/json")
+                    .header("Retry-After", "60").header("Cache-Control", "no-store")
+                    .entity(java.util.Map.of("error", "Audit queue full")).build());
+            return save(run, connection);
+        } catch (java.sql.SQLException error) { throw new IllegalStateException("Audit admission unavailable", error); }
+    }
+
     public Optional<AuditRun> findNextQueuedRun() {
         return Optional.ofNullable(
             transactionManager.selectQuery()
