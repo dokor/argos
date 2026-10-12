@@ -4,7 +4,7 @@
 
 Le calcul a été livré dans [PR #254](https://github.com/dokor/argos/pull/254),
 fusionnée au commit `59e3a44f2fcfeac19f89948747372270b4ee469b`.
-Le catalogue est versionné par `DefaultScorePolicy.version() = 10`.
+La composition a été introduite avec la version 10 ; le catalogue actif est désormais V12, décrit dans [les seuils runtime](runtime-thresholds.md).
 Performance, Sécurité, SEO et Accessibilité ont chacun un coefficient configuré
 de **25 %**. Ce choix donne à chaque domaine la même influence initiale ; le
 nombre de checks ou leurs poids internes ne décide plus de cette influence.
@@ -59,10 +59,3 @@ Les nouveaux champs sont absents/null dans les anciens rapports ; leur score
 reste affiché. Aucun recalcul, migration SQL ou changement des coefficients
 de V10 n'est effectué. L'indisponibilité publique corrige une présentation
 ambiguë, sans changer le calcul ni le catalogue.
-
-## Revue ADE 1.2.1
-
-Perspectives Tech Lead, Backend, Frontend, QA et UX : décomposition explicable,
-cas de référence, absence de confusion entre zéro et indisponibilité,
-compatibilité de désérialisation et conservation par l'enrichissement IA.
-La portée de #44 (comparabilité) et #48 (couverture) demeure distincte.

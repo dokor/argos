@@ -33,8 +33,7 @@ classées par gravité et les mêmes départages.
 
 La confiance accepte uniquement `check.details.measurementConfidence`
 HIGH/MEDIUM/LOW, sinon UNKNOWN. Le nombre de sources ne prouve pas la
-fiabilité d'une mesure. Le travail de couverture/confiance #48 reste
-distinct : les analyzers actuels sans métadonnée explicite produisent UNKNOWN.
+fiabilité d'une mesure. La [couverture](measurement-coverage.md) reste distincte : sans métadonnée explicite, la confiance est UNKNOWN.
 L'effort accepte uniquement `check.details.estimatedEffort` XS/S/M/L ;
 sinon il reste null, y compris pour les issues détaillées. Aucune durée,
 confiance ou estimation d'effort n'est inférée de la seule sévérité.
@@ -72,9 +71,9 @@ les anciennes cartes et efforts sont lus tels quels. Les compteurs du
 Hero continuent à lire `issues`, la liste détaillée conserve les findings,
 et les cartes lisent uniquement `summary.priorities`.
 
-## Validation ADE 1.2.1
+## Validation
 
-Perspectives Tech Lead, Backend, Frontend, UX, QA et Security. Les tests
+Les tests
 couvrent gain supérieur à sévérité moindre, poids effectifs d'un domaine
 partiel, ratio continu, poids nul, égalités, confiance/effort explicites,
 groupement multi-source, causes inconnues, ordre permuté, plafond de six

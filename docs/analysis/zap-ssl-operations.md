@@ -1,15 +1,10 @@
-# ZAP / SSL Labs — correction de déploiement du 6 octobre 2026
+# Exploiter ZAP et SSL Labs
 
-## Incident et diagnostic
+## Prérequis
 
-Le backend ne démarrait pas sans `internal-api.auth-password` depuis la suppression
-du secret par défaut. Fournir un secret externe dans `/srv/configs/api-backend/prod.conf`
-ou `INTERNAL_API_PASSWORD` dans le conteneur reste obligatoire. Ne pas remettre un
-secret par défaut dans Git. Les déploiements précédents ne vérifiaient pas la santé Java.
-
-Après correction du secret, le run fourni a terminé en 45,6s avec 75% de complétude.
-SSL Labs n'avait pas de résultat après cinq sondages (15,35s), sans HTTP 429.
-ZAP était absent et le client utilisait localhost dans le conteneur Java.
+Fournir le secret interne via la configuration montée ou INTERNAL_API_PASSWORD,
+selon [la gestion des secrets](../security/secret-remediation.md). Vérifier la
+santé Java avant d'interpréter un module absent comme une panne du collecteur.
 
 ## ZAP
 
