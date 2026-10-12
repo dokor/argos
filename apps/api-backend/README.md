@@ -1,155 +1,91 @@
-api-backend
-=============
+# Backend API Argos
 
-Welcome to your [Plume](https://github.com/Coreoz/Plume) project!
-Here are some reminders to get your project up and running.
+Java 21, Maven, Plume/Guice, Jersey/Grizzly, MariaDB et QueryDSL.
+Les routes REST sont montées sous `/api`. `WebApplication` démarre la base,
+les migrations Flyway, le serveur HTTP et le scheduler des audits.
 
-If you just created the project, you should have a look at the [finalizing project creation](https://github.com/Coreoz/Plume-archetypes/blob/master/plume-archetype-querydsl-jersey-guice-grizzly#finalizing-project-creation) section in the project Maven Archetype.
+## Démarrage local
 
-Configuring your IDE
---------------------
-Install [Lombok](https://projectlombok.org/): http://jnb.ociweb.com/jnb/jnbJan2010.html#installation
+Prérequis : JDK 21, Maven 3.9+, MariaDB avec une base de développement dédiée.
+Depuis ce dossier, créer `local.conf` (ignoré par Git) :
 
-Launching the server
---------------------
-Just run the `com.dokor.argos.WebApplication` class, you can then open your browser to <http://localhost:8081>.
-
-Configuration
--------------
-The configuration file is located in `src/main/resources/application.conf`.
-If you have any doubt, check out the [configuration documentation](https://github.com/Coreoz/Plume/tree/master/plume-conf). 
-
-The optional `AHREFS_API_KEY` environment variable enables the Ahrefs Domain Rating
-badge in newly published reports. Create a free APIv3 key in Ahrefs account settings
-and supply it to the backend process (the production Compose file forwards this
-variable). Without a key, or when Ahrefs is unavailable, reports are published
-without the badge. Successful ratings are cached in memory per domain for 24 hours;
-the badge shows the retrieval date and the required Ahrefs attribution. The rating
-does not affect Argos scoring. Existing reports are not retroactively enriched.
-
-Database
---------
-To generate classes corresponding to the database tables,
-you can run the `com.dokor.argos.db.QuerydslGenerator.main()` method.
-On Intellij the Maven `querydsl-code-generation` profile must be used for that, so these steps must be followed in Intellij:
-1. Click on the Maven pane on the right
-2. In the Profiles block, select the `querydsl-code-generation` profile
-3. Update the Maven project
-4. Run the `com.dokor.argos.db.QuerydslGenerator.main()` method
-
-See the detailed documentations:
-- [Plume Database](https://github.com/Coreoz/Plume/tree/master/plume-db)
-- [Plume Querydsl](https://github.com/Coreoz/Plume/tree/master/plume-db-querydsl)
-- [Plume Querydsl codegen](https://github.com/Coreoz/Plume/tree/master/plume-db-querydsl-codegen)
-
-Documentation about initial database configuration is available in the [Plume Maven Archetype](https://github.com/Coreoz/Plume-archetypes/blob/master/plume-archetype-querydsl-jersey-guice-grizzly#database-configuration).
-
-Configuring CI
---------------
-
-Java coverage (#237): run `mvn clean verify` with Java 21. JaCoCo generates
-`target/site/jacoco/index.html`, `jacoco.xml` and `jacoco.csv`; GitHub CI runs
-`verify` and retains this directory as a SHA-labelled artifact for 14 days.
-`mvn test` runs the tests with instrumentation but does not generate the report.
-Only `com/dokor/argos/db/generated/**` is excluded from the report (generated
-QueryDSL beans and metamodels). DAOs, webservices, configuration, scheduler and
-business services remain included, even when untested. This first measurement
-is a baseline; no arbitrary coverage threshold blocks the build. The historical
-40% estimate is not a measured baseline. Always compare reports from clean builds
-with the same exclusions and tests; unit coverage does not prove DB concurrency
-or production behavior.
-
-First local baseline (2026-10-05, #237, Java 21, 346 tests): 2,828 / 4,071 lines
-(69.5%), 1,471 / 2,189 branches (67.2%). SchedulerJobs: 28 / 28 lines and 4 / 4
-branches; ConfigurationService: 27 / 29 lines and 8 / 8 branches. Use the CI
-artifact for the exact revision under review, rather than treating these figures
-as a permanent percentage.
-- Gitlab CI configuration is made in the `.gitlab-ci.yml` file
-- Sonar configuration is made in the `sonar-project.properties` file
-- Github CI configuration is made in the `.github` folder
-
-Swagger / OpenAPI
------------------
-Swagger is pre-configured to provide documentation about the project web-services.
-This documentation is protected by Basic access authentication. This is configured in the `application.conf` file
-in the `internal-api.auth-username` and `internal-api.auth-password` keys.
-
-To access this documentation, start the project
-and go to <http://localhost:8081/webjars/swagger-ui/4.1.2/index.html?url=/api/swagger>.
-
-Deploying to production
------------------------
-1. Execute `mvn package`
-2. Run `java -cp "target/dist/api-backend/lib/*" com.dokor.argos.WebApplication`. This can be adapted if the jar files are copied elsewhere.
-
-If `appserver` is used, then this is automated with the server configured to `export SERVER=javazip`.
-
-For further details on `WAR` packaging, see the [Plume Grizzly archetype](https://github.com/Coreoz/Plume-archetypes/tree/master/plume-archetype-querydsl-jersey-guice-grizzly).
-
-Monitoring application
-----------------------
-Monitoring is available through these endpoints:
-- `/monitoring/info`: provides information about the application name and version. Additionnal information can be added by providing an object for the configuration key `plm-web-jersey-info`. For example: `plm-web-jersey-info = { info1 = "value 1", info2 = "value 2" }`
-- `/monitoring/health`: provides information about application health
-- `/monitoring/metrics`: provides JVM and custom metrics info. This can be customized in the `MonitoringWs` class where the monitoring endpoints are configured
-
-So by default, when running on localhost, metrics are available on: <http://localhost:8081/api/monitoring/metrics>
-
-These endpoints are protected by Basic access authentication. This is configured in the `application.conf` file
-in the `internal-api.auth-username` and `internal-api.auth-password` keys.
-
-These endpoints should be compatible with [Spring Actuators endpoints](https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html#actuator.endpoints).
-
-More modules
-------------
-- [Plume Mail](https://github.com/Coreoz/Plume/tree/master/plume-mail): send mails,
-- [Plume Scheduler](https://github.com/Coreoz/Plume/tree/master/plume-scheduler): schedule recurring Java jobs/tasks,
-- [Plume Admin](https://github.com/Coreoz/Plume-admin): web-service with a security layer to create an admin area,
-- [Plume File](https://github.com/Coreoz/Plume-file): manage and serve files,
-- [Plume frontend with React](https://github.com/Coreoz/create-plume-react-project): a frontend JS CLI to create admin or basic front React/TS application that integrate perfectly with a Plume backend (and not only!)
-
-Check the [showcase project](https://github.com/Coreoz/Plume-showcase)
-to see an example with these modules.
-
-
-## Codex report summary
-
-The production stack can generate a short executive summary before publishing a report.
-
-The dedicated `codex-summary` container inherits from:
-
-```text
-ghcr.io/dokor/codex-runtime:0.156.1-r1
+```hocon
+include classpath("application.conf")
+db.hikari."dataSource.url" = "jdbc:mariadb://localhost/argos_dev"
+db.hikari."dataSource.user" = "argos_dev"
+# DB_PASSWORD et INTERNAL_API_PASSWORD sont lus par application.conf.
+external.playwright.url = "http://localhost:3016"
+external.lighthouse.url = "http://localhost:3017"
 ```
 
-It is isolated from the application source and is reachable only from `api-backend` on the private `argos_ai` Docker network.
+Fournir `DB_PASSWORD` et `INTERNAL_API_PASSWORD` dans l'environnement du processus
+(ou via une configuration locale protégée). Ils sont obligatoires : le démarrage
+échoue s'ils sont absents ou vides. Ne pas modifier le fichier versionné avec des
+secrets. `ADMIN_API_TOKEN` est optionnel pour le démarrage, mais requis pour les
+lectures admin historiques ; sa valeur doit correspondre à celle du BFF Next.
 
-Runtime variables:
-
-```env
-CODEX_SUMMARY_ENABLED=true
-CODEX_SUMMARY_SERVICE_URL=http://codex-summary:3010
-CODEX_SUMMARY_TIMEOUT_SECONDS=45
-CODEX_RUNTIME_IMAGE=ghcr.io/dokor/codex-runtime:0.156.1-r1
+```sh
+mvn package
+java -Dconfig.file=local.conf -cp "target/dist/api-backend/lib/*" com.dokor.argos.WebApplication
 ```
 
-The feature is fail-open: a Codex timeout, quota error, invalid response or unavailable service never prevents report publication.
+Le résultat Maven est un JAR avec ses dépendances dans `target/dist/api-backend/lib`,
+pas un fat JAR autonome. Le serveur écoute par défaut sur le port 8081 ;
+`-Dhttp.port=...` et `-Dhttp.address=...` permettent de le configurer.
+Le démarrage applique les migrations : utiliser une base jetable pour les essais.
 
-### First authentication
+## Configuration et services optionnels
 
-After the first deployment, authenticate the dedicated Codex home once:
+- `src/main/resources/application.conf` : valeurs par défaut ; `-Dconfig.file`
+  sélectionne le fichier externe, qui doit inclure ces valeurs si nécessaire.
+- Les clients externes lisent les clés `external.*`, puis leurs variables
+  d'environnement historiques et leurs valeurs par défaut. Voir
+  [opérations ZAP/SSL](../../docs/analysis/zap-ssl-operations.md).
+- Le scheduler prend un run à la fois ; les modules suivent
+  l'[orchestration documentée](../../docs/analysis/progress.md). L'intervalle
+  `audit.scheduler.interval` vaut 5 secondes après la fin du traitement précédent.
+- Les comptes restent désactivés par défaut. Suivre la
+  [configuration des comptes](../../docs/accounts/operations.md) pour JWT, SMTP,
+  OAuth et origine autorisée.
+- `AHREFS_API_KEY` active l'enrichissement Domain Rating des nouveaux rapports,
+  mis en cache 24 h par domaine ; il n'affecte pas le score.
+- La synthèse facultative est décrite dans le [guide du service](codex-summary/README.md).
+  Son indisponibilité n'empêche pas la publication d'un rapport.
 
-```bash
-cd /srv/apps/api-backend
-docker compose -f docker-compose.prod.yml run --rm --entrypoint codex codex-summary login
-docker compose -f docker-compose.prod.yml run --rm --entrypoint codex codex-summary login status
-docker compose -f docker-compose.prod.yml up -d
+## Base de données
+
+Préserver toutes les migrations historiques de `src/main/resources/db/migration`.
+Pour une évolution, ajouter une migration et mettre à jour l'entité ainsi que la
+classe `Q*` correspondantes dans `db.generated`.
+
+`db.QuerydslGenerator` est un outil de développement conservé, pas du code mort :
+son `main` est lancé explicitement depuis l'IDE. Il écrit dans
+`apps/api-backend/src/main/java` relativement à la racine du dépôt. Ne pas le lancer
+pour une migration courante : il pourrait écraser les adaptations existantes.
+Le profil `querydsl-code-generation` ne constitue pas encore une séparation du
+classpath runtime ; voir l'[inventaire de maintenance](../../docs/maintenance.md).
+
+## Tests et packaging
+
+```sh
+mvn test
+mvn clean verify
 ```
 
-The auth state is stored in the `argos_codex_home` Docker volume.
+`verify` exécute le packaging et génère `target/site/jacoco/`. Les classes QueryDSL
+générées sont exclues de la couverture. Utiliser le résultat associé au SHA testé,
+pas les pourcentages des anciens audits. Les tests nécessitant ZAP/MariaDB ont des
+prérequis distincts : [CI](../../docs/testing/ci.md),
+[MariaDB](../../docs/testing/mariadb.md), [E2E](../../docs/testing/controlled-e2e.md).
 
-### GHCR access
+## Endpoints internes et exploitation
 
-The deploy workflow logs into GHCR with the repository `GITHUB_TOKEN` and requests `packages: read`.
+`/api/swagger` expose la définition OpenAPI. `/api/monitoring/info`,
+`/api/monitoring/health` et `/api/monitoring/metrics` exposent le diagnostic interne.
+Ils sont protégés par Basic Auth (`internal-api.auth-username` et
+`INTERNAL_API_PASSWORD`). Ne pas figer une ancienne version du webjar Swagger UI
+dans les liens d'exploitation.
 
-If `dokor/codex-runtime` is private, its package settings must grant **Actions access / Read** to `dokor/argos`. No PAT is required once that repository access is granted.
+Le déploiement est défini dans `.github/workflows/deploy-api-backend.yml` depuis
+la racine du dépôt, et dans `infra/compose/api-backend/docker-compose.prod.yml`.
+Voir le [runbook](../../infra/RUNBOOK.md) pour les opérations et sauvegardes.

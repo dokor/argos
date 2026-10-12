@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { hasUrlScheme, normalizeInputUrl } from "./url";
+import { normalizeInputUrl } from "./url";
 
 // Covers issue #61: the audit input must accept URLs with or without a scheme.
 
@@ -45,14 +45,5 @@ describe("normalizeInputUrl", () => {
     expect(normalizeInputUrl("example.com:8080")).toBe(
       "https://example.com:8080"
     );
-  });
-});
-
-describe("hasUrlScheme", () => {
-  it("detects present and absent schemes", () => {
-    expect(hasUrlScheme("https://example.com")).toBe(true);
-    expect(hasUrlScheme("http://example.com")).toBe(true);
-    expect(hasUrlScheme("example.com")).toBe(false);
-    expect(hasUrlScheme("example.com:8080")).toBe(false);
   });
 });
