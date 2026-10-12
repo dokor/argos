@@ -4,6 +4,14 @@ Le jalon reste désactivé par défaut (`account.enabled=false`). V11 ajoute les
 
 Le fichier [application.example.conf](application.example.conf) contient les paramètres, sans secrets. Générer un secret JWT aléatoire d'au moins 64 octets UTF-8, distinct de `ADMIN_API_TOKEN`, conservé dans le gestionnaire de secrets ou la configuration montée. Sa rotation invalide les JWT existants ; aucune période avec deux clés n'est implémentée. Conserver JWT 15 min et cookie BFF 900 s synchronisés ; changer la durée JWT exige aussi d'adapter le cookie et l'intervalle frontend. Idem pour les preuves 24 h et transactions OAuth 10 min. Le renouvellement ne prolonge pas la limite absolue ni l'inactivité métier. Aucun refresh token longue durée.
 
+## Origine du frontend en production
+
+Le Compose de `console-web` fixe `ACCOUNT_ORIGIN=https://argos.lelouet.fr`, en accord avec son routage Traefik. Le BFF prend cette variable serveur au runtime ; modifier uniquement `account.origin` dans le fichier Java `prod.conf` ne configure pas Next. Hors de ce Compose, définir `ACCOUNT_ORIGIN` dans l'environnement de Next. Sans origine explicite ni `NEXT_PUBLIC_SITE_URL`, le BFF utilise le domaine HTTPS Argos en production et `http://localhost:3000` en développement. Il ne déduit jamais une origine de confiance des headers du navigateur ou du proxy.
+
+Après un changement des variables du frontend, recréer le conteneur (`docker compose -f /srv/apps/console-web/docker-compose.prod.yml up -d --force-recreate console-web`) : un simple `docker restart` ne recharge pas son environnement. Une modification du code nécessite également l'image mise à jour.
+
+Pour diagnostiquer un refus `csrf_invalid` à l'inscription : vérifier l'origine exacte dans Next et Java, puis le cookie de `/api/account/csrf` (HttpOnly, Secure en HTTPS). Un cookie et un jeton concordants ne suffisent pas si l'origine diffère. Le message de confirmation expirée peut donc correspondre à une configuration d'origine incorrecte ; la demande est rejetée avant l'inscription et l'envoi SMTP.
+
 ## Email local et SMTP
 
 Les tests injectent une capture email : ni compte SMTP ni secret réel n'est nécessaire. Pour une recette manuelle, utiliser un SMTP de développement isolé, renseigner host/port/from et ne mettre `account.smtp.require-tls="false"` que sur ce serveur local. En production : SMTP STARTTLS obligatoire, certificat vérifié, identifiants dédiés, adresse d'expédition autorisée et SPF/DKIM/DMARC du domaine à préparer. Vérifier délivrabilité, lien, expiration, renvoi, reset et notifications avec une boîte de test. Ne jamais activer debug SMTP ou journaliser le contenu.

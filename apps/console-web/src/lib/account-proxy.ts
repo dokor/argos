@@ -7,7 +7,12 @@ import { NextRequest, NextResponse } from "next/server";
 export const SESSION_COOKIE = "argos_account";
 export const CSRF_COOKIE = "argos_account_csrf";
 const CLAIM_INDEX = "argos_account_claims";
-const origin = () => (process.env.ACCOUNT_ORIGIN ?? process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/+$/, "");
+// Keep the configured origin authoritative; never infer trust from request/proxy headers.
+const origin = () => (
+  process.env.ACCOUNT_ORIGIN
+  ?? process.env.NEXT_PUBLIC_SITE_URL
+  ?? (process.env.NODE_ENV === "production" ? "https://argos.lelouet.fr" : "http://localhost:3000")
+).replace(/\/+$/, "");
 export function accountCookieOptions(maxAge: number) { return { httpOnly: true, secure: origin().startsWith("https:"), sameSite: "lax" as const, path: "/", maxAge }; }
 export function privateError(error: string, status: number) { return NextResponse.json({ error }, { status, headers: { "Cache-Control": "private, no-store" } }); }
 export function safeAccountReturn(raw: unknown): string {
