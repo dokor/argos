@@ -104,6 +104,49 @@ class AccountCryptoTest {
                                 signed(good, other), validator, "fixture-nonce"));
     }
 
+    @Test
+    void linkedinAcceptsDiscoveryIssuerAndPreservesExistingAccountKeys() throws Exception {
+        var provider = AccountOAuthClient.PROVIDERS.get("linkedin");
+        RSAKey key = new RSAKeyGenerator(2048).keyID("fixture").generate();
+        var validator =
+                new IDTokenValidator(
+                        new Issuer(provider.issuer()),
+                        new ClientID("fixture-client"),
+                        JWSAlgorithm.RS256,
+                        new JWKSet(key.toPublicJWK()));
+        validator.setMaxClockSkew(0);
+        // LinkedIn's live discovery document, rather than the outdated documentation example.
+        var token =
+                new JWTClaimsSet.Builder()
+                        .issuer("https://www.linkedin.com/oauth")
+                        .subject("linkedin-member")
+                        .audience("fixture-client")
+                        .expirationTime(Date.from(Instant.now().plusSeconds(120)))
+                        .issueTime(new Date())
+                        .claim("nonce", "fixture-nonce")
+                        .claim("email", "member@example.com")
+                        .claim("email_verified", true)
+                        .claim("name", "Member")
+                        .build();
+        var claims = AccountOAuthClient.validateOidc(signed(token, key), validator, "fixture-nonce");
+        var identity = AccountOAuthClient.oidcIdentity(provider, claims);
+        assertEquals("https://www.linkedin.com|linkedin-member", identity.subject());
+        assertEquals("member@example.com", identity.email());
+        assertTrue(identity.verified());
+        assertEquals("Member", identity.name());
+        assertThrows(
+                Exception.class,
+                () ->
+                        AccountOAuthClient.validateOidc(
+                                signed(
+                                        new JWTClaimsSet.Builder(token)
+                                                .issuer("https://www.linkedin.com")
+                                                .build(),
+                                        key),
+                                validator,
+                                "fixture-nonce"));
+    }
+
     private SignedJWT signed(JWTClaimsSet claims, RSAKey key) throws Exception {
         var jwt =
                 new SignedJWT(

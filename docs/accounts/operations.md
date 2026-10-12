@@ -32,6 +32,8 @@ Google et LinkedIn utilisent issuer/sub et une signature RS256 validée avec leu
 
 Tester chaque fournisseur réellement : connexion, annulation, callback rejoué, mauvaise transaction, collision d'email, adresse absente/non vérifiée, liaison depuis un compte déjà authentifié récemment, retrait, reconnexion et compte archivé. Ne jamais fusionner deux comptes à partir du seul email. Un callback social n'est pas une réauthentification récente ; utiliser le mot de passe existant ou le code email de confirmation pour les opérations sensibles.
 
+L'émetteur LinkedIn accepté est `https://www.linkedin.com/oauth`, conformément au [document de découverte actuel](https://www.linkedin.com/oauth/.well-known/openid-configuration), dont la valeur diffère de l'exemple de la documentation OIDC. Les clés d'identité déjà enregistrées conservent le préfixe historique `https://www.linkedin.com|` pour éviter de créer de nouveaux comptes lors d'une reconnexion. La signature, l'audience, l'expiration et le nonce restent vérifiés.
+
 ## Reverse proxy et sécurité
 
 Toutes les routes `/api/account/*` passent par Next, jamais par le routage Java public. Les labels Compose ajoutent une limite au bord pour l'authentification. Java utilise l'adresse de son pair TCP, sans accepter les headers d'IP envoyés par le navigateur : derrière Next, son budget IP devient donc un plafond partagé, conservateur. Dimensionner `account.rate.<action>.ip` pour cette topologie tout en conservant les budgets par compte et la limite par client à Traefik. Une provenance proxy de bout en bout serait un chantier explicite, pas une activation de X-Forwarded-For arbitraire. Restreindre l'exposition de Java et supprimer cookies, Authorization et query strings OAuth/rapport des logs de proxy et APM.

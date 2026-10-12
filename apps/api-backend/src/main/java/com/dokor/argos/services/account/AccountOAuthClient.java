@@ -45,7 +45,7 @@ public class AccountOAuthClient {
                                     "linkedin",
                                     "https://www.linkedin.com/oauth/v2/authorization",
                                     "https://www.linkedin.com/oauth/v2/accessToken",
-                                    "https://www.linkedin.com",
+                                    "https://www.linkedin.com/oauth",
                                     "https://www.linkedin.com/oauth/openid/jwks",
                                     "openid email profile",
                                     false),
@@ -155,15 +155,7 @@ public class AccountOAuthClient {
                             new DefaultResourceRetriever(5000, 5000, 100000));
             validator.setMaxClockSkew(0);
             var claims = validateOidc(jwt, validator, nonce);
-            var object = claims.toJSONObject();
-            String subject = claims.getSubject().getValue();
-            if (subject.isBlank() || subject.length() > 200) throw new Exception();
-            String email = object.get("email") instanceof String e ? e : null;
-            return new Identity(
-                    p.issuer() + "|" + subject,
-                    email,
-                    Boolean.TRUE.equals(object.get("email_verified")),
-                    object.get("name") instanceof String n ? n : "Argos");
+            return oidcIdentity(p, claims);
         } catch (Exception invalid) {
             throw new AccountError(400, "oauth_invalid");
         }
@@ -183,6 +175,23 @@ public class AccountOAuthClient {
     public static com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet validateOidc(
             com.nimbusds.jwt.JWT jwt, IDTokenValidator validator, String nonce) throws Exception {
         return validator.validate(jwt, new Nonce(nonce));
+    }
+
+    static Identity oidcIdentity(
+            Provider provider, com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet claims)
+            throws Exception {
+        var object = claims.toJSONObject();
+        String subject = claims.getSubject().getValue();
+        if (subject.isBlank() || subject.length() > 200) throw new Exception();
+        String email = object.get("email") instanceof String e ? e : null;
+        // Keep existing LinkedIn account keys stable when correcting the validation issuer.
+        String namespace =
+                provider.name().equals("linkedin") ? "https://www.linkedin.com" : provider.issuer();
+        return new Identity(
+                namespace + "|" + subject,
+                email,
+                Boolean.TRUE.equals(object.get("email_verified")),
+                object.get("name") instanceof String n ? n : "Argos");
     }
 
     private JsonNode json(HttpRequest request) throws Exception {
