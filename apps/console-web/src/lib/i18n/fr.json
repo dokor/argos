@@ -692,6 +692,10 @@
     "progress": {
       "titleQueued": "Analyse en attente…",
       "titleRunning": "Analyse en cours…",
+      "titleFinalizing": "Préparation du rapport…",
+      "subtitleFinalizing": "Les contrôles sont terminés. Argos calcule les scores, prépare la synthèse et enregistre votre rapport. Il s’affichera automatiquement dès qu’il sera prêt.",
+      "titleReady": "Ouverture du rapport…",
+      "subtitleReady": "Votre rapport est prêt. Les résultats vont s’afficher.",
       "titleFailed": "Analyse échouée",
       "subtitle": "Argos analyse votre site. Le rapport s'affichera automatiquement.",
       "estimate": "Le délai dépend de la file d’attente et des services d’analyse. La progression se met à jour automatiquement.",

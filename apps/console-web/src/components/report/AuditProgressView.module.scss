@@ -54,6 +54,12 @@
   margin: t.$space-2 0 0;
 }
 
+.connectionError {
+  color: t.$text-muted;
+  font-size: 0.875rem;
+  margin-bottom: t.$space-4;
+}
+
 .retryLink {
   display: inline-block;
   margin-top: t.$space-3;

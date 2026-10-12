@@ -104,5 +104,5 @@ export default async function ReportPageHome({ params }: Readonly<Props>) {
       reportToken: maskToken(token),
     },
   });
-  return <AuditProgressView token={token} />;
+  return <AuditProgressView token={token} initialStatus={status} />;
 }
