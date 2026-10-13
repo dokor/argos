@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import Link from "@/components/LocalizedLink";
 import ArgosIcon from "@/components/ArgosIcon";
@@ -16,6 +16,8 @@ import s from "./Connected.module.scss";
 /** One chrome for private pages; authorization still belongs to each Java resource. */
 export default function AccountShell({ children }: { children: ReactNode }) {
   const currentPath = usePathname();
+  // Next route changes do not emit popstate; refresh the language links after commit.
+  useEffect(() => { window.dispatchEvent(new Event("argos-reading")); }, [currentPath]);
   const pathname = frenchPath(currentPath);
   const { t } = useLang(), c = t.connected;
   const session = useAccountSession();
