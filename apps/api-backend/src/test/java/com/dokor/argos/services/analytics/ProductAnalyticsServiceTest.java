@@ -8,6 +8,10 @@ import com.typesafe.config.ConfigFactory;
 import jakarta.ws.rs.NotAuthorizedException;
 import org.junit.jupiter.api.Test;
 import java.time.Instant;
+import com.dokor.argos.db.generated.AccountUser;
+import com.dokor.argos.db.generated.AccountSession;
+import com.dokor.argos.services.account.AccountError;
+import com.dokor.argos.services.account.AccountSessionService;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -26,13 +30,26 @@ class ProductAnalyticsServiceTest {
         service(true).viewed("synthetic","Bearer synthetic-fixture","refused");
         verifyNoInteractions(dao,reports);
     }
-    @Test void directCollectionAndAdminMetricsRequireRealServerCredential() {
+    @Test void directCollectionRequiresRealServerCredential() {
         var on=service(true);
         assertThrows(NotAuthorizedException.class,()->on.count(event,null));
-        assertThrows(NotAuthorizedException.class,()->on.metrics(30,"Bearer wrong"));
         on.attribute(1,event.dimensions(),"Bearer wrong");
         on.viewed("synthetic","Bearer wrong","granted");
         verifyNoInteractions(dao,reports);
+    }
+    @Test void productMetricsRejectNonAdminAndUnverifiedAccountsBeforeStorage() {
+        var user = new AccountUser(); user.setState("ACTIVE"); user.setRole("USER");
+        var context = new AccountSessionService.Context(user, new AccountSession());
+        assertThrows(AccountError.class, () -> service(true).metrics(30, context));
+        user.setRole("ADMIN"); user.setState("PENDING");
+        assertThrows(AccountError.class, () -> service(true).metrics(30, context));
+        verifyNoInteractions(dao, reports);
+    }
+    @Test void invalidPeriodNeverReachesStorageEvenForAnAdministrator() {
+        var user = new AccountUser(); user.setState("ACTIVE"); user.setRole("ADMIN");
+        var context = new AccountSessionService.Context(user, new AccountSession());
+        assertThrows(AccountError.class, () -> service(true).metrics(1, context));
+        verifyNoInteractions(dao, reports);
     }
     @Test void storageFailureDoesNotFailBusinessAttribution() {
         doThrow(new IllegalStateException("synthetic fixture only")).when(dao).attribute(eq(1L),any(),any(Instant.class));

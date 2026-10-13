@@ -1,13 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
-import { adminReadProxy } from "@/lib/admin-read-proxy";
+import { GET as retiredRead } from "../route";
 
-export async function GET(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
-  const { path } = await context.params;
-  const suffix = path.join("/");
-  if (!/^(runs\/[0-9]+(?:\/report)?|[0-9]+\/history(?:\/[0-9]+\/comparison)?)$/.test(suffix)) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
-  }
-  const limit = Math.max(1, Math.min(100, Number(request.nextUrl.searchParams.get("limit")) || 20));
-  const query = suffix.endsWith("/history") ? `?limit=${Math.trunc(limit)}` : "";
-  return adminReadProxy(request, `/api/audits/${suffix}${query}`);
-}
+// Keep the old numeric read paths closed ahead of the generic backend rewrite.
+export const GET = retiredRead;

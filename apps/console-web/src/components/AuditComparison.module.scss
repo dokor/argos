@@ -1,6 +1,0 @@
-@use '../styles/tokens' as t;
-.evidence { width: 100%; min-width: 0; overflow-wrap: anywhere; color: t.$text-muted; font-size: 14px; line-height: 1.6; }
-.evidence p { margin: 8px 0; }
-.evidence ul { list-style: disc; padding-left: 20px; margin-block: 8px; }
-.evidence summary { cursor: pointer; min-height: 44px; padding-block: 10px; font-size: 15px; font-weight: 600; }
-.evidence summary:focus-visible { outline: 3px solid t.$brand; outline-offset: 3px; }

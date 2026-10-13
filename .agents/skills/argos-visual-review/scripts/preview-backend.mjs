@@ -91,18 +91,11 @@ createServer((req, res) => {
   const feedback = [{ id: "701", type: "BUG", status: "OPEN", createdAt: "2026-10-11T10:00:00Z", updatedAt: "2026-10-11T10:00:00Z" }];
   if (path === "/api/account/admin/feedback") return send({ items: feedback.filter(f => (!params.get("status") || f.status === params.get("status")) && (!params.get("type") || f.type === params.get("type"))), nextCursor: null });
   if (path === "/api/account/admin/feedback/701") return send({ ...feedback[0], description: "Texte fictif très long pour vérifier les retours et la lecture des détails. ".repeat(12), page: "REPORT", expected: "Des boutons alignés et de même hauteur.", observed: "Le libellé revient à la ligne.", steps: "Ouvrir le rapport sur un écran étroit.", runId: "401", findingKey: "html.images.alt_coverage", events: [] });
-  if (path === "/api/product-analytics/metrics") {
+  if (path === "/api/account/admin/analytics") {
     const counts = { accepted: 24, started: 22, completed: 18, failed: 2, pending: 4, viewed: 15, completedViewed: 14 };
     const delay = { sample: 18, excluded: 0, medianMs: 19000, p90Ms: 28000, p95Ms: 32000 };
     return send({ enabled: false, capped: false, from: "2026-10-01", until: "2026-10-11", cohort: counts, bySource: [{ route: "/ressources/audit-technique-gratuit", lang: "fr", placement: "hero", counts }], queue: { ...delay, medianMs: 2000 }, processing: delay, endToEnd: delay, events: [{ event: "cta_clicked", route: "/", lang: "fr", placement: "hero", error: "", count: 24 }] });
   }
-  const raw = { schemaVersion: 2, score: { scoringVersion: 9, global: { id: "global", score: 64, maxScore: 100, ratio: .64 }, byModule: [{ id: "html", score: 72, maxScore: 100, ratio: .72 }, { id: "lighthouse", score: 48, maxScore: 100, ratio: .48 }], byTag: [{ id: "performance", score: 48, maxScore: 100, ratio: .48 }, { id: "a11y", score: 72, maxScore: 100, ratio: .72 }] }, modules: [{ id: "tech", data: { cms: { name: "Commerce démo" } } }], evidence: "https://atelier.example/" + "produit-".repeat(60) };
-  const audits = runs.map(r => ({ auditId: 201, runId: Number(r.id), hostname: r.site, inputUrl: "https://atelier.example/collection/" + "produit-".repeat(24), normalizedUrl: "https://atelier.example/collection/" + "produit-".repeat(24), status: r.status, createdAt: r.createdAt, globalScore: r.status === "COMPLETED" ? 64 : null, reportUrl: r.status === "COMPLETED" ? "/dashboard/report/401" : null }));
-  if (path === "/api/audits") return send(audits);
-  const legacyRun = path.match(/^\/api\/audits\/runs\/(\d+)(\/report)?$/);
-  if (legacyRun) return send(legacyRun[2] ? fixture("review-details") : { ...audits.find(a => a.runId === Number(legacyRun[1])), resultJson: Number(legacyRun[1]) === 401 ? JSON.stringify(raw) : null });
-  if (/^\/api\/audits\/\d+\/history$/.test(path)) return send([{ runId: 401, status: "COMPLETED", globalScore: 64, createdAt: "2026-10-11T10:00:00Z", reportUrl: "/dashboard/report/401" }, { runId: 390, status: "COMPLETED", globalScore: 60, createdAt: "2026-10-10T09:00:00Z", reportUrl: "/dashboard/report/390" }]);
-  if (/\/comparison$/.test(path)) return send({ calculation: { scoringVersion: 9, scoringFingerprint: "visual-fixture" }, coverage: fixture("review-complete").scores.coverage, comparison: { reason: "COMPARABLE", globalDelta: 4, domains: [{ domain: "performance", points: 8 }], contributions: [{ key: "runtime.lcp", module: "runtime", domain: "performance", domainPoints: 8, globalPoints: 4 }], coverageChanged: false } });
   const match = path.match(/^\/api\/reports\/(review-[a-z]+)(?:-fixture)?(\/status)?$/);
   if (!match) { res.writeHead(404); res.end("{}"); return; }
   const [, token, status] = match;

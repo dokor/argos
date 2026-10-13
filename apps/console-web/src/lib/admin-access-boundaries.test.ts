@@ -1,21 +1,20 @@
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { accountProxy } from "./account-proxy";
-import { adminReadProxy } from "./admin-read-proxy";
-import { GET as metrics } from "@/app/api/product-analytics/metrics/route";
-import { proxy } from "@/proxy";
+import { GET as retiredList } from "@/app/api/audits/route";
+import { GET as retiredDetail } from "@/app/api/audits/[...path]/route";
+import nextConfig from "../../next.config";
 import { localizedPath } from "./i18n/routes";
 
 const fetchMock = vi.fn();
-const accountRoutes = ["admin/users", "admin/users/42", "admin/runs", "admin/runs/42", "admin/runs/42/report", "admin/queue", "admin/events", "admin/feedback", "admin/feedback/42"];
-const legacyRoutes = ["/api/audits", "/api/audits/7/history", "/api/audits/7/history/42/comparison", "/api/audits/runs/42", "/api/audits/runs/42/report", "/api/product-analytics/metrics"];
+const accountRoutes = ["admin/users", "admin/users/42", "admin/runs", "admin/runs/42", "admin/runs/42/report", "admin/queue", "admin/events", "admin/feedback", "admin/feedback/42", "admin/analytics"];
+const legacyRoutes = ["/api/audits", "/api/audits/7/history", "/api/audits/7/history/42/comparison", "/api/audits/runs/42", "/api/audits/runs/42/report"];
 function request(path: string, cookie = "") {
   return new NextRequest("https://argos.example" + path, {
     headers: { Cookie: cookie, Authorization: "Bearer forged", "X-User-Id": "42", "X-Role": "ADMIN" },
   });
 }
 beforeEach(() => {
-  vi.stubEnv("ADMIN_TOKEN", "synthetic-legacy");
   vi.stubEnv("ADMIN_API_TOKEN", "synthetic-service");
   vi.stubEnv("API_BASE", "http://backend-fixture");
   vi.stubGlobal("fetch", fetchMock);
@@ -23,9 +22,9 @@ beforeEach(() => {
 });
 afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
 
-it.each(legacyRoutes)("does not turn an account session into a legacy credential for %s", async path => {
-  const response = await adminReadProxy(request(path, "argos_account=synthetic-jwt"), path);
-  expect(response.status).toBe(401);
+it.each(legacyRoutes)("keeps the retired read %s closed, including with legacy and account cookies", async path => {
+  const response = await (path === "/api/audits" ? retiredList : retiredDetail)();
+  expect(response.status).toBe(410);
   expect(response.headers.get("cache-control")).toContain("no-store");
   expect(fetchMock).not.toHaveBeenCalled();
 });
@@ -59,31 +58,14 @@ it.each([
   }
 });
 
-it("keeps legacy analytics metrics restricted while accounts are unavailable", async () => {
-  fetchMock.mockResolvedValue(new Response('{"enabled":false}'));
-  expect((await metrics(request("/api/product-analytics/metrics?days=7", "argos_account=synthetic-admin"))).status).toBe(401);
-  expect(fetchMock).not.toHaveBeenCalled();
-  const response = await metrics(request("/api/product-analytics/metrics?days=7", "argos_admin=synthetic-legacy"));
-  expect(response.status).toBe(200);
-  expect(fetchMock).toHaveBeenCalledWith("http://backend-fixture/api/product-analytics/metrics?days=7", expect.objectContaining({
-    headers: { Authorization: "Bearer synthetic-service", Accept: "application/json" }, cache: "no-store", redirect: "error",
-  }));
-});
-
-it.each(["fr", "en"] as const)("preserves localized account destinations and legacy dashboard redirects in %s", lang => {
-  for (const path of ["/account/admin", "/account/admin/runs/42", "/account/admin/feedback"]) {
-    const localized = localizedPath(path, lang);
-    expect(localized).toBe((lang === "en" ? "/en" : "") + path);
-    // Account pages perform their own session checks; proxy does not substitute the legacy cookie.
-    expect(proxy(request(localized)).headers.get("x-middleware-next")).toBe("1");
+it.each(["fr", "en"] as const)("localizes modern admin destinations in %s", lang => {
+  for (const route of ["/account/admin", "/account/admin/runs/42", "/account/admin/feedback", "/account/admin/analytics"]) {
+    expect(localizedPath(route, lang)).toBe((lang === "en" ? "/en" : "") + route);
   }
-  // The legacy dashboard has no /en route today, even when linked from English navigation.
-  for (const path of ["/dashboard", "/dashboard/analytics", "/dashboard/report/42"]) {
-    expect(localizedPath(path, lang)).toBe(path);
-    const response = proxy(request(path, "argos_account=synthetic-admin"));
-    const location = new URL(response.headers.get("location")!);
-    expect(location.pathname).toBe("/login");
-    expect(location.searchParams.get("from")).toBe(path);
-    expect(proxy(request(path, "argos_admin=synthetic-legacy")).headers.get("x-middleware-next")).toBe("1");
+});
+it("redirects the retired console and login to account pages", async () => {
+  const redirects = await nextConfig.redirects!();
+  for (const [source, destination] of [["/dashboard", "/account/admin"], ["/dashboard/analytics", "/account/admin/analytics"], ["/dashboard/report/:runId", "/account/admin/runs/:runId"], ["/login", "/account/sign-in"]]) {
+    expect(redirects).toContainEqual({ source, destination, permanent: true });
   }
 });

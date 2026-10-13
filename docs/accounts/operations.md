@@ -6,14 +6,10 @@ Le fichier [application.example.conf](application.example.conf) contient les par
 
 ## Accès opérateur et transition historique
 
-Les comptes et l'administration historique restent deux mécanismes distincts.
+L’administration du frontend utilise exclusivement une session de compte.
 La [matrice et procédure de transition #516](legacy-admin-transition.md)
 décrit les consommateurs, le provisionnement ADMIN hors API publique,
-la récupération et les conditions de bascule/retour arrière. Garder `/login`
-et ses secrets tant que l'accès opérateur avec comptes désactivés n'a pas de
-remplacement validé. `ADMIN_API_TOKEN` reste nécessaire à la collecte analytics
-serveur lorsqu'elle est activée ; son retrait n'est pas couplé à celui de
-`ADMIN_PASSWORD`, `ADMIN_TOKEN` ou `argos_admin`.
+la récupération et les conditions de bascule/retour arrière. La console historique est retirée : prévoir un compte ACTIVE ADMIN et un accès infra indépendant avant de déployer cette version.
 
 ## Origine du frontend en production
 

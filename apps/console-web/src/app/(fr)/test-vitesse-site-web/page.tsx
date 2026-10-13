@@ -1,6 +1,6 @@
 import TopicAuditPage, { type TopicAuditContent } from "@/components/marketing/TopicAuditPage";
-import { siteUrl } from "@/lib/i18n/metadata";
-export const metadata = { title: "Test de vitesse d’une page web gratuit", description: "Analysez une URL avec Argos : chargement, constats Lighthouse, unités et limites des mesures de laboratoire.", alternates: { canonical: siteUrl + "/test-vitesse-site-web" }, openGraph: { title: "Test de vitesse d’une page web", description: "Mesures de chargement et corrections à examiner sur une URL publique.", url: siteUrl + "/test-vitesse-site-web" } };
+import { localizedMetadata } from "@/lib/i18n/metadata";
+export const metadata = localizedMetadata("/test-vitesse-site-web", "fr", "Test de vitesse d’une page web gratuit", "Analysez une URL avec Argos : chargement, constats Lighthouse, unités et limites des mesures de laboratoire.");
 const content: TopicAuditContent = {
   "route": "/test-vitesse-site-web",
   "title": "Test de vitesse d’une page web",

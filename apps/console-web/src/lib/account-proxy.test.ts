@@ -1,4 +1,15 @@
 import { beforeEach, afterEach, it, expect, vi } from "vitest";
+it.each(["7", "30", "90"])("forwards analytics period %s with the account JWT", async days => {
+  fetchMock.mockResolvedValue(Response.json({ enabled: false }));
+  expect((await accountProxy(request("admin/analytics?days=" + days), ["admin", "analytics"])).status).toBe(200);
+  const [url, init] = fetchMock.mock.calls[0];
+  expect(url).toBe("http://fixture-backend/api/account/admin/analytics?days=" + days);
+  expect(init.headers.get("authorization")).toBe("Bearer " + jwt);
+});
+it.each(["days=1", "days=7&days=30", "role=ADMIN", "days=7.0"])("rejects forged analytics query %s before forwarding", async query => {
+  expect((await accountProxy(request("admin/analytics?" + query), ["admin", "analytics"])).status).toBe(400);
+  expect(fetchMock).not.toHaveBeenCalled();
+});
 it("forwards admin reads with the Argos session, never the legacy admin secret",async()=>{
  fetchMock.mockResolvedValue(new Response('{"items":[],"nextCursor":null}'));
  const response=await accountProxy(request("admin/runs?user=42&site=example.com&status=FAILED&from=2026-10-01&until=2026-10-11&limit=20"),["admin","runs"]);

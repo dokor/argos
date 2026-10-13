@@ -10,8 +10,6 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: "*",
         allow: "/",
         disallow: [
-          "/dashboard/",  // admin console - auth-gated
-          "/login/",      // login page - no value for indexing
           "/api/",        // REST API - never index
         ],
       },

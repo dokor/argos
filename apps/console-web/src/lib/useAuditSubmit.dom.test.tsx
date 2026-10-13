@@ -3,7 +3,7 @@ import { afterEach, expect, it, vi } from "vitest";
 import { act, renderHook } from "@testing-library/react";
 const { push } = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
-vi.mock("@/lib/ArgosApi", () => ({ argosApi: { createAudit: vi.fn(), getReportStatus: vi.fn(), getRunsByRunId: vi.fn() } }));
+vi.mock("@/lib/ArgosApi", () => ({ argosApi: { createAudit: vi.fn(), getReportStatus: vi.fn() } }));
 import { argosApi } from "./ArgosApi";
 import { createLogger } from "./logger";
 import { useAuditSubmit } from "./useAuditSubmit";
@@ -17,7 +17,6 @@ it("polls with the creation token and redirects when sanitized status completes"
   await act(async () => { await result.current.submit("https://example.com"); });
   await act(async () => { await vi.advanceTimersByTimeAsync(100); });
   expect(argosApi.getReportStatus).toHaveBeenCalledWith("synthetic-created-token");
-  expect(argosApi.getRunsByRunId).not.toHaveBeenCalled();
   expect(push).toHaveBeenCalledWith("/report/synthetic-created-token");
   unmount();
 });

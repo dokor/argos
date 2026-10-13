@@ -6,7 +6,7 @@ returned only in that creation response. The database stores its SHA-256 hash in
 using the stored hash, including after a restart; they never mint a replacement.
 Public report/status reads hash the supplied credential. Neither status nor admin
 list/history responses return it. Admin report links use the authenticated
-`/dashboard/report/{runId}` view, backed by the protected Java read endpoint.
+`/account/admin/runs/{runId}` view, backed by the account-protected Java read endpoint.
 
 ## Migration V7
 

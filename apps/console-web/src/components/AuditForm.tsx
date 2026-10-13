@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useMemo, useState, useRef } from "react";
-import { AuditListItem, CreateAuditResponse } from "@/lib/ArgosApi";
 import { useLang } from "@/lib/i18n/LangContext";
 import { createLogger } from "@/lib/logger";
 import { useAuditSubmit } from "@/lib/useAuditSubmit";
@@ -9,8 +8,7 @@ import { normalizeInputUrl } from "@/lib/url";
 import s from "./AuditForm.module.scss";
 
 type Props = {
-  onCreated?: (item: AuditListItem) => void;
-  mode?: "dashboard" | "public" | "personal";
+  mode?: "public" | "personal";
   sourceRoute?: string;
   idPrefix?: string;
   submitLabel?: string;
@@ -29,12 +27,12 @@ function isValidPublicUrl(raw: string): boolean {
   }
 }
 
-export default function AuditForm({ onCreated, mode = "dashboard", sourceRoute, idPrefix, submitLabel, initialUrl = "", launchBlocked = false }: Props) {
+export default function AuditForm({ mode = "public", sourceRoute, idPrefix, submitLabel, initialUrl = "", launchBlocked = false }: Props) {
   const { t } = useLang();
   const publicMode = mode === "public";
   const tf = publicMode ? t.marketing.form : t.auditForm;
   const logger = useMemo(
-    () => createLogger(publicMode ? "landing" : "dashboard", { route: sourceRoute ?? "/dashboard" }),
+    () => createLogger(publicMode ? "landing" : "app", { route: sourceRoute ?? (publicMode ? "/" : "/account/sites") }),
     [publicMode, sourceRoute]
   );
 
@@ -42,24 +40,10 @@ export default function AuditForm({ onCreated, mode = "dashboard", sourceRoute, 
   const [url, setUrl] = useState(initialUrl);
   const [inputError, setInputError] = useState<string | null>(null);
 
-  // Le dashboard ouvre le rapport dans un nouvel onglet (#169) ; les pages
-  // publiques le montrent dans l'onglet courant. Le hook garde le même BFF.
   const { phase, error, submit } = useAuditSubmit({
     logger,
     sourceRoute,
-    openInNewTab: mode === "dashboard",
     personal: mode === "personal",
-    onCreated: (res: CreateAuditResponse, normalizedUrl: string) => {
-      onCreated?.({
-        auditId: Number(res.auditId),
-        inputUrl: normalizedUrl,
-        normalizedUrl: res.normalizedUrl ?? "",
-        runId: Number(res.runId),
-        status: res.status,
-        reportUrl: null,
-        resultJson: null,
-      });
-    },
   });
 
   const submitting = phase === "submitting" || phase === "polling" || phase === "redirecting";

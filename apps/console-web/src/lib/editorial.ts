@@ -54,6 +54,7 @@ export const editorialPages: Record<string, EditorialRecord> = {
     ]
   },
   "/test-vitesse-site-web": {
+    "translatedAt": "2026-10-13",
     "firstVersion": "2026-10-10",
     "revised": "2026-10-10",
     "minutes": 4,
@@ -64,6 +65,7 @@ export const editorialPages: Record<string, EditorialRecord> = {
     ]
   },
   "/analyse-seo-page": {
+    "translatedAt": "2026-10-13",
     "firstVersion": "2026-10-10",
     "revised": "2026-10-10",
     "minutes": 4,
@@ -74,6 +76,7 @@ export const editorialPages: Record<string, EditorialRecord> = {
     ]
   },
   "/verifier-entetes-securite": {
+    "translatedAt": "2026-10-13",
     "firstVersion": "2026-10-10",
     "revised": "2026-10-10",
     "minutes": 4,
@@ -84,6 +87,7 @@ export const editorialPages: Record<string, EditorialRecord> = {
     ]
   },
   "/test-accessibilite-site-web": {
+    "translatedAt": "2026-10-13",
     "firstVersion": "2026-10-11",
     "revised": "2026-10-11",
     "minutes": 4,

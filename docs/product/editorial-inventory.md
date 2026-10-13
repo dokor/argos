@@ -1,6 +1,6 @@
 # Inventaire éditorial — milestone 17
 
-État du dépôt au 12 octobre 2026, départ `c863572`. L’inventaire porte sur les
+État du dépôt au 13 octobre 2026, après synchronisation de `main` (`94078a8`). L’inventaire porte sur les
 routes présentes dans le code, sans supposer leur déploiement. Les intentions SEO
 restent celles du [contrat public](../seo/public-page-intents.md).
 
@@ -18,17 +18,27 @@ restent celles du [contrat public](../seo/public-page-intents.md).
 | `/ressources/accessibilite-numerique` | `/en/resources/digital-accessibility` | Retirer la mention « French » du lien de méthode maintenant traduit. Règles juridiques et dates non révisées. |
 | `/a-propos` | `/en/about` | Identité, contact et licence conservés ; l’accueil renvoie au créateur sans répéter la description du diagnostic. |
 | `/feedback` | `/en/feedback` | Libellé « Description » simplifié ; historique de traitement traduit naturellement. |
-| `/analyse-seo-page` | Aucune | Périmètre d’une URL et absence de promesse de classement déjà explicites. |
-| `/test-vitesse-site-web` | Aucune | Mesures de laboratoire et limites déjà explicites ; aucun délai chiffré ajouté. |
-| `/verifier-entetes-securite` | Aucune | En-têtes et limites du diagnostic déjà explicites. |
-| `/test-accessibilite-site-web` | Aucune | Limites automatiques et vérification humaine conservées. |
-| `/confidentialite` | Aucune | Contrat de conservation lu pour corriger la FAQ ; page juridique inchangée. |
-| `/informations-legales` | Aucune | Identité et informations encore à qualifier conservées. |
-| `/conditions-utilisation` | Aucune | Page et liens de connexion ajoutés par #513, conservés lors de la résolution des conflits avec `main`. |
+| `/analyse-seo-page` | `/en/page-seo-analysis` | Traduction complète du 13 octobre : signaux, exemples HTML, corrections et absence de promesse de classement. |
+| `/test-vitesse-site-web` | `/en/website-speed-test` | Traduction complète du 13 octobre : mesures de laboratoire, unités et limites ; aucun délai chiffré ajouté. |
+| `/verifier-entetes-securite` | `/en/security-header-check` | Traduction complète du 13 octobre : en-têtes, preuve HTTP, correction contextualisée et limites. |
+| `/test-accessibilite-site-web` | `/en/website-accessibility-test` | Traduction complète du 13 octobre : exemples alt, limites automatiques et vérifications humaines. |
+| `/confidentialite` | `/en/privacy` | Traduction déjà intégrée à `main` par #543 ; engagements de conservation conservés. |
+| `/informations-legales` | `/en/legal-information` | Traduction déjà intégrée à `main` par #543 ; identité et informations encore à qualifier conservées. |
+| `/conditions-utilisation` | `/en/terms-of-use` | Traduction déjà intégrée à `main` par #543 ; périmètre et liens juridiques conservés. |
 
-Les sept pages françaises sans version anglaise restent ainsi identifiées : pas
-de faux lien de traduction ni de hreflang ajouté. Les routes, canonical,
-métadonnées et intentions de recherche sont préservés.
+Après récupération de `main`, seules les quatre pages de diagnostic manquaient
+en anglais. Toutes les pages publiques de cet inventaire ont désormais une
+version anglaise complète. Les quatre nouveaux diagnostics figurent dans les
+ressources anglaises ; les liens de langue, canonical et hreflang sont
+réciproques, et le sitemap expose les deux versions. Les exemples restent
+fictifs et les sources initiales sont conservées. Les dates source ne sont pas
+rafraîchies : `translatedAt` consigne la livraison du 13 octobre séparément.
+
+Les routes de comptes et de rapports avaient déjà leurs variantes anglaises.
+L’historique `/account/urls/[id]/history` disposait de sa page anglaise mais
+manquait dans la résolution des liens de langue ; le sélecteur conserve
+désormais le même historique et ses paramètres. Les interfaces historiques
+`/login` et `/dashboard/*` utilisent les dictionnaires FR/EN sur la même URL.
 
 ## Interfaces et sources de textes
 
@@ -48,8 +58,8 @@ métadonnées et intentions de recherche sont préservés.
   les pages ; auparavant le bouton anglais gardait un nom français.
 
 `npm run check:editorial -- --inventory ../../outputs/editorial-inventory.json`
-énumère 63 routes, dont les 31 routes publiques ci-dessus, et les chaînes
-candidates des pages, composants et bibliothèques. Ce fichier est régénérable et
+énumère les routes présentes et les chaînes candidates des pages, composants et
+bibliothèques. Ce fichier est régénérable et
 reste dans les sorties locales. L’extraction inclut du code technique ; les
 chaînes des dictionnaires sont listées séparément par leurs sources. Le contrôle
 n’a signalé aucun des marqueurs explicites de brouillon qu’il recherche. Il ne
