@@ -101,7 +101,7 @@ a.kpi:hover { border-color: var(--argos-brand); }
 .quota > span { color: var(--argos-text-muted); }
 .quota button { text-decoration: underline; }
 .previewNotice { padding: 12px 28px; border-bottom: 1px solid var(--argos-border); color: var(--argos-text-muted); }
-@media (max-width: 1050px) { .twoColumns { grid-template-columns: minmax(0, 1fr); gap: 0; } .heading { flex-wrap: wrap; } }
+@media (max-width: 1050px) { .twoColumns { grid-template-columns: minmax(0, 1fr); } .heading { flex-wrap: wrap; } }
 @media (max-width: 1050px) {
   .topbar { display: grid; grid-template-columns: minmax(0, 1fr) auto; }
   .preferences { grid-column: 2; grid-row: 1; }
