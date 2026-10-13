@@ -74,4 +74,3 @@ export function AccountFooter() {
     <Link href="/faq">{c.help}</Link><Link href="/feedback">{c.contact}</Link><Link href="/informations-legales">{c.legal}</Link><Link href="/confidentialite">{c.privacy}</Link>
   </nav></footer>;
 }
-
