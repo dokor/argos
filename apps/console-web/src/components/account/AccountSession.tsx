@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { accountFetch, AccountClientError, type AccountProfile } from "@/lib/account-client";
 
 export type MonthlyUsage={offer:string;period:string;timezone:string;startsAt:string;resetsAt:string;used:number;reserved:number;limit:number|null;canLaunch:boolean};
@@ -8,18 +8,19 @@ export const useAccountSession = () => useContext(Context);
 export default function AccountSession({ children }: { children: React.ReactNode }) {
   const [profile,setProfile]=useState<AccountProfile|null>(null), [ready,setReady]=useState(false), [denied,setDenied]=useState(false), [error,setError]=useState("");
   const [usage,setUsage]=useState<MonthlyUsage|null>(null),[usageError,setUsageError]=useState(false),[usageRevision,setUsageRevision]=useState(0);
+  const profileRequest=useRef(0);
   const refreshUsage=useCallback(()=>setUsageRevision(v=>v+1),[]);
   const invalidate=useCallback((reason:unknown)=>{
-    if(reason instanceof AccountClientError && reason.status === 401) { setProfile(null); setDenied(true); setError(reason.code); }
+    if(reason instanceof AccountClientError && reason.status === 401) { profileRequest.current++; setReady(true); setProfile(null); setDenied(true); setError(reason.code); }
     else if(reason instanceof AccountClientError && reason.code === "email_unverified") { setProfile(p=>p ? {...p,verified:false} : null); setError(reason.code); }
   },[]);
   useEffect(()=>{
     let alive=true;
-    const load=()=>{ setReady(false); void accountFetch<AccountProfile>("me").then(p=>{if(alive){setProfile(p);setDenied(false);setError("");setReady(true);}}).catch(reason=>{if(alive){setProfile(null);setError(reason instanceof AccountClientError ? reason.code : "account_unavailable");setReady(true);invalidate(reason);}}); };
-    load(); window.addEventListener("argos-account-login",load);
+    const load=(event?:Event)=>{ const request=++profileRequest.current; if(event?.type!=="argos-account-profile") setReady(false); void accountFetch<AccountProfile>("me").then(p=>{if(alive && request===profileRequest.current){setProfile(p);setDenied(false);setError("");setReady(true);}}).catch(reason=>{if(alive && request===profileRequest.current){setProfile(null);setError(reason instanceof AccountClientError ? reason.code : "account_unavailable");setReady(true);invalidate(reason);}}); };
+    load(); window.addEventListener("argos-account-login",load); window.addEventListener("argos-account-profile",load);
     const stop=()=>invalidate(new AccountClientError("session_invalid",401));
     window.addEventListener("argos-account-invalid",stop);
-    return ()=>{alive=false;window.removeEventListener("argos-account-login",load);window.removeEventListener("argos-account-invalid",stop);};
+    return ()=>{alive=false;window.removeEventListener("argos-account-login",load);window.removeEventListener("argos-account-profile",load);window.removeEventListener("argos-account-invalid",stop);};
   },[invalidate]);
   useEffect(()=>{
     if(!profile) return;

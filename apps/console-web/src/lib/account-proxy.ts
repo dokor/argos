@@ -21,7 +21,8 @@ function oauthFailure(request: NextRequest, state: string | null, error: OAuthCa
   const returnCookie = state ? request.cookies.get("argos_return_" + state)?.value : undefined;
   const destination = safeAccountReturn(returnCookie);
   const prefix = destination.startsWith("/en/") ? "/en" : "";
-  const response = NextResponse.redirect(new URL(prefix + "/account/sign-in?error=" + error, origin()), 303);
+  const settings = /^\/(?:en\/)?account\/settings(?:\?section=(?:profile|security|connections))?$/.test(destination);
+  const response = NextResponse.redirect(new URL(settings ? prefix + "/account/settings?section=connections&error=" + error : prefix + "/account/sign-in?error=" + error, origin()), 303);
   response.headers.set("Cache-Control", "private, no-store");
   if (returnCookie) response.cookies.set("argos_account_return", destination, accountCookieOptions(86400));
   if (state) {
@@ -31,7 +32,7 @@ function oauthFailure(request: NextRequest, state: string | null, error: OAuthCa
   return response;
 }
 export function safeAccountReturn(raw: unknown): string {
-  return typeof raw === "string" && raw.length <= 600 && /^\/(?:en\/)?(?:account(?:\/(?:analyses\/new|sites(?:\/[1-9]\d{0,18})?|runs\/[1-9]\d{0,18}|urls\/[1-9]\d{0,18}\/history))?|report\/[A-Za-z0-9_-]{20,512})$/.test(raw) ? raw : "/account/sites";
+  return typeof raw === "string" && raw.length <= 600 && /^\/(?:en\/)?(?:account(?:\/(?:settings(?:\?section=(?:profile|security|connections))?|analyses\/new|sites(?:\/[1-9]\d{0,18})?|runs\/[1-9]\d{0,18}|urls\/[1-9]\d{0,18}\/history))?|report\/[A-Za-z0-9_-]{20,512})$/.test(raw) ? raw : "/account/sites";
 }
 export function validCsrf(request: NextRequest): boolean {
   const cookie = request.cookies.get(CSRF_COOKIE)?.value ?? "", header = request.headers.get("x-argos-csrf") ?? "";
@@ -161,6 +162,7 @@ export async function accountProxy(request: NextRequest, parts: string[]): Promi
       else {
         let error: OAuthCallbackError = upstream.status >= 500 ? "account_unavailable" : "oauth_invalid";
         try { error = oauthCallbackError(JSON.parse(data)?.error, error); } catch { /* Never expose upstream text. */ }
+        if (error === "oauth_invalid" && upstream.status === 400 && request.nextUrl.searchParams.get("error") === "access_denied") error = "oauth_cancelled";
         response = oauthFailure(request, state, error);
       }
       if (upstream.ok) response.cookies.set("argos_account_return", safeAccountReturn(target), accountCookieOptions(86400));

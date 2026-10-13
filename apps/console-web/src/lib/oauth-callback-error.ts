@@ -1,6 +1,6 @@
 // Only public account error codes may cross the OAuth redirect or be read from its URL.
 const callbackErrors = [
-  "oauth_invalid", "use_existing_account", "method_unavailable", "reauth_required",
+  "oauth_invalid", "oauth_cancelled", "use_existing_account", "method_unavailable", "reauth_required",
   "session_invalid", "csrf_invalid", "provider_unavailable", "rate_limited",
   "account_unavailable", "mail_unavailable", "email_invalid",
 ] as const;

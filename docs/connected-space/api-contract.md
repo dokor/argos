@@ -126,3 +126,7 @@ et clés de règles y sont dédiés, pas une preuve d’endpoints déjà livrés
 ## Implémentation F03
 
 Voir [admission URL, progression et recherche privée](site-diagnostic-f03.md#contrats-et-persistance) : `POST /account/analyses`, idempotence, V20, filtre `q` et disponibilité du rapport exact. Ces extensions réutilisent le registre de sessions et de crédits existant.
+
+## Implémentation F04
+
+Voir [compte personnel F04](account-f04.md#contrats-conservés) : réutilisation des endpoints compte, retour OAuth vers les réglages et code public oauth_cancelled. Aucun nouveau schéma ni endpoint métier.

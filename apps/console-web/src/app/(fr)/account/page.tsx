@@ -1,2 +1,2 @@
-import AccountView from "@/components/account/AccountView";
-export default function Page() { return <AccountView />; }
+import { redirect } from "next/navigation";
+export default function Page(){redirect("/account/settings");}
