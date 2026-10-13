@@ -64,7 +64,9 @@
   margin: 0 1px;
 }
 
-.fallback { flex-direction: column; gap: 1px; small { font-size: 10px; letter-spacing: 0; font-weight: 500; } }
+.unavailable { cursor: not-allowed; }
+.light .option.unavailable,
+.dark .option.unavailable { color: t.$text-muted; }
 .option:focus-visible { outline: 3px solid t.$text; outline-offset: 3px; }
 .toggle { padding: 0; border: 0; gap: 2px; }
 .option { width: 44px; height: 44px; border: 1px solid transparent; font-weight: 600; letter-spacing: normal; }

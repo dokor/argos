@@ -967,6 +967,7 @@
   "themeToggle": {"light":"Passer en thème clair","dark":"Passer en thème sombre","lightTitle":"Thème clair","darkTitle":"Thème sombre"},
   "langToggle": {
     "label": "🇬🇧 EN",
-    "targetLang": "en"
+    "targetLang": "en",
+    "englishUnavailable": "Version anglaise indisponible pour cette page"
   }
 }

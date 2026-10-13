@@ -967,6 +967,7 @@
   "themeToggle": {"light":"Switch to light theme","dark":"Switch to dark theme","lightTitle":"Light theme","darkTitle":"Dark theme"},
   "langToggle": {
     "label": "🇫🇷 FR",
-    "targetLang": "fr"
+    "targetLang": "fr",
+    "englishUnavailable": "English is unavailable for this page"
   }
 }
