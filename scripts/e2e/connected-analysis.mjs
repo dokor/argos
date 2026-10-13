@@ -49,12 +49,17 @@ try {
     await page.getByRole('button',{name:lang==='fr' ? 'Rechercher':'Search',exact:true}).click();
     await page.getByRole('heading',{name:lang==='fr' ? 'Aucun résultat pour cette recherche.':'No results for this search.'}).waitFor();
     assert.equal(new URL(page.url()).searchParams.get('q'),'missing');
+    assert.ok((await page.getByRole('link',{name:lang==='fr' ? 'English':'Français',exact:true}).getAttribute('href')).endsWith('/account/sites?q=missing'),'Language switch retains the active search');
     await visit('/account/sites/7');await page.getByRole('heading',{name:history.normalizedUrl,exact:true}).waitFor();
     assert.equal(await page.getByRole('link',{name:lang==='fr' ? 'Ouvrir la progression':'Open progress'}).getAttribute('href'),prefix+'/account/runs/45');
     assert.equal(await page.getByRole('link',{name:lang==='fr' ? 'Ouvrir le rapport':'Open report'}).getAttribute('href'),prefix+'/account/runs/43');
     await check('site');
     await page.getByRole('link',{name:lang==='fr' ? 'Ouvrir le rapport':'Open report'}).click();
     await page.getByRole('heading',{name:'atelier.example',exact:true}).waitFor();await check('partial-report');
+    await page.getByRole('button',{name:lang==='fr' ? 'Constats techniques':'Technical findings',exact:true}).click();
+    await page.getByRole('link',{name:lang==='fr' ? 'Comparaison et historique':'Comparison and history',exact:true}).first().click();
+    await page.getByRole('heading',{name:lang==='fr' ? 'Historique de cette URL':'History for this URL',exact:true}).waitFor();
+    assert.ok(!(await page.getByRole('link',{name:lang==='fr' ? 'English':'Français',exact:true}).getAttribute('href')).includes('view='),'Report filters do not leak to history language links');
     assert.equal(await page.locator('a[href="/"]').filter({hasText:/analyse/i}).count(),0);
     if([320,1440].includes(width)) {
       for(const [id,name] of [['44','expired'],['45','failed'],['47','unmeasured'],['48','legacy']]) {
