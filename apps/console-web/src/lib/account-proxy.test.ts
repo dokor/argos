@@ -332,9 +332,24 @@ it.each(["/account/settings", "/en/account/settings?section=connections", "/acco
 it.each(["/account/settings?section=connections&redirect=//evil.example", "/account/settings?section=evil", "/account/settings#secret"])("rejects forged settings return %s",path=>expect(safeAccountReturn(path)).toBe("/account/sites"));
 it.each(["fr","en"])("returns a cancelled provider link to settings in %s",async lang=>{
  const state="s".repeat(43),callback=request(`auth/oauth/github/callback?state=${state}&error=access_denied&error_description=secret`);
- callback.cookies.set("argos_oauth_"+state,"b".repeat(43));callback.cookies.set("argos_return_"+state,(lang==="en" ? "/en":"")+"/account/settings?section=connections");
+ callback.cookies.set("argos_oauth_"+state,"b".repeat(43));callback.cookies.set("argos_intent_"+state,"link");callback.cookies.set("argos_return_"+state,(lang==="en" ? "/en":"")+"/account/settings?section=connections");
  fetchMock.mockResolvedValue(Response.json({error:"oauth_invalid"},{status:400}));
  const response=await accountProxy(callback,["auth","oauth","github","callback"]);
  expect(response.headers.get("location")).toBe("https://argos.example"+(lang==="en" ? "/en":"")+"/account/settings?section=connections&error=oauth_cancelled");
- expect(response.cookies.get("argos_oauth_"+state)?.maxAge).toBe(0);expect(response.cookies.get("argos_return_"+state)?.maxAge).toBe(0);expect(fetchMock.mock.calls[0][0]).not.toContain("secret");expect(response.cookies.has("argos_account")).toBe(false);
+ expect(response.cookies.get("argos_intent_"+state)?.maxAge).toBe(0);expect(response.cookies.get("argos_oauth_"+state)?.maxAge).toBe(0);expect(response.cookies.get("argos_return_"+state)?.maxAge).toBe(0);expect(fetchMock.mock.calls[0][0]).not.toContain("secret");expect(response.cookies.has("argos_account")).toBe(false);
+});
+
+it("keeps a failed login on sign-in even when the intended destination is settings",async()=>{
+ const state="s".repeat(43),callback=request(`auth/oauth/github/callback?state=${state}&error=access_denied`);
+ callback.cookies.set("argos_oauth_"+state,"b".repeat(43));callback.cookies.set("argos_intent_"+state,"login");callback.cookies.set("argos_return_"+state,"/en/account/settings?section=security");
+ fetchMock.mockResolvedValue(Response.json({error:"oauth_invalid"},{status:400}));
+ const response=await accountProxy(callback,["auth","oauth","github","callback"]);
+ expect(response.headers.get("location")).toBe("https://argos.example/en/account/sign-in?error=oauth_cancelled");
+ expect(response.cookies.get("argos_account_return")?.value).toBe("/en/account/settings?section=security");expect(response.cookies.get("argos_intent_"+state)?.maxAge).toBe(0);
+});
+it.each(["login","link"])("stores the OAuth %s UI intent in an expiring HttpOnly cookie",async intent=>{
+ const state="s".repeat(43);fetchMock.mockResolvedValue(Response.json({state,url:"https://github.com/login/oauth/authorize"},{headers:{"X-Argos-OAuth-Browser":"b".repeat(43)}}));
+ const response=await accountProxy(request("auth/oauth/github/start","POST",{intent,returnTo:"/en/account/settings?section=connections"}),["auth","oauth","github","start"]);
+ expect(response.cookies.get("argos_intent_"+state)).toMatchObject({value:intent,httpOnly:true,secure:true,sameSite:"lax",maxAge:600});
+ expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({intent,returnTo:"/en/account"});
 });

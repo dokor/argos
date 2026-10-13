@@ -23,13 +23,14 @@ function oauthFailure(request: NextRequest, state: string | null, error: OAuthCa
   const returnCookie = state ? request.cookies.get("argos_return_" + state)?.value : undefined;
   const destination = safeAccountReturn(returnCookie);
   const prefix = destination.startsWith("/en/") ? "/en" : "";
-  const settings = /^\/(?:en\/)?account\/settings(?:\?section=(?:profile|security|connections))?$/.test(destination);
+  const settings = request.cookies.get("argos_intent_" + state)?.value === "link" && /^\/(?:en\/)?account\/settings(?:\?section=(?:profile|security|connections))?$/.test(destination);
   const response = NextResponse.redirect(new URL(settings ? prefix + "/account/settings?section=connections&error=" + error : prefix + "/account/sign-in?error=" + error, origin()), 303);
   response.headers.set("Cache-Control", "private, no-store");
   if (returnCookie) response.cookies.set("argos_account_return", destination, accountCookieOptions(86400));
   if (state) {
     response.cookies.set("argos_oauth_" + state, "", accountCookieOptions(0));
     response.cookies.set("argos_return_" + state, "", accountCookieOptions(0));
+    response.cookies.set("argos_intent_" + state, "", accountCookieOptions(0));
   }
   return response;
 }
@@ -85,7 +86,7 @@ export async function accountProxy(request: NextRequest, parts: string[]): Promi
   if (!allowed[request.method]?.test(path) && !(request.method === "GET" && /^report-introduction\/[A-Za-z0-9_-]{20,512}$/.test(path)) && !adminPath(request.method,path)) return privateError("resource_unavailable", 404);
   const headers = accountHeaders(request, mutation);
   if (headers instanceof NextResponse) return headers;
-  let body: string | undefined, returnTo = "/account", preserveReturn = false;
+  let body: string | undefined, returnTo = "/account", preserveReturn = false, linkIntent = false;
   if (mutation) {
     try {
       // DELETE has no forwarded payload; some runtimes expose an empty request stream.
@@ -96,6 +97,7 @@ export async function accountProxy(request: NextRequest, parts: string[]): Promi
       if(path.startsWith("admin/") && !(path.startsWith("admin/feedback/") ? feedbackTreatment(parsed) : adminEntitlement(parsed))) return privateError("payload_invalid",400);
       if (path.endsWith("/start") || path === "auth/register" || path === "auth/confirm-email") {
         returnTo = safeAccountReturn(parsed.returnTo);
+        linkIntent = parsed.intent === "link";
         preserveReturn = !path.endsWith("/start");
         // Report tokens stay in the browser's HttpOnly return cookie, never in the OAuth DB row.
         if (preserveReturn) delete parsed.returnTo;
@@ -167,6 +169,7 @@ export async function accountProxy(request: NextRequest, parts: string[]): Promi
       if (upstream.ok) response.cookies.set("argos_account_return", safeAccountReturn(target), accountCookieOptions(86400));
       response.cookies.set("argos_oauth_" + state, "", accountCookieOptions(0));
       response.cookies.set("argos_return_" + state, "", accountCookieOptions(0));
+    response.cookies.set("argos_intent_" + state, "", accountCookieOptions(0));
     } else response = new NextResponse(data, { status: upstream.status, headers: { "Content-Type": "application/json" } });
     response.headers.set("Cache-Control", "private, no-store");
     if (upstream.ok && preserveReturn) response.cookies.set("argos_account_return", returnTo, accountCookieOptions(86400));
@@ -180,6 +183,7 @@ export async function accountProxy(request: NextRequest, parts: string[]): Promi
       if (typeof start.state !== "string" || !/^[A-Za-z0-9_-]{43}$/.test(start.state) || !browser) return privateError("oauth_invalid", 503);
       response.cookies.set("argos_oauth_" + start.state, browser, accountCookieOptions(600));
       response.cookies.set("argos_return_" + start.state, returnTo, accountCookieOptions(600));
+      response.cookies.set("argos_intent_" + start.state, linkIntent ? "link" : "login", accountCookieOptions(600));
     }
     return response;
   } catch { return callback ? oauthFailure(request, state, "account_unavailable") : privateError("account_unavailable", 503); }

@@ -70,6 +70,9 @@ try {
    assert.equal(writes.filter(w=>w.path.endsWith('methods/password')).length,1);reauthFailure=false;await dialog.getByRole('button',{name:labels.cancel}).click();
    mode='unavailable';await visit('connections');await page.getByText(lang==='fr'?'Associé, mais fournisseur temporairement indisponible':'Linked, but provider temporarily unavailable').waitFor();await check('provider-unavailable');
    mode='normal';localProfile={...profile,verified:false,email:null};await visit();await page.getByRole('button',{name:lang==='fr'?'Envoyer l’email de vérification':'Send verification email'}).waitFor();await check('email-required');
+   await visit('security');await page.getByRole('button',{name:labels.close,exact:true}).click();dialog=page.getByRole('dialog');
+   assert.equal(await dialog.locator('input:not([type=checkbox])').count(),0,'No password or email challenge exists for an email-less social account');
+   assert.equal(await dialog.getByRole('button',{name:labels.confirm}).isDisabled(),true);await dialog.getByRole('checkbox').check();assert.equal(await dialog.getByRole('button',{name:labels.confirm}).isDisabled(),false);await check('pending-archive',true);await dialog.getByRole('button',{name:labels.cancel}).click();
    localProfile={...profile};mode='load-error';await visit();await page.locator('main').getByRole('alert').waitFor();await check('load-error');mode='normal';await page.getByRole('button',{name:lang==='fr'?'Réessayer':'Try again',exact:true}).click();await page.getByLabel(lang==='fr'?'Nom d’affichage':'Display name').waitFor();
    await page.evaluate(()=>{document.documentElement.style.fontSize='200%';});await check('text-200');
    mode='denied';await page.reload();await page.getByRole('heading',{name:lang==='fr'?'Connectez-vous à votre espace':'Sign in to your workspace'}).waitFor();assert.equal(await page.getByText(profile.email,{exact:true}).count(),0);await check('session-expired');

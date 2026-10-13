@@ -82,3 +82,18 @@ it("preserves the report destination while confirming an unverified email",async
   fireEvent.submit(screen.getByRole("button",{name:"Envoyer l’email de vérification"}).closest("form")!);
   await waitFor(()=>expect(accountFetch).toHaveBeenCalledWith("auth/confirm-email","POST",{email:"fixture@example.com",returnTo:report}));
 });
+
+it.each([false,true])("lets an email-less social account close using recent sign-in, or request sign-in again (expired=%s)",async expired=>{
+  const base=vi.mocked(accountFetch).getMockImplementation()!;
+  vi.mocked(accountFetch).mockImplementation(async(...args)=>{
+    if(args[0]==="me")return {displayName:"Camille",email:null,verified:false};
+    if(expired&&args[0]==="me/archive")throw new AccountClientError("reauth_required",403);
+    return base(...args);
+  });
+  render(<AccountSettings/>);fireEvent.click(await screen.findByRole("button",{name:"Fermer mon compte"}));
+  const dialog=screen.getByRole("dialog");expect(within(dialog).queryByLabelText("Mot de passe actuel")).not.toBeInTheDocument();expect(within(dialog).queryByLabelText("Code reçu par email")).not.toBeInTheDocument();
+  const submit=within(dialog).getByRole("button",{name:"Confirmer et continuer"});expect(submit).toBeDisabled();fireEvent.click(within(dialog).getByRole("checkbox"));expect(submit).toBeEnabled();fireEvent.submit(submit.closest("form")!);
+  if(expired){expect(await within(dialog).findByRole("alert")).toHaveTextContent("Confirmez votre identité");expect(within(dialog).getByRole("link",{name:"Se connecter"})).toHaveAttribute("href","/account/sign-in?returnTo=%2Faccount%2Fsettings%3Fsection%3Dsecurity");expect(state.push).not.toHaveBeenCalled();}
+  else await waitFor(()=>expect(accountFetch).toHaveBeenCalledWith("me/archive","POST",{confirmed:true}));
+  expect(vi.mocked(accountFetch).mock.calls.some(call=>call[0]==="auth/reauth")).toBe(false);
+});
