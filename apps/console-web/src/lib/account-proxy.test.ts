@@ -228,6 +228,64 @@ it("OAuth uses a browser cookie per transaction and keeps report tokens out of b
   const completed = await accountProxy(callback, ["auth", "oauth", "google", "callback"]);
   expect(completed.headers.get("location")).toBe("https://argos.example/report/" + report); expect(completed.cookies.get("argos_oauth_" + state)?.maxAge).toBe(0);
 });
+it.each(["google", "github", "linkedin"])("preserves an existing-account refusal from the %s callback without issuing a session", async provider => {
+  const state = "s".repeat(43), report = "r".repeat(43);
+  const callback = request(`auth/oauth/${provider}/callback?state=${state}&code=synthetic`);
+  callback.cookies.set("argos_oauth_" + state, "b".repeat(43));
+  callback.cookies.set("argos_return_" + state, "/report/" + report);
+  fetchMock.mockResolvedValue(Response.json({ error: "use_existing_account", detail: "never disclose" }, { status: 409, headers: { "X-Argos-Session": "must-not-be-used" } }));
+  const response = await accountProxy(callback, ["auth", "oauth", provider, "callback"]);
+  expect(response.headers.get("location")).toBe("https://argos.example/account/sign-in?error=use_existing_account");
+  expect(response.cookies.has("argos_account")).toBe(false);
+  expect(response.cookies.get("argos_account_return")?.value).toBe("/report/" + report);
+  expect(response.cookies.get("argos_account_return")?.httpOnly).toBe(true);
+  expect(response.cookies.get("argos_oauth_" + state)?.maxAge).toBe(0);
+  expect(response.cookies.get("argos_return_" + state)?.maxAge).toBe(0);
+  expect(response.headers.get("location")).not.toContain(report);
+  expect(response.headers.get("location")).not.toContain("never disclose");
+});
+it.each([
+  [403, "reauth_required"], [401, "session_invalid"], [429, "rate_limited"],
+  [503, "provider_unavailable"], [409, "method_unavailable"], [400, "oauth_invalid"],
+])("preserves public callback error %s %s in the user's language", async (status, error) => {
+  const state = "s".repeat(43);
+  const callback = request(`auth/oauth/linkedin/callback?state=${state}&code=synthetic`);
+  callback.cookies.set("argos_oauth_" + state, "b".repeat(43));
+  callback.cookies.set("argos_return_" + state, "/en/account");
+  fetchMock.mockResolvedValue(Response.json({ error }, { status: Number(status) }));
+  const response = await accountProxy(callback, ["auth", "oauth", "linkedin", "callback"]);
+  expect(response.headers.get("location")).toBe("https://argos.example/en/account/sign-in?error=" + error);
+  expect(response.headers.get("cache-control")).toContain("no-store");
+  expect(response.cookies.has("argos_account")).toBe(status === 401);
+  if (status === 401) expect(response.cookies.get("argos_account")?.maxAge).toBe(0);
+});
+it.each(['{"error":"<script>secret</script>"}', '{"error":{"message":"secret"}}', 'secret upstream HTML'])("does not disclose an unknown or malformed callback response", async body => {
+  const state = "s".repeat(43), callback = request(`auth/oauth/linkedin/callback?state=${state}`);
+  callback.cookies.set("argos_oauth_" + state, "b".repeat(43));
+  fetchMock.mockResolvedValue(new Response(body, { status: 400 }));
+  const response = await accountProxy(callback, ["auth", "oauth", "linkedin", "callback"]);
+  expect(response.headers.get("location")).toBe("https://argos.example/account/sign-in?error=oauth_invalid");
+  expect(response.cookies.has("argos_account")).toBe(false);
+});
+it("describes an upstream server failure without a public error code as a service outage", async () => {
+  const state = "s".repeat(43), callback = request(`auth/oauth/linkedin/callback?state=${state}`);
+  callback.cookies.set("argos_oauth_" + state, "b".repeat(43));
+  fetchMock.mockResolvedValue(Response.json({}, { status: 500 }));
+  const response = await accountProxy(callback, ["auth", "oauth", "linkedin", "callback"]);
+  expect(response.headers.get("location")).toBe("https://argos.example/account/sign-in?error=account_unavailable");
+});
+it("cleans up a failed callback when the backend is unreachable and preserves its private return destination", async () => {
+  const state = "s".repeat(43), callback = request(`auth/oauth/linkedin/callback?state=${state}`);
+  callback.cookies.set("argos_oauth_" + state, "b".repeat(43));
+  callback.cookies.set("argos_return_" + state, "/en/account/sites");
+  fetchMock.mockRejectedValue(new Error("secret network details"));
+  const response = await accountProxy(callback, ["auth", "oauth", "linkedin", "callback"]);
+  expect(response.headers.get("location")).toBe("https://argos.example/en/account/sign-in?error=account_unavailable");
+  expect(response.cookies.get("argos_account_return")?.value).toBe("/en/account/sites");
+  expect(response.cookies.get("argos_oauth_" + state)?.maxAge).toBe(0);
+  expect(response.cookies.get("argos_return_" + state)?.maxAge).toBe(0);
+  expect(response.cookies.has("argos_account")).toBe(false);
+});
 it.each(["https://evil.example", "//evil.example", "/\\evil", "/account?token=secret", "/api/audits", "/report/token#secret"])("rejects unsafe return paths %s", path => { expect(safeAccountReturn(path)).toBe("/account/sites"); });
 it("audit creation never silently drops a presented invalid session or exposes claim secrets", async () => {
   const r = new NextRequest("https://argos.example/api/audits", { method: "POST", body: JSON.stringify({ url: "https://example.com", ownerId: "victim" }), headers: { Cookie: "argos_account=" + jwt + ";argos_account_csrf=" + csrf, Origin: "https://argos.example", "X-Argos-CSRF": csrf } });

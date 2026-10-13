@@ -16,6 +16,31 @@ beforeEach(() => {
   vi.mocked(accountFetch).mockImplementation(async path => path === "auth/providers" ? { providers: [], enabled: true } : path === "return" ? { returnTo: "/account" } : path === "me" ? { displayName: "Fixture", email: "fixture@example.com", verified: true } : []);
 });
 describe("account screens", () => {
+  it.each(["fr", "en"] as const)("explains an OAuth email collision and the linking action in %s", async lang => {
+    window.history.replaceState(null, "", "/account/sign-in?error=use_existing_account");
+    render(<LangProvider initialLang={lang}><AccountView mode="sign-in" /></LangProvider>);
+    const message = await screen.findByRole("alert");
+    expect(message).toHaveTextContent(lang === "fr" ? "Un compte Argos utilise déjà cette adresse email." : "An Argos account already uses this email address.");
+    expect(message).toHaveTextContent(lang === "fr" ? "Mon compte" : "My account");
+    expect(message).not.toHaveTextContent(lang === "fr" ? "La connexion au fournisseur a échoué" : "Provider sign-in failed");
+  });
+  it.each(["fr", "en"] as const)("distinguishes expired sessions and service outages from invalid OAuth in %s", async lang => {
+    for (const [error, text] of [
+      ["session_invalid", lang === "fr" ? "Votre session est absente ou expirée" : "Your session is missing or expired"],
+      ["account_unavailable", lang === "fr" ? "Le service est momentanément indisponible" : "The service is temporarily unavailable"],
+    ]) {
+      window.history.replaceState(null, "", "/account/sign-in?error=" + error);
+      const view = render(<LangProvider initialLang={lang}><AccountView mode="sign-in" /></LangProvider>);
+      expect(await screen.findByRole("alert")).toHaveTextContent(text);
+      view.unmount();
+    }
+  });
+  it("never renders arbitrary error content from a callback URL", async () => {
+    window.history.replaceState(null, "", "/account/sign-in?error=" + encodeURIComponent("<script>secret</script>"));
+    render(<AccountView mode="sign-in" />);
+    expect(await screen.findByRole("alert")).toHaveTextContent("La connexion au fournisseur a échoué. Réessayez.");
+    expect(screen.queryByText(/secret/)).not.toBeInTheDocument();
+  });
   it.each(["fr", "en"] as const)("makes public policy links available before either sign-in method in %s", async lang => {
     for (const mode of ["sign-in", "register"] as const) {
       const view = render(<LangProvider initialLang={lang}><AccountView mode={mode} /></LangProvider>);
