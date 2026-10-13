@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { useRef, useState } from "react";
 import { useLang } from "@/lib/i18n/LangContext";
 import { frenchPath } from "@/lib/i18n/routes";
-import { useIsAdmin } from "@/lib/useIsAdmin";
 import { useAccountNav } from "@/lib/useAccountNav";
 import ArgosIcon from "@/components/ArgosIcon";
 import LangToggle from "@/components/LangToggle";
@@ -16,7 +15,6 @@ import s from "./SiteChrome.module.scss";
 export default function SiteNav() {
   const { t } = useLang();
   const pathname = frenchPath(usePathname());
-  const isAdmin = useIsAdmin();
   const signedIn = useAccountNav();
   const [menuPath, setMenuPath] = useState<string | null>(null);
   const menuButton = useRef<HTMLButtonElement>(null);
@@ -58,19 +56,6 @@ export default function SiteNav() {
           <div id="site-nav-preferences" className={s.navPreferences}>
             <ThemeToggle />
             <LangToggle />
-            <div className={s.consoleSlot}>
-              {isAdmin && (
-                <Link href="/dashboard" className={s.navCta} aria-label={t.nav.openConsole} title={t.nav.openConsole} aria-current={pathname === "/dashboard" ? "page" : undefined}>
-                  <svg className={s.consoleIcon} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                    <rect x="3" y="3" width="7" height="7" rx="1" />
-                    <rect x="14" y="3" width="7" height="7" rx="1" />
-                    <rect x="3" y="14" width="7" height="7" rx="1" />
-                    <rect x="14" y="14" width="7" height="7" rx="1" />
-                  </svg>
-                  <span className={s.consoleText}>{t.nav.openConsole}</span>
-                </Link>
-              )}
-            </div>
           </div>
         </div>
       </div>

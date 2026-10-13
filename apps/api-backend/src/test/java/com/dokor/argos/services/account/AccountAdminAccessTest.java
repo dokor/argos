@@ -12,6 +12,11 @@ import com.typesafe.config.ConfigFactory;
 import java.sql.Connection;
 import java.time.*;
 import java.util.Map;
+import java.util.List;
+import com.dokor.argos.services.analytics.ProductAnalyticsDao;
+import com.dokor.argos.services.analytics.ProductAnalyticsService;
+import com.dokor.argos.webservices.api.account.AccountAnalyticsWs;
+import com.dokor.argos.webservices.api.audits.AdminReadAccess;
 import java.util.function.Function;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -65,6 +70,28 @@ class AccountAdminAccessTest {
         denied(403, authorization);
         user.setState("ARCHIVED");
         denied(401, authorization);
+    }
+
+    @Test void metricsEndpointRechecksTheAccountSessionAndCurrentRole() {
+        var metricsDao = mock(ProductAnalyticsDao.class);
+        when(metricsDao.sample(any(), any())).thenReturn(new ProductAnalyticsDao.Sample(List.of(), List.of(), false));
+        var analytics = new ProductAnalyticsService(ConfigFactory.parseString("product-analytics.enabled=false"),
+            metricsDao, mock(AdminReadAccess.class), mock(com.dokor.argos.db.dao.AuditReportDao.class), new TokenService());
+        var endpoint = new AccountAnalyticsWs(sessions, analytics);
+        assertEquals(200, endpoint.metrics(30, authorization).getStatus());
+        for (String state : List.of("USER", "PENDING", "ARCHIVED", "REVOKED", "EXPIRED")) {
+            user.setState("ACTIVE"); user.setRole("ADMIN"); session.setRevokedAt(null); session.setExpiresAt(now.plusSeconds(3600));
+            switch (state) {
+                case "USER" -> user.setRole("USER");
+                case "PENDING", "ARCHIVED" -> user.setState(state);
+                case "REVOKED" -> session.setRevokedAt(now);
+                case "EXPIRED" -> session.setExpiresAt(now);
+            }
+            assertThrows(AccountError.class, () -> endpoint.metrics(30, authorization), state);
+        }
+        assertThrows(AccountError.class, () -> endpoint.metrics(30, null));
+        assertThrows(AccountError.class, () -> endpoint.metrics(30, "Bearer legacy-secret"));
+        verify(metricsDao, times(1)).sample(any(), any());
     }
 
     @Test void anonymousForgedAndLegacyCredentialsNeverAuthorizeAccountAdministration() {

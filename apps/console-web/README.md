@@ -27,7 +27,6 @@ L'exemple `.env.example` ne contient aucun secret. `.env.local` reste ignoré.
 | `API_BASE` | Origine Java, exclusivement serveur, sans suffixe `/api`. En local : `http://localhost:8081` ; défaut Docker : `http://api-backend:8081`. |
 | `ACCOUNT_ORIGIN` | Origine exacte autorisée par le BFF pour les comptes, identique à celle configurée dans Java. |
 | `NEXT_PUBLIC_SITE_URL` | Origine publique pour les métadonnées et liens. Les variables `NEXT_PUBLIC_*` sont intégrées au build client. |
-| `ADMIN_PASSWORD`, `ADMIN_TOKEN` | Accès historique `/login` et cookie `argos_admin` ; secrets distincts, uniquement serveur. |
 | `ADMIN_API_TOKEN` | Credential serveur pour les lectures admin historiques et la collecte analytics ; même valeur côté Java, jamais envoyée au navigateur. |
 | `PRODUCT_ANALYTICS_ENABLED` | Collecte optionnelle ; nécessite aussi la configuration Java et le consentement. Voir le [contrat](../../docs/product/product-analytics.md). |
 | `NEXT_PUBLIC_CALENDLY_URL` | Destination optionnelle du CTA rapport ; repli sur le contact public. |

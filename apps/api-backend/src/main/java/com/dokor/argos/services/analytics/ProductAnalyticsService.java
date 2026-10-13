@@ -2,6 +2,9 @@ package com.dokor.argos.services.analytics;
 import com.dokor.argos.db.dao.AuditReportDao;
 import com.dokor.argos.services.token.TokenService;
 import com.dokor.argos.webservices.api.audits.AdminReadAccess;
+import com.dokor.argos.services.account.AccountSessionService;
+import com.dokor.argos.services.account.AdminService;
+import com.dokor.argos.services.account.AccountError;
 import com.typesafe.config.Config;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -25,8 +28,9 @@ public class ProductAnalyticsService {
         if(!enabled || !"granted".equals(consent))return;
         safe(()->{access.require(authorization);reports.findByTokenHash(tokens.sha256(token)).ifPresent(report->dao.viewed(report.getRunId(),Instant.now()));});
     }
-    public ProductMetrics.Summary metrics(int days,String authorization) {
-        access.require(authorization);if(!Set.of(7,30,90).contains(days))throw new IllegalArgumentException("Period must be 7, 30 or 90 days");
+    public ProductMetrics.Summary metrics(int days,AccountSessionService.Context context) {
+        AdminService.requireAdmin(context);
+        if(!Set.of(7,30,90).contains(days))throw new AccountError(400,"filter_invalid");
         Instant now=Instant.now(),from=now.minus(Duration.ofDays(days));return ProductMetrics.summarize(dao.sample(from,now),from,now,days,enabled);
     }
     public void purgeTelemetry() { safe(()->dao.purgeTelemetry(Instant.now())); }

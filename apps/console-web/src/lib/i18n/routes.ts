@@ -4,6 +4,7 @@ export type Lang = "fr" | "en";
 export const accountRoutes: Record<string, string> = {
   "/feedback": "/en/feedback",
   "/account/admin/feedback": "/en/account/admin/feedback",
+  "/account/admin/analytics": "/en/account/admin/analytics",
   "/account/admin": "/en/account/admin",
   "/account/sites": "/en/account/sites",
   "/account": "/en/account",
