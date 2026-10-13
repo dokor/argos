@@ -38,6 +38,7 @@ export default function ScoreGrid({ categories, model, coverage, onSelectDomain 
           <p className={s.catDesc}>{copy.domainDescriptions[key]}</p>
           {score !== undefined && <p className={s.availability}>{copy.domainScore}</p>}
           {measurement && <p className={s.availability}>{copy.domainCoverage}: {Math.round(measurement.ratio * 100)} %{!measurement.sufficient && ` — ${copy.insufficient}`}</p>}
+          {measurement && !measurement.sufficient && <p className={s.catDesc}>{lang === "fr" ? "Cette note ne permet pas de conclure sur les contrôles non mesurés." : "This score does not support conclusions about unmeasured checks."}</p>}
           <span className={s.detailLink}>{ts.seeDetail}</span>
         </a>;
       })}

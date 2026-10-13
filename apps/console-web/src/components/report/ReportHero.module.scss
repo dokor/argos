@@ -2,6 +2,8 @@
 .hero { background: t.$surface; border-bottom: 1px solid t.$border; }
 .heroInner { max-width: t.$container-width; margin: auto; padding: t.$space-8 t.$page-gutter 0; }
 .identity { min-width: 0; }
+.identity summary { display: inline-flex; align-items: center; min-height: 44px; cursor: pointer; color: t.$text-muted; }
+.identity summary:focus-visible { outline: 3px solid t.$brand; outline-offset: 3px; }
 .siteName { font-size: clamp(28px, 3vw, 36px); letter-spacing: -0.025em; margin: 0 0 t.$space-2; overflow-wrap: anywhere; }
 .meta { display: flex; flex-wrap: wrap; gap: t.$space-2 t.$space-5; color: t.$text-muted; font-size: t.$text-md; overflow-wrap: anywhere; }
 .scope { margin: t.$space-2 0; font-size: t.$text-md; overflow-wrap: anywhere; }

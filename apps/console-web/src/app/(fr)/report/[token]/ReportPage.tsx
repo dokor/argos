@@ -23,6 +23,8 @@ import { Report } from "@/components/report/types";
 import { useLang } from "@/lib/i18n/LangContext";
 import { useIsAdmin } from "@/lib/useIsAdmin";
 import s from "./report.module.scss";
+import { interpretationCopy } from "@/components/report/reportInterpretation";
+import ReportIntroductionEditor from "@/components/report/ReportIntroductionEditor";
 
 type Params = { params: { report: Report }; feedbackReference?: FeedbackReference };
 
@@ -38,6 +40,8 @@ export default function ReportPage({ params, feedbackReference }: Readonly<Param
   const model = useMemo(() => buildReportModel(report), [report]);
   const reading = useReportReading(model);
   const [methodOpen, setMethodOpen] = useState(false);
+  const [noteState, setNoteState] = useState({ report, note: report.introduction });
+  const note = noteState.report === report ? noteState.note : report.introduction;
   const showMethod = () => {
     setMethodOpen(true);
     document.getElementById("report-method")?.scrollIntoView({ block: "start", behavior: "smooth" });
@@ -53,18 +57,16 @@ export default function ReportPage({ params, feedbackReference }: Readonly<Param
   return (
     <FeedbackReportContext.Provider value={reference}><div className={s.page} id="top">
       <ReportHeader />
-      <ReportHero report={report} model={model} onActions={() => reading.navigate({ view: "actions", anchor: "" })} onMethod={showMethod} />
+      <ReportHero report={report} model={model} introduction={note} onSelectFinding={selectFinding} onActions={() => reading.navigate({ view: "actions", anchor: "" })} onMethod={showMethod} />
 
       <main className={s.main}>
-        <RunClaim />
-        <PublicReportHistory />
-        <ReportExport />
         <ReportNavigation view={reading.view} onChange={view => reading.navigate({ view, anchor: "" })} />
         {reading.missing && <p role="status">{copy.missing}</p>}
         {reading.view === "overview" && <section className={s.view} id="report-overview" aria-label={copy.overview}>
+          <PriorityCards priorities={report.summary.priorities} model={model} onSelectFinding={selectFinding} limit={3} />
+          <ReportFooterCta contained />
           <ScoreGrid categories={report.scores.byCategory} model={model} coverage={report.scores.coverage}
             onSelectDomain={domain => reading.navigate({ view: "technical", domain, severity: "all", anchor: "" })} />
-          <PriorityCards priorities={report.summary.priorities} model={model} onSelectFinding={selectFinding} limit={3} />
         </section>}
         {reading.view === "actions" && <section className={s.view} id="report-actions" aria-label={copy.actions}>
           <PriorityCards priorities={report.summary.priorities} model={model} onSelectFinding={selectFinding} />
@@ -73,8 +75,19 @@ export default function ReportPage({ params, feedbackReference }: Readonly<Param
           <IssuesByCategory report={report} model={model} selection={selection} domain={reading.domain} severity={reading.severity}
             onFilterChange={(domain, severity) => reading.navigate({ domain, severity, anchor: "" })} />
         </section>}
-        <AccessibilitySection report={report} />
+        {reading.view !== "overview" && <ReportFooterCta contained />}
+        {(report.accessibilityEvidence || report.accessibilityCompliance) && (reading.view === "technical" ? <AccessibilitySection report={report} /> : <section>
+          <h2>{interpretationCopy[lang].accessibility}</h2>
+          <p>{t.report.accessibility.limit}</p>
+          {report.accessibilityEvidence && <p>{t.report.accessibility.failedLabel} : {report.accessibilityEvidence.failedAudits} · {t.report.accessibility.coverageTitle} : {t.report.accessibility.coverage[report.accessibilityEvidence.coverage]}</p>}
+          <details className={s.dataPanel}><summary className={s.dataSummary}>{interpretationCopy[lang].accessibilityDetails}</summary>
+          <AccessibilitySection report={report} />
+        </details></section>)}
         <ReportMethod report={report} model={model} open={methodOpen} onToggle={setMethodOpen} />
+        <details className={s.dataPanel}><summary className={s.dataSummary}>{interpretationCopy[lang].secondary}</summary>
+          <ReportExport /><RunClaim /><PublicReportHistory />
+        </details>
+        <ReportIntroductionEditor key={token} token={token} model={model} onPublished={note => setNoteState({ report, note })} />
         <ReportFeedback />
 
         {/* Raw JSON - admin only */}
@@ -90,7 +103,6 @@ export default function ReportPage({ params, feedbackReference }: Readonly<Param
         )}
       </main>
 
-      <ReportFooterCta />
     </div></FeedbackReportContext.Provider>
   );
 }

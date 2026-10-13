@@ -14,6 +14,7 @@ export default function FindingDetails({ finding }: { finding: Finding }) {
   const measure = evidence?.measurement;
   const validMeasure = measure && Number.isFinite(measure.value) && Object.hasOwn(copy.units, measure.unit);
   return <div className={s.issueDetail}>
+    <p>{content.qualification}</p>
     <div className={s.detailBlock}><h3 className={s.detailBlockLabel}>{copy.impact}</h3><p>{content.impact}</p></div>
     <div className={s.detailBlock}><h3 className={s.detailBlockLabel}>{copy.observation}</h3><p>{content.observation}</p>
       <p>{copy.technicalTitle}: {cleanEvidence(issue.title)}</p>
@@ -25,6 +26,7 @@ export default function FindingDetails({ finding }: { finding: Finding }) {
       <p>{copy.catalogueVersion}: {CATALOGUE_VERSION}</p>
     </div>
     <div className={s.detailBlock}><h3 className={s.detailBlockLabel}>{copy.evidence}</h3>
+      {content.missingInformation && <p>{content.missingInformation}</p>}
       {validMeasure ? <p>{issue.id === "runtime.network.bytes_estimated" ? `${copy.estimated}: ` : ""}
         {measure.value.toLocaleString(lang, { maximumSignificantDigits: 6 })} {copy.units[measure.unit]}</p> : <p>{copy.missingMeasure}</p>}
       {evidence?.details?.length ? <dl>{evidence.details.slice(0, 20).map((detail, index) =>

@@ -26,7 +26,7 @@ describe("shared report navigation", () => {
     expect(actions).toHaveAttribute("aria-pressed", "true");
     expect(window.location.search).toBe("?view=actions");
     expect(screen.getByText(/Constats uniques : 6/).textContent).toBe(facts);
-    await user.click(screen.getByRole("link", { name: "Voir le constat: Load resources" }));
+    await user.click(screen.getAllByRole("link", { name: /^Voir le constat/ }).find(link => link.getAttribute("href") === `#${model.findings.find(f => f.key === "runtime.load")!.anchor}`)!);
     const finding = model.findings.find(item => item.key === "runtime.load")!;
     const detail = container.querySelector(`#${finding.anchor}`) as HTMLDetailsElement;
     expect(detail.open).toBe(true); expect(detail.querySelector("summary")).toHaveFocus();

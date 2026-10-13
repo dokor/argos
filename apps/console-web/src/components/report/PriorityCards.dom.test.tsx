@@ -88,6 +88,18 @@ describe("PriorityCards", () => {
 });
 
 describe("action resolution", () => {
+  it("keeps an aggregate rank while linking underlying tool findings without asserting a cause", () => {
+    const report = createDemoReport("fr");
+    report.issues = [
+      { ...report.issues[0], id: "lighthouse.score.performance", categoryKey: "performance", module: "lighthouse" },
+      { ...report.issues[1], id: "lighthouse.audit.unused-css", categoryKey: "performance", module: "lighthouse" },
+    ];
+    report.summary.priorities = [{ ...action, findingKey: report.issues[0].id, relatedFindingKeys: [], categoryKey: "performance", rank: 7 }];
+    render(<PriorityCards priorities={report.summary.priorities} model={buildReportModel(report)} />);
+    expect(screen.getByText("Priorité 7")).toBeInTheDocument();
+    expect(screen.getByText(/n’est pas une correction à chiffrer/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Des styles peu utilisés/ })).toHaveAttribute("href", "#" + buildReportModel(report).findings[1].anchor);
+  });
   const demoReport = createDemoReport("fr");
   beforeEach(() => { locale = "fr"; });
   it("preserves backend rank/order and counts actual unique grouped findings", () => {

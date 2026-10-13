@@ -1,4 +1,5 @@
 export type Report = {
+  introduction?: ReportIntroduction | null;
   generatedAt: string;
   domain: string;
   url: string;
@@ -39,6 +40,8 @@ export type Report = {
   accessibilityEvidence?: AccessibilityEvidence | null;
   accessibilityCompliance?: AccessibilityCompliance | null;
 };
+
+export type ReportIntroduction = { author: string; context: string; findingKeys: string[]; nextStep: string; publishedAt: string };
 
 export type AccessibilityEvidence = {
   /** Raw Lighthouse accessibility category score, independently of the Argos domain score. */
