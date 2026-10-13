@@ -15,6 +15,9 @@ export const accountRoutes: Record<string, string> = {
 };
 export const languageRoutes: Record<string, string> = {
   "/": "/en",
+  "/conditions-utilisation": "/en/terms-of-use",
+  "/confidentialite": "/en/privacy",
+  "/informations-legales": "/en/legal-information",
   "/exemple-rapport": "/en/example-report",
   "/faq": "/en/faq",
   "/a-propos": "/en/about",

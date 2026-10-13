@@ -20,8 +20,8 @@ describe("account screens", () => {
     for (const mode of ["sign-in", "register"] as const) {
       const view = render(<LangProvider initialLang={lang}><AccountView mode={mode} /></LangProvider>);
       await waitFor(() => expect(accountFetch).toHaveBeenCalledWith("auth/providers"));
-      expect(screen.getByRole("link", { name: lang === "fr" ? "conditions d’utilisation" : "terms of use (French)" })).toHaveAttribute("href", "/conditions-utilisation");
-      expect(screen.getByRole("link", { name: lang === "fr" ? "politique de confidentialité" : "privacy policy (French)" })).toHaveAttribute("href", "/confidentialite");
+      expect(screen.getByRole("link", { name: lang === "fr" ? "conditions d’utilisation" : "terms of use" })).toHaveAttribute("href", lang === "fr" ? "/conditions-utilisation" : "/en/terms-of-use");
+      expect(screen.getByRole("link", { name: lang === "fr" ? "politique de confidentialité" : "privacy policy" })).toHaveAttribute("href", lang === "fr" ? "/confidentialite" : "/en/privacy");
       view.unmount();
     }
   });

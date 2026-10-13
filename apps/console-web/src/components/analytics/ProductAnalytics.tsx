@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
+import Link from '@/components/LocalizedLink';
 import { useLang } from '@/lib/i18n/LangContext';
 import { publicRoute, type ProductEvent } from '@/lib/analytics/contract';
 import s from './ProductAnalytics.module.scss';
@@ -57,5 +58,5 @@ export default function ProductAnalytics() {
         return null;
     if (state.choice !== 'unset' && !settings)
         return <button className={s.settings} onClick={() => setSettings(true)}>{fr ? 'Préférences de mesure' : 'Measurement preferences'}</button>;
-    return <aside className={s.banner} aria-label={fr ? 'Mesure d’utilisation' : 'Usage measurement'}><p>{fr ? 'Autoriser une mesure interne de l’utilisation ? Elle compte les pages, clics et étapes d’audit, sans URL auditée ni contenu de rapport. Conservation : 90 jours. Vous pouvez refuser ou retirer votre accord ; l’audit reste disponible.' : 'Allow internal usage measurement? It counts pages, clicks and audit steps, without audited URLs or report content. Retention: 90 days. You may refuse or withdraw consent; the audit remains available.'}</p><a href="/confidentialite">{fr ? 'Confidentialité' : 'Privacy information (French)'}</a><div><button onClick={() => choose('refused')}>{fr ? 'Refuser / retirer' : 'Refuse / withdraw'}</button><button onClick={() => choose('granted')}>{fr ? 'Autoriser' : 'Allow'}</button></div></aside>;
+    return <aside className={s.banner} aria-label={fr ? 'Mesure d’utilisation' : 'Usage measurement'}><p>{fr ? 'Autoriser une mesure interne de l’utilisation ? Elle compte les pages, clics et étapes d’audit, sans URL auditée ni contenu de rapport. Conservation : 90 jours. Vous pouvez refuser ou retirer votre accord ; l’audit reste disponible.' : 'Allow internal usage measurement? It counts pages, clicks and audit steps, without audited URLs or report content. Retention: 90 days. You may refuse or withdraw consent; the audit remains available.'}</p><Link href="/confidentialite">{fr ? 'Confidentialité' : 'Privacy information'}</Link><div><button onClick={() => choose('refused')}>{fr ? 'Refuser / retirer' : 'Refuse / withdraw'}</button><button onClick={() => choose('granted')}>{fr ? 'Autoriser' : 'Allow'}</button></div></aside>;
 }
