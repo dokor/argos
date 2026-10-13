@@ -1,0 +1,427 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Deterministic specification fixture, not API seed or real audit output",
+  "snapshotAt": "2026-10-13T10:00:00Z",
+  "ownerId": "fixture-owner-a",
+  "rules": [
+    {
+      "ruleKey": "fixture.security.csp",
+      "category": "security",
+      "severity": "INFO"
+    },
+    {
+      "ruleKey": "fixture.performance.image",
+      "category": "performance",
+      "severity": "IMPORTANT"
+    },
+    {
+      "ruleKey": "fixture.a11y",
+      "category": "a11y",
+      "severity": "IMPORTANT"
+    },
+    {
+      "ruleKey": "fixture.runtime.failed-script",
+      "category": "performance",
+      "severity": "CRITICAL"
+    }
+  ],
+  "domains": [
+    {
+      "id": "domain-1",
+      "batchId": "batch-1",
+      "hostname": "atelier-nova.fr",
+      "pages": [
+        {
+          "id": "page-1-1",
+          "runId": "run-1-1",
+          "url": "https://atelier-nova.fr/",
+          "executionStatus": "COMPLETED",
+          "completeness": "FULL",
+          "score": 72,
+          "reportAvailable": true,
+          "outcomes": {
+            "fixture.security.csp": "FAIL",
+            "fixture.performance.image": "FAIL",
+            "fixture.a11y": "PASS",
+            "fixture.runtime.failed-script": "PASS"
+          },
+          "occurrences": {
+            "fixture.performance.image": 3,
+            "fixture.security.csp": 1
+          },
+          "failureReason": null
+        },
+        {
+          "id": "page-1-2",
+          "runId": "run-1-2",
+          "url": "https://atelier-nova.fr/collections",
+          "executionStatus": "COMPLETED",
+          "completeness": "FULL",
+          "score": 48,
+          "reportAvailable": true,
+          "outcomes": {
+            "fixture.security.csp": "FAIL",
+            "fixture.performance.image": "FAIL",
+            "fixture.a11y": "FAIL",
+            "fixture.runtime.failed-script": "FAIL"
+          },
+          "occurrences": {
+            "fixture.runtime.failed-script": 1,
+            "fixture.performance.image": 1,
+            "fixture.a11y": 1,
+            "fixture.security.csp": 1
+          },
+          "failureReason": null
+        },
+        {
+          "id": "page-1-3",
+          "runId": "run-1-3",
+          "url": "https://atelier-nova.fr/collections/automne",
+          "executionStatus": "COMPLETED",
+          "completeness": "FULL",
+          "score": 55,
+          "reportAvailable": true,
+          "outcomes": {
+            "fixture.security.csp": "FAIL",
+            "fixture.performance.image": "FAIL",
+            "fixture.a11y": "FAIL",
+            "fixture.runtime.failed-script": "PASS"
+          },
+          "occurrences": {
+            "fixture.performance.image": 1,
+            "fixture.a11y": 1,
+            "fixture.security.csp": 1
+          },
+          "failureReason": null
+        },
+        {
+          "id": "page-1-4",
+          "runId": "run-1-4",
+          "url": "https://atelier-nova.fr/contact",
+          "executionStatus": "COMPLETED",
+          "completeness": "FULL",
+          "score": 69,
+          "reportAvailable": true,
+          "outcomes": {
+            "fixture.security.csp": "FAIL",
+            "fixture.performance.image": "PASS",
+            "fixture.a11y": "FAIL",
+            "fixture.runtime.failed-script": "PASS"
+          },
+          "occurrences": {
+            "fixture.a11y": 1,
+            "fixture.security.csp": 1
+          },
+          "failureReason": null
+        },
+        {
+          "id": "page-1-5",
+          "runId": "run-1-5",
+          "url": "https://atelier-nova.fr/a-propos",
+          "executionStatus": "COMPLETED",
+          "completeness": "FULL",
+          "score": 86,
+          "reportAvailable": true,
+          "outcomes": {
+            "fixture.security.csp": "FAIL",
+            "fixture.performance.image": "PASS",
+            "fixture.a11y": "PASS",
+            "fixture.runtime.failed-script": "PASS"
+          },
+          "occurrences": {
+            "fixture.security.csp": 1
+          },
+          "failureReason": null
+        },
+        {
+          "id": "page-1-6",
+          "runId": "run-1-6",
+          "url": "https://atelier-nova.fr/mentions-legales",
+          "executionStatus": "COMPLETED",
+          "completeness": "FULL",
+          "score": 95,
+          "reportAvailable": true,
+          "outcomes": {
+            "fixture.security.csp": "PASS",
+            "fixture.performance.image": "PASS",
+            "fixture.a11y": "PASS",
+            "fixture.runtime.failed-script": "PASS"
+          },
+          "occurrences": {},
+          "failureReason": null
+        },
+        {
+          "id": "page-1-7",
+          "runId": "run-1-7",
+          "url": "https://atelier-nova.fr/blog",
+          "executionStatus": "COMPLETED",
+          "completeness": "PARTIAL",
+          "score": null,
+          "reportAvailable": true,
+          "outcomes": {
+            "fixture.security.csp": "FAIL",
+            "fixture.performance.image": "FAIL",
+            "fixture.a11y": "PASS",
+            "fixture.runtime.failed-script": "PASS"
+          },
+          "occurrences": {
+            "fixture.performance.image": 1,
+            "fixture.security.csp": 1
+          },
+          "failureReason": null
+        },
+        {
+          "id": "page-1-8",
+          "runId": "run-1-8",
+          "url": "https://atelier-nova.fr/panier",
+          "executionStatus": "FAILED",
+          "completeness": "NONE",
+          "score": null,
+          "reportAvailable": false,
+          "outcomes": {
+            "fixture.security.csp": "UNAVAILABLE",
+            "fixture.performance.image": "UNAVAILABLE",
+            "fixture.a11y": "UNAVAILABLE",
+            "fixture.runtime.failed-script": "UNAVAILABLE"
+          },
+          "occurrences": {},
+          "failureReason": "TIMEOUT"
+        }
+      ]
+    },
+    {
+      "id": "domain-2",
+      "batchId": "batch-2",
+      "hostname": "maison-olive.fr",
+      "pages": [
+        {
+          "id": "page-2-1",
+          "runId": "run-2-1",
+          "url": "https://maison-olive.fr/",
+          "executionStatus": "COMPLETED",
+          "completeness": "FULL",
+          "score": 89,
+          "reportAvailable": true,
+          "outcomes": {
+            "fixture.security.csp": "FAIL",
+            "fixture.performance.image": "PASS",
+            "fixture.a11y": "PASS",
+            "fixture.runtime.failed-script": "PASS"
+          },
+          "occurrences": {
+            "fixture.security.csp": 1
+          },
+          "failureReason": null
+        },
+        {
+          "id": "page-2-2",
+          "runId": "run-2-2",
+          "url": "https://maison-olive.fr/boutique",
+          "executionStatus": "COMPLETED",
+          "completeness": "FULL",
+          "score": 76,
+          "reportAvailable": true,
+          "outcomes": {
+            "fixture.security.csp": "FAIL",
+            "fixture.performance.image": "FAIL",
+            "fixture.a11y": "PASS",
+            "fixture.runtime.failed-script": "PASS"
+          },
+          "occurrences": {
+            "fixture.performance.image": 1,
+            "fixture.security.csp": 1
+          },
+          "failureReason": null
+        },
+        {
+          "id": "page-2-3",
+          "runId": "run-2-3",
+          "url": "https://maison-olive.fr/contact",
+          "executionStatus": "COMPLETED",
+          "completeness": "FULL",
+          "score": 83,
+          "reportAvailable": true,
+          "outcomes": {
+            "fixture.security.csp": "PASS",
+            "fixture.performance.image": "PASS",
+            "fixture.a11y": "FAIL",
+            "fixture.runtime.failed-script": "PASS"
+          },
+          "occurrences": {
+            "fixture.a11y": 1
+          },
+          "failureReason": null
+        },
+        {
+          "id": "page-2-4",
+          "runId": "run-2-4",
+          "url": "https://maison-olive.fr/mentions-legales",
+          "executionStatus": "COMPLETED",
+          "completeness": "FULL",
+          "score": 96,
+          "reportAvailable": true,
+          "outcomes": {
+            "fixture.security.csp": "PASS",
+            "fixture.performance.image": "PASS",
+            "fixture.a11y": "PASS",
+            "fixture.runtime.failed-script": "PASS"
+          },
+          "occurrences": {},
+          "failureReason": null
+        }
+      ]
+    },
+    {
+      "id": "domain-3",
+      "batchId": "batch-3",
+      "hostname": "studio-ligne.fr",
+      "pages": [
+        {
+          "id": "page-3-1",
+          "runId": "run-3-1",
+          "url": "https://studio-ligne.fr/",
+          "executionStatus": "COMPLETED",
+          "completeness": "FULL",
+          "score": 61,
+          "reportAvailable": true,
+          "outcomes": {
+            "fixture.security.csp": "FAIL",
+            "fixture.performance.image": "FAIL",
+            "fixture.a11y": "PASS",
+            "fixture.runtime.failed-script": "PASS"
+          },
+          "occurrences": {
+            "fixture.performance.image": 3,
+            "fixture.security.csp": 1
+          },
+          "failureReason": null
+        },
+        {
+          "id": "page-3-2",
+          "runId": "run-3-2",
+          "url": "https://studio-ligne.fr/projets",
+          "executionStatus": "COMPLETED",
+          "completeness": "FULL",
+          "score": 54,
+          "reportAvailable": true,
+          "outcomes": {
+            "fixture.security.csp": "FAIL",
+            "fixture.performance.image": "FAIL",
+            "fixture.a11y": "FAIL",
+            "fixture.runtime.failed-script": "PASS"
+          },
+          "occurrences": {
+            "fixture.performance.image": 1,
+            "fixture.a11y": 1,
+            "fixture.security.csp": 1
+          },
+          "failureReason": null
+        },
+        {
+          "id": "page-3-3",
+          "runId": "run-3-3",
+          "url": "https://studio-ligne.fr/contact",
+          "executionStatus": "FAILED",
+          "completeness": "NONE",
+          "score": null,
+          "reportAvailable": false,
+          "outcomes": {
+            "fixture.security.csp": "UNAVAILABLE",
+            "fixture.performance.image": "UNAVAILABLE",
+            "fixture.a11y": "UNAVAILABLE",
+            "fixture.runtime.failed-script": "UNAVAILABLE"
+          },
+          "occurrences": {},
+          "failureReason": "TIMEOUT"
+        }
+      ]
+    }
+  ],
+  "usage": {
+    "limit": 100,
+    "used": 32,
+    "reserved": 0,
+    "historicalPublishedRunsOutsideLatestSelection": 19,
+    "expectedAvailable": 68
+  },
+  "expected": {
+    "trackedUrls": 15,
+    "priorityUrls": 9,
+    "incompleteUrls": 3,
+    "latestPublishedReports": 13,
+    "atelier": {
+      "selected": 8,
+      "complete": 6,
+      "partial": 1,
+      "failed": 1,
+      "priority": 5,
+      "common": {
+        "fixture.security.csp": {
+          "affected": 6,
+          "evaluated": 7
+        },
+        "fixture.performance.image": {
+          "affected": 4,
+          "evaluated": 7
+        },
+        "fixture.a11y": {
+          "affected": 3,
+          "evaluated": 7
+        }
+      },
+      "firstProblematicPath": "/collections"
+    }
+  },
+  "variants": [
+    {
+      "id": "unknown-rule",
+      "change": "Set CSP outcome of /blog to UNAVAILABLE",
+      "expected": "CSP 5 affected / 6 evaluated / 8 selected; no false PASS"
+    },
+    {
+      "id": "not-applicable",
+      "change": "Set CSP outcome of /blog to NOT_APPLICABLE with reason",
+      "expected": "CSP 5/6; preserve explicit applicability reason"
+    },
+    {
+      "id": "duplicates",
+      "change": "Three image occurrences on the home page",
+      "expected": "One affected page, three proof occurrences"
+    },
+    {
+      "id": "two-owners",
+      "change": "Same hostname and paths for another owner",
+      "expected": "No list, detail, aggregate or mutation crosses owner"
+    },
+    {
+      "id": "latest-failed",
+      "change": "Append failed latest run for a previously critical URL",
+      "expected": "Incomplete and unknown; old report separately available, not current priority"
+    },
+    {
+      "id": "unlimited",
+      "change": "usage.limit=null",
+      "expected": "Unlimited; no Infinity in JSON"
+    },
+    {
+      "id": "zero",
+      "change": "limit=0 used=0 reserved=0",
+      "expected": "No new admission"
+    },
+    {
+      "id": "concurrent",
+      "change": "Available=3; concurrent batches of 2 and 2",
+      "expected": "One accepted; second conflict; no partial batch"
+    },
+    {
+      "id": "new-period",
+      "change": "Publication crosses month boundary with active reservation",
+      "expected": "Count once in publication period; keep reservation until terminal"
+    },
+    {
+      "id": "cancel-race",
+      "change": "Cancel and publish the same running child concurrently",
+      "expected": "Exactly one terminal accounting result"
+    }
+  ]
+}

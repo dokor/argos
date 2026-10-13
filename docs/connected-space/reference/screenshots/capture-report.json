@@ -1,0 +1,484 @@
+{
+  "purpose": "Design reference, not application E2E",
+  "browser": "155.0.4283.45",
+  "checks": [
+    {
+      "name": "domain-list",
+      "viewport": 1056,
+      "width": 1022,
+      "scroll": 1022,
+      "h1": 1,
+      "footer": true,
+      "screenshot": "domain-list-1056.png"
+    },
+    {
+      "name": "domain-summary",
+      "viewport": 1056,
+      "width": 1022,
+      "scroll": 1022,
+      "h1": 1,
+      "footer": true,
+      "screenshot": "domain-summary-1056.png"
+    },
+    {
+      "name": "affected-pages",
+      "viewport": 1056,
+      "width": 1022,
+      "scroll": 1022,
+      "h1": 1,
+      "footer": true,
+      "screenshot": "affected-pages-1056.png"
+    },
+    {
+      "name": "page-report",
+      "viewport": 1056,
+      "width": 1022,
+      "scroll": 1022,
+      "h1": 1,
+      "footer": true,
+      "screenshot": "page-report-1056.png"
+    },
+    {
+      "name": "domain-new",
+      "viewport": 1056,
+      "width": 1022,
+      "scroll": 1022,
+      "h1": 1,
+      "footer": true,
+      "screenshot": "domain-new-1056.png"
+    },
+    {
+      "name": "domain-selection",
+      "viewport": 1056,
+      "width": 1022,
+      "scroll": 1022,
+      "h1": 1,
+      "footer": true,
+      "screenshot": "domain-selection-1056.png"
+    },
+    {
+      "name": "dashboard",
+      "viewport": 1056,
+      "width": 1022,
+      "scroll": 1022,
+      "h1": 1,
+      "footer": true,
+      "screenshot": "dashboard-1056.png"
+    },
+    {
+      "name": "analysis",
+      "viewport": 1056,
+      "width": 1022,
+      "scroll": 1022,
+      "h1": 1,
+      "footer": true,
+      "screenshot": "analysis-1056.png"
+    },
+    {
+      "name": "quota",
+      "viewport": 1056,
+      "width": 1022,
+      "scroll": 1022,
+      "h1": 1,
+      "footer": true,
+      "screenshot": "quota-1056.png"
+    },
+    {
+      "name": "admin",
+      "viewport": 1056,
+      "width": 1022,
+      "scroll": 1022,
+      "h1": 1,
+      "footer": true,
+      "screenshot": "admin-1056.png"
+    },
+    {
+      "name": "integrations",
+      "viewport": 1056,
+      "width": 1022,
+      "scroll": 1022,
+      "h1": 1,
+      "footer": true,
+      "screenshot": "integrations-1056.png"
+    },
+    {
+      "name": "admin-detail",
+      "viewport": 1056,
+      "width": 1022,
+      "scroll": 1022,
+      "h1": 1,
+      "footer": true,
+      "screenshot": "admin-detail-1056.png"
+    },
+    {
+      "name": "account",
+      "viewport": 1056,
+      "width": 1022,
+      "scroll": 1022,
+      "h1": 1,
+      "footer": true,
+      "screenshot": "account-1056.png"
+    },
+    {
+      "name": "dark-domain-summary",
+      "viewport": 1056,
+      "width": 1022,
+      "scroll": 1022,
+      "h1": 1,
+      "footer": true,
+      "screenshot": "dark-domain-summary-1056.png"
+    },
+    {
+      "name": "domain-list",
+      "viewport": 390,
+      "width": 356,
+      "scroll": 356,
+      "h1": 1,
+      "footer": true,
+      "screenshot": "domain-list-390.png"
+    },
+    {
+      "name": "domain-summary",
+      "viewport": 390,
+      "width": 356,
+      "scroll": 356,
+      "h1": 1,
+      "footer": true,
+      "screenshot": "domain-summary-390.png"
+    },
+    {
+      "name": "affected-pages",
+      "viewport": 390,
+      "width": 356,
+      "scroll": 356,
+      "h1": 1,
+      "footer": true,
+      "screenshot": "affected-pages-390.png"
+    },
+    {
+      "name": "page-report",
+      "viewport": 390,
+      "width": 356,
+      "scroll": 356,
+      "h1": 1,
+      "footer": true,
+      "screenshot": "page-report-390.png"
+    },
+    {
+      "name": "domain-new",
+      "viewport": 390,
+      "width": 356,
+      "scroll": 356,
+      "h1": 1,
+      "footer": true,
+      "screenshot": "domain-new-390.png"
+    },
+    {
+      "name": "domain-selection",
+      "viewport": 390,
+      "width": 356,
+      "scroll": 356,
+      "h1": 1,
+      "footer": true,
+      "screenshot": "domain-selection-390.png"
+    },
+    {
+      "name": "dashboard",
+      "viewport": 390,
+      "width": 356,
+      "scroll": 356,
+      "h1": 1,
+      "footer": true,
+      "screenshot": "dashboard-390.png"
+    },
+    {
+      "name": "analysis",
+      "viewport": 390,
+      "width": 356,
+      "scroll": 356,
+      "h1": 1,
+      "footer": true,
+      "screenshot": "analysis-390.png"
+    },
+    {
+      "name": "quota",
+      "viewport": 390,
+      "width": 356,
+      "scroll": 356,
+      "h1": 1,
+      "footer": true,
+      "screenshot": "quota-390.png"
+    },
+    {
+      "name": "admin",
+      "viewport": 390,
+      "width": 356,
+      "scroll": 356,
+      "h1": 1,
+      "footer": true,
+      "screenshot": "admin-390.png"
+    },
+    {
+      "name": "integrations",
+      "viewport": 390,
+      "width": 356,
+      "scroll": 356,
+      "h1": 1,
+      "footer": true,
+      "screenshot": "integrations-390.png"
+    },
+    {
+      "name": "admin-detail",
+      "viewport": 390,
+      "width": 356,
+      "scroll": 356,
+      "h1": 1,
+      "footer": true,
+      "screenshot": "admin-detail-390.png"
+    },
+    {
+      "name": "account",
+      "viewport": 390,
+      "width": 356,
+      "scroll": 356,
+      "h1": 1,
+      "footer": true,
+      "screenshot": "account-390.png"
+    },
+    {
+      "name": "domain-list",
+      "viewport": 320,
+      "width": 286,
+      "scroll": 286,
+      "h1": 1,
+      "footer": true,
+      "screenshot": null
+    },
+    {
+      "name": "domain-summary",
+      "viewport": 320,
+      "width": 286,
+      "scroll": 286,
+      "h1": 1,
+      "footer": true,
+      "screenshot": null
+    },
+    {
+      "name": "affected-pages",
+      "viewport": 320,
+      "width": 286,
+      "scroll": 286,
+      "h1": 1,
+      "footer": true,
+      "screenshot": null
+    },
+    {
+      "name": "page-report",
+      "viewport": 320,
+      "width": 286,
+      "scroll": 286,
+      "h1": 1,
+      "footer": true,
+      "screenshot": null
+    },
+    {
+      "name": "domain-new",
+      "viewport": 320,
+      "width": 286,
+      "scroll": 286,
+      "h1": 1,
+      "footer": true,
+      "screenshot": null
+    },
+    {
+      "name": "domain-selection",
+      "viewport": 320,
+      "width": 286,
+      "scroll": 286,
+      "h1": 1,
+      "footer": true,
+      "screenshot": null
+    },
+    {
+      "name": "dashboard",
+      "viewport": 320,
+      "width": 286,
+      "scroll": 286,
+      "h1": 1,
+      "footer": true,
+      "screenshot": null
+    },
+    {
+      "name": "analysis",
+      "viewport": 320,
+      "width": 286,
+      "scroll": 286,
+      "h1": 1,
+      "footer": true,
+      "screenshot": null
+    },
+    {
+      "name": "quota",
+      "viewport": 320,
+      "width": 286,
+      "scroll": 286,
+      "h1": 1,
+      "footer": true,
+      "screenshot": null
+    },
+    {
+      "name": "admin",
+      "viewport": 320,
+      "width": 286,
+      "scroll": 286,
+      "h1": 1,
+      "footer": true,
+      "screenshot": null
+    },
+    {
+      "name": "integrations",
+      "viewport": 320,
+      "width": 286,
+      "scroll": 286,
+      "h1": 1,
+      "footer": true,
+      "screenshot": null
+    },
+    {
+      "name": "admin-detail",
+      "viewport": 320,
+      "width": 286,
+      "scroll": 286,
+      "h1": 1,
+      "footer": true,
+      "screenshot": null
+    },
+    {
+      "name": "account",
+      "viewport": 320,
+      "width": 286,
+      "scroll": 286,
+      "h1": 1,
+      "footer": true,
+      "screenshot": null
+    },
+    {
+      "name": "domain-list",
+      "viewport": 768,
+      "width": 734,
+      "scroll": 734,
+      "h1": 1,
+      "footer": true,
+      "screenshot": null
+    },
+    {
+      "name": "domain-summary",
+      "viewport": 768,
+      "width": 734,
+      "scroll": 734,
+      "h1": 1,
+      "footer": true,
+      "screenshot": null
+    },
+    {
+      "name": "affected-pages",
+      "viewport": 768,
+      "width": 734,
+      "scroll": 734,
+      "h1": 1,
+      "footer": true,
+      "screenshot": null
+    },
+    {
+      "name": "page-report",
+      "viewport": 768,
+      "width": 734,
+      "scroll": 734,
+      "h1": 1,
+      "footer": true,
+      "screenshot": null
+    },
+    {
+      "name": "domain-new",
+      "viewport": 768,
+      "width": 734,
+      "scroll": 734,
+      "h1": 1,
+      "footer": true,
+      "screenshot": null
+    },
+    {
+      "name": "domain-selection",
+      "viewport": 768,
+      "width": 734,
+      "scroll": 734,
+      "h1": 1,
+      "footer": true,
+      "screenshot": null
+    },
+    {
+      "name": "dashboard",
+      "viewport": 768,
+      "width": 734,
+      "scroll": 734,
+      "h1": 1,
+      "footer": true,
+      "screenshot": null
+    },
+    {
+      "name": "analysis",
+      "viewport": 768,
+      "width": 734,
+      "scroll": 734,
+      "h1": 1,
+      "footer": true,
+      "screenshot": null
+    },
+    {
+      "name": "quota",
+      "viewport": 768,
+      "width": 734,
+      "scroll": 734,
+      "h1": 1,
+      "footer": true,
+      "screenshot": null
+    },
+    {
+      "name": "admin",
+      "viewport": 768,
+      "width": 734,
+      "scroll": 734,
+      "h1": 1,
+      "footer": true,
+      "screenshot": null
+    },
+    {
+      "name": "integrations",
+      "viewport": 768,
+      "width": 734,
+      "scroll": 734,
+      "h1": 1,
+      "footer": true,
+      "screenshot": null
+    },
+    {
+      "name": "admin-detail",
+      "viewport": 768,
+      "width": 734,
+      "scroll": 734,
+      "h1": 1,
+      "footer": true,
+      "screenshot": null
+    },
+    {
+      "name": "account",
+      "viewport": 768,
+      "width": 734,
+      "scroll": 734,
+      "h1": 1,
+      "footer": true,
+      "screenshot": null
+    }
+  ],
+  "errors": []
+}
