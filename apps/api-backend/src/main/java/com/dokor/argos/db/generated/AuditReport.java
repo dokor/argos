@@ -44,6 +44,11 @@ public class AuditReport extends com.coreoz.plume.db.querydsl.crud.CrudEntityQue
     @Column("report_json")
     private String reportJson;
 
+    @Column("introduction_json")
+    private String introductionJson;
+    public String getIntroductionJson() { return introductionJson; }
+    public void setIntroductionJson(String value) { introductionJson = value; }
+
     @Column("run_id")
     @JsonSerialize(using=com.fasterxml.jackson.databind.ser.std.ToStringSerializer.class)
     private Long runId;

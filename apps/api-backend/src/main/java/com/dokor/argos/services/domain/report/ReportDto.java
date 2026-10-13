@@ -15,8 +15,19 @@ public record ReportDto(
     Tech tech,
     AntiBot antiBot,   // non nul uniquement si une protection anti-bot a été détectée (#195)
     AccessibilityEvidence accessibilityEvidence,
-    AccessibilityCompliance accessibilityCompliance
+    AccessibilityCompliance accessibilityCompliance,
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    ReportIntroduction introduction
 ) {
+    public ReportDto(String generatedAt, String domain, String url, Site site, Scores scores,
+                     Summary summary, List<Issue> issues, Tech tech, AntiBot antiBot,
+                     AccessibilityEvidence evidence, AccessibilityCompliance compliance) {
+        this(generatedAt, domain, url, site, scores, summary, issues, tech, antiBot, evidence, compliance, null);
+    }
+    public ReportDto withIntroduction(ReportIntroduction note) {
+        return new ReportDto(generatedAt, domain, url, site, scores, summary, issues, tech, antiBot,
+            accessibilityEvidence, accessibilityCompliance, note);
+    }
     public ReportDto(String generatedAt, String domain, String url, Site site, Scores scores,
                      Summary summary, List<Issue> issues, Tech tech, AntiBot antiBot) {
         this(generatedAt, domain, url, site, scores, summary, issues, tech, antiBot, null, null);

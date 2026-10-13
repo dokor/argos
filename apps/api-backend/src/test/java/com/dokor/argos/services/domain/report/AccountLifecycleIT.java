@@ -1016,6 +1016,7 @@ class AccountLifecycleIT extends MariaDbReportFixture {
             config.register(new com.dokor.argos.webservices.api.account.AdminWs(administration(),new AccountCsrf(settings)));
             config.register(new com.dokor.argos.webservices.api.feedback.FeedbackWs(feedback(),new AccountCsrf(settings),new AccountRateLimiter(dao,tokens,clock,settings)));
             config.register(new com.dokor.argos.webservices.api.feedback.FeedbackAdminWs(feedback(),new AccountCsrf(settings)));
+            config.register(new com.dokor.argos.webservices.api.account.AccountReportIntroductionWs(new AccountReportIntroductionService(sessions,mapper,clock,tokens),new AccountCsrf(settings)));
             var admin = mock(com.dokor.argos.services.configuration.ConfigurationService.class);
             when(admin.adminApiToken()).thenReturn("synthetic-server-credential");
             config.register(
@@ -1520,6 +1521,32 @@ class AccountLifecycleIT extends MariaDbReportFixture {
         }
         sql("UPDATE ARG_AUDIT_RUN SET status='COMPLETED',created_at='2026-10-11 07:00:00' WHERE id="+run);
         return token;
+    }
+
+    @Test void reportIntroductionRequiresOwnerCsrfExistingFindingsAndIsSeparatelyRevocable() throws Exception {
+        var a=user("intro-a@example.com",true);var b=user("intro-b@example.com",true);
+        var run=personal.create("https://example.com",bearer(a),CSRF).audit();String token=historyReport(run.runId(),92,"intro-policy");
+        String json="{\"domain\":\"example.com\",\"scores\":{\"global\":92},\"issues\":[{\"id\":\"html.title\"},{\"id\":\"html.h1.count\"}]}";
+        try(var c=source.getConnection();var s=c.prepareStatement("UPDATE ARG_AUDIT_REPORT SET report_json=? WHERE run_id=?")) {s.setString(1,json);s.setLong(2,run.runId());s.executeUpdate();}
+        String path="/account/report-introduction/"+token,body="{\"author\":\"Provider fixture\",\"context\":\"Context fixture\",\"findingKeys\":[\"html.title\",\"html.h1.count\"],\"nextStep\":\"Review together\"}";
+        try(var http=new HttpFixture()) {
+            assertEquals(401,http.call("PUT",path,null,body,true).statusCode());
+            assertEquals(404,http.call("GET",path,bearer(b),null,false).statusCode());
+            assertEquals(404,http.call("PUT",path,bearer(b),body,true).statusCode());
+            assertEquals(403,http.call("PUT",path,bearer(a),body,false).statusCode());
+            assertEquals(200,http.call("PUT",path,bearer(a),body,true).statusCode());
+            assertEquals("Provider fixture",reader.getByToken(token).orElseThrow().introduction().author());
+            try(var c=source.getConnection();var s=c.prepareStatement("SELECT report_json FROM ARG_AUDIT_REPORT WHERE run_id=?")){s.setLong(1,run.runId());try(var r=s.executeQuery()){assertTrue(r.next());assertEquals(json,r.getString(1));}}
+            assertEquals(400,http.call("PUT",path,bearer(a),body.replace("html.h1.count","other-report.key"),true).statusCode());
+            assertEquals(404,http.call("DELETE",path,bearer(b),null,true).statusCode());
+            assertEquals(200,http.call("DELETE",path,bearer(a),null,true).statusCode());
+            assertNull(reader.getByToken(token).orElseThrow().introduction());
+            assertEquals(200,http.call("PUT",path,bearer(a),body,true).statusCode());
+            sql("UPDATE ARG_AUDIT_REPORT SET expires_at='2026-10-10' WHERE run_id="+run.runId());
+            assertEquals(404,http.call("GET",path,bearer(a),null,false).statusCode());
+            assertEquals(404,http.call("PUT",path,bearer(a),body,true).statusCode());
+            assertTrue(reader.getByToken(token).isEmpty());
+        }
     }
 
     @Test void historyUsesFrozenEvidenceAndSharedTokensNeverGrantHistory() throws Exception {

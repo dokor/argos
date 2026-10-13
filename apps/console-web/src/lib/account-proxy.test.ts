@@ -26,6 +26,18 @@ it.each([["POST","admin/users"],["PATCH","admin/users/42/role"],["DELETE","admin
 });
 import { NextRequest, NextResponse } from "next/server";
 import { accountProxy, accountHeaders, safeAccountReturn, saveRunProof, claimContext } from "./account-proxy";
+it("protects introduction publication and revocation with CSRF and forwards only published fields", async () => {
+  const path = ["report-introduction", "f".repeat(43)];
+  const body = { author: "Fixture", context: "Synthetic context", nextStep: "Review together", findingKeys: ["html.title", "html.h1.count"] };
+  expect((await accountProxy(request(path.join("/"), "PUT", body, false), path)).status).toBe(403);
+  expect((await accountProxy(request(path.join("/"), "DELETE", undefined, false), path)).status).toBe(403);
+  expect((await accountProxy(request(path.join("/"), "PUT", { ...body, ownerId: "forged" }), path)).status).toBe(400);
+  expect(fetchMock).not.toHaveBeenCalled();
+  fetchMock.mockResolvedValue(Response.json({ introduction: null }));
+  expect((await accountProxy(request(path.join("/"), "PUT", body), path)).status).toBe(200);
+  expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual(body);
+  expect(fetchMock.mock.calls[0][1].headers.get("authorization")).toBe("Bearer " + jwt);
+});
 import { GET as csrfRoute } from "@/app/api/account/csrf/route";
 import { POST as create } from "@/app/api/audits/route";
 it.each(["/account/urls/9/history","/en/account/urls/9/history"])("preserves history return destination %s",path=>expect(safeAccountReturn(path)).toBe(path));

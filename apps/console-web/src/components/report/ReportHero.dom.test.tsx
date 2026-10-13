@@ -25,6 +25,11 @@ const report = {
 } as unknown as Report;
 
 describe("ReportHero (rendu du rapport)", () => {
+  it("identifies historical incomplete measurements as provisional beside the score", () => {
+    render(<ReportHero report={{ ...report, scores: { ...report.scores, completeness: 50 } }} />);
+    expect(screen.getByText("Score provisoire")).toBeInTheDocument();
+    expect(screen.queryByText("Score mesuré")).not.toBeInTheDocument();
+  });
   it("distingue un score indisponible d'un zéro mesuré", () => {
     render(<ReportHero report={{ ...report, scores: { ...report.scores, global: 0, globalAvailable: false } }} />);
     expect(screen.getByText("Non évalué")).toBeInTheDocument();

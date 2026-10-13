@@ -1,11 +1,12 @@
 import type { Issue } from "./types";
 import type { Lang } from "@/lib/i18n/routes";
+import { describeObservation, findingQualification, missingLocation } from "./findingPresentation";
 
-export const CATALOGUE_VERSION = "report-content-v2";
-export type FindingContent = { title: string; observation: string; impact: string; recommendation: string; verification: string };
+export const CATALOGUE_VERSION = "report-content-v3";
+export type FindingContent = { title: string; observation: string; impact: string; recommendation: string; verification: string; qualification: string; missingInformation: string };
 type Copy = [title: string, impact: string, recommendation: string, verification: string];
 const catalogue: Record<string, Record<Lang, Copy>> = {};
-function add(keys: string[], fr: Copy, en: Copy) { for (const key of keys) catalogue[key] = { fr, en }; }
+function add(keys: string[], fr: Copy, en: Copy) { for (const key of keys) catalogue[key] = { fr: [...fr], en: [...en] }; }
 
 add(["lighthouse.audit.largest-contentful-paint"],
   ["L’affichage du contenu principal est à examiner", "Une attente prolongée peut retarder la lecture de la page.", "Identifier l’élément principal et les ressources qui retardent son affichage.", "Comparer le LCP avant et après avec le même profil de mesure."],
@@ -144,6 +145,62 @@ const titles: Record<string, [string, string]> = {
 for (const [key, title] of Object.entries(titles)) {
   catalogue[key].fr[0] = title[0]; catalogue[key].en[0] = title[1];
 }
+// Keys emitted by current Lighthouse insight diagnostics; preserve historical IDs.
+for (const [current, historical] of Object.entries({
+  "lcp-discovery-insight": "largest-contentful-paint", "lcp-breakdown-insight": "largest-contentful-paint",
+  "render-blocking-insight": "render-blocking-resources", "image-delivery-insight": "image-delivery",
+  "cls-culprits-insight": "cumulative-layout-shift", "document-latency-insight": "first-contentful-paint",
+})) add([`lighthouse.audit.${current}`], catalogue[`lighthouse.audit.${historical}`].fr, catalogue[`lighthouse.audit.${historical}`].en);
+add(["html.title"],
+  [titles["html.title"][0], "Un titre peu descriptif peut rendre la page difficile à reconnaître dans les onglets et les résultats.", "Dans <head>, rédiger un <title> décrivant cette page et son site.", "Inspecter <title> dans le HTML reçu et vérifier qu’il décrit la page mesurée."],
+  [titles["html.title"][1], "An unclear title can make the page hard to recognise in tabs and results.", "In <head>, write a <title> describing this page and its site.", "Inspect <title> in the received HTML and check it describes the measured page."]);
+add(["html.meta.description.present"],
+  [titles["html.meta.description.present"][0], "Sans résumé spécifique, l’aperçu proposé aux moteurs peut manquer de contexte.", "Dans <head>, ajouter une meta name=\"description\" fidèle au contenu de cette page.", "Vérifier que la description est présente, non vide et spécifique dans le HTML reçu."],
+  [titles["html.meta.description.present"][1], "Without a specific summary, search previews may lack context.", "In <head>, add a meta name=\"description\" matching this page’s content.", "Check the received HTML for a present, non-empty, page-specific description."]);
+add(["html.h1.count"],
+  [titles["html.h1.count"][0], "Un titre principal absent ou ambigu peut gêner la compréhension de la structure.", "Examiner les éléments h1 du contenu puis choisir un titre principal descriptif.", "Recompter les h1 et vérifier la hiérarchie des titres dans le DOM rendu."],
+  [titles["html.h1.count"][1], "A missing or ambiguous main heading can hinder understanding of the structure.", "Inspect the content’s h1 elements and choose a descriptive main heading.", "Recount h1 elements and check heading hierarchy in the rendered DOM."]);
+add(["html.social.meta"],
+  [titles["html.social.meta"][0], "Un partage peut afficher un titre, une description ou une image peu représentatifs.", "Examiner les propriétés Open Graph et adapter le titre, la description et l’image de cette page.", "Inspecter les propriétés Open Graph puis tester un aperçu de partage de la page."],
+  [titles["html.social.meta"][1], "A shared page may show an unrepresentative title, description or image.", "Inspect Open Graph properties and adapt this page’s title, description and image.", "Inspect Open Graph properties and test a sharing preview of the page."]);
+add(["runtime.network.third_party_errors"],
+  [titles["runtime.network.third_party_errors"][0], "Une intégration externe indisponible peut gêner une fonction ; son effet réel reste à reproduire.", "Identifier le fournisseur externe, reproduire la requête et tester le parcours avec l’intégration indisponible.", "Rejouer le parcours et vérifier les réponses du fournisseur et le comportement de repli."],
+  [titles["runtime.network.third_party_errors"][1], "An unavailable external integration may affect a feature; its actual effect needs reproduction.", "Identify the external provider, reproduce the request and test the journey with the integration unavailable.", "Replay the journey and check provider responses and fallback behaviour."]);
+add(["lighthouse.audit.no-vulnerable-libraries"],
+  ["Des dépendances signalées sont à vérifier", "Une dépendance signalée peut exposer une fonction si la version et les conditions d’exploitation sont confirmées.", "Relever la dépendance et sa version dans le diagnostic source, vérifier l’avis de sécurité puis tester une version corrigée.", "Vérifier la version réellement servie, relancer le contrôle et tester les fonctions utilisant cette dépendance."],
+  ["Review flagged dependencies", "A flagged dependency may expose a feature if its version and exploit conditions are confirmed.", "Identify the dependency and version in the source diagnosis, check the security advisory and test a patched version.", "Check the version actually served, repeat the check and test functions using that dependency."]);
+add(["runtime.network.failed_requests"],
+  [titles["runtime.network.failed_requests"][0], "Une requête interrompue peut priver le parcours d’une ressource ; un blocage par le navigateur reste à distinguer d’une panne.", "Retrouver les requêtes échouées dans le journal réseau et vérifier leur URL, leur initiateur et la raison d’échec.", "Rejouer le même parcours et vérifier la réponse et l’usage de chaque ressource concernée."],
+  [titles["runtime.network.failed_requests"][1], "An interrupted request may deprive the journey of a resource; browser blocking needs to be distinguished from an outage.", "Locate failed requests in the network log and inspect their URL, initiator and failure reason.", "Replay the same journey and check the response and usage of each affected resource."]);
+add(["runtime.network.5xx"],
+  [titles["runtime.network.5xx"][0], "Une réponse serveur en erreur peut empêcher une fonction de terminer.", "Identifier les réponses 5xx et corréler leur date avec les journaux du serveur concerné.", "Rejouer les requêtes et vérifier un statut attendu ainsi que la fonction concernée."],
+  [titles["runtime.network.5xx"][1], "A server error response may prevent a feature from completing.", "Identify 5xx responses and correlate their time with the affected server’s logs.", "Replay the requests and verify the expected status and affected feature."]);
+add(["lighthouse.audit.unused-javascript"],
+  ["Du JavaScript peu utilisé est à examiner", "Du code téléchargé sans usage au chargement peut alourdir le transfert.", "Examiner la couverture JavaScript et les parcours différés avant de découper ou différer les scripts candidats.", "Comparer les octets JavaScript transférés et tester les parcours qui chargent du code à la demande."],
+  ["Review underused JavaScript", "Code downloaded without use during loading may increase transfer size.", "Inspect JavaScript coverage and deferred journeys before splitting or deferring candidate scripts.", "Compare transferred JavaScript bytes and test journeys loading code on demand."]);
+add(["lighthouse.audit.unused-css"],
+  ["Des styles peu utilisés sont à examiner", "Des styles inutilisés sur cette page peuvent augmenter le téléchargement.", "Examiner la couverture CSS et les états interactifs avant de retirer les règles candidates.", "Comparer les octets CSS transférés et vérifier les thèmes, les tailles d’écran et les états interactifs."],
+  ["Review underused styles", "Styles unused on this page may increase downloads.", "Inspect CSS coverage and interactive states before removing candidate rules.", "Compare transferred CSS bytes and check themes, screen sizes and interactive states."]);
+add(["lighthouse.audit.render-blocking-resources", "lighthouse.audit.render-blocking-insight"],
+  ["Des ressources bloquent le premier affichage", "Le navigateur peut attendre certaines ressources avant d’afficher le contenu.", "Identifier les ressources bloquantes dans la cascade et différer celles qui ne sont pas nécessaires au premier écran.", "Comparer le premier affichage dans les mêmes conditions et vérifier les styles et fonctions du premier écran."],
+  ["Resources block initial rendering", "The browser may wait for some resources before showing content.", "Identify blocking resources in the waterfall and defer those not required for the first screen.", "Compare initial rendering under the same conditions and check the first screen’s styles and features."]);
+// Verified against the pinned Lighthouse 13.5.0 default configuration.
+for (const [id, source] of Object.entries({
+  "unused-css-rules": "lighthouse.audit.unused-css", "errors-in-console": "runtime.console.errors",
+  "is-on-https": "http.final_url.https", "redirects-http": "http.redirect.to_https",
+  "http-status-code": "http.status_code", "doctype": "html.doctype.html5", "charset": "html.meta.charset.present",
+  "meta-viewport": "html.meta.viewport.present", "input-image-alt": "lighthouse.audit.image-alt",
+  "svg-img-alt": "lighthouse.audit.image-alt", "image-size-responsive": "lighthouse.audit.uses-responsive-images",
+})) add([`lighthouse.audit.${id}`], catalogue[source].fr, catalogue[source].en);
+add(["lighthouse.audit.document-title"],
+  ["Le titre du document rendu est à vérifier", "Un titre absent ou peu explicite peut gêner la reconnaissance de la page par les technologies d’assistance.", "Examiner document.title dans la page rendue et fournir un titre descriptif de son contenu.", "Vérifier le titre dans le DOM rendu, puis relancer le contrôle document-title."],
+  ["Review the rendered document title", "A missing or unclear title can hinder recognition of the page by assistive technology.", "Inspect document.title in the rendered page and provide a title describing its content.", "Check the title in the rendered DOM, then repeat the document-title check."]);
+add(["lighthouse.audit.meta-description"],
+  ["La description du document rendu est à vérifier", "Une description absente ou vide peut laisser l’aperçu de la page sans résumé spécifique.", "Examiner la meta description dans le document rendu et rédiger un résumé fidèle à cette page.", "Vérifier une description non vide dans le DOM rendu, puis relancer le contrôle meta-description."],
+  ["Review the rendered document description", "A missing or empty description may leave the preview without a page-specific summary.", "Inspect the meta description in the rendered document and write an accurate summary of this page.", "Check for a non-empty description in the rendered DOM, then repeat the meta-description check."]);
+add(["lighthouse.audit.interaction-to-next-paint", "lighthouse.audit.inp-breakdown-insight"],
+  ["La réponse aux interactions est à examiner", "Une réponse visuelle tardive peut donner l’impression que le contrôle ne répond pas.", "Reproduire les interactions concernées et examiner les tâches qui retardent la mise à jour visuelle.", "Comparer le délai de réponse aux mêmes interactions dans des conditions comparables."],
+  ["Review interaction responsiveness", "A delayed visual response can make a control appear unresponsive.", "Reproduce the affected interactions and inspect tasks delaying the visual update.", "Compare response delays for the same interactions under comparable conditions."]);
 export const supportedFindingKeys = Object.keys(catalogue);
 export function cleanEvidence(text?: string | null): string {
   return (text ?? "").replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f\u202a-\u202e\u2066-\u2069]/g, "")
@@ -156,12 +213,14 @@ export function findingContent(issue: Issue, lang: Lang): FindingContent {
   const copy = issue.id ? catalogue[issue.id]?.[lang] : undefined;
   const uncertain = issue.confidence !== "HIGH" && issue.confidence !== "MEDIUM";
   const confirm = lang === "fr" ? "Confirmer le signal et son périmètre avant toute correction. " : "Confirm the signal and its scope before making changes. ";
-  const recommendation = copy?.[2] ?? cleanEvidence(issue.recommendation);
+  const recommendation = copy?.[2] ?? (lang === "en" ? cleanEvidence(issue.recommendation) : "Reproduire le contrôle source et identifier les éléments concernés avant de définir la correction.");
+  const title = copy?.[0] ?? (lang === "fr" ? "Contrôle technique à examiner" : cleanEvidence(issue.title) || "Technical check to review");
   return {
-    title: copy?.[0] ?? (cleanEvidence(issue.title) || (lang === "fr" ? "Constat à examiner" : "Finding to review")),
-    observation: lang === "fr" ? "Le contrôle a signalé un point à examiner dans le périmètre mesuré." : "The check flagged a point to review within the measured scope.",
-    impact: copy?.[1] ?? (cleanEvidence(issue.impact) || (lang === "fr" ? "Impact non renseigné." : "Impact not provided.")),
+    title,
+    observation: describeObservation(issue, title, lang),
+    impact: copy?.[1] ?? (lang === "fr" ? "L’effet sur les utilisateurs n’est pas documenté pour ce contrôle ; le vérifier sur le parcours concerné." : "The effect on users is not documented for this check; verify it in the affected journey."),
     recommendation: recommendation ? (uncertain ? confirm : "") + recommendation : confirm.trim(),
     verification: copy?.[3] ?? (lang === "fr" ? "Reproduire l’observation puis relancer le contrôle dans les mêmes conditions." : "Reproduce the observation, then repeat the check under the same conditions."),
+    qualification: findingQualification(issue, lang), missingInformation: missingLocation(issue, lang),
   };
 }

@@ -2,6 +2,7 @@ import { ssrfError } from "./audit-url-validation";
 import { boundedJson } from "./bounded-request";
 import { adminPath, adminQuery, adminEntitlement } from "./admin-request";
 import { feedbackTreatment } from "./feedback-request";
+import { validIntroduction } from "./report-introduction";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 export const SESSION_COOKIE = "argos_account";
@@ -61,20 +62,23 @@ export function claimContext(request: NextRequest, reportToken: unknown): string
 const allowed: Record<string, RegExp> = {
   GET: /^(?:auth\/providers|me|usage|sessions|methods|urls\/\d{1,19}\/history|report-context\/[A-Za-z0-9_-]{20,512}|sites(?:\/\d{1,19}(?:\/urls)?)?|runs|runs\/\d{1,19}(?:\/report)?|auth\/oauth\/(?:google|github|linkedin)\/callback)$/,
   POST: /^(?:auth\/(?:register|login|verify|resend|forgot|reset|renew|logout|reauth|confirm-email)|auth\/oauth\/(?:google|github|linkedin)\/start|sessions\/revoke-others|methods\/password|methods\/\d{1,19}\/remove|me\/archive|sites(?:\/\d{1,19}\/urls)?|runs\/\d{1,19}\/claim)$/,
+  PUT: /^report-introduction\/[A-Za-z0-9_-]{20,512}$/,
   PATCH: /^me$/,
-  DELETE: /^sessions\/\d{1,19}$/,
+  DELETE: /^(?:sessions\/\d{1,19}|report-introduction\/[A-Za-z0-9_-]{20,512})$/,
 };
 export async function accountProxy(request: NextRequest, parts: string[]): Promise<NextResponse> {
   const path = parts.join("/"), mutation = request.method !== "GET", callback = /^auth\/oauth\/(google|github|linkedin)\/callback$/.test(path);
-  if (!allowed[request.method]?.test(path) && !adminPath(request.method,path)) return privateError("resource_unavailable", 404);
+  if (!allowed[request.method]?.test(path) && !(request.method === "GET" && /^report-introduction\/[A-Za-z0-9_-]{20,512}$/.test(path)) && !adminPath(request.method,path)) return privateError("resource_unavailable", 404);
   const headers = accountHeaders(request, mutation);
   if (headers instanceof NextResponse) return headers;
   let body: string | undefined, returnTo = "/account", preserveReturn = false;
   if (mutation) {
     try {
-      const value = request.body ? await boundedJson(request) : {};
+      // DELETE has no forwarded payload; some runtimes expose an empty request stream.
+      const value = request.method === "DELETE" ? {} : request.body ? await boundedJson(request) : {};
       if (value === null || typeof value !== "object" || Array.isArray(value)) return privateError("payload_invalid", 400);
       const parsed = value as Record<string, unknown>;
+      if (request.method === "PUT" && path.startsWith("report-introduction/") && !validIntroduction(parsed)) return privateError("introduction_invalid",400);
       if(path.startsWith("admin/") && !(path.startsWith("admin/feedback/") ? feedbackTreatment(parsed) : adminEntitlement(parsed))) return privateError("payload_invalid",400);
       if (path.endsWith("/start") || path === "auth/register" || path === "auth/confirm-email") {
         returnTo = safeAccountReturn(parsed.returnTo);

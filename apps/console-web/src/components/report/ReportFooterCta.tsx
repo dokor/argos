@@ -9,13 +9,14 @@ import s from "./ReportFooterCta.module.scss";
 
 export default function ReportFooterCta({
   contactUrl = process.env.NEXT_PUBLIC_CALENDLY_URL || PUBLIC_CONTACT.emailHref,
-}: { contactUrl?: string }) {
+  contained = false,
+}: { contactUrl?: string; contained?: boolean }) {
   const { t } = useLang();
   const tf = t.report.footerCta;
   const contact = validContact(contactUrl);
 
   return (
-    <footer className={s.footer}>
+    <footer className={`${s.footer} ${contained ? s.contained : ""}`}>
       <div className={s.inner}>
         {contact && (
           <div className={s.copy}>

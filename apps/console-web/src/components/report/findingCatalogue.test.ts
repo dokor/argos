@@ -4,6 +4,31 @@ import { cleanEvidence, findingContent, supportedFindingKeys } from "./findingCa
 import type { Issue } from "./types";
 const issue: Issue = { id: "lighthouse.audit.largest-contentful-paint", severity: "critical", title: "Largest Contentful Paint", impact: "Largest Contentful Paint", recommendation: "" };
 describe("versioned bilingual content", () => {
+  it("preserves distinct titles and corrections in shared groups in both languages", () => {
+    const keys = ["html.title", "html.meta.description.present", "html.h1.count", "html.social.meta"];
+    expect(keys.map(id => findingContent({ ...issue, id }, "fr").title)).toEqual([
+      "Le titre de la page est à préciser", "La description de la page est à vérifier", "Le titre principal de la page est à vérifier", "L’aperçu de partage est à préciser",
+    ]);
+    expect(keys.map(id => findingContent({ ...issue, id }, "en").title)).toEqual([
+      "Clarify the page title", "Review the page description", "Review the main page heading", "Clarify the sharing preview",
+    ]);
+    for (const lang of ["fr", "en"] as const) {
+      expect(new Set(keys.map(id => findingContent({ ...issue, id }, lang).recommendation)).size).toBe(4);
+      expect(new Set(["runtime.network.5xx", "runtime.network.failed_requests", "runtime.network.third_party_errors"].map(id => findingContent({ ...issue, id }, lang).title)).size).toBe(3);
+    }
+  });
+  it("uses actual measurements, preserves absent locations and separates tool signals", () => {
+    expect(findingContent({ ...issue, id: "html.title", structuredEvidence: { source: "html", details: [{ key: "length", text: "3" }] } }, "fr").observation).toBe("Le titre HTML contient 3 caractères.");
+    expect(findingContent({ ...issue, id: "html.meta.description.present", structuredEvidence: { source: "html", details: [{ key: "state", text: "EMPTY" }] } }, "en").observation).toBe("Description in the received HTML : empty value.");
+    const measured = { ...issue, id: "runtime.network.failed_requests", structuredEvidence: { source: "runtime", measurement: { value: 3, unit: "count" as const } } };
+    const content = findingContent(measured, "fr");
+    expect(content.observation).toBe("Requêtes en échec observées — 3 élément(s)");
+    expect(content.missingInformation).toContain("ne conserve pas les éléments");
+    expect(findingContent({ ...measured, evidence: "https://user:password@example.com/a?token=private" }, "fr").missingInformation).toBe("");
+    expect(findingContent({ ...issue, id: "lighthouse.score.performance", confidence: "HIGH" }, "fr").qualification).toBe("Diagnostic agrégé d’outil");
+    expect(findingContent({ ...issue, confidence: "HIGH" }, "fr").qualification).toContain("Signal à vérifier");
+    expect(findingContent({ ...issue, id: "future.check", title: "An English diagnostic", impact: "An English diagnostic" }, "fr").impact).not.toContain("English");
+  });
   it("has four distinct editorial fields for every supported key and preserves technical identity", () => {
     for (const key of supportedFindingKeys) for (const lang of ["fr", "en"] as const) {
       const content = findingContent({ ...issue, id: key }, lang);
@@ -14,6 +39,10 @@ describe("versioned bilingual content", () => {
     expect(findingContent(issue, "en").title).toBe("Review when the main content appears");
   });
   it("covers static site checks emitted by the current analyzers", () => {
+    for (const id of ["unused-css-rules", "document-title", "meta-description", "errors-in-console", "is-on-https", "redirects-http", "http-status-code", "doctype", "charset", "meta-viewport", "input-image-alt", "svg-img-alt", "image-size-responsive", "interaction-to-next-paint", "inp-breakdown-insight"]) {
+      expect(supportedFindingKeys).toContain("lighthouse.audit." + id);
+      expect(findingContent({ ...issue, id: "lighthouse.audit." + id }, "fr").title).not.toBe("Contrôle technique à examiner");
+    }
     const root = new URL("../../../../api-backend/src/main/java/com/dokor/argos/services/analysis/modules/", import.meta.url);
     const files = readdirSync(root, { recursive: true }).filter(name => String(name).endsWith("Analyzer.java"));
     const keys = files.flatMap(name => [...readFileSync(new URL(String(name).replaceAll("\\", "/"), root), "utf8").matchAll(/"((?:http|html|runtime|ssl|observatory|zap)\.[a-z0-9_.-]+)"/g)].map(match => match[1]));

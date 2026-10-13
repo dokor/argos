@@ -5,6 +5,8 @@
   background: t.$color-navy;
   border-top: 1px solid t.$color-slate-800;
 }
+.contained { margin-inline: calc(-1 * t.$page-gutter); }
+@media (max-width: 640px) { .contained { margin-inline: calc(-1 * t.$page-gutter-mobile); } }
 
 .inner {
   max-width: t.$container-width;

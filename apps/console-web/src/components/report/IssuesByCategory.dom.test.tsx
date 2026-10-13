@@ -36,7 +36,7 @@ describe("IssuesByCategory", () => {
 
     expect(within(document.querySelector("#cat-performance")!).getByText(/Titre technique original: HTTP status/)).toBeInTheDocument();
     expect(within(document.querySelector("#cat-a11y")!).getByText(/Titre technique original: Color contrast/)).toBeInTheDocument();
-    expect(within(document.querySelector("#cat-security")!).getByText("Libraries")).toBeInTheDocument();
+    expect(within(document.querySelector("#cat-security")!).getByText(/Titre technique original: Libraries/)).toBeInTheDocument();
   });
 });
 

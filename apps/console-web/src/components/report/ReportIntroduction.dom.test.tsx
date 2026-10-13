@@ -1,0 +1,50 @@
+// @vitest-environment jsdom
+import { beforeEach, it, expect, vi } from "vitest";
+import { act, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { LangProvider } from "@/lib/i18n/LangContext";
+import { accountFetch } from "@/lib/account-client";
+import { demoReport } from "@/components/marketing/reportDemoFixture";
+import { buildReportModel } from "./reportModel";
+import { findingContent } from "./findingCatalogue";
+import ReportIntroductionEditor from "./ReportIntroductionEditor";
+import ReportIntroductionView from "./ReportIntroductionView";
+vi.mock("@/lib/account-client", () => ({ accountFetch: vi.fn() }));
+const model = buildReportModel(demoReport("fr")); const token = "f".repeat(43);
+beforeEach(() => { vi.mocked(accountFetch).mockReset(); });
+it("does not offer editing to a holder who is not the owner", async () => {
+  vi.mocked(accountFetch).mockRejectedValue(new Error("404"));
+  const { container } = await act(async () => render(<ReportIntroductionEditor token={token} model={model} onPublished={vi.fn()} />));
+  expect(vi.mocked(accountFetch).mock.calls.length).toBe(1);
+  expect(container.querySelector("form")).toBeNull();
+});
+it("previews anonymously without writing, publishes selected proofs and revokes", async () => {
+  const user = userEvent.setup(); const published = vi.fn();
+  vi.mocked(accountFetch).mockResolvedValueOnce({ introduction: null });
+  render(<LangProvider><ReportIntroductionEditor token={token} model={model} onPublished={published} /></LangProvider>);
+  await user.click(await screen.findByText("Préparer une introduction"));
+  await user.type(screen.getByLabelText("Identité du prestataire"), "Atelier conseil");
+  await user.type(screen.getByLabelText("Pourquoi transmettre ce rapport ?"), "Revue fictive de la page produit.");
+  await user.type(screen.getByLabelText("Prochaine étape proposée"), "Examiner ces preuves ensemble.");
+  for (const f of model.findings.slice(0, 2)) await user.click(screen.getByRole("checkbox", { name: findingContent(f.issue, "fr").title }));
+  await user.click(screen.getByRole("button", { name: "Prévisualiser la lecture sans connexion" }));
+  expect(accountFetch).toHaveBeenCalledTimes(1);
+  expect(screen.getByRole("region", { name: "Commentaire de votre prestataire" })).toBeInTheDocument();
+  expect(screen.queryByRole("link", { name: /compte/i })).not.toBeInTheDocument();
+  expect(screen.getAllByRole("link")[0]).toHaveAttribute("href", "#" + model.findings[0].anchor);
+  const note = { author: "Atelier conseil", context: "Revue fictive de la page produit.", nextStep: "Examiner ces preuves ensemble.", findingKeys: model.findings.slice(0, 2).map(f => f.key), publishedAt: "2026-10-13T10:00:00Z" };
+  vi.mocked(accountFetch).mockResolvedValueOnce({ introduction: note });
+  await user.click(screen.getByRole("button", { name: "Publier avec le lien du rapport" }));
+  await waitFor(() => expect(published).toHaveBeenCalledWith(note));
+  expect(accountFetch).toHaveBeenLastCalledWith("report-introduction/" + token, "PUT", { author: note.author, context: note.context, nextStep: note.nextStep, findingKeys: note.findingKeys });
+  vi.mocked(accountFetch).mockResolvedValueOnce({ introduction: null });
+  await user.click(screen.getByRole("button", { name: "Retirer l’introduction publiée" }));
+  await waitFor(() => expect(published).toHaveBeenLastCalledWith(null));
+}, 15000);
+it("escapes human text and links only selected canonical findings in English", () => {
+  const select = vi.fn(); const note = { author: "<script>provider</script>", context: "<img src=x onerror=bad()>", findingKeys: [model.findings[0].key, "absent"], nextStep: "Review", publishedAt: "2026-10-13T10:00:00Z" };
+  const { container } = render(<ReportIntroductionView note={note} model={model} lang="en" onSelectFinding={select} />);
+  expect(container.querySelector("script,img")).toBeNull();
+  expect(screen.getAllByRole("link")).toHaveLength(1);
+  expect(screen.getByText(/Human comment/)).toBeInTheDocument();
+});
