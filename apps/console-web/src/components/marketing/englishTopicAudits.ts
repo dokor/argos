@@ -1,0 +1,127 @@
+import type { TopicAuditContent } from "./TopicAuditPage";
+
+export const englishTopicAudits = {
+  speed: {
+    route: "/test-vitesse-site-web",
+    title: "Website page speed test",
+    lead: "Measure how a URL loads and identify the resources to examine first.",
+    scope: "A laboratory measurement of one public page. Browser conditions and available modules matter; this test does not measure your users’ actual visits.",
+    measures: [
+      { title: "Lighthouse LCP and FCP", text: "When Lighthouse reports them as findings, LCP indicates when the largest visible content appears and FCP when the first content is displayed. Read the available numeric values and units alongside the measurement profile." },
+      { title: "Browser loading", text: "The runtime module records loading events, errors and failed requests, as well as estimated response sizes. It does not provide field INP data." },
+      { title: "Scores and timings", text: "The Lighthouse Performance score is a mark out of 100, not a duration. The Argos Performance score combines separate weighted checks; do not convert either score into seconds." },
+    ],
+    example: {
+      title: "Example: main content appears late",
+      conditions: "Fictional data, with no customer measurements. Assume a Lighthouse laboratory run on atelier.example with a declared desktop profile; always compare the same profile and conditions.",
+      before: "largest-contentful-paint\nnumericValue: 2800\nnumericUnit: millisecond\nLCP: 2.8 s",
+      interpretation: "2,800 milliseconds correspond to 2.8 seconds for this run. A single measurement does not describe the 75th percentile of visitors or every mobile condition.",
+      correction: "Identify the LCP element and its loading chain, then examine image size, server delays and blocking resources before choosing an optimization.",
+      verify: "Run the same URL with the same profile again, compare several measurements and examine field data if you have it.",
+    },
+    limits: "A run can vary with the network, content, cache and available services. Argos does not provide CrUX data collection, visitor INP or a guarantee of mobile speed here. A missing check is not a favorable result.",
+    links: [
+      { href: "/methodologie-score#resume", label: "Understand the score and coverage" },
+      { href: "/guides/checklist-audit-site-web#performance", label: "Manual performance checks" },
+      { href: "/exemple-rapport", label: "Read a commented example report" },
+    ],
+    sources: [
+      { href: "https://web.dev/articles/lcp", label: "web.dev: Largest Contentful Paint" },
+      { href: "https://web.dev/articles/fcp", label: "web.dev: First Contentful Paint" },
+      { href: "https://developer.chrome.com/docs/lighthouse/performance/performance-scoring", label: "Chrome: how the Lighthouse Performance score works" },
+    ],
+  },
+  seo: {
+    route: "/analyse-seo-page",
+    title: "Technical SEO analysis of a page",
+    lead: "Check the HTML and indexability signals of a public URL, then prepare corrections.",
+    scope: "Argos examines one page at a time. This diagnostic does not provide keyword research, backlinks, Google rankings or a full content strategy audit.",
+    measures: [
+      { title: "Title and description", text: "The HTML check looks for a title and a usable meta description. Their presence does not establish their editorial relevance or prove that Google will use these texts." },
+      { title: "Structure and canonical URL", text: "The report examines H1 headings and the presence of a canonical URL, among other signals. Google’s actual choice and consistency across all pages require additional checks." },
+      { title: "Indexability signals", text: "HTTP and HTML checks may identify robots.txt, a sitemap and robots directives. A detected signal does not prove indexing or ranking." },
+    ],
+    example: {
+      title: "Before/after example: a specific description",
+      conditions: "Fictional HTML from an atelier.example product page, with no customer data or private report.",
+      before: "<title>Bag</title>\n<!-- no meta description -->",
+      after: '<title>Blue canvas bag | Atelier Demo</title>\n<meta name="description" content="Explore the Atelier Demo blue canvas bag, its dimensions and care instructions.">',
+      interpretation: "The automated finding establishes that the description is missing. The corrected text is an editorial example: Argos does not validate its effectiveness in search results.",
+      correction: "Write a specific, readable title and summary that accurately reflect the page’s content, then publish them in the delivered HTML.",
+      verify: "Check the source code, rerun the audit and consult Search Console’s URL inspection if you own the property. Google may choose a different title or snippet.",
+    },
+    limits: "A successful check confirms only the measured signal. Content strategy, query relevance, site-wide crawling and actual indexing require other information. No traffic or ranking is guaranteed.",
+    links: [
+      { href: "/guides/checklist-audit-site-web#html-seo", label: "Checklist: check HTML and SEO signals" },
+      { href: "/methodologie-score#resume", label: "Understand score weights and coverage" },
+      { href: "/exemple-rapport", label: "See the description in an example report" },
+    ],
+    sources: [
+      { href: "https://developers.google.com/search/docs/appearance/title-link", label: "Google: titles in search results" },
+      { href: "https://developers.google.com/search/docs/appearance/snippet", label: "Google: snippets and meta descriptions" },
+      { href: "https://developers.google.com/search/docs/crawling-indexing/robots-meta-tag", label: "Google: robots directives" },
+    ],
+  },
+  security: {
+    route: "/verifier-entetes-securite",
+    title: "Check a page’s security headers",
+    lead: "Examine a URL’s HTTP response and the protections it declares to prepare an appropriate correction.",
+    scope: "This form runs the existing Argos audit. A missing header is a technical finding; on its own, it does not prove an exploitable vulnerability.",
+    measures: [
+      { title: "CSP and HSTS", text: "HTTP checks look for Content-Security-Policy and Strict-Transport-Security. Their presence does not establish that the policy is suitable or that all site responses are protected." },
+      { title: "Other headers", text: "The catalog examines X-Frame-Options, X-Content-Type-Options, Referrer-Policy and Permissions-Policy, among other headers, as well as observed cookie attributes." },
+      { title: "HTTPS and TLS", text: "The final URL, connection and available TLS results complement the HTTP findings. External services may be unavailable; read the report alongside its coverage." },
+    ],
+    example: {
+      title: "Example: CSP is missing from the response",
+      conditions: "A fictional HTTPS response from a public atelier.example page. No real site or penetration test.",
+      before: "HTTP/2 200\nContent-Type: text/html\nX-Content-Type-Options: nosniff\n# Content-Security-Policy missing",
+      interpretation: "The http.security.csp check indicates that the header is missing from the observed response. This is not a demonstration of XSS or an exhaustive search for vulnerabilities.",
+      correction: "List the required scripts, styles, images and connections. Prepare a suitable CSP, test it in Report-Only mode in a controlled environment and verify user journeys before enforcing it.",
+      verify: "Check responses and browser errors after deployment. For HSTS, verify HTTPS on the relevant domains before using includeSubDomains or preload; do not copy a universal policy.",
+    },
+    limits: "Argos does not provide a penetration test, an exhaustive vulnerability search or a Supabase/RLS audit here. Protections must match how the site actually works. A high score does not certify its security.",
+    links: [
+      { href: "/guides/checklist-audit-site-web#https-entetes", label: "Checklist: HTTPS and headers" },
+      { href: "/methodologie-score#resume", label: "Read the Security score and coverage" },
+      { href: "/exemple-rapport", label: "See how to read a finding and its evidence" },
+    ],
+    sources: [
+      { href: "https://owasp.org/projects/secure-headers-project", label: "OWASP: Secure Headers Project" },
+      { href: "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP", label: "MDN: design and deploy a CSP" },
+      { href: "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Strict-Transport-Security", label: "MDN: HSTS, subdomains and conditions" },
+    ],
+  },
+  accessibility: {
+    route: "/test-accessibilite-site-web",
+    title: "Automated accessibility test of a page",
+    lead: "Identify detectable problems on a public URL and prepare the human checks that complement the report.",
+    scope: "The form runs the existing Argos audit, including its available automated accessibility checks. It does not issue an RGAA or WCAG compliance certificate.",
+    measures: [
+      { title: "Image alternatives", text: "The HTML check measures alt attribute coverage. Their presence does not guarantee that the text usefully describes an image or that a decorative image is handled correctly." },
+      { title: "Names and structure", text: "HTML checks and available Lighthouse findings may identify links, fields or buttons without accessible names and structural problems. They do not cover every interactive state." },
+      { title: "Automated score", text: "The Lighthouse Accessibility score is a signal from one tool. The Argos Accessibility domain combines weighted checks. Neither score validates real user journeys or compliance across an entire site." },
+    ],
+    example: {
+      title: "Example: an informative image without an alternative",
+      conditions: "Fictional HTML from an atelier.example product page. The fragment is displayed as text, without reproducing an inaccessible image on this page.",
+      before: '<img src="/demo/atelier/sac.svg" width="320" height="240">',
+      after: '<img src="/demo/atelier/sac.svg" width="320" height="240"\n     alt="Blue canvas bag with two handles">',
+      interpretation: "The html.images.alt_coverage check identifies a missing alt attribute. The corrected text depends on the image’s role within the page.",
+      correction: "Describe the useful information conveyed by an informative image. For a purely decorative image, use an empty alternative after checking its role; do not automatically apply the same recipe to every image.",
+      verify: "Read the page with a screen reader and test keyboard actions, focus, error messages and magnified display. Check that alternatives make sense alongside the surrounding content.",
+    },
+    limits: "Automation detects only some problems. A high score does not demonstrate the absence of barriers, the inapplicability of a criterion or RGAA/WCAG compliance. The dedicated resource explains the French and European context separately.",
+    links: [
+      { href: "/ressources/accessibilite-numerique", label: "Understand digital accessibility and the regulatory context" },
+      { href: "/guides/checklist-audit-site-web#accessibilite", label: "Checklist: try a keyboard journey" },
+      { href: "/methodologie-score#resume", label: "Read the score and coverage" },
+      { href: "/exemple-rapport", label: "See this finding in the fictional report" },
+    ],
+    sources: [
+      { href: "https://www.w3.org/WAI/test-evaluate/tools/", label: "W3C WAI: limits of evaluation tools" },
+      { href: "https://www.w3.org/WAI/tutorials/images/", label: "W3C WAI: alternatives for different image roles" },
+      { href: "https://www.w3.org/WAI/WCAG22/quickref/", label: "W3C: WCAG 2.2 criteria" },
+    ],
+  },
+} satisfies Record<string, TopicAuditContent>;

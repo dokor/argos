@@ -25,12 +25,13 @@ describe("server-rendered language routes", () => {
     expect(localizedPath("/faq?source=nav#privacy", "en")).toBe("/en/faq?source=nav#privacy");
     expect(localizedPath("/en/faq#limits", "fr")).toBe("/faq#limits");
     expect(localizedPath("/ressources/accessibilite-numerique", "en")).toBe("/en/resources/digital-accessibility");
-    expect(localizedPath("/test-vitesse-site-web", "en")).toBe("/test-vitesse-site-web");
+    expect(localizedPath("/test-vitesse-site-web", "en")).toBe("/en/website-speed-test");
+    expect(localizedPath("/unpublished-page", "en")).toBe("/unpublished-page");
     expect(localizedPath("/report/token", "en")).toBe("/en/report/token");
   });
 
   it("does not advertise an English version of an untranslated page", () => {
-    expect(localizedMetadata("/test-vitesse-site-web", "fr", "Titre", "Description").alternates?.languages).toEqual({ fr: siteUrl + "/test-vitesse-site-web", "x-default": siteUrl + "/test-vitesse-site-web" });
+    expect(localizedMetadata("/unpublished-page", "fr", "Titre", "Description").alternates?.languages).toEqual({ fr: siteUrl + "/unpublished-page", "x-default": siteUrl + "/unpublished-page" });
   });
 
   it("advertises reciprocal languages and self canonicals for every translated page", () => {

@@ -38,6 +38,10 @@ const copy = {
     guidesTitle: "Understand the measurements",
     audiencesTitle: "Choose your context",
     guides: [
+      { href: "/test-accessibilite-site-web", title: "Automated accessibility test", description: "Identify detectable problems and prepare human checks." },
+      { href: "/verifier-entetes-securite", title: "Check security headers", description: "Read CSP, HSTS and HTTP protections without confusing them with a penetration test." },
+      { href: "/analyse-seo-page", title: "Page SEO analysis", description: "Check HTML signals and prepare corrections for a URL." },
+      { href: "/test-vitesse-site-web", title: "Page speed test", description: "Read laboratory measurements and run an audit of your URL." },
       { href: "/exemple-rapport", title: "Public example report", description: "A controlled demo product page, three pieces of HTML evidence and before/after corrections." },
       { href: "/guides/checklist-audit-site-web", title: "Website audit checklist", description: "Six manual checks, expected results, and the limits of automated analysis." },
       { href: "/methodologie-score", title: "Argos scoring method", description: "Four domains, weighted checks, a worked example and partial results." },
@@ -74,9 +78,9 @@ export default function ResourcesPage() {
         <div className={s.container}>
           <section className={s.starter} aria-labelledby="start-title">
             <h2 id="start-title">{fr ? "Commencer ici" : "Start here"}</h2>
-            <ol><li><Link href="/exemple-rapport">{fr ? "1. Lire un exemple de rapport" : "1. Read an example report"}</Link></li>
-              <li><Link href="/guides/checklist-audit-site-web">{fr ? "2. Choisir les vérifications de la checklist" : "2. Choose checks from the checklist"}</Link></li>
-              <li><Link href="/#audit">{fr ? "3. Analyser votre page gratuitement" : "3. Analyse your page for free"}</Link></li></ol>
+            <ol><li><Link href="/exemple-rapport">{fr ? "Lire un exemple de rapport" : "Read an example report"}</Link></li>
+              <li><Link href="/guides/checklist-audit-site-web">{fr ? "Choisir les vérifications de la checklist" : "Choose checks from the checklist"}</Link></li>
+              <li><Link href="/#audit">{fr ? "Analyser votre page gratuitement" : "Analyse your page for free"}</Link></li></ol>
           </section>
           <section className={s.section} aria-labelledby="guides-title">
             <h2 id="guides-title">{c.guidesTitle}</h2>
