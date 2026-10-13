@@ -5,6 +5,7 @@ Implémentation du lot [#554](https://github.com/dokor/argos/issues/554), exigen
 ## Écran et parcours livrés
 
 - `/account/settings` et `/en/account/settings`, avec `section=profile|security|connections`. Les liens natifs permettent le retour navigateur, le rechargement et le changement de langue dans la même rubrique. `/account` redirige vers les réglages ; aucun second écran personnel n’est maintenu.
+- Le retour vers un rapport après vérification email est conservé par une allowlist pure commune au BFF, aux redirections serveur et aux formulaires.
 - Profil : nom d’affichage, email en lecture seule, statut vérifié ou demande de vérification. Le résumé latéral et le cadre connecté reçoivent le nom enregistré sans démonter le formulaire ni perdre son message de succès.
 - Sécurité : création/changement du mot de passe, retrait protégé, sessions créées et révocation des autres sessions. Les dates sont locales ; aucun appareil ou horodatage de dernière activité n’est inventé. La déconnexion courante reste directement accessible dans le résumé.
 - Connexions : associations réellement retournées par le serveur et fournisseurs configurés. Un fournisseur associé devenu indisponible reste visible comme tel ; il ne compte pas comme accès alternatif utilisable. Le retrait du dernier accès est désactivé, et le backend conserve la décision atomique faisant autorité.

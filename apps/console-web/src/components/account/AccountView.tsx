@@ -8,6 +8,7 @@ import SiteFooter from "@/components/site/SiteFooter";
 import { useLang } from "@/lib/i18n/LangContext";
 import { localizedPath } from "@/lib/i18n/routes";
 import { accountFetch, AccountClientError } from "@/lib/account-client";
+import { safeAccountReturn } from "@/lib/account-return";
 import { oauthCallbackError } from "@/lib/oauth-callback-error";
 import s from "./AccountView.module.scss";
 type Mode = "sign-in" | "register" | "verify" | "forgot" | "reset";
@@ -23,7 +24,7 @@ export default function AccountView({mode="sign-in"}:{mode?:Mode}) {
     // Read fragment tokens after hydration, then remove them before further navigation.
     const initialize = () => {
     const raw = new URLSearchParams(window.location.search).get("returnTo");
-    const safe = raw && /^\/(?:en\/)?(?:account(?:\/(?:settings(?:\?section=(?:profile|security|connections))?|sites(?:\/[1-9]\d{0,18})?|runs\/[1-9]\d{0,18}))?|report\/[A-Za-z0-9_-]{20,512})$/.test(raw) ? raw : localizedPath("/account/sites", lang);
+    const safe = raw && safeAccountReturn(raw) === raw ? raw : localizedPath("/account/sites", lang);
     if (raw) setReturnTo(safe);
     else void accountFetch<{ returnTo: string }>("return").then(value => setReturnTo(value.returnTo === "/account/sites" ? localizedPath("/account/sites", lang) : value.returnTo)).catch(() => setReturnTo(safe));
     const value = new URLSearchParams(window.location.hash.slice(1)).get("token");

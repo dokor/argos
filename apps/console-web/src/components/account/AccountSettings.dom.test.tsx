@@ -71,3 +71,12 @@ it("keeps changes unsaved when profile update fails and reports an error",async(
  render(<AccountSettings/>);fireEvent.change(await screen.findByLabelText("Nom d’affichage"),{target:{value:"Camille edited"}});fireEvent.submit(screen.getByRole("button",{name:"Enregistrer"}).closest("form")!);
  expect(await screen.findByRole("alert")).toHaveTextContent("indisponible");expect(screen.getByLabelText("Nom d’affichage")).toHaveValue("Camille edited");expect(screen.queryByRole("status")).not.toBeInTheDocument();
 });
+
+it("preserves the report destination while confirming an unverified email",async()=>{
+  const report="/report/"+"r".repeat(43);state.section="profile&returnTo="+encodeURIComponent(report);
+  const base=vi.mocked(accountFetch).getMockImplementation()!;vi.mocked(accountFetch).mockImplementation(async(...args)=>args[0]==="me" ? {displayName:"Camille",email:null,verified:false}:base(...args));
+  render(<AccountSettings/>);
+  fireEvent.change(await screen.findByLabelText("Adresse email",{selector:"input[type=email]"}),{target:{value:"fixture@example.com"}});
+  fireEvent.submit(screen.getByRole("button",{name:"Renvoyer l’email de vérification"}).closest("form")!);
+  await waitFor(()=>expect(accountFetch).toHaveBeenCalledWith("auth/confirm-email","POST",{email:"fixture@example.com",returnTo:report}));
+});

@@ -5,6 +5,7 @@ import Link from "@/components/LocalizedLink";
 import { useLang } from "@/lib/i18n/LangContext";
 import { localizedPath } from "@/lib/i18n/routes";
 import { accountFetch, AccountClientError, type AccountProfile } from "@/lib/account-client";
+import { safeAccountReturn } from "@/lib/account-return";
 import { oauthCallbackError } from "@/lib/oauth-callback-error";
 import { PageHeading, EmptyState, StatusBadge } from "@/components/connected/Primitives";
 import { useAccountSession } from "./AccountSession";
@@ -16,12 +17,13 @@ import c from "@/components/connected/Connected.module.scss";
 
 type Method = { id: string; provider: string };
 type Session = { id: string; createdAt: string; current: boolean };
-type Data = { profile: AccountProfile; methods: Method[]; sessions: Session[]; providers: string[] };
+type Data = { profile: AccountProfile; methods: Method[]; sessions: Session[]; providers: string[]; returnTo: string };
 type Action = { title: string; description: string; run: () => Promise<void>; archive?: boolean };
 export default function AccountSettings() {
   const {t,lang}=useLang(), a=t.account, copy=t.accountSettings;
   const router=useRouter(), params=useSearchParams(), shared=useAccountSession();
   const {invalidate}=shared;
+  const requestedReturn=params.get("returnTo");
   const section=params.get("section")==="security" ? "security" : params.get("section")==="connections" ? "connections" : "profile";
   const [data,setData]=useState<Data|null>(null),[failure,setFailure]=useState(""),[revision,setRevision]=useState(0);
   const [name,setName]=useState(""),[email,setEmail]=useState(""),[password,setPassword]=useState("");
@@ -40,11 +42,16 @@ export default function AccountSettings() {
           profile.verified ? accountFetch<Method[]>("methods","GET",undefined,controller.signal) : [],
           profile.verified ? accountFetch<Session[]>("sessions","GET",undefined,controller.signal) : [],
         ]);
-        if(active){setData({profile,methods,sessions,providers:catalog.providers});setName(profile.displayName);setEmail(profile.email??"");setFailure("");}
+        let returnTo=localizedPath("/account/settings",lang);
+        if(!profile.verified) {
+          if(requestedReturn&&safeAccountReturn(requestedReturn)===requestedReturn) returnTo=requestedReturn;
+          else {try {const saved=await accountFetch<{returnTo:string}>("return","GET",undefined,controller.signal);const destination=safeAccountReturn(saved.returnTo);returnTo=destination==="/account/sites" ? localizedPath(destination,lang):destination;}catch {/* Verification can still return to settings if the browser return context is unavailable. */}}
+        }
+        if(active){setData({profile,methods,sessions,providers:catalog.providers,returnTo});setName(profile.displayName);setEmail(profile.email??"");setFailure("");}
       } catch(reason) {if(active){setData(null);setFailure(reason instanceof AccountClientError ? reason.code : "account_unavailable");invalidate(reason);}}
     }
     void load();return ()=>{active=false;controller.abort();};
-  },[revision,invalidate]);
+  },[revision,invalidate,requestedReturn,lang]);
   const explain=(reason:unknown)=>a.errors[(reason instanceof AccountClientError ? reason.code : "account_unavailable") as keyof typeof a.errors]??a.errors.account_unavailable;
   const refresh=()=>setRevision(v=>v+1);
   async function act(work:()=>Promise<void>) {
@@ -75,7 +82,7 @@ export default function AccountSettings() {
             <p id="email-description" className={s.hint}>{a.readonly}</p><div><StatusBadge tone={data.profile.verified ? "success":"warning"}>{data.profile.verified ? copy.verified:copy.pending}</StatusBadge></div>
             {data.profile.verified&&<div><button className={c.primary} disabled={busy||!name.trim()}>{busy ? a.working:a.save}</button></div>}
           </form>
-          {!data.profile.verified&&<form className={s.form} onSubmit={e=>{e.preventDefault();void act(async()=>{await accountFetch("auth/confirm-email","POST",{email,returnTo:localizedPath("/account/settings",lang)});if(alive.current){setMessage(a.sent);refresh();}});}}><p>{a.pending}</p>{!data.profile.email&&<><label htmlFor="verify-email">{a.email}</label><input id="verify-email" type="email" autoComplete="email" required value={email} maxLength={254} onChange={e=>setEmail(e.target.value)}/></>}<div><button className={c.secondary} disabled={busy}>{a.resend}</button></div></form>}
+          {!data.profile.verified&&<form className={s.form} onSubmit={e=>{e.preventDefault();void act(async()=>{await accountFetch("auth/confirm-email","POST",{email,returnTo:data.returnTo});if(alive.current){setMessage(a.sent);refresh();}});}}><p>{a.pending}</p>{!data.profile.email&&<><label htmlFor="verify-email">{a.email}</label><input id="verify-email" type="email" autoComplete="email" required value={email} maxLength={254} onChange={e=>setEmail(e.target.value)}/></>}<div><button className={c.secondary} disabled={busy}>{a.resend}</button></div></form>}
         </section>}
         {section==="security"&&<>
           {data.profile.verified ? <><section className={s.panel}><h2>{a.password}</h2><p className={s.hint}>{data.methods.some(m=>m.provider==="password") ? copy.passwordChange:copy.passwordAbsent}</p>

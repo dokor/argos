@@ -1,3 +1,5 @@
+import { safeAccountReturn } from "./account-return";
+export { safeAccountReturn } from "./account-return";
 import { ssrfError } from "./audit-url-validation";
 import { boundedJson } from "./bounded-request";
 import { adminPath, adminQuery, adminEntitlement } from "./admin-request";
@@ -30,9 +32,6 @@ function oauthFailure(request: NextRequest, state: string | null, error: OAuthCa
     response.cookies.set("argos_return_" + state, "", accountCookieOptions(0));
   }
   return response;
-}
-export function safeAccountReturn(raw: unknown): string {
-  return typeof raw === "string" && raw.length <= 600 && /^\/(?:en\/)?(?:account(?:\/(?:settings(?:\?section=(?:profile|security|connections))?|analyses\/new|sites(?:\/[1-9]\d{0,18})?|runs\/[1-9]\d{0,18}|urls\/[1-9]\d{0,18}\/history))?|report\/[A-Za-z0-9_-]{20,512})$/.test(raw) ? raw : "/account/sites";
 }
 export function validCsrf(request: NextRequest): boolean {
   const cookie = request.cookies.get(CSRF_COOKIE)?.value ?? "", header = request.headers.get("x-argos-csrf") ?? "";
