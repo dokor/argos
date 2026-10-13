@@ -12,6 +12,8 @@ import type { AnalysisProfiles as Profiles, SiteAnalysisAccepted } from "@/lib/c
 export default function AnalysisForm({ initialUrl="", launchBlocked=false }: {initialUrl?:string;launchBlocked?:boolean}) {
   const {t,lang}=useLang(),c=analysisCopy[lang],session=useAccountSession(),router=useRouter();
   const [url,setUrl]=useState(initialUrl),[profiles,setProfiles]=useState<Profiles|null>(null),[error,setError]=useState(""),[busy,setBusy]=useState(false),[revision,setRevision]=useState(0),[uncertain,setUncertain]=useState(false);
+  const mounted=useRef(false);
+  useEffect(()=>{mounted.current=true;return ()=>{mounted.current=false;};},[]);
   const submitting=useRef(false),request=useRef<{url:string;profileId:string;key:string}|null>(null),input=useRef<HTMLInputElement>(null);
   const allowed=session.profile?.verified && !session.denied, invalidate=session.invalidate;
   useEffect(()=>{
@@ -30,10 +32,10 @@ export default function AnalysisForm({ initialUrl="", launchBlocked=false }: {in
       const run=await accountFetch<SiteAnalysisAccepted>("analyses","POST",{url:value,profileId},undefined,request.current.key);
       if(!/^[1-9]\d{0,18}$/.test(run.runId)) throw new Error("Invalid admission response");
       window.dispatchEvent(new Event("argos-usage-refresh"));
-      router.push(localizedPath("/account/runs/"+run.runId,lang));
+      if(mounted.current) router.push(localizedPath("/account/runs/"+run.runId,lang));
       // Keep the guard until navigation unmounts this form.
     } catch(reason) {
-      invalidate(reason);const code=reason instanceof AccountClientError ? reason.code : "account_unavailable";
+      invalidate(reason);if(!mounted.current) return;const code=reason instanceof AccountClientError ? reason.code : "account_unavailable";
       if(code==="unsupported_profile") setProfiles(null);
       setError(code);setUncertain(!(reason instanceof AccountClientError) || reason.status>=500);
       if(reason instanceof AccountClientError && reason.status<500) {request.current=null;window.dispatchEvent(new Event("argos-usage-refresh"));}
