@@ -4329,9 +4329,16 @@
             "maxLength": 64
           },
           "details": {
-            "allOf": [
+            "anyOf": [
               {
                 "$ref": "#/components/schemas/ErrorDetails"
+              },
+              {
+                "type": "object",
+                "nullable": true,
+                "enum": [
+                  null
+                ]
               }
             ],
             "nullable": true
@@ -5124,9 +5131,16 @@
             "format": "date-time"
           },
           "batchStatus": {
-            "allOf": [
+            "anyOf": [
               {
                 "$ref": "#/components/schemas/BatchStatus"
+              },
+              {
+                "type": "object",
+                "nullable": true,
+                "enum": [
+                  null
+                ]
               }
             ],
             "nullable": true
@@ -5323,25 +5337,46 @@
             "maxLength": 2048
           },
           "latestAttempt": {
-            "allOf": [
+            "anyOf": [
               {
                 "$ref": "#/components/schemas/Attempt"
+              },
+              {
+                "type": "object",
+                "nullable": true,
+                "enum": [
+                  null
+                ]
               }
             ],
             "nullable": true
           },
           "latestAvailableReport": {
-            "allOf": [
+            "anyOf": [
               {
                 "$ref": "#/components/schemas/AvailableReport"
+              },
+              {
+                "type": "object",
+                "nullable": true,
+                "enum": [
+                  null
+                ]
               }
             ],
             "nullable": true
           },
           "result": {
-            "allOf": [
+            "anyOf": [
               {
                 "$ref": "#/components/schemas/PageResult"
+              },
+              {
+                "type": "object",
+                "nullable": true,
+                "enum": [
+                  null
+                ]
               }
             ],
             "nullable": true

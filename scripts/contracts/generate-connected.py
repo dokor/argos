@@ -13,7 +13,13 @@ SOURCE = ROOT / 'apps/api-backend/src/main/resources/contracts/connected-space.o
 SCHEMAS = json.loads(SOURCE.read_text(encoding='utf-8'))['components']['schemas']
 
 def reference(schema):
-    value = schema.get('$ref') or (schema.get('allOf') or [{}])[0].get('$ref')
+    # OpenAPI 3.0 allOf + nullable cannot make a non-nullable referenced schema
+    # accept null. Use an explicit anyOf reference / null-only branch instead.
+    union = schema.get('anyOf')
+    if union and (not schema.get('nullable') or len(union) != 2 or
+                  union[1] != {'type': 'object', 'nullable': True, 'enum': [None]}):
+        raise ValueError('Only an explicit nullable reference union is supported')
+    value = schema.get('$ref') or (union or [{}])[0].get('$ref')
     return value.rsplit('/', 1)[-1] if value else None
 
 def java_type(schema):
