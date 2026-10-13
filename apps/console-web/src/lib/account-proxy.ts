@@ -3,6 +3,7 @@ import { boundedJson } from "./bounded-request";
 import { adminPath, adminQuery, adminEntitlement } from "./admin-request";
 import { feedbackTreatment } from "./feedback-request";
 import { validIntroduction } from "./report-introduction";
+import { oauthCallbackError, type OAuthCallbackError } from "./oauth-callback-error";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 export const SESSION_COOKIE = "argos_account";
@@ -16,6 +17,19 @@ const origin = () => (
 ).replace(/\/+$/, "");
 export function accountCookieOptions(maxAge: number) { return { httpOnly: true, secure: origin().startsWith("https:"), sameSite: "lax" as const, path: "/", maxAge }; }
 export function privateError(error: string, status: number) { return NextResponse.json({ error }, { status, headers: { "Cache-Control": "private, no-store" } }); }
+function oauthFailure(request: NextRequest, state: string | null, error: OAuthCallbackError) {
+  const returnCookie = state ? request.cookies.get("argos_return_" + state)?.value : undefined;
+  const destination = safeAccountReturn(returnCookie);
+  const prefix = destination.startsWith("/en/") ? "/en" : "";
+  const response = NextResponse.redirect(new URL(prefix + "/account/sign-in?error=" + error, origin()), 303);
+  response.headers.set("Cache-Control", "private, no-store");
+  if (returnCookie) response.cookies.set("argos_account_return", destination, accountCookieOptions(86400));
+  if (state) {
+    response.cookies.set("argos_oauth_" + state, "", accountCookieOptions(0));
+    response.cookies.set("argos_return_" + state, "", accountCookieOptions(0));
+  }
+  return response;
+}
 export function safeAccountReturn(raw: unknown): string {
   return typeof raw === "string" && raw.length <= 600 && /^\/(?:en\/)?(?:account(?:\/(?:sites(?:\/[1-9]\d{0,18})?|runs\/[1-9]\d{0,18}|urls\/[1-9]\d{0,18}\/history))?|report\/[A-Za-z0-9_-]{20,512})$/.test(raw) ? raw : "/account/sites";
 }
@@ -96,9 +110,9 @@ export async function accountProxy(request: NextRequest, parts: string[]): Promi
   let state: string | null = null;
   if (callback) {
     state = request.nextUrl.searchParams.get("state");
-    if (!state || !/^[A-Za-z0-9_-]{43}$/.test(state)) return NextResponse.redirect(new URL("/account/sign-in?error=oauth_invalid", origin()), 303);
+    if (!state || !/^[A-Za-z0-9_-]{43}$/.test(state)) return oauthFailure(request, null, "oauth_invalid");
     const browser = request.cookies.get("argos_oauth_" + state)?.value;
-    if (!browser) return NextResponse.redirect(new URL("/account/sign-in?error=oauth_invalid", origin()), 303);
+    if (!browser) return oauthFailure(request, state, "oauth_invalid");
     headers.set("X-Argos-OAuth-Browser", browser);
   }
   const claim = /^runs\/(\d{1,19})\/claim$/.exec(path);
@@ -129,9 +143,14 @@ export async function accountProxy(request: NextRequest, parts: string[]): Promi
     let response: NextResponse;
     if (callback) {
       const returnCookie = request.cookies.get("argos_return_" + state)?.value;
-      let target = upstream.ok ? safeAccountReturn(returnCookie) : "/account/sign-in?error=oauth_invalid";
+      let target = safeAccountReturn(returnCookie);
       if (upstream.ok && !returnCookie) { try { target = safeAccountReturn(JSON.parse(data).returnTo); } catch { target = "/account"; } }
-      response = NextResponse.redirect(new URL(target, origin()), 303);
+      if (upstream.ok) response = NextResponse.redirect(new URL(target, origin()), 303);
+      else {
+        let error: OAuthCallbackError = upstream.status >= 500 ? "account_unavailable" : "oauth_invalid";
+        try { error = oauthCallbackError(JSON.parse(data)?.error, error); } catch { /* Never expose upstream text. */ }
+        response = oauthFailure(request, state, error);
+      }
       if (upstream.ok) response.cookies.set("argos_account_return", safeAccountReturn(target), accountCookieOptions(86400));
       response.cookies.set("argos_oauth_" + state, "", accountCookieOptions(0));
       response.cookies.set("argos_return_" + state, "", accountCookieOptions(0));
@@ -150,5 +169,5 @@ export async function accountProxy(request: NextRequest, parts: string[]): Promi
       response.cookies.set("argos_return_" + start.state, returnTo, accountCookieOptions(600));
     }
     return response;
-  } catch { return callback ? NextResponse.redirect(new URL("/account/sign-in?error=oauth_invalid", origin()), 303) : privateError("account_unavailable", 503); }
+  } catch { return callback ? oauthFailure(request, state, "account_unavailable") : privateError("account_unavailable", 503); }
 }
