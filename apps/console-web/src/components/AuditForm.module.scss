@@ -37,6 +37,11 @@
   font-size: t.$text-lg;
   outline: none;
 
+  &::placeholder {
+    color: t.$text-subtle;
+    opacity: 1;
+  }
+
   &:focus-visible {
     border-color: t.$brand;
     outline: 3px solid t.$brand;
