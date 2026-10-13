@@ -24,7 +24,7 @@ export default function AccountShell({ children }: { children: ReactNode }) {
   const open = openPath === pathname;
   if (/^\/account\/(sign-in|register|verify|forgot|reset)$/.test(pathname)) return children;
   const isAccount = pathname === "/account";
-  const isSites = /^\/account\/(sites|runs|urls)(\/|$)/.test(pathname);
+  const isSites = /^\/account\/(analyses|sites|runs|urls)(\/|$)/.test(pathname);
   const valid = session.ready && !!session.profile && !session.denied;
   const admin = valid && session.profile?.verified && session.profile.admin;
   const context = pathname.startsWith("/account/admin") ? c.admin : isSites ? c.sites

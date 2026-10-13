@@ -1346,6 +1346,56 @@ class AccountLifecycleIT extends MariaDbReportFixture {
         var ids=new HashSet<String>();first.items().forEach(s->assertTrue(ids.add(s.siteId())));second.items().forEach(s->assertTrue(ids.add(s.siteId())));
     }
 
+    private com.dokor.argos.services.connected.ConnectedAnalysesService connectedAnalyses() {
+        return new com.dokor.argos.services.connected.ConnectedAnalysesService(dao,sessions,sites(),auditService,new UrlNormalizer(),
+            new com.dokor.argos.services.connected.ConnectedProfiles(new com.dokor.argos.services.analysis.scoring.DefaultScorePolicy()),mapper,tokens);
+    }
+    @Test void connectedAdmissionReplaysConcurrentlyAtQuotaAndScopesItsKeyByOwner() throws Exception {
+        usagePolicy("usage.offers.FREE.monthly-limit=1");
+        var a=user("connected-a@example.com",true); var b=user("connected-b@example.com",true);
+        var service=connectedAnalyses(); var key=UUID.randomUUID().toString();
+        var input=new com.dokor.argos.services.connected.contract.ConnectedContracts.SiteAnalysisInput("https://example.com/page","server-default-v1");
+        var start=new CountDownLatch(1);
+        try(var pool=Executors.newFixedThreadPool(2)) {
+            var first=pool.submit(()->{start.await();return service.create(bearer(a),CSRF,key,input);});
+            var second=pool.submit(()->{start.await();return service.create(bearer(a),CSRF,key,input);});
+            start.countDown();
+            var accepted=first.get(20,TimeUnit.SECONDS);assertEquals(accepted.runId(),second.get(20,TimeUnit.SECONDS).runId());
+            assertEquals(1,personal.usage(bearer(a)).reserved());
+            assertEquals(accepted.runId(),service.create(bearer(a),CSRF,key,input).runId());
+            var run=personal.get(bearer(a),Long.parseLong(accepted.runId()));
+            assertEquals("PENDING",run.get("reportAvailability"));
+            assertTrue(run.get("profileSnapshot").toString().contains("server-default-v1"));
+            error(404,()->personal.get(bearer(b),Long.parseLong(accepted.runId())));
+            assertNotEquals(accepted.runId(),service.create(bearer(b),CSRF,key,input).runId());
+            error(409,()->service.create(bearer(a),CSRF,key,new com.dokor.argos.services.connected.contract.ConnectedContracts.SiteAnalysisInput("https://example.com/other","server-default-v1")));
+            error(429,()->service.create(bearer(a),CSRF,UUID.randomUUID().toString(),input));
+            assertEquals(2,count("ARG_AUDIT_RUN WHERE idempotency_key IS NOT NULL"));
+            assertEquals(2,count("ARG_USAGE_RUN WHERE state='RESERVED'"));
+        }
+    }
+    @Test void connectedAdmissionRejectsUnverifiedPrivateUrlsAndUnsupportedProfilesWithoutReservation() throws Exception {
+        usagePolicy("usage.offers.FREE.monthly-limit=1");
+        var a=user("connected-valid@example.com",true);var pending=user("connected-pending@example.com",false);
+        var service=connectedAnalyses();var key=UUID.randomUUID().toString();
+        var input=new com.dokor.argos.services.connected.contract.ConnectedContracts.SiteAnalysisInput("https://example.com","server-default-v1");
+        error(401,()->service.create(null,CSRF,key,input));
+        error(403,()->service.create(bearer(pending),CSRF,key,input));
+        error(400,()->service.create(bearer(a),CSRF,key,new com.dokor.argos.services.connected.contract.ConnectedContracts.SiteAnalysisInput("http://127.0.0.1","server-default-v1")));
+        error(400,()->service.create(bearer(a),CSRF,key,new com.dokor.argos.services.connected.contract.ConnectedContracts.SiteAnalysisInput("https://example.com","mobile-v1")));
+        assertEquals(0,count("ARG_USAGE_RUN"));assertEquals(0,count("ARG_AUDIT_RUN WHERE idempotency_key IS NOT NULL"));
+    }
+    @Test void connectedSearchIsOwnerScopedBeforePaginationAndTreatsWildcardsLiterally() {
+        var a=user("search-a@example.com",true);var b=user("search-b@example.com",true);
+        var service=sites();var one=service.add(bearer(a),CSRF,null,"https://example.com/first");
+        service.add(bearer(a),CSRF,null,"https://example.com/needle");
+        service.add(bearer(b),CSRF,null,"https://example.com/other");
+        assertEquals(1,service.list(bearer(a),1,null,"EXAMPLE").items().size());
+        assertTrue(service.list(bearer(a),1,null,"%").items().isEmpty());
+        var found=service.urls(bearer(a),Long.parseLong(one.site().siteId()),1,null,"needle");
+        assertEquals(1,found.items().size());assertTrue(found.items().getFirst().normalizedUrl().endsWith("/needle"));assertNull(found.nextCursor());
+        error(404,()->service.urls(bearer(b),Long.parseLong(one.site().siteId()),1,null,"needle"));
+    }
     private void usagePolicy(String config) {
         var usage=new UsageService(dao.transactions,new UsagePolicy(ConfigFactory.parseString(config)),clock);
         var runDao=new AuditRunDao(dao.transactions,usage);

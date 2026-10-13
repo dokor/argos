@@ -3,7 +3,7 @@
   "info": {
     "title": "Argos connected space — Clarté",
     "version": "1.0.0",
-    "description": "Target contract. Only operations marked available are implemented by F01. Existing auth/sites/usage routes keep their current contracts until their own implementation lots. The BFF uses HttpOnly cookies and forwards a server-side Bearer session to Java; no public API keys."
+    "description": "Target contract. Only operations marked available are implemented by F01/F03. Existing auth/sites/usage routes keep their current contracts until their own implementation lots. The BFF uses HttpOnly cookies and forwards a server-side Bearer session to Java; no public API keys."
   },
   "servers": [
     {
@@ -4149,6 +4149,202 @@
           }
         ]
       }
+    },
+    "/account/analyses": {
+      "post": {
+        "operationId": "createSiteAnalysis",
+        "x-implementation": "available",
+        "description": "F03: verified account, Origin and CSRF required. One credit reserved atomically with queue admission and personal URL. Same owner/key/payload replays the exact run even at zero remaining quota; a different payload returns 409 idempotency_conflict. No public report token. Requested profile snapshot is not an assertion about collector versions. Errors use the existing lowercase legacy envelope.",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Private result; explicit null values are significant.",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "private, no-store"
+                  ]
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteAnalysisAccepted"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "accountCookie": []
+          }
+        ],
+        "x-java-security": [
+          {
+            "bearerSession": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SiteAnalysisInput"
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -6083,6 +6279,53 @@
           "snapshotAt": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "SiteAnalysisInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "url",
+          "profileId"
+        ],
+        "properties": {
+          "url": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "profileId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          }
+        }
+      },
+      "AdmittedRunStatus": {
+        "type": "string",
+        "enum": [
+          "QUEUED",
+          "RUNNING",
+          "COMPLETED",
+          "FAILED"
+        ]
+      },
+      "SiteAnalysisAccepted": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "runId",
+          "status"
+        ],
+        "properties": {
+          "runId": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]{0,18}$",
+            "format": "argos-id"
+          },
+          "status": {
+            "$ref": "#/components/schemas/AdmittedRunStatus"
           }
         }
       }

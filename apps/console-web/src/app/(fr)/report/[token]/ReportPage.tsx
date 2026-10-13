@@ -55,16 +55,16 @@ export default function ReportPage({ params, feedbackReference, embedded = false
   const copy = reportReadingCopy[lang];
 
   return (
-    <FeedbackReportContext.Provider value={reference}><div className={s.page} id="top">
+    <FeedbackReportContext.Provider value={reference}><div className={`${s.page} ${embedded ? s.embedded : ""}`} id="top">
       {!embedded && <ReportHeader />}
-      <ReportHero report={report} model={model} introduction={note} onSelectFinding={selectFinding} onActions={() => reading.navigate({ view: "actions", anchor: "" })} onMethod={showMethod} />
+      <ReportHero personal={embedded} report={report} model={model} introduction={note} onSelectFinding={selectFinding} onActions={() => reading.navigate({ view: "actions", anchor: "" })} onMethod={showMethod} />
 
       <main className={s.main}>
         <ReportNavigation view={reading.view} onChange={view => reading.navigate({ view, anchor: "" })} />
         {reading.missing && <p role="status">{copy.missing}</p>}
         {reading.view === "overview" && <section className={s.view} id="report-overview" aria-label={copy.overview}>
           <PriorityCards priorities={report.summary.priorities} model={model} onSelectFinding={selectFinding} limit={3} />
-          <ReportFooterCta contained />
+          {!embedded && <ReportFooterCta contained />}
           <ScoreGrid categories={report.scores.byCategory} model={model} coverage={report.scores.coverage}
             onSelectDomain={domain => reading.navigate({ view: "technical", domain, severity: "all", anchor: "" })} />
         </section>}
@@ -75,7 +75,7 @@ export default function ReportPage({ params, feedbackReference, embedded = false
           <IssuesByCategory report={report} model={model} selection={selection} domain={reading.domain} severity={reading.severity}
             onFilterChange={(domain, severity) => reading.navigate({ domain, severity, anchor: "" })} />
         </section>}
-        {reading.view !== "overview" && <ReportFooterCta contained />}
+        {reading.view !== "overview" && !embedded && <ReportFooterCta contained />}
         {(report.accessibilityEvidence || report.accessibilityCompliance) && (reading.view === "technical" ? <AccessibilitySection report={report} /> : <section>
           <h2>{interpretationCopy[lang].accessibility}</h2>
           <p>{t.report.accessibility.limit}</p>

@@ -13,8 +13,8 @@ import ShareReportButton from "./ShareReportButton";
 import s from "./ReportHero.module.scss";
 import { scoreLimit, interpretationCopy } from "./reportInterpretation";
 
-export default function ReportHero({ report, model = buildReportModel(report), onActions, onMethod, introduction = report.introduction, onSelectFinding }: {
-  report: Report; model?: ReportModel; onActions?: () => void; onMethod?: () => void; introduction?: ReportIntroduction | null; onSelectFinding?: (key: string) => void;
+export default function ReportHero({ report, model = buildReportModel(report), onActions, onMethod, introduction = report.introduction, onSelectFinding, personal = false }: {
+  personal?: boolean; report: Report; model?: ReportModel; onActions?: () => void; onMethod?: () => void; introduction?: ReportIntroduction | null; onSelectFinding?: (key: string) => void;
 }) {
   const { t, lang } = useLang();
   const copy = decisionCopy[lang];
@@ -49,10 +49,10 @@ export default function ReportHero({ report, model = buildReportModel(report), o
             <a href="?view=actions" onClick={event => { if (onActions) { event.preventDefault(); onActions(); } }}>{copy.actions}</a>
             <a href="#report-method" onClick={event => { if (onMethod) { event.preventDefault(); onMethod(); } }}>{copy.methodLink}</a>
           </div>
-          <div className={s.actions}>
+          {!personal && <div className={s.actions}>
             <RelaunchButton url={report.url} />
             <ShareReportButton />
-          </div>
+          </div>}
         </div>
         <div className={s.scoreBlock}>
           <h2 className={s.scoreTitle}>{reading.score}</h2>
