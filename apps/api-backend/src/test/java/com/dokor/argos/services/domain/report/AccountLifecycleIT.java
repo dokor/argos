@@ -1370,7 +1370,7 @@ class AccountLifecycleIT extends MariaDbReportFixture {
             assertNotEquals(accepted.runId(),service.create(bearer(b),CSRF,key,input).runId());
             error(409,()->service.create(bearer(a),CSRF,key,new com.dokor.argos.services.connected.contract.ConnectedContracts.SiteAnalysisInput("https://example.com/other","server-default-v1")));
             var denied=assertThrows(jakarta.ws.rs.WebApplicationException.class,()->service.create(bearer(a),CSRF,UUID.randomUUID().toString(),input));
-            assertEquals(429,denied.getResponse().getStatus());assertEquals(Map.of("error","quota_exceeded"),denied.getResponse().getEntity());
+            assertEquals(429,denied.getResponse().getStatus());assertEquals(Map.of("error","quota_exceeded","resetsAt",personal.usage(bearer(a)).resetsAt()),denied.getResponse().getEntity());
             assertEquals(2,count("ARG_AUDIT_RUN WHERE idempotency_key IS NOT NULL"));
             assertEquals(2,count("ARG_USAGE_RUN WHERE state='RESERVED'"));
         }
