@@ -4,9 +4,7 @@ import { useLang } from "@/lib/i18n/LangContext";
 import { localizedPath } from "@/lib/i18n/routes";
 import { accountFetch, AccountClientError } from "@/lib/account-client";
 import Link from "@/components/LocalizedLink";
-import SiteNav from "@/components/site/SiteNav";
-import SiteFooter from "@/components/site/SiteFooter";
-import { useAccountSession, PersonalNavigation } from "./AccountSession";
+import { useAccountSession } from "./AccountSession";
 import HistoryActions from "./HistoryActions";
 import { historyCopy } from "./historyCopy";
 import { comparableDelta, type HistoryPage, type HistoryItem } from "./history";
@@ -42,7 +40,7 @@ export default function HistoryView({ urlId }: { urlId: string }) {
   },[allowed,urlId,cursor,key,invalidate]);
   const data=allowed && page?.key===key ? page.data : null;
   const date=(raw:string)=>new Date(raw).toLocaleString(lang);
-  return <><div className={s.chrome}><SiteNav/></div><PersonalNavigation/><main className={s.page}>
+  return <><main className={s.page}>
     <Link href={data ? "/account/sites/"+data.context.siteId : "/account/sites"}>{data ? copy.back : copy.sites}</Link>
     <h1>{copy.title}</h1>
     {!session.ready ? <p role="status">{copy.loading}</p> : !allowed ? <><p>{copy.private}</p><Link href={session.profile ? "/account" : "/account/sign-in?returnTo="+encodeURIComponent(localizedPath("/account/urls/"+urlId+"/history",lang))}>{session.profile ? t.account.verify : t.account.signIn}</Link></> : <>
@@ -65,5 +63,5 @@ export default function HistoryView({ urlId }: { urlId: string }) {
         <div className={s.actions}>{cursor && <button className={s.button} onClick={()=>setCursor(null)}>{copy.first}</button>}{data.nextCursor && <button className={s.button} onClick={()=>setCursor(data.nextCursor)}>{copy.next}</button>}</div>
       </>}
     </>}
-  </main><SiteFooter/></>;
+  </main></>;
 }

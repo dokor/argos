@@ -4,7 +4,9 @@ L’[epic #550](https://github.com/dokor/argos/issues/550) pilote la réalisatio
 Le registre [issues.json](issues.json) contient les numéros GitHub et les
 dépendances ; les [fiches de lots](issues/) portent les critères versionnés.
 L’epic GitHub lié dans ce registre est le suivi vivant des statuts. Ce dossier
-ne clôture aucune de ces fonctionnalités et n’a pas commencé leur développement.
+ne clôture aucune de ces fonctionnalités. Le développement a commencé par
+F01 ([PR #562](https://github.com/dokor/argos/pull/562)), puis le
+[cadre F02](shell-f02.md). Leur fusion et leur recette intégrée restent distinctes.
 
 ## Ordre d’intégration conseillé
 

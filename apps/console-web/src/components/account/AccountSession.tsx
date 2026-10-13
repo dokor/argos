@@ -1,9 +1,6 @@
 "use client";
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { accountFetch, AccountClientError, type AccountProfile } from "@/lib/account-client";
-import { useLang } from "@/lib/i18n/LangContext";
-import Link from "@/components/LocalizedLink";
-import s from "./AccountView.module.scss";
 
 export type MonthlyUsage={offer:string;period:string;timezone:string;startsAt:string;resetsAt:string;used:number;reserved:number;limit:number|null;canLaunch:boolean};
 const Context = createContext<{ profile: AccountProfile | null; ready: boolean; denied: boolean; error: string; invalidate: (reason: unknown) => void; usage:MonthlyUsage|null;usageError:boolean;refreshUsage:()=>void }>({profile:null,ready:false,denied:false,error:"",invalidate:()=>{},usage:null,usageError:false,refreshUsage:()=>{}});
@@ -48,12 +45,4 @@ export default function AccountSession({ children }: { children: React.ReactNode
     arm();return ()=>clearTimeout(timer);
   },[usage,refreshUsage]);
   return <Context.Provider value={{profile,ready,denied,error,invalidate,usage,usageError,refreshUsage}}>{children}</Context.Provider>;
-}
-export function PersonalNavigation() {
-  const {profile,denied}=useAccountSession(),{t}=useLang();
-  if(!profile || denied) return null;
-  return <nav className={s.personalNav} aria-label={t.account.sites.title}>
-    <Link href="/account/sites">{t.account.sites.title}</Link><Link href="/account">{t.account.title}</Link><Link href="/account/sites?analyse=1">{t.account.sites.analyse}</Link>
-    {profile.admin && <Link href="/account/admin">Administration</Link>}
-  </nav>;
 }

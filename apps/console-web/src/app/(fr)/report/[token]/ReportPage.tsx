@@ -26,9 +26,9 @@ import s from "./report.module.scss";
 import { interpretationCopy } from "@/components/report/reportInterpretation";
 import ReportIntroductionEditor from "@/components/report/ReportIntroductionEditor";
 
-type Params = { params: { report: Report }; feedbackReference?: FeedbackReference };
+type Params = { params: { report: Report }; feedbackReference?: FeedbackReference; embedded?: boolean };
 
-export default function ReportPage({ params, feedbackReference }: Readonly<Params>) {
+export default function ReportPage({ params, feedbackReference, embedded = false }: Readonly<Params>) {
   const { report } = params;
   const pathname = usePathname();
   const token = /^\/(?:en\/)?report\/([A-Za-z0-9_-]{20,512})$/.exec(pathname ?? "")?.[1];
@@ -56,7 +56,7 @@ export default function ReportPage({ params, feedbackReference }: Readonly<Param
 
   return (
     <FeedbackReportContext.Provider value={reference}><div className={s.page} id="top">
-      <ReportHeader />
+      {!embedded && <ReportHeader />}
       <ReportHero report={report} model={model} introduction={note} onSelectFinding={selectFinding} onActions={() => reading.navigate({ view: "actions", anchor: "" })} onMethod={showMethod} />
 
       <main className={s.main}>
