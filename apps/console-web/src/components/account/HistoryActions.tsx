@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "@/components/LocalizedLink";
-import AuditForm from "@/components/AuditForm";
+import AnalysisForm from "@/components/connected/AnalysisForm";
 import { useLang } from "@/lib/i18n/LangContext";
 import { historyCopy } from "./historyCopy";
 import type { HistoryContext } from "./history";
@@ -12,6 +12,6 @@ export default function HistoryActions({ context, launchBlocked = false }: { con
   return <aside className={s.card} aria-label={copy.title}>
     <div className={s.actions}><Link href="/account/sites">{copy.sites}</Link><Link href={"/account/urls/" + context.siteUrlId + "/history"}>{copy.title}</Link>
       <button className={s.button} onClick={() => setLaunch(v => !v)} aria-expanded={launch}>{copy.again}</button></div>
-    {launch && <AuditForm key={context.siteUrlId} mode="personal" initialUrl={context.normalizedUrl} submitLabel={copy.again} launchBlocked={launchBlocked}/>}
+    {launch && <AnalysisForm key={context.siteUrlId} initialUrl={context.normalizedUrl} launchBlocked={launchBlocked}/>}
   </aside>;
 }

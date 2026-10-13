@@ -8,8 +8,9 @@ async function csrfToken(): Promise<string> {
   csrf = (await response.json()).csrf;
   return csrf!;
 }
-export async function accountFetch<T>(path: string, method = "GET", body?: unknown, signal?: AbortSignal): Promise<T> {
+export async function accountFetch<T>(path: string, method = "GET", body?: unknown, signal?: AbortSignal, idempotencyKey?: string): Promise<T> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (idempotencyKey) headers["Idempotency-Key"] = idempotencyKey;
   if (method !== "GET") headers["X-Argos-CSRF"] = await csrfToken();
   const response = await fetch("/api/account/" + path, { method, headers, signal, ...(body !== undefined ? { body: JSON.stringify(body) } : {}), cache: "no-store" });
   const data = await response.json().catch(() => ({}));

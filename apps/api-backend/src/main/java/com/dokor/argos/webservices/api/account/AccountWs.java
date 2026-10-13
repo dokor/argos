@@ -67,14 +67,14 @@ public class AccountWs {
         return AccountAuthWs.ok(history.reportContext(auth(),token));
     }
     @GET @Path("/sites") @AccountAccess("verified")
-    public Response sites(@QueryParam("limit") @DefaultValue("20") int limit,@QueryParam("cursor") String cursor) {
-        return AccountAuthWs.ok(sites.list(auth(),limit,cursor));
+    public Response sites(@QueryParam("limit") @DefaultValue("20") int limit,@QueryParam("cursor") String cursor,@QueryParam("q") String query) {
+        return AccountAuthWs.ok(sites.list(auth(),limit,cursor,query));
     }
     @GET @Path("/sites/{id}") @AccountAccess("verified")
     public Response site(@PathParam("id") long id) { return AccountAuthWs.ok(sites.get(auth(),id)); }
     @GET @Path("/sites/{id}/urls") @AccountAccess("verified")
-    public Response urls(@PathParam("id") long id,@QueryParam("limit") @DefaultValue("20") int limit,@QueryParam("cursor") String cursor) {
-        return AccountAuthWs.ok(sites.urls(auth(),id,limit,cursor));
+    public Response urls(@PathParam("id") long id,@QueryParam("limit") @DefaultValue("20") int limit,@QueryParam("cursor") String cursor,@QueryParam("q") String query) {
+        return AccountAuthWs.ok(sites.urls(auth(),id,limit,cursor,query));
     }
     @POST @Path("/sites") @AccountAccess("verified")
     public Response addSite(SiteInput body) { return addUrl(null,body); }

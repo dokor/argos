@@ -371,3 +371,16 @@ export type AdminEvents = {
   readonly offset: number;
   readonly snapshotAt: string;
 };
+
+export type SiteAnalysisInput = {
+  readonly url: string;
+  readonly profileId: string;
+};
+
+export const ADMITTED_RUN_STATUS_VALUES = ["QUEUED", "RUNNING", "COMPLETED", "FAILED"] as const;
+export type AdmittedRunStatus = typeof ADMITTED_RUN_STATUS_VALUES[number];
+
+export type SiteAnalysisAccepted = {
+  readonly runId: string;
+  readonly status: AdmittedRunStatus;
+};

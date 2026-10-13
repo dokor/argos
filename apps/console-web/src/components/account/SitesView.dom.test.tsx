@@ -33,14 +33,13 @@ it.each(["fr","en"] as const)("links a failed latest attempt and an earlier avai
   expect(report).toHaveAttribute("href",(lang==="en" ? "/en" : "")+"/account/runs/10");
   expect(screen.getByRole("link",{name:lang==="fr" ? "Ouvrir la progression" : "Open progress"})).toHaveAttribute("href",(lang==="en" ? "/en" : "")+"/account/runs/20");
   expect(screen.queryByText("0/100")).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole("button",{name:lang==="fr" ? "Analyser" : "Analyse"}));
-  expect(screen.getByText("Analyse: https://example.com/path?q=1")).toBeInTheDocument();
+  expect(screen.getByRole("link",{name:lang==="fr" ? "Analyser" : "Analyse"})).toHaveAttribute("href",(lang==="en" ? "/en" : "")+"/account/analyses/new?url=https%3A%2F%2Fexample.com%2Fpath%3Fq%3D1");
 });
 it("reads the next server page and hides private content on revocation",async()=>{
   vi.mocked(accountFetch).mockResolvedValue({items:[site],nextCursor:"42"});
   const view=render(<SitesView/>);
   fireEvent.click(await screen.findByRole("button",{name:"Page suivante"}));
-  await waitFor(()=>expect(accountFetch).toHaveBeenCalledWith("sites?cursor=42"));
+  expect(push).toHaveBeenCalledWith("/account/sites?cursor=42");
   session.denied=true;view.rerender(<SitesView/>);
   expect(screen.queryByText("example.com")).not.toBeInTheDocument();
 });

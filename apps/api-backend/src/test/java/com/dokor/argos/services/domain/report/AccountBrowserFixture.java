@@ -175,6 +175,10 @@ public class AccountBrowserFixture extends MariaDbReportFixture {
                         .register(
                                 new com.dokor.argos.webservices.api.report.ReportsWs(
                                         fixture.reader, fixture.runs));
+        var connectedProfiles=new com.dokor.argos.services.connected.ConnectedProfiles(new com.dokor.argos.services.analysis.scoring.DefaultScorePolicy());
+        config.register(new ConnectedProfilesWs(sessions,connectedProfiles));
+        config.register(new ConnectedAnalysesWs(new com.dokor.argos.services.connected.ConnectedAnalysesService(dao,sessions,
+            new AccountSitesService(dao,sessions,new UrlNormalizer(),new DomainService(new DomainDao(dao.transactions)),auditDao,clock),audits,new UrlNormalizer(),connectedProfiles,fixture.mapper,fixture.tokens),new AccountCsrf(settings)));
         config.register(new AdminWs(new AdminService(dao,sessions,usage,new UsagePolicy(ConfigFactory.empty()),fixture.reader,fixture.mapper,clock),new AccountCsrf(settings)));
         var feedback=new com.dokor.argos.services.feedback.FeedbackService(dao,new FeedbackDao(dao),sessions,fixture.reports,fixture.reader,fixture.tokens,clock);
         config.register(new com.dokor.argos.webservices.api.feedback.FeedbackWs(feedback,new AccountCsrf(settings),new AccountRateLimiter(dao,fixture.tokens,clock,settings)));

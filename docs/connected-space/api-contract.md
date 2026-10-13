@@ -122,3 +122,7 @@ Les essais contractuels doivent figer null/absent, enums et arrondis. Une
 modification du contrat pendant réalisation met à jour dossier, fixtures,
 schéma et tests dans la même PR. Les fixtures sont illustratives : les IDs
 et clés de règles y sont dédiés, pas une preuve d’endpoints déjà livrés.
+
+## Implémentation F03
+
+Voir [admission URL, progression et recherche privée](site-diagnostic-f03.md#contrats-et-persistance) : `POST /account/analyses`, idempotence, V20, filtre `q` et disponibilité du rapport exact. Ces extensions réutilisent le registre de sessions et de crédits existant.

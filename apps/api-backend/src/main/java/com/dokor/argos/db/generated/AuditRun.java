@@ -10,6 +10,21 @@ import com.querydsl.sql.Column;
 @Generated("com.coreoz.plume.db.querydsl.generation.IdBeanSerializer")
 public class AuditRun extends com.coreoz.plume.db.querydsl.crud.CrudEntityQuerydsl {
 
+    @Column("idempotency_key")
+    private String idempotencyKey;
+    public String getIdempotencyKey() { return idempotencyKey; }
+    public void setIdempotencyKey(String value) { idempotencyKey = value; }
+
+    @Column("request_fingerprint")
+    private String requestFingerprint;
+    public String getRequestFingerprint() { return requestFingerprint; }
+    public void setRequestFingerprint(String value) { requestFingerprint = value; }
+
+    @Column("profile_snapshot")
+    private String profileSnapshot;
+    public String getProfileSnapshot() { return profileSnapshot; }
+    public void setProfileSnapshot(String value) { profileSnapshot = value; }
+
     @Column("audit_id")
     @JsonSerialize(using=com.fasterxml.jackson.databind.ser.std.ToStringSerializer.class)
     private Long auditId;

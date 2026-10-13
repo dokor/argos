@@ -1191,4 +1191,39 @@ public final class ConnectedContracts {
             throw new IllegalArgumentException("Unknown connected field");
         }
     }
+
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    public record SiteAnalysisInput(
+        @JsonProperty(value = "url", required = true) String url,
+        @JsonProperty(value = "profileId", required = true) String profileId
+    ) {
+        public SiteAnalysisInput {
+            required(url, "url");
+            check(url.codePointCount(0, url.length()) >= 1, "url");
+            check(url.codePointCount(0, url.length()) <= 2048, "url");
+            required(profileId, "profileId");
+            check(profileId.codePointCount(0, profileId.length()) >= 1, "profileId");
+            check(profileId.codePointCount(0, profileId.length()) <= 64, "profileId");
+        }
+        @JsonAnySetter public void rejectUnknown(String name, Object value) {
+            throw new IllegalArgumentException("Unknown connected field");
+        }
+    }
+    public enum AdmittedRunStatus { QUEUED, RUNNING, COMPLETED, FAILED }
+
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    public record SiteAnalysisAccepted(
+        @JsonProperty(value = "runId", required = true) String runId,
+        @JsonProperty(value = "status", required = true) AdmittedRunStatus status
+    ) {
+        public SiteAnalysisAccepted {
+            required(runId, "runId");
+            check(java.util.regex.Pattern.compile("^[1-9][0-9]{0,18}$").matcher(runId).find(), "runId");
+            check(Long.parseLong(runId) > 0, "runId");
+            required(status, "status");
+        }
+        @JsonAnySetter public void rejectUnknown(String name, Object value) {
+            throw new IllegalArgumentException("Unknown connected field");
+        }
+    }
 }
