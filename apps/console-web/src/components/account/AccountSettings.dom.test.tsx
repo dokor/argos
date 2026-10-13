@@ -77,6 +77,8 @@ it("preserves the report destination while confirming an unverified email",async
   const base=vi.mocked(accountFetch).getMockImplementation()!;vi.mocked(accountFetch).mockImplementation(async(...args)=>args[0]==="me" ? {displayName:"Camille",email:null,verified:false}:base(...args));
   render(<AccountSettings/>);
   fireEvent.change(await screen.findByLabelText("Adresse email",{selector:"input[type=email]"}),{target:{value:"fixture@example.com"}});
-  fireEvent.submit(screen.getByRole("button",{name:"Renvoyer l’email de vérification"}).closest("form")!);
+  expect(screen.getAllByLabelText("Adresse email")).toHaveLength(1);
+  expect(screen.queryByText("L’adresse de connexion est en lecture seule.")).not.toBeInTheDocument();
+  fireEvent.submit(screen.getByRole("button",{name:"Envoyer l’email de vérification"}).closest("form")!);
   await waitFor(()=>expect(accountFetch).toHaveBeenCalledWith("auth/confirm-email","POST",{email:"fixture@example.com",returnTo:report}));
 });
