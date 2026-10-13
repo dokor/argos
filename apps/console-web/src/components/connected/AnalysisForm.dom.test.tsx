@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, expect, it, vi } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import AnalysisForm from "./AnalysisForm";
 import { accountFetch, AccountClientError } from "@/lib/account-client";
 const {push,session}=vi.hoisted(()=>({push:vi.fn(),session:{profile:{verified:true},denied:false,invalidate:vi.fn(),refreshUsage:vi.fn(),usage:{canLaunch:true}}}));
@@ -50,7 +50,7 @@ it("does not redirect back after the user leaves while admission is pending",asy
   const view=render(<AnalysisForm initialUrl="https://example.com"/>);
   await waitFor(()=>expect(screen.getByRole("button",{name:"Lancer l’analyse"})).toBeEnabled());
   fireEvent.click(screen.getByRole("button",{name:"Lancer l’analyse"}));
-  view.unmount();resolve({runId:"42"});
+  view.unmount();await act(async()=>{resolve({runId:"42"});});
   await waitFor(()=>expect(vi.mocked(accountFetch).mock.calls.filter(call=>call[0]==="analyses")).toHaveLength(1));
   expect(push).not.toHaveBeenCalled();
 });
