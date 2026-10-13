@@ -78,7 +78,12 @@ try {
       assert.ok(!report.issues.some(issue=>['html','runtime','lighthouse','tech'].includes(issue.module)),'Challenge page must not create site findings');
     }
     if(scenario==='timeout') assert.ok(report.scores.coverage.checks.some(check=>check.state==='UNAVAILABLE'));
-    const privateResponse=await page.request.get(`${base}/api/audits/runs/${creation.runId}`);assert.equal(privateResponse.status(),401);
+    const retiredResponse=await page.request.get(`${base}/api/audits/runs/${creation.runId}`);
+    assert.equal(retiredResponse.status(),410,'Legacy numeric reads must remain retired in the BFF');
+    assert.equal(retiredResponse.headers()['cache-control'],'private, no-store');
+    assert.deepEqual(await retiredResponse.json(),{error:'resource_unavailable'},'Retired reads must expose no run data');
+    const privateResponse=await page.request.get(`http://127.0.0.1:8081/api/audits/runs/${creation.runId}`);
+    assert.equal(privateResponse.status(),401,'Direct backend reads must still require a server credential');
     const guessed=await page.request.get(`${base}/api/reports/synthetic-unknown-report`);assert.equal(guessed.status(),404);
     evidence.push({scenario,states:[...states],terminal:'COMPLETED',coverage:report.scores.coverage.global.ratio,provisional:report.scores.coverage.provisional});
     await page.close();
