@@ -1,12 +1,8 @@
 # Argos - Technical Website Audit
 
-## What is Argos?
-
-Argos is a free technical audit tool for a public URL, with no account required,
-that provides a private report with scores and recommendations for performance,
-security, SEO and accessibility.
-
-## What Argos analyzes
+> Argos is a free technical audit tool for a public URL, with no account required,
+> that provides a private report with scores and recommendations for performance,
+> security, SEO and accessibility.
 
 Argos examines the submitted public page over HTTP or HTTPS. Automated checks
 cover four areas: performance, security, SEO and accessibility. They use HTTP
@@ -14,7 +10,7 @@ headers, HTML structure, TLS checks, browser metrics and Lighthouse results.
 Runtime (Playwright) supplies performance measurements; it is not a separate
 scoring category. Tech stack detection provides additional context.
 
-## Report and privacy
+Reports include:
 
 - An overall score and scores for performance, security, SEO and accessibility.
 - Prioritized issues with recommendations and effort estimates.
@@ -24,37 +20,23 @@ scoring category. Tech stack detection provides additional context.
 The audit covers the submitted page, not every page of the website. Automated
 checks provide an initial technical diagnosis and do not replace a manual audit.
 
+Built by Antoine LE LOUËT. Contact: a.lelouet.freelance@gmail.com.
+
 ## Public resources
 
-- Website: https://argos.lelouet.fr/
-- FAQ: https://argos.lelouet.fr/faq
-- Scoring methodology: https://argos.lelouet.fr/methodologie-score
-- Technical audit guide: https://argos.lelouet.fr/ressources/audit-technique-gratuit
-
-## Contact
-
-Built by Antoine LE LOUËT - a.lelouet.freelance@gmail.com
-Source code: https://github.com/dokor/argos (Business Source License 1.1)
+- [Argos website](https://argos.lelouet.fr/): Overview of the tool and form to start a public-page audit.
+- [FAQ](https://argos.lelouet.fr/faq): Answers about audit coverage, reports and privacy.
+- [Scoring methodology](https://argos.lelouet.fr/methodologie-score): How the overall and category scores are calculated.
+- [Technical audit guide](https://argos.lelouet.fr/ressources/audit-technique-gratuit): How to use Argos alongside PageSpeed Insights and Lighthouse and prioritize corrections.
 
 ## Digital accessibility guide: RGAA and EAA
 
-Public guide: https://argos.lelouet.fr/ressources/accessibilite-numerique
-
-The French canonical article explains the four WCAG principles, which organisations and
-consumer services may be covered by French Article 47/RGAA or the European Accessibility
-Act, the practical duties, and conditional penalties. It cites DINUM, EUR-Lex, Légifrance,
-DGCCRF and W3C. The article was reviewed on 6 October 2026 and is also readable in English
-using Argos's language switch. Argos can identify some technical accessibility signals,
-but its automated report is not a complete RGAA/WCAG audit, a compliance certificate, or
-legal advice.
+- [Digital accessibility guide](https://argos.lelouet.fr/ressources/accessibilite-numerique): The French canonical article explains the four WCAG principles, which organisations and consumer services may be covered by French Article 47/RGAA or the European Accessibility Act, the practical duties, and conditional penalties. It cites DINUM, EUR-Lex, Légifrance, DGCCRF and W3C. The article was reviewed on 6 October 2026 and is also readable in English using Argos's language switch. Argos can identify some technical accessibility signals, but its automated report is not a complete RGAA/WCAG audit, a compliance certificate, or legal advice.
 
 ## Public educational report example
 
-https://argos.lelouet.fr/exemple-rapport
+- [Educational report example](https://argos.lelouet.fr/exemple-rapport): A bilingual example using an Argos-controlled fictional product page with before and after HTML sources. It explains three verifiable HTML findings and their corrections; it is not a complete measured audit and contains no claimed score or performance gain. User reports are not published as examples. The guides explain how to prioritize corrections for small-business and e-commerce pages.
 
-This bilingual example uses an Argos-controlled fictional product page with before
-and after HTML sources. It explains three verifiable HTML findings and their
-corrections; it is not a complete measured audit and contains no claimed score
-or performance gain. User reports are not published as examples. The guides
-explain when to choose Argos alongside PageSpeed Insights and Lighthouse, and
-how to prioritize corrections for small-business and e-commerce pages.
+## Optional
+
+- [Source code](https://github.com/dokor/argos): Project repository, licensed under the Business Source License 1.1.
