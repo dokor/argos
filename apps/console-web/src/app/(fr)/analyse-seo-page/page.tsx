@@ -1,6 +1,6 @@
 import TopicAuditPage, { type TopicAuditContent } from "@/components/marketing/TopicAuditPage";
-import { siteUrl } from "@/lib/i18n/metadata";
-export const metadata = { title: "Analyse SEO technique d’une page gratuite", description: "Vérifiez title, description, structure HTML et signaux d’indexabilité d’une URL avec Argos, sans promesse de classement.", alternates: { canonical: siteUrl + "/analyse-seo-page" }, openGraph: { title: "Analyse SEO technique d’une page", description: "Signaux HTML, preuve avant/après et limites du diagnostic SEO.", url: siteUrl + "/analyse-seo-page" } };
+import { localizedMetadata } from "@/lib/i18n/metadata";
+export const metadata = localizedMetadata("/analyse-seo-page", "fr", "Analyse SEO technique d’une page gratuite", "Vérifiez title, description, structure HTML et signaux d’indexabilité d’une URL avec Argos, sans promesse de classement.");
 const content: TopicAuditContent = {
   "route": "/analyse-seo-page",
   "title": "Analyse SEO technique d’une page",

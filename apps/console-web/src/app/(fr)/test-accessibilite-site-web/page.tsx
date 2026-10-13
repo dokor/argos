@@ -1,6 +1,6 @@
 import TopicAuditPage, { type TopicAuditContent } from "@/components/marketing/TopicAuditPage";
-import { siteUrl } from "@/lib/i18n/metadata";
-export const metadata = { title: "Test automatique d’accessibilité d’une page", description: "Repérez des signaux automatiques d’accessibilité sur une URL avec Argos et les contrôles humains complémentaires, sans certificat de conformité.", alternates: { canonical: siteUrl + "/test-accessibilite-site-web" }, openGraph: { title: "Test automatique d’accessibilité", description: "Un exemple détectable, sa correction et les vérifications humaines nécessaires.", url: siteUrl + "/test-accessibilite-site-web" } };
+import { localizedMetadata } from "@/lib/i18n/metadata";
+export const metadata = localizedMetadata("/test-accessibilite-site-web", "fr", "Test automatique d’accessibilité d’une page", "Repérez des signaux automatiques d’accessibilité sur une URL avec Argos et les contrôles humains complémentaires, sans certificat de conformité.");
 const content: TopicAuditContent = {
   "route": "/test-accessibilite-site-web",
   "title": "Test automatique d’accessibilité d’une page",
