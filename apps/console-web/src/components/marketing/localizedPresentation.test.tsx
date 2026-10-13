@@ -36,6 +36,14 @@ import LoadingFr from "@/app/(fr)/report/[token]/loading";
 import LoadingEn from "@/app/en/report/[token]/loading";
 import ErrorFr from "@/app/(fr)/report/[token]/error";
 import ErrorEn from "@/app/en/report/[token]/error";
+import SpeedFr from "@/app/(fr)/test-vitesse-site-web/page";
+import SpeedEn from "@/app/en/website-speed-test/page";
+import SeoFr from "@/app/(fr)/analyse-seo-page/page";
+import SeoEn from "@/app/en/page-seo-analysis/page";
+import HeadersFr from "@/app/(fr)/verifier-entetes-securite/page";
+import HeadersEn from "@/app/en/security-header-check/page";
+import AccessibilityTestFr from "@/app/(fr)/test-accessibilite-site-web/page";
+import AccessibilityTestEn from "@/app/en/website-accessibility-test/page";
 
 // Chrome has its own localized interaction tests; compare page content here.
 vi.mock("@/components/site/SiteNav", () => ({ default: () => null }));
@@ -50,6 +58,8 @@ const pages: [string, ComponentType, ComponentType][] = [
   ["/ressources/accessibilite-numerique", AccessibilityFr, AccessibilityEn],
   ["/ressources/audit-site-pme", BusinessFr, BusinessEn], ["/ressources/audit-site-ecommerce", EcommerceFr, EcommerceEn],
   ["/conditions-utilisation", TermsFr, TermsEn], ["/confidentialite", PrivacyFr, PrivacyEn], ["/informations-legales", LegalFr, LegalEn],
+  ["/test-vitesse-site-web", SpeedFr, SpeedEn], ["/analyse-seo-page", SeoFr, SeoEn],
+  ["/verifier-entetes-securite", HeadersFr, HeadersEn], ["/test-accessibilite-site-web", AccessibilityTestFr, AccessibilityTestEn],
 ];
 
 function renderPage(Page: ComponentType, lang: Lang) {
@@ -87,7 +97,7 @@ describe("French and English presentation parity", () => {
     for (const [lang, Page] of [["fr", MethodFr], ["en", MethodEn]] as const) {
       const root = renderPage(Page, lang);
       expect(root.querySelector("main")?.getAttribute("lang")).toBe(lang);
-      expect(root.querySelectorAll(".domainCard, article")).toHaveLength(4);
+      expect(root.querySelectorAll("article")).toHaveLength(4);
       expect(root.querySelectorAll("table tbody tr")).toHaveLength(4);
       expect(root.querySelectorAll("em")).toHaveLength(1);
       expect(root.querySelector('a[href="' + localizedPath("/#audit", lang) + '"]')).not.toBeNull();
@@ -96,12 +106,13 @@ describe("French and English presentation parity", () => {
     }
   });
 
-  it("keeps all resource cards and labels untranslated destinations", () => {
+  it("keeps all resource cards and their English destinations", () => {
     const root = renderPage(ResourcesEn, "en");
     expect(root.querySelectorAll("article")).toHaveLength(11);
     for (const href of ["/test-accessibilite-site-web", "/verifier-entetes-securite", "/analyse-seo-page", "/test-vitesse-site-web"]) {
-      const link = root.querySelector(`a[href="${href}"]`);
-      expect(link?.closest("article")?.textContent).toContain(" · French");
+      const link = root.querySelector(`a[href="${localizedPath(href, "en")}"]`);
+      expect(link).not.toBeNull();
+      expect(link?.closest("article")?.textContent).not.toContain(" · French");
     }
   });
 
