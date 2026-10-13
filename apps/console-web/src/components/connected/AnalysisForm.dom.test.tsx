@@ -43,3 +43,14 @@ it("does not admit a new request at zero quota or without a supported profile",a
   fireEvent.submit(screen.getByLabelText("URL de la page").closest("form")!);
   expect(vi.mocked(accountFetch).mock.calls.some(call=>call[0]==="analyses")).toBe(false);
 });
+
+it("does not redirect back after the user leaves while admission is pending",async()=>{
+  let resolve:(value:unknown)=>void=()=>{};
+  vi.mocked(accountFetch).mockImplementation(async path=>path==="analysis-profiles" ? profiles : new Promise(done=>{resolve=done;}));
+  const view=render(<AnalysisForm initialUrl="https://example.com"/>);
+  await waitFor(()=>expect(screen.getByRole("button",{name:"Lancer l’analyse"})).toBeEnabled());
+  fireEvent.click(screen.getByRole("button",{name:"Lancer l’analyse"}));
+  view.unmount();resolve({runId:"42"});
+  await waitFor(()=>expect(vi.mocked(accountFetch).mock.calls.filter(call=>call[0]==="analyses")).toHaveLength(1));
+  expect(push).not.toHaveBeenCalled();
+});
