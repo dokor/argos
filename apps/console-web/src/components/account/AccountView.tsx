@@ -10,6 +10,7 @@ import SiteFooter from "@/components/site/SiteFooter";
 import { useLang } from "@/lib/i18n/LangContext";
 import { localizedPath } from "@/lib/i18n/routes";
 import { accountFetch, AccountClientError, type AccountProfile } from "@/lib/account-client";
+import { oauthCallbackError } from "@/lib/oauth-callback-error";
 import s from "./AccountView.module.scss";
 type Mode = "me" | "sign-in" | "register" | "verify" | "forgot" | "reset";
 type Method = { id: string; provider: string };
@@ -37,7 +38,8 @@ export default function AccountView({ mode = "me" }: { mode?: Mode }) {
     else void accountFetch<{ returnTo: string }>("return").then(value => setReturnTo(value.returnTo === "/account/sites" ? localizedPath("/account/sites", lang) : value.returnTo)).catch(() => setReturnTo(safe));
     const value = new URLSearchParams(window.location.hash.slice(1)).get("token");
     if (value) { setToken(value); window.history.replaceState(null, "", window.location.pathname + window.location.search); }
-    if (new URLSearchParams(window.location.search).has("error")) setError(copy.errors.oauth_invalid);
+    const callbackError = new URLSearchParams(window.location.search).get("error");
+    if (callbackError !== null) setError(copy.errors[oauthCallbackError(callbackError)]);
     void accountFetch<{ providers: string[]; enabled: boolean }>("auth/providers").then(p => { setProviders(p.providers); setEnabled(p.enabled); }).catch(fail);
     if (mode === "me") void load().catch(fail);
     };
