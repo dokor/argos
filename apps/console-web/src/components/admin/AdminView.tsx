@@ -11,6 +11,7 @@ import type { Report } from "@/components/report/types";
 import { copy, type AdminCopy } from "./copy";
 import s from "./AdminView.module.scss";
 import { feedbackCopy } from "@/components/feedback/copy";
+import { analyticsCopy } from "./analyticsCopy";
 
 type Row={id:string;email?:string;displayName?:string;state?:string;role?:string;offer?:string;userId?:string;site?:string;status?:string;createdAt:string;reportAvailable?:number|boolean;actorId?:string;targetId?:string;oldOffer?:string;newOffer?:string;oldLimit?:number|null;newLimit?:number|null};
 type Page={items:Row[];nextCursor:string|null};
@@ -74,7 +75,7 @@ export default function AdminView({runId}:{runId?:string}) {
  </table></div>;
  if(allowed&&report.data)return <><div className={s.returnBar}><Link href="/account/admin">{c.back}</Link></div><ReportPage params={{report:report.data}}/></>;
  return <><SiteNav/><PersonalNavigation/><main className={s.page}>
-  <h1>{c.title}</h1><p>{c.intro}</p>{allowed && <Link href="/account/admin/feedback">{feedbackCopy[lang].admin}</Link>}
+  <h1>{c.title}</h1><p>{c.intro}</p>{allowed && <div className={s.actions}><Link href="/account/admin/feedback">{feedbackCopy[lang].admin}</Link><Link href="/account/admin/analytics">{analyticsCopy[lang].title}</Link></div>}
   {!session.ready?<p role="status">{c.loading}</p>:!allowed?<><p role="alert">{c.denied}</p><Link href="/account/sign-in">{c.signIn}</Link></>:runId?<>
    <Link href="/account/admin">{c.back}</Link>
    {run.loading&&<p role="status">{c.loading}</p>}{run.error!=null&&<p role="alert">{message(run.error,c)}</p>}

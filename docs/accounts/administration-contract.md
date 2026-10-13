@@ -3,8 +3,8 @@
 L'administration des comptes utilise exclusivement une session Argos ACTIVE avec rôle ADMIN relu côté serveur. L'ancien accès mono-admin reste distinct et ne donne aucun droit sur ces routes.
 
 La [préparation du retrait historique #516](legacy-admin-transition.md) détaille
-les routes encore dépendantes du secret partagé, les écarts de parité et les
-prérequis opérateur. La transition n'est pas activée par la présence de ces routes.
+le retrait de la console historique et les prérequis opérateur avant déploiement.
+La mesure produit est disponible dans `/account/admin/analytics` et sa variante EN.
 
 - `/api/account/admin/users` : recherche nom/email, filtres état/offre, pagination par identifiant décroissant (20 par défaut, 100 maximum).
 - `/api/account/admin/users/{id}` : profil minimal, consommation du mois calendaire configuré, plafond individuel éventuel.
@@ -22,7 +22,7 @@ La modification d'un autre compte ADMIN est refusée : pas de délégation de ge
 
 Appliquer V15 après V14 avec Flyway ; les mappings `UsageAccount/QUsageAccount` et `AdminEvent/QAdminEvent` accompagnent la migration. Les plafonds individuels sont initialement NULL : l'admission conserve le comportement précédent. Activer/configurer les comptes selon [operations.md](operations.md), puis attribuer explicitement le rôle ADMIN à un compte ACTIVE vérifié par l'opérateur. Aucun compte de production n'est créé ni promu par cette PR.
 
-Ouvrir `/account/admin` ou `/en/account/admin`, également accessibles depuis la navigation personnelle d'un administrateur. L'ancien `/dashboard` et son cookie mono-admin restent disponibles pour leurs fonctions existantes ; ils ne donnent pas accès à la gestion des comptes. Les KPI de la nouvelle administration sont calculés sur les runs en base, jamais sur une page de résultats.
+Ouvrir `/account/admin` ou `/en/account/admin`, également accessibles depuis la navigation personnelle d'un administrateur. Les anciennes adresses `/dashboard` et `/login` redirigent vers les pages de compte ; le cookie mono-admin ne donne plus aucun accès dans Next. Les KPI de la nouvelle administration sont calculés sur les runs en base, jamais sur une page de résultats.
 
 La fin de période, les réservations et les débits conservent le contrat [usage-contract.md](usage-contract.md). Une baisse du plafond sous l'usage actuel bloque seulement les nouvelles admissions ; elle ne supprime aucun débit ni run. Un envoi identique ne génère pas de second événement. Les listes affichent les hôtes uniquement ; les rapports se consultent sous session administrative par identifiant de run.
 

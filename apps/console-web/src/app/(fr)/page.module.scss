@@ -346,26 +346,6 @@
   color: t.$color-gray-text;
 }
 
-// ─── ScoreRing ────────────────────────────────────────────────────────────────
-.ringWrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: t.$space-1;
-}
-
-// Valeur au centre de l'anneau, sur la carte mock blanche (fond fixe) :
-// token de même valeur que l'ancien #0f172a — plus de hex en dur (issue #192).
-.ringValue {
-  fill: t.$color-navy;
-}
-
-.ringLabel {
-  font-size: t.$text-xs;
-  color: t.$color-slate-500;
-  font-weight: 500;
-}
-
 // ─── Sections ─────────────────────────────────────────────────────────────────
 .section {
   padding: t.$section-space t.$page-gutter;

@@ -14,12 +14,12 @@ type Props = {
 };
 
 export default function LangToggle({ className, variant = "light" }: Props) {
-  const { lang, setLang } = useLang();
+  const { lang } = useLang();
   const pathname = usePathname();
   const suffix = useSyncExternalStore(subscribeReading, readingSnapshot, () => "");
   const hasLanguageRoute = Boolean(languageRoutes[frenchPath(pathname)] || accountRoutes[frenchPath(pathname)]) || /^\/(en\/)?(?:report|account\/(?:runs|sites|admin\/runs))\//.test(pathname);
 
-  if (!hasLanguageRoute && !/^\/(dashboard|login)(\/|$)/.test(pathname)) return <div className={`${s.toggle} ${s[variant]}${className ? ` ${className}` : ""}`} role="group" aria-label="Language"><span className={`${s.option} ${s.active}`} aria-current="page" lang="fr">FR</span><span className={s.sep} aria-hidden="true" /><Link href="/en/resources" hrefLang="en" lang="en" className={`${s.option} ${s.fallback}`} aria-label="English guides — this page is available in French only" title="English guides — this page is available in French only"><span>EN</span><small>guides</small></Link></div>;
+  if (!hasLanguageRoute) return <div className={`${s.toggle} ${s[variant]}${className ? ` ${className}` : ""}`} role="group" aria-label="Language"><span className={`${s.option} ${s.active}`} aria-current="page" lang="fr">FR</span><span className={s.sep} aria-hidden="true" /><Link href="/en/resources" hrefLang="en" lang="en" className={`${s.option} ${s.fallback}`} aria-label="English guides — this page is available in French only" title="English guides — this page is available in French only"><span>EN</span><small>guides</small></Link></div>;
 
   return (
     <div
@@ -30,7 +30,7 @@ export default function LangToggle({ className, variant = "light" }: Props) {
       {(["fr", "en"] as Lang[]).map((l, i) => (
         <Fragment key={l}>
           {i === 1 && <span className={s.sep} aria-hidden="true" />}
-          {hasLanguageRoute ? <Link
+          <Link
             href={localizedPath(pathname + suffix, l)}
             hrefLang={l}
             lang={l}
@@ -39,15 +39,7 @@ export default function LangToggle({ className, variant = "light" }: Props) {
             aria-label={l === "fr" ? "Français" : "English"}
           >
             {l.toUpperCase()}
-          </Link> : <button
-            type="button"
-            onClick={() => setLang(l)}
-            className={`${s.option} ${lang === l ? s.active : ""}`}
-            aria-pressed={lang === l}
-            aria-label={l === "fr" ? "Français" : "English"}
-          >
-            {l.toUpperCase()}
-          </button>}
+          </Link>
         </Fragment>
       ))}
     </div>

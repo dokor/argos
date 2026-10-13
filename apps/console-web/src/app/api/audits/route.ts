@@ -7,12 +7,11 @@ import { boundedJson } from "@/lib/bounded-request";
  * intercepting audit creation requests to validate the URL before proxying to
  * the Java backend.
  *
- * GET /api/audits (list) is also proxied here so the rewrite remains consistent.
+ * Retired global reads are handled here to prevent the fallback rewrite.
  */
 
 import { attribution, count } from "@/lib/analytics/server";
 import { NextRequest, NextResponse } from "next/server";
-import { adminReadProxy } from "@/lib/admin-read-proxy";
 import { accountHeaders, SESSION_COOKIE, saveRunProof } from "@/lib/account-proxy";
 import { createLogger, safeError, sanitizeUrl } from "@/lib/logger";
 
@@ -161,8 +160,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   return response;
 }
 
-export async function GET(request: NextRequest): Promise<NextResponse> {
-  const limit = request.nextUrl.searchParams.get("limit") ?? "50";
-  const safeLimit = Math.max(1, Math.min(200, parseInt(limit, 10) || 50));
-  return adminReadProxy(request, `/api/audits?limit=${safeLimit}`);
+export async function GET(): Promise<NextResponse> {
+  return NextResponse.json({ error: "resource_unavailable" }, { status: 410, headers: { "Cache-Control": "private, no-store" } });
 }

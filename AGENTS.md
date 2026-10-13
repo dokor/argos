@@ -99,18 +99,17 @@ Fichiers clés : `UrlNormalizerTest`, `ScoreServiceTest`, `DefaultScorePolicyTes
 |---|---|---|
 | `/` | Server | Landing page publique |
 | `/report/[token]` | Server → Client | Rapport : SSR tente le fetch, si 404 → `AuditProgressView` (polling) |
-| `/dashboard` | Client | Console admin (auth par cookie `ADMIN_TOKEN`) |
-| `/login` | Client | Auth admin |
+| `/account/admin` | Client | Administration avec session de compte ACTIVE ADMIN |
+| `/account/admin/analytics` | Client | Mesure produit sous session ACTIVE ADMIN |
+| `/account/sign-in` | Client | Connexion au compte |
 | `/api/audits` | Route Handler | BFF : valide l'URL (SSRF, scheme, longueur) puis proxy vers Java |
-| `/api/auth/login` | Route Handler | Authentification admin |
+| `/api/account/*` | Route Handler | BFF des comptes et de l’administration |
 | `/api/newsletter` | Route Handler | Inscription newsletter |
 
 ### Variables d'environnement
 | Variable | Côté | Description |
 |---|---|---|
 | `API_BASE` | Serveur | URL interne du backend Java (ex: `http://api-backend:8081`) |
-| `ADMIN_PASSWORD` | Serveur | Mot de passe admin |
-| `ADMIN_TOKEN` | Serveur | Token de session admin |
 | `NEXT_PUBLIC_SITE_URL` | Client | URL publique du site (ex: `https://argos.lelouet.fr`) - défaut dans le code |
 | `NEXT_PUBLIC_CALENDLY_URL` | Client | URL Calendly pour le CTA |
 | `NEXT_PUBLIC_APP_LOGS_ENABLED` | Client | Active les logs structurés côté client |
@@ -122,10 +121,10 @@ Les Route Handlers BFF, y compris les routes dynamiques des comptes/admin, sont 
 
 ### Architecture SSR / BFF (issue #136)
 - **Aucun appel navigateur → service externe en direct.** Le navigateur n'appelle que des chemins **same-origin `/api/*`**, résolus côté serveur :
-  - **Route handlers** (`src/app/api/*`) pour les flux avec validation/secrets : `POST/GET /api/audits` (SSRF + longueur), `POST /api/newsletter`, `POST /api/auth/login`.
+  - **Route handlers** (`src/app/api/*`) pour les flux avec validation/secrets : `POST/GET /api/audits` (SSRF + longueur), `POST /api/newsletter`, les mutations de compte.
   - **Rewrite proxy** pour les lectures restantes (`/api/reports/*`, `/api/audits/runs/*`, `/api/audits/*/history`).
 - `API_BASE` (URL interne du backend Java) est **exclusivement serveur** — jamais exposée au client. `argosApi.http()` (`src/lib/ArgosApi.ts`) utilise l'URL absolue en SSR et un chemin relatif côté client (proxifié).
-- **Frontière client/serveur** : la plupart des composants sont `"use client"` **parce que l'i18n (`LangContext`) et le thème (`ThemeContext`) sont des contextes client**, en plus de l'interactivité. Réduire davantage l'hydratation des contenus statiques suppose une **i18n résolue côté serveur** (chantier séparé). Les composants purs sans hook/événement ne portent pas la directive (ex. `KpiCard`, `StatusBadge`).
+- **Frontière client/serveur** : la plupart des composants sont `"use client"` **parce que l'i18n (`LangContext`) et le thème (`ThemeContext`) sont des contextes client**, en plus de l'interactivité. Réduire davantage l'hydratation des contenus statiques suppose une **i18n résolue côté serveur** (chantier séparé). Les composants purs sans hook/événement ne portent pas la directive (ex. `ArgosIcon`).
 
 ### Composants rapport (`src/components/report/`)
 | Composant | Rôle |
@@ -143,15 +142,15 @@ Les Route Handlers BFF, y compris les routes dynamiques des comptes/admin, sont 
 
 ### i18n
 Clés de traduction dans `src/lib/i18n/fr.json` et `en.json` :
-`layout`, `nav`, `landing`, `dashboard`, `report`, `auditForm`, `auditList`, `langToggle`
+`layout`, `nav`, `landing`, `report`, `auditForm`, `account`, `langToggle`
 
 Le one-liner du rapport est retourné comme clé (`"high"` | `"good"` | `"fair"` | `"low"`) par le backend et traduit côté frontend via `t.report.hero.oneLiner[key]`.
 
 ### SEO / Indexabilité
-- `src/app/robots.ts` - crawl autorisé sur `/`, bloqué sur `/dashboard/`, `/login/`, `/api/`, `/report/`
+- `src/app/robots.ts` - crawl autorisé sur `/`, API bloquée ; comptes et rapports portent noindex
 - `src/app/sitemap.ts` - homepage uniquement, changeFrequency weekly
 - `src/app/layout.tsx` - métadonnées OG complètes, JSON-LD `WebApplication`, `manifest.json`
-- `/login` et `/dashboard` ont des `layout.tsx` segment avec `robots: { index: false }` (les pages `"use client"` ne peuvent pas exporter `metadata`)
+- Les segments `/account` et `/en/account` ont des `layout.tsx` avec `robots: { index: false }` (les pages `"use client"` ne peuvent pas exporter `metadata`)
 - `public/og.png` - image OG 1200×630 générée avec Pillow (script `outputs/gen_og.py`)
 - `public/llms.txt` - description pour les crawlers IA
 

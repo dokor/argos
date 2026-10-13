@@ -35,8 +35,7 @@ export type ScoreBandTheme = {
 
 // 4 bandes : excellent (≥85) / bon (≥70) / moyen (≥55) / faible (<55).
 // `accent` et `softBg` reprennent à l'identique les valeurs historiques du rapport
-// (aucun changement visuel du rapport) ; les tints de chip alignent dashboard et
-// chips sur la même famille de couleur.
+// Les chips et le rapport utilisent les mêmes bandes.
 const SCORE_BANDS: readonly ScoreBandTheme[] = [
   { accent: "#10b981", softBg: "rgba(16,185,129,0.15)", chipBg: "#dcfce7", chipFg: "#065f46", chipBorder: "#86efac", dot: "#10b981" },
   { accent: "#3b82f6", softBg: "rgba(59,130,246,0.15)", chipBg: "#dbeafe", chipFg: "#1e40af", chipBorder: "#93c5fd", dot: "#3b82f6" },
@@ -52,9 +51,6 @@ function scoreBand(score: number): ScoreBandTheme {
   return SCORE_BANDS[3];
 }
 
-/** Thème neutre (score absent). */
-const NEUTRAL_SCORE_THEME = { accent: "#64748b", chipBg: "#f1f5f9" } as const;
-
 /** Couleur d'un score 0..100, en 4 bandes (excellent / bon / moyen / faible). */
 export function scoreColor(score: number): string {
   return scoreBand(score).accent;
@@ -69,13 +65,6 @@ export function scoreBg(score: number): string {
 export function scoreChipTheme(ratio: number): { bg: string; fg: string; border: string; dot: string } {
   const band = scoreBand(Math.max(0, Math.min(1, ratio ?? 0)) * 100);
   return { bg: band.chipBg, fg: band.chipFg, border: band.chipBorder, dot: band.dot };
-}
-
-/** Thème d'une carte KPI de score 0..100 ({@code null} → neutre). */
-export function scoreKpiTheme(score: number | null): { accent: string; bg: string } {
-  if (score === null) return { accent: NEUTRAL_SCORE_THEME.accent, bg: NEUTRAL_SCORE_THEME.chipBg };
-  const band = scoreBand(score);
-  return { accent: band.accent, bg: band.chipBg };
 }
 
 export type SeverityKey = "critical" | "important" | "info" | "opportunity";

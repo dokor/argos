@@ -314,28 +314,6 @@
     "backHome": "Retour à l'accueil",
     "reference": "Référence"
   },
-  "login": {
-    "title": "Accès restreint",
-    "passwordLabel": "Mot de passe",
-    "passwordPlaceholder": "Mot de passe",
-    "submit": "Connexion",
-    "submitting": "Connexion…",
-    "error": "Une erreur est survenue"
-  },
-  "dashboard": {
-    "title": "Argos - Console",
-    "newAudit": "Nouvel audit",
-    "stats": {
-      "analyzed": "Analysés",
-      "analyzedDesc": "Projets avec analyse terminée",
-      "inProgress": "En cours",
-      "inProgressDesc": "En file d'attente ou en analyse",
-      "errors": "Erreurs",
-      "errorsDesc": "Analyses ayant échoué",
-      "avgScore": "Score moyen",
-      "avgScoreDesc": "Score global moyen (projets terminés)"
-    }
-  },
   "report": {
     "measurementCoverage": {
       "title": "Couverture de mesure",
@@ -504,10 +482,6 @@
     },
     "metadata": {
       "title": "Rapport Argos"
-    },
-    "antiBot": {
-      "title": "Analyse potentiellement partielle",
-      "description": "Ce site est protégé par une protection anti-bot : l'analyse a porté sur la page de challenge et certains résultats peuvent être incomplets. Ce blocage n'est pas imputé au score."
     },
     "error": {
       "title": "Impossible de charger le rapport",
@@ -721,11 +695,6 @@
         "running": "En cours",
         "pending": "En attente"
       }
-    },
-    "aiSummary": {
-      "label": "Synthèse de l’audit",
-      "keyPoints": "À retenir",
-      "note": "Synthèse générée par Codex à partir des résultats mesurés par Argos."
     }
   },
   "marketing": {
@@ -886,82 +855,6 @@
     "successPrefix": "Audit créé",
     "errorUrlMissing": "Saisissez l’adresse d’une page publique.",
     "errorUnknown": "La demande a échoué. Réessayez."
-  },
-  "auditList": {
-    "comparison": {
-      "show": "Voir la comparaison",
-      "loadError": "Impossible de charger la comparaison.",
-      "method": "Barème figé",
-      "coverage": "Couverture",
-      "unknown": "Inconnue",
-      "coverageChanged": "La couverture de mesure a changé ; ce changement n’est pas une régression du site.",
-      "delta": "Évolution depuis le rapport précédent",
-      "points": "points",
-      "globalPoints": "points globaux",
-      "domainPoints": "points du domaine",
-      "contributions": "Principales améliorations et dégradations",
-      "reasons": {
-        "COMPARABLE": "Audits comparables",
-        "NO_PREVIOUS_REPORT": "Aucun rapport précédent dans cet historique.",
-        "EVIDENCE_MISSING": "Comparaison indisponible : preuves historiques insuffisantes. Relancez une analyse au barème courant.",
-        "SCOPE_CHANGED": "Comparaison indisponible : périmètre différent.",
-        "METHODOLOGY_CHANGED": "Comparaison indisponible : barème ou coefficients différents.",
-        "COVERAGE_CHANGED": "Comparaison indisponible : mesures utilisables différentes.",
-        "INSUFFICIENT_COVERAGE": "Comparaison indisponible : couverture insuffisante ou anti-bot.",
-        "SCORE_UNAVAILABLE": "Comparaison indisponible : score non mesuré."
-      }
-    },
-    "title": "Analyses",
-    "loading": "Chargement…",
-    "empty": "Aucune analyse pour le moment.",
-    "copyJson": "Copier le JSON",
-    "copied": "Copié",
-    "showJson": "Voir le JSON",
-    "loadDetails": "Charger le détail technique",
-    "loadingDetails": "Chargement du détail…",
-    "detailsError": "Impossible de charger le détail.",
-    "viewReport": "Voir le rapport",
-    "reportPending": "Rapport en attente…",
-    "reportUnavailable": "Rapport indisponible",
-    "scorePending": "Score en attente…",
-    "scoreUnavailable": "Score indisponible",
-    "noJson": "Pas de JSON disponible.",
-    "resultPending": "En attente du résultat…",
-    "modulesLabel": "Modules",
-    "tagsLabel": "Tags",
-    "status": {
-      "QUEUED": "En attente",
-      "RUNNING": "En cours",
-      "COMPLETED": "Terminé",
-      "FAILED": "Échec"
-    },
-    "filters": {
-      "statusLabel": "Statut",
-      "all": "Tous",
-      "sortLabel": "Trier",
-      "sortDateDesc": "Plus récent",
-      "sortDateAsc": "Plus ancien",
-      "sortScoreDesc": "Score ↓",
-      "sortScoreAsc": "Score ↑",
-      "moduleLabel": "Module",
-      "tagLabel": "Tag",
-      "techLabel": "Techno",
-      "loadDetails": "Charger les filtres détaillés",
-      "loadingDetails": "Chargement des détails…",
-      "detailsLoaded": "Filtres détaillés chargés",
-      "detailsError": "Impossible de charger les filtres détaillés.",
-      "clearFilters": "Réinitialiser",
-      "noResults": "Aucun résultat pour ces filtres."
-    },
-    "history": {
-      "toggle": "Historique des analyses",
-      "loading": "Chargement de l'historique…",
-      "empty": "Aucune analyse précédente pour cette URL.",
-      "error": "Impossible de charger l'historique.",
-      "current": "actuel",
-      "view": "Voir",
-      "scoreNa": "-"
-    }
   },
   "themeToggle": {"light":"Passer en thème clair","dark":"Passer en thème sombre","lightTitle":"Thème clair","darkTitle":"Thème sombre"},
   "langToggle": {

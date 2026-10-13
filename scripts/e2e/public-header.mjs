@@ -55,7 +55,6 @@ try {
         await context.route('**/api/account/session', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ signedIn }) }));
         // Header visibility follows the verified session response, not cookie presence.
         // Server-side validation of real HttpOnly cookies is covered by account/session tests.
-        await context.route('**/api/auth/status', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ isAdmin: true }) }));
         const page = await context.newPage();
         const errors = [];
         page.on('pageerror', error => errors.push(error.message));

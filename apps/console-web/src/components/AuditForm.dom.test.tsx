@@ -50,12 +50,10 @@ it("invalidates the shared private session when audit creation rejects it",async
 describe("AuditForm (soumission d'audit)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Le dashboard ouvre le rapport dans un nouvel onglet (#169) : on simule un
-    // window.open réussi (jsdom ne l'implémente pas nativement).
     vi.spyOn(window, "open").mockReturnValue({} as Window);
   });
 
-  it("crée un audit avec l'URL normalisée puis ouvre le rapport dans un nouvel onglet", async () => {
+  it("crée par défaut un audit public puis ouvre le rapport dans le même onglet", async () => {
     vi.mocked(argosApi.createAudit).mockResolvedValue({
       auditId: 1,
       runId: 2,
@@ -73,10 +71,9 @@ describe("AuditForm (soumission d'audit)", () => {
       expect(argosApi.createAudit).toHaveBeenCalledWith({ url: "https://example.com", sourceRoute: "/", lang: "fr" })
     );
     await waitFor(() =>
-      expect(window.open).toHaveBeenCalledWith("/report/tok123", "_blank")
+      expect(push).toHaveBeenCalledWith("/report/tok123")
     );
-    // Nouvel onglet ouvert : pas de navigation dans l'onglet courant.
-    expect(push).not.toHaveBeenCalled();
+    expect(window.open).not.toHaveBeenCalled();
   });
 
   it("n'appelle pas l'API quand l'URL est vide", () => {

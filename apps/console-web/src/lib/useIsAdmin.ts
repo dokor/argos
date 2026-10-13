@@ -2,24 +2,36 @@
 
 import { useEffect, useState } from "react";
 import { useAccountSession } from "@/components/account/AccountSession";
+import { accountFetch, type AccountProfile } from "./account-client";
 
-/**
- * Resolve legacy admin sessions on the server: their cookie is HttpOnly.
- * Modern account pages already provide their verified administrator role.
- */
+/** Resolve the current account role, including on shared reports outside AccountSession. */
 export function useIsAdmin(): boolean | null {
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const session = useAccountSession();
-
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   useEffect(() => {
-    const controller = new AbortController();
-    void fetch("/api/auth/status", { cache: "no-store", signal: controller.signal })
-      .then(async response => response.ok && (await response.json()).isAdmin === true)
-      .then(value => { if (!controller.signal.aborted) setIsAdmin(value); })
-      .catch(() => { if (!controller.signal.aborted) setIsAdmin(false); });
-    return () => controller.abort();
-  }, []);
-
-  return session.ready && !session.denied && session.profile?.verified && session.profile.admin
-    ? true : isAdmin;
+    if (session.ready) return;
+    let controller: AbortController;
+    const load = () => {
+      controller?.abort();
+      const request = new AbortController();
+      controller = request;
+      void accountFetch<AccountProfile>("me", "GET", undefined, request.signal)
+        .then(profile => { if (!request.signal.aborted) setIsAdmin(profile.verified && profile.admin === true); })
+        .catch(() => { if (!request.signal.aborted) setIsAdmin(false); });
+    };
+    const invalidate = () => { controller?.abort(); setIsAdmin(false); };
+    load();
+    window.addEventListener("argos-account-login", load);
+    window.addEventListener("argos-account-invalid", invalidate);
+    window.addEventListener("focus", load);
+    return () => {
+      controller?.abort();
+      window.removeEventListener("argos-account-login", load);
+      window.removeEventListener("argos-account-invalid", invalidate);
+      window.removeEventListener("focus", load);
+    };
+  }, [session.ready]);
+  return session.ready
+    ? !session.denied && session.profile?.verified === true && session.profile.admin === true
+    : isAdmin;
 }
