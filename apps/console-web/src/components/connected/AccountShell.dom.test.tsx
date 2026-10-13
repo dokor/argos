@@ -31,11 +31,15 @@ it("only offers administration to a verified active administrator", () => {
   expect(screen.queryByRole("link", { name: "Administration" })).not.toBeInTheDocument();
 });
 it("removes private children and quota immediately on session invalidation, keeping the footer", () => {
+  state.path = "/account/urls/9/history";
   const view = render(<AccountShell>{content}</AccountShell>);
   state.session.denied = true; view.rerender(<AccountShell>{content}</AccountShell>);
   expect(screen.queryByText("Private result")).not.toBeInTheDocument();
   expect(screen.queryByRole("link", { name: /crédits/ })).not.toBeInTheDocument();
-  expect(screen.getByRole("link", { name: "Se connecter" })).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "Se connecter" })).toHaveAttribute("href", "/account/sign-in?returnTo=%2Faccount%2Furls%2F9%2Fhistory");
+  state.path = "/en/account/runs/9";
+  view.rerender(<LangProvider initialLang="en"><AccountShell>{content}</AccountShell></LangProvider>);
+  expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/en/account/sign-in?returnTo=%2Fen%2Faccount%2Fruns%2F9");
   expect(screen.getByRole("contentinfo")).toBeInTheDocument();
 });
 it("distinguishes unavailable identity from sign-out and permits retry", () => {

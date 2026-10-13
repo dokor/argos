@@ -15,7 +15,8 @@ import s from "./Connected.module.scss";
 
 /** One chrome for private pages; authorization still belongs to each Java resource. */
 export default function AccountShell({ children }: { children: ReactNode }) {
-  const pathname = frenchPath(usePathname());
+  const currentPath = usePathname();
+  const pathname = frenchPath(currentPath);
   const { t } = useLang(), c = t.connected;
   const session = useAccountSession();
   const [openPath, setOpenPath] = useState<string | null>(null);
@@ -59,7 +60,7 @@ export default function AccountShell({ children }: { children: ReactNode }) {
         {valid ? children : <main className={s.page}>
           <PageHeading title={c.workspace}/>
           {!session.ready ? <EmptyState title={c.loading} kind="loading"/> : <EmptyState title={session.denied ? c.sessionTitle : c.errorTitle} description={session.denied ? c.sessionDescription : t.account.errors.account_unavailable} kind={session.denied ? "empty" : "error"}>
-            {session.denied ? <Link className={s.primary} href="/account/sign-in">{t.account.signIn}</Link> : <button className={s.secondary} onClick={() => window.dispatchEvent(new Event("argos-account-login"))}>{c.retry}</button>}
+            {session.denied ? <Link className={s.primary} href={"/account/sign-in?returnTo=" + encodeURIComponent(currentPath)}>{t.account.signIn}</Link> : <button className={s.secondary} onClick={() => window.dispatchEvent(new Event("argos-account-login"))}>{c.retry}</button>}
           </EmptyState>}
         </main>}
       </div>
