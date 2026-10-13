@@ -24,6 +24,26 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 /** Real JWT/session/role policy with a mocked registry; SQL/HTTP are covered by AccountLifecycleIT. */
 class AccountAdminAccessTest {
+    @Test void connectedProfilesUseTheRealPolicyAndRequireAnActiveVerifiedSession() {
+        var policy = new com.dokor.argos.services.analysis.scoring.DefaultScorePolicy();
+        var profiles = new com.dokor.argos.services.connected.ConnectedProfiles(policy);
+        var endpoint = new com.dokor.argos.webservices.api.account.ConnectedProfilesWs(sessions, profiles);
+        user.setRole("USER");
+        var response = endpoint.get(authorization);
+        assertEquals(200, response.getStatus());
+        assertEquals("private, no-store", response.getHeaderString("Cache-Control"));
+        var catalogue = (com.dokor.argos.services.connected.contract.ConnectedContracts.AnalysisProfiles) response.getEntity();
+        assertEquals(1, catalogue.items().size());
+        assertEquals("server-default-v1", catalogue.defaultProfileId());
+        assertEquals(policy.fingerprint(), catalogue.items().getFirst().snapshot().scoringFingerprint());
+        assertEquals(policy.version(), catalogue.items().getFirst().snapshot().scoringVersion());
+        assertThrows(AccountError.class, () -> profiles.snapshot("mobile-v1"));
+        assertThrows(AccountError.class, () -> endpoint.get(null));
+        user.setState("PENDING");
+        assertEquals(403, assertThrows(AccountError.class, () -> endpoint.get(authorization)).getResponse().getStatus());
+        user.setState("ARCHIVED");
+        assertEquals(401, assertThrows(AccountError.class, () -> endpoint.get(authorization)).getResponse().getStatus());
+    }
     private final Instant now = Instant.parse("2026-10-13T08:00:00Z");
     private final Clock clock = Clock.fixed(now, ZoneOffset.UTC);
     private final AccountDao dao = mock(AccountDao.class);

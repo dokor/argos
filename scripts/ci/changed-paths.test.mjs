@@ -37,6 +37,17 @@ test('a package lock change audits only its own service', () => {
   assert.equal(result.dependency_playwright, false);
 });
 
+test('shared contracts and generator changes validate both consumers', () => {
+  for (const path of ['scripts/contracts/generate-connected.py',
+    'apps/api-backend/src/main/resources/contracts/connected-space.openapi.json']) {
+    const result = classify([path]);
+    assert.equal(result.api, true);
+    assert.equal(result.frontend, true);
+    assert.equal(result.lighthouse, false);
+    assert.equal(result.dependency_frontend, false);
+  }
+});
+
 test('CI changes and full runs exercise every check', () => {
   for (const paths of [['.github/workflows/ci.yml'], null]) {
     assert.ok(Object.values(classify(paths)).every(Boolean));

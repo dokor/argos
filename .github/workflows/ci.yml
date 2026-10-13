@@ -58,7 +58,11 @@ jobs:
           docker logs --tail 100 argos-zap-test
           exit 1
       - name: Run Maven tests and coverage report
-        run: mvn --batch-mode verify
+        # The canonical OpenAPI contract generates both Java and frontend types.
+        # Check before compiling so a manually edited generated file cannot drift.
+        run: |
+          python3 ../../scripts/contracts/generate-connected.py --check
+          mvn --batch-mode verify
       - name: Diagnose integration daemon failure
         if: failure()
         run: docker logs --tail 200 argos-zap-test
