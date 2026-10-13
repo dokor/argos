@@ -6,7 +6,6 @@ import { accountFetch, AccountClientError } from "@/lib/account-client";
 import SiteNav from "./SiteNav";
 
 vi.mock("next/navigation", () => ({ usePathname: () => "/" }));
-vi.mock("@/lib/useIsAdmin", () => ({ useIsAdmin: () => false }));
 vi.mock("@/components/ThemeToggle", () => ({ default: () => <button>Theme</button> }));
 vi.mock("@/components/LangToggle", () => ({ default: () => <span>Languages</span> }));
 vi.mock("@/lib/account-client", async importOriginal => ({
