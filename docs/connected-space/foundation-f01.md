@@ -28,6 +28,11 @@ modification du schéma ou du générateur déclenche les deux suites.
 - Les identifiants sont des chaînes décimales positives dans la plage Long,
   sans conversion en nombre dans le navigateur. Les compteurs sont des entiers
   positifs ou nuls, bornés à la précision entière JavaScript.
+- `PageResult.pageId`, `TrackedPage.pageId` et les exemples d’un constat commun
+  désignent l’URL suivie privée (`ARG_ACCOUNT_SITE_URL.id`), stable entre runs.
+  `DiscoveredPage.pageId` et la sélection d’admission désignent au contraire
+  `ARG_DOMAIN_DISCOVERY_PAGE.id`, dans la découverte concernée. Le détail du
+  rapport ouvre le `runId` exact ; aucun lien privé n’utilise `ARG_AUDIT.id`.
 - Score : entier 0–100 ou null ; couverture : ratio 0–1 ou null, avec sa
   version. Un échec sans rapport ne devient ni un score 0 ni zéro constat.
   Dernière tentative et dernier rapport disponible sont deux projections distinctes.

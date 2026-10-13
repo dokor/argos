@@ -4765,7 +4765,8 @@
             "minLength": 1,
             "maxLength": 19,
             "pattern": "^[1-9][0-9]{0,18}$",
-            "format": "argos-id"
+            "format": "argos-id",
+            "description": "ARG_DOMAIN_DISCOVERY_PAGE.id; selectedPageIds at admission refers to these IDs within the given discovery."
           },
           "normalizedUrl": {
             "type": "string",
@@ -4820,7 +4821,8 @@
             },
             "minItems": 1,
             "maxItems": 50,
-            "uniqueItems": true
+            "uniqueItems": true,
+            "description": "ARG_DOMAIN_DISCOVERY_PAGE IDs owned by the session and belonging to discoveryId."
           },
           "profileId": {
             "type": "string",
@@ -4894,7 +4896,8 @@
             "minLength": 1,
             "maxLength": 19,
             "pattern": "^[1-9][0-9]{0,18}$",
-            "format": "argos-id"
+            "format": "argos-id",
+            "description": "Private tracked URL ID: ARG_ACCOUNT_SITE_URL.id, stable across runs. Never a shared ARG_AUDIT.id or a discovery page ID."
           },
           "normalizedUrl": {
             "type": "string",
@@ -5086,7 +5089,8 @@
             },
             "minItems": 1,
             "maxItems": 5,
-            "uniqueItems": true
+            "uniqueItems": true,
+            "description": "Private tracked URL IDs (ARG_ACCOUNT_SITE_URL.id), matching PageResult.pageId within this batch."
           },
           "evidenceAvailable": {
             "type": "boolean"
@@ -5322,7 +5326,8 @@
             "minLength": 1,
             "maxLength": 19,
             "pattern": "^[1-9][0-9]{0,18}$",
-            "format": "argos-id"
+            "format": "argos-id",
+            "description": "Private tracked URL ID: ARG_ACCOUNT_SITE_URL.id, stable across runs. Never a shared ARG_AUDIT.id or a discovery page ID."
           },
           "domainId": {
             "type": "string",
