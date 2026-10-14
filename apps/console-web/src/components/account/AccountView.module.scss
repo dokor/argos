@@ -18,6 +18,7 @@
 .error { color: var(--argos-error); background: var(--argos-error-soft); border-color: var(--argos-error); }
 @media (max-width: 480px) { .page { margin: 1.5rem auto; } .card { padding: 1rem; } .button { min-height: 44px; } }
 
+.page a:focus-visible { outline:3px solid var(--argos-text);outline-offset:3px; }
 .page { overflow-wrap:anywhere; }
 
 .chrome a[href$="#audit"] { height:auto;min-height:44px;overflow-wrap:anywhere; }
