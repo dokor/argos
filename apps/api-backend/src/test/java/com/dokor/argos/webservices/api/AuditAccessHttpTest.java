@@ -121,7 +121,7 @@ class AuditAccessHttpTest {
         var list = get("/audits?limit=999", "Authorization", authorization);
         assertEquals(200, list.statusCode());
         assertEquals("42", MAPPER.readTree(list.body()).get(0).path("runId").asText());
-        assertEquals("/dashboard/report/42",
+        assertEquals("/account/admin/runs/42",
             MAPPER.readTree(list.body()).get(0).path("reportUrl").asText());
         var listItem = MAPPER.readTree(list.body()).get(0);
         assertEquals(68, listItem.path("globalScore").asInt());

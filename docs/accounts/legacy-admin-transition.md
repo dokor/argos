@@ -2,18 +2,15 @@
 
 La console mono-admin a été retirée du frontend. L’administration utilise désormais un compte Argos ACTIVE avec rôle ADMIN relu en base et une session HttpOnly `argos_account`. Le cookie `argos_admin` et les variables Next `ADMIN_PASSWORD` / `ADMIN_TOKEN` ne donnent plus accès aux fonctions du frontend.
 
-| Ancienne adresse | Destination permanente |
-| --- | --- |
-| `/dashboard` | `/account/admin` |
-| `/dashboard/analytics` | `/account/admin/analytics` |
-| `/dashboard/report/{runId}` | `/account/admin/runs/{runId}` |
-| `/login` | `/account/sign-in` |
-
-Les pages cibles vérifient la session de compte. La nouvelle administration et la mesure produit existent aussi sous `/en/account/admin`. Une ancienne session mono-admin ne les autorise pas.
+Depuis F12, `/dashboard`, `/dashboard/analytics`, `/dashboard/report/{runId}` et
+`/login` répondent 404 sans alias, également sous `/en`. Utiliser directement
+`/account/admin/users`, `/account/admin/runs`, `/account/admin/analytics` et
+`/account/sign-in` (ou leurs variantes EN). Aucun retour à l’ancienne interface
+ni ancienne session mono-admin n’est conservé.
 
 La liste globale présente des **runs**, avec filtres et pagination, et non l’ancienne liste d’URLs avec leur dernier run. Ses compteurs sont les volumes globaux en attente/en cours, sans moyenne calculée sur une page de résultats. Les rapports se lisent par ID de run sans reconstruire de credential public.
 
-AuditList, AuditCard, AuditComparison, FilterBar, KpiCard, ScoreChip, StatusBadge, leurs styles, les pages dashboard/login, leurs tests dédiés et leurs traductions sont retirés. Le formulaire propose uniquement les parcours public et personnel. L’historique/comparaison global et l’export du blob technique de la console ne sont plus proposés. L’historique personnel conserve ses règles de propriété et ses propres composants, sans accès global supplémentaire.
+AuditList, AuditCard, AuditComparison, FilterBar, KpiCard, ScoreChip, StatusBadge, leurs styles, les pages dashboard/login, leurs tests dédiés et leurs traductions sont retirés. Le formulaire AuditForm est exclusivement public ; le lancement connecté utilise le flux Clarté F03. L’historique/comparaison global et l’export du blob technique de la console ne sont plus proposés. L’historique personnel conserve ses règles de propriété et ses propres composants, sans accès global supplémentaire.
 
 ## Frontières d’accès
 
@@ -28,12 +25,16 @@ AuditList, AuditCard, AuditComparison, FilterBar, KpiCard, ScoreChip, StatusBadg
 
 ## Exploitation
 
-Avant déploiement, activer/configurer les comptes et vérifier qu’un compte ACTIVE ADMIN peut se connecter, accéder aux runs, aux rapports et aux métriques. Prévoir un accès infra indépendant et un mécanisme opérateur de récupération des comptes. Le code ne crée ni ne promeut automatiquement un administrateur.
-
-Retirer `ADMIN_PASSWORD` / `ADMIN_TOKEN` des configurations Next montées lors de la bascule. Les anciens cookies sont ignorés et expireront normalement ; ils ne constituent aucun accès de secours. Conserver une version/configuration compatible pour un retour arrière depuis l’accès infra. Ce changement ne réalise aucune migration SQL, réattribution des runs ni intervention en production.
+L’inventaire livré et les frontières préservées sont dans [F12](../connected-space/cleanup-f12.md).
+Le [runbook du premier ADMIN](../connected-space/first-admin-runbook.md) décrit
+la simulation, la promotion d’un compte vérifié sur une base nommée, la révocation
+et les smoke tests. Le bootstrap est opérateur, hors HTTP et jamais automatique.
+Retirer ADMIN_PASSWORD / ADMIN_TOKEN des configurations Next ; garder l’accès infra
+indépendant et ADMIN_API_TOKEN pour ses consommateurs serveur légitimes. Ce lot
+n’effectue aucune remise à zéro, réattribution de runs ou intervention en production.
 
 ## Vérifications
 
-Les tests frontend couvrent les listes blanches BFF, les redirections FR/EN, les anciennes lectures fermées, les transitions de rôle/session et les états de métriques : chargement, erreur, vide, rafraîchissement et réponses tardives. Les tests Java avec JWT/session réels vérifient admin, USER, PENDING, ARCHIVED, rôle retiré, expiration, révocation et absence de credential avant le stockage.
+Les tests frontend couvrent les listes blanches BFF, l’absence des anciennes routes FR/EN, les anciennes lectures fermées, les transitions de rôle/session et les états de métriques : chargement, erreur, vide, rafraîchissement et réponses tardives. Les tests Java avec JWT/session réels vérifient admin, USER, PENDING, ARCHIVED, rôle retiré, expiration, révocation et absence de credential avant le stockage.
 
 Les tests MariaDB du profil `mariadb-integration` et la recette opérateur déployée restent des vérifications distinctes. Les contrôles navigateur locaux emploient uniquement des comptes et mesures fictifs. Voir la [recette comptes](../testing/accounts.md).

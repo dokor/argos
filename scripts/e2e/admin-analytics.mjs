@@ -62,10 +62,10 @@ try {
     assert.equal(await page.locator('main dl').count(), 0);
     await context.close();
   }
-  for (const [from, to] of [['/dashboard', '/account/admin'], ['/dashboard/analytics', '/account/admin/analytics'], ['/dashboard/report/401', '/account/admin/runs/401'], ['/login', '/account/sign-in']]) {
-    const response = await fetch(base + from, { redirect: 'manual' });
-    assert.equal(response.status, 308);
-    assert.equal(new URL(response.headers.get('location'), base).pathname, to);
+  for (const lang of ['', '/en']) for (const from of ['/dashboard', '/dashboard/analytics', '/dashboard/report/401', '/login']) {
+    const response = await fetch(base + lang + from, { redirect: 'manual' });
+    assert.equal(response.status, 404);
+    assert.equal(response.headers.get('location'), null);
   }
   for (const route of ['/api/audits', '/api/audits/runs/401/report', '/api/audits/201/history']) {
     assert.equal((await fetch(base + route, { headers: { Cookie: 'argos_admin=obsolete-synthetic-cookie' } })).status, 410);
@@ -78,5 +78,5 @@ try {
   assert.equal(await page.locator('h1').count(), 1);
   await context.close();
   await writeFile(output + '/admin-analytics-evidence.json', JSON.stringify(evidence, null, 2));
-  console.log('PASS: 16 responsive language/theme states, 3 denied profiles, redirects, retired APIs, home and shared report');
+  console.log('PASS: 16 responsive language/theme states, 3 denied profiles, removed routes, retired APIs, home and shared report');
 } finally { await browser.close(); }
