@@ -1,0 +1,52 @@
+name: Production provisioning tests
+
+on:
+  pull_request:
+    paths: ['scripts/operations/**', 'docs/connected-space/production/**', '.github/workflows/production-provisioning.yml']
+  push:
+    branches: [main]
+    paths: ['scripts/operations/**', 'docs/connected-space/production/**', '.github/workflows/production-provisioning.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  provisioning:
+    name: Provisioning safety and MariaDB 11.4
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Start disposable MariaDB fixture
+        run: |
+          docker network create argos-provision-test-network
+          docker run -d --name argos-provision-test-db --network argos-provision-test-network \
+            -e MARIADB_ROOT_PASSWORD=synthetic-provision-root-fixture \
+            --health-cmd='healthcheck.sh --connect --innodb_initialized' \
+            --health-interval=3s --health-timeout=3s --health-retries=30 mariadb:11.4
+          for attempt in $(seq 1 60); do
+            if [ "$(docker inspect --format '{{.State.Health.Status}}' argos-provision-test-db)" = healthy ]; then
+              exit 0
+            fi
+            sleep 2
+          done
+          exit 1
+      - name: Test dry run, collisions, credentials, grants, lock and preservation
+        env:
+          ARGOS_PROVISION_TEST_CONTAINER: argos-provision-test-db
+          ARGOS_PROVISION_TEST_NETWORK: argos-provision-test-network
+          ARGOS_PROVISION_TEST_ROOT_PASSWORD: synthetic-provision-root-fixture
+        run: python3 -m unittest discover -s scripts/operations -p 'test_*.py' -v
+      - name: Validate documentation
+        run: python3 docs/connected-space/validate.py
+      - name: Remove disposable fixture only
+        if: always()
+        run: |
+          docker rm -f argos-provision-test-db || true
+          docker network rm argos-provision-test-network || true

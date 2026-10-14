@@ -8,7 +8,8 @@ Conserver la fiche remplie hors Git. Ne pas y coller de secrets.
 | Base candidate | argosclarteprod |
 | Utilisateur applicatif | argosclarte ; hôte autorisé à confirmer |
 | Responsable / date | À renseigner |
-| Hôte MariaDB interne / version | À relever |
+| Hôte MariaDB interne / version | Conteneur mariadb-public ; version exacte à relever |
+| Réseau et compte DB | mariadb-public, 172.24.0.0/16 ; compte limité à 172.24.0.0/255.255.0.0 |
 | Ancienne base et sauvegarde | À relever ; conservée, aucun reset |
 | Référence de restauration isolée | À renseigner avant mise en service |
 | Révision applicative retenue | 17326498900e34f23a7ae1132cdc0050966d73f5 ; revalider si elle change |
@@ -30,3 +31,4 @@ Conserver la fiche remplie hors Git. Ne pas y coller de secrets.
 - [ ] **Ultérieur :** décision de mise en service, migrations, SMTP/OAuth réels.
 - [ ] **Ultérieur :** compte vérifié, simulation et promotion ADMIN, reconnexion.
 - [ ] **Ultérieur :** recette cible, restauration, charge et accessibilité manuelle.
+- [ ] **Ultérieur :** pages publiques FR/EN anonymes, 200 et indexables ; sitemap/robots/canonicals conservés.

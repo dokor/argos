@@ -101,44 +101,80 @@ sans afficher la configuration développée et sans créer de conteneur. Cela ne
 vérifie ni les secrets HOCON, ni la connexion DB, ni SMTP. Ne lancer aucune
 commande `up`, `restart`, workflow de déploiement ou copie vers les fichiers actifs.
 
-## 3. Base neuve — après revue de l'inventaire
+## 3. Provisionnement versionné de la base et de l'utilisateur
 
-Cette étape prépare seulement une base vide et son utilisateur ; elle ne touche
-pas l'ancienne base. Ne la lancer qu'une fois le serveur MariaDB, l'absence de
-collision et le périmètre réseau de l'utilisateur confirmés dans la fiche.
+Le [script opérateur](../../../scripts/operations/provision-clarte.py) nécessite
+Python 3 (bibliothèque standard seulement) et Docker. Il utilise le client
+MariaDB déjà présent dans `mariadb-public`, sans créer de conteneur auxiliaire.
+Il est validé pour MariaDB 11.4. L'inventaire opérateur a confirmé le réseau
+`mariadb-public`, son sous-réseau `172.24.0.0/16` et le raccordement de MariaDB.
 
-Dans la connexion opérateur à **la bonne instance** :
+Depuis une copie du dépôt contenant cette PR, commencer par la simulation :
 
-```sql
-CREATE DATABASE `argosclarteprod`
-  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```sh
+python3 scripts/operations/provision-clarte.py
 ```
 
-Pas de `IF NOT EXISTS` : une collision doit arrêter la procédure. Créer ensuite
-`argosclarte` via l'outil d'administration habituel, avec un nouveau secret du
-coffre et un hôte autorisé limité au réseau client réellement utilisé. Ne pas
-utiliser automatiquement `%`. Ne pas réutiliser un compte aux droits globaux.
-Le provisionnement du compte dépend de cet hôte, encore à relever ; ne pas
-copier un exemple d'adresse comme cible réelle.
+Elle demande le mot de passe DBA avec saisie masquée, vérifie conteneur actif,
+réseau et version, prend un verrou de session contre les provisionnements
+concurrents puis vérifie l'absence de la base et de tout utilisateur homonyme.
+Résultat attendu : `DRY_RUN OK`. Elle ne crée aucun objet DB et ne demande pas
+le mot de passe applicatif. Le verrou est libéré à la fermeture de la session.
+Le client utilise un fichier privé temporaire dans le conteneur, supprimé en
+sortie normale et sur erreur ; une interruption brutale de Docker/hôte peut
+nécessiter de vérifier les fichiers `/tmp/argos-provision.*` résiduels avec le DBA.
 
-Attribuer les droits sur **`argosclarteprod` uniquement**, sans `GRANT OPTION`.
-Le compte utilisé par l'application applique aussi Flyway au démarrage : il lui
-faut les droits DDL/DML sur ce schéma (ALL PRIVILEGES limité à cette base), pas
-seulement SELECT/INSERT. Vérifier les grants avec l'outil DBA ; ne pas publier de
-sortie pouvant contenir une empreinte d'authentification.
+Puis, pour créer explicitement les deux objets :
 
-Avec la connexion du nouvel utilisateur, vérifier la base sélectionnée et son
-absence de tables (résultat attendu : `argosclarteprod`, puis `0`) :
-
-```sql
-SELECT DATABASE();
-SELECT COUNT(*) AS tables_present FROM information_schema.TABLES
-WHERE TABLE_SCHEMA = DATABASE();
+```sh
+python3 scripts/operations/provision-clarte.py --apply
 ```
 
-Conserver une preuve expurgée de la création et des droits. **Ne pas lancer les
-harness de tests contre cette base**, ni Flyway `clean`, ni l'API pour « tester »
-la connexion : son démarrage migrerait le schéma et lancerait des services.
+Les contrôles sont répétés dans la même session verrouillée avant les écritures.
+Le script demande aussi un nouveau mot de passe applicatif du coffre (minimum
+24 caractères), puis sa confirmation. Aucun secret n'est affiché, passé dans
+les arguments ou écrit dans le dépôt. Garder le mot de passe dans le coffre et
+le reporter dans la configuration privée candidate. Ne pas l'envoyer à Codex.
+
+Résultat attendu : `APPLIED OK`. Le script :
+
+- Crée `argosclarteprod` en utf8mb4, sans `IF NOT EXISTS` ni réutilisation.
+- Crée uniquement `argosclarte`@`172.24.0.0/255.255.0.0`, jamais un accès `%`.
+- Accorde les droits DDL/DML à cette base seulement, sans droits globaux ni
+  `GRANT OPTION`, pour que Flyway puisse travailler au futur démarrage.
+- Vérifie une connexion TCP avec le nouveau compte, la base sélectionnée,
+  l'identité réellement authentifiée, l'absence de tables et les droits effectifs.
+
+Le format hôte/netmask et l'authentification par empreinte locale utilisent les
+mécanismes documentés de MariaDB : [CREATE USER](https://mariadb.com/docs/server/reference/sql-statements/account-management-sql-statements/create-user),
+[mysql_native_password](https://mariadb.com/docs/server/reference/plugins/authentication-plugins/authentication-plugin-mysql_native_password).
+L'empreinte est un credential sensible ; les sorties d'erreur SQL sont donc
+masquées et aucune commande SQL complète n'est imprimée.
+
+Une seconde exécution refuse les noms existants, même si la base est vide.
+Une erreur après création peut laisser la base ou l'utilisateur présents : les
+DDL MariaDB ne constituent pas une transaction globale. Le script préserve ces
+objets, signale l'état partiel et ne tente ni suppression, ni correction, ni
+rotation de mot de passe. Faire vérifier cet état par le DBA avant toute suite.
+Le verrou protège les opérateurs utilisant ce script ; il ne bloque pas un DBA
+qui exécute du SQL indépendamment. Les CREATE sans clause de remplacement
+refusent également les collisions survenant entre les contrôles et la création.
+
+Les options `--container`, `--network`, `--subnet`, `--database`, `--user` et
+`--admin-user` permettent de cibler un autre environnement nommé. Les noms de
+base et d'utilisateur applicatif n'acceptent que lettres/chiffres, pour éviter
+les jokers de GRANT et toute interpolation SQL arbitraire. Utiliser le compte
+DBA habituel si ce n'est pas `root`. Le script ne lance ni Flyway, ni serveur,
+ni workflow, ni suppression de données. La base reste vide jusqu'à la future
+mise en service autorisée. Ne jamais lancer les harness de tests sur cette base.
+
+Validation : tests unitaires de refus/absence d'écritures et tests sur une
+MariaDB jetable, dans le [workflow dédié](../../../.github/workflows/production-provisioning.yml).
+La CI vérifie la création, les collisions, le verrou concurrent, l'authentification,
+les droits DDL, le refus de lecture d'une autre base, le refus hors sous-réseau,
+la conservation d'une donnée publique témoin et la suppression des fichiers
+clients temporaires après une erreur d'authentification. Ces tests ne ciblent
+jamais un conteneur de production.
 
 ## 4. Quotas modifiables sans changement de code
 
@@ -183,6 +219,15 @@ fabriquer un compte ACTIVE en SQL. La simulation exige elle aussi le schéma
 migré et le compte vérifié ; elle ne peut pas réussir sur la base vide préparée.
 
 ## 6. Conditions avant la future bascule
+
+Les pages publiques FR/EN doivent rester accessibles anonymement et indexables.
+La future bascule ne doit ajouter ni protection globale par connexion, ni
+`noindex` global, ni blocage du site dans `robots.txt`. Avant et après bascule,
+vérifier `/`, `/en`, les pages d'acquisition/ressources/guides, `robots.txt` et
+`sitemap.xml` : réponses publiques 200, absence de redirection vers la connexion,
+absence de `noindex` HTML ou `X-Robots-Tag` sur les pages indexables, canonicals
+et hreflang conservés. Les comptes et rapports privés gardent leur `noindex`.
+Une fermeture temporaire de l'espace connecté doit rester limitée à ses routes.
 
 La conservation de l'ancienne base ne rend pas ses rapports accessibles depuis
 la nouvelle : décider séparément du traitement des données publiques et des
