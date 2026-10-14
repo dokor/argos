@@ -7,10 +7,15 @@ import java.util.Map;
 
 public class AccountError extends WebApplicationException {
     public AccountError(int status, String code) {
+        this(status, code, null);
+    }
+
+    public AccountError(int status, String code, Integer retryAfterSeconds) {
         super(
                 Response.status(status)
                         .type(jakarta.ws.rs.core.MediaType.APPLICATION_JSON)
                         .header("Cache-Control", "private, no-store")
+                        .header("Retry-After", retryAfterSeconds)
                         .entity(Map.of("error", code))
                         .build());
     }

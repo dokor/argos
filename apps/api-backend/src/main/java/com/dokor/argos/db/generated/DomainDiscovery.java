@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 import java.time.Instant;
 
-/** V19 mapping. Generated SQL columns are read-only: use explicit write column lists. */
+/** V19/V22 mapping. Generated SQL columns are read-only: use explicit write column lists. */
 @Getter @Setter
 public class DomainDiscovery extends CrudEntityQuerydsl {
     @Column("id") private Long id;
@@ -27,5 +27,8 @@ public class DomainDiscovery extends CrudEntityQuerydsl {
     @Column("stop_reason") private String stopReason;
     @Column("version") private Long version;
     @Column("active_owner_id") private Long activeOwnerId;
+    @Column("started_at") private Instant startedAt;
+    @Column("lease_until") private Instant leaseUntil;
+    @Column("claim_token") private String claimToken;
     @Override public String toString() { return "DomainDiscovery#" + id; }
 }

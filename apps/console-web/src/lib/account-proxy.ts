@@ -75,8 +75,8 @@ export function claimContext(request: NextRequest, reportToken: unknown): string
   return claims(request).find(item => item.hash === hash && request.cookies.has("argos_run_" + item.id))?.id ?? null;
 }
 const allowed: Record<string, RegExp> = {
-  GET: /^(?:auth\/providers|me|usage(?:\/events)?|analysis-profiles|sessions|methods|urls\/\d{1,19}\/history|report-context\/[A-Za-z0-9_-]{20,512}|sites(?:\/\d{1,19}(?:\/urls)?)?|runs|runs\/\d{1,19}(?:\/report)?|auth\/oauth\/(?:google|github|linkedin)\/callback)$/,
-  POST: /^(?:analyses|auth\/(?:register|login|verify|resend|forgot|reset|renew|logout|reauth|confirm-email)|auth\/oauth\/(?:google|github|linkedin)\/start|sessions\/revoke-others|methods\/password|methods\/\d{1,19}\/remove|me\/archive|sites(?:\/\d{1,19}\/urls)?|runs\/\d{1,19}\/claim)$/,
+  GET: /^(?:domain-discoveries(?:\/\d{1,19}(?:\/pages)?)?|auth\/providers|me|usage(?:\/events)?|analysis-profiles|sessions|methods|urls\/\d{1,19}\/history|report-context\/[A-Za-z0-9_-]{20,512}|sites(?:\/\d{1,19}(?:\/urls)?)?|runs|runs\/\d{1,19}(?:\/report)?|auth\/oauth\/(?:google|github|linkedin)\/callback)$/,
+  POST: /^(?:domain-discoveries(?:\/\d{1,19}\/cancel)?|analyses|auth\/(?:register|login|verify|resend|forgot|reset|renew|logout|reauth|confirm-email)|auth\/oauth\/(?:google|github|linkedin)\/start|sessions\/revoke-others|methods\/password|methods\/\d{1,19}\/remove|me\/archive|sites(?:\/\d{1,19}\/urls)?|runs\/\d{1,19}\/claim)$/,
   PUT: /^report-introduction\/[A-Za-z0-9_-]{20,512}$/,
   PATCH: /^me$/,
   DELETE: /^(?:sessions\/\d{1,19}|report-introduction\/[A-Za-z0-9_-]{20,512})$/,
@@ -106,6 +106,15 @@ export async function accountProxy(request: NextRequest, parts: string[]): Promi
       if (/^sites(?:\/\d{1,19}\/urls)?$/.test(path)) {
         if (Object.keys(parsed).some(key => key !== "url") || typeof parsed.url !== "string" || parsed.url.length > 2048 || ssrfError(parsed.url)) return privateError("url_invalid",400);
       }
+      if (path === "domain-discoveries") {
+        if (Object.keys(parsed).some(key=>!["hostname","maxUrls","maxDepth","excludedPaths"].includes(key)) || typeof parsed.hostname!=="string" || !/^[A-Za-z0-9.-]{1,253}$/.test(parsed.hostname) || ssrfError("https://"+parsed.hostname)) return privateError("hostname_invalid",400);
+        if (!Number.isInteger(parsed.maxUrls) || Number(parsed.maxUrls)<1 || Number(parsed.maxUrls)>50 || !Number.isInteger(parsed.maxDepth) || Number(parsed.maxDepth)<0 || Number(parsed.maxDepth)>3) return privateError("payload_invalid",400);
+        if (!Array.isArray(parsed.excludedPaths) || parsed.excludedPaths.length>50 || parsed.excludedPaths.some(p=>typeof p!=="string" || p.length>2048 || !p.startsWith("/") || /[?%#\\\x00-\x20\x7f]/.test(p) || p.includes("/../") || p.endsWith("/.."))) return privateError("exclusions_invalid",400);
+        const key=request.headers.get("idempotency-key");
+        if(!key || !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(key))return privateError("idempotency_key_invalid",400);
+        headers.set("Idempotency-Key",key);
+      }
+      if (/^domain-discoveries\/\d{1,19}\/cancel$/.test(path) && Object.keys(parsed).length) return privateError("payload_invalid",400);
       if (path === "analyses") {
         if (Object.keys(parsed).some(key => !["url", "profileId"].includes(key)) || typeof parsed.url !== "string" || parsed.url.length > 2048 || ssrfError(parsed.url)) return privateError("url_invalid", 400);
         if (typeof parsed.profileId !== "string" || !/^[a-z0-9-]{1,64}$/.test(parsed.profileId)) return privateError("unsupported_profile", 400);
@@ -133,6 +142,15 @@ export async function accountProxy(request: NextRequest, parts: string[]): Promi
   const adminParams=path.startsWith("admin/") ? adminQuery(path,request.nextUrl.searchParams) : undefined;
   if(adminParams===null) return privateError("filter_invalid",400);
   const query = adminParams ?? new URLSearchParams();
+  if(path.startsWith("domain-discoveries")) {
+    const params=request.nextUrl.searchParams;
+    if(request.method==="GET" && /^domain-discoveries\/\d{1,19}\/pages$/.test(path)) {
+      if([...params.keys()].some(key=>!["limit","offset","inclusion"].includes(key)||params.getAll(key).length!==1))return privateError("filter_invalid",400);
+      const limit=params.get("limit")??"20",offset=params.get("offset")??"0",inclusion=params.get("inclusion")??"all";
+      if(!/^[1-9][0-9]{0,2}$/.test(limit)||Number(limit)>100||!/^(0|[1-9][0-9]{0,15})$/.test(offset)||!Number.isSafeInteger(Number(offset))||!["all","eligible","excluded"].includes(inclusion))return privateError("filter_invalid",400);
+      query.set("limit",limit);query.set("offset",offset);query.set("inclusion",inclusion);
+    } else if(params.size) return privateError("payload_invalid",400);
+  }
   if(path==="usage/events") {
     if([...request.nextUrl.searchParams.keys()].some(key=>!["period","limit","offset"].includes(key)) || [...request.nextUrl.searchParams.keys()].some(key=>request.nextUrl.searchParams.getAll(key).length!==1)) return privateError("payload_invalid",400);
     const period=request.nextUrl.searchParams.get("period"),limit=request.nextUrl.searchParams.get("limit")??"20",offset=request.nextUrl.searchParams.get("offset")??"0";

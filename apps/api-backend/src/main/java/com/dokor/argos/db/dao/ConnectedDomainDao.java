@@ -9,7 +9,7 @@ import jakarta.inject.Singleton;
 import java.sql.Connection;
 import java.util.List;
 
-/** Private reads only. Admission/worker writes are delivered by F06/F07. */
+/** Private reads only. Discovery writes live in DiscoveryDao (F06); batch writes follow in F07. */
 @Singleton
 public final class ConnectedDomainDao {
     public record Window(int limit, long offset) {

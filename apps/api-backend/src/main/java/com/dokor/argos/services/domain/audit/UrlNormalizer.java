@@ -21,6 +21,13 @@ public class UrlNormalizer {
         if (!value.matches("(?i)^[a-z][a-z0-9+.-]*://.*")) value = "https://" + value;
         URI uri = parse(value);
         validateHost(uri.getHost(), resolver);
+        return canonical(uri);
+    }
+
+    /** Syntax only; callers MUST validate DNS at admission/transport before any request. */
+    public static String normalizeSyntax(String input) { return canonical(parse(input)); }
+
+    private static String canonical(URI uri) {
         String scheme = uri.getScheme().toLowerCase(Locale.ROOT);
         String host = uri.getHost().toLowerCase(Locale.ROOT);
         String path = uri.normalize().getRawPath();

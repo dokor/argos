@@ -27,6 +27,9 @@ public class QDomainDiscovery extends RelationalPathBase<DomainDiscovery> {
     public final StringPath stopReason = createString("stopReason");
     public final NumberPath<Long> version = createNumber("version", Long.class);
     public final NumberPath<Long> activeOwnerId = createNumber("activeOwnerId", Long.class);
+    public final DateTimePath<Instant> startedAt = createDateTime("startedAt", Instant.class);
+    public final DateTimePath<Instant> leaseUntil = createDateTime("leaseUntil", Instant.class);
+    public final StringPath claimToken = createString("claimToken");
     public final PrimaryKey<DomainDiscovery> primary = createPrimaryKey(id);
     public QDomainDiscovery(String variable) {
         super(DomainDiscovery.class, forVariable(variable), null, "ARG_DOMAIN_DISCOVERY");
@@ -47,6 +50,9 @@ public class QDomainDiscovery extends RelationalPathBase<DomainDiscovery> {
         addMetadata(cancelRequested, ColumnMetadata.named("cancel_requested").withIndex(15).ofType(Types.BOOLEAN).notNull());
         addMetadata(stopReason, ColumnMetadata.named("stop_reason").withIndex(16).ofType(Types.VARCHAR).withSize(64));
         addMetadata(version, ColumnMetadata.named("version").withIndex(17).ofType(Types.BIGINT).notNull());
+        addMetadata(startedAt, ColumnMetadata.named("started_at").withIndex(19).ofType(Types.TIMESTAMP));
+        addMetadata(leaseUntil, ColumnMetadata.named("lease_until").withIndex(20).ofType(Types.TIMESTAMP));
+        addMetadata(claimToken, ColumnMetadata.named("claim_token").withIndex(21).ofType(Types.VARCHAR).withSize(36));
         addMetadata(activeOwnerId, ColumnMetadata.named("active_owner_id").withIndex(18).ofType(Types.BIGINT));
     }
 }
