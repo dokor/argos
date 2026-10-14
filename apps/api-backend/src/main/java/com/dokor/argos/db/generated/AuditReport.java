@@ -10,6 +10,10 @@ import com.querydsl.sql.Column;
 @Generated("com.coreoz.plume.db.querydsl.generation.IdBeanSerializer")
 public class AuditReport extends com.coreoz.plume.db.querydsl.crud.CrudEntityQuerydsl {
 
+    @Column("measurement_completeness") private String measurementCompleteness;
+    public String getMeasurementCompleteness(){return measurementCompleteness;}
+    public void setMeasurementCompleteness(String value){measurementCompleteness=value;}
+
     @Column("diagnostic_json") private String diagnosticJson;
     public String getDiagnosticJson(){return diagnosticJson;}
     public void setDiagnosticJson(String value){diagnosticJson=value;}

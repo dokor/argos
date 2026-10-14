@@ -1,4 +1,5 @@
 "use client";
+import {safeOverviewReturn} from "@/lib/overview-request";
 import {useSearchParams} from "next/navigation";
 import {safeDomainReturn} from "@/lib/connected/domain-navigation";
 import { useEffect, useState } from "react";
@@ -14,6 +15,7 @@ import { analysisCopy } from "@/components/connected/analysisCopy";
 import s from "@/components/connected/Analysis.module.scss";
 import ui from "@/components/connected/Connected.module.scss";
 export default function PersonalReport({ runId }: { runId: string }) {
+  const overviewReturn=safeOverviewReturn(useSearchParams().get("returnTo"));
   const domainReturn=safeDomainReturn(useSearchParams().get("returnTo"));
   const [result,setResult]=useState<{id:string;run:PersonalRun;report?:Report}|null>(null),[failure,setFailure]=useState<{id:string;code:string}|null>(null),[revision,setRevision]=useState(0);
   const {t,lang}=useLang(),c=analysisCopy[lang],session=useAccountSession();
@@ -50,7 +52,7 @@ export default function PersonalReport({ runId }: { runId: string }) {
     return ()=>{alive=false;controller.abort();clearTimeout(timer);document.removeEventListener("visibilitychange",visibility);};
   },[runId,allowed,invalidate,revision]);
   const current=result?.id===runId ? result : null,run=current?.run,report=current?.report,error=failure?.id===runId ? failure.code : "";
-  const back=<Link href={domainReturn ?? (allowed && run?.siteId ? "/account/sites/"+run.siteId : "/account/sites")}>{domainReturn ? t.domainPage.backBatch : allowed && run?.siteId ? t.account.sites.back : t.account.sites.title}</Link>;
+  const back=<Link href={overviewReturn ?? domainReturn ?? (allowed && run?.siteId ? "/account/sites/"+run.siteId : "/account/sites")}>{overviewReturn ? t.overviewPage.back : domainReturn ? t.domainPage.backBatch : allowed && run?.siteId ? t.account.sites.back : t.account.sites.title}</Link>;
   if(!session.ready) return <main className={ui.page}><p role="status">{t.account.working}</p></main>;
   if(!allowed) return <main className={ui.page}><h1>{c.progress}</h1><p role="alert">{session.profile ? t.account.pending : t.account.errors.session_invalid}</p><Link href={"/account/sign-in?returnTo="+encodeURIComponent("/account/runs/"+runId)}>{t.account.signIn}</Link>{back}</main>;
   const terminal=run && ["COMPLETED","FAILED","CANCELED"].includes(run.status);

@@ -28,11 +28,11 @@ export default function AccountShell({ children }: { children: ReactNode }) {
   const menuButton = useRef<HTMLButtonElement>(null);
   const open = openPath === pathname;
   if (/^\/account\/(sign-in|register|verify|forgot|reset)$/.test(pathname)) return children;
-  const isAccount = pathname === "/account" || pathname === "/account/settings";
+  const isAccount = pathname === "/account/settings";
   const isSites = /^\/account\/(analyses|sites|runs|urls)(\/|$)/.test(pathname);
   const valid = session.ready && !!session.profile && !session.denied;
   const admin = valid && session.profile?.verified && session.profile.admin;
-  const context = pathname.startsWith("/account/admin") ? c.admin : isSites ? c.sites
+  const context = pathname === "/account" ? c.overview : pathname.startsWith("/account/admin") ? c.admin : isSites ? c.sites
     : pathname.startsWith("/account/domains") ? c.domains : pathname === "/account/usage" ? c.usage : pathname === "/account/integrations" ? c.integrations : c.account;
   const close = () => setOpenPath(null);
   return <div className={s.shell} data-connected-shell>
@@ -41,13 +41,13 @@ export default function AccountShell({ children }: { children: ReactNode }) {
       if (event.key === "Escape" && open) { close(); menuButton.current?.focus(); }
     }}>
       <div className={s.brandRow}>
-        <Link href="/account/sites" className={s.brand} aria-label={c.workspace}><ArgosIcon size={25}/><span>Argos</span></Link>
+        <Link href="/account" className={s.brand} aria-label={c.workspace}><ArgosIcon size={25}/><span>Argos</span></Link>
         <Link className={s.mobileAccount} href="/account/settings" aria-current={isAccount ? "page" : undefined} onClick={close}>{c.account}</Link>
         <button ref={menuButton} className={s.menu} type="button" aria-expanded={open} aria-controls="account-navigation" onClick={() => setOpenPath(open ? null : pathname)}>{open ? c.closeMenu : c.menu}</button>
       </div>
       <nav id="account-navigation" className={s.navigation} aria-label={c.navigation}>
         <p className={s.navCaption}>{c.workspace}</p>
-        <span className={s.unavailable} aria-disabled="true">{c.overview}<span className={s.soon}>{c.soon}</span></span>
+        <Link href="/account" aria-current={pathname === "/account" ? "page" : undefined} onClick={close}>{c.overview}</Link>
         <Link href="/account/sites" aria-current={isSites ? "page" : undefined} onClick={close}>{c.sites}</Link>
         <Link href="/account/domains" aria-current={pathname.startsWith("/account/domains") ? "page" : undefined} onClick={close}>{c.domains}</Link>
         <Link href="/account/integrations" aria-current={pathname === "/account/integrations" ? "page" : undefined} onClick={close}>{c.integrations}<span className={s.soon}>{c.soon}</span></Link>
@@ -65,7 +65,7 @@ export default function AccountShell({ children }: { children: ReactNode }) {
         {valid ? children : <main className={s.page}>
           <PageHeading title={c.workspace}/>
           {!session.ready ? <EmptyState title={c.loading} kind="loading"/> : <EmptyState title={session.denied ? c.sessionTitle : c.errorTitle} description={session.denied ? c.sessionDescription : t.account.errors.account_unavailable} kind={session.denied ? "empty" : "error"}>
-            {session.denied ? <Link className={s.primary} href={"/account/sign-in?returnTo=" + encodeURIComponent(safeAccountReturn(currentPath+(/\/account\/(domains|runs)(\/|$)/.test(currentPath)?suffix:"")))}>{t.account.signIn}</Link> : <button className={s.secondary} onClick={() => window.dispatchEvent(new Event("argos-account-login"))}>{c.retry}</button>}
+            {session.denied ? <Link className={s.primary} href={"/account/sign-in?returnTo=" + encodeURIComponent(safeAccountReturn(currentPath+(/\/account(?:\/(domains|runs)(\/|$)|$)/.test(currentPath)?suffix:"")))}>{t.account.signIn}</Link> : <button className={s.secondary} onClick={() => window.dispatchEvent(new Event("argos-account-login"))}>{c.retry}</button>}
           </EmptyState>}
         </main>}
       </div>

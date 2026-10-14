@@ -1,7 +1,10 @@
+import {safeOverviewReturn} from "./overview-request";
 import { safeDomainReturn, validDomainId } from "./connected/domain-navigation";
 import { domainSummaryQuery } from "./domain-summary-request";
 // Pure allowlist shared by server redirects and client forms.
 export function safeAccountReturn(raw: unknown): string {
+  const overview = safeOverviewReturn(raw);
+  if (overview) return overview;
   const domain = safeDomainReturn(raw);
   if (domain) return domain;
   if (
@@ -12,7 +15,7 @@ export function safeAccountReturn(raw: unknown): string {
     const [path, query] = raw.split("?");
     const run = /^\/(?:en\/)?account\/runs\/([1-9][0-9]{0,18})$/.exec(path);
     const returnTo = new URLSearchParams(query).get("returnTo");
-    if (run && validDomainId(run[1]) && safeDomainReturn(returnTo))
+    if (run && validDomainId(run[1]) && (safeDomainReturn(returnTo)||safeOverviewReturn(returnTo)))
       return path + "?returnTo=" + encodeURIComponent(returnTo!);
     if (
       /^\/(?:en\/)?account\/domains$/.test(path) &&

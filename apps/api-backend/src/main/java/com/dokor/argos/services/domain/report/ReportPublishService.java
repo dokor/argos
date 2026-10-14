@@ -68,6 +68,7 @@ public class ReportPublishService {
             entity.setCriticalCount(diagnostic.criticalCount()==null?null:Math.toIntExact(diagnostic.criticalCount()));
             entity.setImportantCount(diagnostic.importantCount()==null?null:Math.toIntExact(diagnostic.importantCount()));
         } catch (java.io.IOException invalid) { throw new IllegalStateException("Diagnostic projection failed",invalid); }
+        entity.setMeasurementCompleteness(ReportCompleteness.from(dto));
         entity.setCreatedAt(Instant.now());
         entity.setExpiresAt(retention.expiresAt(entity.getCreatedAt()));
 

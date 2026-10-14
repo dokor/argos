@@ -203,9 +203,65 @@ try {
     2,
   );
   assert.deepEqual(errors, []);
+  await page.goto(base + "/account");
+  await page
+    .getByRole("heading", { name: fr.overviewPage.inventory, exact: true })
+    .waitFor();
+  const overview = await (
+    await context.request.get(base + "/api/account/overview")
+  ).json();
+  assert.equal(overview.trackedUrls, 2);
+  assert.equal(overview.pages.total, 2);
+  const incomplete = await (
+    await context.request.get(base + "/api/account/pages?attention=incomplete")
+  ).json();
+  assert.equal(incomplete.total, overview.incompleteUrls);
+  const priority = await (
+    await context.request.get(base + "/api/account/pages?attention=priority")
+  ).json();
+  assert.equal(priority.total, overview.priorityUrls);
+  assert.ok(
+    overview.pages.items.some(
+      (p) =>
+        p.latestAvailableReport &&
+        p.latestAvailableReport.runId !== p.latestAttempt.runId,
+    ),
+  );
+  await page
+    .getByRole("link", {
+      name: new RegExp(
+        fr.overviewPage.incomplete + " " + overview.incompleteUrls,
+      ),
+    })
+    .click();
+  await page.waitForURL(/attention=incomplete/);
+  await page.reload();
+  await page
+    .getByRole("heading", { name: fr.overviewPage.inventory, exact: true })
+    .waitFor();
+  const overviewReturn = page.url(),
+    attemptLink = page
+      .getByRole("link", { name: new RegExp(fr.overviewPage.openRun + " ") })
+      .first();
+  await attemptLink.click();
+  await page
+    .getByRole("link", { name: fr.overviewPage.back, exact: true })
+    .click();
+  assert.equal(page.url(), overviewReturn);
+  await page
+    .getByRole("heading", { name: fr.overviewPage.inventory, exact: true })
+    .waitFor();
+  await page.screenshot({ path: output + "/overview.png", fullPage: true });
   const proof = {
     stack:
       "Browser / Next BFF / Jersey / MariaDB / real queue, scoring and publication; controlled HTTP/headless transport",
+    overview: {
+      tracked: overview.trackedUrls,
+      priority: overview.priorityUrls,
+      incomplete: overview.incompleteUrls,
+      filteredTotalsMatch: true,
+      returnPreserved: true,
+    },
     discoveryId: discovery,
     batchId: admitted.id,
     domainId: admitted.domainId,
