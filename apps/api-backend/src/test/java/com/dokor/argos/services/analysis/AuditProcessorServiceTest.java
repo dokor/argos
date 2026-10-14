@@ -371,7 +371,7 @@ class AuditProcessorServiceTest {
                 assertEquals(List.of("runtime.collect"), result.checks().stream().map(c -> c.key()).toList());
                 assertFalse(result.checks().getFirst().scorable());
                 assertEquals(false, result.data().get("available"));
-                verify(runs).updateModuleStatus(1L, "runtime", "FAILED");
+                verify(runs).updateModuleStatus(1L, "runtime", "FAILED", "synthetic-worker");
                 verify(runs, never()).fail(anyLong(), anyString(), nullable(String.class));
             }
         }
@@ -442,7 +442,7 @@ class AuditProcessorServiceTest {
                 assertEquals("PARTIAL", mapper.readTree(report.getValue().meta().get("moduleStatuses"))
                     .path("runtime").asText());
                 assertTrue(report.getValue().modules().get(2).checks().isEmpty());
-                verify(runs).updateModuleStatus(1L, "runtime", "COMPLETED");
+                verify(runs).updateModuleStatus(1L, "runtime", "COMPLETED", "synthetic-worker");
             }
         }
         @Test void remoteCallsHaveHttpContextOverlapLocalWorkAndPublishOneOrderedReport() throws Exception {
@@ -535,9 +535,9 @@ class AuditProcessorServiceTest {
                 verify(publisher).completeAndPublish(eq(1L), any(), report.capture(), anyString(), nullable(String.class));
                 assertEquals("true", report.getValue().meta().get("degraded"));
                 assertEquals("TIMEOUT", mapper.readTree(report.getValue().meta().get("moduleStatuses")).path("ssl").asText());
-                verify(runs).updateModuleStatus(1L, "ssl", "RUNNING");
-                verify(runs).updateModuleStatus(1L, "ssl", "FAILED");
-                verify(runs, never()).updateModuleStatus(1L, "ssl", "COMPLETED");
+                verify(runs).updateModuleStatus(1L, "ssl", "RUNNING", "synthetic-worker");
+                verify(runs).updateModuleStatus(1L, "ssl", "FAILED", "synthetic-worker");
+                verify(runs, never()).updateModuleStatus(1L, "ssl", "COMPLETED", "synthetic-worker");
                 assertFalse(report.getValue().modules().get(5).checks().getFirst().scorable());
             }
         }

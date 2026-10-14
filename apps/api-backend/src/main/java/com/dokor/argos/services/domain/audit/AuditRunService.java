@@ -120,6 +120,13 @@ public class AuditRunService {
         logger.debug("Module status transition runId={} module={} status={} updated={}", runId, moduleId, status, updated);
     }
 
+    /** Progress written by a worker must retain the claim captured when it was dispatched. */
+    public void updateModuleStatus(long runId,String moduleId,String status,String expectedClaim) {
+        if(expectedClaim==null){updateModuleStatus(runId,moduleId,status);return;}
+        if(!AuditModule.containsId(moduleId)||!List.of(ModuleStatus.RUNNING,ModuleStatus.COMPLETED,ModuleStatus.FAILED,ModuleStatus.SKIPPED).contains(status))throw new IllegalArgumentException("Invalid module transition");
+        auditRunDao.updateModuleStatus(runId,moduleId,status,serializeModuleStatuses(INITIAL_MODULE_STATUSES),false,expectedClaim);
+    }
+
     /**
      * Passe à FAILED tout module encore en RUNNING (ou PENDING) pour un run qui
      * a échoué. Évite qu'un module reste bloqué en RUNNING (spinner infini) dans

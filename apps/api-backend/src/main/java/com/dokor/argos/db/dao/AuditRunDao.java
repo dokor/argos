@@ -310,6 +310,10 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
     /** One atomic UPDATE, without loading the run/result_json or overwriting another module. */
     public boolean updateModuleStatus(long runId, String moduleId, String status,
                                       String initialStatusesJson, boolean onlyRunning) {
+        return updateModuleStatus(runId,moduleId,status,initialStatusesJson,onlyRunning,null);
+    }
+    /** An old worker cannot overwrite progress belonging to a new claim. */
+    public boolean updateModuleStatus(long runId,String moduleId,String status,String initialStatusesJson,boolean onlyRunning,String expectedClaim) {
         StringExpression document = Expressions.stringTemplate(
             "CASE WHEN JSON_VALID({0}) THEN CASE WHEN JSON_TYPE({0}) = 'ARRAY' AND JSON_LENGTH({0}) > 0 "
                 + "THEN {0} ELSE {1} END ELSE {1} END", RUN.moduleStatuses, initialStatusesJson);
@@ -322,7 +326,7 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
         var runState = onlyRunning ? RUN.status.in("RUNNING", "FAILED", "CANCELED") : RUN.status.eq("RUNNING");
         return transactionManager.update(RUN)
             .set(RUN.moduleStatuses, Expressions.stringTemplate("JSON_SET({0}, {1}, {2})", document, path, status))
-            .where(RUN.id.eq(runId), runState, path.isNotNull(), allowed)
+            .where(RUN.id.eq(runId), runState, path.isNotNull(), allowed, expectedClaim==null?null:RUN.claimToken.eq(expectedClaim))
             .execute() == 1;
     }
 }

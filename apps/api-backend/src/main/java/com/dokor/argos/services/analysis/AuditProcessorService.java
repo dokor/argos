@@ -211,7 +211,7 @@ public class AuditProcessorService {
                 throw new IllegalStateException("HTTP must be the first audit module");
             final AuditContext baseContext = context;
             AuditModuleResult httpModule = runModule(
-                runId, httpDefinition, moduleStatuses,
+                runId, run.getClaimToken(), httpDefinition, moduleStatuses,
                 () -> httpModuleAnalyzer.analyze(baseContext, logger));
 
             // Enrichir le contexte avec les données HTTP (finalUrl, headers, body…)
@@ -232,28 +232,28 @@ public class AuditProcessorService {
             AuditDeadline collectionDeadline=AuditDeadline.current();
             try (var observatory = remote.submit(AuditModule.OBSERVATORY.id(), () -> collectionDeadline.call(() -> withHttpSnapshot(snapshotUnavailable, () -> observatoryModuleAnalyzer.analyze(ctx, logger))));
                  var ssl = remote.submit(AuditModule.SSL.id(), () -> collectionDeadline.call(() -> withHttpSnapshot(snapshotUnavailable, () -> sslLabsModuleAnalyzer.analyze(ctx, logger))))) {
-                auditRunService.updateModuleStatus(runId, AuditModule.OBSERVATORY.id(), "RUNNING");
-                auditRunService.updateModuleStatus(runId, AuditModule.SSL.id(), "RUNNING");
+                auditRunService.updateModuleStatus(runId, AuditModule.OBSERVATORY.id(), "RUNNING", run.getClaimToken());
+                auditRunService.updateModuleStatus(runId, AuditModule.SSL.id(), "RUNNING", run.getClaimToken());
 
                 List<AuditModuleResult> allModules = new ArrayList<>(AuditModule.ordered().size());
                 allModules.add(httpModule);
                 for (AuditModule module : AuditModule.ordered().subList(1, AuditModule.ordered().size())) {
                     AuditModuleResult result = switch (module) {
                         case HTTP -> throw new IllegalStateException("HTTP already executed");
-                        case HTML -> runModule(runId, module, moduleStatuses,
+                        case HTML -> runModule(runId, run.getClaimToken(), module, moduleStatuses,
                             () -> withHttpSnapshot(snapshotUnavailable, () -> htmlModuleAnalyzer.analyze(ctx, logger)));
-                        case RUNTIME -> runModule(runId, module, moduleStatuses,
+                        case RUNTIME -> runModule(runId, run.getClaimToken(), module, moduleStatuses,
                             () -> withHttpSnapshot(snapshotUnavailable, () -> runtimeModuleAnalyzer.analyze(ctx, logger)));
-                        case LIGHTHOUSE -> enrichLighthouse(runModule(runId, module, moduleStatuses,
+                        case LIGHTHOUSE -> enrichLighthouse(runModule(runId, run.getClaimToken(), module, moduleStatuses,
                             () -> withHttpSnapshot(snapshotUnavailable, () -> lighthouseModuleAnalyzer.analyze(ctx, logger))), httpModule, ctx);
-                        case OBSERVATORY -> runModule(runId, module, moduleStatuses,
+                        case OBSERVATORY -> runModule(runId, run.getClaimToken(), module, moduleStatuses,
                             observatory::await, observatory.startedAtMillis(), true);
-                        case SSL -> runModule(runId, module, moduleStatuses,
+                        case SSL -> runModule(runId, run.getClaimToken(), module, moduleStatuses,
                             ssl::await, ssl.startedAtMillis(), true);
-                        case ZAP -> runModule(runId, module, moduleStatuses,
+                        case ZAP -> runModule(runId, run.getClaimToken(), module, moduleStatuses,
                             () -> withHttpSnapshot(snapshotUnavailable, () -> zapModuleAnalyzer.analyze(ctx, logger)));
                         // Only Tech has a 24h domain cache. Observatory and SSL still run for each audit.
-                        case TECH -> runModule(runId, module, moduleStatuses,
+                        case TECH -> runModule(runId, run.getClaimToken(), module, moduleStatuses,
                             () -> withHttpSnapshot(snapshotUnavailable, () -> domainAnalysisService.getOrRunTechAnalysis(ctx, logger)));
                     };
                     allModules.add(result);
@@ -418,19 +418,19 @@ public class AuditProcessorService {
      * TIMEOUT / FAILED) et, en cas d'échec, un résultat "indisponible" (WARN, non
      * scorable) est substitué afin que le reste de l'analyse se poursuive.
      */
-    private AuditModuleResult runModule(long runId, AuditModule module,
+    private AuditModuleResult runModule(long runId, String claim, AuditModule module,
                                         Map<String, String> statuses, ModuleCall call) {
-        return runModule(runId, module, statuses, call, System.currentTimeMillis(), false);
+        return runModule(runId, claim, module, statuses, call, System.currentTimeMillis(), false);
     }
 
-    private AuditModuleResult runModule(long runId, AuditModule module,
+    private AuditModuleResult runModule(long runId, String claim, AuditModule module,
                                         Map<String, String> statuses, ModuleCall call, long start, boolean started) {
         String moduleId = module.id();
         String title = module.fallbackTitle();
         MDC.put("module", moduleId);
         if (!started) {
             logger.info("module_start module={} runId={}", moduleId, runId);
-            auditRunService.updateModuleStatus(runId, moduleId, "RUNNING");
+            auditRunService.updateModuleStatus(runId, moduleId, "RUNNING", claim);
         }
         try {
             // Remote work already has its bounded future. Read finished results even after
@@ -467,7 +467,7 @@ public class AuditProcessorService {
                     ? ModuleOutcome.PARTIAL : ModuleOutcome.COMPLETED;
             }
             statuses.put(moduleId, outcome.name());
-            auditRunService.updateModuleStatus(runId, moduleId, outcome.liveStatus());
+            auditRunService.updateModuleStatus(runId, moduleId, outcome.liveStatus(), claim);
             logger.info("module_completed module={} status={} durationMs={}",
                 moduleId, outcome, System.currentTimeMillis() - start);
             return res;
@@ -479,7 +479,7 @@ public class AuditProcessorService {
             ModuleOutcome outcome = isTimeout(e) ? ModuleOutcome.TIMEOUT
                 : e instanceof ModuleUnavailableException ? ModuleOutcome.UNAVAILABLE : ModuleOutcome.FAILED;
             statuses.put(moduleId, outcome.name());
-            auditRunService.updateModuleStatus(runId, moduleId, outcome.liveStatus());
+            auditRunService.updateModuleStatus(runId, moduleId, outcome.liveStatus(), claim);
             logger.warn("module_failed module={} status={} durationMs={} error={}", moduleId,
                 outcome, System.currentTimeMillis() - start, e.getClass().getSimpleName());
             return annotateWithSource(fallbackModule(moduleId, title, outcome, e));

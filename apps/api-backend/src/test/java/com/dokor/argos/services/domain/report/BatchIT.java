@@ -275,7 +275,7 @@ class BatchIT extends MariaDbReportFixture {
         assertEquals(version, progress(first).version());
         sql(
                 "UPDATE ARG_DOMAIN_DISCOVERY SET expires_at=DATE_ADD(created_at,INTERVAL 1 SECOND)"
-                    + " WHERE id="
+                        + " WHERE id="
                         + input.discoveryId());
         clock.now = clock.now.plusSeconds(2);
         assertEquals(first.id(), batches.create(a, CSRF, key, input).id());
@@ -355,7 +355,7 @@ class BatchIT extends MariaDbReportFixture {
                                         input.discoveryId(), input.selectedPageIds(), "other")));
         sql(
                 "UPDATE ARG_DOMAIN_DISCOVERY_PAGE SET"
-                    + " eligible=FALSE,exclusion_reason='USER_EXCLUDED' WHERE id="
+                        + " eligible=FALSE,exclusion_reason='USER_EXCLUDED' WHERE id="
                         + input.selectedPageIds().getFirst());
         error(400, () -> launch(input));
         sql(
@@ -491,6 +491,13 @@ class BatchIT extends MariaDbReportFixture {
                         observed, 3, clock.instant(), runs.initialModuleStatusesJson()));
         assertEquals(2, progress(batch).credits().reserved());
         assertTrue(runDao.claimRun(run, "new", clock.instant()));
+        assertFalse(
+                runDao.updateModuleStatus(
+                        run, "http", "COMPLETED", runs.initialModuleStatusesJson(), false, "old"));
+        assertTrue(
+                runDao.updateModuleStatus(
+                        run, "http", "RUNNING", runs.initialModuleStatusesJson(), false, "new"));
+
         assertEquals(
                 AuditRunDao.Recovery.STALE,
                 runDao.recoverStuck(observed, 3, clock.instant(), "bad"));
@@ -667,7 +674,9 @@ class BatchIT extends MariaDbReportFixture {
             request.header("Origin", "http://localhost:3000")
                     .header("X-Argos-CSRF", CSRF)
                     .header("Cookie", "argos_account_csrf=" + CSRF);
-        return java.net.http.HttpClient.newHttpClient()
+        return java.net.http.HttpClient.newBuilder()
+                .version(java.net.http.HttpClient.Version.HTTP_1_1)
+                .build()
                 .send(
                         request.method(
                                         method,

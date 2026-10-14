@@ -80,7 +80,7 @@ et `audit.scheduler.max-attempts` (3 par défaut ; voir configuration réelle).
 Il compare sous verrou le claim et `startedAt` observés. Reprise : même run,
 même réservation, nouveau claim, progression réinitialisée dans la même transaction.
 Tentatives épuisées : FAILED et RELEASED. Annulation demandée : CANCELED et RELEASED.
-Un ancien worker ne peut ni publier ni échouer le nouveau claim. La deadline
+Un ancien worker ne peut ni publier, ni échouer, ni modifier la progression du nouveau claim. La deadline
 courte du moteur borne la collecte ; le reaper reste la récupération après crash.
 
 Un superviseur réconcilie jusqu'à 100 lots actifs toutes les 2 secondes ; les

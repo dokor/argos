@@ -107,7 +107,7 @@ export async function accountProxy(request: NextRequest, parts: string[]): Promi
         if (Object.keys(parsed).some(key => key !== "url") || typeof parsed.url !== "string" || parsed.url.length > 2048 || ssrfError(parsed.url)) return privateError("url_invalid",400);
       }
       if (path === "domain-batches") {
-        const id = (value: unknown) => typeof value === "string" && /^[1-9][0-9]{0,18}$/.test(value) && BigInt(value) <= 9223372036854775807n;
+        const id = (value: unknown) => typeof value === "string" && /^[1-9][0-9]{0,18}$/.test(value) && BigInt(value) <= BigInt("9223372036854775807");
         if (Object.keys(parsed).some(key => !["discoveryId","selectedPageIds","profileId"].includes(key)) || !id(parsed.discoveryId) || !Array.isArray(parsed.selectedPageIds) || parsed.selectedPageIds.length < 1 || parsed.selectedPageIds.length > 50 || parsed.selectedPageIds.some(value => !id(value)) || new Set(parsed.selectedPageIds).size !== parsed.selectedPageIds.length) return privateError("selection_invalid",400);
         if (typeof parsed.profileId !== "string" || !/^[a-z0-9-]{1,64}$/.test(parsed.profileId)) return privateError("unsupported_profile",400);
         const key = request.headers.get("idempotency-key");
