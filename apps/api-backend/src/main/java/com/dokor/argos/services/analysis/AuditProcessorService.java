@@ -317,6 +317,8 @@ public class AuditProcessorService {
                     score.global().ratio()
                 );
             }
+        } catch (com.dokor.argos.services.domain.audit.RunCanceledException e) {
+            logger.info("Run canceled runId={}",runId);
         } catch (Exception e) {
             // Marque le(s) module(s) resté(s) en RUNNING comme FAILED pour que la
             // vue de progression n'affiche pas un spinner infini sur ce module.

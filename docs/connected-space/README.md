@@ -36,6 +36,7 @@ compatibilité n’est pas une commande de remise à zéro de la production.
 | [Contrats API](api-contract.md) | Requêtes, réponses, erreurs et idempotence |
 | [Fondations F01](foundation-f01.md) | Contrat exécutable, schéma livré, inventaire et validation sur base neuve |
 | [Cadre et composants F02](shell-f02.md) | Navigation, états, aperçu canonique, preuves et écarts visuels |
+| [Consommation et quotas F05](usage-f05.md) | Disponible serveur, journal privé et primitives transactionnelles |
 | [Compte personnel F04](account-f04.md) | Profil, sécurité, connexions, contrats conservés et preuves |
 | [Recette et livraison](acceptance.md) | Matrice de tests et conditions de clôture |
 | [Plan de réalisation](delivery-plan.md) | Issues, dépendances et séquence des PR |

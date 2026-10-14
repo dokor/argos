@@ -765,7 +765,9 @@ public final class ConnectedContracts {
         @JsonProperty(value = "state", required = true) UsageState state,
         @JsonProperty(value = "period", required = true) String period,
         @JsonProperty(value = "createdAt", required = true) String createdAt,
-        @JsonProperty(value = "countedAt", required = true) String countedAt
+        @JsonProperty(value = "countedAt", required = true) String countedAt,
+        @JsonProperty(value = "releasedAt", required = true) String releasedAt,
+        @JsonProperty(value = "url", required = true) String url
     ) {
         public UsageEvent {
             required(runId, "runId");
@@ -780,6 +782,10 @@ public final class ConnectedContracts {
             required(createdAt, "createdAt");
             java.time.Instant.parse(createdAt);
             if (countedAt != null) { java.time.Instant.parse(countedAt); }
+            if (releasedAt != null) { java.time.Instant.parse(releasedAt); }
+            required(url, "url");
+            check(url.codePointCount(0, url.length()) >= 1, "url");
+            check(url.codePointCount(0, url.length()) <= 2048, "url");
         }
         @JsonAnySetter public void rejectUnknown(String name, Object value) {
             throw new IllegalArgumentException("Unknown connected field");
@@ -1108,7 +1114,8 @@ public final class ConnectedContracts {
         @JsonProperty(value = "total", required = true) Long total,
         @JsonProperty(value = "limit", required = true) Long limit,
         @JsonProperty(value = "offset", required = true) Long offset,
-        @JsonProperty(value = "snapshotAt", required = true) String snapshotAt
+        @JsonProperty(value = "snapshotAt", required = true) String snapshotAt,
+        @JsonProperty(value = "period", required = true) String period
     ) {
         public UsageEvents {
             required(items, "items");
@@ -1126,6 +1133,8 @@ public final class ConnectedContracts {
             check(offset <= 9007199254740991L, "offset");
             required(snapshotAt, "snapshotAt");
             java.time.Instant.parse(snapshotAt);
+            required(period, "period");
+            check(java.util.regex.Pattern.compile("^[0-9]{4}-(0[1-9]|1[0-2])$").matcher(period).find(), "period");
         }
         @JsonAnySetter public void rejectUnknown(String name, Object value) {
             throw new IllegalArgumentException("Unknown connected field");
@@ -1209,7 +1218,7 @@ public final class ConnectedContracts {
             throw new IllegalArgumentException("Unknown connected field");
         }
     }
-    public enum AdmittedRunStatus { QUEUED, RUNNING, COMPLETED, FAILED }
+    public enum AdmittedRunStatus { QUEUED, RUNNING, COMPLETED, FAILED, CANCELED }
 
     @JsonInclude(JsonInclude.Include.ALWAYS)
     public record SiteAnalysisAccepted(

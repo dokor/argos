@@ -16,7 +16,7 @@ try {
       const url=new URL(route.request().url());const path=url.pathname;
       let data={};
       if(path.endsWith('/me')) data={displayName:'Fixture',email:'fixture@example.com',verified:true};
-      else if(path.endsWith('/usage')) data={offer:'FREE',period:'2026-10',timezone:'UTC',startsAt:'2026-10-01T00:00:00Z',resetsAt:'2027-01-01T00:00:00Z',used:2,reserved:0,limit:null,canLaunch:true};
+      else if(path.endsWith('/usage')) data={offer:'FREE',period:'2026-10',timezone:'UTC',startsAt:'2026-10-01T00:00:00Z',resetsAt:'2027-01-01T00:00:00Z',used:2,reserved:0,available:null,limit:null,canLaunch:true};
       else if(path.endsWith('/analysis-profiles')) data={defaultProfileId:'server-default-v1',items:[{id:'server-default-v1'}]};
       else if(path.endsWith('/history')) data={context,items:url.searchParams.has('cursor') ? [item(6,50,'NO_PREVIOUS_REPORT')] : [item(9,80,'COMPARABLE'),item(8,70,'METHODOLOGY_CHANGED'),item(7,60,'NO_PREVIOUS_REPORT')],nextCursor:url.searchParams.has('cursor') ? null : '7'};
       return route.fulfill({contentType:'application/json',body:JSON.stringify(data)});

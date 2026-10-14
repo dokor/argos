@@ -8,6 +8,6 @@ export function response(path) {
   if(path==='/api/account/sessions') return sessions;
   if(path==='/api/account/auth/providers') return {providers:['github','google'],enabled:true};
   if(path==='/api/account/return') return {returnTo:'/account/settings'};
-  if(path==='/api/account/usage') return {offer:'FREE',period:'2026-10',timezone:'UTC',startsAt:'2026-10-01T00:00:00Z',resetsAt:'2027-01-01T00:00:00Z',used:2,reserved:1,limit:20,canLaunch:true};
+  if(path==='/api/account/usage') return {offer:'FREE',period:'2026-10',timezone:'UTC',startsAt:'2026-10-01T00:00:00Z',resetsAt:'2027-01-01T00:00:00Z',used:2,reserved:1,available:17,limit:20,canLaunch:true};
   return null;
 }

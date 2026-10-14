@@ -10,6 +10,11 @@ import com.querydsl.sql.Column;
 @Generated("com.coreoz.plume.db.querydsl.generation.IdBeanSerializer")
 public class AuditRun extends com.coreoz.plume.db.querydsl.crud.CrudEntityQuerydsl {
 
+    @Column("cancel_requested")
+    private Boolean cancelRequested = false;
+    public Boolean getCancelRequested() { return cancelRequested; }
+    public void setCancelRequested(Boolean value) { cancelRequested = value; }
+
     @Column("idempotency_key")
     private String idempotencyKey;
     public String getIdempotencyKey() { return idempotencyKey; }

@@ -30,20 +30,20 @@ try {
   const second=await (await mutation(a,"/api/audits",{url:"https://example.com/usage",personal:true})).json();
   assert.equal((await usage(a)).reserved,2);
   const denied=await mutation(a,"/api/audits",{url:"https://example.com/usage",personal:true});assert.equal(denied.status(),429);assert.equal((await denied.json()).error,"quota_exceeded");assert.ok(denied.headers()["retry-after"]);
-  const page=await a.newPage();await page.goto("/account");await page.getByRole("heading",{name:fr.usage.title,exact:true}).waitFor();
+  const page=await a.newPage();await page.goto("/account/usage");await page.getByRole("heading",{name:"Mon quota mensuel",exact:true}).waitFor();
   await page.getByText(fr.usage.reached,{exact:true}).waitFor();
   await page.goto("/account/analyses/new");await page.locator("code").filter({hasText:"server-default-v1"}).waitFor();assert.equal(await page.getByRole("button",{name:"Lancer l’analyse",exact:true}).isDisabled(),true);
-  await page.goto("/account");await page.getByRole("heading",{name:fr.usage.title,exact:true}).waitFor();
+  await page.goto("/account/usage");await page.getByRole("heading",{name:"Mon quota mensuel",exact:true}).waitFor();
   assert.equal((await a.request.get("/api/account/sites")).status(),200);assert.equal((await mutation(a,"/api/account/sites",{url:"https://example.com/extra"})).status(),200);
   await layout(page);await page.screenshot({path:fileURLToPath(new URL("capacity-fr-light.png",out)),fullPage:true});
-  await page.getByRole("heading",{name:fr.usage.title,exact:true}).locator("..").screenshot({path:fileURLToPath(new URL("panel-fr-light.png",out))});
+  await page.getByRole("heading",{name:"Mon quota mensuel",exact:true}).locator("..").screenshot({path:fileURLToPath(new URL("panel-fr-light.png",out))});
   // Test-only controls exercise real publication/failure transactions, without invoking remote modules.
   await finish(first.runId,"publish");let state=await usage(a);assert.equal(state.used,1);assert.equal(state.reserved,1);assert.equal(state.canLaunch,false);
   await finish(second.runId,"fail");state=await usage(a);assert.equal(state.used,1);assert.equal(state.reserved,0);assert.equal(state.canLaunch,true);
   await page.getByRole("button",{name:fr.usage.refresh,exact:true}).click();
   await page.getByText(fr.usage.reached,{exact:true}).waitFor({state:"hidden"});
   await page.goto("/account/analyses/new");await page.locator("code").filter({hasText:"server-default-v1"}).waitFor();assert.equal(await page.getByRole("button",{name:"Lancer l’analyse",exact:true}).isDisabled(),false);
-  await page.goto("/account");await page.getByRole("heading",{name:fr.usage.title,exact:true}).waitFor();
+  await page.goto("/account/usage");await page.getByRole("heading",{name:"Mon quota mensuel",exact:true}).waitFor();
   const report=await a.request.get(`/api/account/runs/${first.runId}/report`);assert.equal(report.status(),200);assert.equal((await report.json()).scores.coverage.provisional,true);
   const b=await browser.newContext({baseURL:base});contexts.push(b);await account(b,"usage-b-"+Date.now()+"@example.com");assert.equal((await usage(b)).used,0);assert.equal((await b.request.get(`/api/account/runs/${first.runId}/report`)).status(),404);
   const c=await browser.newContext({baseURL:base});contexts.push(c);

@@ -2,7 +2,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { accountFetch, AccountClientError, type AccountProfile } from "@/lib/account-client";
 
-export type MonthlyUsage={offer:string;period:string;timezone:string;startsAt:string;resetsAt:string;used:number;reserved:number;limit:number|null;canLaunch:boolean};
+export type MonthlyUsage=import("@/lib/connected/contracts").Usage;
 const Context = createContext<{ profile: AccountProfile | null; ready: boolean; denied: boolean; error: string; invalidate: (reason: unknown) => void; usage:MonthlyUsage|null;usageError:boolean;refreshUsage:()=>void }>({profile:null,ready:false,denied:false,error:"",invalidate:()=>{},usage:null,usageError:false,refreshUsage:()=>{}});
 export const useAccountSession = () => useContext(Context);
 export default function AccountSession({ children }: { children: React.ReactNode }) {

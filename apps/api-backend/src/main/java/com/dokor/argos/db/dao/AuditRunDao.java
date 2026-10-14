@@ -127,6 +127,22 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
             .from(RUN).where(RUN.id.eq(runId)).forUpdate().fetchOne());
     }
 
+    /** Caller authenticates the owner and holds its transaction; lock order: run -> usage. */
+    public boolean requestCancellation(long runId,long owner,Connection c,Instant now) {
+        var run=lockForPublication(runId,c).orElseThrow(com.dokor.argos.services.account.AccountError::missing);
+        if(!java.util.Objects.equals(run.getOwnerUserId(),owner)) throw com.dokor.argos.services.account.AccountError.missing();
+        if(!List.of("QUEUED","RUNNING").contains(run.getStatus())) return false;
+        transactionManager.update(RUN,c).set(RUN.cancelRequested,true).where(RUN.id.eq(runId)).execute();
+        run.setCancelRequested(true);
+        if("QUEUED".equals(run.getStatus())) finishCanceled(run,now,c);
+        return true;
+    }
+    public void finishCanceled(AuditRun run,Instant now,Connection c) {
+        long changed=transactionManager.update(RUN,c).set(RUN.status,"CANCELED").set(RUN.finishedAt,now)
+            .set(RUN.lastError,"CANCELED").where(RUN.id.eq(run.getId()),RUN.status.in("QUEUED","RUNNING")).execute();
+        if(changed==1) usage.release(run,c);
+    }
+
     /** Must execute in the transaction that inserts the report, with the same connection. */
     public boolean markCompleted(long runId, String claimToken, Instant finishedAt, String resultJson, Connection connection) {
         return transactionManager.update(RUN, connection)
@@ -156,6 +172,7 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
         return transactionManager.executeAndReturn(c -> {
             var run=lockForPublication(runId,c).orElse(null);
             if(run==null || !"RUNNING".equals(run.getStatus()) || claimToken!=null && !claimToken.equals(run.getClaimToken())) return false;
+            if(Boolean.TRUE.equals(run.getCancelRequested())) {finishCanceled(run,finishedAt,c);return true;}
             long updated=transactionManager.update(RUN,c)
             .set(RUN.status, AuditRunStatus.FAILED.name())
             .set(RUN.finishedAt, finishedAt)
@@ -205,19 +222,14 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
      * @return true si le run a bien été remis en QUEUED, false sinon
      */
     public boolean requeueStuckRun(long runId) {
-        long updated = transactionManager.update(RUN)
-            .set(RUN.status, AuditRunStatus.QUEUED.name())
-            .setNull(RUN.claimToken)
-            .setNull(RUN.startedAt)
-            .setNull(RUN.finishedAt)
-            .setNull(RUN.lastError)
-            .where(
-                RUN.id.eq(runId),
-                RUN.status.eq(AuditRunStatus.RUNNING.name())
-            )
-            .execute();
-
-        return updated == 1;
+        return transactionManager.executeAndReturn(c->{
+            var run=lockForPublication(runId,c).orElse(null);
+            if(run==null || !"RUNNING".equals(run.getStatus()))return false;
+            if(Boolean.TRUE.equals(run.getCancelRequested())){finishCanceled(run,Instant.now(),c);return false;}
+            return transactionManager.update(RUN,c).set(RUN.status,"QUEUED").setNull(RUN.claimToken)
+                .setNull(RUN.startedAt).setNull(RUN.finishedAt).setNull(RUN.lastError)
+                .where(RUN.id.eq(runId),RUN.status.eq("RUNNING")).execute()==1;
+        });
     }
 
     /**
@@ -275,7 +287,7 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
         StringExpression current = Expressions.stringTemplate("JSON_UNQUOTE(JSON_EXTRACT({0}, {1}))", document, path);
         var allowed = onlyRunning ? current.eq("RUNNING") : "RUNNING".equals(status)
             ? current.eq("PENDING") : current.in("PENDING", "RUNNING");
-        var runState = onlyRunning ? RUN.status.in("RUNNING", "FAILED") : RUN.status.eq("RUNNING");
+        var runState = onlyRunning ? RUN.status.in("RUNNING", "FAILED", "CANCELED") : RUN.status.eq("RUNNING");
         return transactionManager.update(RUN)
             .set(RUN.moduleStatuses, Expressions.stringTemplate("JSON_SET({0}, {1}, {2})", document, path, status))
             .where(RUN.id.eq(runId), runState, path.isNotNull(), allowed)

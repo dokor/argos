@@ -148,6 +148,18 @@ jobs:
           path: outputs/ui-review/clarte-account/
           if-no-files-found: warn
           retention-days: 14
+      - name: Check Clarte usage ledger and quota states
+        env:
+          CONNECTED_BASE_URL: http://127.0.0.1:3000
+        run: node scripts/e2e/connected-usage.mjs
+      - name: Upload Clarte usage captures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: connected-usage-${{ github.sha }}
+          path: outputs/ui-review/clarte-usage/
+          if-no-files-found: warn
+          retention-days: 14
       - name: Rehearse consistent backup and isolated restore
         env:
           DB_FIXTURE_CONTAINER: ${{ job.services.mariadb.id }}

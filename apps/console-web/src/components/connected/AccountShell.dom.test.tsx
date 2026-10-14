@@ -5,7 +5,7 @@ import AccountShell from "./AccountShell";
 import { LangProvider } from "@/lib/i18n/LangContext";
 const state = vi.hoisted(() => ({ path: "/account/integrations", session: {
   ready: true, denied: false, error: "", profile: { displayName: "Camille", verified: true, admin: false },
-  usage: { offer: "FREE", limit: 100 as number | null, used: 32, reserved: 4 }, usageError: false, refreshUsage: vi.fn(),
+  usage: { offer: "FREE", limit: 100 as number | null, used: 32, reserved: 4, available:64 }, usageError: false, refreshUsage: vi.fn(),
 } }));
 vi.mock("next/navigation", () => ({ usePathname: () => state.path }));
 vi.mock("@/components/account/AccountSession", () => ({ useAccountSession: () => state.session }));
@@ -13,13 +13,13 @@ vi.mock("@/components/ThemeToggle", () => ({ default: () => <button>Theme</butto
 vi.mock("@/components/LangToggle", () => ({ default: () => <span>FR / EN</span> }));
 beforeEach(() => {
   state.path = "/account/integrations";
-  Object.assign(state.session, { ready: true, denied: false, error: "", profile: { displayName: "Camille", verified: true, admin: false }, usage: { offer: "FREE", limit: 100, used: 32, reserved: 4 }, usageError: false });
+  Object.assign(state.session, { ready: true, denied: false, error: "", profile: { displayName: "Camille", verified: true, admin: false }, usage: { offer: "FREE", limit: 100, used: 32, reserved: 4, available:64 }, usageError: false });
 });
 const content = <main><h1>Private page</h1><p>Private result</p></main>;
 it("shares one footer, real available credits and a current navigation item", () => {
   render(<AccountShell>{content}</AccountShell>);
   expect(screen.getAllByRole("contentinfo")).toHaveLength(1);
-  expect(screen.getByRole("link", { name: /64 crédits/ })).toHaveAttribute("href", "/account/settings#usage-heading");
+  expect(screen.getByRole("link", { name: /64 crédits/ })).toHaveAttribute("href", "/account/usage");
   expect(screen.getByRole("link", { name: /Intégrations/ })).toHaveAttribute("aria-current", "page");
   expect(screen.queryByRole("link", { name: "Administration" })).not.toBeInTheDocument();
 });
@@ -76,7 +76,7 @@ it("localizes navigation and handles unlimited and zero quota without fake count
   const view = render(<LangProvider initialLang="en"><AccountShell>{content}</AccountShell></LangProvider>);
   expect(screen.getByRole("link", { name: /Unlimited credits/ })).toBeInTheDocument();
   expect(screen.getByRole("link", { name: /Integrations/ })).toHaveAttribute("href", "/en/account/integrations");
-  state.session.usage.limit = 0; view.rerender(<LangProvider initialLang="en"><AccountShell>{content}</AccountShell></LangProvider>);
+  state.session.usage.limit = 0; state.session.usage.available=0; view.rerender(<LangProvider initialLang="en"><AccountShell>{content}</AccountShell></LangProvider>);
   expect(screen.getByRole("link", { name: /0 credits/ })).toBeInTheDocument();
 });
 it("does not install private chrome around public authentication forms", () => {
