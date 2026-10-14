@@ -23,7 +23,7 @@ class Refused(Exception):
 # The private option file exists only for this client session and is removed on exit.
 # Neither passwords nor SQL are arguments to docker/sh/mariadb. Never print stderr:
 # client failures can contain authentication hashes or connection details.
-CLIENT_SHELL = r'''
+CREDENTIAL_SHELL = r'''
 set -eu
 umask 077
 cfg=$(mktemp /tmp/argos-provision.XXXXXXXX)
@@ -34,6 +34,9 @@ IFS= read -r encoded
 printf '%s' "$encoded" | base64 -d > "$cfg"
 unset encoded MYSQL_PWD
 export MYSQL_HISTFILE=/dev/null
+'''
+
+CLIENT_SHELL = CREDENTIAL_SHELL + r'''
 mariadb --defaults-extra-file="$cfg" --batch --skip-column-names --raw \
   --unbuffered --skip-reconnect "$@"
 '''

@@ -6,11 +6,13 @@ La préparation conserve les services et la base existants. Le démarrage de
 l'API candidate, les migrations, la promotion ADMIN et la bascule restent
 pour la future mise en service explicitement autorisée.
 
-Décisions du 14 octobre 2026 : nouvelle base **argosclarteprod**, utilisateur
-**argosclarte**, origine **https://argos.lelouet.fr**, FREE **10** et PREMIUM
-**1000** crédits par mois UTC. Le nom de base évite les caractères joker des
-GRANT MariaDB. Une collision de nom doit être résolue avant toute création,
-sans réutiliser ou nettoyer une base existante.
+Décision révisée du 14 octobre 2026 : conserver **argos_db_prod** et son
+utilisateur **argos_user**. Nettoyer seulement les données périmées sans perdre
+ce qui sert à la nouvelle interface. Origine **https://argos.lelouet.fr**,
+FREE **10** et PREMIUM **1000** crédits par mois UTC. La création de
+`argosclarteprod` n'est plus la voie retenue ; le script initial reste une
+alternative pour un environnement neuf explicitement nommé. Aucun nettoyage
+de production n'a été exécuté par l'agent.
 
 ## 1. Inventaire à exécuter maintenant — lecture seule
 
@@ -32,8 +34,10 @@ Ne pas transmettre `docker inspect` complet, `printenv`, les fichiers de secrets
 ou la sortie développée de `docker compose config`. En cas de droits manquants,
 utiliser le compte opérateur habituel ; ne pas modifier les permissions du démon.
 
-Exécuter [database-inventory.sql](database-inventory.sql) dans l'outil MariaDB
-opérateur déjà configuré. En CLI, utiliser un fichier client protégé existant
+Le fichier [database-inventory.sql](database-inventory.sql) concerne uniquement
+l’ancienne option de création d’une base neuve. Pour la base conservée, utiliser
+la simulation du nettoyage en section 3. Pour les autres contrôles en CLI,
+utiliser un fichier client protégé existant
 (`--defaults-extra-file` doit être la première option) ou la saisie interactive
 du mot de passe, jamais `--password=...`. Aucun conteneur MariaDB ni compte root
 n'est supposé par le kit. Une erreur de droits sur `mysql.user` signifie que la
@@ -63,10 +67,14 @@ l'éditeur ou le transfert de fichiers habituel, sans afficher les secrets :
 | [console.env.example](console.env.example) | `/srv/configs/argos-clarte-candidate/console.env` |
 
 Les exemples de secrets sont volontairement vides et inutilisables tels quels.
-Renseigner `clarte.database-host` avec le nom DNS MariaDB joignable depuis
+`clarte.database-host` est maintenant `mariadb-public`, confirmé par la
+configuration opérateur. Adapter cette valeur uniquement si le nom DNS change.
+Le nom doit être joignable depuis
 `mariadb-public`, sans port, chemin ni credentials (port MariaDB 3306).
 Un port différent demande d'adapter explicitement l'URL JDBC candidate.
-Stocker les mots de passe DB, API interne, SMTP et les jetons dans le coffre.
+Réutiliser le mot de passe existant de `argos_user` pour la candidate, sans
+rotation dans cette opération. Stocker les secrets API interne, SMTP et les
+jetons dans le coffre.
 Générer un secret JWT aléatoire d'au moins 64 octets UTF-8, distinct du jeton
 serveur `admin-api.token` / `ADMIN_API_TOKEN`. Le jeton serveur doit correspondre
 entre Next et Java. Les secrets n'ont pas besoin d'être envoyés à Codex.
@@ -101,7 +109,84 @@ sans afficher la configuration développée et sans créer de conteneur. Cela ne
 vérifie ni les secrets HOCON, ni la connexion DB, ni SMTP. Ne lancer aucune
 commande `up`, `restart`, workflow de déploiement ou copie vers les fichiers actifs.
 
-## 3. Provisionnement versionné de la base et de l'utilisateur
+## 3. Nettoyage ciblé de la base existante — voie retenue
+
+Le [script de maintenance](../../../scripts/operations/clean-clarte.py) partage
+le client protégé du [script opérateur](../../../scripts/operations/provision-clarte.py) ;
+conserver les deux fichiers voisins, issus de la même révision. Il utilise
+Python 3 et le client MariaDB du conteneur existant. La cible par défaut est
+`argos_db_prod` et le compte est `argos_user`, avec les droits SELECT/DELETE et
+ceux nécessaires au dump. Aucun CREATE USER ou privilège global n'est demandé.
+
+Commencer par la simulation, qui fonctionne avec l'API active :
+
+```sh
+python3 scripts/operations/clean-clarte.py
+```
+
+Le mot de passe demandé est bien celui de `argos_user`. Le script vérifie
+MariaDB 11.4, le réseau confirmé, la base sélectionnée et l'historique Flyway,
+puis affiche seulement des compteurs et une date UTC. Ni email, ni URL, ni
+rapport ou credential n'est affiché. Une migration en échec arrête la procédure.
+Les tables qui n'existent pas encore sont ignorées : le script ne migre pas.
+
+Données candidates, selon leur rétention existante :
+
+| Table | Lignes nettoyables |
+|---|---|
+| ARG_ACCOUNT_TOKEN, ARG_ACCOUNT_OAUTH, ARG_ACCOUNT_RUN_CLAIM | Preuves expirées depuis plus d'un jour |
+| ARG_ACCOUNT_SESSION | Sessions expirées depuis plus d'un jour |
+| ARG_ACCOUNT_RATE | Budgets temporaires expirés depuis plus d'un jour |
+| ARG_ACCOUNT_SECURITY_EVENT | Événements de sécurité de plus de 90 jours, selon la politique existante |
+| ARG_DOMAIN_ANALYSIS | Cache technique dont expires_at est dépassé de plus d’un jour (TTL utile 24 h) |
+
+Les comptes, identités/mots de passe et liens sociaux, sites suivis, audits,
+runs, rapports et liens, découvertes/lots/historiques, réservations et débits,
+feedback, newsletter, analytics, journal administratif, verrous de contrôle et
+historique Flyway sont **conservés**. Un ancien historique ou rapport n'est pas
+un cache périmé. Les quotas ne sont pas remis à zéro par ce nettoyage. Les
+nouvelles règles de quotas restent calculées sur le registre existant.
+
+Le schéma versionné n'identifie aucune table entière obsolète à supprimer pour
+Clarté. Les anciennes colonnes évoluent uniquement par les migrations restantes,
+sans effacer les versions/checksums Flyway. Une remise à zéro générale de la
+base ne fait pas partie du script ni du périmètre retenu.
+
+Après revue de la simulation, dans une fenêtre opérateur où les écrivains de
+cette base sont arrêtés, la commande d'application est :
+
+```sh
+python3 scripts/operations/clean-clarte.py --apply --backup-dir /chemin/prive/existant
+```
+
+Ce chemin est à remplacer par le répertoire privé de sauvegarde réellement
+prévu, sans droits d’écriture pour les autres utilisateurs. Le script vérifie que `api-backend` est arrêté ; l'opérateur doit aussi
+confirmer l'absence d'autres instances/API/workers qui écrivent dans cette base.
+Il n'arrête aucun conteneur lui-même. Garder la console et Traefik actifs pour
+servir les pages publiques pendant cette fenêtre. Ne pas couper tout le site.
+
+Avant la première suppression, un dump complet des tables du schéma est produit
+automatiquement, en mode 0600 avec nom unique, sans écraser un fichier. Les
+credentials restent dans un fichier client temporaire privé dans le conteneur.
+Une sauvegarde en échec/incomplète interdit le nettoyage et conserve le fichier
+`.incomplete.sql`. Un dump réussi est gardé en `.sql`. Prévoir stockage privé,
+espace disque et vérification de restauration ; la présence du fichier seul
+n'est pas une preuve de reprise sur la cible.
+
+Les DELETE ciblés sont exécutés dans une transaction InnoDB unique. Pas de
+TRUNCATE, DROP, nettoyage Flyway, désactivation des FK ou création de base.
+Les compteurs des autres tables sont vérifiés avant COMMIT. Une erreur avant
+COMMIT provoque un ROLLBACK ; une coupure au moment du COMMIT nécessite de
+vérifier le résultat avec le DBA, pas une reprise aveugle. Les nouvelles lignes
+non périmées restent intactes. Des triggers, routines/événements SQL ou des FK
+entrantes non prévues provoquent un refus pour éviter des effets non examinés.
+
+Le verrou de maintenance sérialise les sessions de ce script et ne remplace pas
+l'arrêt des écrivains. Aucune commande de démarrage ou déploiement n'est lancée.
+Ne redémarrer l'API qu'après la revue opérateur du résultat. Si aucun compteur
+candidat n'est positif, `NO_CHANGES` termine sans dump ni suppression.
+
+## 3 bis. Provisionnement d’une base neuve — alternative
 
 Le [script opérateur](../../../scripts/operations/provision-clarte.py) nécessite
 Python 3 (bibliothèque standard seulement) et Docker. Il utilise le client
@@ -225,19 +310,22 @@ Conserver l'email souhaité dans la fiche privée ; aucun compte ni mot de passe
 initial n'est codé dans une migration. Le [runbook ADMIN](../first-admin-runbook.md)
 reste la procédure d'autorité. À la future mise en service :
 
-1. Appliquer les migrations historiques par le démarrage normal autorisé de
-   l'API sur la base candidate, puis vérifier SMTP et le parcours réel.
-2. Créer le compte, ouvrir son email, confirmer la vérification et se connecter.
+1. Appliquer les migrations restantes par le démarrage normal autorisé de
+   l'API sur `argos_db_prod`, puis vérifier SMTP et le parcours réel.
+2. Conserver le compte existant s'il est ACTIVE et vérifié. Si un ADMIN existe
+   déjà, le bootstrap ne doit pas être exécuté : utiliser son accès normal.
+   Sinon utiliser un compte réel vérifié ; créer/vérifier un compte seulement
+   si aucun compte éligible n'existe.
 3. Relever l'ID exact de ce compte (chaîne entière), puis simuler le bootstrap
-   avec `--database argosclarteprod --user-id <ID_VERIFIE>` et les variables
+   avec `--database argos_db_prod --user-id <ID_VERIFIE>` et les variables
    temporaires `ARGOS_BOOTSTRAP_*` injectées par le coffre.
 4. Arrêter API/workers dans la fenêtre autorisée avant `--apply`, puis appliquer,
    purger les variables temporaires, redémarrer et se reconnecter.
 5. Vérifier l'accès ADMIN, le refus d'un compte standard et le journal de sécurité.
 
 Aujourd'hui : ne pas démarrer de service, ne pas exécuter `--apply`, ne pas
-fabriquer un compte ACTIVE en SQL. La simulation exige elle aussi le schéma
-migré et le compte vérifié ; elle ne peut pas réussir sur la base vide préparée.
+fabriquer un compte ACTIVE en SQL. La simulation exige le schéma migré et le compte vérifié ; elle ne migre pas
+la base existante ni ne fabrique de compte éligible.
 
 ## 6. Conditions avant la future bascule
 
@@ -250,9 +338,9 @@ absence de `noindex` HTML ou `X-Robots-Tag` sur les pages indexables, canonicals
 et hreflang conservés. Les comptes et rapports privés gardent leur `noindex`.
 Une fermeture temporaire de l'espace connecté doit rester limitée à ses routes.
 
-La conservation de l'ancienne base ne rend pas ses rapports accessibles depuis
-la nouvelle : décider séparément du traitement des données publiques et des
-anciens liens. Vérifier sauvegarde/restauration isolée, SMTP/OAuth, capacité
+La voie retenue conserve la base et les relations des rapports pour préserver
+les anciens liens. Si l’alternative d’une nouvelle base est choisie plus tard,
+la reprise des liens et données publiques demandera une décision distincte. Vérifier sauvegarde/restauration isolée, SMTP/OAuth, capacité
 Raspberry/Argon2, parcours et accessibilité selon le runbook. Relever les SHA
 et les résultats de recette du code finalement retenu. La préparation de ces
 fichiers ne vaut pas validation de ces contrôles ni autorisation de déploiement.

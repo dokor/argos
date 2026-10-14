@@ -1,4 +1,4 @@
-# Premier ADMIN — base neuve isolée
+# Premier ADMIN — base nommée et compte vérifié
 
 Cette procédure est opérateur, hors API. Ne jamais utiliser les schémas de test
 ou commandes de nettoyage Flyway contre une base conservée. L’outil ci-dessous
@@ -7,19 +7,23 @@ le serveur. Il ne sert pas à récupérer un ADMIN existant.
 
 ## Préparation
 
-1. Nommer explicitement l’environnement isolé et sa base neuve, par exemple
-   `argos_clarte_recette`. Employer un compte DB dédié à cette base. Les tables
-   moteur/public sont partagées : ne pas copier puis effacer un sous-ensemble
-   de tables de production. Une mise en service de production est distincte.
+1. Nommer explicitement l’environnement et sa base. La production retenue
+   conserve `argos_db_prod` et `argos_user` ; voir le
+   [kit opérateur](production/README.md). Contrôler l'historique Flyway et la
+   sauvegarde. Pour un environnement neuf, employer un compte DB limité à sa
+   base dédiée. Les tables moteur/public et données nécessaires restent conservées.
 2. Construire `mvn package` dans `apps/api-backend`. Configurer l’application
-   avec cette base ; au démarrage habituel, Flyway applique toutes les migrations.
+   avec cette base ; au démarrage habituel, Flyway applique les migrations restantes.
    Garder les versions historiques et leurs checksums. Vérifier V26 ou suivantes.
 3. Configurer `account.enabled`, origine exacte commune Next/Java, secret JWT,
    SMTP de recette et offres/plafonds suivant [operations](../accounts/operations.md).
    `ADMIN_API_TOKEN` reste distinct. Retirer les anciennes variables Next
    `ADMIN_PASSWORD` et `ADMIN_TOKEN`. Aucun accès frontend de secours partagé.
-4. Depuis `/account/register`, créer le compte opérateur, ouvrir l’e-mail de
-   vérification et confirmer. Vérifier une connexion normale. Ne jamais modifier
+4. Vérifier d'abord si un ADMIN existe : le CLI refuse tout nouveau bootstrap
+   dans ce cas, utiliser l'accès ou la récupération du compte existant.
+   Sinon conserver un compte ACTIVE vérifié éligible. S'il n'existe pas, depuis
+   `/account/register`, créer le compte opérateur, ouvrir l'e-mail de vérification
+   et confirmer. Vérifier une connexion normale. Ne jamais modifier
    l’état en SQL pour contourner la preuve e-mail. Relever son ID exact dans
    ARG_ACCOUNT_USER avec l’outil DB opérateur ; ne pas convertir cet ID en flottant.
 5. Arrêter les processus API/workers pour l’application de la promotion.
@@ -38,14 +42,14 @@ CLI temporaires, pas une nouvelle configuration de l’application.
 Depuis la racine du dépôt, remplacer **123** par l’ID vérifié :
 
 ```sh
-java -cp 'apps/api-backend/target/dist/api-backend/lib/*' com.dokor.argos.operations.FirstAdminBootstrap --database argos_clarte_recette --user-id 123
+java -cp 'apps/api-backend/target/dist/api-backend/lib/*' com.dokor.argos.operations.FirstAdminBootstrap --database argos_db_prod --user-id 123
 ```
 
 Sortie attendue : `DRY_RUN userId=123`, code 0, aucune écriture. Vérifier la base
 et la cible dans l’outil DB. Pour appliquer la décision opérateur autorisée :
 
 ```sh
-java -cp 'apps/api-backend/target/dist/api-backend/lib/*' com.dokor.argos.operations.FirstAdminBootstrap --database argos_clarte_recette --user-id 123 --apply
+java -cp 'apps/api-backend/target/dist/api-backend/lib/*' com.dokor.argos.operations.FirstAdminBootstrap --database argos_db_prod --user-id 123 --apply
 ```
 
 Sortie attendue : `APPLIED userId=123`, code 0. Les mêmes arguments fonctionnent

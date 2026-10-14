@@ -1,6 +1,8 @@
 # Mise en service Clarté — initialisation propre
 
-Ce runbook prépare un environnement neuf nommé. Il n'exécute aucune mise en
+Ce runbook prépare un environnement nommé. La décision opérateur actuelle
+conserve `argos_db_prod` ; voir le [kit production](production/README.md) pour
+la maintenance ciblée et la configuration candidate. Il n'exécute aucune mise en
 production, suppression ou copie de données. Il complète le
 [premier ADMIN](first-admin-runbook.md), la [configuration comptes](../accounts/operations.md)
 et les [protections des collecteurs](../../infra/compose/lighthouse-service).
@@ -13,7 +15,9 @@ préparation de la future activation et du bootstrap.
 
 Consigner environnement, origine HTTPS, nom de base, version MariaDB, SHA des
 images frontend/API/collecteurs, responsable et décision de mise en service.
-Employer une base neuve et un utilisateur DB limité à cette base. Le nom
+La voie retenue conserve la base et le compte applicatif existants, avec
+sauvegarde et historique Flyway intact. Pour un environnement réellement neuf,
+employer une base neuve et un utilisateur DB limité à cette base. Le nom
 `argos_clarte_recette` est un exemple, pas une cible à déduire automatiquement.
 Ne pas réutiliser les noms réservés aux harness de test pour un environnement
 conservé : les suites d'intégration les nettoient.
@@ -41,8 +45,8 @@ deux interfaces ni migration de compatibilité de l'ancien espace.
    du SHA retenu. Un manifeste portant le commit de merge de PR doit être
    distingué du head de branche et du futur commit de livraison.
 2. Construire le package Java et le frontend par les commandes du dépôt.
-   Démarrer l'API sur la base neuve dédiée : Flyway applique la chaîne historique
-   complète jusqu'à V26 ou suivantes. Ne pas éditer les checksums ni utiliser
+   Démarrer l'API sur la base nommée : Flyway applique les migrations
+   restantes (ou la chaîne complète sur base neuve) jusqu'à V26 ou suivantes. Ne pas éditer les checksums ni utiliser
    `clean` sur un environnement conservé. Le démarrage du package est vérifié
    dans la CI MariaDB, séparément des mocks frontend.
 3. Configurer l'origine identique côté Next et Java, API_BASE serveur, comptes,
