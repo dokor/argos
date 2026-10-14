@@ -70,7 +70,13 @@ const incomplete = (p) =>
   (!["QUEUED", "RUNNING"].includes(p.latestAttempt.executionStatus) &&
     p.result.completeness !== "FULL");
 export function response(path, params = new URLSearchParams(), mode = "") {
-  let items = structuredClone(pages);
+  let items = structuredClone(pages).sort(
+    (a, b) =>
+      Number(priority(b)) - Number(priority(a)) ||
+      (b.result.criticalCount ?? -1) - (a.result.criticalCount ?? -1) ||
+      (b.result.importantCount ?? -1) - (a.result.importantCount ?? -1) ||
+      a.normalizedUrl.localeCompare(b.normalizedUrl),
+  );
   if (mode === "empty") items = [];
   if (mode === "active") {
     items[0].latestAttempt.executionStatus = "RUNNING";

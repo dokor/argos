@@ -23,6 +23,7 @@ export default function OverviewView() {
     router = useRouter();
   const query = overviewQuery(new URLSearchParams(params)),
     suffix = params.toString();
+  if (query && !params.has("limit")) query.set("limit", "6");
   const resource = useDomainResource<Overview>(
       query ? "overview?" + query : null,
       pending,
@@ -194,7 +195,7 @@ export default function OverviewView() {
           ) : (
             data && (
               <>
-                <div className={s.kpis}>
+                <div className={`${s.kpis} ${d.kpis}`}>
                   <KpiCard
                     label={c.priority}
                     value={number(data.priorityUrls)}
@@ -344,7 +345,7 @@ export default function OverviewView() {
                     )}
                   </Surface>
                   <Surface title={c.domainTitle}>
-                    <p>{c.domainHint}</p>
+                    <p className={d.promotion}>{c.domainHint}</p>
                     <Link href="/account/domains/new" className={s.primary}>
                       {c.domainAction}
                     </Link>

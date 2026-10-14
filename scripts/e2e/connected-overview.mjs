@@ -123,6 +123,7 @@ try {
         await check("priority");
         await link.click();
         await page.getByRole("link", { name: c.back, exact: true }).click();
+        await page.waitForURL(filtered);
         assert.equal(page.url(), filtered);
         await page.getByText(`9 ${c.results}`, { exact: true }).waitFor();
         await visit("?attention=incomplete&limit=1");
@@ -135,7 +136,7 @@ try {
           .getByRole("link", { name: t.domainPage.previous, exact: true })
           .waitFor();
         await check("incomplete");
-        const other = lang === "fr" ? "EN" : "FR";
+        const other = lang === "fr" ? "English" : "Français";
         assert.ok(
           (
             await page
@@ -143,6 +144,23 @@ try {
               .getAttribute("href")
           ).includes("attention=incomplete"),
         );
+        if (width === 1056 && lang === "fr" && theme === "light") {
+          const search = page.getByLabel(c.search, { exact: true });
+          await search.fill("no-matching-url");
+          await search.press("Tab");
+          assert.equal(
+            await page
+              .getByRole("button", { name: c.searchAction, exact: true })
+              .evaluate((e) => e === document.activeElement),
+            true,
+          );
+          await page.keyboard.press("Enter");
+          await page.waitForURL(/query=no-matching-url/);
+          await page
+            .getByRole("heading", { name: c.noResults, exact: true })
+            .waitFor();
+          await check("keyboard-search-empty");
+        }
         if ([320, 1056].includes(width)) {
           mode = "active";
           await visit();
@@ -178,14 +196,14 @@ try {
                     : variant === "zero"
                       ? c.quotaBlocked
                       : c.unlimited,
-                { exact: true },
+                { exact: variant !== "zero" },
               )
               .first()
               .waitFor();
             await check(variant);
           }
           mode = "denied";
-          await visit();
+          await page.goto(base + prefix + "/account");
           await page
             .getByRole("link", { name: t.account.signIn, exact: true })
             .waitFor();

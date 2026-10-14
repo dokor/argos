@@ -290,6 +290,19 @@ class OverviewIT extends MariaDbReportFixture {
     @Test
     void queryCountDoesNotGrowWithPageSizeAndReadsNoReportBodies() throws Exception {
         seed();
+        for (long id = 3000; id < 3200; id++) {
+            execute(
+                    "INSERT INTO ARG_AUDIT(id,input_url,normalized_url,domain_id)"
+                        + " VALUES(?,?,?,100)",
+                    id,
+                    "https://atelier-nova.fr/extra-" + id,
+                    "https://atelier-nova.fr/extra-" + id);
+            execute(
+                    "INSERT INTO ARG_ACCOUNT_SITE_URL(id,site_id,audit_id,created_at)"
+                        + " VALUES(?,100,?,'2026-10-01')",
+                    id,
+                    id);
+        }
         var sqls = new ArrayList<String>();
         try (var raw = source.getConnection()) {
             var connection =
@@ -310,13 +323,45 @@ class OverviewIT extends MariaDbReportFixture {
             dao.pages(10, clock.instant(), filter(null, 1, 0), connection);
             int count = sqls.size();
             sqls.clear();
-            dao.pages(10, clock.instant(), filter(null, 100, 0), connection);
+            var large = dao.pages(10, clock.instant(), filter(null, 100, 0), connection);
+            assertEquals(215, large.total());
+            assertEquals(100, large.items().size());
             assertEquals(count, sqls.size());
             assertEquals(3, count);
             assertTrue(
                     sqls.stream()
                             .noneMatch(
                                     q -> q.contains("report_json") || q.contains("result_json")));
+        }
+    }
+
+    @Test
+    void completenessMigrationUsesTheEngineRuleAndCanResume() throws Exception {
+        seed();
+        var fixture = SummaryFixture.fixture();
+        var spec = fixture.path("domains").get(0).path("pages").get(0);
+        var evidence = SummaryFixture.evidence(fixture, spec);
+        execute(
+                "UPDATE ARG_AUDIT_REPORT SET report_json=?,measurement_completeness=NULL WHERE"
+                        + " id=100",
+                mapper.writeValueAsString(evidence.report()));
+        sql("UPDATE ARG_AUDIT_REPORT SET measurement_completeness=NULL WHERE id=101");
+        try (var c = source.getConnection()) {
+            var context = org.mockito.Mockito.mock(org.flywaydb.core.api.migration.Context.class);
+            org.mockito.Mockito.when(context.getConnection()).thenReturn(c);
+            var migration = new db.migration.V25__report_completeness();
+            migration.migrate(context);
+            migration.migrate(context);
+            try (var q = c.createStatement();
+                    var r =
+                            q.executeQuery(
+                                    "SELECT measurement_completeness FROM ARG_AUDIT_REPORT WHERE id"
+                                            + " IN (100,101) ORDER BY id")) {
+                assertTrue(r.next());
+                assertEquals("FULL", r.getString(1));
+                assertTrue(r.next());
+                assertEquals("UNKNOWN", r.getString(1));
+            }
         }
     }
 }

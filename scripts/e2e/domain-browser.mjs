@@ -247,6 +247,7 @@ try {
   await page
     .getByRole("link", { name: fr.overviewPage.back, exact: true })
     .click();
+  await page.waitForURL(overviewReturn);
   assert.equal(page.url(), overviewReturn);
   await page
     .getByRole("heading", { name: fr.overviewPage.inventory, exact: true })
