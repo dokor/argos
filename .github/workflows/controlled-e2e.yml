@@ -19,7 +19,7 @@ jobs:
     needs: changes
     if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.e2e == 'true') }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 25
     services:
       mariadb:
         image: mariadb:11.4
@@ -180,6 +180,17 @@ jobs:
             outputs/domain-e2e-error.log
           if-no-files-found: warn
           retention-days: 14
+      - name: Check Clarte overview and latest-attempt inventory
+        env:
+          CONNECTED_BASE_URL: http://127.0.0.1:3000
+        run: node scripts/e2e/connected-overview.mjs
+      - name: Upload overview captures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: connected-overview-${{ github.sha }}
+          path: outputs/ui-review/clarte-overview/
+          if-no-files-found: warn
       - name: Rehearse consistent backup and isolated restore
         env:
           DB_FIXTURE_CONTAINER: ${{ job.services.mariadb.id }}

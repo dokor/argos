@@ -7,7 +7,7 @@ describe("connected contract boundaries", () => {
     const failed: PageResult = { pageId: "9007199254740993", runId: "9007199254740995", normalizedUrl: "https://example.com/",
       executionStatus: "FAILED", completeness: "NONE", score: { value: null, provisional: false, reason: "TIMEOUT" },
       coverage: { ratio: null, version: null }, criticalCount: null, importantCount: null, moduleStatuses: {}, failureReason: "TIMEOUT", reportAvailable: false };
-    const page: TrackedPage = { pageId: failed.pageId, domainId: "123", normalizedUrl: failed.normalizedUrl,
+    const page: TrackedPage = { pageId: failed.pageId, domainId: "123", hostname: "example.com", normalizedUrl: failed.normalizedUrl,
       latestAttempt: { runId: failed.runId, executionStatus: "FAILED", createdAt: "2026-10-13T08:00:00Z", finishedAt: "2026-10-13T08:00:30Z" },
       latestAvailableReport: null, result: failed };
     expect(JSON.parse(JSON.stringify(page)).result.score.value).toBeNull();

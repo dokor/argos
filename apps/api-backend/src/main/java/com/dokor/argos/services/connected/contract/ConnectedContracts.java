@@ -721,7 +721,8 @@ public final class ConnectedContracts {
         @JsonProperty(value = "normalizedUrl", required = true) String normalizedUrl,
         @JsonProperty(value = "latestAttempt", required = true) Attempt latestAttempt,
         @JsonProperty(value = "latestAvailableReport", required = true) AvailableReport latestAvailableReport,
-        @JsonProperty(value = "result", required = true) PageResult result
+        @JsonProperty(value = "result", required = true) PageResult result,
+        @JsonProperty(value = "hostname", required = true) String hostname
     ) {
         public TrackedPage {
             required(pageId, "pageId");
@@ -737,6 +738,9 @@ public final class ConnectedContracts {
             required(normalizedUrl, "normalizedUrl");
             check(normalizedUrl.codePointCount(0, normalizedUrl.length()) >= 1, "normalizedUrl");
             check(normalizedUrl.codePointCount(0, normalizedUrl.length()) <= 2048, "normalizedUrl");
+            required(hostname, "hostname");
+            check(hostname.codePointCount(0, hostname.length()) >= 1, "hostname");
+            check(hostname.codePointCount(0, hostname.length()) <= 253, "hostname");
         }
         @JsonAnySetter public void rejectUnknown(String name, Object value) {
             throw new IllegalArgumentException("Unknown connected field");
@@ -752,8 +756,10 @@ public final class ConnectedContracts {
         @JsonProperty(value = "incompleteUrls", required = true) Long incompleteUrls,
         @JsonProperty(value = "activeRuns", required = true) Long activeRuns,
         @JsonProperty(value = "usage", required = true) Usage usage,
-        @JsonProperty(value = "recentRuns", required = true) List<Attempt> recentRuns,
-        @JsonProperty(value = "priorityPages", required = true) List<TrackedPage> priorityPages
+        @JsonProperty(value = "recentRuns", required = true) List<RecentRun> recentRuns,
+        @JsonProperty(value = "priorityPages", required = true) List<TrackedPage> priorityPages,
+        @JsonProperty(value = "activeAttempts", required = true) List<RecentRun> activeAttempts,
+        @JsonProperty(value = "pages", required = true) TrackedPages pages
     ) {
         public Overview {
             required(snapshotAt, "snapshotAt");
@@ -781,6 +787,11 @@ public final class ConnectedContracts {
             priorityPages = List.copyOf(priorityPages);
             check(priorityPages.size() >= 0 && priorityPages.size() <= 5, "priorityPages");
             for (var item : priorityPages) { required(item, "item"); }
+            required(activeAttempts, "activeAttempts");
+            activeAttempts = List.copyOf(activeAttempts);
+            check(activeAttempts.size() >= 0 && activeAttempts.size() <= 10, "activeAttempts");
+            for (var item : activeAttempts) { required(item, "item"); }
+            required(pages, "pages");
         }
         @JsonAnySetter public void rejectUnknown(String name, Object value) {
             throw new IllegalArgumentException("Unknown connected field");
@@ -1545,6 +1556,38 @@ public final class ConnectedContracts {
             required(version, "version");
             check(version >= 0L, "version");
             check(version <= 9007199254740991L, "version");
+        }
+        @JsonAnySetter public void rejectUnknown(String name, Object value) {
+            throw new IllegalArgumentException("Unknown connected field");
+        }
+    }
+
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    public record RecentRun(
+        @JsonProperty(value = "attempt", required = true) Attempt attempt,
+        @JsonProperty(value = "pageId", required = true) String pageId,
+        @JsonProperty(value = "domainId", required = true) String domainId,
+        @JsonProperty(value = "normalizedUrl", required = true) String normalizedUrl,
+        @JsonProperty(value = "hostname", required = true) String hostname
+    ) {
+        public RecentRun {
+            required(attempt, "attempt");
+            required(pageId, "pageId");
+            check(pageId.codePointCount(0, pageId.length()) >= 1, "pageId");
+            check(pageId.codePointCount(0, pageId.length()) <= 19, "pageId");
+            check(java.util.regex.Pattern.compile("^[1-9][0-9]{0,18}$").matcher(pageId).find(), "pageId");
+            check(Long.parseLong(pageId) > 0, "pageId");
+            required(domainId, "domainId");
+            check(domainId.codePointCount(0, domainId.length()) >= 1, "domainId");
+            check(domainId.codePointCount(0, domainId.length()) <= 19, "domainId");
+            check(java.util.regex.Pattern.compile("^[1-9][0-9]{0,18}$").matcher(domainId).find(), "domainId");
+            check(Long.parseLong(domainId) > 0, "domainId");
+            required(normalizedUrl, "normalizedUrl");
+            check(normalizedUrl.codePointCount(0, normalizedUrl.length()) >= 1, "normalizedUrl");
+            check(normalizedUrl.codePointCount(0, normalizedUrl.length()) <= 2048, "normalizedUrl");
+            required(hostname, "hostname");
+            check(hostname.codePointCount(0, hostname.length()) >= 1, "hostname");
+            check(hostname.codePointCount(0, hostname.length()) <= 253, "hostname");
         }
         @JsonAnySetter public void rejectUnknown(String name, Object value) {
             throw new IllegalArgumentException("Unknown connected field");

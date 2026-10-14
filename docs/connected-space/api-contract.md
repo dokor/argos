@@ -8,7 +8,7 @@ décrit les commandes et limites. Les opérations livrées par F01/F03/F05/F06/F
 Les synthèses privées F08 sont disponibles ([guide F08](summary-f08.md)) : historique léger, crédits du lot, exclusions par règle et complétude inconnue explicites.
 
 Le lancement, la progression et l’annulation des lots sont disponibles ([guide F07](batch-f07.md)).
-Les synthèses, historiques et listes de domaines restent `planned`.
+La vue d’ensemble et l’inventaire F10 sont disponibles ([guide F10](overview-f10.md)).
 Les contrats compte/usage actuels restent réutilisés sauf écarts explicites D-11
 et D-12. BFF same-origin, puis mêmes ressources dans l’API Java sous `/api`.
 
@@ -139,3 +139,10 @@ Voir [admission URL, progression et recherche privée](site-diagnostic-f03.md#co
 ## Implémentation F04
 
 Voir [compte personnel F04](account-f04.md#contrats-conservés) : réutilisation des endpoints compte, retour OAuth vers les réglages et code public oauth_cancelled. Aucun nouveau schéma ni endpoint métier.
+
+## Implémentation F10
+
+`GET /overview` accepte désormais les mêmes filtres que `/pages` et contient
+`pages:TrackedPages`, afin de lire KPI et inventaire dans une seule transaction.
+`attention=active` et `domainId` complètent les filtres. Les récents et actifs
+portent leur URL, pageId, domainId et hostname ; voir [F10](overview-f10.md).

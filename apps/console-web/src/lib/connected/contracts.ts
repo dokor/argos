@@ -245,6 +245,7 @@ export type TrackedPage = {
   readonly latestAttempt: Attempt | null;
   readonly latestAvailableReport: AvailableReport | null;
   readonly result: PageResult | null;
+  readonly hostname: string;
 };
 
 export type Overview = {
@@ -255,8 +256,10 @@ export type Overview = {
   readonly incompleteUrls: number;
   readonly activeRuns: number;
   readonly usage: Usage;
-  readonly recentRuns: ReadonlyArray<Attempt>;
+  readonly recentRuns: ReadonlyArray<RecentRun>;
   readonly priorityPages: ReadonlyArray<TrackedPage>;
+  readonly activeAttempts: ReadonlyArray<RecentRun>;
+  readonly pages: TrackedPages;
 };
 
 export type UsageEvent = {
@@ -477,4 +480,12 @@ export type BatchHistoryItem = {
   readonly counts: BatchCounts;
   readonly usage: BatchCredits;
   readonly version: number;
+};
+
+export type RecentRun = {
+  readonly attempt: Attempt;
+  readonly pageId: string;
+  readonly domainId: string;
+  readonly normalizedUrl: string;
+  readonly hostname: string;
 };

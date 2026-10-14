@@ -11,9 +11,14 @@ it.each(["ownerId=2", "profileId=mobile-v1", "limit=1"])("rejects unexpected cat
   expect((await accountProxy(request("analysis-profiles?" + query), ["analysis-profiles"])).status).toBe(400);
   expect(fetchMock).not.toHaveBeenCalled();
 });
-it.each(["overview"])("does not activate the planned route %s", async path => {
-  expect((await accountProxy(request(path), [path])).status).toBe(404);
-  expect(fetchMock).not.toHaveBeenCalled();
+it.each(["overview","pages"])("forwards the private inventory route %s and its filters",async path=>{
+ fetchMock.mockResolvedValue(Response.json({items:[]}));
+ const result=await accountProxy(request(path+"?attention=priority&offset=20&domainId=9007199254740993"),[path]);
+ expect(result.status).toBe(200);expect(result.headers.get("Cache-Control")).toBe("private, no-store");
+ const url=new URL(fetchMock.mock.calls[0][0]);expect(url.searchParams.get("attention")).toBe("priority");expect(url.searchParams.get("offset")).toBe("20");expect(url.searchParams.get("domainId")).toBe("9007199254740993");
+});
+it.each(["ownerId=20","attention=healthy","query=a&query=b","domainId=9223372036854775808"])("rejects overview filters before forwarding %s",async query=>{
+ expect((await accountProxy(request("overview?"+query),["overview"])).status).toBe(400);expect(fetchMock).not.toHaveBeenCalled();
 });
 it.each(["7", "30", "90"])("forwards analytics period %s with the account JWT", async days => {
   fetchMock.mockResolvedValue(Response.json({ enabled: false }));

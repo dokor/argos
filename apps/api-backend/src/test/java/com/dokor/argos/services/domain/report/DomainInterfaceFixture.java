@@ -62,8 +62,8 @@ final class DomainInterfaceFixture {
                         accounts.transactions, new UsagePolicy(ConfigFactory.empty()), clock);
         fixture.sql(
                 "INSERT INTO ARG_ACCOUNT_USER(id,email,display_name,state,created_at)"
-                    + " VALUES(70,'domain-fixture@example.com','Domain"
-                    + " fixture','ACTIVE',CURRENT_TIMESTAMP)");
+                        + " VALUES(70,'domain-fixture@example.com','Domain"
+                        + " fixture','ACTIVE',CURRENT_TIMESTAMP)");
         jwt =
                 accounts.transaction(
                         c -> sessions.create(accounts.user(70, c, false), CSRF, c).jwt());
@@ -188,6 +188,14 @@ final class DomainInterfaceFixture {
                 .register(new DomainDiscoveriesWs(discovery, csrf))
                 .register(new DomainBatchesWs(batches, csrf))
                 .register(new DomainSummariesWs(summaries))
+                .register(
+                        new AccountOverviewWs(
+                                new AccountOverviewService(
+                                        accounts,
+                                        sessions,
+                                        new AccountOverviewDao(),
+                                        usage,
+                                        clock)))
                 .register(new DomainBatchProgressWs(batches, csrf, summaries));
     }
 

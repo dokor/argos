@@ -1,3 +1,4 @@
+import { overviewQuery } from "./overview-request";
 import { domainSummaryPath, domainSummaryQuery } from "./domain-summary-request";
 import { safeAccountReturn } from "./account-return";
 export { safeAccountReturn } from "./account-return";
@@ -76,7 +77,7 @@ export function claimContext(request: NextRequest, reportToken: unknown): string
   return claims(request).find(item => item.hash === hash && request.cookies.has("argos_run_" + item.id))?.id ?? null;
 }
 const allowed: Record<string, RegExp> = {
-  GET: /^(?:analyses\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}|domain-batches|domains\/\d{1,19}\/batches\/\d{1,19}\/progress(?:\/pages)?|domain-discoveries(?:\/\d{1,19}(?:\/pages)?)?|auth\/providers|me|usage(?:\/events)?|analysis-profiles|sessions|methods|urls\/\d{1,19}\/history|report-context\/[A-Za-z0-9_-]{20,512}|sites(?:\/\d{1,19}(?:\/urls)?)?|runs|runs\/\d{1,19}(?:\/report)?|auth\/oauth\/(?:google|github|linkedin)\/callback)$/,
+  GET: /^(?:overview|pages|analyses\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}|domain-batches|domains\/\d{1,19}\/batches\/\d{1,19}\/progress(?:\/pages)?|domain-discoveries(?:\/\d{1,19}(?:\/pages)?)?|auth\/providers|me|usage(?:\/events)?|analysis-profiles|sessions|methods|urls\/\d{1,19}\/history|report-context\/[A-Za-z0-9_-]{20,512}|sites(?:\/\d{1,19}(?:\/urls)?)?|runs|runs\/\d{1,19}(?:\/report)?|auth\/oauth\/(?:google|github|linkedin)\/callback)$/,
   POST: /^(?:domain-batches|domains\/\d{1,19}\/batches\/\d{1,19}\/cancel|domain-discoveries(?:\/\d{1,19}\/cancel)?|analyses|auth\/(?:register|login|verify|resend|forgot|reset|renew|logout|reauth|confirm-email)|auth\/oauth\/(?:google|github|linkedin)\/start|sessions\/revoke-others|methods\/password|methods\/\d{1,19}\/remove|me\/archive|sites(?:\/\d{1,19}\/urls)?|runs\/\d{1,19}\/claim)$/,
   PUT: /^report-introduction\/[A-Za-z0-9_-]{20,512}$/,
   PATCH: /^me$/,
@@ -149,11 +150,13 @@ export async function accountProxy(request: NextRequest, parts: string[]): Promi
     if (!proof) return privateError("resource_unavailable", 404);
     headers.set("X-Argos-Run-Proof", proof);
   }
+  const overviewParams = ["overview","pages"].includes(path) ? overviewQuery(request.nextUrl.searchParams) : undefined;
+  if (overviewParams === null) return privateError("filter_invalid",400);
   const adminParams=path.startsWith("admin/") ? adminQuery(path,request.nextUrl.searchParams) : undefined;
   if(adminParams===null) return privateError("filter_invalid",400);
   const summaryParams = request.method === "GET" && domainSummaryPath(path) ? domainSummaryQuery(path, request.nextUrl.searchParams) : undefined;
   if (summaryParams === null) return privateError("filter_invalid",400);
-  const query = summaryParams ?? adminParams ?? new URLSearchParams();
+  const query = overviewParams ?? summaryParams ?? adminParams ?? new URLSearchParams();
   if(summaryParams === undefined && (path === "domain-batches" || /^domains\/\d{1,19}\/batches\//.test(path))) {
     const params=request.nextUrl.searchParams;
     if(request.method === "GET" && path.endsWith("/progress/pages")) {
