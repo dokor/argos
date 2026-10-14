@@ -66,7 +66,8 @@ try {
     if(scenario==='errors') {
       const network=report.issues.find(issue=>issue.id==='runtime.network.5xx')?.structuredEvidence?.observed;
       assert.ok(network?.items.some(item=>item.status===503 && item.ownership==='FIRST_PARTY'),'Real Runtime 503 observation must survive publication');
-      assert.ok(report.issues.some(issue=>issue.id.startsWith('lighthouse.audit.') && issue.structuredEvidence?.observed?.items.some(item=>item.kind==='element')),'Real Lighthouse DOM observation must survive publication');
+      const element=report.issues.filter(issue=>issue.id.startsWith('lighthouse.audit.')).flatMap(issue=>issue.structuredEvidence?.observed?.items??[]).find(item=>item.kind==='element');
+      assert.ok(element,'Real Lighthouse DOM observation must survive publication');
       assert.ok(!JSON.stringify(report).includes('synthetic-proof-secret'),'Private request parameters must not reach the published report');
       await mkdir('outputs/ui-review/clarte-evidence',{recursive:true});
       for(const lang of ['fr','en']) {
@@ -79,6 +80,7 @@ try {
         await page.getByText(lang==='fr'?'Prévisualisation prête.':'Preview ready.',{exact:false}).waitFor();
         const content=await popup.locator('main').textContent();
         assert.ok(content.includes(network.items[0].resourceRef),'Full PDF must retain the same resource reference');
+        assert.ok(content.includes(element.nodePath),'Full PDF must retain the same observed DOM path');
         assert.ok(!content.includes('synthetic-proof-secret'),'PDF must exclude private request parameters');
         await popup.evaluate(()=>document.fonts.ready);await popup.emulateMedia({media:'print'});
         await popup.pdf({path:`outputs/ui-review/clarte-evidence/real-${lang}.pdf`,format:'A4',preferCSSPageSize:true,tagged:true});await popup.close();

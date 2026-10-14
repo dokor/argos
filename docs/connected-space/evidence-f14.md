@@ -37,7 +37,9 @@ qu’il n’existe aucune ressource concernée.
 
 ## Confidentialité et limites explicites
 
-La politique existante conserve **l’origine seulement** des URL. F14 ne
+La politique existante conserve **l’origine seulement** des URL. Les entrées
+URL de plus de 2 048 caractères et les origines de plus de 512 caractères
+sont écartées avant projection. F14 ne
 réintroduit pas les chemins privés, userinfo, query ou fragments. Une référence
 hexadécimale de 16 caractères (préfixe SHA-256 origine + chemin, sans userinfo,
 query ou fragment) distingue les ressources ; ce n’est pas un lien navigable,
@@ -76,6 +78,11 @@ chaque constat. FR/EN, contexte connecté, footer et styles existants conservés
 - `ControlledAuditE2eIT` / `browser.mjs` : vrais collecteurs sur page isolée,
   événement HTTP 503, preuve DOM Lighthouse, transport Java, publication en
   MariaDB, absence de paramètre sensible et deux PDF complets FR/EN.
+
+Le harness HTTP local désactive uniquement dans sa configuration de lancement
+les upgrades HTTPS automatiques de Chromium : il ne possède volontairement
+aucun endpoint TLS. Les protections réseau et les flags de production restent
+identiques ; les assertions exigent de vraies observations Runtime et Lighthouse.
 
 Captures et PDF vont dans l’artefact CI `connected-evidence-<sha>`, pas dans la
 référence figée. Résultats au SHA et limites d’exécution dans la PR. La revue

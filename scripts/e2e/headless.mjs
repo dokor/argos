@@ -2,7 +2,7 @@
 import express from '../../apps/playwright-service/node_modules/express/index.js';
 import { chromium } from '../../apps/playwright-service/node_modules/playwright/index.mjs';
 import lighthouse from '../../apps/lighthouse-service/node_modules/lighthouse/core/index.js';
-import { launch } from '../../apps/lighthouse-service/node_modules/chrome-launcher/dist/index.js';
+import { launch, Launcher } from '../../apps/lighthouse-service/node_modules/chrome-launcher/dist/index.js';
 import { createRuntimeApp } from '../../apps/playwright-service/app.mjs';
 import { createLighthouseServer } from '../../apps/lighthouse-service/app.mjs';
 import { createLighthouseCollector } from '../../apps/lighthouse-service/collector.mjs';
@@ -21,9 +21,14 @@ const proxy='http://127.0.0.1:3328';
 // Sandbox isolation is exercised in the Docker security job. This UI-only fixture
 // runner retains its prior explicit launch flags for hosts without user namespaces.
 const fixtureChromium={launch:options=>chromium.launch({...options,chromiumSandbox:false,args:[...options.args,'--no-sandbox']})};
+// Keep this HTTP-only fixture on HTTP: Chromium's automatic HTTPS-first modes
+// otherwise stop at a TLS endpoint that deliberately does not exist in this harness.
+// Preserve chrome-launcher's existing disabled features; production flags are unchanged.
+const fixtureFeatures=Launcher.defaultFlags().find(flag=>flag.startsWith('--disable-features='))
+  + ',HttpsUpgrades,HttpsFirstModeIncognito,HttpsFirstBalancedModeAutoEnable';
 const collect=createLighthouseCollector({launch,lighthouse,chromium,proxy,chromePath:chromium.executablePath(),
   connectPuppeteer: options => puppeteer.connect(options),
-  chromeFlags:['--headless','--no-sandbox','--disable-dev-shm-usage']});
+  chromeFlags:['--headless','--no-sandbox','--disable-dev-shm-usage',fixtureFeatures]});
 
 const runtime=express();runtime.use(express.json());
 runtime.post('/analyze/runtime',(req,res,next)=>{
