@@ -19,11 +19,11 @@ export type AuditErrorKind = "create" | "failed" | "timeout";
 type AppLogger = ReturnType<typeof createLogger>;
 
 export type UseAuditSubmitOptions = {
-  /** Logger déjà contextualisé (canal + route + details). */
+  /** Logger dÃ©jÃ  contextualisÃ© (canal + route + details). */
   logger: AppLogger;
-  /** Route publique fixe utilisée pour attribuer les créations d'audit côté BFF. */
+  /** Route publique fixe utilisÃ©e pour attribuer les crÃ©ations d'audit cÃ´tÃ© BFF. */
   sourceRoute?: string;
-  /** Fenêtre de polling (ms) avant redirection forcée ; 0 = redirection immédiate. */
+  /** FenÃªtre de polling (ms) avant redirection forcÃ©e ; 0 = redirection immÃ©diate. */
   maxWaitMs?: number;
   /** Intervalle de polling (ms). */
   pollIntervalMs?: number;
@@ -31,27 +31,27 @@ export type UseAuditSubmitOptions = {
   maxPolls?: number;
   /**
    * Ouvre le rapport dans un nouvel onglet au lieu de naviguer dans l'onglet
-   * courant. Repli automatique sur une navigation même
-   * onglet si le navigateur bloque la popup. Défaut : `false` (landing).
+   * courant. Repli automatique sur une navigation mÃªme
+   * onglet si le navigateur bloque la popup. DÃ©faut : `false` (landing).
    */
   openInNewTab?: boolean;
-  /** Notifié après création réussie de l'audit . */
+  /** NotifiÃ© aprÃ¨s crÃ©ation rÃ©ussie de l'audit . */
   onCreated?: (res: CreateAuditResponse, normalizedUrl: string) => void;
-  /** Notifié à chaque tick de polling (ex: animation d'étapes de la landing). */
+  /** NotifiÃ© Ã  chaque tick de polling (ex: animation d'Ã©tapes de la landing). */
   onPollTick?: () => void;
 };
 
 export type UseAuditSubmitResult = {
   phase: AuditPhase;
   errorKind: AuditErrorKind | null;
-  /** Erreur brute de création, pour afficher un message précis si besoin. */
+  /** Erreur brute de crÃ©ation, pour afficher un message prÃ©cis si besoin. */
   error: Error | null;
   submit: (rawUrl: string) => Promise<void>;
   reset: () => void;
 };
 
 const DEFAULT_POLL_INTERVAL_MS = 2500;
-const DEFAULT_MAX_POLLS = 48; // ~2 min à 2,5 s
+const DEFAULT_MAX_POLLS = 48; // ~2 min Ã  2,5 s
 
 export function useAuditSubmit(options: UseAuditSubmitOptions): UseAuditSubmitResult {
   const {
@@ -78,8 +78,8 @@ export function useAuditSubmit(options: UseAuditSubmitOptions): UseAuditSubmitRe
   const pollCountRef = useRef(0);
   const pollErrorCountRef = useRef(0);
 
-  // Réfs stables pour les callbacks : évite de relancer l'effet de polling.
-  // Mises à jour en effet (pas pendant le render) pour rester lint-clean.
+  // RÃ©fs stables pour les callbacks : Ã©vite de relancer l'effet de polling.
+  // Mises Ã  jour en effet (pas pendant le render) pour rester lint-clean.
   const onPollTickRef = useRef(onPollTick);
   const onCreatedRef = useRef(onCreated);
   useEffect(() => {
@@ -97,17 +97,17 @@ export function useAuditSubmit(options: UseAuditSubmitOptions): UseAuditSubmitRe
 
       if (openInNewTab && typeof window !== "undefined") {
         // On n'utilise pas la feature "noopener" dans window.open : plusieurs
-        // navigateurs renvoient alors null même en cas de succès, ce qui
-        // fausserait la détection de blocage. On neutralise `opener` à la main
-        // (protection reverse-tabnabbing, ici même origine).
+        // navigateurs renvoient alors null mÃªme en cas de succÃ¨s, ce qui
+        // fausserait la dÃ©tection de blocage. On neutralise `opener` Ã  la main
+        // (protection reverse-tabnabbing, ici mÃªme origine).
         const win = window.open(href, "_blank");
         if (win) {
           win.opener = null;
-          // Onglet courant inchangé : on réactive le formulaire.
+          // Onglet courant inchangÃ© : on rÃ©active le formulaire.
           setPhase("idle");
           return;
         }
-        // Popup bloquée → repli sur une navigation dans l'onglet courant.
+        // Popup bloquÃ©e â†’ repli sur une navigation dans l'onglet courant.
       }
 
       setPhase("redirecting");
@@ -120,8 +120,8 @@ export function useAuditSubmit(options: UseAuditSubmitOptions): UseAuditSubmitRe
   useEffect(() => {
     if (phase !== "polling") return;
 
-    // Repli : au plus tard après maxWaitMs, on redirige vers la page rapport
-    // même si l'analyse est encore en cours (la page /report gère la suite).
+    // Repli : au plus tard aprÃ¨s maxWaitMs, on redirige vers la page rapport
+    // mÃªme si l'analyse est encore en cours (la page /report gÃ¨re la suite).
     const redirectTimer = setTimeout(() => {
       if (reportTokenRef.current) {
         clearInterval(id);
@@ -193,7 +193,7 @@ export function useAuditSubmit(options: UseAuditSubmitOptions): UseAuditSubmitRe
       if (!trimmed || submittingRef.current || (phase !== "idle" && phase !== "error")) return;
       submittingRef.current = true;
 
-      // Prepend https:// quand le schéma est omis (ex: "example.com"),
+      // Prepend https:// quand le schÃ©ma est omis (ex: "example.com"),
       // pour matcher le comportement du BFF/backend.
       const normalized = normalizeInputUrl(trimmed);
       setError(null);
@@ -224,13 +224,13 @@ export function useAuditSubmit(options: UseAuditSubmitOptions): UseAuditSubmitRe
         });
 
         if (maxWaitMs > 0) {
-          // Landing : poll puis redirection (tôt si terminé, sinon après la fenêtre).
+          // Landing : poll puis redirection (tÃ´t si terminÃ©, sinon aprÃ¨s la fenÃªtre).
           setPhase("polling");
         } else if (res.reportToken) {
           // Public form: redirect immediately when no polling window is requested.
           redirectToReport(res.reportToken, "created", 0);
         } else {
-          // Pas de token et pas de fenêtre de polling : on réactive le formulaire.
+          // Pas de token et pas de fenÃªtre de polling : on rÃ©active le formulaire.
           setPhase("idle");
         }
       } catch (err) {
