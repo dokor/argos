@@ -139,13 +139,7 @@ public record DiagnosticProjection(
                             failed ? text(issue, "title", 512) : null,
                             failed ? text(issue, "impact", 1000) : null,
                             failed ? text(issue, "recommendation", 1000) : null,
-                            failed
-                                    && issues.stream()
-                                            .anyMatch(
-                                                    i ->
-                                                            !i.path("evidence").asText("").isBlank()
-                                                                    || i.path("structuredEvidence")
-                                                                            .isObject())));
+                            failed && issues.stream().anyMatch(DiagnosticProjection::hasEvidence)));
         }
         if (rules.isEmpty()) return unknown();
         boolean measured = rules.stream().anyMatch(r -> Set.of("PASS", "FAIL").contains(r.outcome));
@@ -164,6 +158,15 @@ public record DiagnosticProjection(
                 ratio,
                 coverage.path("version").asText(),
                 List.copyOf(rules));
+    }
+
+    private static boolean hasEvidence(JsonNode issue) {
+        if (!issue.path("evidence").asText("").isBlank()) return true;
+        var structured = issue.path("structuredEvidence");
+        if (structured.path("measurement").path("value").isNumber()) return true;
+        for (var detail : structured.path("details"))
+            if (!detail.path("text").asText("").isBlank()) return true;
+        return false;
     }
 
     public static int rank(String severity) {

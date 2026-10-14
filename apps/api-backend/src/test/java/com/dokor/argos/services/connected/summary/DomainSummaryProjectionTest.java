@@ -245,4 +245,24 @@ class DomainSummaryProjectionTest {
                         .writeValueAsString(DiagnosticProjection.from(e.report(), e.score()))
                         .contains("synthetic-secret"));
     }
+
+    @Test
+    void emptyStructuredEvidenceIsNotAdvertisedAsProof() throws Exception {
+        var fixture = SummaryFixture.fixture();
+        var e =
+                SummaryFixture.evidence(
+                        fixture, fixture.path("domains").get(0).path("pages").get(0));
+        for (var issue : e.report().path("issues")) {
+            ((ObjectNode) issue).put("evidence", "").putObject("structuredEvidence");
+        }
+        assertTrue(
+                DiagnosticProjection.from(e.report(), e.score()).rules().stream()
+                        .noneMatch(DiagnosticProjection.Rule::evidenceAvailable));
+        ((ObjectNode) e.report().path("issues").get(0).path("structuredEvidence"))
+                .putObject("measurement")
+                .put("value", 0);
+        assertTrue(
+                DiagnosticProjection.from(e.report(), e.score()).rules().stream()
+                        .anyMatch(DiagnosticProjection.Rule::evidenceAvailable));
+    }
 }
