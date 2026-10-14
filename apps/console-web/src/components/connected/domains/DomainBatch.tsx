@@ -111,6 +111,9 @@ export default function DomainBatch({
     pages.reload();
     history.reload();
   };
+  useEffect(() => {
+    window.dispatchEvent(new Event("argos-reading"));
+  }, [params]);
   return (
     <main className={s.page}>
       <Link className={d.link} href="/account/domains">
@@ -444,6 +447,7 @@ export default function DomainBatch({
                   <label key={key}>
                     {label}
                     <select
+                      aria-label={label}
                       name={key}
                       defaultValue={filters?.query.get(key) ?? ""}
                     >

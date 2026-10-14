@@ -1,4 +1,5 @@
 "use client";
+import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "@/components/LocalizedLink";
 import type { Domains } from "@/lib/connected/contracts";
@@ -28,6 +29,9 @@ export default function DomainList() {
     next.set("offset", String(offset));
     return `/account/domains?${next}`;
   };
+  useEffect(() => {
+    window.dispatchEvent(new Event("argos-reading"));
+  }, [params]);
   return (
     <main className={s.page}>
       <PageHeading

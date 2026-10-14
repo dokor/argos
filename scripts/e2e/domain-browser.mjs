@@ -138,7 +138,7 @@ try {
   await page.getByRole("link", { name: c.backBatch, exact: true }).click();
   await page.getByRole("table").waitFor();
   assert.equal(page.url(), filtered);
-  await page.getByRole("link", { name: c.back, exact: true }).click();
+  await page.getByRole("link", { name: `← ${c.back}`, exact: true }).click();
   await page.getByRole("link", { name: c.open, exact: true }).click();
   await page.waitForURL(base + stable);
   await page.getByRole("heading", { name: c.history, exact: true }).waitFor();
@@ -147,13 +147,52 @@ try {
       .getByRole("link", { name: new RegExp("#" + admitted.id + "$") })
       .count(),
   );
+  // A second launch is a distinct historical resource; canceling it cannot replace the first.
+  await page.goto(base + "/account/domains/new?discovery=" + discovery);
+  await page.getByRole("button", { name: c.selectNone, exact: true }).click();
+  await page.getByRole("checkbox").first().check();
+  await page.getByRole("button", { name: c.confirm, exact: true }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: c.launch, exact: true })
+    .click();
+  await page.waitForURL(
+    (url) => /\/batches\/\d+$/.test(url.pathname) && url.pathname !== stable,
+  );
+  const secondPath = new URL(page.url()).pathname;
+  await page.getByRole("button", { name: c.cancelBatch, exact: true }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: c.cancelBatch, exact: true })
+    .click();
+  await page.getByText(c.cancelRequested, { exact: true }).waitFor();
+  const older = page.getByRole("link", {
+    name: new RegExp("#" + admitted.id + "$"),
+  });
+  await older.click();
+  await page.waitForURL(base + stable);
+  const retained = await (
+    await context.request.get(
+      base +
+        "/api/account/domains/" +
+        admitted.domainId +
+        "/batches/" +
+        admitted.id,
+    )
+  ).json();
+  assert.equal(retained.usage.counted, 2);
+  assert.equal(retained.counts.selectedPages, 2);
+  await page.screenshot({
+    path: output + "/history-preserved.png",
+    fullPage: true,
+  });
   assert.equal(
     mutations.filter((m) => m.path.endsWith("domain-discoveries")).length,
     1,
   );
   assert.equal(
     mutations.filter((m) => m.path.endsWith("domain-batches")).length,
-    1,
+    2,
   );
   assert.deepEqual(errors, []);
   const proof = {
@@ -170,6 +209,8 @@ try {
     refreshDidNotResubmit: true,
     filteredReturnPreserved: true,
     domainListUsesSameResource: true,
+    olderBatchPreserved: true,
+    secondBatchPath: secondPath,
   };
   await writeFile(output + "/proof.json", JSON.stringify(proof, null, 2));
   console.log(JSON.stringify(proof));

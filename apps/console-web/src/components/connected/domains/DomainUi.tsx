@@ -50,23 +50,29 @@ export function DomainError({
 }) {
   const { c } = useDomainText();
   const text =
-    code === "invalid_filters"
+    code === "invalid_filters" || code === "filter_invalid"
       ? c.filterInvalid
       : code.includes("not_found") ||
           code === "forbidden" ||
           code === "resource_unavailable"
         ? c.missing
-        : code === "email_unverified"
-          ? c.verify
-          : code === "discovery_expired"
-            ? c.expired
-            : code === "quota_exceeded"
-              ? c.quotaInsufficient
-              : code.startsWith("selection_")
-                ? c.invalidSelection
-                : code === "batch_active" || code === "discovery_active"
-                  ? c.busy
-                  : c.errorTitle;
+        : code === "hostname_invalid"
+          ? c.hostHint
+          : code === "exclusions_invalid"
+            ? c.exclusionsHint
+            : code === "email_unverified"
+              ? c.verify
+              : code === "discovery_expired"
+                ? c.expired
+                : code === "quota_exceeded"
+                  ? c.quotaInsufficient
+                  : code.startsWith("selection_")
+                    ? c.invalidSelection
+                    : code === "batch_active" ||
+                        code === "discovery_active" ||
+                        code === "discovery_busy"
+                      ? c.busy
+                      : c.errorTitle;
   return (
     <div className={d.error} role="alert">
       <p>{text}</p>
@@ -197,7 +203,7 @@ export function PageTable({
     >
       {pages.map((page) => (
         <tr key={page.pageId}>
-          <th scope="row" className={d.url}>
+          <th scope="row" className={`${d.url} ${d.tableUrl}`}>
             {page.normalizedUrl}
           </th>
           <td>

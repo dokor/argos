@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import {readingSnapshot,subscribeReading} from "@/components/report/reportReading";
+import {safeAccountReturn} from "@/lib/account-return";
 import { usePathname } from "next/navigation";
 import Link from "@/components/LocalizedLink";
 import ArgosIcon from "@/components/ArgosIcon";
@@ -16,6 +18,7 @@ import s from "./Connected.module.scss";
 /** One chrome for private pages; authorization still belongs to each Java resource. */
 export default function AccountShell({ children }: { children: ReactNode }) {
   const currentPath = usePathname();
+  const suffix=useSyncExternalStore(subscribeReading,readingSnapshot,()=>"");
   // Next route changes do not emit popstate; refresh the language links after commit.
   useEffect(() => { window.dispatchEvent(new Event("argos-reading")); }, [currentPath]);
   const pathname = frenchPath(currentPath);
@@ -62,7 +65,7 @@ export default function AccountShell({ children }: { children: ReactNode }) {
         {valid ? children : <main className={s.page}>
           <PageHeading title={c.workspace}/>
           {!session.ready ? <EmptyState title={c.loading} kind="loading"/> : <EmptyState title={session.denied ? c.sessionTitle : c.errorTitle} description={session.denied ? c.sessionDescription : t.account.errors.account_unavailable} kind={session.denied ? "empty" : "error"}>
-            {session.denied ? <Link className={s.primary} href={"/account/sign-in?returnTo=" + encodeURIComponent(currentPath)}>{t.account.signIn}</Link> : <button className={s.secondary} onClick={() => window.dispatchEvent(new Event("argos-account-login"))}>{c.retry}</button>}
+            {session.denied ? <Link className={s.primary} href={"/account/sign-in?returnTo=" + encodeURIComponent(safeAccountReturn(currentPath+(/\/account\/(domains|runs)(\/|$)/.test(currentPath)?suffix:"")))}>{t.account.signIn}</Link> : <button className={s.secondary} onClick={() => window.dispatchEvent(new Event("argos-account-login"))}>{c.retry}</button>}
           </EmptyState>}
         </main>}
       </div>

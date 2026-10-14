@@ -69,6 +69,7 @@
   overflow-wrap: anywhere;
 }
 .link {
+  position: relative;
   color: var(--argos-brand);
   text-decoration: underline;
   text-underline-offset: 3px;
@@ -285,6 +286,7 @@
   padding-left: 30px;
 }
 .steps {
+  list-style: none;
   display: flex;
   flex-wrap: wrap;
   gap: 12px 24px;
@@ -394,4 +396,8 @@
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+.tableUrl {
+  min-width: 230px;
 }

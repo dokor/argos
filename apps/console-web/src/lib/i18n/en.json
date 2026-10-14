@@ -1062,7 +1062,7 @@
     "activeDiscovery": "A discovery is already running",
     "activeBatch": "A batch is already running",
     "limits": "Effective limits",
-    "limitText": "{urls} URLs · depth {depth} · {seconds} seconds · {requests} concurrent requests per host",
+    "limitText": "{urls} URLs · depth {depth} · {seconds} seconds · {requests} requests per host maximum",
     "expires": "Selection available until",
     "truncated": "Discovery was truncated: this is not an exhaustive scope.",
     "stopReason": "Discovery stopped",
