@@ -800,9 +800,9 @@
             "required": true,
             "schema": {
               "type": "string",
-              "minLength": 16,
-              "maxLength": 128,
-              "pattern": "^[A-Za-z0-9_-]+$"
+              "minLength": 36,
+              "maxLength": 36,
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
             }
           },
           {
@@ -1773,7 +1773,7 @@
             }
           },
           "200": {
-            "description": "Already terminal: return the existing result without another mutation.",
+            "description": "Queued discovery canceled immediately, or existing terminal result returned unchanged.",
             "headers": {
               "Cache-Control": {
                 "schema": {
@@ -1802,7 +1802,19 @@
           {
             "bearerSession": []
           }
-        ]
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "maxProperties": 0
+              }
+            }
+          }
+        }
       }
     },
     "/account/domain-batches": {
