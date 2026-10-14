@@ -162,7 +162,7 @@ public final class DomainCrawler {
                     if (href.isBlank() || href.startsWith("#")) continue;
                     try {
                         enqueue(
-                                URI.create(fetched.url).resolve(href).toString(),
+                                link.absUrl("href"),
                                 DiscoverySource.LINK,
                                 item.depth + 1);
                     } catch (IllegalArgumentException e) {
@@ -214,6 +214,7 @@ public final class DomainCrawler {
             else
                 rules = DiscoveryRobots.parse(response.body(), policy.maxLinks, policy.maxSitemaps);
             robots.put(origin, rules);
+            if (rules.sitemapsTruncated) stop = "SITEMAP_LIMIT";
             for (String map : rules.sitemaps) addMap(map);
             return rules;
         }
