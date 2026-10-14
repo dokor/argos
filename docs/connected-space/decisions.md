@@ -49,9 +49,10 @@ des critères des issues concernées, pas un nouvel arbitrage à chaque composan
 
 ## Limite de l’autorisation
 
-La livraison actuelle est documentaire et organisationnelle. Aucun nouveau
-tarif, paiement, changement de rôle de production, suppression de table ou
-mise en ligne n’est réalisé. Aucun besoin de compatibilité ancienne ne doit
+La création initiale du dossier était documentaire et organisationnelle. Les
+lots d’implémentation et la recette F13 ne constituent pas une autorisation de
+nouveau tarif, paiement, changement de rôle de production, suppression de table
+ou mise en ligne. Aucun besoin de compatibilité ancienne ne doit
 être réintroduit comme prérequis caché. L’issue de préparation de mise en
 service doit seulement identifier précisément l’environnement et les données
 à initialiser avant toute opération ultérieure autorisée.

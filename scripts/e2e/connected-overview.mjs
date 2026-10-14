@@ -99,6 +99,11 @@ try {
           .getByRole("heading", { name: c.inventory, exact: true })
           .waitFor();
         await check("overview");
+        if ([320, 1056].includes(width)) {
+          await page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
+          await check('text-200');
+          await page.evaluate(() => { document.documentElement.style.fontSize = ''; });
+        }
         assert.match(
           await page
             .getByRole("link", { name: new RegExp(c.priority + " 9") })
@@ -168,6 +173,16 @@ try {
             .getByRole("heading", { name: `${c.active} (1)`, exact: true })
             .waitFor();
           await check("active");
+          if (width === 1056 && lang === 'fr' && theme === 'light') {
+            // Same mounted page: active -> terminal must stop subsequent network reads.
+            const overviewReads = () => calls.filter(call => call.path.endsWith('/overview')).length;
+            mode = '';
+            await page.getByRole('heading', { name: `${c.active} (1)`, exact: true }).waitFor({state:'hidden'});
+            const terminalReads = overviewReads();
+            await page.waitForTimeout(4500); // More than two production polling intervals.
+            assert.equal(overviewReads(), terminalReads, 'Terminal overview must stop polling');
+            await check('polling-terminal');
+          }
           mode = "";
           await visit();
           await page
@@ -221,6 +236,8 @@ try {
     `${output}/results.json`,
     JSON.stringify(
       {
+        browser: browser.version(),
+        viewportHeight: 900,
         fixtures:
           "Canonical synthetic UI data. Real Java/MariaDB assertions are separate.",
         checks: evidence,

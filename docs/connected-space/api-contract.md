@@ -20,8 +20,10 @@ et D-12. BFF same-origin, puis mêmes ressources dans l’API Java sous `/api`.
   `limit:null` illimité. Champs inconnus de mutation rejetés.
 - Session obligatoire, mutations avec CSRF/origin selon contrat existant.
   Aucun `ownerId`, rôle ou prix accepté depuis le corps.
-- Liste : `items`, `total`, `limit`, `offset`, `snapshotAt` ; limite défaut20,
+- Listes Clarté à offset : `items`, `total`, `limit`, `offset`, `snapshotAt` ; limite défaut20,
   maximum100 ; filtre/tri avant pagination. Compteurs portent sur tout le scope.
+  Les endpoints compte hérités, dont la liste administrative F11, conservent
+  leur pagination par curseur ; voir leurs contrats dédiés.
 - Erreur : `{ "error": { "code": "QUOTA_EXCEEDED", "requestId": "…",
   "details": { "required": 8, "available": 3, "currentVersion": null } } }`. Traduction côté UI,
   jamais message d’exception interne. Uniformiser avec enveloppe existante
@@ -34,8 +36,8 @@ et D-12. BFF same-origin, puis mêmes ressources dans l’API Java sous `/api`.
 
 | Méthode / chemin `/api/account` | Entrée | Sortie / effets |
 |---|---|---|
-| GET `/overview` | aucun | snapshotAt, scope, trackedUrls, priorityUrls, incompleteUrls, activeRuns, usage, recentRuns, priorityPages |
-| GET `/pages` | attention=priority/incomplete, query, limit, offset | Projections dernières tentatives par URL ; totals cohérents overview |
+| GET `/overview` | attention=priority/incomplete/active, query, domainId, limit, offset | snapshotAt, scope, trackedUrls, priorityUrls, incompleteUrls, activeRuns, usage, recentRuns, activeAttempts, priorityPages, pages (inventaire filtré du même snapshot) |
+| GET `/pages` | attention=priority/incomplete/active, query, domainId, limit, offset | Projections dernières tentatives par URL ; totals cohérents overview |
 | GET `/domains` | query, limit, offset | DomainSummary[], dernière tentative/lot, date, compteurs et couverture connue |
 | POST `/domain-discoveries` | hostname, maxUrls, maxDepth, excludedPaths ; Idempotency-Key | 202 Discovery ; un actif/compte, limites effectives |
 | GET `/domain-discoveries` | aucun | Zéro ou une découverte active du compte |

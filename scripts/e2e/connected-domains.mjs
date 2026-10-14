@@ -165,6 +165,11 @@ try {
           .first()
           .waitFor();
         await check("summary");
+        if ([320, 1056].includes(width)) {
+          await page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
+          await check('text-200');
+          await page.evaluate(() => { document.documentElement.style.fontSize = ''; });
+        }
         await page
           .getByRole("link", { name: c.affectedPages + " (3)", exact: true })
           .click();
@@ -412,6 +417,8 @@ try {
     `${output}/results.json`,
     JSON.stringify(
       {
+        browser: browser.version(),
+        viewportHeight: 900,
         fixtures:
           "Synthetic UI responses; see domain-browser.mjs for real Java/MariaDB lifecycle.",
         checks: evidence,
