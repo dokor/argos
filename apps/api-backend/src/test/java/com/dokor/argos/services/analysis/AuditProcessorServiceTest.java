@@ -92,6 +92,18 @@ class AuditProcessorServiceTest {
     }
 
     @Test
+    void staleClaimAndChangedProfileStopBeforeAnyNetworkModule() throws Exception {
+        var runs=mock(AuditRunService.class);var audits=mock(AuditDao.class);var http=mock(HttpModuleAnalyzer.class);var publication=mock(ReportPublishService.class);
+        var run=new AuditRun();run.setId(1L);run.setStatus("RUNNING");run.setClaimToken("current");when(runs.getRun(1)).thenReturn(Optional.of(run));
+        var processor=new AuditProcessorService(runs,audits,mock(UrlNormalizer.class),http,mock(HtmlModuleAnalyzer.class),mock(RuntimeModuleAnalyzer.class),mock(LighthouseModuleAnalyzer.class),mock(ObservatoryModuleAnalyzer.class),mock(SslLabsModuleAnalyzer.class),mock(ZapModuleAnalyzer.class),mock(DomainAnalysisService.class),mock(CheckMergerService.class),mock(ScoreEnricherService.class),mock(ScoreService.class),objectMapper(),publication);
+        var profiles=new com.dokor.argos.services.connected.ConnectedProfiles(new com.dokor.argos.services.analysis.scoring.DefaultScorePolicy());processor.configureExecutionProfiles(profiles);
+        processor.process(1,"stale");verify(runs,never()).fail(anyLong(),anyString(),anyString());verifyNoInteractions(audits,http,publication);
+        var snapshot=profiles.snapshot(com.dokor.argos.services.connected.ConnectedProfiles.DEFAULT_ID);
+        run.setProfileSnapshot(objectMapper().writeValueAsString(new com.dokor.argos.services.connected.contract.ConnectedContracts.ProfileSnapshot(snapshot.profileId(),snapshot.contractVersion(),snapshot.settingsProvenance(),snapshot.scoringVersion()+1,snapshot.scoringFingerprint())));
+        processor.process(1,"current");verify(runs).fail(1,"ANALYSIS_PROFILE_CHANGED","current");verifyNoInteractions(audits,http,publication);
+    }
+
+    @Test
     void shouldFailWhenAuditNotFound() {
         AuditRunService runService = mock(AuditRunService.class);
         AuditDao auditDao = mock(AuditDao.class);

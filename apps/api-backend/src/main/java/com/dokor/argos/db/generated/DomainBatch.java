@@ -23,6 +23,7 @@ public class DomainBatch extends CrudEntityQuerydsl {
     @Column("created_at") private Instant createdAt;
     @Column("finished_at") private Instant finishedAt;
     @Column("version") private Long version;
+    @Column("progress_fingerprint") private byte[] progressFingerprint;
     @Column("active_owner_id") private Long activeOwnerId;
     @Override public String toString() { return "DomainBatch#" + id; }
 }

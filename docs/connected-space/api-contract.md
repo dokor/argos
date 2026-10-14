@@ -2,10 +2,11 @@
 
 **Contrat cible** : F01 fournit le [schéma OpenAPI canonique](../../apps/api-backend/src/main/resources/contracts/connected-space.openapi.json),
 les DTO Java validés et les types TypeScript générés. Le [guide F01](foundation-f01.md)
-décrit les commandes et limites. Les opérations livrées par F01/F03/F05/F06 portent
+décrit les commandes et limites. Les opérations livrées par F01/F03/F05/F06/F07 portent
 `x-implementation: available`, dont les lectures `/usage` et `/usage/events`
 ([guide F05](usage-f05.md)) et `/domain-discoveries` ([guide F06](discovery-f06.md)).
-Les lots et synthèses de domaines restent `planned`.
+Le lancement, la progression et l’annulation des lots sont disponibles ([guide F07](batch-f07.md)).
+Les synthèses, historiques et listes de domaines restent `planned`.
 Les contrats compte/usage actuels restent réutilisés sauf écarts explicites D-11
 et D-12. BFF same-origin, puis mêmes ressources dans l’API Java sous `/api`.
 
@@ -40,6 +41,9 @@ et D-12. BFF same-origin, puis mêmes ressources dans l’API Java sous `/api`.
 | GET `/domain-discoveries/{id}/pages` | limit, offset, inclusion=eligible/excluded/all | URL normalisées, pageId, éligibilité, source, motif |
 | POST `/domain-discoveries/{id}/cancel` | aucun | 202 annulation demandée ou 200 terminal existant |
 | POST `/domain-batches` | discoveryId, selectedPageIds, profileId ; Idempotency-Key | 202 Batch, domainId, reservedCredits, stablePath ; atomique |
+| GET `/domain-batches` | aucun | Zéro ou un BatchProgress actif |
+| GET `/domains/{domainId}/batches/{id}/progress` | aucun | Progression et crédits, sans agrégats de constats F08 |
+| GET `/domains/{domainId}/batches/{id}/progress/pages` | status, limit, offset | Exécution et complétude des enfants privés |
 | GET `/domains/{domainId}/batches` | limit, offset | Historique privé du domaine |
 | GET `/domains/{domainId}/batches/{id}` | aucun | BatchSummary, compteurs complets, commonFindings, problematicPages, usage |
 | GET `/domains/{domainId}/batches/{id}/pages` | ruleKey, severity, status, query, sort, limit, offset | Pages du lot, runId, score/coverage, constats et causes |

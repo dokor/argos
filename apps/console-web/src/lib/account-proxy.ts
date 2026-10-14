@@ -75,8 +75,8 @@ export function claimContext(request: NextRequest, reportToken: unknown): string
   return claims(request).find(item => item.hash === hash && request.cookies.has("argos_run_" + item.id))?.id ?? null;
 }
 const allowed: Record<string, RegExp> = {
-  GET: /^(?:domain-discoveries(?:\/\d{1,19}(?:\/pages)?)?|auth\/providers|me|usage(?:\/events)?|analysis-profiles|sessions|methods|urls\/\d{1,19}\/history|report-context\/[A-Za-z0-9_-]{20,512}|sites(?:\/\d{1,19}(?:\/urls)?)?|runs|runs\/\d{1,19}(?:\/report)?|auth\/oauth\/(?:google|github|linkedin)\/callback)$/,
-  POST: /^(?:domain-discoveries(?:\/\d{1,19}\/cancel)?|analyses|auth\/(?:register|login|verify|resend|forgot|reset|renew|logout|reauth|confirm-email)|auth\/oauth\/(?:google|github|linkedin)\/start|sessions\/revoke-others|methods\/password|methods\/\d{1,19}\/remove|me\/archive|sites(?:\/\d{1,19}\/urls)?|runs\/\d{1,19}\/claim)$/,
+  GET: /^(?:domain-batches|domains\/\d{1,19}\/batches\/\d{1,19}\/progress(?:\/pages)?|domain-discoveries(?:\/\d{1,19}(?:\/pages)?)?|auth\/providers|me|usage(?:\/events)?|analysis-profiles|sessions|methods|urls\/\d{1,19}\/history|report-context\/[A-Za-z0-9_-]{20,512}|sites(?:\/\d{1,19}(?:\/urls)?)?|runs|runs\/\d{1,19}(?:\/report)?|auth\/oauth\/(?:google|github|linkedin)\/callback)$/,
+  POST: /^(?:domain-batches|domains\/\d{1,19}\/batches\/\d{1,19}\/cancel|domain-discoveries(?:\/\d{1,19}\/cancel)?|analyses|auth\/(?:register|login|verify|resend|forgot|reset|renew|logout|reauth|confirm-email)|auth\/oauth\/(?:google|github|linkedin)\/start|sessions\/revoke-others|methods\/password|methods\/\d{1,19}\/remove|me\/archive|sites(?:\/\d{1,19}\/urls)?|runs\/\d{1,19}\/claim)$/,
   PUT: /^report-introduction\/[A-Za-z0-9_-]{20,512}$/,
   PATCH: /^me$/,
   DELETE: /^(?:sessions\/\d{1,19}|report-introduction\/[A-Za-z0-9_-]{20,512})$/,
@@ -106,6 +106,15 @@ export async function accountProxy(request: NextRequest, parts: string[]): Promi
       if (/^sites(?:\/\d{1,19}\/urls)?$/.test(path)) {
         if (Object.keys(parsed).some(key => key !== "url") || typeof parsed.url !== "string" || parsed.url.length > 2048 || ssrfError(parsed.url)) return privateError("url_invalid",400);
       }
+      if (path === "domain-batches") {
+        const id = (value: unknown) => typeof value === "string" && /^[1-9][0-9]{0,18}$/.test(value) && BigInt(value) <= 9223372036854775807n;
+        if (Object.keys(parsed).some(key => !["discoveryId","selectedPageIds","profileId"].includes(key)) || !id(parsed.discoveryId) || !Array.isArray(parsed.selectedPageIds) || parsed.selectedPageIds.length < 1 || parsed.selectedPageIds.length > 50 || parsed.selectedPageIds.some(value => !id(value)) || new Set(parsed.selectedPageIds).size !== parsed.selectedPageIds.length) return privateError("selection_invalid",400);
+        if (typeof parsed.profileId !== "string" || !/^[a-z0-9-]{1,64}$/.test(parsed.profileId)) return privateError("unsupported_profile",400);
+        const key = request.headers.get("idempotency-key");
+        if (!key || !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(key)) return privateError("idempotency_key_invalid",400);
+        headers.set("Idempotency-Key",key);
+      }
+      if (/^domains\/\d{1,19}\/batches\/\d{1,19}\/cancel$/.test(path) && Object.keys(parsed).length) return privateError("payload_invalid",400);
       if (path === "domain-discoveries") {
         if (Object.keys(parsed).some(key=>!["hostname","maxUrls","maxDepth","excludedPaths"].includes(key)) || typeof parsed.hostname!=="string" || !/^[A-Za-z0-9.-]{1,253}$/.test(parsed.hostname) || ssrfError("https://"+parsed.hostname)) return privateError("hostname_invalid",400);
         if (!Number.isInteger(parsed.maxUrls) || Number(parsed.maxUrls)<1 || Number(parsed.maxUrls)>50 || !Number.isInteger(parsed.maxDepth) || Number(parsed.maxDepth)<0 || Number(parsed.maxDepth)>3) return privateError("payload_invalid",400);
@@ -142,6 +151,15 @@ export async function accountProxy(request: NextRequest, parts: string[]): Promi
   const adminParams=path.startsWith("admin/") ? adminQuery(path,request.nextUrl.searchParams) : undefined;
   if(adminParams===null) return privateError("filter_invalid",400);
   const query = adminParams ?? new URLSearchParams();
+  if(path === "domain-batches" || /^domains\/\d{1,19}\/batches\//.test(path)) {
+    const params=request.nextUrl.searchParams;
+    if(request.method === "GET" && path.endsWith("/progress/pages")) {
+      if([...params.keys()].some(key=>!["limit","offset","status"].includes(key)||params.getAll(key).length!==1)) return privateError("filter_invalid",400);
+      const limit=params.get("limit")??"20",offset=params.get("offset")??"0",status=params.get("status")??"all";
+      if(!/^[1-9][0-9]{0,2}$/.test(limit)||Number(limit)>100||!/^(0|[1-9][0-9]{0,15})$/.test(offset)||!Number.isSafeInteger(Number(offset))||!["all","QUEUED","RUNNING","COMPLETED","FAILED","CANCELED"].includes(status)) return privateError("filter_invalid",400);
+      query.set("limit",limit);query.set("offset",offset);query.set("status",status);
+    } else if(params.size) return privateError("payload_invalid",400);
+  }
   if(path.startsWith("domain-discoveries")) {
     const params=request.nextUrl.searchParams;
     if(request.method==="GET" && /^domain-discoveries\/\d{1,19}\/pages$/.test(path)) {

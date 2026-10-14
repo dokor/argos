@@ -11,7 +11,7 @@ it.each(["ownerId=2", "profileId=mobile-v1", "limit=1"])("rejects unexpected cat
   expect((await accountProxy(request("analysis-profiles?" + query), ["analysis-profiles"])).status).toBe(400);
   expect(fetchMock).not.toHaveBeenCalled();
 });
-it.each(["domains", "domain-batches", "overview"])("does not activate the planned route %s", async path => {
+it.each(["domains", "overview"])("does not activate the planned route %s", async path => {
   expect((await accountProxy(request(path), [path])).status).toBe(404);
   expect(fetchMock).not.toHaveBeenCalled();
 });
@@ -388,4 +388,33 @@ it("requires CSRF and an empty body to cancel discovery",async()=>{
   const path=["domain-discoveries","123","cancel"];
   expect((await accountProxy(request(path.join("/"),"POST",{},false),path)).status).toBe(403);
   expect((await accountProxy(request(path.join("/"),"POST",{ownerId:2}),path)).status).toBe(400);expect(fetchMock).not.toHaveBeenCalled();
+});
+
+const batchInput={discoveryId:"9007199254740993",selectedPageIds:["9007199254740994","9007199254740995"],profileId:"server-default-v1"};
+it("forwards an atomic batch selection with opaque ids and idempotency",async()=>{
+ fetchMock.mockResolvedValue(new Response(JSON.stringify({batchId:"123"}),{status:202}));
+ const req=request("domain-batches","POST",batchInput);req.headers.set("idempotency-key","12345678-1234-1234-1234-123456789012");
+ expect((await accountProxy(req,["domain-batches"])).status).toBe(202);
+ expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual(batchInput);
+ expect(fetchMock.mock.calls[0][1].headers.get("Idempotency-Key")).toBe("12345678-1234-1234-1234-123456789012");
+});
+it.each([{selectedPageIds:[]},{selectedPageIds:["1","1"]},{selectedPageIds:[1]},{selectedPageIds:["9223372036854775808"]},{selectedPageIds:Array.from({length:51},(_,i)=>String(i+1))},{ownerId:"2"},{discoveryId:2},{profileId:"../invalid"}])("rejects invalid batch %j",async changes=>{
+ const req=request("domain-batches","POST",{...batchInput,...changes});req.headers.set("idempotency-key","12345678-1234-1234-1234-123456789012");
+ expect((await accountProxy(req,["domain-batches"])).status).toBe(400);expect(fetchMock).not.toHaveBeenCalled();
+});
+it.each(["status=bogus","limit=101","offset=-1","ownerId=2","status=FAILED&status=RUNNING"])("rejects invalid batch filter %s",async query=>{
+ const path="domains/1/batches/2/progress/pages";expect((await accountProxy(request(path+"?"+query),path.split("/"))).status).toBe(400);expect(fetchMock).not.toHaveBeenCalled();
+});
+it("forwards private progress pages and preserves filters",async()=>{
+ fetchMock.mockResolvedValue(new Response("{}"));const path="domains/1/batches/2/progress/pages";
+ const result=await accountProxy(request(path+"?status=FAILED&offset=2"),path.split("/"));expect(result.status).toBe(200);expect(result.headers.get("Cache-Control")).toBe("private, no-store");
+ expect(fetchMock.mock.calls[0][0]).toBe("http://fixture-backend/api/account/"+path+"?limit=20&offset=2&status=FAILED");
+});
+it("keeps F08 summary routes unavailable",async()=>{
+ for(const path of ["domains/1/batches/2","domains/1/batches/2/pages","domains/1/batches"]){expect((await accountProxy(request(path),path.split("/"))).status).toBe(404);}expect(fetchMock).not.toHaveBeenCalled();
+});
+it("requires CSRF and an empty cancel payload",async()=>{
+ const path="domains/1/batches/2/cancel";
+ expect((await accountProxy(request(path,"POST",{runId:"3"}),path.split("/"))).status).toBe(400);
+ const req=request(path,"POST",{});req.headers.delete("x-argos-csrf");expect((await accountProxy(req,path.split("/"))).status).toBe(403);expect(fetchMock).not.toHaveBeenCalled();
 });

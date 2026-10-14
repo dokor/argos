@@ -15,13 +15,13 @@ class AuditQueueServiceTest {
         AuditRunService runs = mock(AuditRunService.class);
         AuditProcessorService processor = mock(AuditProcessorService.class);
         AuditRun claimed = new AuditRun();
-        claimed.setId(42L);
+        claimed.setId(42L); claimed.setClaimToken("worker-claim");
         when(runs.claimNextQueuedRun()).thenReturn(Optional.empty(), Optional.of(claimed));
         AuditQueueService queue = new AuditQueueService(runs, processor);
 
         assertFalse(queue.processNextQueuedRun());
         verifyNoInteractions(processor);
         assertTrue(queue.processNextQueuedRun());
-        verify(processor).process(42L);
+        verify(processor).process(42L,"worker-claim");
     }
 }

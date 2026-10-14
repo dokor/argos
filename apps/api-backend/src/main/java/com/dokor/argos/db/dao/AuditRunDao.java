@@ -35,6 +35,38 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
     }
     public com.dokor.argos.services.account.UsageService usage() { return usage; }
 
+    /** Admission and terminal publication both acquire queue before usage. */
+    public void lockAdmission(Connection c) {
+        try(var s=c.prepareStatement("SELECT id FROM ARG_AUDIT_ADMISSION WHERE id=1 FOR UPDATE");var r=s.executeQuery()) {
+            if(!r.next())throw new IllegalStateException("Audit admission missing");
+        }catch(java.sql.SQLException e){throw new IllegalStateException("Audit admission unavailable",e);}
+    }
+
+    /** Metadata is committed with the report; retention does not erase a batch outcome. */
+    public void recordBatchCompleteness(long runId,String completeness,Connection c) {
+        var page=com.dokor.argos.db.generated.QDomainBatchPage.table;
+        transactionManager.update(page,c).set(page.completeness,completeness).where(page.runId.eq(runId)).execute();
+    }
+
+    public enum Recovery { REQUEUED, FAILED, CANCELED, STALE }
+    /** The observation is fenced, including when two reapers overlap a fresh worker claim. */
+    public Recovery recoverStuck(AuditRun observed,int maxAttempts,Instant now,String initialModules) {
+        return transactionManager.executeAndReturn(c->{
+            var run=lockForPublication(observed.getId(),c).orElse(null);
+            if(run==null||observed.getClaimToken()==null||!"RUNNING".equals(run.getStatus())
+                ||!java.util.Objects.equals(run.getClaimToken(),observed.getClaimToken())
+                ||!java.util.Objects.equals(run.getStartedAt(),observed.getStartedAt()))return Recovery.STALE;
+            if(Boolean.TRUE.equals(run.getCancelRequested())){finishCanceled(run,now,c);return Recovery.CANCELED;}
+            if(run.getAttemptCount()!=null&&run.getAttemptCount()>=maxAttempts){
+                transactionManager.update(RUN,c).set(RUN.status,"FAILED").set(RUN.finishedAt,now).set(RUN.lastError,"AUDIT_WORKER_LOST").where(RUN.id.eq(run.getId())).execute();
+                usage.release(run,c);return Recovery.FAILED;
+            }
+            transactionManager.update(RUN,c).set(RUN.status,"QUEUED").setNull(RUN.claimToken).setNull(RUN.startedAt)
+                .setNull(RUN.finishedAt).setNull(RUN.lastError).set(RUN.moduleStatuses,initialModules).where(RUN.id.eq(run.getId())).execute();
+            return Recovery.REQUEUED;
+        });
+    }
+
     /** Global durable admission, including anonymous and personal runs, before inserting the run. */
     public AuditRun saveQueued(AuditRun run, Connection connection) {
         if (connection == null) return usage.transaction(c -> saveQueued(run, c));

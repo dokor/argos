@@ -81,6 +81,7 @@ public class ReportPublishService {
             if (!runs.markCompleted(runId, claimToken, Instant.now(), resultJson, connection)) {
                 throw new IllegalStateException("Run completion rejected");
             }
+            runs.recordBatchCompleteness(runId,ReportCompleteness.from(dto),connection);
             if(run.getOwnerUserId()!=null) runs.usage().published(run,entity.getCreatedAt(),connection);
             return reportId;
         });

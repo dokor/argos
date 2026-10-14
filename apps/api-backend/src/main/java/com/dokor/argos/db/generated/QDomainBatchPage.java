@@ -18,9 +18,11 @@ public class QDomainBatchPage extends RelationalPathBase<DomainBatchPage> {
     public final NumberPath<Long> auditId = createNumber("auditId", Long.class);
     public final NumberPath<Long> runId = createNumber("runId", Long.class);
     public final DateTimePath<Instant> createdAt = createDateTime("createdAt", Instant.class);
+    public final StringPath completeness = createString("completeness");
     public final PrimaryKey<DomainBatchPage> primary = createPrimaryKey(id);
     public QDomainBatchPage(String variable) {
         super(DomainBatchPage.class, forVariable(variable), null, "ARG_DOMAIN_BATCH_PAGE");
+        addMetadata(completeness, ColumnMetadata.named("completeness").withIndex(10).ofType(Types.VARCHAR).notNull());
         addMetadata(id, ColumnMetadata.named("id").withIndex(1).ofType(Types.BIGINT).notNull());
         addMetadata(batchId, ColumnMetadata.named("batch_id").withIndex(2).ofType(Types.BIGINT).notNull());
         addMetadata(ownerUserId, ColumnMetadata.named("owner_user_id").withIndex(3).ofType(Types.BIGINT).notNull());

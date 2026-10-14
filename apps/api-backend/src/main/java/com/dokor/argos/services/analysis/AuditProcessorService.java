@@ -129,7 +129,12 @@ public class AuditProcessorService {
             new AccessibilityComplianceRiskService());
     }
 
-    public void process(long runId) {
+    private com.dokor.argos.services.connected.ConnectedProfiles executionProfiles;
+    @Inject public void configureExecutionProfiles(com.dokor.argos.services.connected.ConnectedProfiles profiles){this.executionProfiles=profiles;}
+
+    public void process(long runId) { process(runId,null); }
+
+    public void process(long runId,String expectedClaim) {
         // Direct-constructor callers (unit fixtures) own a short-lived pool; Guice injects the shared pool.
         boolean ownedExecutor = remoteModuleExecutor == null;
         RemoteModuleExecutor remote = ownedExecutor ? new RemoteModuleExecutor(java.time.Duration.ofMinutes(2)) : remoteModuleExecutor;
@@ -142,7 +147,7 @@ public class AuditProcessorService {
         long auditStart = System.currentTimeMillis();
         logger.info("audit_start runId={}", runId);
         try (var scope=deadline.child(local.collectionBudget()).enter()) {
-            processInternal(runId, remote);
+            processInternal(runId, remote, expectedClaim);
         } finally {
             if (ownedExecutor) remote.close();
             if (ownedLocal) { local.close(); auditModuleExecutor=null; }
@@ -152,7 +157,7 @@ public class AuditProcessorService {
         }
     }
 
-    private void processInternal(long runId, RemoteModuleExecutor remote) {
+    private void processInternal(long runId, RemoteModuleExecutor remote, String expectedClaim) {
         var runOpt = auditRunService.getRun(runId);
         if (runOpt.isEmpty()) {
             logger.warn("Run not found runId={}", runId);
@@ -160,6 +165,13 @@ public class AuditProcessorService {
         }
 
         var run = runOpt.get();
+        if(expectedClaim!=null&&(!expectedClaim.equals(run.getClaimToken())||!"RUNNING".equals(run.getStatus())))return;
+        if(executionProfiles!=null&&run.getProfileSnapshot()!=null){
+            try {
+                var requested=objectMapper.readValue(run.getProfileSnapshot(),com.dokor.argos.services.connected.contract.ConnectedContracts.ProfileSnapshot.class);
+                if(!requested.equals(executionProfiles.snapshot(requested.profileId())))throw new IllegalArgumentException();
+            }catch(Exception changed){auditRunService.fail(runId,"ANALYSIS_PROFILE_CHANGED",run.getClaimToken());return;}
+        }
 
         Audit audit = auditDao.findById(run.getAuditId());
         if (audit == null) {

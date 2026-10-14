@@ -52,6 +52,8 @@ public class AuditRunService {
                     return Optional.empty();
                 }
 
+                run.setClaimToken(token);
+                run.setStatus("RUNNING");
                 logger.info("Run claimed runId={}", run.getId());
                 return Optional.of(run);
             });
@@ -67,6 +69,8 @@ public class AuditRunService {
     public QueuedRun createQueuedRun(long auditId, Instant now, Long ownerUserId, java.sql.Connection connection) {
         if(ownerUserId!=null) {
             if(connection==null) return auditRunDao.usage().transaction(c -> createQueuedRun(auditId,now,ownerUserId,c));
+            auditRunDao.usage().lockOwner(ownerUserId,connection);
+            auditRunDao.lockAdmission(connection);
             auditRunDao.usage().admit(ownerUserId,connection);
         }
         logger.info("Creating QUEUED run for auditId={}", auditId);
@@ -160,6 +164,8 @@ public class AuditRunService {
     }
 
     // ─── Helpers ─────────────────────────────────────────────────────────────────
+
+    public String initialModuleStatusesJson() { return serializeModuleStatuses(INITIAL_MODULE_STATUSES); }
 
     private String serializeModuleStatuses(List<ModuleStatus> statuses) {
         try {

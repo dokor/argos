@@ -31,9 +31,9 @@ import java.util.List;
  *       message d'erreur exploitable (abandon volontaire, #211).</li>
  * </ul>
  *
- * <p>Les deux opérations passent par des updates atomiques gardés
- * ({@code WHERE status = 'RUNNING'}) : aucun run terminé entre-temps ni re-claimé
- * n'est écrasé, et deux reprises concurrentes ne peuvent aboutir.
+ * <p>La reprise verrouille le run et compare le claim et la date de démarrage
+ * observés avant de changer son état. Un ancien balayage ne peut pas écraser
+ * un nouveau worker. La remise en file et le reset de progression sont atomiques.
  */
 @Singleton
 public class StuckAuditRunReaper {
@@ -76,47 +76,17 @@ public class StuckAuditRunReaper {
 
         int handled = 0;
         for (AuditRun run : stuckRuns) {
-            if (handleStuckRun(run, maxAttempts, timeout)) {
+            if (handleStuckRun(run, maxAttempts)) {
                 handled++;
             }
         }
         return handled;
     }
 
-    private boolean handleStuckRun(AuditRun run, int maxAttempts, Duration timeout) {
-        long runId = run.getId();
-        int attempts = run.getAttemptCount() == null ? 0 : run.getAttemptCount();
-
-        if (attempts < maxAttempts) {
-            return requeue(runId, attempts, maxAttempts);
-        }
-        return abandon(runId, attempts, timeout);
-    }
-
-    private boolean requeue(long runId, int attempts, int maxAttempts) {
-        boolean requeued = auditRunDao.requeueStuckRun(runId);
-        if (!requeued) {
-            // Le run a été terminé ou re-claimé entre la détection et l'update : rien à faire.
-            logger.debug("Stuck run no longer in RUNNING, skipped requeue runId={}", runId);
-            return false;
-        }
-        // Repart d'un état propre pour le nouveau traitement complet.
-        auditRunService.resetModuleStatuses(runId);
-        logger.warn("Stuck run requeued for retry runId={} attempts={}/{}", runId, attempts, maxAttempts);
-        return true;
-    }
-
-    private boolean abandon(long runId, int attempts, Duration timeout) {
-        String message = "Analyse abandonnée : bloquée en RUNNING plus de " + timeout
-            + " après " + attempts + " tentative(s) (interruption probable du worker).";
-        boolean failed = auditRunDao.markStuckFailed(runId, Instant.now(), message);
-        if (!failed) {
-            logger.debug("Stuck run no longer in RUNNING, skipped abandon runId={}", runId);
-            return false;
-        }
-        // Évite un spinner infini côté rapport en clôturant les modules encore RUNNING.
-        auditRunService.failRunningModules(runId);
-        logger.error("Stuck run abandoned as FAILED runId={} attempts={}", runId, attempts);
-        return true;
+    private boolean handleStuckRun(AuditRun run, int maxAttempts) {
+        var result=auditRunDao.recoverStuck(run,maxAttempts,Instant.now(),auditRunService.initialModuleStatusesJson());
+        if(result==AuditRunDao.Recovery.FAILED) auditRunService.failRunningModules(run.getId());
+        if(result!=AuditRunDao.Recovery.STALE) logger.warn("Stuck audit recovery runId={} outcome={}",run.getId(),result);
+        return result!=AuditRunDao.Recovery.STALE;
     }
 }
