@@ -239,6 +239,21 @@ jobs:
           restored=$(docker exec "$DB_FIXTURE_CONTAINER" mariadb -uroot -psynthetic-root-fixture -N argos_restore_test -e "$query")
           test "$original" = "$restored"
           printf '%s\n' '{"fixture":"isolated-mariadb-11.4","backup":"single-transaction-hex-blob","restore":"PASS","reportCountAndHashDigestEqual":true}' > outputs/controlled-restore.json
+      - name: Assemble revision-bound Clarte acceptance evidence
+        env:
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          python3 docs/connected-space/validate.py
+          node --test scripts/e2e/acceptance-evidence.test.mjs
+          node scripts/e2e/acceptance-evidence.mjs
+      - name: Upload Clarte acceptance manifest and comparisons
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: connected-acceptance-${{ github.sha }}
+          path: outputs/ui-review/clarte-acceptance/
+          if-no-files-found: warn
+          retention-days: 14
       - uses: actions/upload-artifact@v4
         if: always()
         with:

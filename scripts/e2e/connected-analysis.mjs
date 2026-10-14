@@ -8,7 +8,7 @@ const output='outputs/ui-review/clarte-analysis';await mkdir(output,{recursive:t
 const browser=await chromium.launch(process.env.CLARTE_BROWSER_PATH ? {executablePath:process.env.CLARTE_BROWSER_PATH} : {});
 const evidence=[];
 try {
-  for(const width of [320,390,768,1056,1440]) for(const lang of ['fr','en']) for(const theme of ['light','dark']) {
+  for(const width of (process.env.ANALYSIS_SMOKE==='1' ? [1056] : [320,390,768,1056,1440])) for(const lang of ['fr','en']) for(const theme of ['light','dark']) {
     const context=await browser.newContext({viewport:{width,height:900},colorScheme:theme});
     const page=await context.newPage(),errors=[];let admissions=0,quota=false;
     page.on('pageerror',error=>errors.push(error.message));
@@ -26,6 +26,13 @@ try {
     const prefix=lang==='en' ? '/en' : '';
     async function visit(path){await page.goto(base+prefix+path);await page.locator('[data-connected-shell] h1').waitFor();}
     async function check(name) {
+      // Require the actual report throughout capture, not merely its transient h1.
+      const reportReady=async()=>{
+        await page.getByRole('heading',{name:'atelier.example',exact:true}).waitFor();
+        await page.getByRole('button',{name:lang==='fr' ? 'Constats techniques':'Technical findings',exact:true}).waitFor();
+        await page.getByRole('heading',{name:lang==='fr' ? 'Contexte de cette analyse':'Analysis context',exact:true}).waitFor();
+      };
+      if(name==='partial-report') await reportReady();
       await page.evaluate(()=>document.fonts.ready);
       assert.equal(await page.locator('h1').count(),1,name+': one title');
       assert.equal(await page.getByRole('contentinfo').count(),1,name+': footer');
@@ -33,7 +40,9 @@ try {
       await page.addScriptTag({path:'apps/console-web/node_modules/axe-core/axe.min.js'});
       const violations=await page.evaluate(async()=>(await window.axe.run(document.querySelector('[data-connected-shell]'),{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}})).violations.map(v=>({id:v.id,nodes:v.nodes.map(n=>n.target)})));
       assert.deepEqual(violations,[],name);
+      if(name==='partial-report') await reportReady();
       const file=`${name}-${lang}-${theme}-${width}.png`;await page.screenshot({path:`${output}/${file}`,fullPage:true});
+      if(name==='partial-report') await reportReady();
       evidence.push({name,lang,theme,width,screenshot:file,axeViolations:0,overflow:false});
     }
     await visit('/account/analyses/new');
@@ -55,6 +64,7 @@ try {
     assert.equal(await page.getByRole('link',{name:lang==='fr' ? 'Ouvrir le rapport':'Open report'}).getAttribute('href'),prefix+'/account/runs/43');
     await check('site');
     await page.getByRole('link',{name:lang==='fr' ? 'Ouvrir le rapport':'Open report'}).click();
+    await page.waitForURL(/account\/runs\/43$/);
     await page.getByRole('heading',{name:'atelier.example',exact:true}).waitFor();await check('partial-report');
     await page.getByRole('button',{name:lang==='fr' ? 'Constats techniques':'Technical findings',exact:true}).click();
     await page.getByRole('link',{name:lang==='fr' ? 'Comparaison et historique':'Comparison and history',exact:true}).first().click();
@@ -74,6 +84,6 @@ try {
     }
     assert.deepEqual(errors,[]);await context.close();
   }
-  await writeFile(`${output}/results.json`,JSON.stringify({browser:browser.version(),fixtures:'Synthetic responses; SQL authorization/admission covered separately in AccountLifecycleIT',checks:evidence},null,2));
+  await writeFile(`${output}/results.json`,JSON.stringify({browser:browser.version(),viewportHeight:900,fixtures:'Synthetic responses; SQL authorization/admission covered separately in AccountLifecycleIT',checks:evidence},null,2));
   console.log(`${evidence.length} Clarte analysis scenarios passed`);
 } finally {await browser.close();}
