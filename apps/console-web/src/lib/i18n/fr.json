@@ -1062,7 +1062,7 @@
     "activeDiscovery": "Une découverte est déjà en cours",
     "activeBatch": "Un lot est déjà en cours",
     "limits": "Limites effectives",
-    "limitText": "{urls} URL · profondeur {depth} · {seconds} secondes · {requests} requêtes simultanées par hôte",
+    "limitText": "{urls} URL · profondeur {depth} · {seconds} secondes · {requests} requêtes au maximum par hôte",
     "expires": "Sélection disponible jusqu’au",
     "truncated": "Découverte tronquée : le périmètre n’est pas exhaustif.",
     "stopReason": "Fin de découverte",

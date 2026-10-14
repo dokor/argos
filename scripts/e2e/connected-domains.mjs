@@ -19,6 +19,7 @@ const browser = await chromium.launch(
       : {},
   ),
   evidence = [];
+let lastPage;
 try {
   for (const width of process.env.DOMAIN_SMOKE
     ? [1056]
@@ -35,7 +36,9 @@ try {
           errors = [];
         let mode = "",
           posts = [],
-          firstLost = true;
+          firstLost = true,
+          cancelRequested = false;
+        lastPage = page;
         page.on("pageerror", (e) => errors.push(e.message));
         await page.route("**/api/account/**", async (route) => {
           const url = new URL(route.request().url()),
@@ -66,8 +69,10 @@ try {
                   reservedCredits: 6,
                   stablePath: "/account/domains/7/batches/700",
                 };
-            } else if (path.endsWith("/cancel"))
+            } else if (path.endsWith("/cancel")) {
+              cancelRequested = true;
               data = { ...batch, cancelRequested: true };
+            }
           }
           if (mode === "expired" && path.endsWith("/domain-discoveries/600"))
             data = { ...discovery, expiresAt: "2000-01-01T00:00:00Z" };
@@ -82,6 +87,7 @@ try {
           if (mode === "active" && path.endsWith("/batches/700"))
             data = {
               ...batch,
+              cancelRequested,
               status: "RUNNING",
               finishedAt: null,
               counts: { ...batch.counts, activePages: 3 },
@@ -139,7 +145,10 @@ try {
           );
           assert.deepEqual(violations, [], name);
           const file = `${name}-${lang}-${theme}-${width}.png`;
-          await page.screenshot({ path: `${output}/${file}`, fullPage: true });
+          await page.screenshot({
+            path: `${output}/${file}`,
+            fullPage: name !== "confirmation",
+          });
           evidence.push({ name, lang, theme, width, screenshot: file });
         }
         await visit("/account/domains");
@@ -164,6 +173,14 @@ try {
         assert.equal(await page.locator("tbody tr").count(), 3);
         await check("filtered-pages");
         const filtered = page.url();
+        const language = page.getByRole("link", {
+          name: lang === "fr" ? "English" : "Français",
+          exact: true,
+        });
+        assert.ok(
+          (await language.getAttribute("href")).includes("rule=http.hsts"),
+          "Language switch keeps filters",
+        );
         await page
           .getByRole("link", { name: new RegExp(c.diagnostic) })
           .first()
@@ -256,7 +273,7 @@ try {
             .getByRole("dialog")
             .getByRole("button", { name: c.launch, exact: true })
             .click();
-          await page.getByRole("alert").waitFor();
+          await page.locator("main").getByRole("alert").waitFor();
           await check("quota-changed");
           assert.equal(
             await page.getByRole("checkbox", { checked: true }).count(),
@@ -296,9 +313,27 @@ try {
             .getByRole("button", { name: c.cancelBatch, exact: true })
             .waitFor();
           await check("running");
+          await page
+            .getByRole("button", { name: c.cancelBatch, exact: true })
+            .click();
+          await page.getByRole("dialog").waitFor();
+          await page.keyboard.press("Escape");
+          assert.equal(
+            posts.filter((p) => p.path.endsWith("/cancel")).length,
+            0,
+          );
+          await page
+            .getByRole("button", { name: c.cancelBatch, exact: true })
+            .click();
+          await page
+            .getByRole("dialog")
+            .getByRole("button", { name: c.cancelBatch, exact: true })
+            .click();
+          await page.getByText(c.cancelRequested, { exact: true }).waitFor();
+          await check("cancel-requested");
           mode = "missing";
           await visit("/account/domains/7/batches/700");
-          await page.getByRole("alert").waitFor();
+          await page.locator("main").getByRole("alert").waitFor();
           await check("missing");
           mode = "empty";
           await visit("/account/domains");
@@ -323,6 +358,18 @@ try {
     ),
   );
   console.log(`${evidence.length} domain UI checks passed`);
+} catch (error) {
+  if (lastPage) {
+    await lastPage.screenshot({
+      path: `${output}/failure.png`,
+      fullPage: true,
+    });
+    await writeFile(
+      `${output}/failure.txt`,
+      await lastPage.locator("body").innerText(),
+    );
+  }
+  throw error;
 } finally {
   await browser.close();
 }

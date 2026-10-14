@@ -109,8 +109,8 @@ class ControlledAuditE2eIT extends MariaDbReportFixture {
                     if (path.equals("/errors"))
                         body +=
                                 "<img src='/missing.png'><script>console.error('Synthetic fixture"
-                                    + " error');throw new Error('Synthetic fixture"
-                                    + " error')</script>";
+                                        + " error');throw new Error('Synthetic fixture"
+                                        + " error')</script>";
                     if (path.equals("/antibot"))
                         body += "<p>Just a moment… Verify you are human</p>";
                     body += "</main></body></html>";
@@ -328,7 +328,7 @@ class ControlledAuditE2eIT extends MariaDbReportFixture {
                             .redirectError(root.resolve("outputs/domain-e2e-error.log").toFile());
             domainBrowser.environment().put("DOMAIN_FIXTURE_SESSION", domainInterface.jwt);
             browser = domainBrowser.start();
-            assertTrue(browser.waitFor(3, TimeUnit.MINUTES), "Domain browser must terminate");
+            assertTrue(browser.waitFor(4, TimeUnit.MINUTES), "Domain browser must terminate");
             assertEquals(
                     0,
                     browser.exitValue(),
@@ -339,11 +339,11 @@ class ControlledAuditE2eIT extends MariaDbReportFixture {
                     var result =
                             statement.executeQuery(
                                     "SELECT COUNT(*),COUNT(DISTINCT p.run_id) FROM"
-                                        + " ARG_DOMAIN_BATCH_PAGE p JOIN ARG_DOMAIN_BATCH b ON"
-                                        + " b.id=p.batch_id WHERE b.owner_user_id=70")) {
+                                            + " ARG_DOMAIN_BATCH_PAGE p JOIN ARG_DOMAIN_BATCH b ON"
+                                            + " b.id=p.batch_id WHERE b.owner_user_id=70")) {
                 assertTrue(result.next());
-                assertEquals(2, result.getInt(1));
-                assertEquals(2, result.getInt(2));
+                assertEquals(3, result.getInt(1));
+                assertEquals(3, result.getInt(2));
             }
         } finally {
             if (browser != null && browser.isAlive()) browser.destroyForcibly();

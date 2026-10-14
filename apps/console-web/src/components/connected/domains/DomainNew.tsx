@@ -236,6 +236,9 @@ export default function DomainNew() {
     }
   }
   const blocked = !session.profile?.verified || session.denied;
+  useEffect(() => {
+    window.dispatchEvent(new Event("argos-reading"));
+  }, [params]);
   return (
     <main className={s.page}>
       <Link className={d.link} href="/account/domains">
@@ -243,13 +246,11 @@ export default function DomainNew() {
       </Link>
       <PageHeading title={c.newTitle} description={c.newIntro} />
       <ol className={d.steps}>
-        <li aria-current={!discoveryId ? "step" : undefined}>
-          1. {c.stepScope}
-        </li>
+        <li aria-current={!discoveryId ? "step" : undefined}>{c.stepScope}</li>
         <li aria-current={discoveryId ? "step" : undefined}>
-          2. {c.stepSelection}
+          {c.stepSelection}
         </li>
-        <li>3. {c.stepLaunch}</li>
+        <li>{c.stepLaunch}</li>
       </ol>
       {blocked ? (
         <Waiting allowed={false} />
@@ -258,6 +259,12 @@ export default function DomainNew() {
       ) : (
         <>
           {error && <DomainError code={error} />}
+          {discoveryId && activeBatches.error && (
+            <DomainError
+              code={activeBatches.error}
+              retry={activeBatches.reload}
+            />
+          )}
           {request && (
             <div className={d.notice} role="status">
               <p>{c.recovery}</p>
@@ -433,7 +440,7 @@ export default function DomainNew() {
                     title={discovery.hostname}
                     action={<State value={discovery.status} />}
                   >
-                    <p>{c.durableDiscovery}</p>
+                    <p>{running ? c.durableDiscovery : c.scopeHint}</p>
                     <dl className={d.facts}>
                       <div>
                         <dt>{c.eligible}</dt>
@@ -573,6 +580,7 @@ export default function DomainNew() {
                               <label>
                                 {c.profile}
                                 <select
+                                  aria-label={c.profile}
                                   value={profile}
                                   onChange={(event) =>
                                     change({ profile: event.target.value })
@@ -630,6 +638,12 @@ export default function DomainNew() {
                                 </Link>
                               </p>
                             )}
+                            {selected.length > 0 &&
+                              discovered.data &&
+                              profiles.data &&
+                              !selectionValid && (
+                                <DomainError code="selection_ineligible" />
+                              )}
                             <button
                               ref={launchButton}
                               className={s.primary}

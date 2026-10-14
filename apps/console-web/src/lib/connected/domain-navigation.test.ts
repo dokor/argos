@@ -66,3 +66,16 @@ describe("domain navigation", () => {
     expect(readDomainRequest("not json")).toBeNull();
   });
 });
+
+it("preserves a discovery or exact child context across reauthentication", () => {
+  expect(
+    safeAccountReturn("/account/domains/new?discovery=123&request=discard"),
+  ).toBe("/account/domains/new?discovery=123");
+  const path =
+    "/account/runs/99?returnTo=" +
+    encodeURIComponent("/account/domains/7/batches/8?tab=pages&rule=http.hsts");
+  expect(safeAccountReturn(path)).toBe(path);
+  expect(safeAccountReturn("/account/runs/99?returnTo=https://evil.test")).toBe(
+    "/account/sites",
+  );
+});

@@ -11,7 +11,9 @@ export function readDomainRequest(raw: string | null): DomainRequest | null {
     if (
       !value ||
       typeof value.key !== "string" ||
-      !/^[-a-f0-9]{36}$/.test(value.key)
+      !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(
+        value.key,
+      )
     )
       return null;
     const b = value.body;
