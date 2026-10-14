@@ -19,7 +19,7 @@ const content = <main><h1>Private page</h1><p>Private result</p></main>;
 it("shares one footer, real available credits and a current navigation item", () => {
   render(<AccountShell>{content}</AccountShell>);
   expect(screen.getAllByRole("contentinfo")).toHaveLength(1);
-  expect(screen.getByRole("link", { name: /64 crédits/ })).toHaveAttribute("href", "/account#usage-heading");
+  expect(screen.getByRole("link", { name: /64 crédits/ })).toHaveAttribute("href", "/account/settings#usage-heading");
   expect(screen.getByRole("link", { name: /Intégrations/ })).toHaveAttribute("aria-current", "page");
   expect(screen.queryByRole("link", { name: "Administration" })).not.toBeInTheDocument();
 });

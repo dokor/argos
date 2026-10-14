@@ -25,7 +25,7 @@ export default function AccountShell({ children }: { children: ReactNode }) {
   const menuButton = useRef<HTMLButtonElement>(null);
   const open = openPath === pathname;
   if (/^\/account\/(sign-in|register|verify|forgot|reset)$/.test(pathname)) return children;
-  const isAccount = pathname === "/account";
+  const isAccount = pathname === "/account" || pathname === "/account/settings";
   const isSites = /^\/account\/(analyses|sites|runs|urls)(\/|$)/.test(pathname);
   const valid = session.ready && !!session.profile && !session.denied;
   const admin = valid && session.profile?.verified && session.profile.admin;
@@ -39,7 +39,7 @@ export default function AccountShell({ children }: { children: ReactNode }) {
     }}>
       <div className={s.brandRow}>
         <Link href="/account/sites" className={s.brand} aria-label={c.workspace}><ArgosIcon size={25}/><span>Argos</span></Link>
-        <Link className={s.mobileAccount} href="/account" aria-current={isAccount ? "page" : undefined} onClick={close}>{c.account}</Link>
+        <Link className={s.mobileAccount} href="/account/settings" aria-current={isAccount ? "page" : undefined} onClick={close}>{c.account}</Link>
         <button ref={menuButton} className={s.menu} type="button" aria-expanded={open} aria-controls="account-navigation" onClick={() => setOpenPath(open ? null : pathname)}>{open ? c.closeMenu : c.menu}</button>
       </div>
       <nav id="account-navigation" className={s.navigation} aria-label={c.navigation}>
@@ -49,8 +49,8 @@ export default function AccountShell({ children }: { children: ReactNode }) {
         <span className={s.unavailable} aria-disabled="true">{c.domains}<span className={s.soon}>{c.soon}</span></span>
         <Link href="/account/integrations" aria-current={pathname === "/account/integrations" ? "page" : undefined} onClick={close}>{c.integrations}<span className={s.soon}>{c.soon}</span></Link>
         <div className={s.navBottom}>
-          <Link href="/account" aria-current={isAccount ? "page" : undefined} onClick={close}>{c.account}</Link>
-          <Link href="/account#usage-heading" onClick={close}>{c.usage}</Link>
+          <Link href="/account/settings" aria-current={isAccount ? "page" : undefined} onClick={close}>{c.account}</Link>
+          <Link href="/account/settings#usage-heading" onClick={close}>{c.usage}</Link>
           {admin && <Link href="/account/admin" aria-current={pathname.startsWith("/account/admin") ? "page" : undefined} onClick={close}>{c.admin}</Link>}
         </div>
       </nav>

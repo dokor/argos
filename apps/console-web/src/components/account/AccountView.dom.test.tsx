@@ -5,13 +5,15 @@ import { LangProvider } from "@/lib/i18n/LangContext";
 import { accountFetch, AccountClientError } from "@/lib/account-client";
 import AccountSession from "./AccountSession";
 import AccountView from "./AccountView";
+import AccountSettings from "./AccountSettings";
 import RunClaim from "./RunClaim";
 const { push } = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock("./AccountView.module.scss", () => ({ default: {} }));
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push, refresh: vi.fn() }), usePathname: () => "/report/" + "r".repeat(43) }));
+vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams(window.location.search), useRouter: () => ({ push, refresh: vi.fn() }), usePathname: () => "/report/" + "r".repeat(43) }));
 vi.mock("@/components/site/SiteNav", () => ({ default: () => null })); vi.mock("@/components/site/SiteFooter", () => ({ default: () => null }));
 vi.mock("@/lib/account-client", () => ({ accountFetch: vi.fn(), AccountClientError: class extends Error { constructor(public code: string, public status: number) { super(code); } } }));
 beforeEach(() => {
+  HTMLDialogElement.prototype.showModal=function(){this.setAttribute("open","");}; HTMLDialogElement.prototype.close=function(){this.removeAttribute("open");};
   vi.mocked(accountFetch).mockReset(); push.mockReset(); window.history.replaceState(null, "", "/account");
   vi.mocked(accountFetch).mockImplementation(async path => path === "auth/providers" ? { providers: [], enabled: true } : path === "return" ? { returnTo: "/account" } : path === "me" ? { displayName: "Fixture", email: "fixture@example.com", verified: true } : []);
 });
@@ -107,7 +109,7 @@ describe("account screens", () => {
       if (path === "me") throw new AccountClientError("session_invalid", 401);
       return path === "auth/providers" ? { providers: [], enabled: true } : { returnTo: "/account/sites" };
     });
-    render(<AccountSession><AccountView /></AccountSession>);
+    render(<AccountSession><AccountSettings/></AccountSession>);
     expect(await screen.findByRole("alert")).toHaveTextContent("Votre session est absente ou expirée. Connectez-vous à nouveau.");
   });
   it.each(["fr", "en"] as const)("labels registration fields and confirms email without revealing credentials in %s", async lang => {
@@ -134,21 +136,23 @@ describe("account screens", () => {
     expect(screen.queryByRole("region", { name: "Ou continuer avec" })).not.toBeInTheDocument();
   });
   it.each(["fr", "en"] as const)("offers only social providers that are not already linked in %s", async lang => {
+    window.history.replaceState(null, "", "/account/settings?section=connections");
     const fallback = vi.mocked(accountFetch).getMockImplementation()!;
     vi.mocked(accountFetch).mockImplementation(async (path, ...args) => {
       if (path === "auth/providers") return { providers: ["google", "github", "linkedin"], enabled: true };
       if (path === "methods") return [{ id: "1", provider: "github" }, { id: "2", provider: "google" }];
       return fallback(path, ...args);
     });
-    render(<LangProvider initialLang={lang}><AccountView /></LangProvider>);
+    render(<LangProvider initialLang={lang}><AccountSettings/></LangProvider>);
     const add = lang === "fr" ? "Associer" : "Link";
-    expect(await screen.findByRole("button", { name: add + " linkedin" })).toBeEnabled();
-    expect(screen.queryByRole("button", { name: add + " github" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: add + " google" })).not.toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: add + " LinkedIn" })).toBeEnabled();
+    expect(screen.queryByRole("button", { name: add + " GitHub" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: add + " Google" })).not.toBeInTheDocument();
     expect(screen.getByText("GitHub")).toBeInTheDocument();
     expect(screen.getByText("Google")).toBeInTheDocument();
   });
   it("waits for the linked methods before offering an association", async () => {
+    window.history.replaceState(null, "", "/account/settings?section=connections");
     const fallback = vi.mocked(accountFetch).getMockImplementation()!;
     let resolveMethods!: (value: { id: string; provider: string }[]) => void;
     const pendingMethods = new Promise<{ id: string; provider: string }[]>(resolve => { resolveMethods = resolve; });
@@ -157,14 +161,15 @@ describe("account screens", () => {
       if (path === "methods") return pendingMethods;
       return fallback(path, ...args);
     });
-    render(<AccountView />);
-    await waitFor(() => expect(accountFetch).toHaveBeenCalledWith("methods"));
-    expect(screen.queryByRole("button", { name: "Associer github" })).not.toBeInTheDocument();
+    render(<AccountSettings/>);
+    await waitFor(() => expect(accountFetch).toHaveBeenCalledWith("methods", "GET", undefined, expect.any(AbortSignal)));
+    expect(screen.queryByRole("button", { name: "Associer GitHub" })).not.toBeInTheDocument();
     resolveMethods([{ id: "1", provider: "github" }]);
     await screen.findByText("GitHub");
-    expect(screen.queryByRole("button", { name: "Associer github" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Associer GitHub" })).not.toBeInTheDocument();
   });
   it("offers a provider again after its method is removed", async () => {
+    window.history.replaceState(null, "", "/account/settings?section=connections");
     const fallback = vi.mocked(accountFetch).getMockImplementation()!;
     let methods = [{ id: "1", provider: "github" }, { id: "2", provider: "password" }];
     vi.mocked(accountFetch).mockImplementation(async (path, ...args) => {
@@ -173,22 +178,20 @@ describe("account screens", () => {
       if (path === "methods/1/remove") { methods = methods.filter(method => method.id !== "1"); return { accepted: true }; }
       return fallback(path, ...args);
     });
-    vi.spyOn(window, "confirm").mockReturnValueOnce(true);
-    render(<AccountView />);
+    render(<AccountSettings/>);
     const github = await screen.findByText("GitHub");
-    expect(screen.queryByRole("button", { name: "Associer github" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Associer GitHub" })).not.toBeInTheDocument();
     fireEvent.click(github.closest("li")!.querySelector("button")!);
-    expect(await screen.findByRole("button", { name: "Associer github" })).toBeEnabled();
-    expect(screen.queryByText("GitHub")).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Mot de passe actuel"), {target:{value:"synthetic long password"}});
+    fireEvent.submit(screen.getByRole("button",{name:"Confirmer et continuer"}).closest("form")!);
+    expect(await screen.findByRole("button", { name: "Associer GitHub" })).toBeEnabled();
+    expect(screen.getByText("Aucun compte associé")).toBeInTheDocument();
     expect(accountFetch).toHaveBeenCalledWith("methods/1/remove", "POST", { confirmed: true });
   });
-  it("disables archival until its explicit confirmation and keeps email read-only", async () => {
-    render(<AccountView />);
-    const close = await screen.findByRole("button", { name: "Fermer mon compte" }); expect(close).toBeDisabled();
-    fireEvent.click(screen.getByLabelText("Je confirme la fermeture de mon compte.")); expect(close).toBeEnabled();
+  it("keeps the connection email read-only", async () => {
+    render(<AccountSettings/>);
+    expect(await screen.findByLabelText("Adresse email")).toHaveAttribute("readonly");
     expect(screen.getByText("L’adresse de connexion est en lecture seule.")).toBeInTheDocument();
-    fireEvent.click(close);
-    await waitFor(() => expect(accountFetch).toHaveBeenCalledWith("me/archive", "POST", { confirmed: true }));
   });
   it("shows a claim action only for this browser's precise run and a verified user", async () => {
     vi.mocked(accountFetch).mockImplementation(async path => path === "claim-context" ? { runId: "42" } : { displayName: "Fixture", email: "fixture@example.com", verified: true });

@@ -33,3 +33,24 @@ it("aborts a pending usage read on unmount",async()=>{
   vi.mocked(accountFetch).mockImplementation(async(path,_method,_body,s)=>{if(path==="me") return profile;signal=s;return new Promise(()=>{});});
   const view=render(<AccountSession><Probe name="abort"/></AccountSession>);await waitFor(()=>expect(signal).toBeDefined());view.unmount();expect(signal?.aborted).toBe(true);
 });
+
+it("refreshes the profile without unmounting content and cannot restore a revoked session",async()=>{
+  function Identity(){const session=useAccountSession();return session.ready&&session.profile&&!session.denied ? <input aria-label="preserved form" defaultValue={session.profile.displayName}/> : <p>No access</p>;}
+  render(<AccountSession><Identity/></AccountSession>);
+  const input=await screen.findByLabelText("preserved form");fireEvent.change(input,{target:{value:"unsaved input"}});
+  let resolve!:(value:unknown)=>void;
+  vi.mocked(accountFetch).mockImplementation(async path=>path==="me" ? new Promise(r=>{resolve=r;}) : usage);
+  act(()=>window.dispatchEvent(new Event("argos-account-profile")));
+  expect(screen.getByLabelText("preserved form")).toBe(input);expect(input).toHaveValue("unsaved input");
+  act(()=>window.dispatchEvent(new Event("argos-account-invalid")));
+  await act(async()=>resolve(profile));expect(screen.queryByLabelText("preserved form")).not.toBeInTheDocument();
+});
+
+it("leaves loading on invalidation even when the initial profile request is still pending",async()=>{
+  let resolve!:(value:unknown)=>void;
+  vi.mocked(accountFetch).mockImplementation(async()=>new Promise(r=>{resolve=r;}));
+  function State(){const s=useAccountSession();return <p>{s.ready ? s.denied ? "Denied" : "Ready" : "Loading"}</p>;}
+  render(<AccountSession><State/></AccountSession>);expect(screen.getByText("Loading")).toBeInTheDocument();
+  act(()=>window.dispatchEvent(new Event("argos-account-invalid")));expect(screen.getByText("Denied")).toBeInTheDocument();
+  await act(async()=>resolve(profile));expect(screen.getByText("Denied")).toBeInTheDocument();
+});
