@@ -34,6 +34,11 @@ try{
   }
   await visit();await page.getByRole('link',{name:labels.open+' #9007199254740992'}).waitFor();
   assert.equal(await page.getByRole('link',{name:labels.open+' #9007199254740992'}).getAttribute('href'),prefix+'/account/runs/9007199254740992');await check('current');
+  await page.getByRole('button',{name:labels.current,exact:true}).focus();await page.keyboard.press('Tab');
+  const ledgerRegion=page.getByRole('region',{name:(lang==='fr'?'Journal de consommation':'Usage ledger')+' · 2026-10'});
+  assert.ok(await ledgerRegion.evaluate(el=>el===document.activeElement),'Keyboard reaches ledger region');
+  if(width<768){await page.keyboard.press('ArrowRight');await page.waitForFunction(()=>document.querySelector('main [role=region]').scrollLeft>0);}
+
   await page.getByRole('button',{name:labels.next,exact:true}).click();await page.waitForURL(/offset=20/);await page.getByRole('link',{name:labels.open+' #2020'}).waitFor();assert.equal(await page.locator('tbody tr').count(),4);await check('page-two');
   const languageLink=page.getByRole('link',{name:lang==='fr'?'English':'Français',exact:true});assert.ok((await languageLink.getAttribute('href')).includes('offset=20'));
   await page.getByLabel(labels.month).fill('2026-09');await page.getByRole('button',{name:labels.show,exact:true}).click();await page.waitForURL(/period=2026-09$/);assert.ok(!new URL(page.url()).searchParams.has('offset'));await page.getByRole('link',{name:labels.open+' #2010'}).waitFor();await check('prior-month');
