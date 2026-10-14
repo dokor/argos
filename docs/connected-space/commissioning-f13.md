@@ -5,6 +5,10 @@ production, suppression ou copie de données. Il complète le
 [premier ADMIN](first-admin-runbook.md), la [configuration comptes](../accounts/operations.md)
 et les [protections des collecteurs](../../infra/compose/lighthouse-service).
 
+Le [kit opérateur de préparation](production/README.md) fournit les fichiers
+candidats, les contrôles en lecture seule et les quotas retenus. Il sépare la
+préparation de la future activation et du bootstrap.
+
 ## 1. Fiche d'environnement avant exécution
 
 Consigner environnement, origine HTTPS, nom de base, version MariaDB, SHA des

@@ -47,6 +47,7 @@ compatibilité n’est pas une commande de remise à zéro de la production.
 | [Analyses par lots F07](batch-f07.md) | Admission atomique, progression, reprise et annulation privées |
 | [Compte personnel F04](account-f04.md) | Profil, sécurité, connexions, contrats conservés et preuves |
 | [Recette intégrée F13](acceptance-f13.md) | Matrice de preuves au SHA, comparaisons et réserves |
+| [Préparation production](production/README.md) | Kit opérateur sans déploiement, configuration candidate, base neuve et premier ADMIN |
 | [Mise en service F13](commissioning-f13.md) | Environnement neuf, données à décider, smoke tests et diagnostic |
 | [Recette et livraison](acceptance.md) | Matrice de tests et conditions de clôture |
 | [Plan de réalisation](delivery-plan.md) | Issues, dépendances et séquence des PR |
