@@ -1117,11 +1117,11 @@ class AccountLifecycleIT extends MariaDbReportFixture {
     }
     @Test void administrationSuspensionRevokesBlocksAndRestoresWithoutRevivingSessions() throws Exception {
         var a=administrator();var u=user("suspended@example.com",true);long id=u.context().user().getId();var admin=administration();
-        var run=personal.create("https://example.com",bearer(u),CSRF);long runs=count("ARG_AUDIT_RUN"),ledger=count("ARG_USAGE_RUN");
+        var run=personal.create("https://example.com",bearer(u),CSRF);long totalRuns=count("ARG_AUDIT_RUN"),ledger=count("ARG_USAGE_RUN");
         var stale=change(id,"PRO",10L);
         admin.suspension(bearer(a),CSRF,id,suspendInput(id,true));
         assertEquals("SUSPENDED",admin.user(bearer(a),id).get("state"));
-        assertEquals(runs,count("ARG_AUDIT_RUN"));assertEquals(ledger,count("ARG_USAGE_RUN"));
+        assertEquals(totalRuns,count("ARG_AUDIT_RUN"));assertEquals(ledger,count("ARG_USAGE_RUN"));
         assertEquals("QUEUED",dao.transactions.selectQuery().select(QAuditRun.auditRun.status).from(QAuditRun.auditRun).where(QAuditRun.auditRun.id.eq(run.audit().runId())).fetchOne());
         error(401,()->auth.login("suspended@example.com",PASSWORD,CSRF));
         error(401,()->sessions.renew(bearer(u),CSRF));error(401,()->personal.create("https://example.com",bearer(u),CSRF));

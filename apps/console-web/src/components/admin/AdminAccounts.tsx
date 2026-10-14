@@ -221,6 +221,7 @@ export default function AdminAccounts({
                             ? c.resumeHint
                             : c.suspendHint}
                         </p>
+                        {!data.canSuspend && <p className={a.notice}>{c.protected}</p>}
                         {data.canSuspend && (
                           <button
                             className={s.secondary}

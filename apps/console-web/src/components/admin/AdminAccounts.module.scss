@@ -242,3 +242,5 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+.form button:disabled {opacity:.55;cursor:not-allowed;}
