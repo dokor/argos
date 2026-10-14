@@ -118,3 +118,45 @@ la délivrabilité email, HTTPS, la charge Argon2/Chromium sur le Raspberry ou
 le zoom natif/lecteur d’écran. Consigner ces résultats dans la fiche opérateur.
 Les fonctionnalités publiques restent utilisables après bascule avec de nouveaux
 rapports ; les anciens liens ne sont pas conservés.
+
+
+## 5. Lancement depuis GitHub Actions
+
+Les quatre workflows `deploy-*` acceptent un lancement manuel
+(`workflow_dispatch`) sur `main` uniquement. Les déclenchements automatiques
+sur les chemins existants sont conservés. Réactiver un workflow ne rejoue pas
+les pushes survenus pendant sa désactivation.
+
+Avant la première bascule Clarté, relever le SHA de `main` dont les six workflows
+de validation sont verts. Garder ce SHA identique pendant les quatre lancements
+et vérifier le `headSha` de chaque run. Ne pas fusionner d'autres changements
+pendant la bascule. Les fichiers actifs sont `/srv/configs/api-backend/prod.conf`
+et `/srv/configs/console-web/.env.prod` ; les pipelines ne les remplacent pas.
+Une configuration privée incluse dans HOCON doit déjà être montée par le Compose.
+
+Sans utilisateur actif, une page de maintenance n'est pas nécessaire. Arrêter
+la console, l'ancienne API et les deux collecteurs avant les lancements pour
+abandonner les travaux en cours. Ne pas arrêter MariaDB ni les autres applications
+du serveur. Vérifier qu'aucune instance API annexe n'écrit dans la base Argos.
+
+Réactiver et lancer les workflows un par un, en attendant le succès de chacun :
+
+1. `deploy-playwright-service.yml`, puis contrôler l'état healthy du collecteur.
+2. `deploy-lighthouse-service.yml`, puis contrôler l'état healthy du collecteur.
+3. `deploy-api-backend.yml`, puis vérifier le démarrage, le succès de V27 et les
+   compteurs SQL du [contrat de remise à zéro](../reset-v27.md).
+4. `deploy-console-web.yml`, puis effectuer les smoke tests et le bootstrap ADMIN.
+
+Exemple pour le premier service, depuis un poste authentifié GitHub :
+
+```sh
+gh workflow enable deploy-playwright-service.yml --repo dokor/argos
+gh workflow run deploy-playwright-service.yml --ref main --repo dokor/argos
+```
+
+Un `up -d --build` réussi ne prouve pas que l'application a terminé son démarrage.
+Contrôler chaque service avant de poursuivre ; en cas d'échec, arrêter la séquence
+et diagnostiquer. Ne pas relancer un ancien run qui déploierait un ancien SHA.
+Le premier démarrage de l'API applique automatiquement la purge V27 ; garder la
+console arrêtée jusqu'à sa vérification. Le workflow de console recrée ensuite
+le conteneur avec le fichier d'environnement actualisé.

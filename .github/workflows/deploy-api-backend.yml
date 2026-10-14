@@ -1,6 +1,7 @@
 name: Deploy api-backend (Raspberry)
 
 on:
+  workflow_dispatch:
   push:
     branches: ["main"]
     paths:
@@ -19,6 +20,7 @@ concurrency:
 
 jobs:
   deploy:
+    if: github.ref == 'refs/heads/main'
     runs-on: self-hosted
     env:
       ARGOS_REVISION: ${{ github.sha }}
