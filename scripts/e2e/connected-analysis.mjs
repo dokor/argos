@@ -19,7 +19,7 @@ try {
         admissions++;assert.deepEqual(route.request().postDataJSON(),{url:history.normalizedUrl,profileId:'server-default-v1'});
         assert.match(route.request().headers()['idempotency-key'],/^[a-f0-9-]{36}$/);data={runId:'42',status:'QUEUED'};
       } else data=response(url.pathname,url.searchParams);
-      if(quota&&url.pathname.endsWith('/usage')) data={...data,used:20,reserved:0,canLaunch:false};
+      if(quota&&url.pathname.endsWith('/usage')) data={...data,used:20,reserved:0,available:0,canLaunch:false};
       if(!data){status=404;data={error:'resource_unavailable'};}
       await route.fulfill({status,contentType:'application/json',body:JSON.stringify(data)});
     });

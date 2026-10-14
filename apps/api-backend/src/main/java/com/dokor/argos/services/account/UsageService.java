@@ -12,7 +12,7 @@ import java.util.*;
 @Singleton
 public class UsageService {
     public record Snapshot(String offer, String period, String timezone, String startsAt,
-            String resetsAt, long used, long reserved, Long limit, boolean canLaunch) {}
+            String resetsAt, long used, long reserved, Long limit, Long available, boolean canLaunch) {}
     private final TransactionManagerQuerydsl transactions;
     private final UsagePolicy policy;
     private final Clock clock;
@@ -29,26 +29,40 @@ public class UsageService {
         } catch(SQLException e) { throw new IllegalStateException("Usage lock failed",e); }
     }
     private String offer(long user, Connection c) {
-        // Non-locking read avoids account -> run / run -> account inversion.
-        try(var s=c.prepareStatement("SELECT offer FROM ARG_ACCOUNT_USER WHERE id=?")) {
+        return offer(user,c,true);
+    }
+    private String offer(long user, Connection c, boolean locked) {
+        // Snapshot/admission take account -> usage. Publication never calls this method.
+        try(var s=c.prepareStatement("SELECT offer FROM ARG_ACCOUNT_USER WHERE id=?"+(locked ? " FOR UPDATE":""))) {
             s.setLong(1,user);try(var r=s.executeQuery()) { if(!r.next()) throw AccountError.missing();return r.getString(1); }
         } catch(SQLException e) { throw new IllegalStateException("Usage offer unavailable",e); }
     }
     public Snapshot snapshot(long user, String offer, Connection c) {
+        offer=offer(user,c); // Current effective offer, even after waiting behind an administrative change.
         lock(user,c);
+        return snapshot(user,offer,c,true);
+    }
+    /** Consistent MVCC read in the caller's transaction, without taking another account's locks. */
+    public Snapshot readSnapshot(long user, Connection c) {
+        return snapshot(user,offer(user,c,false),c,false);
+    }
+    private Snapshot snapshot(long user, String offer, Connection c, boolean locked) {
         YearMonth month=policy.period(clock.instant());
         long used=0,reserved=0;
-        try(var s=c.prepareStatement("SELECT state,COUNT(*) FROM ARG_USAGE_RUN WHERE user_id=? AND (state='RESERVED' OR (state='COUNTED' AND period=?)) GROUP BY state FOR UPDATE")) {
+        try(var s=c.prepareStatement("SELECT state,COUNT(*) FROM ARG_USAGE_RUN WHERE user_id=? AND (state='RESERVED' OR (state='COUNTED' AND period=?)) GROUP BY state"+(locked ? " FOR UPDATE":""))) {
             s.setLong(1,user);s.setString(2,month.toString());
             try(var r=s.executeQuery()) { while(r.next()) { if(r.getString(1).equals("COUNTED")) used=r.getLong(2);else reserved=r.getLong(2); } }
         } catch(SQLException e) { throw new IllegalStateException("Usage unavailable",e); }
-        Long override=override(user,c);
+        Long override=override(user,c,locked);
         Long limit=override==null ? policy.limit(offer) : override;
-        return new Snapshot(offer,month.toString(),policy.zone().getId(),policy.start(month).toString(),policy.reset(month).toString(),used,reserved,limit,limit==null || used<limit && reserved<limit-used);
+        return new Snapshot(offer,month.toString(),policy.zone().getId(),policy.start(month).toString(),policy.reset(month).toString(),used,reserved,limit,limit==null ? null : used>=limit || reserved>=limit-used ? 0L : limit-used-reserved,limit==null || used<limit && reserved<limit-used);
     }
-    public void admit(long user, Connection c) {
+    public void admit(long user, Connection c) { admitMany(user,1,c); }
+    /** F07 must call this before inserting any of the N children on this SAME transaction. */
+    public void admitMany(long user, int count, Connection c) {
+        if(count<1 || count>100) throw new AccountError(400,"selection_invalid");
         var view=snapshot(user,offer(user,c),c);
-        if(!view.canLaunch()) {
+        if(view.available()!=null && view.available()<count) {
             long retry=Math.max(1,Duration.between(clock.instant(),Instant.parse(view.resetsAt())).getSeconds());
             throw new jakarta.ws.rs.WebApplicationException(Response.status(429).type("application/json")
                 .header("Cache-Control","private, no-store").header("Retry-After",retry)
@@ -67,13 +81,13 @@ public class UsageService {
         if(run.getOwnerUserId()==null) return;
         lock(run.getOwnerUserId(),c);
         execute(c,"INSERT INTO ARG_USAGE_RUN(id,user_id,period,state,created_at,counted_at) VALUES(?,?,?,'COUNTED',?,?) "
-            +"ON DUPLICATE KEY UPDATE period=IF(state='COUNTED',period,VALUES(period)), counted_at=IF(state='COUNTED',counted_at,VALUES(counted_at)), state='COUNTED'",
+            +"ON DUPLICATE KEY UPDATE period=IF(state='RESERVED',VALUES(period),period), counted_at=IF(state='RESERVED',VALUES(counted_at),counted_at), state=IF(state='RESERVED','COUNTED',state)",
             run.getId(),run.getOwnerUserId(),policy.period(publishedAt).toString(),Timestamp.from(run.getCreatedAt()),Timestamp.from(publishedAt));
     }
     public void release(AuditRun run, Connection c) {
         if(run.getOwnerUserId()==null) return;
         lock(run.getOwnerUserId(),c);
-        execute(c,"UPDATE ARG_USAGE_RUN SET state='RELEASED' WHERE id=? AND state='RESERVED'",run.getId());
+        execute(c,"UPDATE ARG_USAGE_RUN SET state='RELEASED',released_at=? WHERE id=? AND state='RESERVED'",Timestamp.from(clock.instant()),run.getId());
     }
     /** Completed anonymous reports are counted at their original publication, without a new launch. */
     public void claimed(AuditRun run, Instant publishedAt, Connection c) {
@@ -81,7 +95,11 @@ public class UsageService {
         else if(List.of("QUEUED","RUNNING").contains(run.getStatus())) { admit(run.getOwnerUserId(),c);reserve(run,c); }
     }
     public Long override(long user, Connection c) {
-        try(var s=c.prepareStatement("SELECT monthly_limit FROM ARG_USAGE_ACCOUNT WHERE id=?")) {
+        return override(user,c,true);
+    }
+    public Long readOverride(long user, Connection c) { return override(user,c,false); }
+    private Long override(long user, Connection c, boolean locked) {
+        try(var s=c.prepareStatement("SELECT monthly_limit FROM ARG_USAGE_ACCOUNT WHERE id=?"+(locked ? " FOR UPDATE":""))) {
             s.setLong(1,user);try(var r=s.executeQuery()) { return r.next() ? r.getObject(1,Long.class) : null; }
         } catch(SQLException e) { throw new IllegalStateException("Usage limit unavailable",e); }
     }

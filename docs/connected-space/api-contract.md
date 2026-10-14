@@ -2,8 +2,9 @@
 
 **Contrat cible** : F01 fournit le [schéma OpenAPI canonique](../../apps/api-backend/src/main/resources/contracts/connected-space.openapi.json),
 les DTO Java validés et les types TypeScript générés. Le [guide F01](foundation-f01.md)
-décrit les commandes et limites. Seul le nouveau GET `/analysis-profiles` est
-disponible dans ce lot ; les autres opérations portent `x-implementation: planned`.
+décrit les commandes et limites. Les opérations livrées par F01/F03/F05 portent
+`x-implementation: available`, dont les lectures `/usage` et `/usage/events`
+([guide F05](usage-f05.md)). Les opérations de domaines restent `planned`.
 Les contrats compte/usage actuels restent réutilisés sauf écarts explicites D-11
 et D-12. BFF same-origin, puis mêmes ressources dans l’API Java sous `/api`.
 

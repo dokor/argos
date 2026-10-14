@@ -257,6 +257,8 @@ export type UsageEvent = {
   readonly period: string;
   readonly createdAt: string;
   readonly countedAt: string | null;
+  readonly releasedAt: string | null;
+  readonly url: string;
 };
 
 export type EntitlementInput = {
@@ -354,6 +356,7 @@ export type UsageEvents = {
   readonly limit: number;
   readonly offset: number;
   readonly snapshotAt: string;
+  readonly period: string;
 };
 
 export type AdminUsers = {
@@ -377,7 +380,7 @@ export type SiteAnalysisInput = {
   readonly profileId: string;
 };
 
-export const ADMITTED_RUN_STATUS_VALUES = ["QUEUED", "RUNNING", "COMPLETED", "FAILED"] as const;
+export const ADMITTED_RUN_STATUS_VALUES = ["QUEUED", "RUNNING", "COMPLETED", "FAILED", "CANCELED"] as const;
 export type AdmittedRunStatus = typeof ADMITTED_RUN_STATUS_VALUES[number];
 
 export type SiteAnalysisAccepted = {

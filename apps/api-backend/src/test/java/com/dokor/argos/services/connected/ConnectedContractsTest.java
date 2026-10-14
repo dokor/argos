@@ -72,7 +72,7 @@ class ConnectedContractsTest {
     @Test void existingUsageIsAdaptedWithoutAnotherLedgerOrUnlimitedSentinels() throws Exception {
         for (Long limit : Arrays.asList(null, 0L, 100L, 30L)) {
             var snapshot = new UsageService.Snapshot("FREE", "2026-10", "UTC", "2026-10-01T00:00:00Z",
-                    "2026-11-01T00:00:00Z", 32, 4, limit, limit == null || limit > 36);
+                    "2026-11-01T00:00:00Z", 32, 4, limit, limit==null ? null:Math.max(0,limit-36), limit == null || limit > 36);
             var value = ConnectedViews.usage(snapshot);
             assertEquals(limit == null ? null : limit == 100 ? 64L : 0L, value.available());
             assertEquals(snapshot.canLaunch(), value.canLaunch());

@@ -28,7 +28,7 @@ try {
           : { displayName: 'Camille · Atelier de démonstration', email: 'fixture@example.com', verified: mode !== 'pending', admin: mode === 'admin' };
       } else if (path.endsWith('/usage')) {
         status = mode === 'quota-error' ? 503 : 200;
-        data = status === 503 ? { error: 'account_unavailable' } : { offer: 'FREE', period: '2026-10', timezone: 'UTC', startsAt: '2026-10-01T00:00:00Z', resetsAt: '2027-01-01T00:00:00Z', used: fixture.usage.used, reserved: fixture.usage.reserved, limit: mode === 'unlimited' ? null : mode === 'zero' ? fixture.usage.used + fixture.usage.reserved : fixture.usage.limit, canLaunch: mode !== 'zero' };
+        data = status === 503 ? { error: 'account_unavailable' } : { offer: 'FREE', period: '2026-10', timezone: 'UTC', startsAt: '2026-10-01T00:00:00Z', resetsAt: '2027-01-01T00:00:00Z', available: mode === "unlimited" ? null : mode === "zero" ? 0 : fixture.usage.expectedAvailable, used: fixture.usage.used, reserved: fixture.usage.reserved, limit: mode === 'unlimited' ? null : mode === 'zero' ? fixture.usage.used + fixture.usage.reserved : fixture.usage.limit, canLaunch: mode !== 'zero' };
       }
       await route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(data) });
     });

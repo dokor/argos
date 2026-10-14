@@ -1013,6 +1013,7 @@ class AccountLifecycleIT extends MariaDbReportFixture {
                                             personal,
                                             new AccountCsrf(settings),
                                             new AccountRateLimiter(dao, tokens, clock, settings), new AccountSitesService(dao,sessions,new UrlNormalizer(),new DomainService(new DomainDao(dao.transactions)),new AuditDao(dao.transactions),clock),new AccountHistoryService(dao,sessions,mapper,clock)));
+            config.register(new com.dokor.argos.webservices.api.account.UsageHistoryWs(new UsageHistoryService(sessions,new UsagePolicy(ConfigFactory.empty()),clock)));
             config.register(new com.dokor.argos.webservices.api.account.ConnectedAnalysesWs(connectedAnalyses(),new AccountCsrf(settings)));
             config.register(new com.dokor.argos.webservices.api.account.AdminWs(administration(),new AccountCsrf(settings)));
             config.register(new com.dokor.argos.webservices.api.feedback.FeedbackWs(feedback(),new AccountCsrf(settings),new AccountRateLimiter(dao,tokens,clock,settings)));
@@ -1110,6 +1111,26 @@ class AccountLifecycleIT extends MariaDbReportFixture {
     AdminService administration() {
         var policy=new UsagePolicy(ConfigFactory.parseString("usage.offers.FREE.monthly-limit=2\nusage.offers.PRO.monthly-limit=10"));
         return new AdminService(dao,sessions,new UsageService(dao.transactions,policy,clock),policy,reader,mapper,clock);
+    }
+    @Test void administratorsCanReadEachOtherConcurrentlyWithoutCrossingAccountLocks() throws Exception {
+        var a=administrator();var b=user("cross-admin@example.com",true);
+        sql("UPDATE ARG_ACCOUNT_USER SET role='ADMIN' WHERE id="+b.context().user().getId());
+        var ready=new CountDownLatch(2);var release=new CountDownLatch(1);
+        var synchronizedSessions=spy(sessions);
+        doAnswer(call->{
+            var context=call.callRealMethod(); // Both transactions hold their own account/session first.
+            ready.countDown();assertTrue(release.await(10,TimeUnit.SECONDS));return context;
+        }).when(synchronizedSessions).require(anyString(),isNull(),eq(true),eq(false),any(java.sql.Connection.class));
+        var policy=new UsagePolicy(ConfigFactory.parseString("usage.offers.FREE.monthly-limit=2"));
+        var service=new AdminService(dao,synchronizedSessions,new UsageService(dao.transactions,policy,clock),policy,reader,mapper,clock);
+        try(var pool=Executors.newFixedThreadPool(2)) {
+            var first=pool.submit(()->service.user(bearer(a),b.context().user().getId()));
+            var second=pool.submit(()->service.user(bearer(b),a.context().user().getId()));
+            try {assertTrue(ready.await(10,TimeUnit.SECONDS));}finally{release.countDown();}
+            assertEquals(b.context().user().getId().toString(),first.get(15,TimeUnit.SECONDS).get("id"));
+            assertEquals(a.context().user().getId().toString(),second.get(15,TimeUnit.SECONDS).get("id"));
+        }
+        assertEquals(0,count("ARG_USAGE_RUN"));assertEquals(0,count("ARG_ADMIN_EVENT"));
     }
     AccountSessionService.Issued administrator() throws Exception {
         var a=user("admin@example.com",true);
@@ -1638,4 +1659,39 @@ class AccountLifecycleIT extends MariaDbReportFixture {
         sql("UPDATE ARG_AUDIT_REPORT SET expires_at='2026-10-10' WHERE run_id="+second.runId());
         error(404,()->history.reportContext(bearer(a),token));
     }
+    @Test void usageHistoryIsOwnerScopedPaginatedAndRetainsPriorMonthReservations() throws Exception {
+        var a=user("ledger-a@example.com",true);var b=user("ledger-b@example.com",true);
+        var one=personal.create("https://example.com",bearer(a),CSRF).audit();
+        var two=personal.create("https://example.com/next",bearer(a),CSRF).audit();
+        personal.create("https://example.com/private-other",bearer(b),CSRF);
+        sql("UPDATE ARG_USAGE_RUN SET period='2026-09',created_at='2026-09-30 23:59:59' WHERE id="+one.runId());
+
+        long owner=a.context().user().getId();long site=Long.parseLong(sites().list(bearer(a),20,null).items().getFirst().siteId());
+        sql("INSERT INTO ARG_DOMAIN_DISCOVERY(id,owner_user_id,site_id,idempotency_key,request_fingerprint,status,parameters_json,effective_limits_json,created_at,finished_at,expires_at) VALUES(66001,"+owner+","+site+",'ledger-discovery',UNHEX(REPEAT('00',32)),'COMPLETED','{}','{}','2026-09-30 23:58:00','2026-09-30 23:59:00','2026-10-01 00:59:00')");
+        sql("INSERT INTO ARG_DOMAIN_DISCOVERY_PAGE(id,discovery_id,owner_user_id,site_id,normalized_url,source,depth,eligible) VALUES(66002,66001,"+owner+","+site+",'https://example.com/','INITIAL',0,TRUE)");
+        sql("INSERT INTO ARG_DOMAIN_BATCH(id,owner_user_id,site_id,discovery_id,idempotency_key,request_fingerprint,profile_id,profile_snapshot_json,selected_count,status,created_at) VALUES(66003,"+owner+","+site+",66001,'ledger-batch',UNHEX(REPEAT('00',32)),'server-default-v1','{}',1,'RUNNING','2026-09-30 23:59:00')");
+        sql("INSERT INTO ARG_DOMAIN_BATCH_PAGE(id,batch_id,owner_user_id,site_id,discovery_id,discovery_page_id,audit_id,run_id,created_at) VALUES(66004,66003,"+owner+","+site+",66001,66002,"+one.auditId()+","+one.runId()+",'2026-09-30 23:59:00')");
+        var history=new UsageHistoryService(sessions,new UsagePolicy(ConfigFactory.empty()),clock);
+        var first=history.events(bearer(a),"2026-10",1,0);var second=history.events(bearer(a),"2026-10",1,1);
+        assertEquals(2,first.total());assertEquals(1,first.items().size());assertEquals(1,second.items().size());assertNotEquals(first.items().getFirst().runId(),second.items().getFirst().runId());
+        assertEquals(Long.toString(one.runId()),second.items().getFirst().runId());assertEquals("2026-09",second.items().getFirst().period());assertEquals("2026-10",first.period());
+        assertEquals(1,history.events(bearer(b),"2026-10",20,0).total());assertEquals(0,history.events(bearer(a),"2026-08",20,0).total());
+        assertNull(first.items().getFirst().batchId());assertEquals("66003",second.items().getFirst().batchId());assertTrue(first.items().getFirst().url().startsWith("https://example.com"));
+        error(400,()->history.events(bearer(a),"2026-13",20,0));error(400,()->history.events(bearer(a),"2026-10",101,0));
+        assertEquals(0,history.events(bearer(a),"2026-10",20,100).items().size());
+        auth.archive(bearer(a),CSRF,true);error(401,()->history.events(bearer(a),null,20,0));
+    }
+    @Test void usageHistoryHttpEnforcesVerificationAndNeverRenewsSessionActivity() throws Exception {
+        var a=user("ledger-http@example.com",true);var pending=user("ledger-pending@example.com",false);personal.create("https://example.com",bearer(a),CSRF);
+        var original=dao.transaction(c->dao.session(a.context().session().getId(),c,false)).getLastActivityAt();clock.now=clock.now.plusSeconds(30);
+        try(var http=new HttpFixture()){
+            assertEquals(401,http.call("GET","/account/usage/events",null,null,false).statusCode());
+            assertEquals(403,http.call("GET","/account/usage/events",bearer(pending),null,false).statusCode());
+            var response=http.call("GET","/account/usage/events?period=2026-10&limit=1&offset=0",bearer(a),null,false);
+            assertEquals(200,response.statusCode(),response.body());assertTrue(response.headers().firstValue("cache-control").orElse("").contains("no-store"));
+            assertEquals(1,mapper.readTree(response.body()).get("total").asInt());
+        }
+        assertEquals(original,dao.transaction(c->dao.session(a.context().session().getId(),c,false)).getLastActivityAt());
+    }
+
 }

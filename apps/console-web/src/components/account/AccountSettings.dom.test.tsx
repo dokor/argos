@@ -6,7 +6,6 @@ import {accountFetch,AccountClientError} from "@/lib/account-client";
 const state=vi.hoisted(()=>({section:"profile",push:vi.fn(),denied:false,invalidate:vi.fn()}));
 vi.mock("next/navigation",()=>({useRouter:()=>({push:state.push}),useSearchParams:()=>new URLSearchParams("section="+state.section),usePathname:()=>"/account/settings"}));
 vi.mock("./AccountSession",()=>({useAccountSession:()=>({denied:state.denied,invalidate:state.invalidate})}));
-vi.mock("./UsagePanel",()=>({default:()=>null}));
 vi.mock("@/lib/account-client",()=>({accountFetch:vi.fn(),AccountClientError:class extends Error{constructor(public code:string,public status:number){super(code);}}}));
 let methods:{id:string;provider:string}[],providers:string[],calls:string[];
 beforeEach(()=>{

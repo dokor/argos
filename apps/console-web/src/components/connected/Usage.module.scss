@@ -1,0 +1,18 @@
+.grid { display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:20px;align-items:start; }
+.period,.hint,.reset,.snapshot { color:var(--argos-text-muted); }
+.period strong { font-weight:600; }
+.capacity { display:flex;align-items:baseline;flex-wrap:wrap;gap:10px;margin:24px 0 18px; }
+.capacity strong { font-size:clamp(30px,4vw,42px);line-height:1.2;font-weight:700;font-variant-numeric:tabular-nums; }
+.capacity span { color:var(--argos-text-muted); }
+.meter { display:block;width:100%;height:14px;margin-bottom:20px;accent-color:var(--argos-brand); }
+.meter::-webkit-meter-bar { border:0;background:var(--argos-border); }.meter::-webkit-meter-optimum-value { background:var(--argos-brand); }
+.facts { display:grid;gap:0;margin-bottom:18px; }.facts>div { display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid var(--argos-border); }.facts dd { font-weight:650;font-variant-numeric:tabular-nums; }
+.reset { margin-bottom:10px; }.reset time { color:var(--argos-text);font-weight:550; }
+.rule { margin-bottom:18px; }.rule:last-child { margin-bottom:0; }.rule h3 { font-weight:650;margin-bottom:6px; }.rule p { color:var(--argos-text-muted);max-width:65ch; }
+.link { display:inline-flex;align-items:center;min-height:44px;color:var(--argos-brand);text-decoration:underline;margin-top:12px; }
+.notice { border:1px solid var(--argos-border);border-radius:7px;padding:14px;margin:16px 0;background:var(--argos-surface); }.notice p { margin-bottom:10px; }
+.historyHeading { display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:end;margin-bottom:18px; }.historyHeading h2 { margin-bottom:8px; }
+.filters { display:flex;flex-wrap:wrap;gap:10px;align-items:end; }.filters label { display:grid;gap:5px; }.filters input { min-width:0;max-width:100%;padding:9px 12px;min-height:44px;border:1px solid var(--argos-border);border-radius:6px;font:inherit;color:var(--argos-text);background:var(--argos-surface); }
+.snapshot { margin-bottom:12px;font-size:12px; }.url { overflow-wrap:anywhere;max-width:55ch;margin-top:5px; }.pagination { display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;margin-top:16px; }
+@media(max-width:980px) { .grid { grid-template-columns:minmax(0,1fr); }.filters { width:100%; } }
+.history table { min-width:680px; }.history td:first-child { min-width:140px;overflow-wrap:normal; }.history td:first-child time { white-space:nowrap; }.history td:nth-child(2) { min-width:240px; }

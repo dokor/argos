@@ -353,6 +353,16 @@ it.each(["login","link"])("stores the OAuth %s UI intent in an expiring HttpOnly
  expect(response.cookies.get("argos_intent_"+state)).toMatchObject({value:intent,httpOnly:true,secure:true,sameSite:"lax",maxAge:600});
  expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({intent,returnTo:"/en/account"});
 });
+
+it("forwards private usage history with period/offset and cookie identity only",async()=>{
+ fetchMock.mockResolvedValue(Response.json({items:[],total:0,limit:20,offset:0,period:"2026-10",snapshotAt:"2026-10-14T08:00:00Z"}));
+ const response=await accountProxy(request("usage/events?period=2026-10&limit=20&offset=40"),["usage","events"]);
+ expect(response.status).toBe(200);expect(response.headers.get("cache-control")).toContain("no-store");
+ expect(fetchMock.mock.calls[0][0]).toContain("/api/account/usage/events?period=2026-10&limit=20&offset=40");expect(fetchMock.mock.calls[0][1].headers.get("authorization")).toBe("Bearer "+jwt);
+});
+it.each(["ownerId=2","period=2026-13","period=2026-10&period=2026-09","offset=-1","offset=9007199254740992","limit=101","limit=20&limit=1"])("rejects invalid usage history query %s",async query=>{
+ expect((await accountProxy(request("usage/events?"+query),["usage","events"])).status).toBe(400);expect(fetchMock).not.toHaveBeenCalled();
+});
 it("recovers an admission only by validated key and session, with private caching",async()=>{
   const key="12345678-1234-1234-1234-123456789012";
   fetchMock.mockResolvedValue(Response.json({runId:"42",status:"COMPLETED"}));

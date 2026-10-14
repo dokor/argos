@@ -37,7 +37,7 @@ Un événement interne `argos-account-profile` actualise le cadre sans masquer l
 
 La composition suit les trois rubriques, le panneau principal et le résumé latéral de la référence, dans le shell F02 : rayons 9 px, marges, couleurs, langues, thèmes et footer communs. Les rubriques sont des liens de navigation, plutôt que des onglets ARIA simulés.
 
-Le panneau de consommation existant reste accessible sous Profil, ainsi que par « Offre et quotas », en attendant F05/#555. Sa refonte commerciale n’est pas revendiquée dans ce lot. Le formulaire de mot de passe est directement visible dans Sécurité, puis la confirmation apparaît au moment de l’enregistrement.
+F05/#555 remplace le panneau de consommation provisoire par la page autonome « Offre et quotas », décrite dans [usage-f05.md](usage-f05.md). Aucun parcours de paiement n’est ajouté. Le formulaire de mot de passe est directement visible dans Sécurité, puis la confirmation apparaît au moment de l’enregistrement.
 
 ## Vérifications et preuves
 

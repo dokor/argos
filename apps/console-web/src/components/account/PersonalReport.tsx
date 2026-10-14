@@ -32,7 +32,7 @@ export default function PersonalReport({ runId }: { runId: string }) {
         if(run.reportAvailability==="AVAILABLE" || run.status==="COMPLETED" && !["EXPIRED","UNAVAILABLE"].includes(run.reportAvailability??"")) {
           const report=await accountFetch<Report>("runs/"+runId+"/report","GET",undefined,controller.signal);
           if(alive) {setResult({id:runId,run,report});window.dispatchEvent(new Event("argos-usage-refresh"));}terminal=true;
-        } else if(["COMPLETED","FAILED"].includes(run.status)) {terminal=true;window.dispatchEvent(new Event("argos-usage-refresh"));}
+        } else if(["COMPLETED","FAILED","CANCELED"].includes(run.status)) {terminal=true;window.dispatchEvent(new Event("argos-usage-refresh"));}
         retries=0;schedule(1500);
       } catch(reason) {
         if(!alive) return;
@@ -50,7 +50,7 @@ export default function PersonalReport({ runId }: { runId: string }) {
   const back=<Link href={allowed && run?.siteId ? "/account/sites/"+run.siteId : "/account/sites"}>{allowed && run?.siteId ? t.account.sites.back : t.account.sites.title}</Link>;
   if(!session.ready) return <main className={ui.page}><p role="status">{t.account.working}</p></main>;
   if(!allowed) return <main className={ui.page}><h1>{c.progress}</h1><p role="alert">{session.profile ? t.account.pending : t.account.errors.session_invalid}</p><Link href={"/account/sign-in?returnTo="+encodeURIComponent("/account/runs/"+runId)}>{t.account.signIn}</Link>{back}</main>;
-  const terminal=run && ["COMPLETED","FAILED"].includes(run.status);
+  const terminal=run && ["COMPLETED","FAILED","CANCELED"].includes(run.status);
   const expired=run?.reportAvailability==="EXPIRED";
   const unavailable=expired || run?.reportAvailability==="UNAVAILABLE" || error==="resource_unavailable";
   const actions=<nav className={s.navigation} aria-label={c.progress}>{back}{run?.historyContext && <Link href={"/account/urls/"+run.historyContext.siteUrlId+"/history"}>{c.compare}</Link>}<Link href={"/account/analyses/new"+(run?.historyContext ? "?url="+encodeURIComponent(run.historyContext.normalizedUrl) : "")}>{c.fresh}</Link></nav>;

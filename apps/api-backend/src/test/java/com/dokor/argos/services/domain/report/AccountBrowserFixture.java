@@ -176,6 +176,7 @@ public class AccountBrowserFixture extends MariaDbReportFixture {
                                 new com.dokor.argos.webservices.api.report.ReportsWs(
                                         fixture.reader, fixture.runs));
         var connectedProfiles=new com.dokor.argos.services.connected.ConnectedProfiles(new com.dokor.argos.services.analysis.scoring.DefaultScorePolicy());
+        config.register(new UsageHistoryWs(new UsageHistoryService(sessions,new UsagePolicy(ConfigFactory.empty()),clock)));
         config.register(new ConnectedProfilesWs(sessions,connectedProfiles));
         config.register(new ConnectedAnalysesWs(new com.dokor.argos.services.connected.ConnectedAnalysesService(dao,sessions,
             new AccountSitesService(dao,sessions,new UrlNormalizer(),new DomainService(new DomainDao(dao.transactions)),auditDao,clock),audits,new UrlNormalizer(),connectedProfiles,fixture.mapper,fixture.tokens),new AccountCsrf(settings)));

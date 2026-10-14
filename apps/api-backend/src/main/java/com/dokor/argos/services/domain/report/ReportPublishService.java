@@ -65,7 +65,7 @@ public class ReportPublishService {
         entity.setCreatedAt(Instant.now());
         entity.setExpiresAt(retention.expiresAt(entity.getCreatedAt()));
 
-        return transactions.executeAndReturn(connection -> {
+        long outcome = transactions.executeAndReturn(connection -> {
             var run = runs.lockForPublication(runId, connection).orElseThrow(() -> new IllegalStateException("Run missing"));
             if (!Objects.equals(run.getAuditId(), audit.getId()) || !claimToken.equals(run.getClaimToken())) {
                 throw new IllegalStateException("Worker no longer owns this run");
@@ -73,6 +73,7 @@ public class ReportPublishService {
             var existing = reports.findByRunId(runId, connection);
             if ("COMPLETED".equals(run.getStatus()) && existing.isPresent()) return existing.get().getId();
             if (!"RUNNING".equals(run.getStatus()) || existing.isPresent()) throw new IllegalStateException("Run cannot be published");
+            if(Boolean.TRUE.equals(run.getCancelRequested())) {runs.finishCanceled(run,Instant.now(),connection);return 0L;}
             byte[] hash = run.getReportTokenHash();
             if (hash == null || hash.length != 32) throw new IllegalStateException("Missing report credential hash");
             entity.setTokenHash(hash);
@@ -83,6 +84,8 @@ public class ReportPublishService {
             if(run.getOwnerUserId()!=null) runs.usage().published(run,entity.getCreatedAt(),connection);
             return reportId;
         });
+        if(outcome==0) throw new com.dokor.argos.services.domain.audit.RunCanceledException();
+        return outcome;
     }
 
     static Integer publishedGlobalScore(AuditReportJson internal, ReportDto report) {

@@ -4,5 +4,6 @@ public enum AuditRunStatus {
     QUEUED,
     RUNNING,
     COMPLETED,
+    CANCELED,
     FAILED
 }
