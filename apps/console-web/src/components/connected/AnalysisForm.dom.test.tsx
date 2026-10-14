@@ -3,12 +3,63 @@ import { beforeEach, expect, it, vi } from "vitest";
 import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import AnalysisForm from "./AnalysisForm";
 import { accountFetch, AccountClientError } from "@/lib/account-client";
+import { pendingAnalysis } from "@/lib/connected/analysis-recovery";
 const {push,session}=vi.hoisted(()=>({push:vi.fn(),session:{profile:{verified:true},denied:false,invalidate:vi.fn(),refreshUsage:vi.fn(),usage:{canLaunch:true}}}));
-vi.mock("next/navigation",()=>({useRouter:()=>({push})}));
+const router={push};
+vi.mock("next/navigation",()=>({useRouter:()=>router}));
 vi.mock("@/components/account/AccountSession",()=>({useAccountSession:()=>session}));
 vi.mock("@/lib/account-client",()=>({accountFetch:vi.fn(),AccountClientError:class extends Error {constructor(public code:string,public status:number){super(code);}}}));
 const profiles={defaultProfileId:"server-default-v1",items:[{id:"server-default-v1"}]};
-beforeEach(()=>{push.mockReset();vi.mocked(accountFetch).mockReset();session.usage.canLaunch=true;session.denied=false;});
+it("recovers the exact admitted run after remount, including at exhausted quota, without posting again",async()=>{
+  let accepted=false;
+  vi.mocked(accountFetch).mockImplementation(async path=>{
+    if(path==="analysis-profiles")return profiles;
+    if(path.startsWith("analyses/"))return {runId:"42",status:"COMPLETED"};
+    accepted=true;throw new AccountClientError("account_unavailable",503);
+  });
+  const first=render(<AnalysisForm initialUrl="https://example.com/path"/>);
+  await waitFor(()=>expect(screen.getByRole("button",{name:"Lancer l’analyse"})).toBeEnabled());
+  fireEvent.click(screen.getByRole("button",{name:"Lancer l’analyse"}));
+  await screen.findByRole("button",{name:"Réessayer"});
+  const key=pendingAnalysis()!.key;expect(accepted).toBe(true);
+  first.unmount();session.usage.canLaunch=false;
+  render(<AnalysisForm/>);
+  await waitFor(()=>expect(push).toHaveBeenCalledWith("/account/runs/42"));
+  expect(accountFetch).toHaveBeenCalledWith("analyses/"+key,"GET",undefined,expect.any(AbortSignal));
+  expect(vi.mocked(accountFetch).mock.calls.filter(call=>call[0]==="analyses")).toHaveLength(1);
+  expect(pendingAnalysis()).toBeNull();
+});
+it("keeps the original key when recovery finds no admission and does not submit automatically",async()=>{
+  vi.mocked(accountFetch).mockImplementation(async path=>{
+    if(path==="analysis-profiles")return profiles;
+    if(path.startsWith("analyses/"))throw new AccountClientError("resource_unavailable",404);
+    throw new AccountClientError("account_unavailable",503);
+  });
+  const first=render(<AnalysisForm initialUrl="https://example.com/path"/>);
+  await waitFor(()=>expect(screen.getByRole("button",{name:"Lancer l’analyse"})).toBeEnabled());
+  fireEvent.click(screen.getByRole("button",{name:"Lancer l’analyse"}));
+  await screen.findByRole("button",{name:"Réessayer"});
+  const key=pendingAnalysis()!.key;first.unmount();
+  render(<AnalysisForm/>);
+  await waitFor(()=>expect(screen.getByRole("button",{name:"Réessayer"})).toBeEnabled());
+  expect(screen.getByLabelText("URL de la page")).toHaveValue("https://example.com/path");
+  expect(vi.mocked(accountFetch).mock.calls.filter(call=>call[0]==="analyses")).toHaveLength(1);
+  fireEvent.click(screen.getByRole("button",{name:"Réessayer"}));
+  await waitFor(()=>expect(vi.mocked(accountFetch).mock.calls.filter(call=>call[0]==="analyses")).toHaveLength(2));
+  expect(vi.mocked(accountFetch).mock.calls.filter(call=>call[0]==="analyses").map(call=>call[4])).toEqual([key,key]);
+});
+it("does not admit if the pending intention cannot be saved",async()=>{
+  vi.mocked(accountFetch).mockResolvedValue(profiles);
+  const storage=vi.spyOn(Storage.prototype,"setItem").mockImplementation(()=>{throw new DOMException("Unavailable");});
+  try {
+    render(<AnalysisForm initialUrl="https://example.com"/>);
+    await waitFor(()=>expect(screen.getByRole("button",{name:"Lancer l’analyse"})).toBeEnabled());
+    fireEvent.click(screen.getByRole("button",{name:"Lancer l’analyse"}));
+    await screen.findByRole("alert");
+    expect(vi.mocked(accountFetch).mock.calls.some(call=>call[0]==="analyses")).toBe(false);
+  }finally{storage.mockRestore();}
+});
+beforeEach(()=>{sessionStorage.clear();push.mockReset();vi.mocked(accountFetch).mockReset();session.usage.canLaunch=true;session.denied=false;});
 it("blocks double submission and uses only the catalogue profile for a private run",async()=>{
   let resolve:(value:unknown)=>void=()=>{};
   vi.mocked(accountFetch).mockImplementation(async path=>path==="analysis-profiles" ? profiles : new Promise(done=>{resolve=done;}));
@@ -53,4 +104,5 @@ it("does not redirect back after the user leaves while admission is pending",asy
   view.unmount();await act(async()=>{resolve({runId:"42"});});
   await waitFor(()=>expect(vi.mocked(accountFetch).mock.calls.filter(call=>call[0]==="analyses")).toHaveLength(1));
   expect(push).not.toHaveBeenCalled();
+  expect(pendingAnalysis()?.url).toBe("https://example.com");
 });

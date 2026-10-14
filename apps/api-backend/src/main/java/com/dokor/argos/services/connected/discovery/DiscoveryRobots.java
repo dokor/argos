@@ -3,6 +3,7 @@ package com.dokor.argos.services.connected.discovery;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import com.dokor.argos.services.domain.audit.UrlNormalizer;
 
 /** Bounded REP parser: merged exact product groups, fallback *, longest rule, Allow wins ties. */
 public final class DiscoveryRobots {
@@ -16,19 +17,22 @@ public final class DiscoveryRobots {
 
     private final List<Rule> rules;
     public final List<String> sitemaps;
+    public final boolean sitemapsTruncated;
 
-    private DiscoveryRobots(List<Rule> rules, List<String> sitemaps) {
+    private DiscoveryRobots(List<Rule> rules, List<String> sitemaps, boolean sitemapsTruncated) {
         this.rules = rules;
         this.sitemaps = List.copyOf(sitemaps);
+        this.sitemapsTruncated = sitemapsTruncated;
     }
 
     public static DiscoveryRobots allowAll() {
-        return new DiscoveryRobots(List.of(), List.of());
+        return new DiscoveryRobots(List.of(), List.of(), false);
     }
 
     public static DiscoveryRobots parse(String body, int maxRules, int maxSitemaps) {
         var groups = new ArrayList<Group>();
-        var maps = new ArrayList<String>();
+        var maps = new LinkedHashSet<String>();
+        boolean mapsTruncated = false;
         Group group = new Group();
         groups.add(group);
         int lines = 0, ruleCount = 0;
@@ -45,8 +49,13 @@ public final class DiscoveryRobots {
             String key = line.substring(0, colon).trim().toLowerCase(Locale.ROOT),
                     value = line.substring(colon + 1).trim();
             if (key.equals("sitemap")) {
-                if (maps.size() >= maxSitemaps) throw new DiscoveryStop("SITEMAP_LIMIT");
-                if (value.length() <= 2048) maps.add(value);
+                if (value.length() > 2048) { mapsTruncated = true; continue; }
+                String map = value;
+                try { map = UrlNormalizer.normalizeSyntax(value); }
+                catch (IllegalArgumentException e) { /* Crawler records invalid sitemap syntax. */ }
+                if (maps.contains(map)) continue;
+                if (maps.size() >= maxSitemaps) { mapsTruncated = true; continue; }
+                maps.add(map);
                 continue;
             }
             if (key.equals("user-agent")) {
@@ -67,7 +76,7 @@ public final class DiscoveryRobots {
         var selected = new ArrayList<Rule>();
         for (var g : groups)
             if (g.agents.contains(specific ? "argosdiscovery" : "*")) selected.addAll(g.rules);
-        return new DiscoveryRobots(selected, maps);
+        return new DiscoveryRobots(selected, List.copyOf(maps), mapsTruncated);
     }
 
     public boolean allows(String url) {

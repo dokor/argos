@@ -110,6 +110,17 @@ couverture incomplète, pas un inventaire exhaustif du site.
 
 ## Persistance et reprise
 
+Les liens HTML utilisent la base effective du document (`<base href>` compris).
+L'hôte exact, les chemins exclus et robots sont revérifiés sur l'URL résolue :
+une base externe ne permet aucun fetch externe.
+
+Le parseur robots déduplique les sitemaps par URL canonique avant d'appliquer
+le plafond. Les entrées distinctes excédentaires sont ignorées, signalées par
+`SITEMAP_LIMIT` et `truncated=true`, tout en conservant les règles robots et
+le parcours HTML. Les plafonds de corps, lignes/règles et transport restent
+appliqués. Tests : base relative/externe/exclue, six déclarations identiques,
+variantes canoniques et excès de sitemaps sans perte de la page d'accueil.
+
 V22 ajoute le verrou global, début, lease, jeton de claim et index aux tables
 F01. Les colonnes SQL générées restent en lecture seule. L'admission verrouille
 le compte avant le verrou global ; les workers ne verrouillent pas ensuite un

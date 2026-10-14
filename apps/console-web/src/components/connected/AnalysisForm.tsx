@@ -6,6 +6,7 @@ import { localizedPath } from "@/lib/i18n/routes";
 import { accountFetch, AccountClientError } from "@/lib/account-client";
 import { useAccountSession } from "@/components/account/AccountSession";
 import { analysisCopy } from "./analysisCopy";
+import { pendingAnalysis, rememberAnalysis, forgetAnalysis, type PendingAnalysis } from "@/lib/connected/analysis-recovery";
 import s from "./Analysis.module.scss";
 import ui from "./Connected.module.scss";
 import type { AnalysisProfiles as Profiles, SiteAnalysisAccepted } from "@/lib/connected/contracts";
@@ -14,31 +15,58 @@ export default function AnalysisForm({ initialUrl="", launchBlocked=false }: {in
   const [url,setUrl]=useState(initialUrl),[profiles,setProfiles]=useState<Profiles|null>(null),[error,setError]=useState(""),[busy,setBusy]=useState(false),[revision,setRevision]=useState(0),[uncertain,setUncertain]=useState(false);
   const mounted=useRef(false);
   useEffect(()=>{mounted.current=true;return ()=>{mounted.current=false;};},[]);
-  const submitting=useRef(false),request=useRef<{url:string;profileId:string;key:string}|null>(null),input=useRef<HTMLInputElement>(null);
+  const submitting=useRef(false),request=useRef<PendingAnalysis|null>(null),input=useRef<HTMLInputElement>(null);
   const allowed=session.profile?.verified && !session.denied, invalidate=session.invalidate;
   useEffect(()=>{
     if(!allowed) return;
     let alive=true;const controller=new AbortController();
-    void accountFetch<Profiles>("analysis-profiles","GET",undefined,controller.signal).then(data=>{if(alive){if(!data.items?.some(item=>item.id===data.defaultProfileId)) throw new Error("Invalid profile catalogue");setProfiles(data);setError("");}}).catch(reason=>{if(alive){invalidate(reason);setError(reason instanceof AccountClientError ? reason.code : "account_unavailable");}});
+    async function load() {
+      try {
+        const pending=pendingAnalysis();
+        if(pending) {request.current=pending;setUrl(pending.url);setUncertain(true);setBusy(true);}
+        const data=await accountFetch<Profiles>("analysis-profiles","GET",undefined,controller.signal);
+        if(!alive)return;
+        if(!data.items?.some(item=>item.id===data.defaultProfileId)) throw new Error("Invalid profile catalogue");
+        setProfiles(data);setError("");
+        if(pending) {
+          try {
+            const run=await accountFetch<SiteAnalysisAccepted>("analyses/"+pending.key,"GET",undefined,controller.signal);
+            if(!/^[1-9]\d{0,18}$/.test(run.runId))throw new Error("Invalid recovery response");
+            if(!alive)return;
+            forgetAnalysis(pending.key);
+            window.dispatchEvent(new Event("argos-usage-refresh"));
+            router.push(localizedPath("/account/runs/"+run.runId,lang));
+            return;
+          } catch(reason) {
+            if(!alive)return;
+            // Keep the original key if not admitted, without automatically creating a run.
+            if(!(reason instanceof AccountClientError) || reason.status!==404)throw reason;
+          }
+        }
+      } catch(reason) {if(alive){invalidate(reason);setError(reason instanceof AccountClientError ? reason.code : "account_unavailable");}}
+      if(alive)setBusy(false);
+    }
+    void load();
     return ()=>{alive=false;controller.abort();};
-  },[allowed,revision,invalidate]);
+  },[allowed,revision,invalidate,router,lang]);
   async function submit(event:FormEvent) {
     event.preventDefault();
     if(submitting.current || !allowed || !profiles || (!uncertain && (!session.usage?.canLaunch || launchBlocked))) return;
     submitting.current=true;setBusy(true);setError("");
-    const value=url.trim(),profileId=profiles.defaultProfileId;
+    const value=url.trim(),profileId=uncertain&&request.current ? request.current.profileId : profiles.defaultProfileId;
     if(!request.current || request.current.url!==value || request.current.profileId!==profileId) request.current={url:value,profileId,key:crypto.randomUUID()};
     try {
+      rememberAnalysis(request.current);
       const run=await accountFetch<SiteAnalysisAccepted>("analyses","POST",{url:value,profileId},undefined,request.current.key);
       if(!/^[1-9]\d{0,18}$/.test(run.runId)) throw new Error("Invalid admission response");
       window.dispatchEvent(new Event("argos-usage-refresh"));
-      if(mounted.current) router.push(localizedPath("/account/runs/"+run.runId,lang));
+      if(mounted.current) {forgetAnalysis(request.current.key);router.push(localizedPath("/account/runs/"+run.runId,lang));}
       // Keep the guard until navigation unmounts this form.
     } catch(reason) {
       invalidate(reason);if(!mounted.current) return;const code=reason instanceof AccountClientError ? reason.code : "account_unavailable";
       if(code==="unsupported_profile") setProfiles(null);
       setError(code);setUncertain(!(reason instanceof AccountClientError) || reason.status>=500);
-      if(reason instanceof AccountClientError && reason.status<500) {request.current=null;window.dispatchEvent(new Event("argos-usage-refresh"));}
+      if(reason instanceof AccountClientError && reason.status<500) {forgetAnalysis(request.current!.key);request.current=null;window.dispatchEvent(new Event("argos-usage-refresh"));}
       submitting.current=false;setBusy(false);input.current?.focus();
     }
   }
