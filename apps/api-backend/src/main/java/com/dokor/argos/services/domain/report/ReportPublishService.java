@@ -62,6 +62,12 @@ public class ReportPublishService {
         entity.setScoringVersion(globalScore == null ? null : internal.score().scoringVersion());
         try { entity.setReportJson(mapper.writeValueAsString(com.dokor.argos.services.analysis.AuditOutputSanitizer.tree(dto, mapper))); }
         catch (Exception error) { throw new IllegalStateException("Report serialization failed", error); }
+        try {
+            var diagnostic=com.dokor.argos.services.connected.summary.DiagnosticProjection.from(mapper.readTree(entity.getReportJson()),mapper.valueToTree(internal.score()));
+            entity.setDiagnosticJson(mapper.writeValueAsString(diagnostic));
+            entity.setCriticalCount(diagnostic.criticalCount()==null?null:Math.toIntExact(diagnostic.criticalCount()));
+            entity.setImportantCount(diagnostic.importantCount()==null?null:Math.toIntExact(diagnostic.importantCount()));
+        } catch (java.io.IOException invalid) { throw new IllegalStateException("Diagnostic projection failed",invalid); }
         entity.setCreatedAt(Instant.now());
         entity.setExpiresAt(retention.expiresAt(entity.getCreatedAt()));
 

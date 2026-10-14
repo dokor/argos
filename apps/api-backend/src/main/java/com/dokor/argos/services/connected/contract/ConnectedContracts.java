@@ -471,7 +471,8 @@ public final class ConnectedContracts {
         @JsonProperty(value = "failedPages", required = true) Long failedPages,
         @JsonProperty(value = "canceledPages", required = true) Long canceledPages,
         @JsonProperty(value = "activePages", required = true) Long activePages,
-        @JsonProperty(value = "priorityPages", required = true) Long priorityPages
+        @JsonProperty(value = "priorityPages", required = true) Long priorityPages,
+        @JsonProperty(value = "unknownPages", required = true) Long unknownPages
     ) {
         public BatchCounts {
             required(selectedPages, "selectedPages");
@@ -495,6 +496,9 @@ public final class ConnectedContracts {
             required(priorityPages, "priorityPages");
             check(priorityPages >= 0L, "priorityPages");
             check(priorityPages <= 9007199254740991L, "priorityPages");
+            required(unknownPages, "unknownPages");
+            check(unknownPages >= 0L, "unknownPages");
+            check(unknownPages <= 9007199254740991L, "unknownPages");
         }
         @JsonAnySetter public void rejectUnknown(String name, Object value) {
             throw new IllegalArgumentException("Unknown connected field");
@@ -513,7 +517,12 @@ public final class ConnectedContracts {
         @JsonProperty(value = "evaluatedPages", required = true) Long evaluatedPages,
         @JsonProperty(value = "selectedPages", required = true) Long selectedPages,
         @JsonProperty(value = "examplePageIds", required = true) List<String> examplePageIds,
-        @JsonProperty(value = "evidenceAvailable", required = true) Boolean evidenceAvailable
+        @JsonProperty(value = "evidenceAvailable", required = true) Boolean evidenceAvailable,
+        @JsonProperty(value = "title", required = true) String title,
+        @JsonProperty(value = "impact", required = true) String impact,
+        @JsonProperty(value = "recommendation", required = true) String recommendation,
+        @JsonProperty(value = "notEvaluatedPages", required = true) Long notEvaluatedPages,
+        @JsonProperty(value = "exclusions", required = true) List<FindingExclusion> exclusions
     ) {
         public CommonFinding {
             required(ruleKey, "ruleKey");
@@ -546,6 +555,16 @@ public final class ConnectedContracts {
             check(new HashSet<>(examplePageIds).size() == examplePageIds.size(), "examplePageIds");
             for (var item : examplePageIds) { required(item, "item"); check(item.codePointCount(0, item.length()) >= 1, "item"); check(item.codePointCount(0, item.length()) <= 19, "item"); check(java.util.regex.Pattern.compile("^[1-9][0-9]{0,18}$").matcher(item).find(), "item"); check(Long.parseLong(item) > 0, "item"); }
             required(evidenceAvailable, "evidenceAvailable");
+            if (title != null) { check(title.codePointCount(0, title.length()) <= 512, "title"); }
+            if (impact != null) { check(impact.codePointCount(0, impact.length()) <= 1000, "impact"); }
+            if (recommendation != null) { check(recommendation.codePointCount(0, recommendation.length()) <= 1000, "recommendation"); }
+            required(notEvaluatedPages, "notEvaluatedPages");
+            check(notEvaluatedPages >= 0L, "notEvaluatedPages");
+            check(notEvaluatedPages <= 9007199254740991L, "notEvaluatedPages");
+            required(exclusions, "exclusions");
+            exclusions = List.copyOf(exclusions);
+            check(exclusions.size() >= 0 && exclusions.size() <= 100, "exclusions");
+            for (var item : exclusions) { required(item, "item"); }
         }
         @JsonAnySetter public void rejectUnknown(String name, Object value) {
             throw new IllegalArgumentException("Unknown connected field");
@@ -592,9 +611,12 @@ public final class ConnectedContracts {
         @JsonProperty(value = "counts", required = true) BatchCounts counts,
         @JsonProperty(value = "commonFindings", required = true) List<CommonFinding> commonFindings,
         @JsonProperty(value = "problematicPages", required = true) List<PageResult> problematicPages,
-        @JsonProperty(value = "usage", required = true) Usage usage,
+        @JsonProperty(value = "usage", required = true) BatchCredits usage,
         @JsonProperty(value = "snapshotAt", required = true) String snapshotAt,
-        @JsonProperty(value = "version", required = true) Long version
+        @JsonProperty(value = "version", required = true) Long version,
+        @JsonProperty(value = "hostname", required = true) String hostname,
+        @JsonProperty(value = "discovery", required = true) BatchDiscovery discovery,
+        @JsonProperty(value = "incompletePages", required = true) List<PageResult> incompletePages
     ) {
         public BatchSummary {
             required(id, "id");
@@ -633,6 +655,13 @@ public final class ConnectedContracts {
             required(version, "version");
             check(version >= 0L, "version");
             check(version <= 9007199254740991L, "version");
+            required(hostname, "hostname");
+            check(hostname.codePointCount(0, hostname.length()) <= 253, "hostname");
+            required(discovery, "discovery");
+            required(incompletePages, "incompletePages");
+            incompletePages = List.copyOf(incompletePages);
+            check(incompletePages.size() >= 0 && incompletePages.size() <= 5, "incompletePages");
+            for (var item : incompletePages) { required(item, "item"); }
         }
         @JsonAnySetter public void rejectUnknown(String name, Object value) {
             throw new IllegalArgumentException("Unknown connected field");
@@ -1050,7 +1079,7 @@ public final class ConnectedContracts {
 
     @JsonInclude(JsonInclude.Include.ALWAYS)
     public record Batches(
-        @JsonProperty(value = "items", required = true) List<BatchSummary> items,
+        @JsonProperty(value = "items", required = true) List<BatchHistoryItem> items,
         @JsonProperty(value = "total", required = true) Long total,
         @JsonProperty(value = "limit", required = true) Long limit,
         @JsonProperty(value = "offset", required = true) Long offset,
@@ -1434,6 +1463,88 @@ public final class ConnectedContracts {
             check(offset <= 9007199254740991L, "offset");
             required(snapshotAt, "snapshotAt");
             java.time.Instant.parse(snapshotAt);
+        }
+        @JsonAnySetter public void rejectUnknown(String name, Object value) {
+            throw new IllegalArgumentException("Unknown connected field");
+        }
+    }
+
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    public record FindingExclusion(
+        @JsonProperty(value = "reason", required = true) String reason,
+        @JsonProperty(value = "pages", required = true) Long pages
+    ) {
+        public FindingExclusion {
+            required(reason, "reason");
+            check(reason.codePointCount(0, reason.length()) <= 64, "reason");
+            required(pages, "pages");
+            check(pages >= 0L, "pages");
+            check(pages <= 9007199254740991L, "pages");
+        }
+        @JsonAnySetter public void rejectUnknown(String name, Object value) {
+            throw new IllegalArgumentException("Unknown connected field");
+        }
+    }
+
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    public record BatchDiscovery(
+        @JsonProperty(value = "eligiblePages", required = true) Long eligiblePages,
+        @JsonProperty(value = "excludedPages", required = true) Long excludedPages,
+        @JsonProperty(value = "truncated", required = true) Boolean truncated,
+        @JsonProperty(value = "stopReason", required = true) String stopReason,
+        @JsonProperty(value = "effectiveLimits", required = true) DiscoveryLimits effectiveLimits
+    ) {
+        public BatchDiscovery {
+            required(eligiblePages, "eligiblePages");
+            check(eligiblePages >= 0L, "eligiblePages");
+            check(eligiblePages <= 9007199254740991L, "eligiblePages");
+            required(excludedPages, "excludedPages");
+            check(excludedPages >= 0L, "excludedPages");
+            check(excludedPages <= 9007199254740991L, "excludedPages");
+            required(truncated, "truncated");
+            if (stopReason != null) { check(stopReason.codePointCount(0, stopReason.length()) <= 64, "stopReason"); }
+            required(effectiveLimits, "effectiveLimits");
+        }
+        @JsonAnySetter public void rejectUnknown(String name, Object value) {
+            throw new IllegalArgumentException("Unknown connected field");
+        }
+    }
+
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    public record BatchHistoryItem(
+        @JsonProperty(value = "id", required = true) String id,
+        @JsonProperty(value = "domainId", required = true) String domainId,
+        @JsonProperty(value = "profileSnapshot", required = true) ProfileSnapshot profileSnapshot,
+        @JsonProperty(value = "createdAt", required = true) String createdAt,
+        @JsonProperty(value = "finishedAt", required = true) String finishedAt,
+        @JsonProperty(value = "status", required = true) BatchStatus status,
+        @JsonProperty(value = "cancelRequested", required = true) Boolean cancelRequested,
+        @JsonProperty(value = "counts", required = true) BatchCounts counts,
+        @JsonProperty(value = "usage", required = true) BatchCredits usage,
+        @JsonProperty(value = "version", required = true) Long version
+    ) {
+        public BatchHistoryItem {
+            required(id, "id");
+            check(id.codePointCount(0, id.length()) >= 1, "id");
+            check(id.codePointCount(0, id.length()) <= 19, "id");
+            check(java.util.regex.Pattern.compile("^[1-9][0-9]{0,18}$").matcher(id).find(), "id");
+            check(Long.parseLong(id) > 0, "id");
+            required(domainId, "domainId");
+            check(domainId.codePointCount(0, domainId.length()) >= 1, "domainId");
+            check(domainId.codePointCount(0, domainId.length()) <= 19, "domainId");
+            check(java.util.regex.Pattern.compile("^[1-9][0-9]{0,18}$").matcher(domainId).find(), "domainId");
+            check(Long.parseLong(domainId) > 0, "domainId");
+            required(profileSnapshot, "profileSnapshot");
+            required(createdAt, "createdAt");
+            java.time.Instant.parse(createdAt);
+            if (finishedAt != null) { java.time.Instant.parse(finishedAt); }
+            required(status, "status");
+            required(cancelRequested, "cancelRequested");
+            required(counts, "counts");
+            required(usage, "usage");
+            required(version, "version");
+            check(version >= 0L, "version");
+            check(version <= 9007199254740991L, "version");
         }
         @JsonAnySetter public void rejectUnknown(String name, Object value) {
             throw new IllegalArgumentException("Unknown connected field");

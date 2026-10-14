@@ -173,6 +173,7 @@ export type BatchCounts = {
   readonly canceledPages: number;
   readonly activePages: number;
   readonly priorityPages: number;
+  readonly unknownPages: number;
 };
 
 export type CommonFinding = {
@@ -187,6 +188,11 @@ export type CommonFinding = {
   readonly selectedPages: number;
   readonly examplePageIds: ReadonlyArray<string>;
   readonly evidenceAvailable: boolean;
+  readonly title: string | null;
+  readonly impact: string | null;
+  readonly recommendation: string | null;
+  readonly notEvaluatedPages: number;
+  readonly exclusions: ReadonlyArray<FindingExclusion>;
 };
 
 export type DomainSummary = {
@@ -210,9 +216,12 @@ export type BatchSummary = {
   readonly counts: BatchCounts;
   readonly commonFindings: ReadonlyArray<CommonFinding>;
   readonly problematicPages: ReadonlyArray<PageResult>;
-  readonly usage: Usage;
+  readonly usage: BatchCredits;
   readonly snapshotAt: string;
   readonly version: number;
+  readonly hostname: string;
+  readonly discovery: BatchDiscovery;
+  readonly incompletePages: ReadonlyArray<PageResult>;
 };
 
 export type Attempt = {
@@ -335,7 +344,7 @@ export type Domains = {
 };
 
 export type Batches = {
-  readonly items: ReadonlyArray<BatchSummary>;
+  readonly items: ReadonlyArray<BatchHistoryItem>;
   readonly total: number;
   readonly limit: number;
   readonly offset: number;
@@ -442,4 +451,30 @@ export type BatchProgressPages = {
   readonly limit: number;
   readonly offset: number;
   readonly snapshotAt: string;
+};
+
+export type FindingExclusion = {
+  readonly reason: string;
+  readonly pages: number;
+};
+
+export type BatchDiscovery = {
+  readonly eligiblePages: number;
+  readonly excludedPages: number;
+  readonly truncated: boolean;
+  readonly stopReason: string | null;
+  readonly effectiveLimits: DiscoveryLimits;
+};
+
+export type BatchHistoryItem = {
+  readonly id: string;
+  readonly domainId: string;
+  readonly profileSnapshot: ProfileSnapshot;
+  readonly createdAt: string;
+  readonly finishedAt: string | null;
+  readonly status: BatchStatus;
+  readonly cancelRequested: boolean;
+  readonly counts: BatchCounts;
+  readonly usage: BatchCredits;
+  readonly version: number;
 };
