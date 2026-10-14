@@ -30,7 +30,7 @@ export default function AccountShell({ children }: { children: ReactNode }) {
   const valid = session.ready && !!session.profile && !session.denied;
   const admin = valid && session.profile?.verified && session.profile.admin;
   const context = pathname.startsWith("/account/admin") ? c.admin : isSites ? c.sites
-    : pathname === "/account/usage" ? c.usage : pathname === "/account/integrations" ? c.integrations : c.account;
+    : pathname.startsWith("/account/domains") ? c.domains : pathname === "/account/usage" ? c.usage : pathname === "/account/integrations" ? c.integrations : c.account;
   const close = () => setOpenPath(null);
   return <div className={s.shell} data-connected-shell>
     <a href="#account-content" className={s.skip}>{c.skip}</a>
@@ -46,7 +46,7 @@ export default function AccountShell({ children }: { children: ReactNode }) {
         <p className={s.navCaption}>{c.workspace}</p>
         <span className={s.unavailable} aria-disabled="true">{c.overview}<span className={s.soon}>{c.soon}</span></span>
         <Link href="/account/sites" aria-current={isSites ? "page" : undefined} onClick={close}>{c.sites}</Link>
-        <span className={s.unavailable} aria-disabled="true">{c.domains}<span className={s.soon}>{c.soon}</span></span>
+        <Link href="/account/domains" aria-current={pathname.startsWith("/account/domains") ? "page" : undefined} onClick={close}>{c.domains}</Link>
         <Link href="/account/integrations" aria-current={pathname === "/account/integrations" ? "page" : undefined} onClick={close}>{c.integrations}<span className={s.soon}>{c.soon}</span></Link>
         <div className={s.navBottom}>
           <Link href="/account/settings" aria-current={isAccount ? "page" : undefined} onClick={close}>{c.account}</Link>

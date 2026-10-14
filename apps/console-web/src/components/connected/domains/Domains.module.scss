@@ -1,0 +1,397 @@
+@use "../../../styles/controls";
+.stack {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+.card {
+  padding: 22px;
+  border: 1px solid var(--argos-border);
+  border-radius: 9px;
+  background: var(--argos-surface);
+  min-width: 0;
+}
+.cardHeader,
+.sectionHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.cardHeader h2 {
+  overflow-wrap: anywhere;
+  margin-bottom: 8px;
+}
+.cardHeader p {
+  margin: 8px 0;
+  color: var(--argos-text-muted);
+}
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  padding-top: 20px;
+  margin-top: 20px;
+  border-top: 1px solid var(--argos-border);
+}
+.metrics div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 6px;
+}
+.metrics dd {
+  font-size: 24px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+}
+.metrics dt,
+.muted {
+  color: var(--argos-text-muted);
+}
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 24px;
+  margin: 16px 0;
+}
+.facts div {
+  min-width: 0;
+}
+.facts dt {
+  color: var(--argos-text-muted);
+  font-size: 13px;
+}
+.facts dd {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.link {
+  color: var(--argos-brand);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  overflow-wrap: anywhere;
+}
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  border-bottom: 1px solid var(--argos-border);
+  margin: 20px 0;
+}
+.tabs a {
+  min-height: 44px;
+  padding: 10px 0;
+  border-bottom: 2px solid transparent;
+  color: var(--argos-text-muted);
+}
+.tabs a[aria-current] {
+  color: var(--argos-brand);
+  border-color: var(--argos-brand);
+  font-weight: 650;
+}
+.form {
+  display: grid;
+  gap: 18px;
+  max-width: 780px;
+}
+.form label,
+.filters label {
+  display: grid;
+  gap: 6px;
+  font-weight: 550;
+  min-width: 0;
+}
+.form :is(input, select, textarea),
+.filters :is(input, select) {
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font: inherit;
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--argos-border);
+  background: var(--argos-surface);
+  color: var(--argos-text);
+}
+.form textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+.form p {
+  color: var(--argos-text-muted);
+  max-width: 72ch;
+}
+.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 20px;
+}
+.filters label {
+  flex: 1 1 170px;
+}
+.filters button {
+  flex-shrink: 0;
+}
+.notice,
+.error {
+  border-left: 3px solid var(--argos-brand);
+  padding: 12px 16px;
+  margin: 16px 0;
+  background: var(--argos-brand-soft);
+  overflow-wrap: anywhere;
+}
+.error {
+  color: var(--argos-error);
+  background: var(--argos-error-soft);
+  border-color: var(--argos-error);
+}
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 20px 0;
+}
+.pagination p {
+  color: var(--argos-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.finding {
+  border-top: 1px solid var(--argos-border);
+  padding: 16px 0;
+}
+.finding summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  cursor: pointer;
+  min-height: 44px;
+  list-style: none;
+}
+.finding summary::-webkit-details-marker {
+  display: none;
+}
+.finding summary::after {
+  content: "+";
+  color: var(--argos-brand);
+  font-size: 24px;
+}
+.finding[open] summary::after {
+  content: "−";
+}
+.finding summary > div {
+  min-width: 0;
+  flex: 1;
+}
+.finding summary strong {
+  display: block;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+  margin-bottom: 6px;
+}
+.finding p {
+  margin: 12px 0;
+  max-width: 75ch;
+  overflow-wrap: anywhere;
+}
+.finding h3 {
+  font-weight: 650;
+  margin-top: 16px;
+}
+.finding ul {
+  list-style: disc;
+  padding-left: 22px;
+}
+.meter {
+  display: block;
+  width: 100%;
+  height: 8px;
+  accent-color: var(--argos-brand);
+  margin: 14px 0;
+}
+.pageList {
+  list-style: none;
+}
+.pageRow {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+  border-top: 1px solid var(--argos-border);
+}
+.pageRow > div {
+  min-width: 0;
+  flex: 1;
+}
+.pageRow strong {
+  display: block;
+  overflow-wrap: anywhere;
+  font-weight: 600;
+}
+.pageRow p {
+  color: var(--argos-text-muted);
+  margin-top: 8px;
+}
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+}
+.url {
+  overflow-wrap: anywhere;
+  word-break: normal;
+  max-width: 65ch;
+}
+.check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-height: 44px;
+  padding: 10px 0;
+}
+.check input {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  margin-top: 2px;
+  accent-color: var(--argos-brand);
+}
+.selection {
+  margin: 16px 0;
+}
+.selection li {
+  border-top: 1px solid var(--argos-border);
+  padding: 8px 0;
+}
+.selection p {
+  padding-left: 30px;
+}
+.steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  margin-bottom: 24px;
+  color: var(--argos-text-muted);
+}
+.steps [aria-current] {
+  color: var(--argos-brand);
+  font-weight: 650;
+}
+.dialog {
+  background: var(--argos-surface);
+  color: var(--argos-text);
+  border: 1px solid var(--argos-border);
+  border-radius: 9px;
+  padding: 24px;
+  max-width: 600px;
+  width: calc(100% - 28px);
+  max-height: calc(100dvh - 28px);
+  overflow: auto;
+  margin: auto;
+}
+.dialog::backdrop {
+  background: rgba(15, 23, 42, 0.55);
+}
+.dialog h2 {
+  font-size: 20px;
+  font-weight: 650;
+  margin-bottom: 16px;
+}
+.dialog p {
+  margin: 14px 0;
+}
+.dialog button {
+  margin-top: 8px;
+}
+.history li {
+  border-top: 1px solid var(--argos-border);
+  padding: 12px 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.modules {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.modules li {
+  padding: 3px 8px;
+  background: var(--argos-canvas);
+  border-radius: 4px;
+  font-size: 12px;
+}
+.tableDetails summary {
+  min-height: 44px;
+  cursor: pointer;
+  align-content: center;
+}
+@media (max-width: 620px) {
+  .card {
+    padding: 16px;
+  }
+  .metrics {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .metrics div {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 14px;
+  }
+  .metrics dd {
+    font-size: 22px;
+  }
+  .columns {
+    grid-template-columns: 1fr;
+  }
+  .pageRow {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .finding summary {
+    align-items: flex-start;
+  }
+  .facts {
+    gap: 12px 18px;
+  }
+  .cardHeader > a {
+    width: 100%;
+  }
+  .dialog {
+    padding: 18px;
+  }
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

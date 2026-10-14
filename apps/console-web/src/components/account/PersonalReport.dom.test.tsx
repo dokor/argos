@@ -5,7 +5,7 @@ import { accountFetch, AccountClientError } from "@/lib/account-client";
 import PersonalReport from "./PersonalReport";
 const {session}=vi.hoisted(()=>({session:{profile:{verified:true},ready:true,denied:false,invalidate:vi.fn()}}));
 vi.mock("./AccountSession",()=>({useAccountSession:()=>session,PersonalNavigation:()=>null}));
-vi.mock("next/navigation",()=>({usePathname:()=>"/account/runs/42"}));
+vi.mock("next/navigation",()=>({usePathname:()=>"/account/runs/42",useSearchParams:()=>new URLSearchParams(window.location.search)}));
 vi.mock("@/app/(fr)/report/[token]/ReportPage",()=>({default:({params}:{params:{report:{domain:string}}})=><p>{params.report.domain}</p>}));
 vi.mock("@/lib/account-client",()=>({accountFetch:vi.fn(),AccountClientError:class extends Error {constructor(public code:string,public status:number,public retryAfter=0){super(code);}}}));
 beforeEach(()=>{vi.useFakeTimers();vi.mocked(accountFetch).mockReset();session.denied=false;session.invalidate.mockReset();Object.defineProperty(document,"hidden",{value:false,configurable:true});});

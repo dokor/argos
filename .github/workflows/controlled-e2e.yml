@@ -19,7 +19,7 @@ jobs:
     needs: changes
     if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.e2e == 'true') }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     services:
       mariadb:
         image: mariadb:11.4
@@ -37,6 +37,7 @@ jobs:
       ARGOS_TEST_CREDENTIALS_URL: jdbc:mariadb://127.0.0.1:3306/argos_credentials_test
       ARGOS_TEST_CREDENTIALS_USER: argos_fixture
       ARGOS_TEST_CREDENTIALS_PASSWORD: synthetic-fixture
+      ACCOUNT_ORIGIN: http://127.0.0.1:3000
       API_BASE: http://127.0.0.1:8081
       PLAYWRIGHT_SERVICE_URL: http://127.0.0.1:3016
       LIGHTHOUSE_SERVICE_URL: http://127.0.0.1:3017
@@ -158,6 +159,21 @@ jobs:
         with:
           name: connected-usage-${{ github.sha }}
           path: outputs/ui-review/clarte-usage/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Check Clarte domain interface and recovery
+        env:
+          CONNECTED_BASE_URL: http://127.0.0.1:3000
+        run: node scripts/e2e/connected-domains.mjs
+      - name: Upload domain visual and real lifecycle evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: connected-domains-${{ github.sha }}
+          path: |
+            outputs/ui-review/clarte-domains/
+            outputs/domain-e2e.json
+            outputs/domain-e2e-error.log
           if-no-files-found: warn
           retention-days: 14
       - name: Rehearse consistent backup and isolated restore
