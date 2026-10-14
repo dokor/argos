@@ -11,7 +11,7 @@ it.each(["ownerId=2", "profileId=mobile-v1", "limit=1"])("rejects unexpected cat
   expect((await accountProxy(request("analysis-profiles?" + query), ["analysis-profiles"])).status).toBe(400);
   expect(fetchMock).not.toHaveBeenCalled();
 });
-it.each(["domains", "overview"])("does not activate the planned route %s", async path => {
+it.each(["overview"])("does not activate the planned route %s", async path => {
   expect((await accountProxy(request(path), [path])).status).toBe(404);
   expect(fetchMock).not.toHaveBeenCalled();
 });
@@ -410,8 +410,9 @@ it("forwards private progress pages and preserves filters",async()=>{
  const result=await accountProxy(request(path+"?status=FAILED&offset=2"),path.split("/"));expect(result.status).toBe(200);expect(result.headers.get("Cache-Control")).toBe("private, no-store");
  expect(fetchMock.mock.calls[0][0]).toBe("http://fixture-backend/api/account/"+path+"?limit=20&offset=2&status=FAILED");
 });
-it("keeps F08 summary routes unavailable",async()=>{
- for(const path of ["domains/1/batches/2","domains/1/batches/2/pages","domains/1/batches"]){expect((await accountProxy(request(path),path.split("/"))).status).toBe(404);}expect(fetchMock).not.toHaveBeenCalled();
+it("proxies F08 summary routes privately",async()=>{
+ fetchMock.mockImplementation(async () => new Response("{}"));
+ for(const path of ["domains/1/batches/2","domains/1/batches/2/pages","domains/1/batches"]){expect((await accountProxy(request(path),path.split("/"))).status).toBe(200);}expect(fetchMock).toHaveBeenCalledTimes(3);
 });
 it("requires CSRF and an empty cancel payload",async()=>{
  const path="domains/1/batches/2/cancel";

@@ -13,6 +13,7 @@ import com.dokor.argos.services.connected.ConnectedProfiles;
 import com.dokor.argos.services.connected.batch.*;
 import com.dokor.argos.services.connected.contract.ConnectedContracts.*;
 import com.dokor.argos.services.connected.discovery.*;
+import com.dokor.argos.services.connected.summary.*;
 import com.dokor.argos.services.domain.audit.*;
 import com.dokor.argos.services.domain.domain.DomainService;
 import com.dokor.argos.webservices.api.account.*;
@@ -597,8 +598,11 @@ class BatchIT extends MariaDbReportFixture {
                                         new AccountPermissionProvider(sessions),
                                         AccountAccess.class,
                                         AccountAccess::value))
+                        .register(new DomainSummariesWs(summaries()))
                         .register(new DomainBatchesWs(batches, new AccountCsrf(settings)))
-                        .register(new DomainBatchProgressWs(batches, new AccountCsrf(settings)));
+                        .register(
+                                new DomainBatchProgressWs(
+                                        batches, new AccountCsrf(settings), summaries()));
         var server =
                 org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory.createHttpServer(
                         java.net.URI.create("http://127.0.0.1:0/"), config, false);
@@ -638,7 +642,13 @@ class BatchIT extends MariaDbReportFixture {
             assertEquals(202, admitted.statusCode(), admitted.body());
             var batch = mapper.readValue(admitted.body(), AdmittedBatch.class);
             String path = "/account/domains/" + batch.domainId() + "/batches/" + batch.id();
-            for (String route : List.of(path + "/progress", path + "/progress/pages")) {
+            for (String route :
+                    List.of(
+                            path + "/progress",
+                            path + "/progress/pages",
+                            path,
+                            path + "/pages",
+                            "/account/domains/" + batch.domainId() + "/batches")) {
                 assertEquals(401, http(base, "GET", route, null, null, false).statusCode());
                 assertEquals(404, http(base, "GET", route, b, null, false).statusCode());
                 var response = http(base, "GET", route, a, null, false);
@@ -686,5 +696,210 @@ class BatchIT extends MariaDbReportFixture {
                                                         body))
                                 .build(),
                         java.net.http.HttpResponse.BodyHandlers.ofString());
+    }
+
+    DomainSummaryService summaries() {
+        return new DomainSummaryService(
+                accounts,
+                sessions,
+                new DomainSummaryDao(accounts.transactions),
+                new ConnectedDomainDao(accounts.transactions),
+                batchDao,
+                mapper,
+                clock);
+    }
+
+    @Test
+    void f08CanonicalPublicationPrivateSummariesAndRetention() throws Exception {
+        engine("");
+        var fixture = SummaryFixture.fixture();
+        var sourcePages = fixture.path("domains").get(0).path("pages");
+        StringBuilder links = new StringBuilder();
+        for (var p : sourcePages)
+            links.append("<a href='")
+                    .append(java.net.URI.create(p.path("url").asText()).getPath())
+                    .append("'>page</a>");
+        when(transport.get(anyString(), anyInt(), any()))
+                .thenAnswer(
+                        call ->
+                                new DiscoveryTransport.Response(
+                                        call.<String>getArgument(0).endsWith("robots.txt")
+                                                        || call.<String>getArgument(0)
+                                                                .endsWith("sitemap.xml")
+                                                ? 404
+                                                : 200,
+                                        "text/html",
+                                        null,
+                                        links.toString()));
+        var discovery = create(a);
+        assertTrue(
+                new DiscoveryWorker(
+                                dao, policy, new DomainCrawler(policy, transport), service, clock)
+                        .processNext());
+        var selected =
+                service
+                        .pages(a, Long.parseLong(discovery.id()), 100, 0, "eligible")
+                        .items()
+                        .stream()
+                        .map(DiscoveredPage::pageId)
+                        .toList();
+        assertEquals(8, selected.size());
+        var batch = launch(new CreateBatch(discovery.id(), selected, ConnectedProfiles.DEFAULT_ID));
+        for (var page : pages(batch)) {
+            var spec =
+                    java.util.stream.StreamSupport.stream(sourcePages.spliterator(), false)
+                            .filter(
+                                    v ->
+                                            java.net
+                                                    .URI
+                                                    .create(v.path("url").asText())
+                                                    .getPath()
+                                                    .equals(
+                                                            java.net
+                                                                    .URI
+                                                                    .create(page.normalizedUrl())
+                                                                    .getPath()))
+                            .findFirst()
+                            .orElseThrow();
+            long run = Long.parseLong(page.runId());
+            assertTrue(runDao.claimRun(run, "f08", clock.instant()));
+            if (!spec.path("reportAvailable").asBoolean()) {
+                assertTrue(runDao.markFailed(run, clock.instant(), "synthetic failure", "f08"));
+                continue;
+            }
+            var e = SummaryFixture.evidence(fixture, spec);
+            var internal = mock(AuditReportJson.class);
+            when(internal.score())
+                    .thenReturn(
+                            mapper.treeToValue(
+                                    e.score(),
+                                    com.dokor.argos.services.analysis.scoring.AuditScoreReport
+                                            .class));
+            var composer = mock(PublicReportComposer.class);
+            when(composer.compose(any()))
+                    .thenReturn(mapper.treeToValue(e.report(), ReportDto.class));
+            var enrichment = mock(AiReportSummaryService.class);
+            when(enrichment.enrich(any())).thenAnswer(call -> call.getArgument(0));
+            var pub =
+                    new ReportPublishService(
+                            accounts.transactions,
+                            runDao,
+                            reports,
+                            composer,
+                            enrichment,
+                            mock(AhrefsDomainRatingClient.class),
+                            mapper);
+            var row = runs.getRun(run).orElseThrow();
+            pub.completeAndPublish(
+                    run,
+                    new AuditDao(accounts.transactions).findById(row.getAuditId()),
+                    internal,
+                    "{\"score\":" + e.score() + "}",
+                    "f08");
+        }
+        var summary = summaries().summary(a, site(batch), id(batch));
+        assertEquals(new BatchCounts(8L, 6L, 1L, 1L, 0L, 0L, 5L, 0L), summary.counts());
+        assertEquals(
+                List.of(6L, 4L, 3L),
+                summary.commonFindings().stream().map(CommonFinding::affectedPages).toList());
+        assertEquals(7, summary.commonFindings().getFirst().evaluatedPages());
+        assertTrue(summary.problematicPages().getFirst().normalizedUrl().endsWith("/collections"));
+        assertEquals(7, summary.usage().counted());
+        assertEquals(1, summary.usage().released());
+        var f = summary.commonFindings().getFirst();
+        var filter =
+                new DomainSummaryProjection.Filter(
+                        f.ruleKey(), f.definitionVersion(), null, null, null, "url", null, null);
+        var slice = summaries().pages(a, site(batch), id(batch), 2, 4, filter);
+        assertEquals(6, slice.total());
+        assertEquals(2, slice.items().size());
+        assertEquals(
+                summary.counts(), summaries().list(a, 20, 0, null).items().getFirst().counts());
+        assertEquals(0, summaries().list(a, 20, 0, "absent").total());
+        assertEquals(1, summaries().history(a, site(batch), 1, 0).total());
+        error(404, () -> summaries().summary(b, site(batch), id(batch)));
+        error(404, () -> summaries().history(b, site(batch), 20, 0));
+        assertEquals(0, summaries().list(b, 20, 0, null).total());
+        create(b);
+        assertEquals(1, summaries().list(b, 20, 0, null).total());
+        assertNull(summaries().list(b, 20, 0, null).items().getFirst().latestBatchId());
+        sql(
+                "UPDATE ARG_AUDIT_REPORT p JOIN ARG_DOMAIN_BATCH_PAGE child ON"
+                    + " child.run_id=p.run_id SET p.expires_at='2000-01-01' WHERE child.batch_id="
+                        + batch.id());
+        var retained = summaries().summary(a, site(batch), id(batch));
+        assertEquals(6, retained.counts().completePages());
+        assertEquals(0, retained.counts().priorityPages());
+        assertTrue(retained.commonFindings().isEmpty());
+        assertTrue(retained.problematicPages().isEmpty());
+        assertEquals(5, retained.incompletePages().size());
+        assertFalse(mapper.writeValueAsString(retained).contains("token"));
+    }
+
+    @Test
+    void f08LatestAttemptStableHistoryAndEmptyPages() throws Exception {
+        engine("");
+        var input = selection(a);
+        var first = launch(input);
+        batches.cancel(a, CSRF, site(first), id(first));
+        var second = launch(input);
+        assertEquals(
+                second.id(), summaries().list(a, 1, 0, null).items().getFirst().latestBatchId());
+        assertEquals(2, summaries().history(a, site(first), 1, 0).total());
+        assertEquals(first.id(), summaries().history(a, site(first), 1, 1).items().getFirst().id());
+        var statements = new ArrayList<String>();
+        var counted = countedSummaries(statements);
+        counted.history(a, site(first), 1, 0);
+        int one = statements.size();
+        assertTrue(one > 0);
+        statements.clear();
+        counted.history(a, site(first), 100, 0);
+        assertEquals(one, statements.size());
+        assertTrue(
+                statements.stream()
+                        .noneMatch(
+                                q ->
+                                        q.contains("report_json")
+                                                || q.contains("result_json")
+                                                || q.contains("report.diagnostic_json")));
+        var filter =
+                new DomainSummaryProjection.Filter(
+                        null, null, null, "FAILED", null, null, null, null);
+        assertEquals(0, summaries().pages(a, site(second), id(second), 1, 0, filter).total());
+        assertEquals(2, summaries().summary(a, site(second), id(second)).counts().activePages());
+    }
+
+    DomainSummaryService countedSummaries(List<String> statements) throws Exception {
+        var ds = mock(javax.sql.DataSource.class);
+        when(ds.getConnection())
+                .thenAnswer(
+                        call -> {
+                            var c = source.getConnection();
+                            return java.lang.reflect.Proxy.newProxyInstance(
+                                    getClass().getClassLoader(),
+                                    new Class<?>[] {java.sql.Connection.class},
+                                    (proxy, method, args) -> {
+                                        if (method.getName().equals("prepareStatement"))
+                                            statements.add((String) args[0]);
+                                        try {
+                                            return method.invoke(c, args);
+                                        } catch (java.lang.reflect.InvocationTargetException e) {
+                                            throw e.getCause();
+                                        }
+                                    });
+                        });
+        var tx =
+                new TransactionManagerQuerydsl(
+                        ds,
+                        new com.querydsl.sql.Configuration(
+                                com.querydsl.sql.MySQLTemplates.DEFAULT));
+        return new DomainSummaryService(
+                new AccountDao(tx),
+                sessions,
+                new DomainSummaryDao(tx),
+                new ConnectedDomainDao(tx),
+                batchDao,
+                mapper,
+                clock);
     }
 }

@@ -584,7 +584,7 @@
     "/account/domains": {
       "get": {
         "operationId": "getDomains",
-        "x-implementation": "planned",
+        "x-implementation": "available",
         "description": "Verified account session required. Private resource IDs of other owners return 404. ",
         "parameters": [
           {
@@ -2206,7 +2206,7 @@
     "/account/domains/{domainId}/batches": {
       "get": {
         "operationId": "getDomainsDomainidBatches",
-        "x-implementation": "planned",
+        "x-implementation": "available",
         "description": "Verified account session required. Private resource IDs of other owners return 404. ",
         "parameters": [
           {
@@ -2417,7 +2417,7 @@
     "/account/domains/{domainId}/batches/{id}": {
       "get": {
         "operationId": "getDomainsDomainidBatchesId",
-        "x-implementation": "planned",
+        "x-implementation": "available",
         "description": "Verified account session required. Private resource IDs of other owners return 404. ",
         "parameters": [
           {
@@ -2618,7 +2618,7 @@
     "/account/domains/{domainId}/batches/{id}/pages": {
       "get": {
         "operationId": "getDomainsDomainidBatchesIdPages",
-        "x-implementation": "planned",
+        "x-implementation": "available",
         "description": "Verified account session required. Private resource IDs of other owners return 404. ",
         "parameters": [
           {
@@ -2706,6 +2706,34 @@
                 "priority",
                 "url"
               ]
+            }
+          },
+          {
+            "name": "definitionVersion",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "all",
+                "problematic",
+                "incomplete"
+              ],
+              "default": "all"
+            }
+          },
+          {
+            "name": "completeness",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/Completeness"
             }
           }
         ],
@@ -6343,7 +6371,8 @@
           "failedPages",
           "canceledPages",
           "activePages",
-          "priorityPages"
+          "priorityPages",
+          "unknownPages"
         ],
         "properties": {
           "selectedPages": {
@@ -6387,6 +6416,12 @@
             "format": "int64",
             "minimum": 0,
             "maximum": 9007199254740991
+          },
+          "unknownPages": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0,
+            "maximum": 9007199254740991
           }
         }
       },
@@ -6404,7 +6439,12 @@
           "evaluatedPages",
           "selectedPages",
           "examplePageIds",
-          "evidenceAvailable"
+          "evidenceAvailable",
+          "title",
+          "impact",
+          "recommendation",
+          "notEvaluatedPages",
+          "exclusions"
         ],
         "properties": {
           "ruleKey": {
@@ -6472,6 +6512,35 @@
           },
           "evidenceAvailable": {
             "type": "boolean"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 512,
+            "nullable": true
+          },
+          "impact": {
+            "type": "string",
+            "maxLength": 1000,
+            "nullable": true
+          },
+          "recommendation": {
+            "type": "string",
+            "maxLength": 1000,
+            "nullable": true
+          },
+          "notEvaluatedPages": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "exclusions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FindingExclusion"
+            },
+            "minItems": 0,
+            "maxItems": 100
           }
         }
       },
@@ -6549,7 +6618,10 @@
           "problematicPages",
           "usage",
           "snapshotAt",
-          "version"
+          "version",
+          "hostname",
+          "discovery",
+          "incompletePages"
         ],
         "properties": {
           "id": {
@@ -6611,7 +6683,7 @@
             "maxItems": 5
           },
           "usage": {
-            "$ref": "#/components/schemas/Usage"
+            "$ref": "#/components/schemas/BatchCredits"
           },
           "snapshotAt": {
             "type": "string",
@@ -6622,6 +6694,21 @@
             "format": "int64",
             "minimum": 0,
             "maximum": 9007199254740991
+          },
+          "hostname": {
+            "type": "string",
+            "maxLength": 253
+          },
+          "discovery": {
+            "$ref": "#/components/schemas/BatchDiscovery"
+          },
+          "incompletePages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PageResult"
+            },
+            "minItems": 0,
+            "maxItems": 5
           }
         }
       },
@@ -7275,7 +7362,7 @@
           "items": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/BatchSummary"
+              "$ref": "#/components/schemas/BatchHistoryItem"
             },
             "minItems": 0,
             "maxItems": 100
@@ -7807,6 +7894,124 @@
           "snapshotAt": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "FindingExclusion": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "reason",
+          "pages"
+        ],
+        "properties": {
+          "reason": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "pages": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        }
+      },
+      "BatchDiscovery": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "eligiblePages",
+          "excludedPages",
+          "truncated",
+          "stopReason",
+          "effectiveLimits"
+        ],
+        "properties": {
+          "eligiblePages": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "excludedPages": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "truncated": {
+            "type": "boolean"
+          },
+          "stopReason": {
+            "type": "string",
+            "maxLength": 64,
+            "nullable": true
+          },
+          "effectiveLimits": {
+            "$ref": "#/components/schemas/DiscoveryLimits"
+          }
+        }
+      },
+      "BatchHistoryItem": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "domainId",
+          "profileSnapshot",
+          "createdAt",
+          "finishedAt",
+          "status",
+          "cancelRequested",
+          "counts",
+          "usage",
+          "version"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 19,
+            "pattern": "^[1-9][0-9]{0,18}$",
+            "format": "argos-id"
+          },
+          "domainId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 19,
+            "pattern": "^[1-9][0-9]{0,18}$",
+            "format": "argos-id"
+          },
+          "profileSnapshot": {
+            "$ref": "#/components/schemas/ProfileSnapshot"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "finishedAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "status": {
+            "$ref": "#/components/schemas/BatchStatus"
+          },
+          "cancelRequested": {
+            "type": "boolean"
+          },
+          "counts": {
+            "$ref": "#/components/schemas/BatchCounts"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/BatchCredits"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0,
+            "maximum": 9007199254740991
           }
         }
       }

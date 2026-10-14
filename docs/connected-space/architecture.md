@@ -119,3 +119,7 @@ Les listes ne chargent pas tous les rapports JSON. Requêtes paginées/projectio
 et index explicites ; prouver l’absence de N+1 et de lectures hors propriétaire.
 Polling avec backoff borné et arrêt au terminal, 401 ou ressource supprimée ;
 respecter Retry-After, pause lorsque l’onglet est caché puis revalidation.
+
+## Projection des synthèses F08
+
+V24 matérialise un diagnostic compact au moment de la publication, dans la même transaction que le rapport et ses crédits. Les listes lisent uniquement les compteurs scalaires ; les synthèses chargent au plus cinquante diagnostics privés. Rétention, backfill borné, définition des règles et cohérence de lecture sont décrits dans [summary-f08.md](summary-f08.md).
