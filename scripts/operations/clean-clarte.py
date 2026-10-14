@@ -198,7 +198,7 @@ def main(argv=None):
             maintenance(args, password)
         return 0
     except KeyboardInterrupt:
-        print('Interruption ; transaction non validée annulée, sauvegarde conservée. Vérifier la cible avant reprise.', file=sys.stderr)
+        print('Interruption ; conserver la sauvegarde et vérifier le résultat du COMMIT avant toute reprise.', file=sys.stderr)
     except (op.Refused, getpass.GetPassWarning) as error:
         print(str(error) if isinstance(error, op.Refused) else 'Un terminal avec saisie masquée est requis.', file=sys.stderr)
     except Exception:

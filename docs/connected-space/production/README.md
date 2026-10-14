@@ -75,7 +75,8 @@ Un port différent demande d'adapter explicitement l'URL JDBC candidate.
 Réutiliser le mot de passe existant de `argos_user` pour la candidate, sans
 rotation dans cette opération. Stocker les secrets API interne, SMTP et les
 jetons dans le coffre.
-Générer un secret JWT aléatoire d'au moins 64 octets UTF-8, distinct du jeton
+Conserver le secret JWT existant s’il est déjà conforme pour éviter une rotation
+involontaire. Sinon générer un secret aléatoire d’au moins 64 octets UTF-8, distinct du jeton
 serveur `admin-api.token` / `ADMIN_API_TOKEN`. Le jeton serveur doit correspondre
 entre Next et Java. Les secrets n'ont pas besoin d'être envoyés à Codex.
 
