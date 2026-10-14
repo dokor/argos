@@ -1,4 +1,20 @@
 import { beforeEach, afterEach, it, expect, vi } from "vitest";
+it("forwards only the implemented connected profile catalogue with a private account session", async () => {
+  fetchMock.mockResolvedValue(Response.json({ defaultProfileId: "server-default-v1", items: [] }));
+  const response = await accountProxy(request("analysis-profiles"), ["analysis-profiles"]);
+  expect(response.status).toBe(200);
+  expect(response.headers.get("cache-control")).toContain("no-store");
+  expect(fetchMock.mock.calls[0][0]).toBe("http://fixture-backend/api/account/analysis-profiles");
+  expect(fetchMock.mock.calls[0][1].headers.get("authorization")).toBe("Bearer " + jwt);
+});
+it.each(["ownerId=2", "profileId=mobile-v1", "limit=1"])("rejects unexpected catalogue input %s", async query => {
+  expect((await accountProxy(request("analysis-profiles?" + query), ["analysis-profiles"])).status).toBe(400);
+  expect(fetchMock).not.toHaveBeenCalled();
+});
+it.each(["domains", "domain-discoveries", "domain-batches", "overview"])("does not activate the planned route %s", async path => {
+  expect((await accountProxy(request(path), [path])).status).toBe(404);
+  expect(fetchMock).not.toHaveBeenCalled();
+});
 it.each(["7", "30", "90"])("forwards analytics period %s with the account JWT", async days => {
   fetchMock.mockResolvedValue(Response.json({ enabled: false }));
   expect((await accountProxy(request("admin/analytics?days=" + days), ["admin", "analytics"])).status).toBe(200);

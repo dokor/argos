@@ -34,6 +34,7 @@ compatibilité n’est pas une commande de remise à zéro de la production.
 | [Règles fonctionnelles](functional-spec.md) | KPI, regroupements, tri, quotas et états |
 | [Architecture et modèle](architecture.md) | Données, exécution, sécurité et reprise |
 | [Contrats API](api-contract.md) | Requêtes, réponses, erreurs et idempotence |
+| [Fondations F01](foundation-f01.md) | Contrat exécutable, schéma livré, inventaire et validation sur base neuve |
 | [Recette et livraison](acceptance.md) | Matrice de tests et conditions de clôture |
 | [Plan de réalisation](delivery-plan.md) | Issues, dépendances et séquence des PR |
 | [Jeu de données canonique](fixtures/connected-space.json) | Valeurs attendues pour les calculs et les écrans |

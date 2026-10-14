@@ -1,20 +1,24 @@
 # Contrat API cible v1
 
-**Contrat à implémenter**, à convertir en DTO validés et schéma OpenAPI dans
-F01. Les chemins nouveaux ci-dessous ne sont pas annoncés comme disponibles.
+**Contrat cible** : F01 fournit le [schéma OpenAPI canonique](../../apps/api-backend/src/main/resources/contracts/connected-space.openapi.json),
+les DTO Java validés et les types TypeScript générés. Le [guide F01](foundation-f01.md)
+décrit les commandes et limites. Seul le nouveau GET `/analysis-profiles` est
+disponible dans ce lot ; les autres opérations portent `x-implementation: planned`.
 Les contrats compte/usage actuels restent réutilisés sauf écarts explicites D-11
 et D-12. BFF same-origin, puis mêmes ressources dans l’API Java sous `/api`.
 
 ## Conventions communes
 
-- IDs opaques en chaînes, dates ISO-8601 UTC, montants de crédits entiers ≥ 0,
+- IDs opaques pour le client, représentés par des chaînes décimales positives
+  dans la plage Java Long ; ne jamais les convertir en Number JavaScript.
+  Dates ISO-8601 UTC, montants de crédits entiers ≥ 0,
   `limit:null` illimité. Champs inconnus de mutation rejetés.
 - Session obligatoire, mutations avec CSRF/origin selon contrat existant.
   Aucun `ownerId`, rôle ou prix accepté depuis le corps.
 - Liste : `items`, `total`, `limit`, `offset`, `snapshotAt` ; limite défaut20,
   maximum100 ; filtre/tri avant pagination. Compteurs portent sur tout le scope.
 - Erreur : `{ "error": { "code": "QUOTA_EXCEEDED", "requestId": "…",
-  "details": { "required": 8, "available": 3 } } }`. Traduction côté UI,
+  "details": { "required": 8, "available": 3, "currentVersion": null } } }`. Traduction côté UI,
   jamais message d’exception interne. Uniformiser avec enveloppe existante
   via adaptation typée, pas deux parseurs ad hoc dans chaque écran.
 - 400 syntaxe/validation, 401 session, 403 rôle/vérification, 404 ressource
@@ -46,8 +50,9 @@ truncated:boolean, stopReason nullable, version. Les URL sont sur la ressource
 paginée, pas dans une réponse de statut illimitée.
 
 `DomainSummary` : id, hostname, latestBatchId, latestAttemptAt, batchStatus,
-selectedPages, completePages, partialPages, failedPages, canceledPages,
-activePages, priorityPages ; **aucun domainScore moyen**.
+counts:{selectedPages, completePages, partialPages, failedPages, canceledPages,
+activePages, priorityPages} ; **aucun domainScore moyen**. L’ID privé du domaine
+est `ARG_ACCOUNT_SITE.id`, jamais l’ID de cache partagé `ARG_DOMAIN.id`.
 
 `Batch` : id, domainId, discoveryId, profileSnapshot, createdAt/finishedAt,
 status QUEUED/RUNNING/COMPLETED/PARTIAL/FAILED/CANCELED, cancelRequested,
@@ -76,14 +81,17 @@ POST /api/account/domain-batches
 Idempotency-Key: 11111111-1111-4111-8111-111111111111
 Content-Type: application/json
 
-{"discoveryId":"discovery-123","selectedPageIds":["page-1","page-2"],"profileId":"profile-supported-by-server"}
+{"discoveryId":"123","selectedPageIds":["1","2"],"profileId":"server-default-v1"}
 ```
 
 ```json
-{"id":"batch-456","domainId":"domain-17","status":"QUEUED","reservedCredits":2,"stablePath":"/account/domains/domain-17/batches/batch-456"}
+{"id":"456","domainId":"17","status":"QUEUED","reservedCredits":2,"stablePath":"/account/domains/17/batches/456"}
 ```
 
-Le profil et la clé d’exemple sont fictifs, jamais à coder en dur. Générer une
+Les IDs et la clé d’exemple sont fictifs, jamais à coder en dur. Le client doit
+obtenir le profil par GET `/analysis-profiles` : `server-default-v1` correspond
+actuellement aux réglages des collecteurs serveur, sans variante mobile/desktop.
+Générer une
 clé unique par nouvelle intention de lancement, conservée lors de ses reprises.
 Même clé/même sélection normalisée = même batch ; autre contenu =
 `IDEMPOTENCY_CONFLICT`. Refus `QUOTA_EXCEEDED`, `ACTIVE_BATCH_LIMIT`,

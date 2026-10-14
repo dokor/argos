@@ -30,8 +30,10 @@ export function classify(paths) {
     path.startsWith('.github/actions/') ||
     path.startsWith('.github/workflows/')
   );
-  const api = common || matches(starts('apps/api-backend/'));
-  const frontend = common || matches((path) =>
+  const contracts = matches((path) => path.startsWith('scripts/contracts/') ||
+    path === 'apps/api-backend/src/main/resources/contracts/connected-space.openapi.json');
+  const api = common || contracts || matches(starts('apps/api-backend/'));
+  const frontend = common || contracts || matches((path) =>
     path.startsWith('apps/console-web/') ||
     path.startsWith('scripts/release/') ||
     path.startsWith('scripts/check-release-evidence') ||
