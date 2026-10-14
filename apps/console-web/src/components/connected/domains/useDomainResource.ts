@@ -52,6 +52,11 @@ export function useDomainResource<T>(
       } catch (reason) {
         if (!alive) return;
         invalidate(reason);
+        if (
+          reason instanceof AccountClientError &&
+          [401, 403, 404, 410].includes(reason.status)
+        )
+          setResult(null);
         const transient =
           !(reason instanceof AccountClientError) ||
           reason.status === 429 ||

@@ -108,11 +108,16 @@ export function Pagination({
   return (
     <nav className={d.pagination} aria-label={c.pagination}>
       <p>
-        {total
+        {total && offset < total
           ? `${offset + 1}–${Math.min(offset + limit, total)} / ${total}`
-          : "0"}
+          : `0 / ${total}`}
       </p>
       <div className={s.actions}>
+        {offset >= total && offset > 0 && (
+          <Link className={s.secondary} href={href(0)}>
+            {c.first}
+          </Link>
+        )}
         {offset > 0 && (
           <Link
             className={s.secondary}
@@ -197,56 +202,61 @@ export function PageTable({
 }) {
   const { c } = useDomainText();
   return pages.length ? (
-    <DataTable
-      caption={c.allPages}
-      columns={[c.url, c.execution, c.coverage, c.score, c.details]}
-    >
-      {pages.map((page) => (
-        <tr key={page.pageId}>
-          <th scope="row" className={`${d.url} ${d.tableUrl}`}>
-            {page.normalizedUrl}
-          </th>
-          <td>
-            <State value={page.executionStatus} />
-            {page.failureReason && (
+    <div className={d.pageTable}>
+      <p className={d.tableHint}>{c.tableHint}</p>
+      <DataTable
+        caption={c.allPages}
+        columns={[c.url, c.execution, c.coverage, c.score, c.details]}
+      >
+        {pages.map((page) => (
+          <tr key={page.pageId}>
+            <th scope="row" className={`${d.url} ${d.tableUrl}`}>
+              {page.normalizedUrl}
+            </th>
+            <td>
+              <State value={page.executionStatus} />
+              {page.failureReason && (
+                <p>
+                  <Reason value={page.failureReason} />
+                </p>
+              )}
+            </td>
+            <td>
+              <State value={page.completeness} />
               <p>
-                <Reason value={page.failureReason} />
+                {page.coverage.ratio === null
+                  ? c.notMeasured
+                  : `${Math.round(page.coverage.ratio * 100)} %`}
               </p>
-            )}
-          </td>
-          <td>
-            <State value={page.completeness} />
-            <p>
-              {page.coverage.ratio === null
-                ? c.notMeasured
-                : `${Math.round(page.coverage.ratio * 100)} %`}
-            </p>
-          </td>
-          <td>
-            {page.score.value ?? "—"}
-            {page.score.provisional && <p>{c.provisional}</p>}
-            <p>
-              {c.critical}: {page.criticalCount ?? "—"}
-              <br />
-              {c.important}: {page.importantCount ?? "—"}
-            </p>
-          </td>
-          <td>
-            <ReportLink page={page} returnTo={returnTo} />
-            <details className={d.tableDetails}>
-              <summary>{c.modules}</summary>
-              <ul>
-                {Object.entries(page.moduleStatuses).map(([module, status]) => (
-                  <li key={module}>
-                    {module}: <State value={status} />
-                  </li>
-                ))}
-              </ul>
-            </details>
-          </td>
-        </tr>
-      ))}
-    </DataTable>
+            </td>
+            <td>
+              {page.score.value ?? "—"}
+              {page.score.provisional && <p>{c.provisional}</p>}
+              <p>
+                {c.critical}: {page.criticalCount ?? "—"}
+                <br />
+                {c.important}: {page.importantCount ?? "—"}
+              </p>
+            </td>
+            <td>
+              <ReportLink page={page} returnTo={returnTo} />
+              <details className={d.tableDetails}>
+                <summary>{c.modules}</summary>
+                <ul>
+                  {Object.entries(page.moduleStatuses).map(
+                    ([module, status]) => (
+                      <li key={module}>
+                        {module}: <State value={status} />
+                      </li>
+                    ),
+                  )}
+                </ul>
+              </details>
+            </td>
+          </tr>
+        ))}
+      </DataTable>
+    </div>
   ) : (
     <p className={d.notice}>{c.emptyPages}</p>
   );
@@ -285,6 +295,27 @@ export function ConfirmDialog({
       ref={ref}
       className={d.dialog}
       aria-labelledby="domain-confirm-title"
+      tabIndex={-1}
+      onKeyDown={(event) => {
+        if (event.key !== "Tab") return;
+        const nodes = Array.from(
+          event.currentTarget.querySelectorAll<HTMLElement>(
+            'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex="0"]',
+          ),
+        ).filter((node) => node.getClientRects().length > 0);
+        const first = nodes[0],
+          last = nodes[nodes.length - 1];
+        if (!first) {
+          event.preventDefault();
+          event.currentTarget.focus();
+        } else if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }}
       onCancel={(event) => {
         event.preventDefault();
         if (!busy) onClose();

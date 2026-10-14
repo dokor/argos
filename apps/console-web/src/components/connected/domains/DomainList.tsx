@@ -94,7 +94,7 @@ export default function DomainList() {
                         : `/account/domains/new?hostname=${encodeURIComponent(domain.hostname)}`
                     }
                   >
-                    {domain.latestBatchId ? c.open : c.first}
+                    {domain.latestBatchId ? c.open : c.new}
                   </Link>
                 </div>
                 <dl className={d.metrics}>
@@ -124,7 +124,7 @@ export default function DomainList() {
               </article>
             ))}
           </div>
-          {resource.data.total === 0 && (
+          {resource.data.items.length === 0 && (
             <EmptyState
               title={query?.get("query") ? c.noResults : c.empty}
               description={c.emptyHint}

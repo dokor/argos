@@ -250,7 +250,7 @@ export default function DomainBatch({
                 <KpiCard
                   label={`${c.complete} / ${c.selected}`}
                   value={`${batch.counts.completePages} / ${batch.counts.selectedPages}`}
-                  detail={c.coverageHint}
+                  detail={c.completeHint}
                   href={`${base}?tab=pages&scope=incomplete`}
                 />
               </div>

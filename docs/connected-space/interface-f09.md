@@ -68,9 +68,10 @@ réponses API : navigateur → BFF → Jersey → MariaDB → découverte, admis
 queue, scoring, publication et agrégation. Seuls les transports de collecte
 sont adaptés à un serveur local contrôlé (et les fournisseurs externes déjà
 simulés dans le test d’audit). La session de fixture est passée en mémoire et
-n’apparaît pas dans les preuves. La recette vérifie deux runs enfants uniques,
+n’apparaît pas dans les preuves. La recette vérifie trois runs enfants uniques sur deux lots,
 les crédits consommés, le même lot depuis la liste et la fin du tunnel, le
-refresh sans nouvelle admission et le retour aux filtres depuis le bon rapport.
+refresh sans nouvelle admission, le retour aux filtres depuis le bon rapport et
+la conservation du premier lot après le lancement puis l’annulation du second.
 
 Captures et résultats : `outputs/ui-review/clarte-domains/`, artefact CI
 `connected-domains-<sha>` ; preuve réelle dans `real/proof.json` et
