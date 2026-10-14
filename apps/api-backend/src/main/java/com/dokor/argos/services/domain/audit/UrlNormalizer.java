@@ -24,8 +24,16 @@ public class UrlNormalizer {
         return canonical(uri);
     }
 
-    /** Syntax only; callers MUST validate DNS at admission/transport before any request. */
+    /** Absolute discovery/transport syntax only. DNS validation remains mandatory before a fetch. */
     public static String normalizeSyntax(String input) { return canonical(parse(input)); }
+
+    /** Deterministic admission fingerprint, including the existing default HTTPS input convention. */
+    public static String normalizeAdmissionSyntax(String input) {
+        if (input == null || input.isBlank()) throw new IllegalArgumentException("URL cannot be blank");
+        String value = input.strip();
+        if (!value.matches("(?i)^[a-z][a-z0-9+.-]*://.*")) value = "https://" + value;
+        return canonical(parse(value));
+    }
 
     private static String canonical(URI uri) {
         String scheme = uri.getScheme().toLowerCase(Locale.ROOT);

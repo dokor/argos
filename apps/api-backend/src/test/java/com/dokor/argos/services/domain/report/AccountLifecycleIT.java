@@ -1015,6 +1015,7 @@ class AccountLifecycleIT extends MariaDbReportFixture {
                                             new AccountRateLimiter(dao, tokens, clock, settings), new AccountSitesService(dao,sessions,new UrlNormalizer(),new DomainService(new DomainDao(dao.transactions)),new AuditDao(dao.transactions),clock),new AccountHistoryService(dao,sessions,mapper,clock)));
             config.register(new com.dokor.argos.webservices.api.account.DomainDiscoveriesWs(discoveries(),new AccountCsrf(settings)));
             config.register(new com.dokor.argos.webservices.api.account.UsageHistoryWs(new UsageHistoryService(sessions,new UsagePolicy(ConfigFactory.empty()),clock)));
+            config.register(new com.dokor.argos.webservices.api.account.ConnectedAnalysesWs(connectedAnalyses(),new AccountCsrf(settings)));
             config.register(new com.dokor.argos.webservices.api.account.AdminWs(administration(),new AccountCsrf(settings)));
             config.register(new com.dokor.argos.webservices.api.feedback.FeedbackWs(feedback(),new AccountCsrf(settings),new AccountRateLimiter(dao,tokens,clock,settings)));
             config.register(new com.dokor.argos.webservices.api.feedback.FeedbackAdminWs(feedback(),new AccountCsrf(settings)));
@@ -1184,6 +1185,26 @@ class AccountLifecycleIT extends MariaDbReportFixture {
     AdminService administration() {
         var policy=new UsagePolicy(ConfigFactory.parseString("usage.offers.FREE.monthly-limit=2\nusage.offers.PRO.monthly-limit=10"));
         return new AdminService(dao,sessions,new UsageService(dao.transactions,policy,clock),policy,reader,mapper,clock);
+    }
+    @Test void administratorsCanReadEachOtherConcurrentlyWithoutCrossingAccountLocks() throws Exception {
+        var a=administrator();var b=user("cross-admin@example.com",true);
+        sql("UPDATE ARG_ACCOUNT_USER SET role='ADMIN' WHERE id="+b.context().user().getId());
+        var ready=new CountDownLatch(2);var release=new CountDownLatch(1);
+        var synchronizedSessions=spy(sessions);
+        doAnswer(call->{
+            var context=call.callRealMethod(); // Both transactions hold their own account/session first.
+            ready.countDown();assertTrue(release.await(10,TimeUnit.SECONDS));return context;
+        }).when(synchronizedSessions).require(anyString(),isNull(),eq(true),eq(false),any(java.sql.Connection.class));
+        var policy=new UsagePolicy(ConfigFactory.parseString("usage.offers.FREE.monthly-limit=2"));
+        var service=new AdminService(dao,synchronizedSessions,new UsageService(dao.transactions,policy,clock),policy,reader,mapper,clock);
+        try(var pool=Executors.newFixedThreadPool(2)) {
+            var first=pool.submit(()->service.user(bearer(a),b.context().user().getId()));
+            var second=pool.submit(()->service.user(bearer(b),a.context().user().getId()));
+            try {assertTrue(ready.await(10,TimeUnit.SECONDS));}finally{release.countDown();}
+            assertEquals(b.context().user().getId().toString(),first.get(15,TimeUnit.SECONDS).get("id"));
+            assertEquals(a.context().user().getId().toString(),second.get(15,TimeUnit.SECONDS).get("id"));
+        }
+        assertEquals(0,count("ARG_USAGE_RUN"));assertEquals(0,count("ARG_ADMIN_EVENT"));
     }
     AccountSessionService.Issued administrator() throws Exception {
         var a=user("admin@example.com",true);
@@ -1443,6 +1464,24 @@ class AccountLifecycleIT extends MariaDbReportFixture {
     private com.dokor.argos.services.connected.ConnectedAnalysesService connectedAnalyses() {
         return new com.dokor.argos.services.connected.ConnectedAnalysesService(dao,sessions,sites(),auditService,new UrlNormalizer(),
             new com.dokor.argos.services.connected.ConnectedProfiles(new com.dokor.argos.services.analysis.scoring.DefaultScorePolicy()),mapper,tokens);
+    }
+    @Test void connectedRecoveryHttpIsOwnerScopedReadOnlyAndPrivatelyCached() throws Exception {
+        var a=user("recovery-a@example.com",true);var b=user("recovery-b@example.com",true);
+        var key=UUID.randomUUID().toString();
+        var accepted=connectedAnalyses().create(bearer(a),CSRF,key,
+            new com.dokor.argos.services.connected.contract.ConnectedContracts.SiteAnalysisInput("https://example.com/page","server-default-v1"));
+        try(var http=new HttpFixture()) {
+            var path="/account/analyses/"+key;
+            assertEquals(401,http.call("GET",path,null,null,false).statusCode());
+            assertEquals(404,http.call("GET",path,bearer(b),null,false).statusCode());
+            var response=http.call("GET",path,bearer(a),null,false);
+            assertEquals(200,response.statusCode(),response.body());
+            assertEquals("private, no-store",response.headers().firstValue("Cache-Control").orElseThrow());
+            assertEquals(accepted.runId(),mapper.readTree(response.body()).path("runId").asText());
+            assertEquals(404,http.call("GET","/account/analyses/"+UUID.randomUUID(),bearer(a),null,false).statusCode());
+            assertEquals(1,count("ARG_USAGE_RUN WHERE state='RESERVED'"));
+            assertEquals(1,count("ARG_AUDIT_RUN WHERE idempotency_key IS NOT NULL"));
+        }
     }
     @Test void connectedAdmissionReplaysConcurrentlyAtQuotaAndScopesItsKeyByOwner() throws Exception {
         usagePolicy("usage.offers.FREE.monthly-limit=1");
