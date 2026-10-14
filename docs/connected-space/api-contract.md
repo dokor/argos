@@ -146,3 +146,7 @@ Voir [compte personnel F04](account-f04.md#contrats-conservés) : réutilisation
 `pages:TrackedPages`, afin de lire KPI et inventaire dans une seule transaction.
 `attention=active` et `domainId` complètent les filtres. Les récents et actifs
 portent leur URL, pageId, domainId et hostname ; voir [F10](overview-f10.md).
+
+## Implémentation F11
+
+Les routes administratives sont disponibles selon [administration-f11.md](administration-f11.md). Les contrats générés décrivent la pagination par curseur, les capacités d’édition, les motifs et versions obligatoires, les plafonds configurés et les événements historiques explicitement incomplets. Les mutations retournent changed/version ; la lecture suivante donne la fiche effective.

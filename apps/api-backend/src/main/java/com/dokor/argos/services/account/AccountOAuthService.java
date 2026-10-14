@@ -173,7 +173,7 @@ public class AccountOAuthService {
                             existing = dao.identity(provider, identity.subject(), c, true);
                             if (user == null
                                     || existing.getDisabledAt() != null
-                                    || "ARCHIVED".equals(user.getState()))
+                                    || Set.of("ARCHIVED", "SUSPENDED").contains(user.getState()))
                                 throw AccountError.unauthorized();
                         } else {
                             String email =

@@ -334,6 +334,21 @@ class ControlledAuditE2eIT extends MariaDbReportFixture {
                     browser.exitValue(),
                     "Domain browser assertions; see sanitized domain-e2e-error.log");
             assertTrue(failures.isEmpty(), "Discovery and audit workers must succeed");
+            var adminBrowser =
+                    new ProcessBuilder(
+                                    "node",
+                                    root.resolve("scripts/e2e/admin-browser.mjs").toString())
+                            .directory(root.toFile())
+                            .redirectOutput(root.resolve("outputs/admin-e2e.json").toFile())
+                            .redirectError(root.resolve("outputs/admin-e2e-error.log").toFile());
+            adminBrowser.environment().put("ADMIN_FIXTURE_SESSION", domainInterface.adminJwt);
+            adminBrowser.environment().put("ADMIN_TARGET_SESSION", domainInterface.jwt);
+            browser = adminBrowser.start();
+            assertTrue(browser.waitFor(3, TimeUnit.MINUTES), "Admin browser must terminate");
+            assertEquals(
+                    0,
+                    browser.exitValue(),
+                    "Admin browser assertions; see sanitized admin-e2e-error.log");
             try (var connection = source.getConnection();
                     var statement = connection.createStatement();
                     var result =

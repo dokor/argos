@@ -1,8 +1,11 @@
+import {safeAdminReturn} from "./admin-request";
 import {safeOverviewReturn} from "./overview-request";
 import { safeDomainReturn, validDomainId } from "./connected/domain-navigation";
 import { domainSummaryQuery } from "./domain-summary-request";
 // Pure allowlist shared by server redirects and client forms.
 export function safeAccountReturn(raw: unknown): string {
+  const admin=safeAdminReturn(raw);if(admin)return admin;
+  if(typeof raw==="string"&&/^\/(?:en\/)?account\/admin(?:\/users\/[1-9]\d{0,18}|\/events|\/runs)?$/.test(raw))return raw;
   const overview = safeOverviewReturn(raw);
   if (overview) return overview;
   const domain = safeDomainReturn(raw);

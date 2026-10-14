@@ -22,40 +22,19 @@ beforeEach(()=>{
   return {items:[],nextCursor:null};
  });
 });
-it.each(["fr","en"] as const)("renders global counts and pagination in %s",async lang=>{
+it.each(["fr","en"] as const)("keeps monitoring counts and private run pagination in %s",async lang=>{
+ api.mockImplementation(async(path:string)=>path==="admin/queue"?{queued:27,running:3}:{items:[{id:"42",site:"example.com",status:"FAILED",createdAt:"2026-10-11T10:00:00Z"}],nextCursor:"42"});
  render(<LangProvider initialLang={lang}><AdminView/></LangProvider>);
- expect(await screen.findByRole("button",{name:lang==="fr"?"Consulter Alice":"View Alice"})).toBeInTheDocument();expect(screen.getByText("27")).toBeInTheDocument();
+ await screen.findByText("example.com");expect(screen.getByText("27")).toBeInTheDocument();
  fireEvent.click(screen.getByRole("button",{name:lang==="fr"?"Page suivante":"Next page"}));
- await waitFor(()=>expect(api).toHaveBeenCalledWith("admin/users?limit=20&cursor=42","GET",undefined,expect.any(AbortSignal)));
+ await waitFor(()=>expect(api).toHaveBeenCalledWith("admin/runs?limit=20&cursor=42","GET",undefined,expect.any(AbortSignal)));
  expect(document.querySelectorAll("h1")).toHaveLength(1);
 });
-it("does not load private data for a regular account and clears the view on revocation",async()=>{
- session.profile.admin=false;
- const view=render(<LangProvider><AdminView/></LangProvider>);expect(api).not.toHaveBeenCalled();expect(screen.getByRole("alert")).toHaveTextContent("administrateur");
- session.profile.admin=true;view.rerender(<LangProvider><AdminView/></LangProvider>);await screen.findByRole("button",{name:"Consulter Alice"});
- session.denied=true;view.rerender(<LangProvider><AdminView/></LangProvider>);expect(screen.queryByText("Alice")).not.toBeInTheDocument();
+it("does not request private monitoring for a regular account",()=>{
+ session.profile.admin=false;render(<LangProvider><AdminView/></LangProvider>);expect(api).not.toHaveBeenCalled();expect(screen.getByRole("alert")).toHaveTextContent("administrateur");
 });
-it("submits a confirmed explicit quota change and retains its success feedback",async()=>{
- render(<LangProvider><AdminView/></LangProvider>);
- fireEvent.click(await screen.findByRole("button",{name:"Consulter Alice"}));
- const limit=await screen.findByLabelText("Plafond individuel");fireEvent.change(limit,{target:{value:"0"}});
- fireEvent.click(screen.getByRole("checkbox"));
- fireEvent.click(screen.getByRole("button",{name:"Enregistrer"}));
- await waitFor(()=>expect(api).toHaveBeenCalledWith("admin/users/42/entitlement","PATCH",{offer:"FREE",monthlyLimit:0,confirmed:true}));
- expect(await screen.findByText("Modification enregistrée et journalisée.")).toBeInTheDocument();
- await screen.findByLabelText("Plafond individuel");expect(screen.getByText("Modification enregistrée et journalisée.")).toBeInTheDocument();
-});
-it("shows service failures with a refresh path and denies after a server role refusal",async()=>{
- api.mockImplementation(async(path:string)=>{if(path==="admin/queue")return {queued:1,running:0};throw new AccountClientError("account_unavailable",503);});
- render(<LangProvider><AdminView/></LangProvider>);expect(await screen.findByRole("alert")).toHaveTextContent("indisponible");
+it("clears private monitoring after the server revokes the role",async()=>{
+ render(<LangProvider><AdminView/></LangProvider>);await screen.findByText("27");
  api.mockRejectedValue(new AccountClientError("admin_required",403));fireEvent.click(screen.getByRole("button",{name:"Actualiser"}));
- await waitFor(()=>expect(screen.getByRole("alert")).toHaveTextContent("administrateur"));expect(screen.queryByRole("button",{name:"Utilisateurs"})).not.toBeInTheDocument();
-});
-it("transfers the selected user into the analyses filter and supports empty results",async()=>{
- render(<LangProvider><AdminView/></LangProvider>);fireEvent.click(await screen.findByRole("button",{name:"Consulter Alice"}));
- await screen.findByLabelText("Plafond individuel");
- const buttons=screen.getAllByRole("button",{name:"Analyses"});fireEvent.click(buttons[1]);
- expect(await screen.findByText("Aucun résultat pour ces filtres.")).toBeInTheDocument();
- expect(screen.getByLabelText("Utilisateur")).toHaveValue("42");
- expect(api).toHaveBeenCalledWith("admin/runs?limit=20&user=42","GET",undefined,expect.any(AbortSignal));
+ await waitFor(()=>expect(screen.getByRole("alert")).toHaveTextContent("administrateur"));expect(screen.queryByText("27")).not.toBeInTheDocument();
 });
