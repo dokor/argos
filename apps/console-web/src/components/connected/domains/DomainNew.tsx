@@ -39,7 +39,9 @@ export default function DomainNew() {
     session = useAccountSession();
   const discoveryId = params.get("discovery"),
     request = readDomainRequest(params.get("request")),
-    valid = !discoveryId || validDomainId(discoveryId);
+    valid =
+      (!discoveryId || validDomainId(discoveryId)) &&
+      (request?.kind !== "batch" || request.body.discoveryId === discoveryId);
   const discoveryResource = useDomainResource<Discovery>(
       valid && discoveryId ? `domain-discoveries/${discoveryId}` : null,
       activeStatus,
@@ -59,12 +61,31 @@ export default function DomainNew() {
     discovery && !running ? "analysis-profiles" : null,
   );
   const eligible = discovered.data?.items.filter((page) => page.eligible) ?? [];
+  const queryKey = params.toString();
+  const [selectionDraft, setSelectionDraft] = useState<{
+    query: string;
+    ids: readonly string[];
+  } | null>(null);
+  useEffect(() => {
+    let live = true;
+    queueMicrotask(() => {
+      if (live)
+        setSelectionDraft((current) =>
+          current && current.query !== queryKey ? null : current,
+        );
+    });
+    return () => {
+      live = false;
+    };
+  }, [queryKey]);
   const selected =
     request?.kind === "batch"
       ? request.body.selectedPageIds
-      : params.has("selected")
-        ? (params.get("selected") ?? "").split(",").filter(Boolean)
-        : eligible.map((page) => page.pageId);
+      : selectionDraft?.query === queryKey
+        ? selectionDraft.ids
+        : params.has("selected")
+          ? (params.get("selected") ?? "").split(",").filter(Boolean)
+          : eligible.map((page) => page.pageId);
   const profile =
     request?.kind === "batch"
       ? request.body.profileId
@@ -97,6 +118,11 @@ export default function DomainNew() {
       else next.set(key, value);
     navigate(next);
   };
+  // Commit the visible checkbox immediately; the URL remains the durable navigation state.
+  const selectPages = (ids: readonly string[]) => {
+    setSelectionDraft({ query: queryKey, ids });
+    change({ selected: ids.join(",") });
+  };
   async function send(intent: DomainRequest) {
     if (lock.current) return;
     lock.current = true;
@@ -114,6 +140,8 @@ export default function DomainNew() {
           undefined,
           intent.key,
         );
+        if (!validDomainId(value.id) || !validDomainId(value.domainId))
+          throw new AccountClientError("account_unavailable", 502);
         if (alive.current)
           navigate(new URLSearchParams({ discovery: value.id }), false);
       } else {
@@ -124,12 +152,10 @@ export default function DomainNew() {
           undefined,
           intent.key,
         );
+        if (!validDomainId(value.id) || !validDomainId(value.domainId))
+          throw new AccountClientError("account_unavailable", 502);
         window.dispatchEvent(new Event("argos-usage-refresh"));
-        if (
-          alive.current &&
-          validDomainId(value.domainId) &&
-          validDomainId(value.id)
-        )
+        if (alive.current)
           router.push(localizedPath(batchPath(value.domainId, value.id), lang));
       }
     } catch (reason) {
@@ -514,11 +540,7 @@ export default function DomainNew() {
                                 className={s.secondary}
                                 disabled={busy || !!request || expired}
                                 onClick={() =>
-                                  change({
-                                    selected: eligible
-                                      .map((p) => p.pageId)
-                                      .join(","),
-                                  })
+                                  selectPages(eligible.map((p) => p.pageId))
                                 }
                               >
                                 {c.selectAll}
@@ -526,7 +548,7 @@ export default function DomainNew() {
                               <button
                                 className={s.secondary}
                                 disabled={busy || !!request || expired}
-                                onClick={() => change({ selected: "" })}
+                                onClick={() => selectPages([])}
                               >
                                 {c.selectNone}
                               </button>
@@ -548,14 +570,13 @@ export default function DomainNew() {
                                         expired
                                       }
                                       onChange={(event) =>
-                                        change({
-                                          selected: (event.target.checked
+                                        selectPages(
+                                          event.target.checked
                                             ? [...selected, page.pageId]
                                             : selected.filter(
                                                 (id) => id !== page.pageId,
-                                              )
-                                          ).join(","),
-                                        })
+                                              ),
+                                        )
                                       }
                                     />
                                     <span className={d.url}>

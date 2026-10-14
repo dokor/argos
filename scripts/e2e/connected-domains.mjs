@@ -222,6 +222,40 @@ try {
         await page
           .getByRole("button", { name: c.confirm, exact: true })
           .waitFor();
+        const boxes = page.getByRole("checkbox");
+        await boxes.first().uncheck();
+        await page.waitForURL(
+          (url) => url.searchParams.get("selected")?.split(",").length === 5,
+        );
+        await page.reload();
+        await boxes.first().waitFor();
+        assert.equal(await boxes.first().isChecked(), false);
+        await boxes.first().check();
+        await page
+          .getByRole("button", { name: c.selectNone, exact: true })
+          .click();
+        await page.waitForFunction(
+          () =>
+            document.querySelectorAll("input[type=checkbox]:checked").length ===
+            0,
+        );
+        await boxes.first().check();
+        await boxes.nth(1).check();
+        await page.waitForURL(
+          (url) => url.searchParams.get("selected")?.split(",").length === 2,
+        );
+        await page.reload();
+        await boxes.first().waitFor();
+        assert.equal(
+          await page.getByRole("checkbox", { checked: true }).count(),
+          2,
+        );
+        await page
+          .getByRole("button", { name: c.selectAll, exact: true })
+          .click();
+        await page.waitForURL(
+          (url) => url.searchParams.get("selected")?.split(",").length === 6,
+        );
         await check("selection");
         const before = posts.length;
         await page.reload();
