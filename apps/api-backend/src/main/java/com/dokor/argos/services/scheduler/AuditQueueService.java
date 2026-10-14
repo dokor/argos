@@ -23,7 +23,7 @@ public class AuditQueueService {
     public boolean processNextQueuedRun() {
         return runs.claimNextQueuedRun().map(run -> {
             logger.info("Processing queued runId={}", run.getId());
-            processor.process(run.getId());
+            processor.process(run.getId(),run.getClaimToken());
             return true;
         }).orElse(false);
     }

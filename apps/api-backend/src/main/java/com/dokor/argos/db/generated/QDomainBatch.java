@@ -24,9 +24,11 @@ public class QDomainBatch extends RelationalPathBase<DomainBatch> {
     public final DateTimePath<Instant> finishedAt = createDateTime("finishedAt", Instant.class);
     public final NumberPath<Long> version = createNumber("version", Long.class);
     public final NumberPath<Long> activeOwnerId = createNumber("activeOwnerId", Long.class);
+    public final SimplePath<byte[]> progressFingerprint = createSimple("progressFingerprint", byte[].class);
     public final PrimaryKey<DomainBatch> primary = createPrimaryKey(id);
     public QDomainBatch(String variable) {
         super(DomainBatch.class, forVariable(variable), null, "ARG_DOMAIN_BATCH");
+        addMetadata(progressFingerprint, ColumnMetadata.named("progress_fingerprint").withIndex(16).ofType(Types.BINARY));
         addMetadata(id, ColumnMetadata.named("id").withIndex(1).ofType(Types.BIGINT).notNull());
         addMetadata(ownerUserId, ColumnMetadata.named("owner_user_id").withIndex(2).ofType(Types.BIGINT).notNull());
         addMetadata(siteId, ColumnMetadata.named("site_id").withIndex(3).ofType(Types.BIGINT).notNull());

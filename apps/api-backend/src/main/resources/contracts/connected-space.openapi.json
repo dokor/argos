@@ -1820,8 +1820,8 @@
     "/account/domain-batches": {
       "post": {
         "operationId": "postDomain-Batches",
-        "x-implementation": "planned",
-        "description": "Verified account session required. Private resource IDs of other owners return 404. ",
+        "x-implementation": "available",
+        "description": "Atomic private admission of 1–50 eligible pages from a terminal unexpired discovery; replay ignores selection order. No additional reservation on replay.",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -1829,9 +1829,9 @@
             "required": true,
             "schema": {
               "type": "string",
-              "minLength": 16,
-              "maxLength": 128,
-              "pattern": "^[A-Za-z0-9_-]+$"
+              "minLength": 36,
+              "maxLength": 36,
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
             }
           },
           {
@@ -2023,6 +2023,184 @@
             }
           }
         }
+      },
+      "get": {
+        "operationId": "getActiveBatches",
+        "x-implementation": "available",
+        "description": "Zero or one active private batch; reconciled from durable runs without renewing session activity.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Private result; explicit null values are significant.",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "private, no-store"
+                  ]
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "maxItems": 1,
+                  "items": {
+                    "$ref": "#/components/schemas/BatchProgress"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "accountCookie": []
+          }
+        ],
+        "x-java-security": [
+          {
+            "bearerSession": []
+          }
+        ]
       }
     },
     "/account/domains/{domainId}/batches": {
@@ -2704,8 +2882,8 @@
     "/account/domains/{domainId}/batches/{id}/cancel": {
       "post": {
         "operationId": "postDomainsDomainidBatchesIdCancel",
-        "x-implementation": "planned",
-        "description": "Verified account session required. Private resource IDs of other owners return 404. ",
+        "x-implementation": "available",
+        "description": "Cancel queued children immediately; running children settle at publication/failure. Published reports remain counted.",
         "parameters": [
           {
             "name": "domainId",
@@ -2758,7 +2936,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BatchSummary"
+                  "$ref": "#/components/schemas/BatchProgress"
                 }
               }
             }
@@ -2900,7 +3078,7 @@
             }
           },
           "200": {
-            "description": "Already terminal: return the existing result without another mutation.",
+            "description": "All children terminal, including immediate queued cancellation.",
             "headers": {
               "Cache-Control": {
                 "schema": {
@@ -2914,7 +3092,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BatchSummary"
+                  "$ref": "#/components/schemas/BatchProgress"
                 }
               }
             }
@@ -2929,7 +3107,19 @@
           {
             "bearerSession": []
           }
-        ]
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "maxProperties": 0
+              }
+            }
+          }
+        }
       }
     },
     "/account/usage/events": {
@@ -4559,6 +4749,446 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Usage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "accountCookie": []
+          }
+        ],
+        "x-java-security": [
+          {
+            "bearerSession": []
+          }
+        ]
+      }
+    },
+    "/account/domains/{domainId}/batches/{id}/progress": {
+      "get": {
+        "operationId": "getBatchProgress",
+        "x-implementation": "available",
+        "description": "Durable execution and credit counters. Business findings and score projections are delivered separately in F08.",
+        "parameters": [
+          {
+            "name": "domainId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 19,
+              "pattern": "^[1-9][0-9]{0,18}$",
+              "format": "argos-id"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 19,
+              "pattern": "^[1-9][0-9]{0,18}$",
+              "format": "argos-id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Private result; explicit null values are significant.",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "private, no-store"
+                  ]
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchProgress"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "accountCookie": []
+          }
+        ],
+        "x-java-security": [
+          {
+            "bearerSession": []
+          }
+        ]
+      }
+    },
+    "/account/domains/{domainId}/batches/{id}/progress/pages": {
+      "get": {
+        "operationId": "getBatchProgressPages",
+        "x-implementation": "available",
+        "description": "Private child runs, paginated after execution-status filtering. No report payload or token is exposed.",
+        "parameters": [
+          {
+            "name": "domainId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 19,
+              "pattern": "^[1-9][0-9]{0,18}$",
+              "format": "argos-id"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 19,
+              "pattern": "^[1-9][0-9]{0,18}$",
+              "format": "argos-id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 0,
+              "maximum": 9007199254740991,
+              "default": 0
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "all",
+                "QUEUED",
+                "RUNNING",
+                "COMPLETED",
+                "FAILED",
+                "CANCELED"
+              ],
+              "default": "all"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Private result; explicit null values are significant.",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "private, no-store"
+                  ]
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchProgressPages"
                 }
               }
             }
@@ -6896,6 +7526,287 @@
           },
           "status": {
             "$ref": "#/components/schemas/AdmittedRunStatus"
+          }
+        }
+      },
+      "BatchExecutionCounts": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "selected",
+          "queued",
+          "running",
+          "completed",
+          "failed",
+          "canceled",
+          "full",
+          "partial",
+          "unknown"
+        ],
+        "properties": {
+          "selected": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 50
+          },
+          "queued": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 50
+          },
+          "running": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 50
+          },
+          "completed": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 50
+          },
+          "failed": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 50
+          },
+          "canceled": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 50
+          },
+          "full": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 50
+          },
+          "partial": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 50
+          },
+          "unknown": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 50
+          }
+        }
+      },
+      "BatchCredits": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "total",
+          "reserved",
+          "counted",
+          "released"
+        ],
+        "properties": {
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 50
+          },
+          "reserved": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 50
+          },
+          "counted": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 50
+          },
+          "released": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 50
+          }
+        }
+      },
+      "BatchProgress": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "domainId",
+          "discoveryId",
+          "hostname",
+          "profileSnapshot",
+          "status",
+          "cancelRequested",
+          "counts",
+          "credits",
+          "createdAt",
+          "finishedAt",
+          "snapshotAt",
+          "version",
+          "stablePath"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 19,
+            "pattern": "^[1-9][0-9]{0,18}$",
+            "format": "argos-id"
+          },
+          "domainId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 19,
+            "pattern": "^[1-9][0-9]{0,18}$",
+            "format": "argos-id"
+          },
+          "discoveryId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 19,
+            "pattern": "^[1-9][0-9]{0,18}$",
+            "format": "argos-id"
+          },
+          "hostname": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 253
+          },
+          "profileSnapshot": {
+            "$ref": "#/components/schemas/ProfileSnapshot"
+          },
+          "status": {
+            "$ref": "#/components/schemas/BatchStatus"
+          },
+          "cancelRequested": {
+            "type": "boolean"
+          },
+          "counts": {
+            "$ref": "#/components/schemas/BatchExecutionCounts"
+          },
+          "credits": {
+            "$ref": "#/components/schemas/BatchCredits"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "finishedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "snapshotAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "stablePath": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^/account/domains/[1-9][0-9]*/batches/[1-9][0-9]*$"
+          }
+        }
+      },
+      "BatchProgressPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "pageId",
+          "discoveryPageId",
+          "runId",
+          "normalizedUrl",
+          "executionStatus",
+          "completeness",
+          "reportAvailable",
+          "createdAt",
+          "finishedAt"
+        ],
+        "properties": {
+          "pageId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 19,
+            "pattern": "^[1-9][0-9]{0,18}$",
+            "format": "argos-id"
+          },
+          "discoveryPageId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 19,
+            "pattern": "^[1-9][0-9]{0,18}$",
+            "format": "argos-id"
+          },
+          "runId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 19,
+            "pattern": "^[1-9][0-9]{0,18}$",
+            "format": "argos-id"
+          },
+          "normalizedUrl": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "executionStatus": {
+            "$ref": "#/components/schemas/ExecutionStatus"
+          },
+          "completeness": {
+            "$ref": "#/components/schemas/Completeness"
+          },
+          "reportAvailable": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "finishedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
+      "BatchProgressPages": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset",
+          "snapshotAt"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/BatchProgressPage"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 50
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "snapshotAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       }

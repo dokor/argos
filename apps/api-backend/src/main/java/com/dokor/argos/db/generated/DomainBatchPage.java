@@ -17,6 +17,7 @@ public class DomainBatchPage extends CrudEntityQuerydsl {
     @Column("discovery_page_id") private Long discoveryPageId;
     @Column("audit_id") private Long auditId;
     @Column("run_id") private Long runId;
+    @Column("completeness") private String completeness;
     @Column("created_at") private Instant createdAt;
     @Override public String toString() { return "DomainBatchPage#" + id; }
 }

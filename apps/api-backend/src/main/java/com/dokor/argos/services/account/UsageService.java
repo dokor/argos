@@ -28,6 +28,7 @@ public class UsageService {
             s.setLong(1,user);try(var r=s.executeQuery()) { if(!r.next()) throw new IllegalStateException("Usage lock missing"); }
         } catch(SQLException e) { throw new IllegalStateException("Usage lock failed",e); }
     }
+    public void lockOwner(long user,Connection c) { offer(user,c); }
     private String offer(long user, Connection c) {
         return offer(user,c,true);
     }

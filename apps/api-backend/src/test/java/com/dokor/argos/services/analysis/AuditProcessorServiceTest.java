@@ -92,6 +92,18 @@ class AuditProcessorServiceTest {
     }
 
     @Test
+    void staleClaimAndChangedProfileStopBeforeAnyNetworkModule() throws Exception {
+        var runs=mock(AuditRunService.class);var audits=mock(AuditDao.class);var http=mock(HttpModuleAnalyzer.class);var publication=mock(ReportPublishService.class);
+        var run=new AuditRun();run.setId(1L);run.setStatus("RUNNING");run.setClaimToken("current");when(runs.getRun(1)).thenReturn(Optional.of(run));
+        var processor=new AuditProcessorService(runs,audits,mock(UrlNormalizer.class),http,mock(HtmlModuleAnalyzer.class),mock(RuntimeModuleAnalyzer.class),mock(LighthouseModuleAnalyzer.class),mock(ObservatoryModuleAnalyzer.class),mock(SslLabsModuleAnalyzer.class),mock(ZapModuleAnalyzer.class),mock(DomainAnalysisService.class),mock(CheckMergerService.class),mock(ScoreEnricherService.class),mock(ScoreService.class),objectMapper(),publication);
+        var profiles=new com.dokor.argos.services.connected.ConnectedProfiles(new com.dokor.argos.services.analysis.scoring.DefaultScorePolicy());processor.configureExecutionProfiles(profiles);
+        processor.process(1,"stale");verify(runs,never()).fail(anyLong(),anyString(),anyString());verifyNoInteractions(audits,http,publication);
+        var snapshot=profiles.snapshot(com.dokor.argos.services.connected.ConnectedProfiles.DEFAULT_ID);
+        run.setProfileSnapshot(objectMapper().writeValueAsString(new com.dokor.argos.services.connected.contract.ConnectedContracts.ProfileSnapshot(snapshot.profileId(),snapshot.contractVersion(),snapshot.settingsProvenance(),snapshot.scoringVersion()+1,snapshot.scoringFingerprint())));
+        processor.process(1,"current");verify(runs).fail(1,"ANALYSIS_PROFILE_CHANGED","current");verifyNoInteractions(audits,http,publication);
+    }
+
+    @Test
     void shouldFailWhenAuditNotFound() {
         AuditRunService runService = mock(AuditRunService.class);
         AuditDao auditDao = mock(AuditDao.class);
@@ -359,7 +371,7 @@ class AuditProcessorServiceTest {
                 assertEquals(List.of("runtime.collect"), result.checks().stream().map(c -> c.key()).toList());
                 assertFalse(result.checks().getFirst().scorable());
                 assertEquals(false, result.data().get("available"));
-                verify(runs).updateModuleStatus(1L, "runtime", "FAILED");
+                verify(runs).updateModuleStatus(1L, "runtime", "FAILED", "synthetic-worker");
                 verify(runs, never()).fail(anyLong(), anyString(), nullable(String.class));
             }
         }
@@ -430,7 +442,7 @@ class AuditProcessorServiceTest {
                 assertEquals("PARTIAL", mapper.readTree(report.getValue().meta().get("moduleStatuses"))
                     .path("runtime").asText());
                 assertTrue(report.getValue().modules().get(2).checks().isEmpty());
-                verify(runs).updateModuleStatus(1L, "runtime", "COMPLETED");
+                verify(runs).updateModuleStatus(1L, "runtime", "COMPLETED", "synthetic-worker");
             }
         }
         @Test void remoteCallsHaveHttpContextOverlapLocalWorkAndPublishOneOrderedReport() throws Exception {
@@ -523,9 +535,9 @@ class AuditProcessorServiceTest {
                 verify(publisher).completeAndPublish(eq(1L), any(), report.capture(), anyString(), nullable(String.class));
                 assertEquals("true", report.getValue().meta().get("degraded"));
                 assertEquals("TIMEOUT", mapper.readTree(report.getValue().meta().get("moduleStatuses")).path("ssl").asText());
-                verify(runs).updateModuleStatus(1L, "ssl", "RUNNING");
-                verify(runs).updateModuleStatus(1L, "ssl", "FAILED");
-                verify(runs, never()).updateModuleStatus(1L, "ssl", "COMPLETED");
+                verify(runs).updateModuleStatus(1L, "ssl", "RUNNING", "synthetic-worker");
+                verify(runs).updateModuleStatus(1L, "ssl", "FAILED", "synthetic-worker");
+                verify(runs, never()).updateModuleStatus(1L, "ssl", "COMPLETED", "synthetic-worker");
                 assertFalse(report.getValue().modules().get(5).checks().getFirst().scorable());
             }
         }

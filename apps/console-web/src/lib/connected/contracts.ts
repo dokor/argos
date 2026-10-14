@@ -387,3 +387,59 @@ export type SiteAnalysisAccepted = {
   readonly runId: string;
   readonly status: AdmittedRunStatus;
 };
+
+export type BatchExecutionCounts = {
+  readonly selected: number;
+  readonly queued: number;
+  readonly running: number;
+  readonly completed: number;
+  readonly failed: number;
+  readonly canceled: number;
+  readonly full: number;
+  readonly partial: number;
+  readonly unknown: number;
+};
+
+export type BatchCredits = {
+  readonly total: number;
+  readonly reserved: number;
+  readonly counted: number;
+  readonly released: number;
+};
+
+export type BatchProgress = {
+  readonly id: string;
+  readonly domainId: string;
+  readonly discoveryId: string;
+  readonly hostname: string;
+  readonly profileSnapshot: ProfileSnapshot;
+  readonly status: BatchStatus;
+  readonly cancelRequested: boolean;
+  readonly counts: BatchExecutionCounts;
+  readonly credits: BatchCredits;
+  readonly createdAt: string;
+  readonly finishedAt: string | null;
+  readonly snapshotAt: string;
+  readonly version: number;
+  readonly stablePath: string;
+};
+
+export type BatchProgressPage = {
+  readonly pageId: string;
+  readonly discoveryPageId: string;
+  readonly runId: string;
+  readonly normalizedUrl: string;
+  readonly executionStatus: ExecutionStatus;
+  readonly completeness: Completeness;
+  readonly reportAvailable: boolean;
+  readonly createdAt: string;
+  readonly finishedAt: string | null;
+};
+
+export type BatchProgressPages = {
+  readonly items: ReadonlyArray<BatchProgressPage>;
+  readonly total: number;
+  readonly limit: number;
+  readonly offset: number;
+  readonly snapshotAt: string;
+};

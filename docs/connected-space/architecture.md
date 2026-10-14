@@ -40,8 +40,9 @@ ne constitue jamais une frontière d’autorisation.
 ## ARC-03 — Admission et concurrence
 
 1. Vérifier session active/vérifiée, CSRF, sélection et snapshot.
-2. Verrouiller le registre d’usage du propriétaire ; appliquer la limite de
-   lot actif et la clé d’idempotence.
+2. Verrouiller compte/session ; appliquer la limite de lot actif et la clé
+   d’idempotence, puis verrouiller la file globale avant le registre d’usage.
+   Voir l’ordre détaillé et la réconciliation dans [F07](batch-f07.md).
 3. Dans **une transaction MariaDB**, créer le lot, ses N runs/enfants et N
    réservations, ou ne rien créer. `used+reserved+N <= limit` si fini.
 4. Répondre avec la ressource persistée. Les workers réclament les runs de

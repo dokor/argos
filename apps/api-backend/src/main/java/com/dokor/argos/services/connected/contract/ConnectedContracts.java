@@ -1235,4 +1235,208 @@ public final class ConnectedContracts {
             throw new IllegalArgumentException("Unknown connected field");
         }
     }
+
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    public record BatchExecutionCounts(
+        @JsonProperty(value = "selected", required = true) Long selected,
+        @JsonProperty(value = "queued", required = true) Long queued,
+        @JsonProperty(value = "running", required = true) Long running,
+        @JsonProperty(value = "completed", required = true) Long completed,
+        @JsonProperty(value = "failed", required = true) Long failed,
+        @JsonProperty(value = "canceled", required = true) Long canceled,
+        @JsonProperty(value = "full", required = true) Long full,
+        @JsonProperty(value = "partial", required = true) Long partial,
+        @JsonProperty(value = "unknown", required = true) Long unknown
+    ) {
+        public BatchExecutionCounts {
+            required(selected, "selected");
+            check(selected >= 0L, "selected");
+            check(selected <= 50L, "selected");
+            required(queued, "queued");
+            check(queued >= 0L, "queued");
+            check(queued <= 50L, "queued");
+            required(running, "running");
+            check(running >= 0L, "running");
+            check(running <= 50L, "running");
+            required(completed, "completed");
+            check(completed >= 0L, "completed");
+            check(completed <= 50L, "completed");
+            required(failed, "failed");
+            check(failed >= 0L, "failed");
+            check(failed <= 50L, "failed");
+            required(canceled, "canceled");
+            check(canceled >= 0L, "canceled");
+            check(canceled <= 50L, "canceled");
+            required(full, "full");
+            check(full >= 0L, "full");
+            check(full <= 50L, "full");
+            required(partial, "partial");
+            check(partial >= 0L, "partial");
+            check(partial <= 50L, "partial");
+            required(unknown, "unknown");
+            check(unknown >= 0L, "unknown");
+            check(unknown <= 50L, "unknown");
+        }
+        @JsonAnySetter public void rejectUnknown(String name, Object value) {
+            throw new IllegalArgumentException("Unknown connected field");
+        }
+    }
+
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    public record BatchCredits(
+        @JsonProperty(value = "total", required = true) Long total,
+        @JsonProperty(value = "reserved", required = true) Long reserved,
+        @JsonProperty(value = "counted", required = true) Long counted,
+        @JsonProperty(value = "released", required = true) Long released
+    ) {
+        public BatchCredits {
+            required(total, "total");
+            check(total >= 0L, "total");
+            check(total <= 50L, "total");
+            required(reserved, "reserved");
+            check(reserved >= 0L, "reserved");
+            check(reserved <= 50L, "reserved");
+            required(counted, "counted");
+            check(counted >= 0L, "counted");
+            check(counted <= 50L, "counted");
+            required(released, "released");
+            check(released >= 0L, "released");
+            check(released <= 50L, "released");
+        }
+        @JsonAnySetter public void rejectUnknown(String name, Object value) {
+            throw new IllegalArgumentException("Unknown connected field");
+        }
+    }
+
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    public record BatchProgress(
+        @JsonProperty(value = "id", required = true) String id,
+        @JsonProperty(value = "domainId", required = true) String domainId,
+        @JsonProperty(value = "discoveryId", required = true) String discoveryId,
+        @JsonProperty(value = "hostname", required = true) String hostname,
+        @JsonProperty(value = "profileSnapshot", required = true) ProfileSnapshot profileSnapshot,
+        @JsonProperty(value = "status", required = true) BatchStatus status,
+        @JsonProperty(value = "cancelRequested", required = true) Boolean cancelRequested,
+        @JsonProperty(value = "counts", required = true) BatchExecutionCounts counts,
+        @JsonProperty(value = "credits", required = true) BatchCredits credits,
+        @JsonProperty(value = "createdAt", required = true) String createdAt,
+        @JsonProperty(value = "finishedAt", required = true) String finishedAt,
+        @JsonProperty(value = "snapshotAt", required = true) String snapshotAt,
+        @JsonProperty(value = "version", required = true) Long version,
+        @JsonProperty(value = "stablePath", required = true) String stablePath
+    ) {
+        public BatchProgress {
+            required(id, "id");
+            check(id.codePointCount(0, id.length()) >= 1, "id");
+            check(id.codePointCount(0, id.length()) <= 19, "id");
+            check(java.util.regex.Pattern.compile("^[1-9][0-9]{0,18}$").matcher(id).find(), "id");
+            check(Long.parseLong(id) > 0, "id");
+            required(domainId, "domainId");
+            check(domainId.codePointCount(0, domainId.length()) >= 1, "domainId");
+            check(domainId.codePointCount(0, domainId.length()) <= 19, "domainId");
+            check(java.util.regex.Pattern.compile("^[1-9][0-9]{0,18}$").matcher(domainId).find(), "domainId");
+            check(Long.parseLong(domainId) > 0, "domainId");
+            required(discoveryId, "discoveryId");
+            check(discoveryId.codePointCount(0, discoveryId.length()) >= 1, "discoveryId");
+            check(discoveryId.codePointCount(0, discoveryId.length()) <= 19, "discoveryId");
+            check(java.util.regex.Pattern.compile("^[1-9][0-9]{0,18}$").matcher(discoveryId).find(), "discoveryId");
+            check(Long.parseLong(discoveryId) > 0, "discoveryId");
+            required(hostname, "hostname");
+            check(hostname.codePointCount(0, hostname.length()) >= 1, "hostname");
+            check(hostname.codePointCount(0, hostname.length()) <= 253, "hostname");
+            required(profileSnapshot, "profileSnapshot");
+            required(status, "status");
+            required(cancelRequested, "cancelRequested");
+            required(counts, "counts");
+            required(credits, "credits");
+            required(createdAt, "createdAt");
+            java.time.Instant.parse(createdAt);
+            if (finishedAt != null) { java.time.Instant.parse(finishedAt); }
+            required(snapshotAt, "snapshotAt");
+            java.time.Instant.parse(snapshotAt);
+            required(version, "version");
+            check(version >= 0L, "version");
+            check(version <= 9007199254740991L, "version");
+            required(stablePath, "stablePath");
+            check(stablePath.codePointCount(0, stablePath.length()) >= 1, "stablePath");
+            check(stablePath.codePointCount(0, stablePath.length()) <= 256, "stablePath");
+            check(java.util.regex.Pattern.compile("^/account/domains/[1-9][0-9]*/batches/[1-9][0-9]*$").matcher(stablePath).find(), "stablePath");
+        }
+        @JsonAnySetter public void rejectUnknown(String name, Object value) {
+            throw new IllegalArgumentException("Unknown connected field");
+        }
+    }
+
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    public record BatchProgressPage(
+        @JsonProperty(value = "pageId", required = true) String pageId,
+        @JsonProperty(value = "discoveryPageId", required = true) String discoveryPageId,
+        @JsonProperty(value = "runId", required = true) String runId,
+        @JsonProperty(value = "normalizedUrl", required = true) String normalizedUrl,
+        @JsonProperty(value = "executionStatus", required = true) ExecutionStatus executionStatus,
+        @JsonProperty(value = "completeness", required = true) Completeness completeness,
+        @JsonProperty(value = "reportAvailable", required = true) Boolean reportAvailable,
+        @JsonProperty(value = "createdAt", required = true) String createdAt,
+        @JsonProperty(value = "finishedAt", required = true) String finishedAt
+    ) {
+        public BatchProgressPage {
+            required(pageId, "pageId");
+            check(pageId.codePointCount(0, pageId.length()) >= 1, "pageId");
+            check(pageId.codePointCount(0, pageId.length()) <= 19, "pageId");
+            check(java.util.regex.Pattern.compile("^[1-9][0-9]{0,18}$").matcher(pageId).find(), "pageId");
+            check(Long.parseLong(pageId) > 0, "pageId");
+            required(discoveryPageId, "discoveryPageId");
+            check(discoveryPageId.codePointCount(0, discoveryPageId.length()) >= 1, "discoveryPageId");
+            check(discoveryPageId.codePointCount(0, discoveryPageId.length()) <= 19, "discoveryPageId");
+            check(java.util.regex.Pattern.compile("^[1-9][0-9]{0,18}$").matcher(discoveryPageId).find(), "discoveryPageId");
+            check(Long.parseLong(discoveryPageId) > 0, "discoveryPageId");
+            required(runId, "runId");
+            check(runId.codePointCount(0, runId.length()) >= 1, "runId");
+            check(runId.codePointCount(0, runId.length()) <= 19, "runId");
+            check(java.util.regex.Pattern.compile("^[1-9][0-9]{0,18}$").matcher(runId).find(), "runId");
+            check(Long.parseLong(runId) > 0, "runId");
+            required(normalizedUrl, "normalizedUrl");
+            check(normalizedUrl.codePointCount(0, normalizedUrl.length()) >= 1, "normalizedUrl");
+            check(normalizedUrl.codePointCount(0, normalizedUrl.length()) <= 2048, "normalizedUrl");
+            required(executionStatus, "executionStatus");
+            required(completeness, "completeness");
+            required(reportAvailable, "reportAvailable");
+            required(createdAt, "createdAt");
+            java.time.Instant.parse(createdAt);
+            if (finishedAt != null) { java.time.Instant.parse(finishedAt); }
+        }
+        @JsonAnySetter public void rejectUnknown(String name, Object value) {
+            throw new IllegalArgumentException("Unknown connected field");
+        }
+    }
+
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    public record BatchProgressPages(
+        @JsonProperty(value = "items", required = true) List<BatchProgressPage> items,
+        @JsonProperty(value = "total", required = true) Long total,
+        @JsonProperty(value = "limit", required = true) Long limit,
+        @JsonProperty(value = "offset", required = true) Long offset,
+        @JsonProperty(value = "snapshotAt", required = true) String snapshotAt
+    ) {
+        public BatchProgressPages {
+            required(items, "items");
+            items = List.copyOf(items);
+            check(items.size() >= 0 && items.size() <= 100, "items");
+            for (var item : items) { required(item, "item"); }
+            required(total, "total");
+            check(total >= 0L, "total");
+            check(total <= 50L, "total");
+            required(limit, "limit");
+            check(limit >= 1L, "limit");
+            check(limit <= 100L, "limit");
+            required(offset, "offset");
+            check(offset >= 0L, "offset");
+            check(offset <= 9007199254740991L, "offset");
+            required(snapshotAt, "snapshotAt");
+            java.time.Instant.parse(snapshotAt);
+        }
+        @JsonAnySetter public void rejectUnknown(String name, Object value) {
+            throw new IllegalArgumentException("Unknown connected field");
+        }
+    }
 }
