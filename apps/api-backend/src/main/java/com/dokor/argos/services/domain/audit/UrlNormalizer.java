@@ -24,8 +24,13 @@ public class UrlNormalizer {
         return canonical(uri);
     }
 
-    /** Syntax only; callers MUST validate DNS at admission/transport before any request. */
-    public static String normalizeSyntax(String input) { return canonical(parse(input)); }
+    /** Fingerprinting only; new admissions and transports MUST still check DNS. */
+    public static String normalizeSyntax(String input) {
+        if (input == null || input.isBlank()) throw new IllegalArgumentException("URL cannot be blank");
+        String value = input.strip();
+        if (!value.matches("(?i)^[a-z][a-z0-9+.-]*://.*")) value = "https://" + value;
+        return canonical(parse(value));
+    }
 
     private static String canonical(URI uri) {
         String scheme = uri.getScheme().toLowerCase(Locale.ROOT);
