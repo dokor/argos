@@ -1181,6 +1181,58 @@ class AccountLifecycleIT extends MariaDbReportFixture {
         assertThrows(IllegalStateException.class,()->broken.suspension(bearer(a),CSRF,id,suspendInput(id,true)));
         assertEquals("ACTIVE",dao.transaction(c->dao.user(id,c,false)).getState());assertNotNull(sessions.renew(bearer(u),CSRF));assertEquals(0,count("ARG_ADMIN_EVENT"));
     }
+    boolean bootstrap(long id,boolean apply) throws Exception {
+        try(var c=source.getConnection()) {
+            return com.dokor.argos.operations.FirstAdminBootstrap.execute(c,c.getCatalog(),id,apply);
+        }
+    }
+    @Test void firstAdminOnFreshDatabaseRequiresVerifiedIdentityAndReauthentication() throws Exception {
+        var flyway=org.flywaydb.core.Flyway.configure().dataSource(source).cleanDisabled(false).load();
+        flyway.clean();flyway.migrate();
+        sql("INSERT INTO ARG_ACCOUNT_USER(id,email,display_name,state,created_at) VALUES(43,'no-identity@example.com','Fixture','ACTIVE',CURRENT_TIMESTAMP)");
+        assertThrows(IllegalStateException.class,()->bootstrap(43,true));
+        sql("UPDATE ARG_ACCOUNT_USER SET state='SUSPENDED' WHERE id=43");
+        assertThrows(IllegalStateException.class,()->bootstrap(43,true));
+        var pending=user("operator@example.com",false);long id=pending.context().user().getId();
+        assertThrows(IllegalStateException.class,()->bootstrap(id,true));
+        auth.verify(mail.token("operator@example.com"));
+        var verified=auth.login("operator@example.com",PASSWORD,CSRF);
+        try(var c=source.getConnection()) {
+            assertThrows(IllegalStateException.class,()->com.dokor.argos.operations.FirstAdminBootstrap.execute(c,"wrong_database",id,true));
+        }
+        long events=count("ARG_ACCOUNT_SECURITY_EVENT");
+        assertFalse(bootstrap(id,false));assertEquals(events,count("ARG_ACCOUNT_SECURITY_EVENT"));
+        assertEquals("USER",dao.transaction(c->dao.user(id,c,false)).getRole());
+        assertNotNull(sessions.renew(bearer(verified),CSRF));
+        assertTrue(bootstrap(id,true));
+        error(401,()->sessions.renew(bearer(verified),CSRF));
+        var fresh=auth.login("operator@example.com",PASSWORD,CSRF);
+        assertEquals("ADMIN",fresh.context().user().getRole());assertEquals("FREE",fresh.context().user().getOffer());
+        assertEquals(id,Long.parseLong(administration().user(bearer(fresh),id).get("id").toString()));
+        assertThrows(IllegalStateException.class,()->bootstrap(id,true));
+        sql("UPDATE ARG_ACCOUNT_USER SET state='ARCHIVED' WHERE id="+id);
+        assertThrows(IllegalStateException.class,()->bootstrap(id,true));
+    }
+    @Test void firstAdminIsUniqueUnderConcurrentOperatorsAndRollsBackJournalFailure() throws Exception {
+        var a=user("operator-a@example.com",true);var b=user("operator-b@example.com",true);
+        long aid=a.context().user().getId(),bid=b.context().user().getId();
+        sql("ALTER TABLE ARG_ACCOUNT_SECURITY_EVENT ADD CONSTRAINT ck_bootstrap_fixture CHECK(action <> 'bootstrap_admin')");
+        try {
+            assertThrows(java.sql.SQLException.class,()->bootstrap(aid,true));
+            assertEquals("USER",dao.transaction(c->dao.user(aid,c,false)).getRole());
+            assertNotNull(sessions.renew(bearer(a),CSRF));
+        } finally {sql("ALTER TABLE ARG_ACCOUNT_SECURITY_EVENT DROP CONSTRAINT ck_bootstrap_fixture");}
+        var start=new CountDownLatch(1);
+        try(var pool=Executors.newFixedThreadPool(2)) {
+            var results=new ArrayList<Future<Boolean>>();
+            for(long id:List.of(aid,bid)) results.add(pool.submit(()->{
+                start.await();try{return bootstrap(id,true);}catch(IllegalStateException expected){assertEquals("admin_already_exists",expected.getMessage());return false;}
+            }));
+            start.countDown();int changed=0;for(var result:results)if(result.get(15,TimeUnit.SECONDS))changed++;
+            assertEquals(1,changed);
+        }
+        try(var c=source.getConnection();var st=c.createStatement();var r=st.executeQuery("SELECT COUNT(*) FROM ARG_ACCOUNT_SECURITY_EVENT WHERE action='bootstrap_admin'")) {r.next();assertEquals(1,r.getLong(1));}
+    }
     AdminService administration() {
         var policy=new UsagePolicy(ConfigFactory.parseString("usage.offers.FREE.monthly-limit=2\nusage.offers.PRO.monthly-limit=10"));
         return new AdminService(dao,sessions,new UsageService(dao.transactions,policy,clock),policy,reader,mapper,clock);

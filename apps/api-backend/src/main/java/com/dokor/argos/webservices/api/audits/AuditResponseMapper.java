@@ -10,7 +10,7 @@ import com.dokor.argos.webservices.api.audits.data.CreateAuditResponse;
 
 /** REST representation mapping stays at the HTTP boundary. */
 final class AuditResponseMapper {
-    private static final String REPORTS_BASE_PATH = "/dashboard/report/";
+    private static final String REPORTS_BASE_PATH = "/account/admin/runs/";
 
     private AuditResponseMapper() {}
 

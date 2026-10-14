@@ -4,12 +4,12 @@ Le jalon reste désactivé par défaut (`account.enabled=false`). V11 ajoute les
 
 Le fichier [application.example.conf](application.example.conf) contient les paramètres, sans secrets. Générer un secret JWT aléatoire d'au moins 64 octets UTF-8, distinct de `ADMIN_API_TOKEN`, conservé dans le gestionnaire de secrets ou la configuration montée. Sa rotation invalide les JWT existants ; aucune période avec deux clés n'est implémentée. Conserver JWT 15 min et cookie BFF 900 s synchronisés ; changer la durée JWT exige aussi d'adapter le cookie et l'intervalle frontend. Idem pour les preuves 24 h et transactions OAuth 10 min. Le renouvellement ne prolonge pas la limite absolue ni l'inactivité métier. Aucun refresh token longue durée.
 
-## Accès opérateur et transition historique
+## Accès opérateur Clarté
 
 L’administration du frontend utilise exclusivement une session de compte.
 La [matrice et procédure de transition #516](legacy-admin-transition.md)
 décrit les consommateurs, le provisionnement ADMIN hors API publique,
-la récupération et les conditions de bascule/retour arrière. La console historique est retirée : prévoir un compte ACTIVE ADMIN et un accès infra indépendant avant de déployer cette version.
+la récupération. Suivre le [runbook du premier ADMIN](../connected-space/first-admin-runbook.md) pour une base neuve nommée. La console historique est retirée : prévoir un compte ACTIVE ADMIN et un accès infra indépendant avant de déployer cette version.
 
 ## Origine du frontend en production
 

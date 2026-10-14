@@ -8,12 +8,11 @@ import { normalizeInputUrl } from "@/lib/url";
 import s from "./AuditForm.module.scss";
 
 type Props = {
-  mode?: "public" | "personal";
+  mode?: "public";
   sourceRoute?: string;
   idPrefix?: string;
   submitLabel?: string;
   initialUrl?: string;
-  launchBlocked?: boolean;
 };
 
 function isValidPublicUrl(raw: string): boolean {
@@ -27,13 +26,12 @@ function isValidPublicUrl(raw: string): boolean {
   }
 }
 
-export default function AuditForm({ mode = "public", sourceRoute, idPrefix, submitLabel, initialUrl = "", launchBlocked = false }: Props) {
+export default function AuditForm({ sourceRoute, idPrefix, submitLabel, initialUrl = "" }: Props) {
   const { t } = useLang();
-  const publicMode = mode === "public";
-  const tf = publicMode ? t.marketing.form : t.auditForm;
+  const tf = t.marketing.form;
   const logger = useMemo(
-    () => createLogger(publicMode ? "landing" : "app", { route: sourceRoute ?? (publicMode ? "/" : "/account/sites") }),
-    [publicMode, sourceRoute]
+    () => createLogger("landing", { route: sourceRoute ?? "/" }),
+    [sourceRoute]
   );
 
   const inputRef=useRef<HTMLInputElement>(null);
@@ -43,24 +41,22 @@ export default function AuditForm({ mode = "public", sourceRoute, idPrefix, subm
   const { phase, error, submit } = useAuditSubmit({
     logger,
     sourceRoute,
-    personal: mode === "personal",
   });
 
   const submitting = phase === "submitting" || phase === "polling" || phase === "redirecting";
   const errorMsg = inputError ?? (phase === "error"
-    ? error && "code" in error && error.code === "quota_exceeded" ? t.account.usage.reached : publicMode || mode === "personal" ? t.marketing.form.errorRequest : error?.message ?? t.auditForm.errorUnknown
+    ? error && "code" in error && error.code === "quota_exceeded" ? t.account.usage.reached : t.marketing.form.errorRequest
     : null);
-  const inputId = idPrefix ? `${idPrefix}-audit-url` : publicMode ? "public-audit-url" : "url";
+  const inputId = idPrefix ? `${idPrefix}-audit-url` : "public-audit-url";
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if(launchBlocked) return;
     setInputError(null);
     if (!url.trim()) {
       setInputError(tf.errorUrlMissing);inputRef.current?.focus();
       return;
     }
-    if ((publicMode || mode === "personal") && !isValidPublicUrl(url)) {
+    if (!isValidPublicUrl(url)) {
       setInputError(t.marketing.form.errorInvalidUrl);inputRef.current?.focus();
       return;
     }
@@ -68,7 +64,7 @@ export default function AuditForm({ mode = "public", sourceRoute, idPrefix, subm
   }
 
   return (
-    <form onSubmit={handleSubmit} className={`${s.form} ${publicMode ? s.publicForm : ""}`} noValidate>
+    <form onSubmit={handleSubmit} className={`${s.form} ${s.publicForm}`} noValidate>
       <div className={s.fieldGroup}>
         <label htmlFor={inputId} className={s.label}>{tf.urlLabel}</label>
         <input
@@ -90,11 +86,11 @@ export default function AuditForm({ mode = "public", sourceRoute, idPrefix, subm
         />
       </div>
 
-      <button type="submit" disabled={submitting || launchBlocked} className={s.submitBtn}>
+      <button type="submit" disabled={submitting} className={s.submitBtn}>
         {submitting ? tf.submitting : submitLabel ?? tf.submit}
       </button>
 
-      {publicMode && submitting && (
+      {submitting && (
         <p role="status" className={s.statusMsg}>
           {phase === "submitting" ? t.marketing.form.submitting : t.marketing.form.analysing}
         </p>
@@ -102,7 +98,7 @@ export default function AuditForm({ mode = "public", sourceRoute, idPrefix, subm
       {errorMsg && (
         <div id={`${inputId}-error`} role="alert" className={s.errorMsg}>{errorMsg}</div>
       )}
-      {publicMode && <p className={s.hint}>{t.marketing.form.hint}</p>}
+      <p className={s.hint}>{t.marketing.form.hint}</p>
     </form>
   );
 }

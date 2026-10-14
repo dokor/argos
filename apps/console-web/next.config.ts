@@ -43,10 +43,6 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   async redirects() {
     return [
-      { source: "/dashboard", destination: "/account/admin", permanent: true },
-      { source: "/dashboard/analytics", destination: "/account/admin/analytics", permanent: true },
-      { source: "/dashboard/report/:runId", destination: "/account/admin/runs/:runId", permanent: true },
-      { source: "/login", destination: "/account/sign-in", permanent: true },
       { source: "/accessibilite-numerique", destination: "/ressources/accessibilite-numerique", permanent: true },
       { source: "/audit-technique-gratuit", destination: "/ressources/audit-technique-gratuit", permanent: true },
       { source: "/audit-site-pme", destination: "/ressources/audit-site-pme", permanent: true },

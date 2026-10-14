@@ -89,6 +89,17 @@ jobs:
             if(!ready) throw new Error('Controlled service failed readiness');
           }
           JS
+      - name: Check retired connected routes and public/auth rendering
+        env:
+          CONNECTED_BASE_URL: http://127.0.0.1:3000
+        run: node scripts/e2e/connected-cleanup.mjs
+      - name: Upload connected cleanup evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: connected-cleanup-${{ github.sha }}
+          path: outputs/ui-review/clarte-cleanup/
+          retention-days: 14
       - name: Compare public header geometry and captures
         run: node scripts/e2e/public-header.mjs
       - name: Upload public header captures

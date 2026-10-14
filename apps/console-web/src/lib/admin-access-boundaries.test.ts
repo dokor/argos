@@ -63,9 +63,8 @@ it.each(["fr", "en"] as const)("localizes modern admin destinations in %s", lang
     expect(localizedPath(route, lang)).toBe((lang === "en" ? "/en" : "") + route);
   }
 });
-it("redirects the retired console and login to account pages", async () => {
+it("does not retain aliases for the retired connected interface", async () => {
   const redirects = await nextConfig.redirects!();
-  for (const [source, destination] of [["/dashboard", "/account/admin"], ["/dashboard/analytics", "/account/admin/analytics"], ["/dashboard/report/:runId", "/account/admin/runs/:runId"], ["/login", "/account/sign-in"]]) {
-    expect(redirects).toContainEqual({ source, destination, permanent: true });
-  }
+  expect(redirects.filter(({source}) => /^\/(?:en\/)?(?:dashboard|login)(?:\/|$)/.test(source))).toEqual([]);
+  expect(redirects).toContainEqual({source:"/audit-site-pme",destination:"/ressources/audit-site-pme",permanent:true});
 });
