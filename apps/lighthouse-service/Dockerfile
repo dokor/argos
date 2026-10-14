@@ -11,7 +11,7 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm ci --omit=dev
 
-COPY server.mjs app.mjs collector.mjs policy.mjs browser-policy.mjs .
+COPY server.mjs app.mjs collector.mjs policy.mjs browser-policy.mjs evidence.mjs .
 
 # L'image Playwright embarque Chromium dans /ms-playwright. On crée un chemin
 # stable afin que chrome-launcher puisse le lancer explicitement.
