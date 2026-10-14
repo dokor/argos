@@ -29,21 +29,31 @@ public class UsageService {
         } catch(SQLException e) { throw new IllegalStateException("Usage lock failed",e); }
     }
     private String offer(long user, Connection c) {
+        return offer(user,c,true);
+    }
+    private String offer(long user, Connection c, boolean locked) {
         // Snapshot/admission take account -> usage. Publication never calls this method.
-        try(var s=c.prepareStatement("SELECT offer FROM ARG_ACCOUNT_USER WHERE id=? FOR UPDATE")) {
+        try(var s=c.prepareStatement("SELECT offer FROM ARG_ACCOUNT_USER WHERE id=?"+(locked ? " FOR UPDATE":""))) {
             s.setLong(1,user);try(var r=s.executeQuery()) { if(!r.next()) throw AccountError.missing();return r.getString(1); }
         } catch(SQLException e) { throw new IllegalStateException("Usage offer unavailable",e); }
     }
     public Snapshot snapshot(long user, String offer, Connection c) {
         offer=offer(user,c); // Current effective offer, even after waiting behind an administrative change.
         lock(user,c);
+        return snapshot(user,offer,c,true);
+    }
+    /** Consistent MVCC read in the caller's transaction, without taking another account's locks. */
+    public Snapshot readSnapshot(long user, Connection c) {
+        return snapshot(user,offer(user,c,false),c,false);
+    }
+    private Snapshot snapshot(long user, String offer, Connection c, boolean locked) {
         YearMonth month=policy.period(clock.instant());
         long used=0,reserved=0;
-        try(var s=c.prepareStatement("SELECT state,COUNT(*) FROM ARG_USAGE_RUN WHERE user_id=? AND (state='RESERVED' OR (state='COUNTED' AND period=?)) GROUP BY state FOR UPDATE")) {
+        try(var s=c.prepareStatement("SELECT state,COUNT(*) FROM ARG_USAGE_RUN WHERE user_id=? AND (state='RESERVED' OR (state='COUNTED' AND period=?)) GROUP BY state"+(locked ? " FOR UPDATE":""))) {
             s.setLong(1,user);s.setString(2,month.toString());
             try(var r=s.executeQuery()) { while(r.next()) { if(r.getString(1).equals("COUNTED")) used=r.getLong(2);else reserved=r.getLong(2); } }
         } catch(SQLException e) { throw new IllegalStateException("Usage unavailable",e); }
-        Long override=override(user,c);
+        Long override=override(user,c,locked);
         Long limit=override==null ? policy.limit(offer) : override;
         return new Snapshot(offer,month.toString(),policy.zone().getId(),policy.start(month).toString(),policy.reset(month).toString(),used,reserved,limit,limit==null ? null : used>=limit || reserved>=limit-used ? 0L : limit-used-reserved,limit==null || used<limit && reserved<limit-used);
     }
@@ -85,7 +95,11 @@ public class UsageService {
         else if(List.of("QUEUED","RUNNING").contains(run.getStatus())) { admit(run.getOwnerUserId(),c);reserve(run,c); }
     }
     public Long override(long user, Connection c) {
-        try(var s=c.prepareStatement("SELECT monthly_limit FROM ARG_USAGE_ACCOUNT WHERE id=? FOR UPDATE")) {
+        return override(user,c,true);
+    }
+    public Long readOverride(long user, Connection c) { return override(user,c,false); }
+    private Long override(long user, Connection c, boolean locked) {
+        try(var s=c.prepareStatement("SELECT monthly_limit FROM ARG_USAGE_ACCOUNT WHERE id=?"+(locked ? " FOR UPDATE":""))) {
             s.setLong(1,user);try(var r=s.executeQuery()) { return r.next() ? r.getObject(1,Long.class) : null; }
         } catch(SQLException e) { throw new IllegalStateException("Usage limit unavailable",e); }
     }

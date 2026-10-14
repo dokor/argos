@@ -1112,6 +1112,26 @@ class AccountLifecycleIT extends MariaDbReportFixture {
         var policy=new UsagePolicy(ConfigFactory.parseString("usage.offers.FREE.monthly-limit=2\nusage.offers.PRO.monthly-limit=10"));
         return new AdminService(dao,sessions,new UsageService(dao.transactions,policy,clock),policy,reader,mapper,clock);
     }
+    @Test void administratorsCanReadEachOtherConcurrentlyWithoutCrossingAccountLocks() throws Exception {
+        var a=administrator();var b=user("cross-admin@example.com",true);
+        sql("UPDATE ARG_ACCOUNT_USER SET role='ADMIN' WHERE id="+b.context().user().getId());
+        var ready=new CountDownLatch(2);var release=new CountDownLatch(1);
+        var synchronizedSessions=spy(sessions);
+        doAnswer(call->{
+            var context=call.callRealMethod(); // Both transactions hold their own account/session first.
+            ready.countDown();assertTrue(release.await(10,TimeUnit.SECONDS));return context;
+        }).when(synchronizedSessions).require(anyString(),isNull(),eq(true),eq(false),any(java.sql.Connection.class));
+        var policy=new UsagePolicy(ConfigFactory.parseString("usage.offers.FREE.monthly-limit=2"));
+        var service=new AdminService(dao,synchronizedSessions,new UsageService(dao.transactions,policy,clock),policy,reader,mapper,clock);
+        try(var pool=Executors.newFixedThreadPool(2)) {
+            var first=pool.submit(()->service.user(bearer(a),b.context().user().getId()));
+            var second=pool.submit(()->service.user(bearer(b),a.context().user().getId()));
+            try {assertTrue(ready.await(10,TimeUnit.SECONDS));}finally{release.countDown();}
+            assertEquals(b.context().user().getId().toString(),first.get(15,TimeUnit.SECONDS).get("id"));
+            assertEquals(a.context().user().getId().toString(),second.get(15,TimeUnit.SECONDS).get("id"));
+        }
+        assertEquals(0,count("ARG_USAGE_RUN"));assertEquals(0,count("ARG_ADMIN_EVENT"));
+    }
     AccountSessionService.Issued administrator() throws Exception {
         var a=user("admin@example.com",true);
         sql("UPDATE ARG_ACCOUNT_USER SET role='ADMIN' WHERE id="+a.context().user().getId());

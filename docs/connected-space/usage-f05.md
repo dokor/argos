@@ -76,6 +76,13 @@ run comprennent CANCELED et arrêtent leur polling dans cet état terminal.
 
 ## Migration et recette
 
+La consultation administrative utilise une lecture MVCC cohérente de l'offre,
+du plafond et du registre, sans verrouiller le compte consulté. Deux ADMIN
+peuvent lire leurs fiches respectives alors que leur session tient déjà leur
+propre verrou de compte. Le test MariaDB synchronise précisément cette frontière.
+Les admissions et mutations conservent la relecture courante et les verrous
+compte puis usage ; la consultation ne peut servir à admettre une réservation.
+
 V21 ajoute le drapeau d'annulation et la date de libération, avec beans et
 compagnons QueryDSL mis à jour. Les données de recette sont synthétiques ;
 aucun plafond commercial chiffré n'est ajouté en configuration applicative.
