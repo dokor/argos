@@ -100,9 +100,10 @@ L'échantillon ne démontre ni utilisabilité auprès de clients ni conformité 
 
 ## Mise en service et réserves
 
-Suivre le [runbook d'initialisation](commissioning-f13.md). Le nouveau départ
-concerne l'espace connecté ; les tables techniques/public et les comptes
-partagent des relations. Aucune suppression sélective n'est fournie.
+Suivre le [runbook d’initialisation](commissioning-f13.md). La décision D-21
+étend désormais le nouveau départ à toutes les données Argos. La [V27](reset-v27.md)
+prépare leur effacement intégral ; ses preuves appartiennent à sa propre PR et
+ne doivent pas être attribuées rétroactivement à la recette F13.
 
 L'espace de démonstration reste fermé en production. Les intégrations API/CI
 sont annoncées « Bientôt » sans bouton d'activation fictif. Les actions de site,

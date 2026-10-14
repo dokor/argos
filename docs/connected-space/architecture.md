@@ -95,18 +95,16 @@ F01 produit le modèle cible et des migrations d’initialisation testées sur u
 connectés ou drapeau de bascule exigés. Cela ne justifie pas de réécrire les
 versions Flyway déjà appliquées à une base conservée.
 
-Deux frontières sont à documenter dans la PR d’implémentation : tables du
-moteur/public conservées, et tables connectées nouvelles/remplacées. Si des
-tables sont partagées, les séparer explicitement avant de prétendre effacer
-l’ancien espace. Les entités QueryDSL/Q* sont mises à jour avec le SQL.
+La décision D-21 autorise désormais l’abandon de toutes les données Argos,
+y compris moteur/public. La [V27](reset-v27.md) vide les tables dans une
+transaction et restaure les deux lignes techniques. Le schéma Clarté reste
+utilisé ; aucune adaptation QueryDSL n’est requise pour cette purge de données.
+Les anciennes migrations et leur historique sont conservés.
 
-Le lot de mise en service livre un runbook : environnement nommé, inventaire
-des données à abandonner, initialisation du premier administrateur par voie
-opérateur, configuration des fournisseurs/quota, smoke tests et diagnostic.
-La décision d’abandonner l’historique connecté est autorisée comme conception ;
-l’exécution d’un reset de production demande une autorisation distincte.
-Aucun script de ce dossier n’efface de données. On ne construit pas un ancien
-et un nouvel espace parallèles pour une « bascule réversible ».
+Le runbook nomme la base, l’arrêt des écrivains, le contrôle du succès V27,
+le nouveau compte ADMIN et les smoke tests. La préparation de ce changement
+ne déclenche pas de déploiement ; l’effacement n’est pas annulé par un rollback
+applicatif.
 
 ## ARC-06 — Observabilité et performances
 

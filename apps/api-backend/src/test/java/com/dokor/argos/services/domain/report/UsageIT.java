@@ -118,7 +118,7 @@ class UsageIT extends MariaDbReportFixture {
         sql("INSERT INTO ARG_ACCOUNT_USER(id,email,display_name,state,created_at) VALUES(10,NULL,'Archived','ARCHIVED',NOW())");
         sql("UPDATE ARG_AUDIT_RUN SET owner_user_id=10 WHERE id IN(1,2,3)");
         sql("UPDATE ARG_AUDIT_REPORT SET created_at='2026-09-15 08:00:00',provisional=1 WHERE run_id IN(1,3)");
-        org.flywaydb.core.Flyway.configure().dataSource(source).load().migrate();
+        org.flywaydb.core.Flyway.configure().dataSource(source).target("26").load().migrate();
         assertEquals(2,count("ARG_USAGE_RUN WHERE user_id=10 AND state='COUNTED' AND period='2026-09'"));
         assertEquals(1,count("ARG_USAGE_RUN WHERE user_id=10 AND state='RESERVED'"));assertEquals(3,count("ARG_USAGE_RUN"));
         // The QueryDSL companions project every persisted field.

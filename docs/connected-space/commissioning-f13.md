@@ -1,105 +1,78 @@
-# Mise en service Clarté — initialisation propre
+# Mise en service Clarté — après remise à zéro
 
-Ce runbook prépare un environnement neuf nommé. Il n'exécute aucune mise en
-production, suppression ou copie de données. Il complète le
-[premier ADMIN](first-admin-runbook.md), la [configuration comptes](../accounts/operations.md)
-et les [protections des collecteurs](../../infra/compose/lighthouse-service).
+La décision D-21 autorise l’abandon de toutes les données de la base Argos,
+y compris comptes et rapports publics. La PR prépare l’opération sans déployer.
+Le [kit opérateur](production/README.md) fixe l’ordre d’arrêt, migration et reprise ;
+le [contrat V27](reset-v27.md) précise l’effacement et la gestion d’incident.
 
-Le [kit opérateur de préparation](production/README.md) fournit les fichiers
-candidats, les contrôles en lecture seule et les quotas retenus. Il sépare la
-préparation de la future activation et du bootstrap.
+## 1. Environnement et données
 
-## 1. Fiche d'environnement avant exécution
+Consigner la base exacte, MariaDB, le SHA des quatre images et la fenêtre opérateur.
+La cible est la base Argos existante ; une installation vierge est aussi testée.
+Aucune reprise métier n’est attendue : comptes, identités, sessions, audits,
+rapports/liens, quotas, domaines/lots, caches, journaux, newsletter, feedback et
+analytics sont effacés. Les configurations/secrets de l’infrastructure restent
+hors base. Seuls l’historique Flyway et les deux lignes techniques persistent.
 
-Consigner environnement, origine HTTPS, nom de base, version MariaDB, SHA des
-images frontend/API/collecteurs, responsable et décision de mise en service.
-Employer une base neuve et un utilisateur DB limité à cette base. Le nom
-`argos_clarte_recette` est un exemple, pas une cible à déduire automatiquement.
-Ne pas réutiliser les noms réservés aux harness de test pour un environnement
-conservé : les suites d'intégration les nettoient.
+Ne jamais exécuter les harness contre la production. La future migration V27
+s’applique après arrêt de tous les anciens écrivains, avant de rouvrir les accès.
+Les versions historiques restent immuables. V27 ne modifie ni colonnes ni
+mappings QueryDSL. Le code du moteur et les protections restent opérationnels.
 
-Inventaire à décider explicitement si une production existante est remplacée :
+## 2. Construire et initialiser lors de la future bascule
 
-| Famille | Conséquence d'un départ sans reprise |
-|---|---|
-| ARG_ACCOUNT_* | Profils, méthodes, sessions, preuves, associations sites/URL et rattachements de runs absents ; comptes à recréer, aucune reconnexion avec une ancienne session |
-| ARG_USAGE_ACCOUNT / ARG_USAGE_RUN | Plafonds individuels et historique de consommation/réservation non repris ; ne pas transposer un compteur sans les réservations correspondantes |
-| ARG_DOMAIN_DISCOVERY*, ARG_DOMAIN_BATCH* | Découvertes, sélections, lots, liens stables et historique connecté non repris |
-| ARG_ADMIN_EVENT, ARG_ACCOUNT_SECURITY_EVENT | Historique administratif/sécurité non présent dans la nouvelle base ; conservation éventuelle séparée selon la politique existante |
-| ARG_AUDIT*, ARG_DOMAIN*, feedback, analytics, newsletter | Données moteur/public partagées ou adjacentes : elles ne sont pas autorisées à être supprimées par la décision de refonte connectée |
+1. Retenir le SHA testé et les images API, console, Lighthouse et Playwright.
+   Les lots F01–F14 sont fusionnés ; utiliser les preuves CI du commit livré.
+2. Préparer la configuration selon le [kit opérateur](production/README.md) :
+   origine Next/Java, API_BASE serveur, JWT, SMTP, OAuth retenus, offres et limites.
+   Retirer ADMIN_PASSWORD/ADMIN_TOKEN ; ADMIN_API_TOKEN reste serveur et distinct.
+3. Dans la fenêtre autorisée, bloquer les admissions et arrêter les anciens
+   services écrivants. Démarrer une seule API candidate sur la base nommée :
+   Flyway applique la chaîne historique et V27 avant HTTP et scheduler.
+4. Vérifier V27 réussie, les deux lignes techniques et les compteurs vides.
+   Garder les accès fermés en cas d’échec et suivre le diagnostic V27.
+5. Démarrer la console et les collecteurs candidats. Vérifier la délivrabilité
+   SMTP puis créer et vérifier le nouveau compte opérateur. Appliquer le
+   [bootstrap ADMIN](first-admin-runbook.md), API/workers arrêtés pour la promotion.
+   Redémarrer puis se reconnecter.
+6. Exécuter les smoke tests ci-dessous avant réouverture. Ne pas réactiver
+   automatiquement les workflows de déploiement.
 
-Les liens privés et publics utilisent des relations/credentials persistés.
-Une base entièrement neuve ne peut pas préserver leurs anciens liens par
-magie. Si les données publiques doivent être conservées, définir et faire
-valider séparément une reprise cohérente ; ne pas effacer seulement les tables
-compte dans une base partagée. Le présent lot n'impose aucune coexistence de
-deux interfaces ni migration de compatibilité de l'ancien espace.
+## 3. Smoke tests de l’environnement retenu
 
-## 2. Construire et initialiser
-
-1. Vérifier l'intégration des PR F01–F14 concernées et le manifeste de recette
-   du SHA retenu. Un manifeste portant le commit de merge de PR doit être
-   distingué du head de branche et du futur commit de livraison.
-2. Construire le package Java et le frontend par les commandes du dépôt.
-   Démarrer l'API sur la base neuve dédiée : Flyway applique la chaîne historique
-   complète jusqu'à V26 ou suivantes. Ne pas éditer les checksums ni utiliser
-   `clean` sur un environnement conservé. Le démarrage du package est vérifié
-   dans la CI MariaDB, séparément des mocks frontend.
-3. Configurer l'origine identique côté Next et Java, API_BASE serveur, comptes,
-   secret JWT, SMTP, fournisseurs sociaux réellement disponibles, offres/quota,
-   limites de découverte/lot et capacités headless. Partir des exemples
-   versionnés référencés dans [operations](../accounts/operations.md),
-   [découverte](discovery-f06.md) et [lots](batch-f07.md).
-4. Conserver l'egress proxy et l'isolation Chromium. `/api/account/*` doit passer
-   par le BFF ; aucune exposition directe ne doit contourner origine/CSRF.
-   `ADMIN_API_TOKEN` reste un secret serveur indépendant. Supprimer les anciennes
-   variables ADMIN_PASSWORD/ADMIN_TOKEN ; elles ne rétablissent aucun accès.
-5. Créer puis vérifier le compte opérateur par le vrai parcours email. Appliquer
-   la simulation puis le bootstrap explicite du [runbook ADMIN](first-admin-runbook.md),
-   API/workers arrêtés pour la promotion. Reconnexion obligatoire ensuite.
-
-## 3. Smoke tests de l'environnement retenu
-
-Utiliser deux comptes de recette dédiés et un domaine de test autorisé.
+Utiliser deux nouveaux comptes de recette et un domaine de test autorisé.
 Consigner résultat/date/SHA sans mot de passe, jeton, URL privée ou contenu email.
 
 - Inscription, vérification, connexion, déconnexion, récupération et changement
-  de mot de passe ; vérifier délivrabilité SMTP et callbacks OAuth configurés.
+  de mot de passe ; délivrabilité SMTP et callbacks OAuth réellement configurés.
 - Analyse URL : admission, progression, publication, lecture privée, relance,
-  historique et absence de duplication sur reprise d'une requête.
-- Domaine : découverte bornée, sélection, coût affiché, admission tout-ou-rien,
-  fermeture/retour/rafraîchissement, synthèse, filtre de règle, run exact et ancien lot.
-- Dashboard : dernières tentatives, compteurs/listes concordants, cas sans mesure,
-  filtre/pagination et arrêt de polling au terminal.
-- Quotas : disponible = limite − consommé − réservé, refus au quota nul,
-  rapport publié débité une fois et échec sans rapport restitué.
+  historique et absence de duplication sur reprise d’une requête.
+- Domaine : découverte, sélection, coût, admission tout-ou-rien, fermeture/retour,
+  rafraîchissement, synthèse, filtre, run exact et conservation des nouveaux lots.
+- Dashboard : compteurs/listes concordants, absence de mesure explicite,
+  filtres/pagination et arrêt du polling au terminal.
+- Quotas : limite − consommé − réservé, refus à zéro, publication débitée une fois,
+  échec sans rapport restitué ; valeurs FREE 10 et PREMIUM 1000 configurables.
 - ADMIN : utilisateur standard refusé, cible ADMIN protégée, version obsolète,
   plafond sous engagé refusé, motif/journal, suspension et sessions révoquées.
-- Deux propriétaires du même hôte : aucun ID de l'autre n'ouvre de données privées.
-- Accueil, analyse publique et token de rapport conservés ; anciennes routes
-  en 404, lectures numériques BFF en 410 ; footer, langue et thème présents.
-- Rapport/PDF : origine des preuves, absence distincte de zéro, secrets exclus.
+- Deux propriétaires du même hôte : aucun ID de l’autre ne donne accès aux données.
+- Accueil et audit public fonctionnels, nouveaux liens de rapport valides ; anciens
+  liens et sessions indisponibles, anciennes routes 404 et lectures BFF retirées 410.
+- Rapport et PDF : preuves collectées, absence distincte de zéro, secrets exclus.
+- Redémarrage : comptes/analyses nouveaux conservés, V27 non rejouée, queue correcte.
+- Clavier, zoom natif 200 %, lecteur d’écran, langues et thèmes sur les parcours principaux.
 
-La CI démontre ces mécanismes sur fixtures isolées. Elle ne valide pas les
-secrets, DNS, certificats, délivrabilité ou performances de l'environnement cible.
-Prévoir une revue clavier/zoom natif 200 % et lecteur d'écran sur les parcours
-principaux ; les scans axe et la taille racine injectée ne les remplacent pas.
+La CI ne valide pas les secrets, DNS, certificats, délivrabilité ou performances
+du serveur cible. Mesurer aussi la capacité Argon2/Chromium et configurer les
+limites et la supervision avant ouverture.
 
-## 4. Sauvegarde, incident et décision
+## 4. Incident et décision
 
-La CI prend un dump cohérent de la MariaDB jetable, le restaure dans un autre
-schéma isolé et compare nombre et empreinte des rapports. C'est une preuve de
-restauration de cette fixture, pas un exercice de reprise de toute la production.
-Tester séparément restauration complète, droits, stockage des secrets et temps
-de reprise de l'environnement retenu avant une mise en service effective.
+En cas d’échec de migration, garder les admissions fermées et diagnostiquer
+avant de relancer. Le [contrat V27](reset-v27.md) explique le rollback DML et
+l’intervalle entre commit et enregistrement Flyway. Aucun repair automatique.
 
-En cas d'anomalie, arrêter les nouvelles admissions, préserver la base et les
-preuves, identifier le run/lot/statut et vérifier réservations/publication.
-Ne pas rejouer un débit ou modifier un solde à la main. Utiliser le diagnostic
-et les reprises des services ; une intervention sur les données nécessite son
-propre périmètre et sa décision. Pour un échec du bootstrap, suivre son runbook,
-sans retirer le rôle ADMIN pour contourner le garde-fou.
-
-La décision finale consigne les réserves (fournisseurs, accessibilité manuelle,
-charge/Argon2, supervision, stockage/rotation des secrets), les responsables et
-leur résultat. Aucun reset, fusion ou déploiement n'est lancé par cette recette.
+La CI restaure une MariaDB jetable ; elle ne prouve pas la reprise du serveur
+réel. Une sauvegarde de secours technique éventuelle n’impose aucune reprise
+métier des données abandonnées. Revenir à une ancienne image ne restaure pas
+la base effacée. Consigner la décision d’ouverture et les résultats cible.

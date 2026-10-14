@@ -101,7 +101,7 @@ class AuditPublicationIT extends MariaDbReportFixture {
         // Replay V8 from its historical boundary with a credential-bearing orphan.
         migrateHistoricalRowsTo("7");
         sql("INSERT INTO ARG_AUDIT_RUN(id,audit_id,status,report_token_hash) VALUES(6,1,'COMPLETED',UNHEX(SHA2('synthetic-orphan',256)))");
-        org.flywaydb.core.Flyway.configure().dataSource(source).load().migrate();
+        org.flywaydb.core.Flyway.configure().dataSource(source).target("26").load().migrate();
         assertEquals("FAILED",runs.getRun(6).orElseThrow().getStatus());
         assertEquals("LEGACY_REPORT_PUBLICATION_MISSING",runs.getRun(6).orElseThrow().getLastError());
         assertTrue(reader.getByToken("synthetic-existing").isPresent());

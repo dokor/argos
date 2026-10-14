@@ -28,6 +28,15 @@ des critères des issues concernées, pas un nouvel arbitrage à chaque composan
 | D-19 | Compteurs et regroupements calculés serveur sur le périmètre complet | Pas de calcul sur la seule page de pagination, pas de moyenne de scores de domaine |
 | D-20 | Domaine logique privé par propriétaire+hôte ; lots et rapports immuables | Une nouvelle analyse conserve les précédentes ; la liste désigne la dernière tentative |
 
+## D-21 — Abandon intégral de l’ancienne base (14 octobre 2026)
+
+L’utilisateur autorise l’effacement de toutes les données Argos et les changements
+de structure nécessaires, via Flyway. La préparation de la PR et ses tests sont
+autorisés ; le déploiement reste exclu de cette demande. Cette décision remplace
+les anciennes restrictions de conservation, y compris pour les rapports publics,
+comptes, journaux et données annexes. Le code du moteur, ses protections et le
+site public restent fonctionnels. Voir le [contrat V27](reset-v27.md).
+
 ## Écarts à ne pas recopier
 
 | Maquette | Cible de production |
@@ -49,10 +58,7 @@ des critères des issues concernées, pas un nouvel arbitrage à chaque composan
 
 ## Limite de l’autorisation
 
-La création initiale du dossier était documentaire et organisationnelle. Les
-lots d’implémentation et la recette F13 ne constituent pas une autorisation de
-nouveau tarif, paiement, changement de rôle de production, suppression de table
-ou mise en ligne. Aucun besoin de compatibilité ancienne ne doit
-être réintroduit comme prérequis caché. L’issue de préparation de mise en
-service doit seulement identifier précisément l’environnement et les données
-à initialiser avant toute opération ultérieure autorisée.
+La demande autorise la préparation et la livraison en PR de la remise à zéro
+via Flyway, de ses tests et du runbook. Elle exclut explicitement le déploiement.
+Les anciennes restrictions de conservation sont remplacées par D-21. Aucun
+paiement, nouveau tarif ni changement de rôle en production n’est effectué ici.
