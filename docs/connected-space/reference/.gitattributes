@@ -1,0 +1,3 @@
+# Preserve the approved source bytes and deterministic generated preview hashes.
+clarte.fragment.html -text
+clarte.html text eol=lf

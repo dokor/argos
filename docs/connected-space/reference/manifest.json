@@ -1,0 +1,137 @@
+{
+  "referenceVersion": "1.0",
+  "acceptedAt": "2026-10-13",
+  "status": "Design baseline, not implemented application",
+  "source": "argos-clarte-synthese-domaines.html — approved Clarté domain synthesis prototype",
+  "browser": "155.0.4283.45",
+  "prototypeChecks": 53,
+  "prototypeErrors": [],
+  "viewportsChecked": [
+    320,
+    390,
+    768,
+    1056
+  ],
+  "screenshotViewports": [
+    390,
+    1056
+  ],
+  "assets": [
+    {
+      "path": "clarte.fragment.html",
+      "sha256": "066716bbc2fe482cb6707275e6492e7e4d3f38242808810300f95d0b0a1aad5f"
+    },
+    {
+      "path": "clarte.html",
+      "sha256": "eefa8f45e1cdba6c1abf6c1da31aa7af86f873d8a7d40be50ba02f81f41057d7"
+    },
+    {
+      "path": "screenshots/account-1056.png",
+      "sha256": "b4365cc916ac1bb84ce76ca317bf898eef108a4a082285516334d0c511c95085"
+    },
+    {
+      "path": "screenshots/account-390.png",
+      "sha256": "3cc591c43ee3c541416ab0fb1d938e040f1ae8cbd7fbc389292038fda8d0c19e"
+    },
+    {
+      "path": "screenshots/admin-1056.png",
+      "sha256": "3b109fe9f24266af6dded137676b55c26e9cfafccc85494a5802ed6c7a4af51f"
+    },
+    {
+      "path": "screenshots/admin-390.png",
+      "sha256": "a6ef45a23e9ce7698310633028a416819cecaee749526ff70fc75a246e64ba8d"
+    },
+    {
+      "path": "screenshots/admin-detail-1056.png",
+      "sha256": "2b7c00b601512d13432c28c2a1cbc725126bb03024e3a40d3805a4ba3357d2ca"
+    },
+    {
+      "path": "screenshots/admin-detail-390.png",
+      "sha256": "605246cb1600b0a6c0592cff6c830dd1694de6328491fb31b3efd8305f4d9ce2"
+    },
+    {
+      "path": "screenshots/affected-pages-1056.png",
+      "sha256": "bcda50e8993884bae9472825cfd320a457b16d8190e0fae220746f98322278d8"
+    },
+    {
+      "path": "screenshots/affected-pages-390.png",
+      "sha256": "b7cc6146c6b3dea41a8bc30cd4c122287ce21853de7fe84e5ea31b7eeb4b96aa"
+    },
+    {
+      "path": "screenshots/analysis-1056.png",
+      "sha256": "c72ae70a34336b6f3a7cb5dab6123e037f4a712072ce218a57bca45d798e1ca6"
+    },
+    {
+      "path": "screenshots/analysis-390.png",
+      "sha256": "d004024d8cb877eb36383716cb4926165c18a95944e0d80361ec34edf712592a"
+    },
+    {
+      "path": "screenshots/dark-domain-summary-1056.png",
+      "sha256": "253c09c134cdd2abbb0cfc21ec58ce80eb87fd06bcf3696943ed48ec71e44ee0"
+    },
+    {
+      "path": "screenshots/dashboard-1056.png",
+      "sha256": "a09c2941b604e8a714f977d86409802943078c6752cae92ef65e928284561d67"
+    },
+    {
+      "path": "screenshots/dashboard-390.png",
+      "sha256": "f460005db5ef155cb3f1015a53f006a2ec50913d9bfb6d8d13609f91e9e507b9"
+    },
+    {
+      "path": "screenshots/domain-list-1056.png",
+      "sha256": "2ac9ec1fc76298307bed0f6b389dea841c07f5a70159a32da979b5b87ac6c1c5"
+    },
+    {
+      "path": "screenshots/domain-list-390.png",
+      "sha256": "7623a7e03deb335a2067794fddf2db800bec7a4aad853b1850a769b99e4f2d0d"
+    },
+    {
+      "path": "screenshots/domain-new-1056.png",
+      "sha256": "437a06dc11b1c6c9389c78fa77c2d2f15e1dcd9ec4b526045f7560ad34b3b6a8"
+    },
+    {
+      "path": "screenshots/domain-new-390.png",
+      "sha256": "1b9faccc84240f62cd9088d5f18c1c0d04549b72e34b67201178a0071c34d7f7"
+    },
+    {
+      "path": "screenshots/domain-selection-1056.png",
+      "sha256": "63a04ac9e8a74dda1f7b0d2a88b36d5fa6f4c0ccc3e895a9fe6c543234aee7a2"
+    },
+    {
+      "path": "screenshots/domain-selection-390.png",
+      "sha256": "c700eb0e36d388969af147361e84ffc94e12382c4e69898bc52a79ddd827b147"
+    },
+    {
+      "path": "screenshots/domain-summary-1056.png",
+      "sha256": "6910ed68791dfba5b934962a9f207ce367c56961907f23ad97e504f885634944"
+    },
+    {
+      "path": "screenshots/domain-summary-390.png",
+      "sha256": "072f35b70848ad0be32b9ad6dfa2d2be1702799d11509ea2137ae2a8053859da"
+    },
+    {
+      "path": "screenshots/integrations-1056.png",
+      "sha256": "4eedb1a0fa9bea75eb8a83faa349fbe228fdc06b02040dcd66bf293704295c48"
+    },
+    {
+      "path": "screenshots/integrations-390.png",
+      "sha256": "fe4210f7177ccc42705fd20464f0ea3b9ea537f7a8c8ccf689ab7d8cbe92e867"
+    },
+    {
+      "path": "screenshots/page-report-1056.png",
+      "sha256": "d33271cd34912c06e6bd89a3d6877967aa0a9400931f07619bea58f12819a23a"
+    },
+    {
+      "path": "screenshots/page-report-390.png",
+      "sha256": "82aff8656a9276e2b21215b3363768d2bc7cfa4ce05aaa0b7049ccdf4456f99d"
+    },
+    {
+      "path": "screenshots/quota-1056.png",
+      "sha256": "0d19e0415ebca1ba4fa82fdb471eda9edeb3b5032e14315b4ccdaa16ad498d08"
+    },
+    {
+      "path": "screenshots/quota-390.png",
+      "sha256": "4ad72b2ee150fef3678006a39b1cba2124c5526abd3ad0d6f60bc382166f2083"
+    }
+  ]
+}
