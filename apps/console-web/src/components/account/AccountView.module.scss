@@ -14,26 +14,13 @@
 .links { display: grid; justify-items: start; gap: .25rem; margin-top: 1rem; max-width: 34rem; color: var(--argos-text-muted); }
 .links p { display: flex; flex-wrap: wrap; align-items: center; gap: 0 .35rem; }
 .links a { display: inline-flex; align-items: center; min-height: 44px; color: var(--argos-brand); text-decoration: underline; text-underline-offset: .2em; }
-.list { list-style: none; padding: 0; }
-.list li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .75rem; padding: .8rem 0; border-bottom: 1px solid var(--argos-border); align-items: center; }
 .notice { max-width: 34rem; margin-bottom: 1rem; padding: .75rem; border: 1px solid var(--argos-border); border-radius: .5rem; overflow-wrap: anywhere; font: inherit; }
 .error { color: var(--argos-error); background: var(--argos-error-soft); border-color: var(--argos-error); }
-.check { display: flex; gap: .6rem; align-items: flex-start; }
 @media (max-width: 480px) { .page { margin: 1.5rem auto; } .card { padding: 1rem; } .button { min-height: 44px; } }
 
-.personalNav { display:flex;flex-wrap:wrap;gap:1rem;padding:1rem 1.25rem;max-width:48rem;margin:auto; }
-.personalNav a:focus-visible,.page a:focus-visible { outline:3px solid var(--argos-text);outline-offset:3px; }
 .page { overflow-wrap:anywhere; }
-.urlList { list-style:none;padding:0; }
-.urlList h3 { font-weight:600;margin:1rem 0 .5rem; }
 
 .chrome a[href$="#audit"] { height:auto;min-height:44px;overflow-wrap:anywhere; }
-.usage { display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,13rem),1fr));gap:1rem; }
-.usage dt { color:var(--argos-text-muted); }
-.usage dd { margin:.25rem 0 0;font-weight:600; }
-.personalNav { width: 100%; max-width: 1100px; padding: 12px 24px; gap: 8px 24px; border-bottom: 1px solid var(--argos-border); }
-.personalNav a { display: inline-flex; align-items: center; min-height: 44px; font-size: 15px; font-weight: 600; }
-@media(max-width:600px) { .personalNav { padding-inline: 16px; gap: 8px 16px; } }
 
 .social { max-width: 34rem; margin-top: 1.5rem; }
 .socialDivider { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; color: var(--argos-text-muted); font-size: .875rem; }

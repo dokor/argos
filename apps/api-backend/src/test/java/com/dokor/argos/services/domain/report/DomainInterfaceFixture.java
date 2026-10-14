@@ -70,20 +70,27 @@ final class DomainInterfaceFixture {
                         c -> sessions.create(accounts.user(70, c, false), CSRF, c).jwt());
         fixture.sql(
                 "INSERT INTO ARG_ACCOUNT_USER(id,email,display_name,state,role,created_at)"
-                    + " VALUES(71,'admin-fixture@example.com','Admin"
-                    + " fixture','ACTIVE','ADMIN',CURRENT_TIMESTAMP)");
+                        + " VALUES(71,'admin-fixture@example.com','Admin"
+                        + " fixture','ACTIVE','USER',CURRENT_TIMESTAMP)");
+        accounts.transaction(
+                c -> {
+                    var identity = new com.dokor.argos.db.generated.AccountIdentity();
+                    identity.setUserId(71L);
+                    identity.setProvider("password");
+                    identity.setSubject("71");
+                    identity.setPasswordHash(
+                            new AccountPasswords(settings)
+                                    .hash("a long synthetic fixture passphrase"));
+                    identity.setCreatedAt(clock.instant());
+                    accounts.save(identity, c);
+                    return null;
+                });
+        try (var c = fixture.source.getConnection()) {
+            com.dokor.argos.operations.FirstAdminBootstrap.execute(c, c.getCatalog(), 71, true);
+        }
         adminJwt =
                 accounts.transaction(
                         c -> {
-                            var identity = new com.dokor.argos.db.generated.AccountIdentity();
-                            identity.setUserId(71L);
-                            identity.setProvider("password");
-                            identity.setSubject("71");
-                            identity.setPasswordHash(
-                                    new AccountPasswords(settings)
-                                            .hash("a long synthetic fixture passphrase"));
-                            identity.setCreatedAt(clock.instant());
-                            accounts.save(identity, c);
                             var issued = sessions.create(accounts.user(71, c, false), CSRF, c);
                             issued.context().session().setAuthenticatedAt(Instant.EPOCH);
                             accounts.save(issued.context().session(), c);
