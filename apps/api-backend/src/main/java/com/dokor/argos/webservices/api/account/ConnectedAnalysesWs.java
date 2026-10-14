@@ -20,4 +20,7 @@ public final class ConnectedAnalysesWs {
             @HeaderParam("Idempotency-Key") String key, com.dokor.argos.services.connected.contract.ConnectedContracts.SiteAnalysisInput input) {
         return AccountAuthWs.ok(analyses.create(auth,csrf.require(requests.get()),key,input));
     }
+    @GET @Path("{key}") public Response get(@HeaderParam("Authorization") String auth, @PathParam("key") String key) {
+        return AccountAuthWs.ok(analyses.get(auth,key));
+    }
 }
