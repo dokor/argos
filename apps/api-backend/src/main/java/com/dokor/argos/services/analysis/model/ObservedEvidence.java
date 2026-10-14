@@ -55,7 +55,9 @@ public record ObservedEvidence(
             String kind = raw.path("kind").asText(), origin = null, ref = null, path = null;
             if ("resource".equals(kind)) {
                 try {
-                    URI uri = URI.create(raw.path("origin").asText());
+                    String rawOrigin = raw.path("origin").asText();
+                    if (rawOrigin.length() > 512) continue;
+                    URI uri = URI.create(rawOrigin);
                     if (!Set.of("http", "https").contains(uri.getScheme()) || uri.getHost() == null)
                         continue;
                     origin =

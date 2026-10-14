@@ -82,6 +82,9 @@ class ReportEvidenceTest {
         assertEquals(10,parsed.items().size());assertTrue(parsed.truncated());
         items.removeAll().addObject().put("kind","element").put("nodePath","<secret>");
         assertEquals("UNAVAILABLE",com.dokor.argos.services.analysis.model.ObservedEvidence.from(root).state());
+        items.removeAll().addObject().put("kind","resource").put("origin","https://"+"a".repeat(513)+".com")
+            .put("resourceRef","0123456789abcdef");
+        assertEquals("UNAVAILABLE",com.dokor.argos.services.analysis.model.ObservedEvidence.from(root).state());
         root.put("source","secret");
         assertNull(com.dokor.argos.services.analysis.model.ObservedEvidence.from(root));
     }

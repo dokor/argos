@@ -11,7 +11,7 @@ test('resource identities exclude credentials, query, fragment and raw path in b
  assert.match(expected.resourceRef,/^[a-f0-9]{16}$/);
  assert.equal(resourceEvidence('https://site.example/private-person/secret-token.js').resourceRef,expected.resourceRef);
  assert.doesNotMatch(JSON.stringify(expected),/password|credential|fragment|private-person|secret-token/);
- for(const url of ['javascript:alert(1)','data:secret','not an url']) assert.equal(resourceEvidence(url),null);
+ for(const url of ['javascript:alert(1)','data:secret','not an url','https://example.com/'+ 'a'.repeat(2048)]) assert.equal(resourceEvidence(url),null);
 });
 test('preserves only observed structural locations and explicit absence',()=>{
  const evidence=lighthouseEvidence({details:{items:[{node:{type:'node',path:'1,HTML,1,BODY,2,IMG',selector:'#customer-email',snippet:'<img alt="secret">'}}, {url:'https://cdn.example/a.js?secret=abc'}]}});
