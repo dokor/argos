@@ -418,3 +418,15 @@ it("requires CSRF and an empty cancel payload",async()=>{
  expect((await accountProxy(request(path,"POST",{runId:"3"}),path.split("/"))).status).toBe(400);
  const req=request(path,"POST",{});req.headers.delete("x-argos-csrf");expect((await accountProxy(req,path.split("/"))).status).toBe(403);expect(fetchMock).not.toHaveBeenCalled();
 });
+it("recovers an admission only by validated key and session, with private caching",async()=>{
+  const key="12345678-1234-1234-1234-123456789012";
+  fetchMock.mockResolvedValue(Response.json({runId:"42",status:"COMPLETED"}));
+  const response=await accountProxy(request("analyses/"+key),["analyses",key]);
+  expect(response.status).toBe(200);expect(response.headers.get("cache-control")).toBe("private, no-store");
+  expect(fetchMock.mock.calls[0][0]).toBe("http://fixture-backend/api/account/analyses/"+key);
+  expect(fetchMock.mock.calls[0][1].headers.get("Authorization")).toBe("Bearer "+jwt);
+  fetchMock.mockClear();
+  expect((await accountProxy(request("analyses/"+key+"?ownerId=forged"),["analyses",key])).status).toBe(400);
+  expect((await accountProxy(request("analyses/bad-key"),["analyses","bad-key"])).status).toBe(404);
+  expect(fetchMock).not.toHaveBeenCalled();
+});
