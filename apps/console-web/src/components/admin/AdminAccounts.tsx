@@ -97,8 +97,7 @@ export default function AdminAccounts({
     refresh();
     session.refreshUsage();
   };
-  const protectedUser =
-    data && !data.canEditEntitlement;
+  const protectedUser = data && !data.canEditEntitlement;
   const unavailable =
     !!user.error ||
     user.loading ||
@@ -221,7 +220,9 @@ export default function AdminAccounts({
                             ? c.resumeHint
                             : c.suspendHint}
                         </p>
-                        {!data.canSuspend && <p className={a.notice}>{c.protected}</p>}
+                        {!data.canSuspend && data.canEditEntitlement && (
+                          <p className={a.notice}>{c.protected}</p>
+                        )}
                         {data.canSuspend && (
                           <button
                             className={s.secondary}
@@ -693,6 +694,23 @@ function AdminConfirmation({
       ref={dialog}
       className={a.dialog}
       aria-labelledby="admin-confirm-title"
+      onKeyDown={(e) => {
+        if (e.key !== "Tab") return;
+        const fields = Array.from(
+          e.currentTarget.querySelectorAll<HTMLElement>(
+            'button:not(:disabled), input:not(:disabled), select:not(:disabled), [tabindex="0"]',
+          ),
+        ).filter((el) => el.getClientRects().length > 0);
+        const first = fields[0],
+          last = fields[fields.length - 1];
+        if (
+          (e.shiftKey && document.activeElement === first) ||
+          (!e.shiftKey && document.activeElement === last)
+        ) {
+          e.preventDefault();
+          (e.shiftKey ? last : first)?.focus();
+        }
+      }}
       onCancel={(e) => {
         e.preventDefault();
         if (!lock.current) onCancel();

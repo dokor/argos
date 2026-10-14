@@ -152,7 +152,7 @@ public class AdminService {
                         if (search.length() > 100) throw new AccountError(400, "filter_invalid");
                         sql.append(
                                 " AND (LOCATE(LOWER(?),LOWER(display_name))>0 OR"
-                                    + " LOCATE(LOWER(?),LOWER(email))>0)");
+                                        + " LOCATE(LOWER(?),LOWER(email))>0)");
                         args.add(search.strip());
                         args.add(search.strip());
                     }
@@ -200,8 +200,8 @@ public class AdminService {
                 query(
                         c,
                         "SELECT user_id AS userId,SUM(state='COUNTED' AND period=?) AS"
-                            + " used,SUM(state='RESERVED') AS reserved FROM ARG_USAGE_RUN WHERE"
-                            + " user_id IN ("
+                                + " used,SUM(state='RESERVED') AS reserved FROM ARG_USAGE_RUN WHERE"
+                                + " user_id IN ("
                                 + String.join(",", Collections.nCopies(rows.size(), "?"))
                                 + ") GROUP BY user_id",
                         args);
@@ -215,7 +215,7 @@ public class AdminService {
             Long limit =
                     row.get("monthlyLimit") == null
                             ? policy.limit(offer)
-                            : ((Number) row.get("monthlyLimit")).longValue();
+                            : Long.valueOf(((Number) row.get("monthlyLimit")).longValue());
             row.put(
                     "usage",
                     new UsageService.Snapshot(
@@ -232,9 +232,12 @@ public class AdminService {
         }
     }
 
-    private static void capabilities(List<Map<String,Object>> rows, AccountSessionService.Context ctx) {
-        for(var row:rows) {
-            boolean archived="ARCHIVED".equals(row.get("state")),admin="ADMIN".equals(row.get("role")),self=ctx.user().getId().toString().equals(row.get("id"));
+    private static void capabilities(
+            List<Map<String, Object>> rows, AccountSessionService.Context ctx) {
+        for (var row : rows) {
+            boolean archived = "ARCHIVED".equals(row.get("state")),
+                    admin = "ADMIN".equals(row.get("role")),
+                    self = ctx.user().getId().toString().equals(row.get("id"));
             row.put("canEditEntitlement", !archived && (!admin || self));
             row.put("canSuspend", !archived && !admin && !self);
         }
@@ -499,7 +502,7 @@ public class AdminService {
                             query(
                                             c,
                                             "SELECT module_statuses AS modules FROM ARG_AUDIT_RUN"
-                                                + " WHERE id=?",
+                                                    + " WHERE id=?",
                                             List.of(id))
                                     .getFirst();
                     var modules = new LinkedHashMap<String, String>();

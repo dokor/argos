@@ -1218,6 +1218,20 @@ class AccountLifecycleIT extends MariaDbReportFixture {
             for(String route:routes) assertEquals(401,http.call("GET","/account/admin/"+route,bearer(archived),null,false).statusCode(),route);
         }
     }
+    @Test void administrationReadsUnlimitedInheritedAndZeroOverrideQuotas() throws Exception {
+        var a=administrator();var u=user("unlimited@example.com",true);
+        long id=u.context().user().getId();var policy=new UsagePolicy(ConfigFactory.empty());
+        var admin=new AdminService(dao,sessions,new UsageService(dao.transactions,policy,clock),policy,reader,mapper,clock);
+        var page=admin.users(bearer(a),"unlimited",null,null,20,null);
+        var unlimited=(UsageService.Snapshot)page.items().getFirst().get("usage");
+        assertNull(unlimited.limit());assertNull(unlimited.available());assertTrue(unlimited.canLaunch());
+        assertNull(((UsageService.Snapshot)admin.user(bearer(a),id).get("usage")).limit());
+        admin.entitlement(bearer(a),CSRF,id,change(id,"FREE",0L));
+        var zero=(UsageService.Snapshot)admin.user(bearer(a),id).get("usage");
+        assertEquals(0L,zero.limit());assertEquals(0L,zero.available());assertFalse(zero.canLaunch());
+        admin.entitlement(bearer(a),CSRF,id,change(id,"FREE",null));
+        assertNull(((UsageService.Snapshot)admin.user(bearer(a),id).get("usage")).limit());
+    }
     @Test void administrationPaginationFiltersQueueAndSafeFailureDetail() throws Exception {
         var a=administrator();var u=user("find-me@example.com",true);var admin=administration();String token=bearer(a);
         var page=admin.users(token,"FIND-ME","ACTIVE","FREE",1,null);
@@ -1372,14 +1386,16 @@ class AccountLifecycleIT extends MariaDbReportFixture {
     }
     @Test void migrationBackfillsAllOwnersIncludingArchivedButNeverAnonymous() throws Exception {
         migrateHistoricalRowsTo("11");
-        var a=user("backfill-a@example.com",true);var b=user("backfill-b@example.com",true);
-        long aid=a.context().user().getId(),bid=b.context().user().getId();
+        // Seed the historical schema directly: current services require later columns.
+        long aid=7001,bid=7002;
+        sql("INSERT INTO ARG_ACCOUNT_USER(id,email,display_name,state,created_at,archived_at) VALUES "
+            +"(7001,'backfill-a@example.com','Active owner','ACTIVE','2026-10-01',NULL),"
+            +"(7002,NULL,'Archived owner','ARCHIVED','2026-10-01','2026-10-02')");
         sql("UPDATE ARG_AUDIT_RUN SET owner_user_id="+aid+" WHERE id IN (1,2)");
         sql("UPDATE ARG_AUDIT_RUN SET owner_user_id="+bid+" WHERE id=3");
         try(var c=source.getConnection();var s=c.prepareStatement("INSERT INTO ARG_AUDIT_RUN(id,audit_id,status,owner_user_id,created_at) VALUES(?,1,'FAILED',?,'2026-10-09')")) {
             for(int n=0;n<1005;n++){s.setLong(1,1000+n);s.setLong(2,aid);s.addBatch();}s.executeBatch();
         }
-        auth.archive(bearer(b),CSRF,true);
         org.flywaydb.core.Flyway.configure().dataSource(source).load().migrate();
         org.flywaydb.core.Flyway.configure().dataSource(source).load().migrate();
         try(var connection=source.getConnection()) {
@@ -1388,9 +1404,10 @@ class AccountLifecycleIT extends MariaDbReportFixture {
                 public org.flywaydb.core.api.configuration.Configuration getConfiguration(){return null;}
             });
         }
+        var a=dao.transaction(c->sessions.create(dao.user(aid,c,true),CSRF,c));
         assertEquals(1,sites().list(bearer(a),20,null).items().size());
         try(var c=source.getConnection();var s=c.createStatement();var r=s.executeQuery("SELECT COUNT(*) FROM ARG_ACCOUNT_SITE")){r.next();assertEquals(2,r.getInt(1));}
-        error(401,()->sites().list(bearer(b),20,null));
+        error(401,()->dao.transaction(c->sessions.create(dao.user(bid,c,true),CSRF,c)));
     }
 
     @Test void manySitesUseBoundedProjectionsAndDeterministicPages() throws Exception {
