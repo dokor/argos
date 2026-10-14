@@ -11,7 +11,7 @@ it.each(["ownerId=2", "profileId=mobile-v1", "limit=1"])("rejects unexpected cat
   expect((await accountProxy(request("analysis-profiles?" + query), ["analysis-profiles"])).status).toBe(400);
   expect(fetchMock).not.toHaveBeenCalled();
 });
-it.each(["domains", "domain-discoveries", "domain-batches", "overview"])("does not activate the planned route %s", async path => {
+it.each(["domains", "domain-batches", "overview"])("does not activate the planned route %s", async path => {
   expect((await accountProxy(request(path), [path])).status).toBe(404);
   expect(fetchMock).not.toHaveBeenCalled();
 });
@@ -362,6 +362,32 @@ it("forwards private usage history with period/offset and cookie identity only",
 });
 it.each(["ownerId=2","period=2026-13","period=2026-10&period=2026-09","offset=-1","offset=9007199254740992","limit=101","limit=20&limit=1"])("rejects invalid usage history query %s",async query=>{
  expect((await accountProxy(request("usage/events?"+query),["usage","events"])).status).toBe(400);expect(fetchMock).not.toHaveBeenCalled();
+});
+
+const discoveryInput={hostname:"example.com",maxUrls:50,maxDepth:3,excludedPaths:["/private"]};
+it("forwards bounded discovery with session, CSRF and idempotency key",async()=>{
+  fetchMock.mockResolvedValue(Response.json({id:"9007199254740993",status:"QUEUED"},{status:202}));
+  const req=request("domain-discoveries","POST",discoveryInput);req.headers.set("idempotency-key","12345678-1234-1234-1234-123456789012");
+  const response=await accountProxy(req,["domain-discoveries"]);expect(response.status).toBe(202);
+  expect(fetchMock.mock.calls[0][1].headers.get("idempotency-key")).toBe("12345678-1234-1234-1234-123456789012");
+  expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual(discoveryInput);
+});
+it.each([{hostname:"127.0.0.1"},{hostname:"[::1]"},{hostname:"user@example.com"},{hostname:"example.com:81"},{hostname:"example.com/path"},{maxUrls:51},{maxDepth:4},{excludedPaths:["/a?token=secret"]},{ownerId:"2"}])("rejects invalid discovery input %j",async changes=>{
+  const req=request("domain-discoveries","POST",{...discoveryInput,...changes});req.headers.set("idempotency-key","12345678-1234-1234-1234-123456789012");
+  expect((await accountProxy(req,["domain-discoveries"])).status).toBe(400);expect(fetchMock).not.toHaveBeenCalled();
+});
+it.each(["ownerId=2","limit=101","offset=-1","inclusion=other","limit=1&limit=2"])("rejects invalid discovery page query %s",async query=>{
+  expect((await accountProxy(request("domain-discoveries/123/pages?"+query),["domain-discoveries","123","pages"])).status).toBe(400);expect(fetchMock).not.toHaveBeenCalled();
+});
+it("preserves the selected discovery scope and opaque id",async()=>{
+  fetchMock.mockResolvedValue(Response.json({items:[],total:0,limit:20,offset:20}));
+  expect((await accountProxy(request("domain-discoveries/9007199254740993/pages?inclusion=eligible&offset=20"),["domain-discoveries","9007199254740993","pages"])).status).toBe(200);
+  expect(fetchMock.mock.calls[0][0]).toBe("http://fixture-backend/api/account/domain-discoveries/9007199254740993/pages?limit=20&offset=20&inclusion=eligible");
+});
+it("requires CSRF and an empty body to cancel discovery",async()=>{
+  const path=["domain-discoveries","123","cancel"];
+  expect((await accountProxy(request(path.join("/"),"POST",{},false),path)).status).toBe(403);
+  expect((await accountProxy(request(path.join("/"),"POST",{ownerId:2}),path)).status).toBe(400);expect(fetchMock).not.toHaveBeenCalled();
 });
 it("recovers an admission only by validated key and session, with private caching",async()=>{
   const key="12345678-1234-1234-1234-123456789012";

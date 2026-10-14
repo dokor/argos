@@ -2,9 +2,10 @@
 
 **Contrat cible** : F01 fournit le [schéma OpenAPI canonique](../../apps/api-backend/src/main/resources/contracts/connected-space.openapi.json),
 les DTO Java validés et les types TypeScript générés. Le [guide F01](foundation-f01.md)
-décrit les commandes et limites. Les opérations livrées par F01/F03/F05 portent
+décrit les commandes et limites. Les opérations livrées par F01/F03/F05/F06 portent
 `x-implementation: available`, dont les lectures `/usage` et `/usage/events`
-([guide F05](usage-f05.md)). Les opérations de domaines restent `planned`.
+([guide F05](usage-f05.md)) et `/domain-discoveries` ([guide F06](discovery-f06.md)).
+Les lots et synthèses de domaines restent `planned`.
 Les contrats compte/usage actuels restent réutilisés sauf écarts explicites D-11
 et D-12. BFF same-origin, puis mêmes ressources dans l’API Java sous `/api`.
 
@@ -34,6 +35,7 @@ et D-12. BFF same-origin, puis mêmes ressources dans l’API Java sous `/api`.
 | GET `/pages` | attention=priority/incomplete, query, limit, offset | Projections dernières tentatives par URL ; totals cohérents overview |
 | GET `/domains` | query, limit, offset | DomainSummary[], dernière tentative/lot, date, compteurs et couverture connue |
 | POST `/domain-discoveries` | hostname, maxUrls, maxDepth, excludedPaths ; Idempotency-Key | 202 Discovery ; un actif/compte, limites effectives |
+| GET `/domain-discoveries` | aucun | Zéro ou une découverte active du compte |
 | GET `/domain-discoveries/{id}` | aucun | Discovery, état/compteurs/expiration, motif de fin |
 | GET `/domain-discoveries/{id}/pages` | limit, offset, inclusion=eligible/excluded/all | URL normalisées, pageId, éligibilité, source, motif |
 | POST `/domain-discoveries/{id}/cancel` | aucun | 202 annulation demandée ou 200 terminal existant |

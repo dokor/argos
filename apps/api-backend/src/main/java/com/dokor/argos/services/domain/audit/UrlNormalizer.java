@@ -24,8 +24,11 @@ public class UrlNormalizer {
         return canonical(uri);
     }
 
-    /** Fingerprinting only; new admissions and transports MUST still check DNS. */
-    public static String normalizeSyntax(String input) {
+    /** Absolute discovery/transport syntax only. DNS validation remains mandatory before a fetch. */
+    public static String normalizeSyntax(String input) { return canonical(parse(input)); }
+
+    /** Deterministic admission fingerprint, including the existing default HTTPS input convention. */
+    public static String normalizeAdmissionSyntax(String input) {
         if (input == null || input.isBlank()) throw new IllegalArgumentException("URL cannot be blank");
         String value = input.strip();
         if (!value.matches("(?i)^[a-z][a-z0-9+.-]*://.*")) value = "https://" + value;

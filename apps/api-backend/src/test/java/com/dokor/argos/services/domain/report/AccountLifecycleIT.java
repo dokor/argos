@@ -1013,6 +1013,7 @@ class AccountLifecycleIT extends MariaDbReportFixture {
                                             personal,
                                             new AccountCsrf(settings),
                                             new AccountRateLimiter(dao, tokens, clock, settings), new AccountSitesService(dao,sessions,new UrlNormalizer(),new DomainService(new DomainDao(dao.transactions)),new AuditDao(dao.transactions),clock),new AccountHistoryService(dao,sessions,mapper,clock)));
+            config.register(new com.dokor.argos.webservices.api.account.DomainDiscoveriesWs(discoveries(),new AccountCsrf(settings)));
             config.register(new com.dokor.argos.webservices.api.account.UsageHistoryWs(new UsageHistoryService(sessions,new UsagePolicy(ConfigFactory.empty()),clock)));
             config.register(new com.dokor.argos.webservices.api.account.ConnectedAnalysesWs(connectedAnalyses(),new AccountCsrf(settings)));
             config.register(new com.dokor.argos.webservices.api.account.AdminWs(administration(),new AccountCsrf(settings)));
@@ -1692,6 +1693,28 @@ class AccountLifecycleIT extends MariaDbReportFixture {
             assertEquals(1,mapper.readTree(response.body()).get("total").asInt());
         }
         assertEquals(original,dao.transaction(c->dao.session(a.context().session().getId(),c,false)).getLastActivityAt());
+    }
+
+    private com.dokor.argos.services.connected.discovery.DiscoveryService discoveries(){
+        var policy=new com.dokor.argos.services.connected.discovery.DiscoveryPolicy(ConfigFactory.empty());
+        return new com.dokor.argos.services.connected.discovery.DiscoveryService(dao,sessions,new DiscoveryDao(dao.transactions),new DomainService(new DomainDao(dao.transactions)),policy,
+            mock(com.dokor.argos.services.connected.discovery.DiscoveryTransport.class),mapper,tokens,clock);
+    }
+    @Test void discoveryHttpIsPrivateVerifiedAndCancelRequiresCsrf() throws Exception {
+        var a=user("discovery-http@example.com",true);var b=user("discovery-other@example.com",true);var pending=user("discovery-pending@example.com",false);
+        var item=discoveries().create(bearer(a),CSRF,UUID.randomUUID().toString(),new com.dokor.argos.services.connected.contract.ConnectedContracts.CreateDiscovery("example.com",50L,3L,List.of()));
+        String path="/account/domain-discoveries/"+item.id();
+        try(var http=new HttpFixture()) {
+            for(String route:List.of(path,path+"/pages","/account/domain-discoveries")){
+                assertEquals(401,http.call("GET",route,null,null,false).statusCode());assertEquals(403,http.call("GET",route,bearer(pending),null,false).statusCode());
+                var response=http.call("GET",route,bearer(a),null,false);assertEquals(200,response.statusCode(),response.body());assertTrue(response.headers().firstValue("cache-control").orElse("").contains("no-store"));
+            }
+            assertEquals(404,http.call("GET",path,bearer(b),null,false).statusCode());
+            assertEquals(400,http.call("POST",path+"/cancel",bearer(a),"{\"ownerId\":1}",true).statusCode());
+            assertEquals(403,http.call("POST",path+"/cancel",bearer(a),"{}",false).statusCode());
+            assertEquals(404,http.call("POST",path+"/cancel",bearer(b),"{}",true).statusCode());
+            assertEquals(200,http.call("POST",path+"/cancel",bearer(a),"{}",true).statusCode());
+        }
     }
 
 }
