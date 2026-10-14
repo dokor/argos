@@ -45,6 +45,7 @@ public record DiagnosticProjection(
                 || calculation.path("scoringFingerprint").asText().isBlank()
                 || !calculation.path("scoringVersion").isIntegralNumber()
                 || !coverage.path("version").isTextual()
+                || coverage.path("version").asText().length() > 64
                 || !score.path("scoringFingerprint").equals(calculation.path("scoringFingerprint"))
                 || score.path("scoringVersion").asInt(-1)
                         != calculation.path("scoringVersion").asInt(-2)) return unknown();
@@ -56,7 +57,9 @@ public record DiagnosticProjection(
                     || key.chars().anyMatch(Character::isISOControl)
                     || !Set.of("security", "performance", "seo", "a11y")
                             .contains(check.path("domain").asText())) continue;
-            if (!check.path("weight").isNumber() || check.path("weight").asDouble() <= 0) continue;
+            if (!check.path("weight").isNumber()
+                    || !Double.isFinite(check.path("weight").asDouble())
+                    || check.path("weight").asDouble() <= 0) continue;
             observations.computeIfAbsent(key, k -> new ArrayList<>()).add(check);
         }
         var rules = new ArrayList<Rule>();

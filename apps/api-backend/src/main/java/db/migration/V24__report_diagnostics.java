@@ -30,10 +30,10 @@ public class V24__report_diagnostics extends BaseJavaMigration {
             var rows = new ArrayList<Row>();
             try (var s =
                     c.prepareStatement(
-                            "SELECT p.id,p.report_json,JSON_EXTRACT(r.result_json,'$.score') score"
-                                + " FROM ARG_AUDIT_REPORT p JOIN ARG_AUDIT_RUN r ON r.id=p.run_id"
-                                + " WHERE p.id>? AND p.diagnostic_json IS NULL ORDER BY p.id LIMIT"
-                                + " 20")) {
+                            "SELECT p.id,p.report_json,CASE WHEN JSON_VALID(r.result_json) THEN"
+                                + " JSON_EXTRACT(r.result_json,'$.score') ELSE NULL END score FROM"
+                                + " ARG_AUDIT_REPORT p JOIN ARG_AUDIT_RUN r ON r.id=p.run_id WHERE"
+                                + " p.id>? AND p.diagnostic_json IS NULL ORDER BY p.id LIMIT 20")) {
                 s.setLong(1, after);
                 try (var r = s.executeQuery()) {
                     while (r.next())

@@ -717,7 +717,12 @@ class BatchIT extends MariaDbReportFixture {
         StringBuilder links = new StringBuilder();
         for (var p : sourcePages)
             links.append("<a href='")
-                    .append(java.net.URI.create(p.path("url").asText()).getPath())
+                    .append(
+                            java.net
+                                    .URI
+                                    .create(p.path("url").asText())
+                                    .getPath()
+                                    .replaceAll("^/$", ""))
                     .append("'>page</a>");
         when(transport.get(anyString(), anyInt(), any()))
                 .thenAnswer(
@@ -754,11 +759,13 @@ class BatchIT extends MariaDbReportFixture {
                                                     .URI
                                                     .create(v.path("url").asText())
                                                     .getPath()
+                                                    .replaceAll("^/$", "")
                                                     .equals(
                                                             java.net
                                                                     .URI
                                                                     .create(page.normalizedUrl())
-                                                                    .getPath()))
+                                                                    .getPath()
+                                                                    .replaceAll("^/$", "")))
                             .findFirst()
                             .orElseThrow();
             long run = Long.parseLong(page.runId());
