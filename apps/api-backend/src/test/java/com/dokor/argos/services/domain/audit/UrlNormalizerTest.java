@@ -15,6 +15,12 @@ import static org.junit.jupiter.api.Assertions.*;
  * Chaque groupe couvre une règle de normalisation distincte.
  */
 class UrlNormalizerTest {
+    @Test void admissionDefaultsDoNotWeakenAbsoluteDiscoverySyntax() {
+        assertEquals("https://example.com/page",UrlNormalizer.normalizeAdmissionSyntax(" example.com/page#fragment "));
+        assertEquals("https://example.com/page",UrlNormalizer.normalizeSyntax("HTTPS://EXAMPLE.COM:443/page#fragment"));
+        assertThrows(IllegalArgumentException.class,()->UrlNormalizer.normalizeSyntax("example.com/page"));
+        assertThrows(IllegalArgumentException.class,()->UrlNormalizer.normalizeSyntax("file:///private"));
+    }
 
     @Test void dnsFailsClosedAndChecksAllAnswersWithoutConnecting() throws Exception {
         var mixed = new UrlNormalizer(host -> new InetAddress[]{InetAddress.getByName("8.8.8.8"), InetAddress.getByName("10.0.0.1")});

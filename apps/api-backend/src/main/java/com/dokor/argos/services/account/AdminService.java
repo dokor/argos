@@ -90,8 +90,8 @@ public class AdminService {
   return read(auth,(ctx,c)->{
    var rows=query(c,"SELECT id,email,display_name AS displayName,state,role,offer,created_at AS createdAt FROM ARG_ACCOUNT_USER WHERE id=?",List.of(id));
    if(rows.isEmpty()) throw AccountError.missing();
-   var row=rows.getFirst();row.put("usage",usage.snapshot(id,row.get("offer").toString(),c));
-   row.put("monthlyLimit",usage.override(id,c));row.put("offers",policy.offers());return row;
+   var row=rows.getFirst();row.put("usage",usage.readSnapshot(id,c));
+   row.put("monthlyLimit",usage.readOverride(id,c));row.put("offers",policy.offers());return row;
   });
  }
  public Map<String,Object> entitlement(String auth,String csrf,long id,Entitlement body) {

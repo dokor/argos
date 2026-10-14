@@ -157,6 +157,43 @@ class DomainCrawlerTest {
         assertEquals(1, pages.size());
         assertTrue(result.truncated());
     }
+    @Test void relativeLinksRespectTheHtmlBase() {
+        html("", "<base href='/app/'><a href='products'>products</a>");
+        html("/app/products", "");
+        run(50, 3, List.of());
+        assertTrue(fetched.contains("https://example.com/app/products"));
+        assertFalse(fetched.contains("https://example.com/products"));
+        assertEquals(2, pages.stream().filter(DomainCrawler.Page::eligible).count());
+    }
+    @Test void externalHtmlBaseCannotEscapeHostOrPathExclusions() {
+        html("", "<base href='https://outside.example.com/app/'><a href='products'>products</a>");
+        run(50, 3, List.of());
+        assertFalse(fetched.stream().anyMatch(url -> url.contains("outside.example.com")));
+        assertTrue(pages.stream().anyMatch(page -> "EXTERNAL_HOST".equals(page.reason())));
+        pages.clear();fetched.clear();
+        html("", "<base href='/private/'><a href='products'>products</a>");
+        run(50, 3, List.of("/private"));
+        assertFalse(fetched.contains("https://example.com/private/products"));
+        assertTrue(pages.stream().anyMatch(page -> "EXCLUDED_PATH".equals(page.reason())));
+    }
+    @Test void duplicateSitemapsDoNotStopTheHomePage() {
+        robots("User-agent: *\nAllow: /\n" + "Sitemap: https://example.com/sitemap.xml\n".repeat(6));
+        html("", "");
+        var result=run(50, 3, List.of());
+        assertEquals("EXHAUSTED",result.reason());assertFalse(result.truncated());
+        assertTrue(pages.getFirst().eligible());
+        assertEquals(1,Collections.frequency(fetched,"https://example.com/sitemap.xml"));
+    }
+    @Test void distinctSitemapOverflowKeepsHtmlPagesAndIsExplicitlyTruncated() {
+        var body=new StringBuilder("User-agent: *\nAllow: /\n");
+        for(int n=0;n<6;n++)body.append("Sitemap: https://example.com/map-").append(n).append(".xml\n");
+        robots(body.toString());html("", "<a href='/ok'>ok</a>");html("/ok", "");
+        var result=run(50,3,List.of());
+        assertEquals("SITEMAP_LIMIT",result.reason());assertTrue(result.truncated());
+        assertEquals(2,pages.stream().filter(DomainCrawler.Page::eligible).count());
+        assertEquals(5,fetched.stream().filter(url->url.endsWith(".xml")).count());
+        assertFalse(fetched.contains("https://example.com/map-5.xml"));
+    }
 
     @Test
     void robotsFailureFailsClosedAndKeepsExplicitExclusion() {

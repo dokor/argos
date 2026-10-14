@@ -3,6 +3,7 @@ package com.dokor.argos.services.connected.discovery;
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
+import java.util.List;
 
 class DiscoveryRobotsTest {
     @Test
@@ -53,5 +54,16 @@ class DiscoveryRobotsTest {
         assertThrows(
                 DiscoveryStop.class,
                 () -> DiscoveryRobots.parse("User-agent: *\nDisallow: /a\nDisallow: /b\n", 1, 5));
+    }
+    @Test void sitemapLimitsCountCanonicalDistinctUrlsAndKeepRobotsRules() {
+        var duplicate=DiscoveryRobots.parse("User-agent: *\nDisallow: /private\n"
+            + "Sitemap: https://example.com/map.xml\n".repeat(6)
+            + "Sitemap: HTTPS://EXAMPLE.COM:443/map.xml#ignored\n",100,1);
+        assertEquals(List.of("https://example.com/map.xml"),duplicate.sitemaps);
+        assertFalse(duplicate.sitemapsTruncated);assertFalse(duplicate.allows("https://example.com/private"));
+        var truncated=DiscoveryRobots.parse("User-agent: *\nDisallow: /private\n"
+            + "Sitemap: https://example.com/a.xml\nSitemap: https://example.com/b.xml\n",100,1);
+        assertTrue(truncated.sitemapsTruncated);assertEquals(1,truncated.sitemaps.size());
+        assertFalse(truncated.allows("https://example.com/private"));assertTrue(truncated.allows("https://example.com/open"));
     }
 }
