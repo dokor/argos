@@ -75,6 +75,25 @@ class Client:
         finally:
             self.lines.put(None)
 
+    def refusal(self):
+        self.errors.flush()
+        self.errors.seek(0)
+        diagnostic = self.errors.read(8192).decode('utf-8', errors='replace')
+        match = re.search(r'\bERROR\s+([0-9]{4,5})(?:\s+\(([A-Z0-9]{5})\))?', diagnostic)
+        if not match:
+            return Refused('Client MariaDB refusé (code indisponible) ; aucun message brut affiché.')
+        code = match.group(1)
+        state = ' SQLSTATE=' + match.group(2) if match.group(2) else ''
+        if code in {'1045', '1698'}:
+            reason = 'Authentification refusée ; vérifier le compte DBA et le mot de passe.'
+        elif code in {'1044', '1142', '1143', '1227'}:
+            reason = 'Droits insuffisants pour cette opération ; utiliser le compte DBA autorisé.'
+        elif code in {'2002', '2003'}:
+            reason = 'Connexion MariaDB indisponible ; vérifier le socket et la cible.'
+        else:
+            reason = 'Opération MariaDB refusée ; transmettre ce code au mainteneur.'
+        return Refused('MariaDB ERROR=' + code + state + '. ' + reason)
+
     def query(self, sql):
         marker = 'ARGOS_END_' + uuid.uuid4().hex
         try:
@@ -84,11 +103,13 @@ class Client:
             while True:
                 line = self.lines.get(timeout=30)
                 if line is None:
-                    raise Refused('Requête MariaDB refusée ; vérifier les droits et la cible avec le DBA.')
+                    raise self.refusal()
                 if line == marker:
                     return result
                 result.append(line)
-        except (BrokenPipeError, OSError, queue.Empty):
+        except (BrokenPipeError, OSError):
+            raise self.refusal() from None
+        except queue.Empty:
             raise Refused('Client MariaDB interrompu ou délai dépassé ; vérifier la cible avec le DBA.') from None
 
     def close(self):
@@ -158,16 +179,20 @@ def provision(args, admin_password, password_reader=application_password):
     client = Client(args.container, args.admin_user, admin_password)
     created = []
     locked = False
+    stage = 'connexion/version'
     account = "'" + args.user + "'@'" + host + "'"
     try:
         version = scalar(client, 'SELECT VERSION()')
         if not re.match(r'^11\.4\.\d+.*MariaDB', version):
             raise Refused('Cette procédure est validée pour MariaDB 11.4 ; version cible différente.')
+        stage = 'verrou'
         if scalar(client, "SELECT GET_LOCK('argos:provision',5)") != '1':
             raise Refused('Un autre provisionnement est en cours ; aucune création effectuée.')
         locked = True
+        stage = 'absence-base'
         if scalar(client, "SELECT COUNT(*) FROM information_schema.SCHEMATA WHERE SCHEMA_NAME='" + args.database + "'") != '0':
             raise Refused('La base existe déjà : refus de la réutiliser, même vide.')
+        stage = 'absence-utilisateur'
         if scalar(client, "SELECT COUNT(*) FROM mysql.user WHERE User='" + args.user + "'") != '0':
             raise Refused('Le nom utilisateur existe déjà sur au moins un hôte : refus de le modifier.')
         print('Cible : conteneur=' + args.container + ' réseau=' + args.network +
@@ -175,14 +200,19 @@ def provision(args, admin_password, password_reader=application_password):
         if not args.apply:
             print('DRY_RUN OK : noms disponibles ; aucune base ni aucun utilisateur créés.')
             return
+        stage = 'saisie-secret-applicatif'
         password = password_reader()
         # Hash locally so a plaintext application password never enters a SQL log.
         encoded = native_hash(password)
+        stage = 'creation-base'
         client.query('CREATE DATABASE `' + args.database + '` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci')
         created.append('base')
+        stage = 'creation-utilisateur'
         client.query('CREATE USER ' + account + " IDENTIFIED VIA mysql_native_password USING '" + encoded + "'")
         created.append('utilisateur')
+        stage = 'attribution-droits'
         client.query('GRANT ALL PRIVILEGES ON `' + args.database + '`.* TO ' + account)
+        stage = 'verification-droits'
         grantee = "CONCAT(CHAR(39),'" + args.user + "',CHAR(39),'@',CHAR(39),'" + host + "',CHAR(39))"
         if scalar(client, 'SELECT COUNT(*) FROM information_schema.USER_PRIVILEGES WHERE GRANTEE=' + grantee + " AND (PRIVILEGE_TYPE<>'USAGE' OR IS_GRANTABLE<>'NO')") != '0':
             raise Refused('Droits globaux inattendus sur le nouvel utilisateur.')
@@ -192,6 +222,7 @@ def provision(args, admin_password, password_reader=application_password):
         permissions = {row.split('\t')[1] for row in grants}
         if not {'SELECT', 'INSERT', 'UPDATE', 'DELETE', 'CREATE', 'ALTER', 'INDEX', 'DROP'}.issubset(permissions):
             raise Refused('Droits DDL/DML incomplets pour le futur démarrage Flyway.')
+        stage = 'connexion-applicative-TCP'
         app = Client(args.container, args.user, password,
                      ('--protocol=TCP', '--host=' + address, '--database=' + args.database))
         try:
@@ -204,10 +235,11 @@ def provision(args, admin_password, password_reader=application_password):
         print('APPLIED OK : base vide, connexion TCP applicative vérifiée, droits limités au schéma sans GRANT OPTION.')
         print('Conserver le mot de passe dans le coffre et remplir la configuration candidate. Aucun service déployé ou redémarré.')
     except Exception as error:
+        detail = str(error) if isinstance(error, Refused) else 'Erreur opérateur ; aucun détail sensible affiché.'
         if created:
-            raise Refused('Provisionnement partiel (' + ', '.join(created) +
+            raise Refused('Étape=' + stage + '. ' + detail + ' Provisionnement partiel (' + ', '.join(created) +
                           ' créée/créé). Les DDL ne sont pas transactionnels : aucune suppression ni reprise automatique. Faire vérifier la cible par le DBA.') from None
-        raise error
+        raise Refused('Étape=' + stage + '. ' + detail + ' Aucune création effectuée.') from None
     finally:
         if locked:
             try:

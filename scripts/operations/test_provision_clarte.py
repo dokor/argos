@@ -5,6 +5,7 @@ import contextlib
 import importlib.util
 import io
 import os
+import tempfile
 from pathlib import Path
 import unittest
 from unittest.mock import patch
@@ -75,6 +76,20 @@ class SafetyTests(unittest.TestCase):
         slash = chr(92)
         password = 'a"b' + slash + 'c' + chr(10) + chr(13) + chr(9)
         self.assertEqual(p.option_string(password), '"a' + slash + '"b' + slash * 2 + 'c' + slash + 'n' + slash + 'r' + slash + 't"')
+
+    def test_error_diagnostic_never_discloses_raw_driver_details(self):
+        for message, expected in [
+            ('ERROR 1045 (28000): denied SECRET_PASSWORD *PRIVATE_HASH private-user@host', 'ERROR=1045 SQLSTATE=28000'),
+            ('ERROR 1142 (42000): denied SECRET_PASSWORD private-table', 'ERROR=1142 SQLSTATE=42000'),
+            ('unknown option SECRET_PASSWORD PRIVATE_HASH', 'code indisponible'),
+        ]:
+            client = p.Client.__new__(p.Client)
+            with tempfile.TemporaryFile() as client.errors:
+                client.errors.write(message.encode('utf-8'))
+                output = str(client.refusal())
+            self.assertIn(expected, output)
+            for private in ['SECRET_PASSWORD', 'PRIVATE_HASH', 'private-user', 'private-table', 'host']:
+                self.assertNotIn(private, output)
 
     def test_no_unmasked_fallback(self):
         with patch.object(p.getpass, 'getpass', side_effect=p.getpass.GetPassWarning), contextlib.redirect_stderr(io.StringIO()) as output:
@@ -159,9 +174,18 @@ class MariaDBTests(unittest.TestCase):
             with self.assertRaisesRegex(p.Refused, 'autre provisionnement'): self.run_provision(args)
         finally: self.root.query("DO RELEASE_LOCK('argos:provision')")
 
+    def test_missing_operator_privileges_is_reported_without_creation(self):
+        args = self.args(True)
+        args.admin_user = 'limited' + uuid.uuid4().hex[:8]
+        secret = 'synthetic-limited-admin-fixture'
+        self.root.query("CREATE USER '" + args.admin_user + "'@'localhost' IDENTIFIED VIA mysql_native_password USING '" + p.native_hash(secret) + "'")
+        with contextlib.redirect_stdout(io.StringIO()), self.assertRaisesRegex(p.Refused, 'Étape=absence-utilisateur.*ERROR=1142'):
+            p.provision(args, secret, password_reader=lambda: self.fail('denied privileges prompted for app secret'))
+        self.assertEqual(p.scalar(self.root, "SELECT COUNT(*) FROM information_schema.SCHEMATA WHERE SCHEMA_NAME='" + args.database + "'"), '0')
+
     def test_wrong_admin_password_and_temp_file_cleanup(self):
         args = self.args(True)
-        with contextlib.redirect_stdout(io.StringIO()), self.assertRaises(p.Refused):
+        with contextlib.redirect_stdout(io.StringIO()), self.assertRaisesRegex(p.Refused, 'Étape=connexion/version.*ERROR=1045'):
             p.provision(args, 'wrong-fixture-password', password_reader=lambda: self.fail('invalid DBA credentials prompted for app secret'))
         result = p.subprocess.run(['docker', 'exec', self.container, 'sh', '-c', 'find /tmp -maxdepth 1 -name "argos-provision.*"'], capture_output=True, text=True, check=True)
         # One option file belongs to the long-lived test root connection.
