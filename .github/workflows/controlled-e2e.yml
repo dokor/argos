@@ -127,13 +127,17 @@ jobs:
       - name: Check Clarte URL analysis and diagnostic
         env:
           CONNECTED_BASE_URL: http://127.0.0.1:3000
-        run: node scripts/e2e/connected-analysis.mjs
+        run: |
+          node scripts/e2e/connected-analysis.mjs
+          node scripts/e2e/connected-analysis-recovery.mjs
       - name: Upload Clarte diagnostic captures
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: connected-analysis-${{ github.sha }}
-          path: outputs/ui-review/clarte-analysis/
+          path: |
+            outputs/ui-review/clarte-analysis/
+            outputs/ui-review/clarte-analysis-recovery/
           if-no-files-found: warn
           retention-days: 14
       - name: Rehearse consistent backup and isolated restore

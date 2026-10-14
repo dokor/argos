@@ -26,6 +26,25 @@ Les listes `sites` et `sites/{id}/urls` acceptent `q` (200 caractères max, sans
 
 ## Fidélité et dépendances
 
+### Reprise après perte de réponse
+
+La demande en attente (URL, profil, UUID) est enregistrée dans `sessionStorage`
+avant le POST, puis retirée après une réponse confirmée ou un refus définitif.
+Elle survit au démontage et au rechargement dans le même onglet ; la déconnexion
+et l'archivage la retirent. Aucun credential n'y est conservé. Si l'enregistrement
+est impossible, aucune admission n'est envoyée.
+
+Au retour, `GET /api/account/analyses/{key}` retrouve le run exact, y compris
+terminal, uniquement pour le propriétaire actif/vérifié. Lecture `no-store`,
+sans DNS, renouvellement d'activité, création ou réservation ; clé inconnue ou
+d'un autre compte : 404. Une lecture 404 conserve l'intention pour une reprise
+explicite avec le même UUID, sans POST automatique.
+
+Le rejeu du POST compare la normalisation syntaxique et l'empreinte persistée
+avant DNS, profil courant ou quota. Toute nouvelle admission garde les contrôles
+SSRF/DNS existants. Tests : remount au plafond, GET privé/ownership, absence
+d'admission automatique, stockage indisponible, DNS perdu et conflit de contenu.
+
 Le profil `mobile-v1`, le viewport et le réseau illustrés par la maquette ne sont pas des capacités du moteur : l’écran affiche `server-default-v1` et les réglages propres aux collecteurs. Le snapshot demandé est distinct des versions effectives : scoring, couverture, preuves et versions présentes viennent du rapport, via son panneau méthode. Les valeurs absentes restent inconnues. Aucun delta n’est calculé dans le navigateur.
 
 F05/#555 reste nécessaire pour le parcours complet offres/quotas et l’admission d’un lot de pages. F03 utilise la réservation atomique URL déjà disponible et l’enrichit d’idempotence. F14/#538 reste nécessaire pour les nouvelles preuves DOM/ressources réelles et bornées. F03 n’invente pas de sélecteur ou d’exemple HTML : il présente les preuves existantes et explique les absences. **QA-18 complète dépend toujours de #538 ; ne pas clôturer #553 sur les seules captures de cette PR.** La contrainte historique d’unicité des URL sur 255 caractères reste suivie par F07, avant le lancement de lots de pages longues.
