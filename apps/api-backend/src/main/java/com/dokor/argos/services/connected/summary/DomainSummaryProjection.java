@@ -116,6 +116,7 @@ public final class DomainSummaryProjection {
     }
 
     public static List<CommonFinding> common(List<Page> pages) {
+        pages = pages.stream().sorted(Comparator.comparing(Page::result, URL)).toList();
         record Key(String rule, String definition) {}
         var groups =
                 new TreeMap<Key, DiagnosticProjection.Rule>(

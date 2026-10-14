@@ -179,4 +179,70 @@ class DomainSummaryProjectionTest {
                         new DomainSummaryProjection.Filter(
                                 null, null, "high", null, null, null, null, null));
     }
+
+    @Test
+    void incompatibleGroupsAmbiguityNonApplicableAndSafeLabels() throws Exception {
+        var fixture = SummaryFixture.fixture();
+        var rows = rows(fixture);
+        var e =
+                SummaryFixture.evidence(
+                        fixture, fixture.path("domains").get(0).path("pages").get(0));
+        ((ObjectNode) e.report().path("scores").path("calculation"))
+                .put("scoringFingerprint", "other");
+        e.score().put("scoringFingerprint", "other");
+        var r = rows.getFirst();
+        var changed = DiagnosticProjection.from(e.report(), e.score());
+        rows.set(
+                0,
+                new Row(
+                        r.batchId(),
+                        r.state(),
+                        r.score(),
+                        r.provisional(),
+                        r.critical(),
+                        r.important(),
+                        SummaryFixture.MAPPER.writeValueAsString(changed),
+                        r.modules()));
+        var csp =
+                DomainSummaryProjection.common(pages(rows)).stream()
+                        .filter(f -> f.ruleKey().endsWith("csp"))
+                        .findFirst()
+                        .orElseThrow();
+        assertEquals(5, csp.affectedPages());
+        assertEquals(6, csp.evaluatedPages());
+        assertTrue(
+                csp.exclusions().stream()
+                        .anyMatch(x -> x.reason().equals("INCOMPATIBLE_DEFINITION")));
+        var observations =
+                (com.fasterxml.jackson.databind.node.ArrayNode)
+                        e.report().path("scores").path("coverage").path("checks");
+        var duplicate = observations.get(0).deepCopy();
+        ((ObjectNode) duplicate).put("weight", 2);
+        observations.add(duplicate);
+        assertEquals(
+                "UNKNOWN",
+                DiagnosticProjection.from(e.report(), e.score()).rules().stream()
+                        .filter(x -> x.key().endsWith("csp"))
+                        .findFirst()
+                        .orElseThrow()
+                        .outcome());
+        observations.remove(observations.size() - 1);
+        ((ObjectNode) observations.get(0))
+                .put("state", "NOT_APPLICABLE")
+                .put("reason", "NOT_APPLICABLE");
+        assertEquals(
+                "NOT_APPLICABLE",
+                DiagnosticProjection.from(e.report(), e.score()).rules().stream()
+                        .filter(x -> x.key().endsWith("csp"))
+                        .findFirst()
+                        .orElseThrow()
+                        .outcome());
+        for (var issue : e.report().path("issues"))
+            ((ObjectNode) issue)
+                    .put("recommendation", "See https://example.com/?token=synthetic-secret");
+        assertFalse(
+                SummaryFixture.MAPPER
+                        .writeValueAsString(DiagnosticProjection.from(e.report(), e.score()))
+                        .contains("synthetic-secret"));
+    }
 }
