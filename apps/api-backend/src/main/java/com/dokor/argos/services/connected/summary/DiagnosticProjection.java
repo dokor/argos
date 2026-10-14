@@ -164,6 +164,8 @@ public record DiagnosticProjection(
         if (!issue.path("evidence").asText("").isBlank()) return true;
         var structured = issue.path("structuredEvidence");
         if (structured.path("measurement").path("value").isNumber()) return true;
+        var observed = com.dokor.argos.services.analysis.model.ObservedEvidence.from(structured.path("observed"));
+        if (observed != null && !observed.items().isEmpty()) return true;
         for (var detail : structured.path("details"))
             if (!detail.path("text").asText("").isBlank()) return true;
         return false;

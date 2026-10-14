@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {mkdir} from 'node:fs/promises';
 import { chromium } from '../../apps/playwright-service/node_modules/playwright/index.mjs';
 const base='http://127.0.0.1:3000';
 const browser=await chromium.launch({args:['--no-sandbox']});
@@ -62,7 +63,27 @@ try {
       assert.equal(await completeness.count(),1,'Measurement details must expose exactly one module completeness row');
       assert.equal(await completeness.locator('dd').textContent(),`${report.scores.completeness} %`,'Module completeness must remain distinct from weighted coverage');
     }
-    if(scenario==='errors') assert.ok(report.issues.some(issue=>issue.id.startsWith('runtime.')),'Runtime errors must surface');
+    if(scenario==='errors') {
+      const network=report.issues.find(issue=>issue.id==='runtime.network.5xx')?.structuredEvidence?.observed;
+      assert.ok(network?.items.some(item=>item.status===503 && item.ownership==='FIRST_PARTY'),'Real Runtime 503 observation must survive publication');
+      assert.ok(report.issues.some(issue=>issue.id.startsWith('lighthouse.audit.') && issue.structuredEvidence?.observed?.items.some(item=>item.kind==='element')),'Real Lighthouse DOM observation must survive publication');
+      assert.ok(!JSON.stringify(report).includes('synthetic-proof-secret'),'Private request parameters must not reach the published report');
+      await mkdir('outputs/ui-review/clarte-evidence',{recursive:true});
+      for(const lang of ['fr','en']) {
+        await page.goto(base+(lang==='en'?'/en':'')+'/report/'+token);
+        await page.getByText(lang==='fr'?'Export et navigation du propriétaire':'Export and owner navigation',{exact:true}).click();
+        await page.getByLabel(lang==='fr'?'Format PDF':'PDF format').selectOption('full');
+        const opened=page.waitForEvent('popup');
+        await page.getByRole('button',{name:lang==='fr'?'Exporter en PDF':'Export PDF',exact:true}).click();
+        const popup=await opened;await popup.locator('main').waitFor();
+        await page.getByText(lang==='fr'?'Prévisualisation prête.':'Preview ready.',{exact:false}).waitFor();
+        const content=await popup.locator('main').textContent();
+        assert.ok(content.includes(network.items[0].resourceRef),'Full PDF must retain the same resource reference');
+        assert.ok(!content.includes('synthetic-proof-secret'),'PDF must exclude private request parameters');
+        await popup.evaluate(()=>document.fonts.ready);await popup.emulateMedia({media:'print'});
+        await popup.pdf({path:`outputs/ui-review/clarte-evidence/real-${lang}.pdf`,format:'A4',preferCSSPageSize:true,tagged:true});await popup.close();
+      }
+    }
     if(scenario==='partial') {
       const lh=report.scores.coverage.checks.filter(check=>check.module==='lighthouse');
       assert.equal(lh.find(check=>check.key==='lighthouse.score.performance').state,'MEASURED');

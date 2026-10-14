@@ -142,9 +142,19 @@ export type PriorityItem = {
   globalScoreGain?: number | null;
 };
 
+export type ObservedEvidence = {
+  version: "observed-evidence-v1";
+  source: "lighthouse" | "runtime";
+  state: "AVAILABLE" | "UNAVAILABLE";
+  inspected: number; truncated: boolean; redacted: boolean;
+  items: Array<{kind:"resource"|"element";origin?:string;resourceRef?:string;nodePath?:string;
+    status?:number;reason?:string;resourceType?:string;ownership?:"FIRST_PARTY"|"THIRD_PARTY"}>;
+};
+
 export type Issue = {
   structuredEvidence?: {
     source: string;
+    observed?: ObservedEvidence | null;
     measurement?: { value: number; unit: "ms" | "bytes" | "count" | "days" | "score/100" | "ratio" | "unitless" } | null;
     details?: Array<{ key: string; text: string }>;
   } | null;

@@ -57,6 +57,21 @@ class DomainSummaryProjectionTest {
                 .toList();
     }
 
+    @Test void observedLocationsCountAsEvidenceWithoutChangingCounters() throws Exception {
+        var fixture=SummaryFixture.fixture();
+        var e=SummaryFixture.evidence(fixture,fixture.path("domains").get(0).path("pages").get(0));
+        for(var issue:e.report().path("issues")) ((ObjectNode)issue).remove("evidence");
+        var before=DiagnosticProjection.from(e.report(),e.score());
+        var issue=(ObjectNode)e.report().path("issues").get(0);
+        issue.putObject("structuredEvidence").putObject("observed")
+            .put("version","observed-evidence-v1").put("source","lighthouse")
+            .putArray("items").addObject().put("kind","element").put("nodePath","1,HTML,1,BODY,1,IMG");
+        var after=DiagnosticProjection.from(e.report(),e.score());
+        assertEquals(before.criticalCount(),after.criticalCount());
+        assertTrue(after.rules().stream().filter(r->r.key().equals(issue.path("id").asText())).findFirst().orElseThrow().evidenceAvailable());
+        assertTrue(before.rules().stream().noneMatch(DiagnosticProjection.Rule::evidenceAvailable));
+    }
+
     @Test
     void atelierCountsDenominatorsDeduplicationAndPriority() throws Exception {
         var rows = rows(SummaryFixture.fixture());

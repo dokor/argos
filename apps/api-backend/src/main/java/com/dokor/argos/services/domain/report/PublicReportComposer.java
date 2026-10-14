@@ -188,8 +188,10 @@ public class PublicReportComposer {
 
     private static String evidenceFrom(AuditCheckResult check) {
         if (check.details() == null || check.details().isEmpty()) return null;
-        // MVP : stringify court
-        return ReportEvidence.clean(check.details());
+        // Typed observations have their own renderer; never duplicate them as a map string.
+        var textDetails = new LinkedHashMap<>(check.details());
+        textDetails.remove("observed");
+        return textDetails.isEmpty() ? null : ReportEvidence.clean(textDetails);
     }
 
     private static int severityRank(ReportDto.IssueSeverity s) {

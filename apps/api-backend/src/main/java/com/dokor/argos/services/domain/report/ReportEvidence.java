@@ -41,11 +41,13 @@ final class ReportEvidence {
         ReportDto.Measurement measurement = value instanceof Number n && unit != null
             && Double.isFinite(n.doubleValue()) ? new ReportDto.Measurement(n.doubleValue(), unit) : null;
         List<ReportDto.EvidenceDetail> details = check.details() == null ? List.of()
-            : check.details().entrySet().stream().filter(entry -> entry.getValue() != null).limit(20)
+            : check.details().entrySet().stream().filter(entry -> entry.getValue() != null && !"observed".equals(entry.getKey())).limit(20)
                 .map(entry -> new ReportDto.EvidenceDetail(clean(entry.getKey()), clean(entry.getValue()))).toList();
         String source = check.measurementProvenance() != null && check.measurementProvenance().module() != null
             ? check.measurementProvenance().module() : module;
-        return new ReportDto.StructuredEvidence(source, measurement, details);
+        var observed = com.dokor.argos.services.analysis.model.ObservedEvidence.from(
+            check.details()==null?null:check.details().get("observed"));
+        return new ReportDto.StructuredEvidence(source, measurement, details, observed);
     }
 
     static String clean(Object value) {

@@ -25,7 +25,7 @@ function collector({ navigationFailure = false, contextFailure = false, cdpFailu
       handlers.pageerror(new Error('fixture page error'));
       handlers.request({ url: () => 'https://assets.example.co.uk/script.js',
         resourceType: () => 'script', method: () => 'GET' });
-      handlers.requestfailed({ url: () => 'https://assets.example.co.uk/script.js' });
+      handlers.requestfailed({ url: () => 'https://assets.example.co.uk/script.js?token=private-secret', resourceType: () => 'script', failure: () => ({errorText:'net::ERR_CONNECTION_RESET'}) });
       await handlers.response({ url: () => 'https://other.test/api', status: () => 503,
         headers: () => ({ 'content-length': '321' }) });
       if (navigationFailure) throw new Error('Timeout fixture');
@@ -99,6 +99,13 @@ test('runtime contract retains metrics and partitions errors using the final dom
   assert.equal(report.network.status5xxFirstParty, 0);
   assert.equal(report.network.status5xxThirdParty, 1);
   assert.equal(report.network.totalBytesEstimated, 321);
+  const evidence=report.network.observedEvidence;
+  assert.equal(evidence.version,'observed-evidence-v1');
+  assert.equal(evidence.items[0].ownership,'FIRST_PARTY');
+  assert.equal(evidence.items[0].reason,'net::ERR_CONNECTION_RESET');
+  assert.equal(evidence.items[1].ownership,'THIRD_PARTY');
+  assert.equal(evidence.items[1].status,503);
+  assert.doesNotMatch(JSON.stringify(evidence),/private-secret|script.js|\?token/);
   assert.equal(fake.closed(), 1);
 });
 

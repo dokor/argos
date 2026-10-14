@@ -1,4 +1,5 @@
 import http from 'node:http';
+import { lighthouseEvidence } from './evidence.mjs';
 import { analysisUrl } from './policy.mjs';
 import { safeOrigin, redactDiagnostics } from './browser-policy.mjs';
 
@@ -79,7 +80,12 @@ export function createLighthouseServer({ analyze, log = () => {}, maxConcurrency
       }
       log('analyze.done', { url: safeUrl, durationMs: Date.now() - startedAt });
       res.setHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify(redactDiagnostics(result.lhr)));
+      const safe = redactDiagnostics(result.lhr);
+      for (const [id, audit] of Object.entries(result.lhr.audits ?? {})) {
+        if (safe.audits?.[id] && typeof audit === 'object' && audit !== null)
+          safe.audits[id].observedEvidence = lighthouseEvidence(audit);
+      }
+      res.end(JSON.stringify(safe));
     } catch (error) {
       log('analyze.error', { url: safeUrl, durationMs: Date.now() - startedAt, error: 'Collector failure' });
       if (!res.headersSent && !res.destroyed) res.writeHead(controller.signal.aborted ? 504 : error.message === 'Collector busy' ? 429 : 500).end(controller.signal.aborted ? 'Analysis timeout' : 'Collector unavailable');
