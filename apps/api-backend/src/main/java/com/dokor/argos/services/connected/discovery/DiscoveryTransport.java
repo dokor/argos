@@ -52,7 +52,15 @@ public class DiscoveryTransport {
     public void validate(String url, DiscoveryBudget budget) {
         Future<?> task;
         try {
-            task = dns.submit(() -> UrlNormalizer.validatePublicUrl(url));
+            task =
+                    dns.submit(
+                            () -> {
+                                try {
+                                    UrlNormalizer.validatePublicUrl(url);
+                                } catch (IllegalArgumentException e) {
+                                    throw new DiscoveryStop("TARGET_BLOCKED");
+                                }
+                            });
         } catch (RejectedExecutionException e) {
             throw new DiscoveryStop("DNS_BUSY");
         }

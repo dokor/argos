@@ -103,6 +103,11 @@ public final class DiscoveryService {
                     // Existing domain cache is only an identity; no audit is created and no quota
                     // is reserved.
                     var domain = domains.findOrCreate(host);
+                    dao.gate(c);
+                    if (dao.activeCount(c) >= policy.queueLimit)
+                        throw new AccountError(429, "discovery_busy", 2);
+                    // Account lock serializes this owner's site writes. Avoid gap locks on
+                    // a missing site: different owners can otherwise deadlock on insertion.
                     var q = QAccountSite.table;
                     var site =
                             accounts.transactions
@@ -112,7 +117,6 @@ public final class DiscoveryService {
                                     .where(
                                             q.ownerUserId.eq(ctx.user().getId()),
                                             q.domainId.eq(domain.getId()))
-                                    .forUpdate()
                                     .fetchOne();
                     if (site == null) {
                         site = new AccountSite();
@@ -121,9 +125,6 @@ public final class DiscoveryService {
                         site.setCreatedAt(clock.instant());
                         accounts.save(site, q, c);
                     }
-                    dao.gate(c);
-                    if (dao.activeCount(c) >= policy.queueLimit)
-                        throw new AccountError(429, "discovery_busy", 2);
                     var row = new DomainDiscovery();
                     row.setId(dao.nextId());
                     row.setOwnerUserId(ctx.user().getId());

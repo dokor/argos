@@ -1671,6 +1671,7 @@ class AccountLifecycleIT extends MariaDbReportFixture {
                 var response=http.call("GET",route,bearer(a),null,false);assertEquals(200,response.statusCode(),response.body());assertTrue(response.headers().firstValue("cache-control").orElse("").contains("no-store"));
             }
             assertEquals(404,http.call("GET",path,bearer(b),null,false).statusCode());
+            assertEquals(400,http.call("POST",path+"/cancel",bearer(a),"{\"ownerId\":1}",true).statusCode());
             assertEquals(403,http.call("POST",path+"/cancel",bearer(a),"{}",false).statusCode());
             assertEquals(404,http.call("POST",path+"/cancel",bearer(b),"{}",true).statusCode());
             assertEquals(200,http.call("POST",path+"/cancel",bearer(a),"{}",true).statusCode());

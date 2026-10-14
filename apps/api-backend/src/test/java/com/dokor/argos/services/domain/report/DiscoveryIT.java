@@ -170,6 +170,24 @@ class DiscoveryIT extends MariaDbReportFixture {
     }
 
     @Test
+    void simultaneousReplayCreatesExactlyOneSnapshot() throws Exception {
+        String key = UUID.randomUUID().toString();
+        var barrier = new CyclicBarrier(2);
+        try (var pool = Executors.newFixedThreadPool(2)) {
+            Callable<String> task =
+                    () -> {
+                        barrier.await();
+                        return service.create(a, CSRF, key, input()).id();
+                    };
+            var one = pool.submit(task);
+            var two = pool.submit(task);
+            assertEquals(one.get(10, TimeUnit.SECONDS), two.get(10, TimeUnit.SECONDS));
+        }
+        assertEquals(1, count("ARG_DOMAIN_DISCOVERY"));
+        assertEquals(1, count("ARG_ACCOUNT_SITE"));
+    }
+
+    @Test
     void concurrentSameOwnerSubmissionsHaveOneWinner() throws Exception {
         var barrier = new CyclicBarrier(2);
         try (var pool = Executors.newFixedThreadPool(2)) {
