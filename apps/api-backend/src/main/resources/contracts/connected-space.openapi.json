@@ -3426,7 +3426,7 @@
     "/account/admin/users": {
       "get": {
         "operationId": "getAdminUsers",
-        "x-implementation": "planned",
+        "x-implementation": "available",
         "description": "Verified account session required. Private resource IDs of other owners return 404. ADMIN and recent reauthentication required for mutations.",
         "parameters": [
           {
@@ -3434,29 +3434,43 @@
             "in": "query",
             "schema": {
               "type": "integer",
-              "format": "int64",
               "minimum": 1,
               "maximum": 100,
               "default": 20
             }
           },
           {
-            "name": "offset",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int64",
-              "minimum": 0,
-              "maximum": 9007199254740991,
-              "default": 0
-            }
-          },
-          {
-            "name": "query",
+            "name": "cursor",
             "in": "query",
             "schema": {
               "type": "string",
-              "maxLength": 254
+              "minLength": 1,
+              "maxLength": 19,
+              "pattern": "^[1-9][0-9]{0,18}$",
+              "format": "argos-id"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/AccountState"
+            }
+          },
+          {
+            "name": "offer",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 16
             }
           }
         ],
@@ -3633,7 +3647,7 @@
     "/account/admin/users/{id}": {
       "get": {
         "operationId": "getAdminUsersId",
-        "x-implementation": "planned",
+        "x-implementation": "available",
         "description": "Verified account session required. Private resource IDs of other owners return 404. ADMIN and recent reauthentication required for mutations.",
         "parameters": [
           {
@@ -3822,7 +3836,7 @@
     "/account/admin/users/{id}/entitlement": {
       "patch": {
         "operationId": "patchAdminUsersIdEntitlement",
-        "x-implementation": "planned",
+        "x-implementation": "available",
         "description": "Verified account session required. Private resource IDs of other owners return 404. ADMIN and recent reauthentication required for mutations.",
         "parameters": [
           {
@@ -3864,7 +3878,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AdminUser"
+                  "$ref": "#/components/schemas/AdminMutation"
                 }
               }
             }
@@ -4031,7 +4045,7 @@
     "/account/admin/users/{id}/suspension": {
       "post": {
         "operationId": "postAdminUsersIdSuspension",
-        "x-implementation": "planned",
+        "x-implementation": "available",
         "description": "Verified account session required. Private resource IDs of other owners return 404. ADMIN and recent reauthentication required for mutations.",
         "parameters": [
           {
@@ -4073,7 +4087,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AdminUser"
+                  "$ref": "#/components/schemas/AdminMutation"
                 }
               }
             }
@@ -4240,7 +4254,7 @@
     "/account/admin/entitlement-options": {
       "get": {
         "operationId": "getAdminEntitlement-Options",
-        "x-implementation": "planned",
+        "x-implementation": "available",
         "description": "Verified account session required. Private resource IDs of other owners return 404. ADMIN and recent reauthentication required for mutations.",
         "parameters": [],
         "responses": {
@@ -4416,7 +4430,7 @@
     "/account/admin/users/{id}/events": {
       "get": {
         "operationId": "getAdminUsersIdEvents",
-        "x-implementation": "planned",
+        "x-implementation": "available",
         "description": "Verified account session required. Private resource IDs of other owners return 404. ADMIN and recent reauthentication required for mutations.",
         "parameters": [
           {
@@ -4436,21 +4450,20 @@
             "in": "query",
             "schema": {
               "type": "integer",
-              "format": "int64",
               "minimum": 1,
               "maximum": 100,
               "default": 20
             }
           },
           {
-            "name": "offset",
+            "name": "cursor",
             "in": "query",
             "schema": {
-              "type": "integer",
-              "format": "int64",
-              "minimum": 0,
-              "maximum": 9007199254740991,
-              "default": 0
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 19,
+              "pattern": "^[1-9][0-9]{0,18}$",
+              "format": "argos-id"
             }
           }
         ],
@@ -5283,6 +5296,215 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BatchProgressPages"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "accountCookie": []
+          }
+        ],
+        "x-java-security": [
+          {
+            "bearerSession": []
+          }
+        ]
+      }
+    },
+    "/account/admin/events": {
+      "get": {
+        "operationId": "getAdminEvents",
+        "x-implementation": "available",
+        "description": "Verified account session required. Private resource IDs of other owners return 404. ADMIN and recent reauthentication required for mutations.",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 19,
+              "pattern": "^[1-9][0-9]{0,18}$",
+              "format": "argos-id"
+            }
+          },
+          {
+            "name": "target",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 19,
+              "pattern": "^[1-9][0-9]{0,18}$",
+              "format": "argos-id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Private result; explicit null values are significant.",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "private, no-store"
+                  ]
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminEvents"
                 }
               }
             }
@@ -7139,7 +7361,11 @@
           "role",
           "offer",
           "version",
-          "usage"
+          "usage",
+          "monthlyLimit",
+          "createdAt",
+          "canEditEntitlement",
+          "canSuspend"
         ],
         "properties": {
           "id": {
@@ -7182,6 +7408,23 @@
           },
           "usage": {
             "$ref": "#/components/schemas/Usage"
+          },
+          "monthlyLimit": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "canEditEntitlement": {
+            "type": "boolean"
+          },
+          "canSuspend": {
+            "type": "boolean"
           }
         }
       },
@@ -7219,9 +7462,13 @@
           "actorId",
           "targetId",
           "createdAt",
+          "oldOffer",
+          "newOffer",
+          "oldLimit",
+          "newLimit",
+          "oldState",
+          "newState",
           "reasonCode",
-          "before",
-          "after",
           "requestId"
         ],
         "properties": {
@@ -7250,19 +7497,77 @@
             "type": "string",
             "format": "date-time"
           },
+          "oldOffer": {
+            "type": "string",
+            "maxLength": 16
+          },
+          "newOffer": {
+            "type": "string",
+            "maxLength": 16
+          },
+          "oldLimit": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "nullable": true
+          },
+          "newLimit": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "nullable": true
+          },
+          "oldState": {
+            "nullable": true,
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AccountState"
+              },
+              {
+                "type": "object",
+                "nullable": true,
+                "enum": [
+                  null
+                ]
+              }
+            ]
+          },
+          "newState": {
+            "nullable": true,
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AccountState"
+              },
+              {
+                "type": "object",
+                "nullable": true,
+                "enum": [
+                  null
+                ]
+              }
+            ]
+          },
           "reasonCode": {
-            "$ref": "#/components/schemas/AdminReason"
-          },
-          "before": {
-            "$ref": "#/components/schemas/AdminSnapshot"
-          },
-          "after": {
-            "$ref": "#/components/schemas/AdminSnapshot"
+            "nullable": true,
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AdminReason"
+              },
+              {
+                "type": "object",
+                "nullable": true,
+                "enum": [
+                  null
+                ]
+              }
+            ]
           },
           "requestId": {
             "type": "string",
-            "minLength": 1,
-            "maxLength": 64
+            "maxLength": 64,
+            "nullable": true
           }
         }
       },
@@ -7272,7 +7577,8 @@
         "required": [
           "offers",
           "reasonCodes",
-          "maximumMonthlyLimit"
+          "maximumMonthlyLimit",
+          "offerLimits"
         ],
         "properties": {
           "offers": {
@@ -7300,6 +7606,13 @@
             "format": "int64",
             "minimum": 0,
             "maximum": 9007199254740991
+          },
+          "offerLimits": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+              "$ref": "#/components/schemas/OfferLimit"
+            }
           }
         }
       },
@@ -7571,41 +7884,23 @@
         "additionalProperties": false,
         "required": [
           "items",
-          "total",
-          "limit",
-          "offset",
-          "snapshotAt"
+          "nextCursor"
         ],
         "properties": {
           "items": {
             "type": "array",
+            "maxItems": 100,
             "items": {
               "$ref": "#/components/schemas/AdminUser"
-            },
-            "minItems": 0,
-            "maxItems": 100
+            }
           },
-          "total": {
-            "type": "integer",
-            "format": "int64",
-            "minimum": 0,
-            "maximum": 9007199254740991
-          },
-          "limit": {
-            "type": "integer",
-            "format": "int64",
-            "minimum": 1,
-            "maximum": 100
-          },
-          "offset": {
-            "type": "integer",
-            "format": "int64",
-            "minimum": 0,
-            "maximum": 9007199254740991
-          },
-          "snapshotAt": {
+          "nextCursor": {
             "type": "string",
-            "format": "date-time"
+            "minLength": 1,
+            "maxLength": 19,
+            "pattern": "^[1-9][0-9]{0,18}$",
+            "format": "argos-id",
+            "nullable": true
           }
         }
       },
@@ -7614,41 +7909,23 @@
         "additionalProperties": false,
         "required": [
           "items",
-          "total",
-          "limit",
-          "offset",
-          "snapshotAt"
+          "nextCursor"
         ],
         "properties": {
           "items": {
             "type": "array",
+            "maxItems": 100,
             "items": {
               "$ref": "#/components/schemas/AdminEvent"
-            },
-            "minItems": 0,
-            "maxItems": 100
+            }
           },
-          "total": {
-            "type": "integer",
-            "format": "int64",
-            "minimum": 0,
-            "maximum": 9007199254740991
-          },
-          "limit": {
-            "type": "integer",
-            "format": "int64",
-            "minimum": 1,
-            "maximum": 100
-          },
-          "offset": {
-            "type": "integer",
-            "format": "int64",
-            "minimum": 0,
-            "maximum": 9007199254740991
-          },
-          "snapshotAt": {
+          "nextCursor": {
             "type": "string",
-            "format": "date-time"
+            "minLength": 1,
+            "maxLength": 19,
+            "pattern": "^[1-9][0-9]{0,18}$",
+            "format": "argos-id",
+            "nullable": true
           }
         }
       },
@@ -8137,6 +8414,47 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 253
+          }
+        }
+      },
+      "AdminMutation": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "changed",
+          "version"
+        ],
+        "properties": {
+          "changed": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        }
+      },
+      "OfferLimit": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "offer",
+          "monthlyLimit"
+        ],
+        "properties": {
+          "offer": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 16
+          },
+          "monthlyLimit": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "nullable": true
           }
         }
       }

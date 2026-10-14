@@ -19,7 +19,7 @@ jobs:
     needs: changes
     if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.e2e == 'true') }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 30
     services:
       mariadb:
         image: mariadb:11.4
@@ -191,6 +191,20 @@ jobs:
           name: connected-overview-${{ github.sha }}
           path: outputs/ui-review/clarte-overview/
           if-no-files-found: warn
+      - name: Check Clarte administration and protected changes
+        env:
+          CONNECTED_BASE_URL: http://127.0.0.1:3000
+        run: node scripts/e2e/connected-admin.mjs
+      - name: Upload administrative visual and real evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: connected-admin-${{ github.sha }}
+          path: |
+            outputs/ui-review/clarte-admin/
+            outputs/admin-e2e.json
+            outputs/admin-e2e-error.log
+          retention-days: 14
       - name: Rehearse consistent backup and isolated restore
         env:
           DB_FIXTURE_CONTAINER: ${{ job.services.mariadb.id }}

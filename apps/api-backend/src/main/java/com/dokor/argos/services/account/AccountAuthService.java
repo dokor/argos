@@ -106,7 +106,9 @@ public class AccountAuthService {
                                             ? null
                                             : local.getPasswordHash(),
                                     password);
-                    if (!valid || u == null || "ARCHIVED".equals(u.getState()))
+                    if (!valid
+                            || u == null
+                            || Set.of("ARCHIVED", "SUSPENDED").contains(u.getState()))
                         throw AccountError.unauthorized();
                     var result = sessions.create(u, csrf, c);
                     sessions.event(
@@ -123,7 +125,7 @@ public class AccountAuthService {
                     var found = dao.email(email, c);
                     if (found == null) return null;
                     var u = dao.user(found.getId(), c, true);
-                    if ("ARCHIVED".equals(u.getState())
+                    if (Set.of("ARCHIVED", "SUSPENDED").contains(u.getState())
                             || purpose.equals("VERIFY") && !"PENDING".equals(u.getState())
                             || purpose.equals("RESET")
                                     && dao.identities(u.getId(), c).stream()
@@ -143,6 +145,7 @@ public class AccountAuthService {
                     if (!"PENDING".equals(u.getState()) || u.getEmail() == null)
                         throw new AccountError(400, "token_invalid");
                     u.setState("ACTIVE");
+                    u.setAdminVersion(u.getAdminVersion() + 1);
                     dao.save(u, c);
                     sessions.event("verify", "accepted", u.getId(), null, c);
                     return null;
@@ -198,7 +201,7 @@ public class AccountAuthService {
                                     .forUpdate()
                                     .fetchOne();
                     if (u == null
-                            || "ARCHIVED".equals(u.getState())
+                            || Set.of("ARCHIVED", "SUSPENDED").contains(u.getState())
                             || t.getConsumedAt() != null
                             || !purpose.equals(t.getPurpose())
                             || !t.getExpiresAt().isAfter(clock.instant())
@@ -415,6 +418,7 @@ public class AccountAuthService {
                     sessions.recent(context);
                     var user = context.user();
                     user.setState("ARCHIVED");
+                    user.setAdminVersion(user.getAdminVersion() + 1);
                     user.setArchivedAt(clock.instant());
                     dao.save(user, c);
                     sessions.revokeAll(user.getId(), null, c);

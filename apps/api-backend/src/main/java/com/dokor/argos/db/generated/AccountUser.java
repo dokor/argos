@@ -36,6 +36,12 @@ public class AccountUser extends CrudEntityQuerydsl {
     @Column("archived_at")
     private Instant archivedAt;
 
+    @Column("admin_version")
+    private Long adminVersion = 0L;
+
+    @Column("suspended_from")
+    private String suspendedFrom;
+
     @Override
     public String toString() {
         return "AccountUser#" + id;

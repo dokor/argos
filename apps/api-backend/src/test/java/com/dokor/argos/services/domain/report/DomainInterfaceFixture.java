@@ -36,6 +36,7 @@ final class DomainInterfaceFixture {
     final MariaDbReportFixture fixture;
     DiscoveryWorker worker;
     String jwt;
+    String adminJwt;
 
     DomainInterfaceFixture(MariaDbReportFixture fixture, AccountDao accounts) throws Exception {
         this.fixture = fixture;
@@ -67,6 +68,27 @@ final class DomainInterfaceFixture {
         jwt =
                 accounts.transaction(
                         c -> sessions.create(accounts.user(70, c, false), CSRF, c).jwt());
+        fixture.sql(
+                "INSERT INTO ARG_ACCOUNT_USER(id,email,display_name,state,role,created_at)"
+                    + " VALUES(71,'admin-fixture@example.com','Admin"
+                    + " fixture','ACTIVE','ADMIN',CURRENT_TIMESTAMP)");
+        adminJwt =
+                accounts.transaction(
+                        c -> {
+                            var identity = new com.dokor.argos.db.generated.AccountIdentity();
+                            identity.setUserId(71L);
+                            identity.setProvider("password");
+                            identity.setSubject("71");
+                            identity.setPasswordHash(
+                                    new AccountPasswords(settings)
+                                            .hash("a long synthetic fixture passphrase"));
+                            identity.setCreatedAt(clock.instant());
+                            accounts.save(identity, c);
+                            var issued = sessions.create(accounts.user(71, c, false), CSRF, c);
+                            issued.context().session().setAuthenticatedAt(Instant.EPOCH);
+                            accounts.save(issued.context().session(), c);
+                            return issued.jwt();
+                        });
     }
 
     void register(
@@ -88,6 +110,35 @@ final class DomainInterfaceFixture {
                         settings,
                         sites);
         var csrf = new AccountCsrf(settings);
+        var auth =
+                new AccountAuthService(
+                        accounts,
+                        new AccountPasswords(settings),
+                        sessions,
+                        fixture.tokens,
+                        settings,
+                        mock(AccountMail.class),
+                        clock);
+        config.register(
+                new AccountAuthWs(
+                        auth,
+                        sessions,
+                        mock(AccountOAuthService.class),
+                        csrf,
+                        new AccountRateLimiter(accounts, fixture.tokens, clock, settings),
+                        fixture.tokens,
+                        settings));
+        config.register(
+                new AdminWs(
+                        new AdminService(
+                                accounts,
+                                sessions,
+                                usage,
+                                new UsagePolicy(ConfigFactory.empty()),
+                                fixture.reader,
+                                fixture.mapper,
+                                clock),
+                        csrf));
         var discoveryDao = new DiscoveryDao(accounts.transactions);
         var policy = new DiscoveryPolicy(ConfigFactory.empty());
         var transport = mock(DiscoveryTransport.class);
@@ -177,7 +228,7 @@ final class DomainInterfaceFixture {
                         new AccountWs(
                                 accounts,
                                 sessions,
-                                mock(AccountAuthService.class),
+                                auth,
                                 personal,
                                 csrf,
                                 new AccountRateLimiter(accounts, fixture.tokens, clock, settings),

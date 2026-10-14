@@ -42,9 +42,9 @@ it.each(["role=ADMIN","limit=101","limit=1&limit=2","cursor=-1"])("rejects forge
  expect((await accountProxy(request("admin/users?"+query),["admin","users"])).status).toBe(400);expect(fetchMock).not.toHaveBeenCalled();
 });
 it("allows only explicit entitlement changes with CSRF",async()=>{
- const path=["admin","users","42","entitlement"],body={offer:"FREE",monthlyLimit:0,confirmed:true};
+ const path=["admin","users","42","entitlement"],body={offer:"FREE",monthlyLimit:0,confirmation:true,expectedVersion:1,reasonCode:"PLAN_ADJUSTMENT"};
  expect((await accountProxy(request(path.join("/"),"PATCH",body,false),path)).status).toBe(403);
- for(const bad of [{...body,role:"ADMIN"},{...body,monthlyLimit:-1},{...body,monthlyLimit:1.5},{...body,confirmed:false},{...body,monthlyLimit:Number.MAX_SAFE_INTEGER+1}]) {
+ for(const bad of [{...body,role:"ADMIN"},{...body,monthlyLimit:-1},{...body,monthlyLimit:1.5},{...body,confirmation:false},{...body,expectedVersion:-1},{...body,reasonCode:"arbitrary text"},{...body,monthlyLimit:Number.MAX_SAFE_INTEGER+1}]) {
   expect((await accountProxy(request(path.join("/"),"PATCH",bad),path)).status).toBe(400);
  }
  expect(fetchMock).not.toHaveBeenCalled();

@@ -9,6 +9,7 @@ import jakarta.inject.*;
 import java.security.MessageDigest;
 import java.sql.Connection;
 import java.time.*;
+import java.util.Set;
 import java.util.function.BiFunction;
 
 @Singleton
@@ -45,7 +46,8 @@ public class AccountSessionService {
         if (claim == null || claim.uid() == null || claim.sid() == null)
             throw AccountError.unauthorized();
         var user = dao.user(claim.uid(), c, true);
-        if (user == null || "ARCHIVED".equals(user.getState())) throw AccountError.unauthorized();
+        if (user == null || Set.of("ARCHIVED", "SUSPENDED").contains(user.getState()))
+            throw AccountError.unauthorized();
         var session = dao.session(claim.sid(), c, true);
         Instant now = clock.instant();
         if (session == null
@@ -82,7 +84,8 @@ public class AccountSessionService {
     }
 
     public Issued create(AccountUser user, String csrf, Connection c) {
-        if ("ARCHIVED".equals(user.getState())) throw AccountError.unauthorized();
+        if (Set.of("ARCHIVED", "SUSPENDED").contains(user.getState()))
+            throw AccountError.unauthorized();
         Instant now = clock.instant();
         var s = new AccountSession();
         s.setUserId(user.getId());

@@ -297,6 +297,10 @@ export type AdminUser = {
   readonly offer: string;
   readonly version: number;
   readonly usage: Usage;
+  readonly monthlyLimit: number | null;
+  readonly createdAt: string;
+  readonly canEditEntitlement: boolean;
+  readonly canSuspend: boolean;
 };
 
 export type AdminSnapshot = {
@@ -310,16 +314,21 @@ export type AdminEvent = {
   readonly actorId: string;
   readonly targetId: string;
   readonly createdAt: string;
-  readonly reasonCode: AdminReason;
-  readonly before: AdminSnapshot;
-  readonly after: AdminSnapshot;
-  readonly requestId: string;
+  readonly oldOffer: string;
+  readonly newOffer: string;
+  readonly oldLimit: number | null;
+  readonly newLimit: number | null;
+  readonly oldState: AccountState | null;
+  readonly newState: AccountState | null;
+  readonly reasonCode: AdminReason | null;
+  readonly requestId: string | null;
 };
 
 export type EntitlementOptions = {
   readonly offers: ReadonlyArray<string>;
   readonly reasonCodes: ReadonlyArray<AdminReason>;
   readonly maximumMonthlyLimit: number;
+  readonly offerLimits: ReadonlyArray<OfferLimit>;
 };
 
 export type DiscoveredPages = {
@@ -373,18 +382,12 @@ export type UsageEvents = {
 
 export type AdminUsers = {
   readonly items: ReadonlyArray<AdminUser>;
-  readonly total: number;
-  readonly limit: number;
-  readonly offset: number;
-  readonly snapshotAt: string;
+  readonly nextCursor: string | null;
 };
 
 export type AdminEvents = {
   readonly items: ReadonlyArray<AdminEvent>;
-  readonly total: number;
-  readonly limit: number;
-  readonly offset: number;
-  readonly snapshotAt: string;
+  readonly nextCursor: string | null;
 };
 
 export type SiteAnalysisInput = {
@@ -488,4 +491,14 @@ export type RecentRun = {
   readonly domainId: string;
   readonly normalizedUrl: string;
   readonly hostname: string;
+};
+
+export type AdminMutation = {
+  readonly changed: boolean;
+  readonly version: number;
+};
+
+export type OfferLimit = {
+  readonly offer: string;
+  readonly monthlyLimit: number | null;
 };

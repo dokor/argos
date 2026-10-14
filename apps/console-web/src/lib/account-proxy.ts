@@ -4,7 +4,7 @@ import { safeAccountReturn } from "./account-return";
 export { safeAccountReturn } from "./account-return";
 import { ssrfError } from "./audit-url-validation";
 import { boundedJson } from "./bounded-request";
-import { adminPath, adminQuery, adminEntitlement } from "./admin-request";
+import { adminPath, adminQuery, adminEntitlement, adminSuspension } from "./admin-request";
 import { feedbackTreatment } from "./feedback-request";
 import { validIntroduction } from "./report-introduction";
 import { oauthCallbackError, type OAuthCallbackError } from "./oauth-callback-error";
@@ -96,7 +96,7 @@ export async function accountProxy(request: NextRequest, parts: string[]): Promi
       if (value === null || typeof value !== "object" || Array.isArray(value)) return privateError("payload_invalid", 400);
       const parsed = value as Record<string, unknown>;
       if (request.method === "PUT" && path.startsWith("report-introduction/") && !validIntroduction(parsed)) return privateError("introduction_invalid",400);
-      if(path.startsWith("admin/") && !(path.startsWith("admin/feedback/") ? feedbackTreatment(parsed) : adminEntitlement(parsed))) return privateError("payload_invalid",400);
+      if(path.startsWith("admin/") && !(path.startsWith("admin/feedback/") ? feedbackTreatment(parsed) : path.endsWith("/suspension") ? adminSuspension(parsed) : adminEntitlement(parsed))) return privateError("payload_invalid",400);
       if (path.endsWith("/start") || path === "auth/register" || path === "auth/confirm-email") {
         returnTo = safeAccountReturn(parsed.returnTo);
         linkIntent = parsed.intent === "link";

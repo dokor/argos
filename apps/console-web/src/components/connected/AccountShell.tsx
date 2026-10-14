@@ -65,7 +65,7 @@ export default function AccountShell({ children }: { children: ReactNode }) {
         {valid ? children : <main className={s.page}>
           <PageHeading title={c.workspace}/>
           {!session.ready ? <EmptyState title={c.loading} kind="loading"/> : <EmptyState title={session.denied ? c.sessionTitle : c.errorTitle} description={session.denied ? c.sessionDescription : t.account.errors.account_unavailable} kind={session.denied ? "empty" : "error"}>
-            {session.denied ? <Link className={s.primary} href={"/account/sign-in?returnTo=" + encodeURIComponent(safeAccountReturn(currentPath+(/\/account(?:\/(domains|runs)(\/|$)|$)/.test(currentPath)?suffix:"")))}>{t.account.signIn}</Link> : <button className={s.secondary} onClick={() => window.dispatchEvent(new Event("argos-account-login"))}>{c.retry}</button>}
+            {session.denied ? <Link className={s.primary} href={"/account/sign-in?returnTo=" + encodeURIComponent(safeAccountReturn(currentPath+(/\/account(?:\/(domains|runs|admin)(\/|$)|$)/.test(currentPath)?suffix:"")))}>{t.account.signIn}</Link> : <button className={s.secondary} onClick={() => window.dispatchEvent(new Event("argos-account-login"))}>{c.retry}</button>}
           </EmptyState>}
         </main>}
       </div>

@@ -1,21 +1,112 @@
+import type { AdminReason } from "./connected/contracts";
+export const adminReasons: AdminReason[] = [
+  "SUPPORT_REQUEST",
+  "PLAN_ADJUSTMENT",
+  "ABUSE_REVIEW",
+  "ACCOUNT_RECOVERY",
+];
+const id = (value: string) =>
+  /^[1-9][0-9]{0,18}$/.test(value) &&
+  BigInt(value) <= BigInt("9223372036854775807");
 export function adminPath(method: string, path: string): boolean {
-  return method === "GET" ? /^admin\/(?:feedback(?:\/[1-9]\d{0,18})?|users(?:\/[1-9]\d{0,18})?|runs(?:\/[1-9]\d{0,18}(?:\/report)?)?|queue|events|analytics)$/.test(path)
-    : method === "PATCH" && /^admin\/(?:feedback\/[1-9]\d{0,18}|users\/[1-9]\d{0,18}\/entitlement)$/.test(path);
+  const ids = path.match(/\/([0-9]+)(?:\/|$)/g);
+  if (ids?.some((v) => !id(v.replaceAll("/", "")))) return false;
+  return method === "GET"
+    ? /^admin\/(?:feedback(?:\/[1-9]\d{0,18})?|users(?:\/[1-9]\d{0,18}(?:\/events)?)?|runs(?:\/[1-9]\d{0,18}(?:\/report)?)?|queue|events|analytics|entitlement-options)$/.test(
+        path,
+      )
+    : method === "PATCH"
+      ? /^admin\/(?:feedback\/[1-9]\d{0,18}|users\/[1-9]\d{0,18}\/entitlement)$/.test(
+          path,
+        )
+      : method === "POST" &&
+        /^admin\/users\/[1-9]\d{0,18}\/suspension$/.test(path);
 }
-export function adminQuery(path: string, params: URLSearchParams): URLSearchParams | null {
-  const keys = path === "admin/analytics" ? ["days"] : path === "admin/feedback" ? ["type","status","limit","cursor"] : path === "admin/users" ? ["q","state","offer","limit","cursor"] : path === "admin/runs" ? ["user","site","status","from","until","limit","cursor"] : path === "admin/events" ? ["limit","cursor"] : [];
-  const result = new URLSearchParams();
-  for (const [key,value] of params) {
-    if (!keys.includes(key) || params.getAll(key).length !== 1 || value.length > 253) return null;
-    if (key === "days" && !["7","30","90"].includes(value)) return null;
-    if (key === "limit" && (!/^[1-9]\d{0,2}$/.test(value) || Number(value)>100)) return null;
-    if (key === "cursor" && !/^[1-9]\d{0,18}$/.test(value)) return null;
-    result.set(key,value);
+export function adminQuery(
+  path: string,
+  params: URLSearchParams,
+): URLSearchParams | null {
+  const keys =
+    path === "admin/analytics"
+      ? ["days"]
+      : path === "admin/feedback"
+        ? ["type", "status", "limit", "cursor"]
+        : path === "admin/users"
+          ? ["q", "state", "offer", "limit", "cursor"]
+          : path === "admin/runs"
+            ? ["user", "site", "status", "from", "until", "limit", "cursor"]
+            : path === "admin/events"
+              ? ["limit", "cursor", "target"]
+              : /^admin\/users\/\d+\/events$/.test(path)
+                ? ["limit", "cursor"]
+                : [];
+  for (const [key, value] of params) {
+    if (
+      !keys.includes(key) ||
+      params.getAll(key).length !== 1 ||
+      value.length > 253 ||
+      /[\x00-\x1f\x7f-\x9f]/.test(value)
+    )
+      return null;
+    if (key === "days" && !["7", "30", "90"].includes(value)) return null;
+    if (
+      key === "limit" &&
+      (!/^[1-9]\d{0,2}$/.test(value) || Number(value) > 100)
+    )
+      return null;
+    if (["cursor", "target"].includes(key) && !id(value)) return null;
+    if (
+      path === "admin/users" &&
+      ((key === "q" && value.length > 100) ||
+        (key === "state" &&
+          !["ACTIVE", "PENDING", "SUSPENDED", "ARCHIVED"].includes(value)) ||
+        (key === "offer" && !/^[A-Z][A-Z0-9_]{0,15}$/.test(value)))
+    )
+      return null;
   }
-  return result;
+  return new URLSearchParams(params);
+}
+function common(body: Record<string, unknown>): boolean {
+  return (
+    body.confirmation === true &&
+    typeof body.expectedVersion === "number" &&
+    Number.isSafeInteger(body.expectedVersion) &&
+    body.expectedVersion >= 0 &&
+    adminReasons.includes(body.reasonCode as AdminReason)
+  );
 }
 export function adminEntitlement(body: Record<string, unknown>): boolean {
-  return Object.keys(body).sort().join(",") === "confirmed,monthlyLimit,offer" && body.confirmed === true
-    && typeof body.offer === "string" && /^[A-Z][A-Z0-9_]{0,15}$/.test(body.offer)
-    && (body.monthlyLimit === null || typeof body.monthlyLimit === "number" && Number.isSafeInteger(body.monthlyLimit) && body.monthlyLimit >= 0);
+  return (
+    Object.keys(body).sort().join(",") ===
+      "confirmation,expectedVersion,monthlyLimit,offer,reasonCode" &&
+    common(body) &&
+    typeof body.offer === "string" &&
+    /^[A-Z][A-Z0-9_]{0,15}$/.test(body.offer) &&
+    (body.monthlyLimit === null ||
+      (typeof body.monthlyLimit === "number" &&
+        Number.isSafeInteger(body.monthlyLimit) &&
+        body.monthlyLimit >= 0))
+  );
+}
+export function adminSuspension(body: Record<string, unknown>): boolean {
+  return (
+    Object.keys(body).sort().join(",") ===
+      "confirmation,expectedVersion,reasonCode,suspended" &&
+    common(body) &&
+    typeof body.suspended === "boolean"
+  );
+}
+export function safeAdminReturn(raw: unknown): string | null {
+  if (
+    typeof raw !== "string" ||
+    raw.length > 2048 ||
+    /[\\#\x00-\x20]/.test(raw) ||
+    raw.split("?").length > 2
+  )
+    return null;
+  const [path, query] = raw.split("?");
+  return /^\/(?:en\/)?account\/admin\/users$/.test(path) &&
+    adminQuery("admin/users", new URLSearchParams(query))
+    ? raw
+    : null;
 }

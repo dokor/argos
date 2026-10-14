@@ -885,7 +885,11 @@ public final class ConnectedContracts {
         @JsonProperty(value = "role", required = true) String role,
         @JsonProperty(value = "offer", required = true) String offer,
         @JsonProperty(value = "version", required = true) Long version,
-        @JsonProperty(value = "usage", required = true) Usage usage
+        @JsonProperty(value = "usage", required = true) Usage usage,
+        @JsonProperty(value = "monthlyLimit", required = true) Long monthlyLimit,
+        @JsonProperty(value = "createdAt", required = true) String createdAt,
+        @JsonProperty(value = "canEditEntitlement", required = true) Boolean canEditEntitlement,
+        @JsonProperty(value = "canSuspend", required = true) Boolean canSuspend
     ) {
         public AdminUser {
             required(id, "id");
@@ -907,6 +911,11 @@ public final class ConnectedContracts {
             check(version >= 0L, "version");
             check(version <= 9007199254740991L, "version");
             required(usage, "usage");
+            if (monthlyLimit != null) { check(monthlyLimit >= 0L, "monthlyLimit"); check(monthlyLimit <= 9007199254740991L, "monthlyLimit"); }
+            required(createdAt, "createdAt");
+            java.time.Instant.parse(createdAt);
+            required(canEditEntitlement, "canEditEntitlement");
+            required(canSuspend, "canSuspend");
         }
         @JsonAnySetter public void rejectUnknown(String name, Object value) {
             throw new IllegalArgumentException("Unknown connected field");
@@ -937,9 +946,13 @@ public final class ConnectedContracts {
         @JsonProperty(value = "actorId", required = true) String actorId,
         @JsonProperty(value = "targetId", required = true) String targetId,
         @JsonProperty(value = "createdAt", required = true) String createdAt,
+        @JsonProperty(value = "oldOffer", required = true) String oldOffer,
+        @JsonProperty(value = "newOffer", required = true) String newOffer,
+        @JsonProperty(value = "oldLimit", required = true) Long oldLimit,
+        @JsonProperty(value = "newLimit", required = true) Long newLimit,
+        @JsonProperty(value = "oldState", required = true) AccountState oldState,
+        @JsonProperty(value = "newState", required = true) AccountState newState,
         @JsonProperty(value = "reasonCode", required = true) AdminReason reasonCode,
-        @JsonProperty(value = "before", required = true) AdminSnapshot before,
-        @JsonProperty(value = "after", required = true) AdminSnapshot after,
         @JsonProperty(value = "requestId", required = true) String requestId
     ) {
         public AdminEvent {
@@ -960,12 +973,13 @@ public final class ConnectedContracts {
             check(Long.parseLong(targetId) > 0, "targetId");
             required(createdAt, "createdAt");
             java.time.Instant.parse(createdAt);
-            required(reasonCode, "reasonCode");
-            required(before, "before");
-            required(after, "after");
-            required(requestId, "requestId");
-            check(requestId.codePointCount(0, requestId.length()) >= 1, "requestId");
-            check(requestId.codePointCount(0, requestId.length()) <= 64, "requestId");
+            required(oldOffer, "oldOffer");
+            check(oldOffer.codePointCount(0, oldOffer.length()) <= 16, "oldOffer");
+            required(newOffer, "newOffer");
+            check(newOffer.codePointCount(0, newOffer.length()) <= 16, "newOffer");
+            if (oldLimit != null) { check(oldLimit >= 0L, "oldLimit"); check(oldLimit <= 9007199254740991L, "oldLimit"); }
+            if (newLimit != null) { check(newLimit >= 0L, "newLimit"); check(newLimit <= 9007199254740991L, "newLimit"); }
+            if (requestId != null) { check(requestId.codePointCount(0, requestId.length()) <= 64, "requestId"); }
         }
         @JsonAnySetter public void rejectUnknown(String name, Object value) {
             throw new IllegalArgumentException("Unknown connected field");
@@ -976,7 +990,8 @@ public final class ConnectedContracts {
     public record EntitlementOptions(
         @JsonProperty(value = "offers", required = true) List<String> offers,
         @JsonProperty(value = "reasonCodes", required = true) List<AdminReason> reasonCodes,
-        @JsonProperty(value = "maximumMonthlyLimit", required = true) Long maximumMonthlyLimit
+        @JsonProperty(value = "maximumMonthlyLimit", required = true) Long maximumMonthlyLimit,
+        @JsonProperty(value = "offerLimits", required = true) List<OfferLimit> offerLimits
     ) {
         public EntitlementOptions {
             required(offers, "offers");
@@ -992,6 +1007,10 @@ public final class ConnectedContracts {
             required(maximumMonthlyLimit, "maximumMonthlyLimit");
             check(maximumMonthlyLimit >= 0L, "maximumMonthlyLimit");
             check(maximumMonthlyLimit <= 9007199254740991L, "maximumMonthlyLimit");
+            required(offerLimits, "offerLimits");
+            offerLimits = List.copyOf(offerLimits);
+            check(offerLimits.size() >= 0 && offerLimits.size() <= 20, "offerLimits");
+            for (var item : offerLimits) { required(item, "item"); }
         }
         @JsonAnySetter public void rejectUnknown(String name, Object value) {
             throw new IllegalArgumentException("Unknown connected field");
@@ -1184,27 +1203,14 @@ public final class ConnectedContracts {
     @JsonInclude(JsonInclude.Include.ALWAYS)
     public record AdminUsers(
         @JsonProperty(value = "items", required = true) List<AdminUser> items,
-        @JsonProperty(value = "total", required = true) Long total,
-        @JsonProperty(value = "limit", required = true) Long limit,
-        @JsonProperty(value = "offset", required = true) Long offset,
-        @JsonProperty(value = "snapshotAt", required = true) String snapshotAt
+        @JsonProperty(value = "nextCursor", required = true) String nextCursor
     ) {
         public AdminUsers {
             required(items, "items");
             items = List.copyOf(items);
             check(items.size() >= 0 && items.size() <= 100, "items");
             for (var item : items) { required(item, "item"); }
-            required(total, "total");
-            check(total >= 0L, "total");
-            check(total <= 9007199254740991L, "total");
-            required(limit, "limit");
-            check(limit >= 1L, "limit");
-            check(limit <= 100L, "limit");
-            required(offset, "offset");
-            check(offset >= 0L, "offset");
-            check(offset <= 9007199254740991L, "offset");
-            required(snapshotAt, "snapshotAt");
-            java.time.Instant.parse(snapshotAt);
+            if (nextCursor != null) { check(nextCursor.codePointCount(0, nextCursor.length()) >= 1, "nextCursor"); check(nextCursor.codePointCount(0, nextCursor.length()) <= 19, "nextCursor"); check(java.util.regex.Pattern.compile("^[1-9][0-9]{0,18}$").matcher(nextCursor).find(), "nextCursor"); check(Long.parseLong(nextCursor) > 0, "nextCursor"); }
         }
         @JsonAnySetter public void rejectUnknown(String name, Object value) {
             throw new IllegalArgumentException("Unknown connected field");
@@ -1214,27 +1220,14 @@ public final class ConnectedContracts {
     @JsonInclude(JsonInclude.Include.ALWAYS)
     public record AdminEvents(
         @JsonProperty(value = "items", required = true) List<AdminEvent> items,
-        @JsonProperty(value = "total", required = true) Long total,
-        @JsonProperty(value = "limit", required = true) Long limit,
-        @JsonProperty(value = "offset", required = true) Long offset,
-        @JsonProperty(value = "snapshotAt", required = true) String snapshotAt
+        @JsonProperty(value = "nextCursor", required = true) String nextCursor
     ) {
         public AdminEvents {
             required(items, "items");
             items = List.copyOf(items);
             check(items.size() >= 0 && items.size() <= 100, "items");
             for (var item : items) { required(item, "item"); }
-            required(total, "total");
-            check(total >= 0L, "total");
-            check(total <= 9007199254740991L, "total");
-            required(limit, "limit");
-            check(limit >= 1L, "limit");
-            check(limit <= 100L, "limit");
-            required(offset, "offset");
-            check(offset >= 0L, "offset");
-            check(offset <= 9007199254740991L, "offset");
-            required(snapshotAt, "snapshotAt");
-            java.time.Instant.parse(snapshotAt);
+            if (nextCursor != null) { check(nextCursor.codePointCount(0, nextCursor.length()) >= 1, "nextCursor"); check(nextCursor.codePointCount(0, nextCursor.length()) <= 19, "nextCursor"); check(java.util.regex.Pattern.compile("^[1-9][0-9]{0,18}$").matcher(nextCursor).find(), "nextCursor"); check(Long.parseLong(nextCursor) > 0, "nextCursor"); }
         }
         @JsonAnySetter public void rejectUnknown(String name, Object value) {
             throw new IllegalArgumentException("Unknown connected field");
@@ -1588,6 +1581,38 @@ public final class ConnectedContracts {
             required(hostname, "hostname");
             check(hostname.codePointCount(0, hostname.length()) >= 1, "hostname");
             check(hostname.codePointCount(0, hostname.length()) <= 253, "hostname");
+        }
+        @JsonAnySetter public void rejectUnknown(String name, Object value) {
+            throw new IllegalArgumentException("Unknown connected field");
+        }
+    }
+
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    public record AdminMutation(
+        @JsonProperty(value = "changed", required = true) Boolean changed,
+        @JsonProperty(value = "version", required = true) Long version
+    ) {
+        public AdminMutation {
+            required(changed, "changed");
+            required(version, "version");
+            check(version >= 0L, "version");
+            check(version <= 9007199254740991L, "version");
+        }
+        @JsonAnySetter public void rejectUnknown(String name, Object value) {
+            throw new IllegalArgumentException("Unknown connected field");
+        }
+    }
+
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    public record OfferLimit(
+        @JsonProperty(value = "offer", required = true) String offer,
+        @JsonProperty(value = "monthlyLimit", required = true) Long monthlyLimit
+    ) {
+        public OfferLimit {
+            required(offer, "offer");
+            check(offer.codePointCount(0, offer.length()) >= 1, "offer");
+            check(offer.codePointCount(0, offer.length()) <= 16, "offer");
+            if (monthlyLimit != null) { check(monthlyLimit >= 0L, "monthlyLimit"); check(monthlyLimit <= 9007199254740991L, "monthlyLimit"); }
         }
         @JsonAnySetter public void rejectUnknown(String name, Object value) {
             throw new IllegalArgumentException("Unknown connected field");

@@ -38,6 +38,7 @@ compatibilité n’est pas une commande de remise à zéro de la production.
 | [Cadre et composants F02](shell-f02.md) | Navigation, états, aperçu canonique, preuves et écarts visuels |
 | [Consommation et quotas F05](usage-f05.md) | Disponible serveur, journal privé et primitives transactionnelles |
 | [Découverte de domaine F06](discovery-f06.md) | Crawler privé borné, transport, snapshots, annulation et reprise |
+| [Administration F11](administration-f11.md) | Comptes, offres, quotas, suspension et journal administratif |
 | [Vue d’ensemble F10](overview-f10.md) | KPI, inventaire des dernières tentatives et preuve de cohérence |
 | [Interface domaine F09](interface-f09.md) | Parcours raccordé, filtres, confirmation des crédits et preuves navigateur |
 | [Synthèses serveur F08](summary-f08.md) | Agrégats privés, preuves évaluées, pages prioritaires et historique |

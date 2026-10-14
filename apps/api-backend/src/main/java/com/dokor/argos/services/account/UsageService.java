@@ -62,6 +62,12 @@ public class UsageService {
     /** F07 must call this before inserting any of the N children on this SAME transaction. */
     public void admitMany(long user, int count, Connection c) {
         if(count<1 || count>100) throw new AccountError(400,"selection_invalid");
+        offer(user,c);
+        try(var s=c.prepareStatement("SELECT state FROM ARG_ACCOUNT_USER WHERE id=?")) {
+            s.setLong(1,user);try(var r=s.executeQuery()) {
+                if(!r.next() || !"ACTIVE".equals(r.getString(1))) throw AccountError.forbidden("account_inactive");
+            }
+        } catch(SQLException e) {throw new IllegalStateException("Admission state unavailable",e);}
         var view=snapshot(user,offer(user,c),c);
         if(view.available()!=null && view.available()<count) {
             long retry=Math.max(1,Duration.between(clock.instant(),Instant.parse(view.resetsAt())).getSeconds());
