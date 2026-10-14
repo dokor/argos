@@ -19,6 +19,18 @@ class PublicReportComposerTest {
 
     private final PublicReportComposer composer = new PublicReportComposer();
 
+    @Test void publishesTypedObservationsWithoutDuplicatingUnvalidatedMapText() {
+        var observation=Map.of("version","observed-evidence-v1","source","lighthouse","items",
+            List.of(Map.of("kind","element","nodePath","1,HTML,1,BODY,1,IMG","snippet","private-secret")));
+        var check=AuditCheckResult.of("lighthouse.audit.image-alt","Image",AuditStatus.FAIL,AuditSeverity.HIGH,
+            true,0,List.of("a11y"),0,Map.of("observed",observation),"Missing alternative","Review image");
+        var result=composer.compose(report(List.of(module("lighthouse",Map.of(),check)),scoreOf(.5)));
+        var issue=result.issues().getFirst();
+        assertNull(issue.evidence());
+        assertTrue(issue.structuredEvidence().details().isEmpty());
+        assertEquals("1,HTML,1,BODY,1,IMG",issue.structuredEvidence().observed().items().getFirst().nodePath());
+    }
+
     // ---------------------------------------------------- anti-bot (issue #195)
 
     @Test

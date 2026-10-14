@@ -7,7 +7,9 @@ are separate fields. Unrecognised checks retain their escaped technical text and
 receive explicit translated guidance to confirm the observation.
 
 `Issue.structuredEvidence` is optional: `source`, optional `measurement` (value,
-unit), and bounded text details. Only explicit measurements with a known unit are
+unit), bounded text details, and optional typed `observed` evidence (F14).
+See [the observed evidence contract](../connected-space/evidence-f14.md) for
+collection bounds, privacy omissions and shared web/full-PDF rendering. Only explicit measurements with a known unit are
 published. Lighthouse audit ratios are never timings. Historic string evidence is
 shown as historic context; no parsing of a Java map string into measurements.
 

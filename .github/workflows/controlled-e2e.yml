@@ -112,6 +112,17 @@ jobs:
           retention-days: 14
       - name: Run real database and browser lifecycle
         run: mvn --batch-mode -f apps/api-backend/pom.xml -P mariadb-integration -Dit.test=ControlledAuditE2eIT verify
+      - name: Check observed evidence in connected reports
+        env:
+          CONNECTED_BASE_URL: http://127.0.0.1:3000
+        run: node scripts/e2e/connected-evidence.mjs
+      - name: Upload observed evidence visual and real PDF checks
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: connected-evidence-${{ github.sha }}
+          path: outputs/ui-review/clarte-evidence/
+          retention-days: 14
       - name: Check private history layout, keyboard and accessibility
         env:
           HISTORY_BASE_URL: http://127.0.0.1:3000

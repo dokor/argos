@@ -197,6 +197,8 @@ public class LighthouseModuleAnalyzer {
             details.put("score", c.score());
             details.put("weight", c.weight());
             JsonNode raw = audits.path(c.id());
+            var observed = ObservedEvidence.from(raw.path("observedEvidence"));
+            if (observed != null && "lighthouse".equals(observed.source())) details.put("observed", observed);
             if (raw.path("numericValue").isNumber() && Double.isFinite(raw.path("numericValue").asDouble())) {
                 details.put("numericValue", raw.path("numericValue").asDouble());
                 String unit = JsonNodes.nonBlankText(raw.path("numericUnit"));

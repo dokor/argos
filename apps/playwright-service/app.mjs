@@ -1,7 +1,8 @@
 import express from 'express';
+import { resourceEvidence, evidenceEnvelope, EVIDENCE_LIMIT } from './evidence.mjs';
 import { analysisUrl } from './policy.mjs';
 import { proxyEndpoint, browserFlags, protectContext, safeOrigin } from './browser-policy.mjs';
-import { partitionNetworkErrors, registrableDomainForUrl } from './domain.mjs';
+import { partitionNetworkErrors, registrableDomainForUrl, isFirstPartyUrl } from './domain.mjs';
 
 export function isValidAnalysisUrl(value) {
   try { analysisUrl(value); return true; } catch { return false; }
@@ -99,6 +100,17 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
       let status5xx = 0;
       const failedRequestUrls = [];
       const status5xxUrls = [];
+      const incidents=[];
+      let incidentCount=0;
+      function incident(rawUrl, type, status, failure) {
+        incidentCount++;
+        if(incidents.length>=EVIDENCE_LIMIT) return;
+        const resource=resourceEvidence(rawUrl); if(!resource) return;
+        // Chromium reason code only, never a site-controlled error message or stack.
+        const reason=typeof failure==='string' && /^net::ERR_[A-Z_]{1,60}$/.test(failure) ? failure : undefined;
+        const resourceType=['document','stylesheet','image','media','font','script','xhr','fetch','other'].includes(type)?type:undefined;
+        incidents.push({...resource, status, reason, resourceType});
+      }
       let totalBytesEstimated = 0;
 
       const byType = {};
@@ -117,6 +129,7 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
 
       page.on('requestfailed', (request) => {
         failedRequests++;
+        incident(request.url(),request.resourceType?.(),undefined,request.failure?.()?.errorText);
         if (failedRequestUrls.length < 300) failedRequestUrls.push(safeOrigin(request.url()));
       });
 
@@ -126,6 +139,7 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
         if (status >= 400 && status < 500) status4xx++;
         if (status >= 500) {
           status5xx++;
+          incident(url,response.request?.()?.resourceType?.(),status);
           if (status5xxUrls.length < 300) status5xxUrls.push(safeOrigin(url));
         }
 
@@ -221,6 +235,9 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
           status5xxFirstParty: networkOwnership.status5xx.firstParty,
           status5xxThirdParty: networkOwnership.status5xx.thirdParty,
           totalBytesEstimated,
+          observedEvidence: evidenceEnvelope('runtime', incidents.map(item=>({...item,
+            ownership:isFirstPartyUrl(item.origin,finalUrl)?'FIRST_PARTY':'THIRD_PARTY'})), incidentCount,
+            incidentCount>incidents.length),
           byType,
           topLargest
         }

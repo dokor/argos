@@ -53,4 +53,39 @@ class ReportEvidenceTest {
             new AuditCheckResult.MeasurementProvenance("http", List.of("http")));
         assertEquals("http", ReportEvidence.from("zap", sourced).source());
     }
+    @Test void observedEvidenceSurvivesPersistenceAndRemainsAllowlisted() throws Exception {
+        var mapper = new ObjectMapper();
+        var raw = mapper.readTree("""
+            {"version":"observed-evidence-v1","source":"runtime","items":[
+              {"kind":"resource","origin":"https://user:secret@example.com/private?token=secret#fragment",
+               "resourceRef":"0123456789abcdef","status":503,"ownership":"FIRST_PARTY","snippet":"secret"},
+              {"kind":"element","nodePath":"1,HTML,1,BODY,2,IMG","selector":"#secret"}],
+             "inspected":12,"truncated":true}
+            """);
+        var c=check("runtime.network.5xx",1,Map.of("observed",raw));
+        var persisted=com.dokor.argos.services.analysis.AuditOutputSanitizer.tree(c,mapper);
+        var restored=mapper.treeToValue(persisted,AuditCheckResult.class);
+        var evidence=ReportEvidence.from("runtime",restored);
+        assertEquals(2,evidence.observed().items().size());
+        assertEquals("https://example.com",evidence.observed().items().getFirst().origin());
+        assertTrue(evidence.observed().truncated());
+        assertTrue(evidence.details().isEmpty());
+        assertFalse(mapper.writeValueAsString(evidence).contains("secret"));
+        assertNull(ReportEvidence.from("runtime",check("runtime.network.5xx",1,Map.of())).observed());
+    }
+    @Test void rejectsUntrustedEvidenceAndCapsTheRenderedList() throws Exception {
+        var mapper=new ObjectMapper();
+        var root=mapper.createObjectNode().put("version","observed-evidence-v1").put("source","lighthouse");
+        var items=root.putArray("items");
+        for(int i=0;i<50;i++) items.addObject().put("kind","element").put("nodePath","1,HTML,1,BODY,"+i+",IMG");
+        var parsed=com.dokor.argos.services.analysis.model.ObservedEvidence.from(root);
+        assertEquals(10,parsed.items().size());assertTrue(parsed.truncated());
+        items.removeAll().addObject().put("kind","element").put("nodePath","<secret>");
+        assertEquals("UNAVAILABLE",com.dokor.argos.services.analysis.model.ObservedEvidence.from(root).state());
+        items.removeAll().addObject().put("kind","resource").put("origin","https://"+"a".repeat(513)+".com")
+            .put("resourceRef","0123456789abcdef");
+        assertEquals("UNAVAILABLE",com.dokor.argos.services.analysis.model.ObservedEvidence.from(root).state());
+        root.put("source","secret");
+        assertNull(com.dokor.argos.services.analysis.model.ObservedEvidence.from(root));
+    }
 }
