@@ -88,6 +88,11 @@ illustrations, badges de démonstration et valeurs exemplaires ne sont pas des
 fonctionnalités attendues. Les vues sombres/EN et les autres largeurs sont
 contrôlées par les suites produit, sans référence sombre figée équivalente.
 
+La revue a repéré une ancienne capture `partial-report` prise pendant le
+chargement. Le harness d'analyse attend désormais l'URL du run, le titre du
+rapport, ses onglets et son contexte avant et après la capture. Cette correction
+concerne la fiabilité de la preuve, pas une nouvelle fonctionnalité produit.
+
 La revue de F13 consigne les images réellement examinées et les éventuels
 écarts bloquants dans la PR. Les nouveaux scénarios de texte agrandi et le
 contrôle d'arrêt du polling sont des tests du rendu produit avec API simulée.
