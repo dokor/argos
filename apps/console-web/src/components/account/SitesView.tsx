@@ -2,12 +2,10 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { accountFetch, AccountClientError } from "@/lib/account-client";
-import { useAccountSession, PersonalNavigation } from "./AccountSession";
+import { useAccountSession } from "./AccountSession";
 import { useLang } from "@/lib/i18n/LangContext";
 import { localizedPath } from "@/lib/i18n/routes";
 import Link from "@/components/LocalizedLink";
-import SiteNav from "@/components/site/SiteNav";
-import SiteFooter from "@/components/site/SiteFooter";
 import AuditForm from "@/components/AuditForm";
 import UsagePanel from "./UsagePanel";
 import { historyCopy } from "./historyCopy";
@@ -54,7 +52,7 @@ export default function SitesView({siteId}:{siteId?:string}) {
   const status=(raw:string|null)=>raw ? t.account.statuses[raw as keyof typeof t.account.statuses] ?? t.account.working : copy.none;
   const failure=error==="hostname_mismatch" ? copy.mismatch : t.account.errors[error as keyof typeof t.account.errors] ?? t.account.errors.account_unavailable;
   const showAnalysis=analyse!==null || params.get("analyse")==="1";
-  return <><div className={s.chrome}><SiteNav/></div><PersonalNavigation/><main className={s.page}>
+  return <><main className={s.page}>
     {siteId && <Link href="/account/sites">{copy.title}</Link>}
     <h1>{allowed && site ? site.hostname : copy.title}</h1>
     {!session.ready && <p role="status">{t.account.working}</p>}
@@ -80,5 +78,5 @@ export default function SitesView({siteId}:{siteId?:string}) {
       </li>)}</ul>}
       {next && !loading && <button className={s.button} onClick={()=>setCursor(next)}>{copy.next}</button>}
     </>}
-  </main><SiteFooter/></>;
+  </main></>;
 }

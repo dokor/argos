@@ -1,11 +1,9 @@
 "use client";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { accountFetch, AccountClientError } from "@/lib/account-client";
-import { useAccountSession, PersonalNavigation, type MonthlyUsage } from "@/components/account/AccountSession";
+import { useAccountSession, type MonthlyUsage } from "@/components/account/AccountSession";
 import { useLang } from "@/lib/i18n/LangContext";
 import Link from "@/components/LocalizedLink";
-import SiteNav from "@/components/site/SiteNav";
-import SiteFooter from "@/components/site/SiteFooter";
 import ReportPage from "@/app/(fr)/report/[token]/ReportPage";
 import type { Report } from "@/components/report/types";
 import { copy, type AdminCopy } from "./copy";
@@ -73,8 +71,8 @@ export default function AdminView({runId}:{runId?:string}) {
    <td>{row.actorId}</td><td>{row.targetId}</td><td>{row.oldOffer} / {row.oldLimit??c.defaultLimit} → {row.newOffer} / {row.newLimit??c.defaultLimit}</td><td>{date(row.createdAt,lang)}</td>
   </>}</tr>)}</tbody>
  </table></div>;
- if(allowed&&report.data)return <><div className={s.returnBar}><Link href="/account/admin">{c.back}</Link></div><ReportPage params={{report:report.data}}/></>;
- return <><SiteNav/><PersonalNavigation/><main className={s.page}>
+ if(allowed&&report.data)return <><div className={s.returnBar}><Link href="/account/admin">{c.back}</Link></div><ReportPage embedded params={{report:report.data}}/></>;
+ return <><main className={s.page}>
   <h1>{c.title}</h1><p>{c.intro}</p>{allowed && <div className={s.actions}><Link href="/account/admin/feedback">{feedbackCopy[lang].admin}</Link><Link href="/account/admin/analytics">{analyticsCopy[lang].title}</Link></div>}
   {!session.ready?<p role="status">{c.loading}</p>:!allowed?<><p role="alert">{c.denied}</p><Link href="/account/sign-in">{c.signIn}</Link></>:runId?<>
    <Link href="/account/admin">{c.back}</Link>
@@ -105,7 +103,7 @@ export default function AdminView({runId}:{runId?:string}) {
    {list.loading?<p role="status">{c.loading}</p>:list.error!=null?<p role="alert">{message(list.error,c)}</p>:list.data?.items.length?table:<p role="status">{c.empty}</p>}
    <div className={s.actions}><button disabled={!cursor||list.loading} onClick={()=>setCursor(null)}>{c.first}</button><button disabled={!list.data?.nextCursor||list.loading} onClick={()=>setCursor(list.data!.nextCursor)}>{c.next}</button></div>
   </>}
- </main><SiteFooter/></>;
+ </main></>;
 }
 function UserDetail({id,c,onDenied,onClose,onSaved,onRuns}:{id:string;c:AdminCopy;onDenied:()=>void;onClose:()=>void;onSaved:()=>void;onRuns:()=>void}) {
  const user=useResource<User>("admin/users/"+id,onDenied);

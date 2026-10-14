@@ -2,11 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "@/components/LocalizedLink";
-import { useAccountSession, PersonalNavigation } from "@/components/account/AccountSession";
+import { useAccountSession } from "@/components/account/AccountSession";
 import { accountFetch, AccountClientError } from "@/lib/account-client";
 import { useLang } from "@/lib/i18n/LangContext";
-import SiteNav from "@/components/site/SiteNav";
-import SiteFooter from "@/components/site/SiteFooter";
 import { analyticsCopy } from "./analyticsCopy";
 import s from "./AnalyticsView.module.scss";
 
@@ -42,7 +40,7 @@ export default function AnalyticsView() {
   const seconds = (value: number | null) => value === null ? c.unavailable : new Intl.NumberFormat(lang, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value / 1000) + " s";
   const data = current?.data;
 
-  return <><SiteNav /><PersonalNavigation /><main className={s.main}>
+  return <><main className={s.main}>
     <Link href="/account/admin">{c.back}</Link><h1>{c.title}</h1><p>{c.intro}</p>
     {!session.ready ? <p role="status">{c.loading}</p> : !allowed ? <><p role="alert">{c.denied}</p><Link href="/account/sign-in">{c.signIn}</Link></> : <>
       <div className={s.controls}><label htmlFor="analytics-period">{c.period}</label>
@@ -68,5 +66,5 @@ export default function AnalyticsView() {
         <h2>{c.events}</h2><p>{c.eventHelp}</p>{!data.events.length ? <p>{c.emptyEvents}</p> : <ul>{data.events.map((row, index) => <li key={index}>{row.event} · {row.route} · {row.lang} · {row.placement} · {row.error} : {row.count}</li>)}</ul>}
       </>}
     </>}
-  </main><SiteFooter /></>;
+  </main></>;
 }

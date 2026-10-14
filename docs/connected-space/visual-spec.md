@@ -58,6 +58,8 @@ libellé et la même couleur dans la liste, le détail et le dashboard.
 - Sous environ 620 px, navigation compacte et compte toujours accessible ;
   les grilles passent en colonnes adaptées. Les seuils peuvent être ajustés
   d’après le contenu, pas pour réussir une seule capture.
+  F02 utilise 900 px après revue du diagnostic existant à 768 px : conserver
+  la sidebar à cette largeur comprimait trop la colonne de lecture.
 - Aucun scroll horizontal global. Un tableau dense peut défiler dans une
   région identifiée, avec URL/statut/action accessibles. Préférer des lignes
   adaptées pour les domaines. URL longue et texte anglais sont des cas de test.

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { accountFetch, AccountClientError } from "@/lib/account-client";
-import { useAccountSession, PersonalNavigation } from "./AccountSession";
+import { useAccountSession } from "./AccountSession";
 import { useLang } from "@/lib/i18n/LangContext";
 import ReportPage from "@/app/(fr)/report/[token]/ReportPage";
 import type { Report } from "@/components/report/types";
@@ -50,6 +50,6 @@ export default function PersonalReport({ runId }: { runId: string }) {
   const back=<Link href={allowed && siteId ? "/account/sites/"+siteId : "/account/sites"}>{allowed && siteId ? t.account.sites.back : t.account.sites.title}</Link>;
   if(!session.ready) return <main className={s.page}><p role="status">{t.account.working}</p></main>;
   if(!allowed) return <main className={s.page}><h1>{t.account.openReport}</h1><p role="alert">{session.profile ? t.account.pending : t.account.errors.session_invalid}</p><Link href={"/account/sign-in?returnTo="+encodeURIComponent("/account/runs/"+runId)}>{t.account.signIn}</Link>{back}</main>;
-  if(report?.runId===runId) return <><PersonalNavigation/><div className={s.personalNav}>{back}</div>{history?.runId===runId && <div className={s.page}><HistoryActions context={history.context} launchBlocked={session.usage?.canLaunch===false}/></div>}<ReportPage params={{report:report.data}} feedbackReference={{runId}}/></>;
-  return <><PersonalNavigation/><main className={s.page}><h1>{t.account.openReport}</h1><p role={error ? "alert" : "status"}>{error==="resource_unavailable" ? t.account.sites.unavailable : error ? t.account.errors[error as keyof typeof t.account.errors]??t.account.errors.account_unavailable : status||t.account.working}</p>{back}{history?.runId===runId ? <HistoryActions context={history.context} launchBlocked={session.usage?.canLaunch===false}/> : <Link href="/account/sites?analyse=1">{t.account.sites.analyse}</Link>}</main></>;
+  if(report?.runId===runId) return <><div className={s.personalNav}>{back}</div>{history?.runId===runId && <div className={s.page}><HistoryActions context={history.context} launchBlocked={session.usage?.canLaunch===false}/></div>}<ReportPage embedded params={{report:report.data}} feedbackReference={{runId}}/></>;
+  return <><main className={s.page}><h1>{t.account.openReport}</h1><p role={error ? "alert" : "status"}>{error==="resource_unavailable" ? t.account.sites.unavailable : error ? t.account.errors[error as keyof typeof t.account.errors]??t.account.errors.account_unavailable : status||t.account.working}</p>{back}{history?.runId===runId ? <HistoryActions context={history.context} launchBlocked={session.usage?.canLaunch===false}/> : <Link href="/account/sites?analyse=1">{t.account.sites.analyse}</Link>}</main></>;
 }

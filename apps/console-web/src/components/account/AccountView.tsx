@@ -1,5 +1,5 @@
 "use client";
-import { useAccountSession, PersonalNavigation } from "./AccountSession";
+import { useAccountSession } from "./AccountSession";
 import UsagePanel from "./UsagePanel";
 import SocialProviderLogo, { socialProviderNames } from "./SocialProviderLogo";
 import { useEffect, useState, type FormEvent } from "react";
@@ -68,7 +68,7 @@ export default function AccountView({ mode = "me" }: { mode?: Mode }) {
   const unlinkedProviders = methods === null ? [] : providers.filter(provider => !methods.some(method => method.provider === provider));
   const title = mode === "me" ? copy.title : mode === "sign-in" ? copy.signIn : mode === "register" ? copy.register : mode === "verify" ? copy.verify : mode === "reset" ? copy.reset : copy.forgot;
   const field = (id: string, label: string, value: string, set: (v: string) => void, type = "text", autoComplete?: string) => <div className={s.field}><label htmlFor={id}>{label}</label><input className={s.input} id={id} type={type} value={value} onChange={e => set(e.target.value)} autoComplete={autoComplete} required disabled={busy} maxLength={type === "password" ? 256 : 254} /></div>;
-  return <><div className={s.chrome}><SiteNav /></div>{mode === "me" && <PersonalNavigation/>}<main className={s.page}><h1>{title}</h1>
+  return <>{mode !== "me" && <div className={s.chrome}><SiteNav /></div>}<main className={s.page}><h1>{title}</h1>
     {error && <p className={`${s.notice} ${s.error}`} role="alert">{error}</p>}{message && <p className={s.notice} role="status">{message}</p>}
     {!enabled && <p role="status">{copy.unavailable}</p>}
     {["register", "sign-in"].includes(mode) && <p className={s.policies}>
@@ -130,5 +130,5 @@ export default function AccountView({ mode = "me" }: { mode?: Mode }) {
       {mode === "me" && <p>{copy.alreadyRegistered} <Link href={"/account/sign-in?returnTo=" + encodeURIComponent(returnTo)}>{copy.signIn}</Link></p>}
       {["forgot", "reset", "verify"].includes(mode) && <Link href={"/account/sign-in?returnTo=" + encodeURIComponent(returnTo)}>{copy.backToSignIn}</Link>}
     </div>}
-  </main><SiteFooter /></>;
+  </main>{mode !== "me" && <SiteFooter />}</>;
 }
