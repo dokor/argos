@@ -24,7 +24,7 @@ try {
         assert.equal(route.request().method(),'GET');data={runId:'42',status:'RUNNING'};
       }else {
         data=response(url.pathname,url.searchParams);
-        if(accepted&&url.pathname.endsWith('/usage'))data={...data,used:19,reserved:1,canLaunch:false};
+        if(accepted&&url.pathname.endsWith('/usage'))data={...data,used:19,reserved:1,available:0,canLaunch:false};
       }
       if(!data){status=404;data={error:'resource_unavailable'};}
       await route.fulfill({status,contentType:'application/json',body:JSON.stringify(data)});
