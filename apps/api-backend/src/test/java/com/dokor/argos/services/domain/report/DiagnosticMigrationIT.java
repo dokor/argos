@@ -28,7 +28,7 @@ class DiagnosticMigrationIT extends MariaDbReportFixture {
         }
         // A DDL interruption may leave only one new column; migration remains restartable.
         sql("ALTER TABLE ARG_AUDIT_REPORT ADD COLUMN diagnostic_json LONGTEXT NULL");
-        Flyway.configure().dataSource(source).load().migrate();
+        Flyway.configure().dataSource(source).target("26").load().migrate();
         try (var c = source.getConnection();
                 var s = c.createStatement();
                 var r =

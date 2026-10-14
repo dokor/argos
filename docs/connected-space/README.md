@@ -1,6 +1,7 @@
 # Espace connecté Clarté — dossier d’intégration
 
-Version 1.0 · 13 octobre 2026 · **Spécification cible, pas fonctionnalité livrée**.
+Mise à jour du 14 octobre 2026 : F01–F14 intégrées dans `main`, recette F13
+livrée ; mise en service et remise à zéro V27 en préparation.
 
 Suivi : [epic #550](https://github.com/dokor/argos/issues/550) — dix nouveaux
 lots et quatre tickets existants reliés dans le [plan](delivery-plan.md).
@@ -19,8 +20,8 @@ reste souhaitable. Le moteur d’audit, ses protections et le site public ne
 sont pas à réécrire par défaut.
 
 Ce dossier ne déclenche ni suppression de données, ni migration, ni déploiement.
-La préparation d’une base neuve et le périmètre des données abandonnées sont
-décrits dans [architecture.md](architecture.md). Concevoir une rupture de
+La décision D-21 autorise l’abandon intégral de l’ancienne base ; le mécanisme
+et ses limites sont décrits dans [reset-v27.md](reset-v27.md). Concevoir une rupture de
 compatibilité n’est pas une commande de remise à zéro de la production.
 
 ## Parcours de lecture
@@ -47,8 +48,9 @@ compatibilité n’est pas une commande de remise à zéro de la production.
 | [Analyses par lots F07](batch-f07.md) | Admission atomique, progression, reprise et annulation privées |
 | [Compte personnel F04](account-f04.md) | Profil, sécurité, connexions, contrats conservés et preuves |
 | [Recette intégrée F13](acceptance-f13.md) | Matrice de preuves au SHA, comparaisons et réserves |
-| [Préparation production](production/README.md) | Kit opérateur sans déploiement, configuration candidate, base neuve et premier ADMIN |
-| [Mise en service F13](commissioning-f13.md) | Environnement neuf, données à décider, smoke tests et diagnostic |
+| [Remise à zéro V27](reset-v27.md) | Purge transactionnelle, historique Flyway, reprise et tests |
+| [Préparation production](production/README.md) | Kit opérateur sans déploiement, configuration candidate, base existante et premier ADMIN |
+| [Mise en service F13](commissioning-f13.md) | Base cible et données abandonnées, smoke tests et diagnostic |
 | [Recette et livraison](acceptance.md) | Matrice de tests et conditions de clôture |
 | [Plan de réalisation](delivery-plan.md) | Issues, dépendances et séquence des PR |
 | [Jeu de données canonique](fixtures/connected-space.json) | Valeurs attendues pour les calculs et les écrans |

@@ -1,4 +1,4 @@
-# Premier ADMIN — base neuve isolée
+# Premier ADMIN — après initialisation ou remise à zéro Clarté
 
 Cette procédure est opérateur, hors API. Ne jamais utiliser les schémas de test
 ou commandes de nettoyage Flyway contre une base conservée. L’outil ci-dessous
@@ -7,13 +7,13 @@ le serveur. Il ne sert pas à récupérer un ADMIN existant.
 
 ## Préparation
 
-1. Nommer explicitement l’environnement isolé et sa base neuve, par exemple
-   `argos_clarte_recette`. Employer un compte DB dédié à cette base. Les tables
-   moteur/public sont partagées : ne pas copier puis effacer un sous-ensemble
-   de tables de production. Une mise en service de production est distincte.
+1. Nommer explicitement l’environnement et sa base : `argos_clarte_recette`
+   pour une recette isolée, ou `argos_db_prod` après la future bascule autorisée.
+   Employer le compte DB limité à cette base. Vérifier la [V27](reset-v27.md)
+   réussie avant de créer le nouveau compte ; tous les anciens comptes sont effacés.
 2. Construire `mvn package` dans `apps/api-backend`. Configurer l’application
    avec cette base ; au démarrage habituel, Flyway applique toutes les migrations.
-   Garder les versions historiques et leurs checksums. Vérifier V26 ou suivantes.
+   Garder les versions historiques et leurs checksums. Vérifier V27 réussie avant création du compte opérateur.
 3. Configurer `account.enabled`, origine exacte commune Next/Java, secret JWT,
    SMTP de recette et offres/plafonds suivant [operations](../accounts/operations.md).
    `ADMIN_API_TOKEN` reste distinct. Retirer les anciennes variables Next

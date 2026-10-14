@@ -1,32 +1,27 @@
 # Fiche opérateur privée — Clarté
 
-Conserver la fiche remplie hors Git. Ne pas y coller de secrets.
+Conserver la fiche remplie hors Git, sans valeur de secret.
 
 | Élément | Valeur / preuve |
 |---|---|
 | Origine | https://argos.lelouet.fr |
-| Base candidate | argosclarteprod |
-| Utilisateur applicatif | argosclarte ; hôte autorisé à confirmer |
-| Responsable / date | À renseigner |
-| Hôte MariaDB interne / version | À relever |
-| Ancienne base et sauvegarde | À relever ; conservée, aucun reset |
-| Référence de restauration isolée | À renseigner avant mise en service |
-| Révision applicative retenue | 17326498900e34f23a7ae1132cdc0050966d73f5 ; revalider si elle change |
-| Images réellement actives / candidates | À relever séparément |
+| Base cible / utilisateur | argos_db_prod / argos_user, à confirmer sur l’instance réelle |
+| Responsable / fenêtre | À renseigner |
+| MariaDB interne / version / droits | À relever |
+| Révision et images candidates | SHA de la PR fusionnée et testée, à renseigner |
+| Images actives avant bascule | À relever séparément |
+| Inventaire tables / moteurs / volume / effets SQL | À relever ; 29 tables Argos InnoDB attendues avant V27 |
+| Abandon des données | Total : comptes, rapports publics/privés, historique, quotas, newsletter, feedback, analytics |
+| Sauvegarde de secours technique | Référence privée si retenue ; aucune reprise métier requise |
 | FREE / PREMIUM | 10 / 1000 par mois UTC |
-| SMTP et domaine expéditeur | À renseigner ; délivrabilité non vérifiée |
-| OAuth réellement retenus | À décider ; ne pas activer des boutons sans configuration valide |
-| Premier ADMIN | Email puis ID exact après vérification ; fiche privée uniquement |
-| Décision concernant anciens rapports et données publiques | À décider avant bascule ; base conservée ne signifie pas liens accessibles sur la nouvelle |
-| Accès cible / configuration | Exécutés par l'opérateur ; aucun accès serveur donné à Codex |
-| Autorisation actuelle | Préparation seulement ; aucun déploiement ni suppression |
+| SMTP et fournisseurs OAuth | Résultats de recette réelle à renseigner |
+| Premier ADMIN | Nouveau compte vérifié puis ID exact ; aucune donnée de compte dans Git |
+| Autorisation actuelle | Préparer PR, scripts, tests et documentation ; aucun déploiement |
 
-## Avancement à dater avec preuve
-
-- [ ] Inventaire de la cible et absence de collision de nom confirmés.
-- [ ] Fichiers candidats remplis, accès restreint, secrets stockés dans le coffre.
-- [ ] Base vide et utilisateur dédié provisionnés par l'opérateur, droits vérifiés.
-- [ ] Copie candidate des Compose relue ; fichiers actifs inchangés.
-- [ ] **Ultérieur :** décision de mise en service, migrations, SMTP/OAuth réels.
-- [ ] **Ultérieur :** compte vérifié, simulation et promotion ADMIN, reconnexion.
-- [ ] **Ultérieur :** recette cible, restauration, charge et accessibilité manuelle.
+- [ ] Base exacte et toutes les instances écrivantes inventoriées.
+- [ ] Configuration candidate préparée ; secrets/droits/montages vérifiés.
+- [ ] CI/MariaDB/E2E verts au SHA retenu ; workflows de déploiement désactivés.
+- [ ] Ultérieur : maintenance, anciens écrivains arrêtés, V27 réussie, compteurs contrôlés.
+- [ ] Ultérieur : nouveau compte vérifié, bootstrap ADMIN et reconnexion.
+- [ ] Ultérieur : smoke tests publics/connectés, SMTP/OAuth, charge et accessibilité.
+- [ ] Ultérieur : redémarrage sans nouvel effacement, ouverture et supervision.

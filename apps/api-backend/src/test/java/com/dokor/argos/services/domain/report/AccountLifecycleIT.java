@@ -1469,8 +1469,8 @@ class AccountLifecycleIT extends MariaDbReportFixture {
         try(var c=source.getConnection();var s=c.prepareStatement("INSERT INTO ARG_AUDIT_RUN(id,audit_id,status,owner_user_id,created_at) VALUES(?,1,'FAILED',?,'2026-10-09')")) {
             for(int n=0;n<1005;n++){s.setLong(1,1000+n);s.setLong(2,aid);s.addBatch();}s.executeBatch();
         }
-        org.flywaydb.core.Flyway.configure().dataSource(source).load().migrate();
-        org.flywaydb.core.Flyway.configure().dataSource(source).load().migrate();
+        org.flywaydb.core.Flyway.configure().dataSource(source).target("26").load().migrate();
+        org.flywaydb.core.Flyway.configure().dataSource(source).target("26").load().migrate();
         try(var connection=source.getConnection()) {
             new db.migration.V13__backfill_account_sites().migrate(new org.flywaydb.core.api.migration.Context() {
                 public java.sql.Connection getConnection(){return connection;}
