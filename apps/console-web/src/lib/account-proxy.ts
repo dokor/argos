@@ -1,3 +1,4 @@
+import { domainSummaryPath, domainSummaryQuery } from "./domain-summary-request";
 import { safeAccountReturn } from "./account-return";
 export { safeAccountReturn } from "./account-return";
 import { ssrfError } from "./audit-url-validation";
@@ -83,7 +84,7 @@ const allowed: Record<string, RegExp> = {
 };
 export async function accountProxy(request: NextRequest, parts: string[]): Promise<NextResponse> {
   const path = parts.join("/"), mutation = request.method !== "GET", callback = /^auth\/oauth\/(google|github|linkedin)\/callback$/.test(path);
-  if (!allowed[request.method]?.test(path) && !(request.method === "GET" && /^report-introduction\/[A-Za-z0-9_-]{20,512}$/.test(path)) && !adminPath(request.method,path)) return privateError("resource_unavailable", 404);
+  if (!allowed[request.method]?.test(path) && !(request.method === "GET" && domainSummaryPath(path)) && !(request.method === "GET" && /^report-introduction\/[A-Za-z0-9_-]{20,512}$/.test(path)) && !adminPath(request.method,path)) return privateError("resource_unavailable", 404);
   const headers = accountHeaders(request, mutation);
   if (headers instanceof NextResponse) return headers;
   let body: string | undefined, returnTo = "/account", preserveReturn = false, linkIntent = false;
@@ -150,8 +151,10 @@ export async function accountProxy(request: NextRequest, parts: string[]): Promi
   }
   const adminParams=path.startsWith("admin/") ? adminQuery(path,request.nextUrl.searchParams) : undefined;
   if(adminParams===null) return privateError("filter_invalid",400);
-  const query = adminParams ?? new URLSearchParams();
-  if(path === "domain-batches" || /^domains\/\d{1,19}\/batches\//.test(path)) {
+  const summaryParams = request.method === "GET" && domainSummaryPath(path) ? domainSummaryQuery(path, request.nextUrl.searchParams) : undefined;
+  if (summaryParams === null) return privateError("filter_invalid",400);
+  const query = summaryParams ?? adminParams ?? new URLSearchParams();
+  if(summaryParams === undefined && (path === "domain-batches" || /^domains\/\d{1,19}\/batches\//.test(path))) {
     const params=request.nextUrl.searchParams;
     if(request.method === "GET" && path.endsWith("/progress/pages")) {
       if([...params.keys()].some(key=>!["limit","offset","status"].includes(key)||params.getAll(key).length!==1)) return privateError("filter_invalid",400);
