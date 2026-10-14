@@ -156,6 +156,23 @@ Une erreur après création peut laisser la base ou l'utilisateur présents : le
 DDL MariaDB ne constituent pas une transaction globale. Le script préserve ces
 objets, signale l'état partiel et ne tente ni suppression, ni correction, ni
 rotation de mot de passe. Faire vérifier cet état par le DBA avant toute suite.
+Les échecs indiquent l'étape et, si le client le fournit, uniquement le numéro
+d'erreur MariaDB et le SQLSTATE. Le texte brut de l'erreur, le SQL, les secrets
+et les empreintes restent masqués. `connexion/version` avec ERROR=1045 indique
+un refus d'authentification ; `absence-utilisateur` avec ERROR=1142 indique un
+manque de droits de lecture pour vérifier les collisions. Comparer avec la
+connexion manuelle habituelle, avec saisie masquée :
+
+```sh
+docker exec -it mariadb-public mariadb -u root -p -e 'SELECT VERSION(), CURRENT_USER();'
+```
+
+Si le compte DBA habituel n'est pas root, utiliser le même nom en CLI et dans
+`--admin-user`. Ne pas modifier les grants ou le mot de passe d'un compte existant
+pour contourner l'échec ; utiliser le compte opérateur déjà autorisé. Références :
+[1045](https://mariadb.com/docs/server/reference/error-codes/mariadb-error-codes-1000-to-1099/e1045),
+[1142](https://mariadb.com/docs/server/reference/error-codes/mariadb-error-codes-1100-to-1199/e1142).
+
 Le verrou protège les opérateurs utilisant ce script ; il ne bloque pas un DBA
 qui exécute du SQL indépendamment. Les CREATE sans clause de remplacement
 refusent également les collisions survenant entre les contrôles et la création.
