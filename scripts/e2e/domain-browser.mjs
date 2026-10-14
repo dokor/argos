@@ -150,7 +150,15 @@ try {
   // A second launch is a distinct historical resource; canceling it cannot replace the first.
   await page.goto(base + "/account/domains/new?discovery=" + discovery);
   await page.getByRole("button", { name: c.selectNone, exact: true }).click();
+  await page.waitForFunction(
+    () =>
+      document.querySelectorAll("input[type=checkbox]:checked").length === 0,
+  );
   await page.getByRole("checkbox").first().check();
+  await page.waitForFunction(
+    () =>
+      document.querySelectorAll("input[type=checkbox]:checked").length === 1,
+  );
   await page.getByRole("button", { name: c.confirm, exact: true }).click();
   await page
     .getByRole("dialog")

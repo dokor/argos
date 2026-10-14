@@ -172,6 +172,17 @@ try {
         assert.match(page.url(), /rule=http.hsts/);
         assert.equal(await page.locator("tbody tr").count(), 3);
         await check("filtered-pages");
+        if (width < 768) {
+          const region = page.getByRole("region", {
+            name: c.allPages,
+            exact: true,
+          });
+          await region.focus();
+          await page.keyboard.press("ArrowRight");
+          await page.waitForFunction(
+            () => document.querySelector("main [role=region]").scrollLeft > 0,
+          );
+        }
         const filtered = page.url();
         const language = page.getByRole("link", {
           name: lang === "fr" ? "English" : "Français",
@@ -220,6 +231,24 @@ try {
         assert.equal(posts.length, before, "Reload never submits");
         await page.getByRole("dialog").waitFor();
         await check("confirmation");
+        const modal = page.getByRole("dialog");
+        await modal
+          .getByRole("button", { name: c.cancel, exact: true })
+          .focus();
+        await page.keyboard.press("Shift+Tab");
+        assert.equal(
+          await modal
+            .getByRole("button", { name: c.launch, exact: true })
+            .evaluate((el) => el === document.activeElement),
+          true,
+        );
+        await page.keyboard.press("Tab");
+        assert.equal(
+          await modal
+            .getByRole("button", { name: c.cancel, exact: true })
+            .evaluate((el) => el === document.activeElement),
+          true,
+        );
         await page.keyboard.press("Escape");
         assert.equal(await page.getByRole("dialog").count(), 0);
         assert.equal(

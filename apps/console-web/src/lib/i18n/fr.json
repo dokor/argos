@@ -947,6 +947,8 @@
     "targetLang": "en"
   },
   "domainPage": {
+    "completeHint": "Diagnostics complets parmi les pages sélectionnées",
+    "tableHint": "Le tableau peut défiler horizontalement : statut, couverture et diagnostic sont dans les colonnes suivantes.",
     "listTitle": "Mes domaines",
     "listIntro": "Retrouvez la dernière synthèse de chaque domaine analysé.",
     "new": "Analyser un domaine",

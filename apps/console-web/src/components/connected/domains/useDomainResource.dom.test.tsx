@@ -127,3 +127,27 @@ it("does not retry unauthorized reads or query unverified accounts", async () =>
   });
   expect(accountFetch).not.toHaveBeenCalled();
 });
+
+it.each([401, 403, 404, 410])(
+  "clears an already loaded private resource on permanent HTTP %s",
+  async (status) => {
+    vi.mocked(accountFetch)
+      .mockResolvedValueOnce({ status: "COMPLETED" })
+      .mockRejectedValue(
+        new AccountClientError("resource_unavailable", status),
+      );
+    const hook = renderHook(() =>
+      useDomainResource("domains/7/batches/1", activeStatus),
+    );
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(hook.result.current.data).not.toBeNull();
+    act(() => hook.result.current.reload());
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(hook.result.current.data).toBeNull();
+    expect(hook.result.current.error).toBe("resource_unavailable");
+  },
+);

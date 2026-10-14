@@ -947,6 +947,8 @@
     "targetLang": "fr"
   },
   "domainPage": {
+    "completeHint": "Complete diagnostics among the selected pages",
+    "tableHint": "The table scrolls horizontally: status, coverage and diagnostic are in the following columns.",
     "listTitle": "My domains",
     "listIntro": "Find the latest summary for each analysed domain.",
     "new": "Analyse a domain",
