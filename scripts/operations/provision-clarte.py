@@ -278,7 +278,7 @@ def main(argv=None):
     try:
         with warnings.catch_warnings():
             warnings.simplefilter('error', getpass.GetPassWarning)
-            admin_password = getpass.getpass('Mot de passe DBA MariaDB (saisie masquée) : ')
+            admin_password = getpass.getpass('Mot de passe DBA MariaDB [' + args.admin_user + '] (saisie masquée) : ')
             provision(args, admin_password)
         return 0
     except KeyboardInterrupt:

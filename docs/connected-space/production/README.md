@@ -115,7 +115,11 @@ Depuis une copie du dépôt contenant cette PR, commencer par la simulation :
 python3 scripts/operations/provision-clarte.py
 ```
 
-Elle demande le mot de passe DBA avec saisie masquée, vérifie conteneur actif,
+Elle demande le mot de passe DBA avec saisie masquée et affiche le compte attendu
+(`root` par défaut). Ce mot de passe est celui de MariaDB, pas celui du compte
+Linux ni celui de l’application existante `argos_user` / `argos_db_prod`.
+Utiliser les credentials DBA du coffre ou de la configuration du service MariaDB.
+Elle vérifie conteneur actif,
 réseau et version, prend un verrou de session contre les provisionnements
 concurrents puis vérifie l'absence de la base et de tout utilisateur homonyme.
 Résultat attendu : `DRY_RUN OK`. Elle ne crée aucun objet DB et ne demande pas

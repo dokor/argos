@@ -94,6 +94,7 @@ class SafetyTests(unittest.TestCase):
     def test_no_unmasked_fallback(self):
         with patch.object(p.getpass, 'getpass', side_effect=p.getpass.GetPassWarning), contextlib.redirect_stderr(io.StringIO()) as output:
             self.assertEqual(p.main([]), 1)
+            self.assertIn('[root]', p.getpass.getpass.call_args.args[0])
         self.assertIn('saisie masquée', output.getvalue())
 
 
