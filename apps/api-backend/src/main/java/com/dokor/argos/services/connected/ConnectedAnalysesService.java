@@ -33,7 +33,7 @@ public final class ConnectedAnalysesService {
             throw new AccountError(400,"url_invalid");
         return sessions.with(auth,csrf,true,true,(context,c)-> {
             String normalized;
-            try { normalized=UrlNormalizer.normalizeSyntax(input.url()); }
+            try { normalized=UrlNormalizer.normalizeAdmissionSyntax(input.url()); }
             catch (IllegalArgumentException e) { throw new AccountError(400,"url_invalid"); }
             var fingerprint=HexFormat.of().formatHex(tokens.sha256(normalized+"\n"+input.profileId()));
             var q=QAuditRun.auditRun;
