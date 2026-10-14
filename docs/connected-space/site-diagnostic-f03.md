@@ -39,3 +39,7 @@ F05/#555 reste nécessaire pour le parcours complet offres/quotas et l’admissi
 - `node scripts/e2e/account-history.mjs` : comparaison et relance depuis l’historique. Les recettes backend réelles `check-sites.mjs` et `check-usage.mjs` sont adaptées à la nouvelle page ; leurs prérequis sont dans `docs/testing/accounts.md`.
 
 Captures et résultats : `outputs/ui-review/clarte-analysis/` (ignoré), publiés par `Controlled audit E2E` comme artefact `connected-analysis-{sha}`. Les fixtures ne sont importées ni par Next ni par Java. Le serveur optionnel `node scripts/e2e/connected-analysis-fixture.mjs --serve` écoute en lecture seule sur `127.0.0.1:3021` pour l’inspection humaine ; ne jamais le déployer.
+
+## Préparation de la recette QA-18
+
+Le [lot F14](evidence-f14.md) ajoute les observations bornées à la chaîne de collecte et au rendu partagé web/PDF. La dépendance #538 doit être intégrée et ses preuves au SHA vérifiées avant de clôturer QA-18 et F13 ; les captures mockées F03 seules restent insuffisantes.

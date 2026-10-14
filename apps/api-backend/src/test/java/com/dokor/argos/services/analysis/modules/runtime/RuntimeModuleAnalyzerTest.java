@@ -18,6 +18,26 @@ import static org.mockito.Mockito.*;
 
 class RuntimeModuleAnalyzerTest {
 
+    @Test void evidenceIsScopedToTheActualNetworkFinding() throws Exception {
+        var mapper=new com.fasterxml.jackson.databind.ObjectMapper();
+        var raw=mapper.readTree("""
+          {"url":"https://example.com","finalUrl":"https://example.com","network":{
+           "requests":3,"failedRequests":2,"status5xx":1,"failedRequestsFirstParty":1,
+           "failedRequestsThirdParty":1,"status5xxFirstParty":1,"status5xxThirdParty":0,
+           "observedEvidence":{"version":"observed-evidence-v1","source":"runtime","items":[
+             {"kind":"resource","origin":"https://example.com","resourceRef":"1111111111111111","ownership":"FIRST_PARTY","status":503},
+             {"kind":"resource","origin":"https://example.com","resourceRef":"2222222222222222","ownership":"FIRST_PARTY","reason":"net::ERR_FAILED"},
+             {"kind":"resource","origin":"https://other.example","resourceRef":"3333333333333333","ownership":"THIRD_PARTY"}],"inspected":3}}}
+          """);
+        var result=analyze(mapper.treeToValue(raw,PlaywrightRuntimeClient.RuntimeAnalyzeResponse.class));
+        for(var entry:Map.of("runtime.network.5xx","1111111111111111",
+                "runtime.network.failed_requests","2222222222222222","runtime.network.third_party_errors","3333333333333333").entrySet()) {
+            var check=result.checks().stream().filter(c->entry.getKey().equals(c.key())).findFirst().orElseThrow();
+            var evidence=(com.dokor.argos.services.analysis.model.ObservedEvidence)check.details().get("observed");
+            assertEquals(1,evidence.items().size());assertEquals(entry.getValue(),evidence.items().getFirst().resourceRef());
+        }
+    }
+
     private static AuditContext ctx() {
         return new AuditContext("http://example.com", "http://example.com", 1L);
     }

@@ -51,6 +51,7 @@ export function describeObservation(issue: Issue, title: string, lang: Lang) {
 export function missingLocation(issue: Issue, lang: Lang) {
   if (issue.id === "html.title" || issue.id === "html.meta.description.present" || issue.id === "html.social.meta")
     return lang === "fr" ? "Emplacement : <head> de la page mesurée. Utiliser le HTML reçu pour retrouver la balise et sa valeur exacte." : "Location: <head> of the measured page. Use the received HTML to locate the tag and its exact value.";
+  if (issue.structuredEvidence?.observed?.version === "observed-evidence-v1") return ""; // Collection metadata explains its own availability and limits.
   const located = issue.structuredEvidence?.details?.some(d => /url|element|node|selector|resource|sample|snippet|location/i.test(d.key)) || /<\w|https?:\/\//.test(issue.evidence ?? "");
   return located ? "" : lang === "fr"
     ? "Le rapport ne conserve pas les éléments ou ressources concernés ni leur emplacement. Les retrouver dans le HTML ou le diagnostic source avant d’agir."

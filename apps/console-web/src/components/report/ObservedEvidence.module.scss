@@ -1,0 +1,8 @@
+.evidence {
+  margin-block: 1rem;
+  overflow-wrap: anywhere;
+  ul { padding-inline-start: 1.2rem; }
+  li { margin-block: .75rem; break-inside: avoid; }
+  p { margin-block: .4rem; }
+  code { font-size: inherit; white-space: normal; }
+}

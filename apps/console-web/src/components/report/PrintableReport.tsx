@@ -1,3 +1,4 @@
+import ObservedEvidence from "./ObservedEvidence";
 import s from './PrintableReport.module.scss';
 import type { Report } from './types';
 import type { Lang } from '@/lib/i18n/routes';
@@ -54,6 +55,7 @@ export default function PrintableReport({report,lang,format}:{report:Report;lang
  <p>{r.technicalTitle}: {cleanEvidence(i.title)}</p><p>{r.originalObservation}: {cleanEvidence(i.impact)}</p><p>{r.technicalId}: {cleanEvidence(i.id??f.key)}</p>
  <p>{r.source}: {cleanEvidence(i.structuredEvidence?.source||f.sources.join(', '))||d.sourcesUnknown}</p><p>{t.priorityCards.confidenceLabel} {i.confidence&&Object.hasOwn(t.priorityCards.confidence,i.confidence)?t.priorityCards.confidence[i.confidence]:r.unknownConfidence}</p>
  <h5>{r.evidence}</h5>{valid?<p>{i.id==='runtime.network.bytes_estimated'?r.estimated+': ':''}{m.value.toLocaleString(lang,{maximumSignificantDigits:6})} {r.units[m.unit]}</p>:<p>{r.missingMeasure}</p>}
+ <ObservedEvidence evidence={i.structuredEvidence?.observed} lang={lang} />
  {i.structuredEvidence?.details?.length?<dl>{i.structuredEvidence.details.slice(0,20).map((detail,n)=><div key={n}><dt>{detail.key==='score'&&i.id?.startsWith('lighthouse.audit.')?r.lighthouseRatio:cleanEvidence(detail.key)}</dt><dd>{cleanEvidence(detail.text)}</dd></div>)}</dl>:i.evidence&&<p className="evidence">{cleanEvidence(i.evidence)}</p>}
  <p><strong>{r.recommendation}:</strong> {c.recommendation}</p><p><strong>{r.verification}:</strong> {c.verification}</p></article>;})}</section>)}</section>}
  <section><h2>{d.method}</h2><p>{d.confidenceExplain}</p><p>{d.lighthouse}</p><p>{d.automaticLimit}</p><p>{r.limits}</p>

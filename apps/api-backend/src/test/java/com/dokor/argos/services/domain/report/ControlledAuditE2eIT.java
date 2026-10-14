@@ -80,7 +80,7 @@ class ControlledAuditE2eIT extends MariaDbReportFixture {
                             Thread.currentThread().interrupt();
                         }
                     } else if (!Set.of(
-                                    "/robots.txt", "/sitemap.xml", "/favicon.ico", "/missing.png")
+                                    "/robots.txt", "/sitemap.xml", "/favicon.ico", "/missing.png", "/resource-503")
                             .contains(path)) {
                         // Keep the RUNNING UI observable even when both collectors fail
                         // immediately.
@@ -90,7 +90,7 @@ class ControlledAuditE2eIT extends MariaDbReportFixture {
                             Thread.currentThread().interrupt();
                         }
                     }
-                    int status = path.equals("/antibot") ? 403 : 200;
+                    int status = path.equals("/antibot") ? 403 : path.equals("/resource-503") ? 503 : 200;
                     exchange.getResponseHeaders().set("Content-Type", "text/html; charset=utf-8");
                     exchange.getResponseHeaders().set("X-Content-Type-Options", "nosniff");
                     if (path.equals("/antibot")) {
@@ -108,7 +108,7 @@ class ControlledAuditE2eIT extends MariaDbReportFixture {
                                 + " fixture</h1><p>Local fixture content.</p>";
                     if (path.equals("/errors"))
                         body +=
-                                "<img src='/missing.png'><script>console.error('Synthetic fixture"
+                                "<img src='/missing.png'><script>fetch('/resource-503?token=synthetic-proof-secret');console.error('Synthetic fixture"
                                         + " error');throw new Error('Synthetic fixture"
                                         + " error')</script>";
                     if (path.equals("/antibot"))

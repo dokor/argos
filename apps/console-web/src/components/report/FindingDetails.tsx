@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import ObservedEvidence from "./ObservedEvidence";
 import { correctionGuide } from "@/lib/correctionGuides";
 import { useLang } from "@/lib/i18n/LangContext";
 import { CATALOGUE_VERSION, cleanEvidence, findingContent } from "./findingCatalogue";
@@ -29,6 +30,7 @@ export default function FindingDetails({ finding }: { finding: Finding }) {
       {content.missingInformation && <p>{content.missingInformation}</p>}
       {validMeasure ? <p>{issue.id === "runtime.network.bytes_estimated" ? `${copy.estimated}: ` : ""}
         {measure.value.toLocaleString(lang, { maximumSignificantDigits: 6 })} {copy.units[measure.unit]}</p> : <p>{copy.missingMeasure}</p>}
+      <ObservedEvidence evidence={evidence?.observed} lang={lang} />
       {evidence?.details?.length ? <dl>{evidence.details.slice(0, 20).map((detail, index) =>
         <div key={index}><dt><code>{detail.key === "score" && issue.id?.startsWith("lighthouse.audit.") ? copy.lighthouseRatio : cleanEvidence(detail.key)}</code></dt><dd>{cleanEvidence(detail.text)}</dd></div>)}</dl>
         : issue.evidence && <p>{cleanEvidence(issue.evidence)}</p>}

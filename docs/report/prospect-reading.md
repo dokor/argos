@@ -12,7 +12,7 @@ La moyenne, la couverture globale et la couverture d’un domaine décrivent des
 
 La vue d’ensemble présente trois priorités et une aide concrète avant les scores détaillés. Les trois modes et leurs liens canoniques sont conservés. L’export et la navigation privée sont secondaires. Le résultat automatique d’accessibilité et sa limite restent visibles ; les détails sont repliés dans la synthèse et le plan d’action.
 
-La collecte ne conserve pas toujours les ressources/éléments et leur emplacement. Le rendu le dit explicitement. L’enrichissement de la collecte est suivi dans [#538](https://github.com/dokor/argos/issues/538).
+La collecte ne conserve pas toujours les ressources/éléments et leur emplacement. Le rendu le dit explicitement. La collecte bornée F14 et ses limites de confidentialité sont décrites dans le [contrat des preuves observées](../connected-space/evidence-f14.md). Les rapports historiques ne sont pas enrichis rétroactivement.
 
 ## Introduction humaine publiée
 

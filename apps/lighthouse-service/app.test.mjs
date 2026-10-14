@@ -103,3 +103,12 @@ test('cancelling queued work removes it without consuming a concurrency slot', a
   release(); await first;
   assert.equal(await limited(async () => 'next'), 'next');
 });
+
+ test('HTTP contract attaches observations before generic redaction without exposing raw evidence',async t=>{
+ const base=await serverFor(t,async()=>({lhr:{audits:{fixture:{score:0,details:{items:[{url:'https://site.example/private.js?token=private-secret'}]}}}}}));
+ const response=await fetch(base+'/analyze',{method:'POST',body:JSON.stringify({url:'https://example.com'})});
+ const report=await response.json(), evidence=report.audits.fixture.observedEvidence;
+ assert.equal(evidence.items[0].origin,'https://site.example');
+ assert.match(evidence.items[0].resourceRef,/^[a-f0-9]{16}$/);
+ assert.doesNotMatch(JSON.stringify(report),/private-secret|private.js/);
+ });

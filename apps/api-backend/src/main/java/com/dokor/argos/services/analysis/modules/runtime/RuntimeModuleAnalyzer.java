@@ -125,7 +125,7 @@ public class RuntimeModuleAnalyzer {
             firstParty5xx == 0 ? AuditSeverity.LOW : AuditSeverity.HIGH,
             false, 0.0, List.of("runtime"),
             firstParty5xx,
-            nullableMap("topLargest", r.network() != null ? r.network().topLargest() : null),
+            networkEvidence(r, "server"),
             firstParty5xx == 0 ? "Aucune réponse 5xx de votre site observée." : (firstParty5xx + " réponse(s) 5xx de votre site observée(s)."),
             firstParty5xx == 0 ? null : "Analyser les endpoints en erreur (logs serveur, timeouts, config CDN)."
         ));
@@ -138,7 +138,7 @@ public class RuntimeModuleAnalyzer {
             firstPartyFailedReq == 0 ? AuditSeverity.LOW : AuditSeverity.MEDIUM,
             false, 0.0, List.of("runtime"),
             firstPartyFailedReq,
-            Map.of(),
+            networkEvidence(r, "failed"),
             firstPartyFailedReq == 0 ? "Aucune requête réseau de votre site en échec." : (firstPartyFailedReq + " requête(s) réseau de votre site en échec."),
             firstPartyFailedReq == 0 ? null : "Vérifier les ressources bloquées (CORS, DNS, timeouts, adblock, mixed content)."
         ));
@@ -153,7 +153,7 @@ public class RuntimeModuleAnalyzer {
             AuditSeverity.LOW,
             false, 0.0, List.of("runtime"),
             thirdPartyNetworkErrors,
-            Map.of("failedRequests", thirdPartyFailedReq, "status5xx", thirdParty5xx),
+            networkEvidence(r, "third_party"),
             thirdPartyNetworkErrors == 0
                 ? "Aucun incident réseau tiers observé."
                 : thirdPartyNetworkErrors + " incident(s) réseau tiers observé(s), non compté(s) dans votre score.",
@@ -278,6 +278,16 @@ public class RuntimeModuleAnalyzer {
         if (total == null || firstParty == null) return thirdParty;
         if (thirdParty == null) return Math.max(0, total - firstParty);
         return Math.min(Math.max(0, total - firstParty), Math.max(0, thirdParty));
+    }
+
+    private static Map<String,Object> networkEvidence(PlaywrightRuntimeClient.RuntimeAnalyzeResponse response, String kind) {
+        var observed=ObservedEvidence.from(response.network()==null?null:response.network().observedEvidence());
+        if(observed==null || !"runtime".equals(observed.source())) return Map.of();
+        var selected=observed.filter(item -> "third_party".equals(kind)
+            ? "THIRD_PARTY".equals(item.ownership())
+            : "FIRST_PARTY".equals(item.ownership()) && ("server".equals(kind)
+                ? item.status()!=null && item.status()>=500 : item.status()==null));
+        return Map.of("observed",selected);
     }
 
     private static List<Map<String, String>> sampleConsole(PlaywrightRuntimeClient.RuntimeAnalyzeResponse r, String type) {
