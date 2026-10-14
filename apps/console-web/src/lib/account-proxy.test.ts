@@ -363,3 +363,15 @@ it("forwards private usage history with period/offset and cookie identity only",
 it.each(["ownerId=2","period=2026-13","period=2026-10&period=2026-09","offset=-1","offset=9007199254740992","limit=101","limit=20&limit=1"])("rejects invalid usage history query %s",async query=>{
  expect((await accountProxy(request("usage/events?"+query),["usage","events"])).status).toBe(400);expect(fetchMock).not.toHaveBeenCalled();
 });
+it("recovers an admission only by validated key and session, with private caching",async()=>{
+  const key="12345678-1234-1234-1234-123456789012";
+  fetchMock.mockResolvedValue(Response.json({runId:"42",status:"COMPLETED"}));
+  const response=await accountProxy(request("analyses/"+key),["analyses",key]);
+  expect(response.status).toBe(200);expect(response.headers.get("cache-control")).toBe("private, no-store");
+  expect(fetchMock.mock.calls[0][0]).toBe("http://fixture-backend/api/account/analyses/"+key);
+  expect(fetchMock.mock.calls[0][1].headers.get("Authorization")).toBe("Bearer "+jwt);
+  fetchMock.mockClear();
+  expect((await accountProxy(request("analyses/"+key+"?ownerId=forged"),["analyses",key])).status).toBe(400);
+  expect((await accountProxy(request("analyses/bad-key"),["analyses","bad-key"])).status).toBe(404);
+  expect(fetchMock).not.toHaveBeenCalled();
+});

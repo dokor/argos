@@ -1014,6 +1014,7 @@ class AccountLifecycleIT extends MariaDbReportFixture {
                                             new AccountCsrf(settings),
                                             new AccountRateLimiter(dao, tokens, clock, settings), new AccountSitesService(dao,sessions,new UrlNormalizer(),new DomainService(new DomainDao(dao.transactions)),new AuditDao(dao.transactions),clock),new AccountHistoryService(dao,sessions,mapper,clock)));
             config.register(new com.dokor.argos.webservices.api.account.UsageHistoryWs(new UsageHistoryService(sessions,new UsagePolicy(ConfigFactory.empty()),clock)));
+            config.register(new com.dokor.argos.webservices.api.account.ConnectedAnalysesWs(connectedAnalyses(),new AccountCsrf(settings)));
             config.register(new com.dokor.argos.webservices.api.account.AdminWs(administration(),new AccountCsrf(settings)));
             config.register(new com.dokor.argos.webservices.api.feedback.FeedbackWs(feedback(),new AccountCsrf(settings),new AccountRateLimiter(dao,tokens,clock,settings)));
             config.register(new com.dokor.argos.webservices.api.feedback.FeedbackAdminWs(feedback(),new AccountCsrf(settings)));
@@ -1350,6 +1351,24 @@ class AccountLifecycleIT extends MariaDbReportFixture {
     private com.dokor.argos.services.connected.ConnectedAnalysesService connectedAnalyses() {
         return new com.dokor.argos.services.connected.ConnectedAnalysesService(dao,sessions,sites(),auditService,new UrlNormalizer(),
             new com.dokor.argos.services.connected.ConnectedProfiles(new com.dokor.argos.services.analysis.scoring.DefaultScorePolicy()),mapper,tokens);
+    }
+    @Test void connectedRecoveryHttpIsOwnerScopedReadOnlyAndPrivatelyCached() throws Exception {
+        var a=user("recovery-a@example.com",true);var b=user("recovery-b@example.com",true);
+        var key=UUID.randomUUID().toString();
+        var accepted=connectedAnalyses().create(bearer(a),CSRF,key,
+            new com.dokor.argos.services.connected.contract.ConnectedContracts.SiteAnalysisInput("https://example.com/page","server-default-v1"));
+        try(var http=new HttpFixture()) {
+            var path="/account/analyses/"+key;
+            assertEquals(401,http.call("GET",path,null,null,false).statusCode());
+            assertEquals(404,http.call("GET",path,bearer(b),null,false).statusCode());
+            var response=http.call("GET",path,bearer(a),null,false);
+            assertEquals(200,response.statusCode(),response.body());
+            assertEquals("private, no-store",response.headers().firstValue("Cache-Control").orElseThrow());
+            assertEquals(accepted.runId(),mapper.readTree(response.body()).path("runId").asText());
+            assertEquals(404,http.call("GET","/account/analyses/"+UUID.randomUUID(),bearer(a),null,false).statusCode());
+            assertEquals(1,count("ARG_USAGE_RUN WHERE state='RESERVED'"));
+            assertEquals(1,count("ARG_AUDIT_RUN WHERE idempotency_key IS NOT NULL"));
+        }
     }
     @Test void connectedAdmissionReplaysConcurrentlyAtQuotaAndScopesItsKeyByOwner() throws Exception {
         usagePolicy("usage.offers.FREE.monthly-limit=1");

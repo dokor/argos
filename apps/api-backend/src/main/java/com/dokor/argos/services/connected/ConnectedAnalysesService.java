@@ -28,15 +28,13 @@ public final class ConnectedAnalysesService {
         this.normalizer=normalizer; this.profiles=profiles; this.mapper=mapper; this.tokens=tokens;
     }
     public SiteAnalysisAccepted create(String auth, String csrf, String key, SiteAnalysisInput input) {
-        if (key==null || !key.matches("[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}"))
-            throw new AccountError(400,"idempotency_key_invalid");
+        requireKey(key);
         if (input==null || input.url()==null || input.url().length()>2048)
             throw new AccountError(400,"url_invalid");
         return sessions.with(auth,csrf,true,true,(context,c)-> {
             String normalized;
-            try { normalized=normalizer.normalize(input.url()); }
+            try { normalized=UrlNormalizer.normalizeSyntax(input.url()); }
             catch (IllegalArgumentException e) { throw new AccountError(400,"url_invalid"); }
-            var snapshot=profiles.snapshot(input.profileId());
             var fingerprint=HexFormat.of().formatHex(tokens.sha256(normalized+"\n"+input.profileId()));
             var q=QAuditRun.auditRun;
             // A current read also sees the preceding request after waiting for the account lock.
@@ -46,6 +44,9 @@ public final class ConnectedAnalysesService {
                 if(!fingerprint.equals(previous.getRequestFingerprint())) throw new AccountError(409,"idempotency_conflict");
                 return new SiteAnalysisAccepted(previous.getId().toString(),AdmittedRunStatus.valueOf(previous.getStatus()));
             }
+            try { normalizer.normalize(normalized); }
+            catch (IllegalArgumentException e) { throw new AccountError(400,"url_invalid"); }
+            var snapshot=profiles.snapshot(input.profileId());
             var created=audits.createAudit(normalized,context.user().getId(),c);
             sites.follow(context.user().getId(),created.auditId(),c);
             final String json;
@@ -55,5 +56,20 @@ public final class ConnectedAnalysesService {
                 .set(q.profileSnapshot,json).where(q.id.eq(created.runId())).execute();
             return new SiteAnalysisAccepted(Long.toString(created.runId()),AdmittedRunStatus.valueOf(created.status()));
         });
+    }
+    /** Recovery never creates a run or contacts its target, including for terminal requests. */
+    public SiteAnalysisAccepted get(String auth, String key) {
+        requireKey(key);
+        return sessions.with(auth,null,true,false,(context,c)-> {
+            var q=QAuditRun.auditRun;
+            var run=dao.transactions.selectQuery(c).select(q).from(q)
+                .where(q.ownerUserId.eq(context.user().getId()),q.idempotencyKey.eq(key)).forUpdate().fetchOne();
+            if(run==null) throw AccountError.missing();
+            return new SiteAnalysisAccepted(run.getId().toString(),AdmittedRunStatus.valueOf(run.getStatus()));
+        });
+    }
+    private static void requireKey(String key) {
+        if (key==null || !key.matches("[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}"))
+            throw new AccountError(400,"idempotency_key_invalid");
     }
 }
