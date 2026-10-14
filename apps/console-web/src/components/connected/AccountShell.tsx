@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import Link from "@/components/LocalizedLink";
 import ArgosIcon from "@/components/ArgosIcon";
@@ -16,6 +16,8 @@ import s from "./Connected.module.scss";
 /** One chrome for private pages; authorization still belongs to each Java resource. */
 export default function AccountShell({ children }: { children: ReactNode }) {
   const currentPath = usePathname();
+  // Next route changes do not emit popstate; refresh the language links after commit.
+  useEffect(() => { window.dispatchEvent(new Event("argos-reading")); }, [currentPath]);
   const pathname = frenchPath(currentPath);
   const { t } = useLang(), c = t.connected;
   const session = useAccountSession();
@@ -24,7 +26,7 @@ export default function AccountShell({ children }: { children: ReactNode }) {
   const open = openPath === pathname;
   if (/^\/account\/(sign-in|register|verify|forgot|reset)$/.test(pathname)) return children;
   const isAccount = pathname === "/account";
-  const isSites = /^\/account\/(sites|runs|urls)(\/|$)/.test(pathname);
+  const isSites = /^\/account\/(analyses|sites|runs|urls)(\/|$)/.test(pathname);
   const valid = session.ready && !!session.profile && !session.denied;
   const admin = valid && session.profile?.verified && session.profile.admin;
   const context = pathname.startsWith("/account/admin") ? c.admin : isSites ? c.sites

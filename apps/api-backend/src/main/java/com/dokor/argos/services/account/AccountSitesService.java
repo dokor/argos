@@ -86,15 +86,19 @@ public class AccountSitesService {
     public Site get(String auth,long id) {
         return sessions.with(auth,null,true,true,(ctx,c)->site(c,ctx.user().getId(),id));
     }
-    public Page<Site> list(String auth,int limit,String cursor) {
+    public Page<Site> list(String auth,int limit,String cursor) { return list(auth,limit,cursor,null); }
+    public Page<Site> list(String auth,int limit,String cursor,String search) {
+        String term=search(search);
         int size=limit(limit); long after=cursor(cursor);
         return sessions.with(auth,null,true,true,(ctx,c)->{
             if(after>0) site(c,ctx.user().getId(),after);
-            var rows=query(c,SITE_SELECT+" WHERE s.owner_user_id=? AND s.id>? ORDER BY s.id LIMIT ?",this::readSite,ctx.user().getId(),after,size+1);
+            var rows=query(c,SITE_SELECT+" WHERE s.owner_user_id=? AND s.id>? AND LOCATE(LOWER(?),LOWER(d.hostname))>0 ORDER BY s.id LIMIT ?",this::readSite,ctx.user().getId(),after,term,size+1);
             return page(rows,size, rows.size()>size ? rows.get(size-1).siteId() : null);
         });
     }
-    public Page<SiteUrl> urls(String auth,long id,int limit,String cursor) {
+    public Page<SiteUrl> urls(String auth,long id,int limit,String cursor) { return urls(auth,id,limit,cursor,null); }
+    public Page<SiteUrl> urls(String auth,long id,int limit,String cursor,String search) {
+        String term=search(search);
         int size=limit(limit); long after=cursor(cursor);
         return sessions.with(auth,null,true,true,(ctx,c)-> {
             site(c,ctx.user().getId(),id);
@@ -112,13 +116,13 @@ public class AccountSitesService {
                   SELECT b.id FROM ARG_AUDIT_REPORT b JOIN ARG_AUDIT_RUN x ON x.id=b.run_id
                   WHERE x.audit_id=u.audit_id AND x.owner_user_id=s.owner_user_id AND (b.expires_at IS NULL OR b.expires_at>?)
                   ORDER BY b.created_at DESC,b.id DESC LIMIT 1)
-                WHERE s.owner_user_id=? AND u.site_id=? AND u.id>? ORDER BY u.id LIMIT ?
+                WHERE s.owner_user_id=? AND u.site_id=? AND u.id>? AND LOCATE(LOWER(?),LOWER(a.normalized_url))>0 ORDER BY u.id LIMIT ?
                 """,r->new SiteUrl(r.getString("id"),r.getString("audit_id"),r.getString("normalized_url"),
                     r.getObject("attempt_id")==null ? null : new Attempt(r.getString("attempt_id"),r.getString("status"),date(r,"attempt_at"),date(r,"finished_at")),
                     r.getObject("report_run")==null ? null : new AvailableReport(r.getString("report_run"),date(r,"published_at"),date(r,"expires_at"),
                         r.getObject("global_score")==null ? null : r.getInt("global_score"),
                         r.getString("provisional")==null ? null : Set.of("1","true").contains(r.getString("provisional")))),
-                    Timestamp.from(clock.instant()),ctx.user().getId(),id,after,size+1);
+                    Timestamp.from(clock.instant()),ctx.user().getId(),id,after,term,size+1);
             return page(rows,size,rows.size()>size ? rows.get(size-1).siteUrlId() : null);
         });
     }
@@ -127,6 +131,10 @@ public class AccountSitesService {
     }
     public AccountHistoryService.Context contextForRun(long owner,long auditId,Connection c) {
         return query(c,"SELECT s.id,u.id,a.normalized_url FROM ARG_ACCOUNT_SITE s JOIN ARG_ACCOUNT_SITE_URL u ON u.site_id=s.id JOIN ARG_AUDIT a ON a.id=u.audit_id WHERE s.owner_user_id=? AND u.audit_id=?",r->new AccountHistoryService.Context(r.getString(1),r.getString(2),r.getString(3)),owner,auditId).stream().findFirst().orElse(null);
+    }
+    private static String search(String value) {
+        if(value!=null && (value.length()>200 || value.chars().anyMatch(Character::isISOControl))) throw new AccountError(400,"filter_invalid");
+        return value==null ? "" : value.trim();
     }
     static int limit(int n) { if(n<1 || n>100) throw new AccountError(400,"limit_invalid"); return n; }
     static long cursor(String raw) {

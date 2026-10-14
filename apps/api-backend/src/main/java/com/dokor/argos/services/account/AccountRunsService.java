@@ -111,7 +111,13 @@ public class AccountRunsService {
                 null,
                 true,
                 true,
-                (context, c) -> { var run=owned(id,context.user().getId(),c); var result=status(run); result.put("siteId",sites.siteForRun(context.user().getId(),run.getAuditId(),c)); result.put("historyContext",sites.contextForRun(context.user().getId(),run.getAuditId(),c)); return result; });
+                (context, c) -> { var run=owned(id,context.user().getId(),c); var result=status(run); result.put("siteId",sites.siteForRun(context.user().getId(),run.getAuditId(),c)); result.put("historyContext",sites.contextForRun(context.user().getId(),run.getAuditId(),c));
+                    var q=QAuditReport.auditReport;
+                    var report=dao.transactions.selectQuery(c).select(q.id,q.expiresAt).from(q).where(q.runId.eq(id)).fetchOne();
+                    String availability=report==null ? ("COMPLETED".equals(run.getStatus()) || "FAILED".equals(run.getStatus()) ? "UNAVAILABLE" : "PENDING")
+                        : report.get(q.expiresAt)!=null && !report.get(q.expiresAt).isAfter(clock.instant()) ? "EXPIRED" : "AVAILABLE";
+                    result.put("reportAvailability",availability);
+                    return result; });
     }
 
     public Object report(String authorization, long id) {
@@ -132,6 +138,9 @@ public class AccountRunsService {
         result.put("status", run.getStatus());
         result.put("createdAt", run.getCreatedAt().toString());
         result.put("moduleStatuses", run.getModuleStatuses());
+        result.put("startedAt", run.getStartedAt()==null ? null : run.getStartedAt().toString());
+        result.put("finishedAt", run.getFinishedAt()==null ? null : run.getFinishedAt().toString());
+        result.put("profileSnapshot", run.getProfileSnapshot());
         return result;
     }
 

@@ -298,3 +298,44 @@ it("never downgrades an explicitly personal audit to anonymous when its cookie e
  const r=new NextRequest("https://argos.example/api/audits",{method:"POST",body:JSON.stringify({url:"https://example.com",personal:true})});
  expect((await create(r)).status).toBe(401);expect(fetchMock).not.toHaveBeenCalled();
 });
+
+it("validates URL, CSRF and idempotency before private admission, forwarding no forged identity",async()=>{
+  const body={url:"https://example.com/path",profileId:"server-default-v1"};
+  const key="12345678-1234-1234-1234-123456789012";
+  expect((await accountProxy(request("analyses","POST",body,false),["analyses"])).status).toBe(403);
+  expect((await accountProxy(request("analyses","POST",body),["analyses"])).status).toBe(400);
+  for(const invalid of [{...body,url:"http://127.0.0.1"},{...body,ownerId:"forged"},{...body,url:"x".repeat(2049)}]) {
+    const r=request("analyses","POST",invalid);r.headers.set("Idempotency-Key",key);
+    expect((await accountProxy(r,["analyses"])).status).toBe(400);
+  }
+  expect(fetchMock).not.toHaveBeenCalled();
+  fetchMock.mockResolvedValue(Response.json({runId:"42",status:"QUEUED"}));
+  const r=request("analyses","POST",body);r.headers.set("Idempotency-Key",key);
+  expect((await accountProxy(r,["analyses"])).status).toBe(200);
+  const [url,options]=fetchMock.mock.calls[0];
+  expect(url).toBe("http://fixture-backend/api/account/analyses");
+  expect(options.headers.get("Idempotency-Key")).toBe(key);
+  expect(options.headers.get("Authorization")).toBe("Bearer "+jwt);
+  expect(options.headers.has("X-User-Id")).toBe(false);
+});
+it("forwards bounded literal site search but does not open filters on history",async()=>{
+  fetchMock.mockResolvedValue(Response.json({items:[],nextCursor:null}));
+  expect((await accountProxy(request("sites?q=shop%25&limit=1"),["sites"])).status).toBe(200);
+  expect(fetchMock.mock.calls[0][0]).toContain("q=shop%25");
+  fetchMock.mockClear();
+  expect((await accountProxy(request("sites?q="+"a".repeat(201)),["sites"])).status).toBe(400);
+  expect((await accountProxy(request("urls/9/history?q=shop"),["urls","9","history"])).status).toBe(400);
+  expect(fetchMock).not.toHaveBeenCalled();
+});
+it("recovers an admission only by validated key and session, with private caching",async()=>{
+  const key="12345678-1234-1234-1234-123456789012";
+  fetchMock.mockResolvedValue(Response.json({runId:"42",status:"COMPLETED"}));
+  const response=await accountProxy(request("analyses/"+key),["analyses",key]);
+  expect(response.status).toBe(200);expect(response.headers.get("cache-control")).toBe("private, no-store");
+  expect(fetchMock.mock.calls[0][0]).toBe("http://fixture-backend/api/account/analyses/"+key);
+  expect(fetchMock.mock.calls[0][1].headers.get("Authorization")).toBe("Bearer "+jwt);
+  fetchMock.mockClear();
+  expect((await accountProxy(request("analyses/"+key+"?ownerId=forged"),["analyses",key])).status).toBe(400);
+  expect((await accountProxy(request("analyses/bad-key"),["analyses","bad-key"])).status).toBe(404);
+  expect(fetchMock).not.toHaveBeenCalled();
+});
