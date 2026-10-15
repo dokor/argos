@@ -41,3 +41,48 @@ Aucun changement du protocole LinkedIn, des sujets d'identité, des sessions Jav
 Cette correction n'est pas un déploiement ni un essai avec un compte LinkedIn réel. #548 reste ouverte jusqu'à connexion et reconnexion réelles validées.
 
 Après livraison, relever uniquement le message public affiché, sans copier l'URL de callback, code OAuth, state, nonce, cookie ou jeton. Si le refus indique un compte existant, suivre le parcours de liaison explicite. Si `oauth_invalid` subsiste, vérifier le backend réellement déployé (notamment #509) et analyser le refus côté serveur avec des données assainies avant de modifier les contrôles OIDC.
+
+## Diagnostic opérateur ajouté le 15 octobre 2026
+
+L'opérateur confirme un nouvel échec depuis la page de connexion, après la
+connexion chez LinkedIn. Aucun message technique n'est disponible. Cette
+instrumentation prépare le diagnostic ; elle ne déclare pas la panne corrigée.
+
+Les logs de `console-web` émettent `account_oauth_callback_rejected` avec
+fournisseur autorisé, étape et code public autorisé uniquement :
+
+| Étape BFF | Information à vérifier |
+|---|---|
+| `invalid_state` | Le callback n'a pas de state au format attendu |
+| `missing_browser_cookie` | Le cookie privé de cette transaction manque au retour |
+| `backend_response` | Java a refusé le callback ; rapprocher le journal Java |
+| `backend_transport` | Le BFF n'a pas pu terminer l'appel à Java |
+
+Le backend émet `account_oauth_rejected` avec un vocabulaire fermé :
+
+| Étape Java | Sens |
+|---|---|
+| `CALLBACK_CONTEXT` | Code ou contexte navigateur absent/invalide |
+| `TRANSACTION` | Transaction absente, expirée, consommée ou mal liée |
+| `TOKEN_EXCHANGE` | Échange du code auprès du fournisseur |
+| `PROVIDER_PROFILE` | Lecture du profil GitHub |
+| `ID_TOKEN_PARSING` | Lecture de l'ID token Google/LinkedIn |
+| `ID_TOKEN_VALIDATION` | Validation signature, clés et claims OIDC |
+| `IDENTITY_CLAIMS` | Construction de l'identité après validation |
+
+`reason` distingue `HTTP_REJECTED`, `TIMEOUT`, `NETWORK_IO`,
+`MALFORMED_RESPONSE`, `OIDC_REJECTED`, les refus de contexte/transaction et
+`UNEXPECTED_RESPONSE`. `http_status` est le statut HTTP du fournisseur, ou zéro
+s'il n'y en a pas. Un refus OIDC peut encore nécessiter un diagnostic ciblé :
+ce journal ne copie pas les claims ni le message de l'exception.
+
+Les logs n'incluent aucun code OAuth, state, nonce, cookie, jeton, email, URL de
+callback, corps de réponse ou stack trace. Le fournisseur est ramené à une
+liste fixe ; une valeur inconnue devient `unknown`. Le navigateur conserve
+ses messages publics actuels et les refus ne créent pas de session.
+
+Après fusion et déploiement explicitement autorisés, faire une nouvelle
+tentative puis communiquer seulement l'étape, la raison, le statut et l'heure
+de la ligne correspondante via l'interface de logs disponible. Inutile de
+demander un relevé shell général ou des journaux bruts. Connexion/reconnexion
+réelles restent nécessaires pour clôturer #548.
