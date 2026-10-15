@@ -7,6 +7,8 @@ assert.ok(['localhost','127.0.0.1'].includes(new URL(base).hostname));
 const output='outputs/ui-review/clarte-evidence';await mkdir(output,{recursive:true});
 const browser=await chromium.launch(process.env.CLARTE_BROWSER_PATH?{executablePath:process.env.CLARTE_BROWSER_PATH}:{});
 const results=[];
+// Canonical finding anchors are shared by both report readers; metadata markup may differ.
+const findingAnchor=key=>'finding-'+Array.from(key).map(char=>char.codePointAt(0).toString(16)).join('-');
 try {
  for(const width of [390,1056]) for(const lang of ['fr','en']) for(const colorScheme of ['light','dark']) {
   const context=await browser.newContext({viewport:{width,height:900},colorScheme});
@@ -26,7 +28,7 @@ try {
   });
   for(state of ['available','truncated','unavailable','historical']) {
    await page.goto(base+(lang==='en'?'/en':'')+'/account/runs/43?view=technical');
-   const details=page.locator('details').filter({has:page.locator('code').filter({hasText:'runtime.network.5xx'})}).first();
+   const details=page.locator('details#'+findingAnchor('runtime.network.5xx'));
    const summary=details.locator('summary').first();await summary.waitFor();
    if(await details.evaluate(el=>el.open)) {await summary.focus();await page.keyboard.press('Enter');}
    await summary.focus();await page.keyboard.press('Enter');
@@ -47,7 +49,7 @@ try {
    await page.screenshot({path:`${output}/${state}-${lang}-${colorScheme}-${width}.png`,fullPage:true});
    results.push({state,lang,theme:colorScheme,width,overflow:false,axeViolations:0,keyboard:true});
    if(state==='available') {
-    const dom=page.locator('details').filter({has:page.locator('code').filter({hasText:'lighthouse.audit.image-alt'})}).first();
+    const dom=page.locator('details#'+findingAnchor('lighthouse.audit.image-alt'));
     const domSummary=dom.locator('summary').first();await domSummary.focus();await page.keyboard.press('Enter');
     assert.ok(await dom.evaluate(el=>el.open));
     assert.ok((await dom.locator('[data-observed-evidence]').textContent()).includes('1,HTML,1,BODY,2,MAIN,4,IMG'));
