@@ -10,7 +10,12 @@ concurrency:
   group: auth-experience-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  changes:
+    uses: ./.github/workflows/changed-paths.yml
+
   auth:
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.auth == 'true') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     services:

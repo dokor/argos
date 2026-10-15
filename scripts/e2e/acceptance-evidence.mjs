@@ -32,11 +32,12 @@ const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
 const json=async path=>JSON.parse(await readFile(path,'utf8'));
 async function main() {
   const preview=process.argv.includes('--preview');
+  const visualOnly=process.argv.includes('--visual-only');
   assert.ok(preview||process.env.GITHUB_ACTIONS==='true','Use CI for revision-bound evidence, or --preview for unbound local output');
   if(!preview) assert.equal(execFileSync('git',['status','--porcelain','--untracked-files=no'],{encoding:'utf8'}).trim(),'','Evidence requires a clean checkout');
   const output='outputs/ui-review/clarte-acceptance';
   await mkdir(output+'/results',{recursive:true});await mkdir(output+'/comparisons',{recursive:true});
-  const manifest={version:'clarte-acceptance-v1',provenance:preview?'local-unbound':'clean-ci-checkout',
+  const manifest={version:visualOnly?'clarte-visual-v1':'clarte-acceptance-v1',scope:visualOnly?'visual-only':'visual-and-lifecycle',provenance:preview?'local-unbound':'clean-ci-checkout',
     testedRevision:preview?null:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),
     pullRequestHead:preview?null:process.env.PR_HEAD_SHA??null,
     run:preview?null:process.env.GITHUB_RUN_ID, suites:{}, comparisons:[], real:{},
@@ -54,18 +55,20 @@ async function main() {
     await copyFile(path,`${output}/results/${name}.json`);
     manifest.suites[name]={cases:rows.length,browser:data.browser??null,resultsSha256:hash(bytes),captures};
   }
-  const lifecycle=await json('outputs/controlled-e2e.json');
-  for(const name of ['healthy','errors','redirect','partial','empty','unavailable','antibot','timeout'])
-    assert.ok(lifecycle.scenarios.some(s=>s.scenario===name&&s.terminal==='COMPLETED'),`Missing real scenario ${name}`);
-  const domain=await json('outputs/ui-review/clarte-domains/real/proof.json');
-  for(const key of ['refreshDidNotResubmit','filteredReturnPreserved','domainListUsesSameResource','olderBatchPreserved']) assert.equal(domain[key],true,key);
-  const admin=await json('outputs/ui-review/clarte-admin/real/proof.json');
-  for(const key of ['regularDenied','sessionsRemainRevoked','usagePreserved','returnPreserved']) assert.equal(admin[key],true,key);
-  const restore=await json('outputs/controlled-restore.json');assert.equal(restore.restore,'PASS');assert.equal(restore.reportCountAndHashDigestEqual,true);
-  for(const [name,path] of Object.entries({lifecycle:'outputs/controlled-e2e.json',domain:'outputs/ui-review/clarte-domains/real/proof.json',admin:'outputs/ui-review/clarte-admin/real/proof.json',restore:'outputs/controlled-restore.json'})) {
-    manifest.real[name]={sha256:hash(await readFile(path))};await copyFile(path,`${output}/results/${name}-real.json`);
+  if (!visualOnly) {
+    const lifecycle=await json('outputs/controlled-e2e.json');
+    for(const name of ['healthy','errors','redirect','partial','empty','unavailable','antibot','timeout'])
+      assert.ok(lifecycle.scenarios.some(s=>s.scenario===name&&s.terminal==='COMPLETED'),`Missing real scenario ${name}`);
+    const domain=await json('outputs/ui-review/clarte-domains/real/proof.json');
+    for(const key of ['refreshDidNotResubmit','filteredReturnPreserved','domainListUsesSameResource','olderBatchPreserved']) assert.equal(domain[key],true,key);
+    const admin=await json('outputs/ui-review/clarte-admin/real/proof.json');
+    for(const key of ['regularDenied','sessionsRemainRevoked','usagePreserved','returnPreserved']) assert.equal(admin[key],true,key);
+    const restore=await json('outputs/controlled-restore.json');assert.equal(restore.restore,'PASS');assert.equal(restore.reportCountAndHashDigestEqual,true);
+    for(const [name,path] of Object.entries({lifecycle:'outputs/controlled-e2e.json',domain:'outputs/ui-review/clarte-domains/real/proof.json',admin:'outputs/ui-review/clarte-admin/real/proof.json',restore:'outputs/controlled-restore.json'})) {
+      manifest.real[name]={sha256:hash(await readFile(path))};await copyFile(path,`${output}/results/${name}-real.json`);
+    }
+    for(const lang of ['fr','en']) {const path=`outputs/ui-review/clarte-evidence/real-${lang}.pdf`;const bytes=await readFile(path);assert.ok(bytes.subarray(0,5).toString()==='%PDF-');manifest.real[`pdf-${lang}`]={sha256:hash(bytes)};}
   }
-  for(const lang of ['fr','en']) {const path=`outputs/ui-review/clarte-evidence/real-${lang}.pdf`;const bytes=await readFile(path);assert.ok(bytes.subarray(0,5).toString()==='%PDF-');manifest.real[`pdf-${lang}`]={sha256:hash(bytes)};}
   const reference=await json('docs/connected-space/reference/manifest.json');
   const comparisons=[['dashboard','overview','overview'],['domain-list','domains','list'],['domain-summary','domains','summary'],['affected-pages','domains','filtered-pages'],['page-report','analysis','partial-report'],['account','account','profile'],['quota','usage','current'],['admin-detail','admin','detail']];
   let html='<!doctype html><html lang="fr"><meta charset="utf-8"><title>Clarté — référence et produit</title><style>body{font:16px system-ui;margin:24px;color:#172239}section{margin:32px 0}.pair{display:flex;gap:20px;align-items:flex-start}figure{margin:0;flex:1;min-width:0}img{width:100%;border:1px solid #ccd}h2{font-size:20px}</style><h1>Référence / produit</h1><p>Données et hauteurs différentes : comparaison de composition, pas égalité pixel. Le prototype possède un cadre de démonstration absent du produit. Les KPI et états suivent les contrats livrés.</p>';
@@ -80,6 +83,6 @@ async function main() {
   }
   await writeFile(output+'/comparisons.html',html+'</html>');
   await writeFile(output+'/manifest.json',JSON.stringify(manifest,null,2));
-  console.log(`Acceptance evidence: ${Object.values(manifest.suites).reduce((n,s)=>n+s.cases,0)} visual cases, 16 comparisons, real lifecycle and restore. Human review remains separate.`);
+  console.log(`Acceptance evidence: ${Object.values(manifest.suites).reduce((n,s)=>n+s.cases,0)} visual cases, 16 comparisons; ${visualOnly ? "visual-only, no server lifecycle claimed" : "real lifecycle and restore"}. Human review remains separate.`);
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href) await main();

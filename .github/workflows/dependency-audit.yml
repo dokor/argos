@@ -1,6 +1,8 @@
 name: Production dependency audit
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '0 4 * * *'
   pull_request:
   push:
     branches: [main]
@@ -33,7 +35,7 @@ jobs:
 
   playwright-service:
     name: Production dependency audit (playwright-service)
-    needs: [changes, console-web]
+    needs: changes
     if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.dependency_playwright == 'true') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 8
@@ -50,7 +52,7 @@ jobs:
 
   lighthouse-service:
     name: Production dependency audit (lighthouse-service)
-    needs: [changes, playwright-service]
+    needs: changes
     if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.dependency_lighthouse == 'true') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 8

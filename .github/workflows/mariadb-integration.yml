@@ -20,7 +20,7 @@ jobs:
   integration:
     name: MariaDB integration (11.4)
     needs: changes
-    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.api == 'true') }}
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.integration == 'true') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     services:
