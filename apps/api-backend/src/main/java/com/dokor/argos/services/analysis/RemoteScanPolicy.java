@@ -10,7 +10,7 @@ public final class RemoteScanPolicy {
     }
     public static void requireAllowed(String host, boolean enabled) {
         if (!enabled)
-            throw new IllegalStateException("External target scans disabled by security policy");
+            throw new CollectorFailure(CollectorFailure.Code.POLICY_DISABLED);
         if (host == null || host.contains("/") || host.contains("@") || host.contains("?") || host.contains("#"))
             throw new IllegalArgumentException("Invalid scan hostname");
         UrlNormalizer.validatePublicUrl("https://" + host);
