@@ -1,6 +1,7 @@
 package com.dokor.argos.services.analysis.modules.zap;
 
 import com.dokor.argos.services.analysis.model.AuditContext;
+import com.dokor.argos.services.analysis.CollectorFailure;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpServer;
@@ -28,6 +29,7 @@ class ZapClientTest {
     private boolean emptyImport;
     private boolean neverFinish;
     private String key;
+    private int targetMessageCount = 1;
 
     @AfterEach void stop() { if (server != null) server.stop(0); }
 
@@ -59,7 +61,7 @@ class ZapClientTest {
                 }
                 case "core/view/numberOfMessages/" -> {
                     // The real daemon includes API/internal messages when baseurl is omitted.
-                    int count = emptyImport ? 0 : params.containsKey("baseurl") ? 1 : 2;
+                    int count = emptyImport ? 0 : params.containsKey("baseurl") ? targetMessageCount : targetMessageCount + 1;
                     response = "{\"numberOfMessages\":\"" + count + "\"}";
                 }
                 case "core/view/alerts/" -> { assertTrue(pending <= 0); response = "{\"alerts\":[]}"; }
@@ -92,6 +94,23 @@ class ZapClientTest {
         assertTrue(calls.stream().noneMatch(p -> p.contains("spider") || p.contains("ascan") || p.contains("sendRequest")));
     }
 
+    @Test void extraTargetHistoryMessageDoesNotRejectSuccessfulImport() throws Exception {
+        // Production ZAP 2.17.0/exim 0.21.0 records two target messages for one root-page HAR.
+        targetMessageCount = 2;
+        assertTrue(client(Duration.ofSeconds(3)).analyze(snapshot("https://example.com")).path("alerts").isArray());
+        assertEquals(1, imported.path("log").path("entries").size());
+        assertEquals("core/view/alerts/", calls.getLast());
+    }
+
+    @Test void missingImportAddonHasAnActionableBoundedCode() throws Exception {
+        failImport = true;
+        var failure = assertThrows(CollectorFailure.class,
+            () -> client(Duration.ofSeconds(2)).analyze(snapshot("https://example.com")));
+        assertEquals(CollectorFailure.Code.INTEGRATION_ENDPOINT, CollectorFailure.classify(failure));
+        assertEquals("INTEGRATION_ENDPOINT", failure.getMessage());
+        assertFalse(calls.contains("core/view/alerts/"));
+    }
+
     @Test void startsANewSessionForEachAudit() throws Exception {
         var client = client(Duration.ofSeconds(3));
         client.analyze(snapshot("https://example.com/first"));
@@ -109,6 +128,14 @@ class ZapClientTest {
     @Test void emptyImportDoesNotBecomeANoAlertsSuccess() throws Exception {
         emptyImport = true;
         assertThrows(IllegalStateException.class, () -> client(Duration.ofSeconds(2)).analyze(snapshot("https://example.com")));
+        assertFalse(calls.contains("core/view/alerts/"));
+    }
+
+    @Test void invalidMessageCountDoesNotBecomeANoAlertsSuccess() throws Exception {
+        targetMessageCount = -1;
+        var failure = assertThrows(CollectorFailure.class,
+            () -> client(Duration.ofSeconds(2)).analyze(snapshot("https://example.com")));
+        assertEquals(CollectorFailure.Code.INVALID_RESPONSE, CollectorFailure.classify(failure));
         assertFalse(calls.contains("core/view/alerts/"));
     }
 
