@@ -74,7 +74,7 @@ public class SslLabsModuleAnalyzer {
                 boolean pending = progress != null && progress.isNumber() && progress.intValue() < 100;
                 boolean failed = "READY".equals(hostStatus) && statusMessage != null
                     && !"Ready".equalsIgnoreCase(statusMessage);
-                var analysis = analyzeEndpoint(host, hostStatus, pending || failed ? null : item, nowMs);
+                var analysis = analyzeEndpoint(host, hostStatus, pending || failed ? null : certificateSnapshot(result, item), nowMs);
                 observations.add(new EndpointObservation(item, analysis,
                     failed ? "ASSESSMENT_FAILED" : pending ? "NOT_EVALUATED"
                         : analysis.checks().stream().anyMatch(c -> c.status() != AuditStatus.INFO)
@@ -108,6 +108,43 @@ public class SslLabsModuleAnalyzer {
         String summary = "host=" + host + " endpoints=" + observations.size() + " partial=" + partial;
         logger.info("SSL Labs module done: {}", summary);
         return new AuditModuleResult(moduleId(), "SSL Labs", summary, data, checks);
+    }
+
+    /** API v3 links endpoint chains to the host-level certificate inventory by ID.
+     * Every served leaf must be known before concluding that certificates are healthy.
+     * Keep the legacy embedded format for recorded fixtures/older adapters only.
+     */
+    private static JsonNode certificateSnapshot(JsonNode host, JsonNode endpoint) {
+        JsonNode chains = endpoint.path("details").path("certChains");
+        if (!chains.isArray()) return endpoint;
+        var copy = endpoint.deepCopy();
+        var details = (com.fasterxml.jackson.databind.node.ObjectNode) copy.path("details");
+        details.remove("cert");
+        if (chains.isEmpty()) return copy;
+        long issues = 0, earliestExpiry = Long.MAX_VALUE;
+        boolean issuesKnown = true, expiryKnown = true;
+        for (JsonNode chain : chains) {
+            JsonNode ids = chain.path("certIds");
+            String leafId = ids.isArray() && !ids.isEmpty() && ids.get(0).isTextual() ? ids.get(0).textValue() : null;
+            JsonNode leaf = null;
+            if (leafId != null && host.path("certs").isArray()) {
+                for (JsonNode cert : host.path("certs")) if (leafId.equals(textField(cert, "id"))) {
+                    if (leaf != null) { leaf = null; break; } // ambiguous inventory
+                    leaf = cert;
+                }
+            }
+            Long leafIssues = nonNegativeLongField(leaf, "issues");
+            Long expiry = nonNegativeLongField(leaf, "notAfter");
+            if (leafIssues == null || leafIssues > Integer.MAX_VALUE) issuesKnown = false;
+            else issues |= leafIssues;
+            if (expiry == null || expiry == 0) expiryKnown = false;
+            else earliestExpiry = Math.min(earliestExpiry, expiry);
+        }
+        var certificate = details.putObject("cert");
+        // A measured defect remains useful even if another served chain is unknown.
+        if (issuesKnown || issues > 0) certificate.put("issues", issues);
+        if (expiryKnown) certificate.put("notAfter", earliestExpiry);
+        return copy;
     }
 
     private AuditModuleResult analyzeEndpoint(String host, String hostStatus, JsonNode endpoint, long nowMs) {

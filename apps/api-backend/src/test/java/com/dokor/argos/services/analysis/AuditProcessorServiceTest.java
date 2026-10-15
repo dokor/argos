@@ -384,12 +384,15 @@ class AuditProcessorServiceTest {
                         "fetchOutcome", "TIMEOUT", "requestedUrl", "https://example.com/unreached",
                         "lastResponse", Map.of("url", "https://example.com", "statusCode", 301)), List.of()));
                 processor.process(1L);
-                verifyNoInteractions(html, runtime, lighthouse, observatory, ssl, zap, domains);
+                verifyNoInteractions(html, runtime, lighthouse, observatory, zap, domains);
+                verify(ssl).analyze(argThat(ctx -> ctx.finalUrl() == null
+                    && "https://example.com".equals(ctx.normalizedUrl())), any());
                 var report = ArgumentCaptor.forClass(AuditReportJson.class);
                 verify(publisher).completeAndPublish(eq(1L), any(), report.capture(), anyString(), nullable(String.class));
                 var statuses = mapper.readTree(report.getValue().meta().get("moduleStatuses"));
                 assertEquals("PARTIAL", statuses.path("http").asText());
-                for (String id : List.of("html", "runtime", "lighthouse", "observatory", "ssl", "zap", "tech")) {
+                assertEquals("COMPLETED", statuses.path("ssl").asText());
+                for (String id : List.of("html", "runtime", "lighthouse", "observatory", "zap", "tech")) {
                     assertEquals("UNAVAILABLE", statuses.path(id).asText(), id);
                     var module = report.getValue().modules().stream().filter(m -> m.id().equals(id)).findFirst().orElseThrow();
                     assertEquals(List.of(id + ".collect"), module.checks().stream().map(c -> c.key()).toList());
