@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, expect, it, vi } from "vitest";
 import { render, screen, within } from "@testing-library/react";
-import { connectedFixture } from "../../../../../.agents/skills/argos-visual-review/scripts/connected-fixtures.mjs";
+import { connectedFixture } from "./fixtures/connected-fixtures.mjs";
 import OverviewView from "./OverviewView";
 import DomainBatch from "./domains/DomainBatch";
 import { findingEditorial } from "@/components/report/findingCatalogue";
