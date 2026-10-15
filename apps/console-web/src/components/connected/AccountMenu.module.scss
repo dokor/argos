@@ -1,0 +1,34 @@
+.root { position: relative; min-width: 0; border-top: 1px solid var(--argos-border); padding: 10px 12px; }
+.trigger { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 56px; padding: 8px 10px; text-align: left; border-radius: 7px; }
+.trigger:hover, .trigger[aria-expanded='true'] { background: var(--argos-brand-soft); }
+.avatar { display: grid; place-items: center; width: 32px; height: 32px; flex-shrink: 0; border-radius: 50%; background: var(--argos-brand-soft); color: var(--argos-brand); }
+.identity { min-width: 0; flex: 1; overflow-wrap: anywhere; }
+.identity strong, .identity > span { display: block; }
+.identity strong { font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.identity > span { font-size: 12px; color: var(--argos-text-muted); }
+.chevron { flex-shrink: 0; color: var(--argos-text-muted); }
+.trigger[aria-expanded='true'] .chevron { transform: rotate(180deg); }
+.mobileLabel { display: none; }
+.panel { position: absolute; z-index: 60; bottom: calc(100% + 4px); left: 12px; width: 260px; max-width: calc(100vw - 28px); max-height: calc(100dvh - 90px); overflow-y: auto; padding: 6px; border: 1px solid var(--argos-border); border-radius: 9px; background: var(--argos-surface); box-shadow: 0 8px 28px rgb(0 0 0 / .14); }
+.panelIdentity { padding: 10px; overflow-wrap: anywhere; }
+.panelIdentity strong, .panelIdentity span { display: block; }
+.panelIdentity strong { font-weight: 650; }
+.panelIdentity span { font-size: 12px; color: var(--argos-text-muted); }
+.action { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 10px; border-radius: 6px; text-align: left; overflow-wrap: anywhere; }
+.action svg { flex-shrink: 0; color: var(--argos-text-muted); }
+.action:hover { background: var(--argos-canvas); }
+.action[aria-disabled='true'] { cursor: wait; color: var(--argos-text-muted); }
+.separator { height: 1px; margin: 4px 10px; background: var(--argos-border); }
+.error { margin: 8px 10px; color: var(--argos-error); font-size: 13px; overflow-wrap: anywhere; }
+.srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (max-width: 900px) {
+  .root { position: static; grid-column: 2; grid-row: 1; border: 0; padding: 0; }
+  .trigger { min-height: 44px; padding: 6px; gap: 6px; font-size: 13px; }
+  .avatar { width: 26px; height: 26px; }
+  .identity { display: none; }
+  .mobileLabel { display: inline; }
+  .chevron { transform: rotate(180deg); width: 12px; }
+  .trigger[aria-expanded='true'] .chevron { transform: none; }
+  .panel { bottom: auto; top: calc(100% + 4px); left: auto; right: 14px; width: 300px; }
+}
+@media (max-width: 360px) { .trigger > .avatar { display: none; } }
