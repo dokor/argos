@@ -39,10 +39,13 @@ export default function AccountView({mode="sign-in"}:{mode?:Mode}) {
   // Run after inputs are enabled again; disabled fields cannot receive focus.
   useEffect(() => {
     if (busy || !focusTarget.current) return;
-    const target = focusTarget.current;
+    const target = focusTarget.current === "notice"
+      ? noticeRef.current
+      : formRef.current?.querySelector<HTMLInputElement>(`#${focusTarget.current}`);
+    // Keep the request until the target exists in the committed DOM.
+    if (!target) return;
     focusTarget.current = null;
-    if (target === "notice") noticeRef.current?.focus();
-    else formRef.current?.querySelector<HTMLInputElement>(`#${target}`)?.focus();
+    target.focus();
   });
   useEffect(() => {
     // Read fragment tokens after hydration, then remove them before further navigation.
