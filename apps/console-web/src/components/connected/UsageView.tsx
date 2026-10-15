@@ -1,4 +1,5 @@
 "use client";
+import { quotaResetDate } from "@/lib/quota-date";
 import {useEffect,useState} from "react";
 import {useSearchParams,useRouter} from "next/navigation";
 import {useAccountSession} from "@/components/account/AccountSession";
@@ -49,7 +50,7 @@ export default function UsageView() {
           <p className={s.capacity}><strong>{usage.available===null ? copy.unlimited:number(usage.available)}</strong><span>{usage.limit===null ? copy.noLimit:copy.available+" / "+number(usage.limit)}</span></p>
           {usage.limit!==null&&usage.limit>0&&<meter className={s.meter} min={0} max={usage.limit} value={Math.min(usage.limit,usage.used+usage.reserved)} aria-label={copy.occupied}/>}
           <dl className={s.facts}><div><dt>{copy.used}</dt><dd>{number(usage.used)}</dd></div><div><dt>{copy.reserved}</dt><dd>{number(usage.reserved)}</dd></div><div><dt>{copy.limit}</dt><dd>{usage.limit===null ? copy.unlimited:number(usage.limit)}</dd></div></dl>
-          <p className={s.reset}>{copy.reset} <time dateTime={usage.resetsAt}>{date(usage.resetsAt)}</time> · {usage.timezone}</p>
+          <p className={s.reset}>{copy.reset} <time dateTime={usage.resetsAt}>{quotaResetDate(usage.resetsAt,lang,usage.timezone)}</time></p>
           <p className={s.hint}>{copy.calendar}</p>
           {!usage.canLaunch&&<p className={s.notice} role="status">{usage.limit===0 ? copy.zero:copy.exhausted}</p>}
           <Link className={s.link} href="/feedback">{copy.contact}</Link>
