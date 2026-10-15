@@ -111,6 +111,24 @@ it("requires CSRF for additions and never permits deletion",async()=>{
   expect(fetchMock).not.toHaveBeenCalled();
 });
 const csrf = "c".repeat(43), jwt = "synthetic.signed.credential", fetchMock = vi.fn();
+it.each(["invalid_state", "missing_browser_cookie", "backend_response", "backend_transport"] as const)("logs only safe OAuth categories at %s", async stage => {
+  const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+  try {
+    const state = "s".repeat(43), secret = "never-log-code-token-email-cookie";
+    const callback = request(`auth/oauth/linkedin/callback?state=${stage === "invalid_state" ? secret : state}&code=${secret}&error_description=${secret}`);
+    if (stage !== "missing_browser_cookie") callback.cookies.set("argos_oauth_" + state, secret);
+    if (stage === "backend_response") fetchMock.mockResolvedValue(Response.json({ error: secret, detail: secret }, { status: 400 }));
+    if (stage === "backend_transport") fetchMock.mockRejectedValue(new Error(secret));
+    const response = await accountProxy(callback, ["auth", "oauth", "linkedin", "callback"]);
+    expect(response.status).toBe(303);
+    expect(warn).toHaveBeenCalledExactlyOnceWith("account_oauth_callback_rejected", {
+      provider: "linkedin", stage, error: stage === "backend_transport" ? "account_unavailable" : "oauth_invalid",
+    });
+    expect(JSON.stringify(warn.mock.calls)).not.toContain(secret);
+    expect(JSON.stringify(warn.mock.calls)).not.toContain(state);
+    if (stage === "invalid_state" || stage === "missing_browser_cookie") expect(fetchMock).not.toHaveBeenCalled();
+  } finally { warn.mockRestore(); }
+});
 it("maps a rejected login without deleting an existing session, while protected 401s still delete it", async () => {
   fetchMock.mockImplementation(async () => Response.json({error:"session_invalid",detail:"private"},{status:401}));
   const login = await accountProxy(request("auth/login","POST",{email:"test@example.invalid",password:"invalid"}),["auth","login"]);
