@@ -1,5 +1,7 @@
 {
   "connected": {
+    "collapseMenu": "Réduire le menu",
+    "expandMenu": "Déployer le menu",
     "unlimitedCredits": "Crédits illimités",
     "workspace": "Espace connecté",
     "personalSpace": "Espace personnel",

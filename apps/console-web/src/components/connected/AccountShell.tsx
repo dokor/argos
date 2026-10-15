@@ -13,6 +13,7 @@ import { frenchPath } from "@/lib/i18n/routes";
 import { useAccountSession } from "@/components/account/AccountSession";
 import { EmptyState, PageHeading } from "./Primitives";
 import QuotaSummary from "./QuotaSummary";
+import NavigationIcon from "./NavigationIcon";
 import s from "./Connected.module.scss";
 
 /** One chrome for private pages; authorization still belongs to each Java resource. */
@@ -26,6 +27,8 @@ export default function AccountShell({ children }: { children: ReactNode }) {
   const session = useAccountSession();
   const [openPath, setOpenPath] = useState<string | null>(null);
   const menuButton = useRef<HTMLButtonElement>(null);
+  const [collapsed, setCollapsed] = useState(false);
+  const [tooltipDismissed, setTooltipDismissed] = useState(false);
   const open = openPath === pathname;
   if (/^\/account\/(sign-in|register|verify|forgot|reset)$/.test(pathname)) return children;
   const isAccount = pathname === "/account/settings";
@@ -35,26 +38,34 @@ export default function AccountShell({ children }: { children: ReactNode }) {
   const context = pathname === "/account" ? c.overview : pathname.startsWith("/account/admin") ? c.admin : isSites ? c.sites
     : pathname.startsWith("/account/domains") ? c.domains : pathname === "/account/usage" ? c.usage : pathname === "/account/integrations" ? c.integrations : c.account;
   const close = () => setOpenPath(null);
-  return <div className={s.shell} data-connected-shell>
+  return <div className={s.shell} data-connected-shell data-collapsed={collapsed} data-tooltip-dismissed={tooltipDismissed}>
     <a href="#account-content" className={s.skip}>{c.skip}</a>
     <aside className={s.sidebar} data-open={open} onKeyDown={event => {
-      if (event.key === "Escape" && open) { close(); menuButton.current?.focus(); }
-    }}>
+      if (event.key === "Escape") {
+        setTooltipDismissed(true);
+        if (open) { close(); menuButton.current?.focus(); }
+      }
+    }} onFocusCapture={() => setTooltipDismissed(false)} onMouseOver={() => setTooltipDismissed(false)}>
       <div className={s.brandRow}>
         <Link href="/account" className={s.brand} aria-label={c.workspace}><ArgosIcon size={25}/><span>Argos</span></Link>
         <Link className={s.mobileAccount} href="/account/settings" aria-current={isAccount ? "page" : undefined} onClick={close}>{c.account}</Link>
         <button ref={menuButton} className={s.menu} type="button" aria-expanded={open} aria-controls="account-navigation" onClick={() => setOpenPath(open ? null : pathname)}>{open ? c.closeMenu : c.menu}</button>
       </div>
       <nav id="account-navigation" className={s.navigation} aria-label={c.navigation}>
-        <p className={s.navCaption}>{c.workspace}</p>
-        <Link href="/account" aria-current={pathname === "/account" ? "page" : undefined} onClick={close}>{c.overview}</Link>
-        <Link href="/account/sites" aria-current={isSites ? "page" : undefined} onClick={close}>{c.sites}</Link>
-        <Link href="/account/domains" aria-current={pathname.startsWith("/account/domains") ? "page" : undefined} onClick={close}>{c.domains}</Link>
-        <Link href="/account/integrations" aria-current={pathname === "/account/integrations" ? "page" : undefined} onClick={close}>{c.integrations}<span className={s.soon}>{c.soon}</span></Link>
+        <div className={s.navHeading}>
+          <p className={s.navCaption}>{c.workspace}</p>
+          <button type="button" className={s.collapseToggle} aria-label={collapsed ? c.expandMenu : c.collapseMenu} aria-expanded={!collapsed} aria-controls="account-navigation" onClick={() => setCollapsed(value => !value)}>
+            <NavigationIcon name={collapsed ? "expand" : "collapse"}/><span className={s.toggleLabel}>{collapsed ? c.expandMenu : c.collapseMenu}</span>
+          </button>
+        </div>
+        <Link href="/account" aria-current={pathname === "/account" ? "page" : undefined} onClick={close} aria-label={c.overview}><NavigationIcon name="overview"/><span className={s.navLabel}>{c.overview}</span></Link>
+        <Link href="/account/sites" aria-current={isSites ? "page" : undefined} onClick={close} aria-label={c.sites}><NavigationIcon name="sites"/><span className={s.navLabel}>{c.sites}</span></Link>
+        <Link href="/account/domains" aria-current={pathname.startsWith("/account/domains") ? "page" : undefined} onClick={close} aria-label={c.domains}><NavigationIcon name="domains"/><span className={s.navLabel}>{c.domains}</span></Link>
+        <Link href="/account/integrations" aria-current={pathname === "/account/integrations" ? "page" : undefined} onClick={close} aria-label={`${c.integrations} — ${c.soon}`}><NavigationIcon name="integrations"/><span className={s.navLabel}>{c.integrations}<span className={s.soon}>{c.soon}</span></span></Link>
         <div className={s.navBottom}>
-          <Link href="/account/settings" aria-current={isAccount ? "page" : undefined} onClick={close}>{c.account}</Link>
-          <Link href="/account/usage" aria-current={pathname === "/account/usage" ? "page" : undefined} onClick={close}>{c.usage}</Link>
-          {admin && <Link href="/account/admin" aria-current={pathname.startsWith("/account/admin") ? "page" : undefined} onClick={close}>{c.admin}</Link>}
+          <Link href="/account/settings" aria-current={isAccount ? "page" : undefined} onClick={close} aria-label={c.account}><NavigationIcon name="account"/><span className={s.navLabel}>{c.account}</span></Link>
+          <Link href="/account/usage" aria-current={pathname === "/account/usage" ? "page" : undefined} onClick={close} aria-label={c.usage}><NavigationIcon name="usage"/><span className={s.navLabel}>{c.usage}</span></Link>
+          {admin && <Link href="/account/admin" aria-current={pathname.startsWith("/account/admin") ? "page" : undefined} onClick={close} aria-label={c.admin}><NavigationIcon name="admin"/><span className={s.navLabel}>{c.admin}</span></Link>}
         </div>
       </nav>
       {valid && <div className={s.identity}><span className={s.avatar} aria-hidden="true">{session.profile?.displayName.slice(0, 1).toUpperCase()}</span><div><strong>{session.profile?.displayName}</strong><span>{c.personalSpace}</span></div></div>}

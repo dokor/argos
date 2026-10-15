@@ -27,12 +27,43 @@
 .brand { display: inline-flex; gap: 10px; align-items: center; min-height: 44px; font-size: 22px; font-weight: 750; }
 .brand svg { color: var(--argos-brand); }
 .navigation { display: flex; flex: 1; flex-direction: column; gap: 6px; padding: 24px 12px; }
-.navCaption { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--argos-text-muted); padding: 0 10px 12px; }
-.navigation a, .unavailable { display: flex; align-items: center; gap: 7px; padding: 10px; min-height: 44px; border-radius: 7px; overflow-wrap: anywhere; }
+.navHeading { display: flex; align-items: center; justify-content: space-between; min-height: 44px; margin-bottom: 6px; }
+.navCaption { font-size: 11px; letter-spacing: .025em; text-transform: uppercase; white-space: nowrap; color: var(--argos-text-muted); padding-left: 10px; }
+.navigation a, .unavailable { position: relative; display: flex; align-items: center; gap: 10px; padding: 10px; min-height: 44px; border-radius: 7px; overflow-wrap: anywhere; }
+.navigation a > svg { flex-shrink: 0; color: var(--argos-text-muted); }
+.navigation a[aria-current] > svg { color: inherit; }
+.navLabel { display: flex; align-items: center; flex: 1; min-width: 0; gap: 4px; white-space: nowrap; }
+.collapseToggle { position: relative; display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 44px; min-height: 44px; padding: 10px; border-radius: 7px; color: var(--argos-text-muted); text-align: left; }
+.collapseToggle > svg { flex-shrink: 0; }
+.collapseToggle:hover { background: var(--argos-canvas); }
+.toggleLabel { position: absolute; left: 100%; top: 50%; transform: translateY(-50%); width: max-content; padding: 8px 12px; background: var(--argos-surface); color: var(--argos-text); border: 1px solid var(--argos-border); border-radius: 7px; font-size: 13px; z-index: 60; visibility: hidden; }
+.shell:not([data-tooltip-dismissed='true']) .collapseToggle:is(:hover, :focus-visible) .toggleLabel { visibility: visible; }
+// Collapse is opt-in on desktop; mobile always keeps the full text disclosure.
+@media (min-width: 901px) {
+  .shell[data-collapsed='true'] {
+    grid-template-columns: 72px minmax(0, 1fr);
+    .brandRow { justify-content: center; padding-inline: 10px; }
+    .navHeading { justify-content: center; }
+    .brand > span, .navCaption, .identity > div { display: none; }
+    .navigation a, .collapseToggle { justify-content: center; padding-inline: 10px; }
+    .identity { justify-content: center; padding-inline: 10px; }
+    .navLabel, .toggleLabel {
+      position: absolute; left: 100%; top: 50%; transform: translateY(-50%);
+      width: max-content; max-width: 240px; padding: 8px 12px;
+      background: var(--argos-surface); color: var(--argos-text); border: 1px solid var(--argos-border);
+      border-radius: 7px; font-size: 13px; font-weight: 400; z-index: 60;
+      visibility: hidden; opacity: 0;
+    }
+    &:not([data-tooltip-dismissed='true']) {
+      .navigation a:is(:hover, :focus-visible) .navLabel,
+      .collapseToggle:is(:hover, :focus-visible) .toggleLabel { visibility: visible; opacity: 1; }
+    }
+  }
+}
 .navigation a:hover { background: var(--argos-canvas); }
 .navigation a[aria-current] { background: var(--argos-brand-soft); color: var(--argos-brand); font-weight: 650; }
 .unavailable { color: var(--argos-text-muted); flex-wrap: wrap; }
-.soon { font-size: 11px; color: var(--argos-text-muted); border: 1px solid var(--argos-border); border-radius: 4px; padding: 1px 5px; margin-left: auto; white-space: nowrap; }
+.soon { flex-shrink: 0; font-size: 11px; font-weight: 400; color: var(--argos-text-muted); border: 1px solid var(--argos-border); border-radius: 4px; padding: 1px 4px; margin-left: auto; white-space: nowrap; }
 .navBottom { display: grid; gap: 6px; margin-top: 38px; border-top: 1px solid var(--argos-border); padding-top: 16px; }
 .identity { display: flex; align-items: center; gap: 10px; padding: 18px 22px; border-top: 1px solid var(--argos-border); overflow-wrap: anywhere; }
 .identity strong, .identity span:not(.avatar) { display: block; }
@@ -110,6 +141,7 @@ a.kpi:hover { border-color: var(--argos-brand); }
 @media (max-width: 820px) { .kpis { grid-template-columns: minmax(0, 1fr); } }
 // The existing diagnostic uses its own responsive grid; keep a readable content width on tablets.
 @media (max-width: 900px) {
+  .collapseToggle { display: none; }
   .shell { grid-template-columns: minmax(0, 1fr); }
   .sidebar { border-right: 0; }
   .brandRow { padding: 10px 14px; gap: 8px; }
