@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
 import {chromium} from '../../apps/playwright-service/node_modules/playwright/index.mjs';
 import {response,usage} from './connected-usage-fixture.mjs';
+import fr from '../../apps/console-web/src/lib/i18n/fr.json' with {type:'json'};
+import en from '../../apps/console-web/src/lib/i18n/en.json' with {type:'json'};
 const base=process.env.CONNECTED_BASE_URL??'http://127.0.0.1:3030';assert.ok(['127.0.0.1','localhost'].includes(new URL(base).hostname));
 const output='outputs/ui-review/clarte-usage';await mkdir(output,{recursive:true});
 const browser=await chromium.launch(process.env.CLARTE_BROWSER_PATH?{executablePath:process.env.CLARTE_BROWSER_PATH}:{}),evidence=[];
@@ -34,6 +36,10 @@ try{
   }
   await visit();await page.getByRole('link',{name:labels.open+' #9007199254740992'}).waitFor();
   assert.equal(await page.getByRole('link',{name:labels.open+' #9007199254740992'}).getAttribute('href'),prefix+'/account/runs/9007199254740992');await check('current');
+  const meter=page.getByRole('meter',{name:(lang==='fr'?fr:en).usagePage.available,exact:true});
+  await meter.waitFor();
+  assert.equal(await meter.getAttribute('value'),String(usage.available),'The gauge represents the remaining credits supplied by the server');
+  assert.equal(await meter.getAttribute('max'),String(usage.limit));
   await page.getByRole('button',{name:labels.current,exact:true}).focus();await page.keyboard.press('Tab');
   const ledgerRegion=page.getByRole('region',{name:(lang==='fr'?'Journal de consommation':'Usage ledger')+' · 2026-10'});
   assert.ok(await ledgerRegion.evaluate(el=>el===document.activeElement),'Keyboard reaches ledger region');
@@ -42,7 +48,7 @@ try{
   await page.getByRole('button',{name:labels.next,exact:true}).click();await page.waitForURL(/offset=20/);await page.getByRole('link',{name:labels.open+' #2020'}).waitFor();assert.equal(await page.locator('tbody tr').count(),4);await check('page-two');
   const languageLink=page.getByRole('link',{name:lang==='fr'?'English':'Français',exact:true});assert.ok((await languageLink.getAttribute('href')).includes('offset=20'));
   await page.getByLabel(labels.month).fill('2026-09');await page.getByRole('button',{name:labels.show,exact:true}).click();await page.waitForURL(/period=2026-09$/);assert.ok(!new URL(page.url()).searchParams.has('offset'));await page.getByRole('link',{name:labels.open+' #2010'}).waitFor();await check('prior-month');
-  assert.equal(await page.getByRole('link',{name:lang==='fr'?'9 crédits disponibles':'9 credits available',exact:true}).count(),1,'Historic filter never changes current quota');
+  assert.equal(await page.getByRole('link',{name:`${usage.available} ${(lang==='fr'?fr:en).connected.credits}`,exact:true}).count(),1,'Historic filter never changes current quota');
   await page.getByLabel(labels.month).fill('2026-08');await page.getByRole('button',{name:labels.show,exact:true}).click();await page.getByRole('heading',{name:labels.empty}).waitFor();await check('empty');
   if([320,1440].includes(width)){
    for(const variant of ['zero','unlimited','exhausted','quota-error','ledger-error']){

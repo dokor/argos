@@ -466,3 +466,15 @@
 .scopeQuota span { color: var(--argos-text-muted); }
 .scopeQuota button { margin-top: 10px; }
 @media (max-width: 900px) { .scopeLayout { grid-template-columns: minmax(0, 1fr); } }
+.metrics .commonMetric { flex-direction: column; justify-content: start; }
+.commonMetric dt { order: 2; }
+.commonMetric dd:not(.metricHint) { order: 1; }
+.metrics .metricHint { order: 3; font-size: 13px; font-weight: 400; color: var(--argos-text-muted); overflow-wrap: anywhere; }
+.metricHint span { display: block; margin-top: 4px; }
+.metrics dd:not(.metricHint) { white-space: nowrap; flex-shrink: 0; }
+@media (max-width: 620px) {
+  .metrics .commonMetric { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 6px 14px; }
+  .commonMetric dt { order: 1; }
+  .commonMetric dd:not(.metricHint) { order: 2; }
+  .commonMetric .metricHint { grid-column: 1 / -1; }
+}
