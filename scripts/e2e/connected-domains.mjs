@@ -179,7 +179,7 @@ try {
         await check("filtered-pages");
         if (width < 768) {
           const region = page.getByRole("region", {
-            name: c.allPages,
+            name: await page.getByRole("table").locator("caption").textContent(),
             exact: true,
           });
           await region.focus();
