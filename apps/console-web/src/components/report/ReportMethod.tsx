@@ -1,5 +1,6 @@
 "use client";
 
+import ModuleExecutionFacts from "./ModuleExecutionFacts";
 import ReportPageScope from "./ReportPageScope";
 
 import Link from "@/components/LocalizedLink";
@@ -47,7 +48,7 @@ export default function ReportMethod({ report, model, open, onToggle }: {
         <div><dt>{copy.scope}</dt><dd><ReportPageScope report={report} lang={lang} /></dd></div>
         <div><dt>{t.report.hero.analyzedAt}</dt><dd>{Number.isFinite(new Date(report.generatedAt).getTime()) ? <time dateTime={report.generatedAt}>{new Date(report.generatedAt).toLocaleString(t.report.hero.locale, { timeZone: "UTC", timeZoneName: "short" })}</time> : copy.dateUnknown}</dd></div>
         <div><dt>{reading.coverage}</dt><dd>{coverage ? `${Math.round(coverage.global.ratio * 100)} %` : copy.coverageUnknown}</dd></div>
-        {typeof report.scores.completeness === "number" && <div><dt>{reading.moduleCompleteness}</dt><dd>{report.scores.completeness} %</dd></div>}
+        <ModuleExecutionFacts scores={report.scores} lang={lang} />
       </dl>
       <p>{copy.coverageExplain}</p><p>{copy.completenessExplain}</p><p>{copy.confidenceExplain}</p>
       {coverage && <><h3>{copy.checks}</h3><ul>{(["MEASURED", "UNAVAILABLE", "BLOCKED_BY_ANTIBOT", "NOT_APPLICABLE"] as const).map(state =>
