@@ -1,5 +1,7 @@
 {
   "connected": {
+    "accountMenu": "Menu du compte",
+    "signingOut": "Déconnexion…",
     "unlimitedCredits": "Crédits illimités",
     "workspace": "Espace connecté",
     "personalSpace": "Espace personnel",
