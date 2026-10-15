@@ -176,7 +176,7 @@
   border-top: 1px solid var(--argos-border);
   padding: 16px 0;
 }
-.finding summary {
+.finding > summary {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -185,22 +185,22 @@
   min-height: 44px;
   list-style: none;
 }
-.finding summary::-webkit-details-marker {
+.finding > summary::-webkit-details-marker {
   display: none;
 }
-.finding summary::after {
+.finding > summary::after {
   content: "+";
   color: var(--argos-brand);
   font-size: 24px;
 }
-.finding[open] summary::after {
+.finding[open] > summary::after {
   content: "−";
 }
-.finding summary > div {
+.finding > summary > div {
   min-width: 0;
   flex: 1;
 }
-.finding summary strong {
+.finding > summary strong {
   display: block;
   font-weight: 650;
   overflow-wrap: anywhere;
@@ -373,7 +373,7 @@
     flex-direction: column;
     gap: 4px;
   }
-  .finding summary {
+  .finding > summary {
     align-items: flex-start;
   }
   .facts {
@@ -412,4 +412,18 @@
 .tableHint {
   color: var(--argos-text-muted);
   margin-bottom: 12px;
+}
+
+.source > summary {
+  min-height: 44px;
+  padding-block: 8px;
+  cursor: pointer;
+  list-style: disclosure-closed inside;
+}
+.source[open] > summary {
+  list-style-type: disclosure-open;
+}
+.source > summary:focus-visible {
+  outline: 3px solid var(--argos-brand);
+  outline-offset: 3px;
 }

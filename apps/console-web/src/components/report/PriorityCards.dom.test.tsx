@@ -70,16 +70,16 @@ describe("PriorityCards", () => {
   });
   it("conserve les cartes historiques et leur effort explicite", () => {
     render(<PriorityCards priorities={[{ severity: "critical", title: "Historical action", impact: "Impact", effort: "M" }]} />);
-    expect(screen.getByText("Historical action")).toBeInTheDocument();
+    expect(screen.getByText(/Titre source.*Historical action/)).toBeInTheDocument();
     expect(screen.getByText("Effort M")).toBeInTheDocument();
     expect(screen.getByText("Confiance de mesure : inconnue")).toBeInTheDocument();
   });
   it("limite la présentation à six actions sans reclassement client", () => {
     const list = Array.from({ length: 8 }, (_, i) => ({ ...action, findingKey: `key-${i}`, title: `Action ${i}` }));
     render(<PriorityCards priorities={list} />);
-    expect(screen.getByText("Action 0")).toBeInTheDocument();
-    expect(screen.getByText("Action 5")).toBeInTheDocument();
-    expect(screen.queryByText("Action 6")).not.toBeInTheDocument();
+    expect(screen.getByText(/Titre source.*Action 0/)).toBeInTheDocument();
+    expect(screen.getByText(/Titre source.*Action 5/)).toBeInTheDocument();
+    expect(screen.queryByText(/Titre source.*Action 6/)).not.toBeInTheDocument();
   });
   it("affiche l'état vide", () => {
     render(<PriorityCards priorities={[]} />);

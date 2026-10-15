@@ -3,7 +3,7 @@ import s from './PrintableReport.module.scss';
 import type { Report } from './types';
 import type { Lang } from '@/lib/i18n/routes';
 import { buildReportModel } from './reportModel';
-import { findingContent, cleanEvidence, CATALOGUE_VERSION } from './findingCatalogue';
+import { findingContent, findingEditorial, cleanEvidence, CATALOGUE_VERSION } from './findingCatalogue';
 import { globalScore, domainScore, partialReport, reportScope } from './reportSummaryModel';
 import { decisionCopy } from './decisionCopy';
 import { reportReadingCopy } from './reportReadingCopy';
@@ -39,12 +39,12 @@ export default function PrintableReport({report,lang,format}:{report:Report;lang
  <table><caption>{r.score} / {e.coverage}</caption><thead><tr><th>{r.domain}</th><th>{r.score}</th><th>{e.coverage}</th></tr></thead><tbody>{model.groups.filter(g=>g.key!=='unknown').map(g=>{const value=domainScore(g.score?.score,g.key,coverage);return <tr key={g.key}><th scope="row">{title(g.key)}</th><td>{value===undefined?d.notEvaluated:value+'/100'}</td><td>{pct(coverage?.domains.find(row=>row.key===g.key)?.ratio)}</td></tr>;})}</tbody></table>
  <p>{d.automaticLimit}</p><p>{r.limits}</p></section>
  <section><h2>{r.actions}</h2><p>{interpretationCopy[lang].actions}</p>{!priorities.length&&<p>{t.priorityCards.empty}</p>}{priorities.map((resolved,index)=>{const p=resolved.priority;const grouped=new Set([p.findingKey,...(p.relatedFindingKeys??[])].filter(Boolean)).size>1;const content=!grouped&&resolved.findings.length===1?findingContent(resolved.findings[0].issue,lang):undefined;return <article key={index}>
- <h3>{t.priorityCards.rankLabel} {p.rank??index+1} · {content?.title??cleanEvidence(p.title)}</h3><p>{content?.impact??cleanEvidence(p.impact)}</p>
+ <h3>{t.priorityCards.rankLabel} {p.rank??index+1} · {content?.title??findingEditorial(p.findingKey,lang).title}</h3><p>{content?.impact??findingEditorial(p.findingKey,lang).impact}</p>
  {content&&<><p>{content.qualification}</p><p>{content.recommendation}</p></>}
  {isAggregateFinding(p.findingKey)&&<p>{lang==='fr'?'Cette note d’outil n’est pas une correction à chiffrer. Examiner les constats détaillés ; sans eux, demander le diagnostic source.':'This tool score is not an estimable correction. Inspect detailed findings; without them, request the source diagnosis.'}</p>}
  <p>{title(p.categoryKey??resolved.findings[0]?.domain??'unknown')} · {t.priorityCards.effortLabel} {p.effort??t.priorityCards.effortUnknown}</p>
  <p>{t.priorityCards.confidenceLabel} {p.confidence&&Object.hasOwn(t.priorityCards.confidence,p.confidence)?t.priorityCards.confidence[p.confidence]:t.priorityCards.confidence.UNKNOWN}</p>
- <p>{e.source}: {[...new Set([...(p.sources??[]),...resolved.findings.flatMap(f=>f.sources)])].map(cleanEvidence).join(', ')||e.unknown}</p>
+ <p>{r.technicalTitle}: {cleanEvidence(p.title)}</p><p>{e.source}: {[...new Set([...(p.sources??[]),...resolved.findings.flatMap(f=>f.sources)])].map(cleanEvidence).join(', ')||e.unknown}</p>
  {p.rankReason&&<p>{t.priorityCards.rankReasons[p.rankReason]}</p>}{p.rankReason==='MODELLED_SCORE_GAIN'&&typeof p.globalScoreGain==='number'&&Number.isFinite(p.globalScoreGain)&&<p>{t.priorityCards.gainLabel} {p.globalScoreGain.toLocaleString(lang,{maximumFractionDigits:2})} {t.priorityCards.gainUnit}. {t.priorityCards.modelLimit}</p>}
  {grouped&&<p>{t.priorityCards.groupedLabel} {resolved.findings.length}</p>}
  {[...resolved.findings,...(isAggregateFinding(p.findingKey)?model.findings.filter(f=>!isAggregateFinding(f.key)&&f.domain===(p.categoryKey??resolved.findings[0]?.domain)&&f.key.startsWith(p.findingKey!.split('.')[0]+'.')&&!resolved.findings.some(r=>r.key===f.key)):[])].map(f=><p key={f.key}>{t.priorityCards.seeFinding}: {findingContent(f.issue,lang).title} ({cleanEvidence(f.key)})</p>)}
