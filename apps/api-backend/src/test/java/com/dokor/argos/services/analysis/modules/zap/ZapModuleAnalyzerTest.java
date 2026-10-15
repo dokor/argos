@@ -21,6 +21,19 @@ import static org.mockito.Mockito.when;
  * des faux positifs (confidence=0) et conservation de la gravité maximale (issue #157).
  */
 class ZapModuleAnalyzerTest {
+    @Test void poweredByDisclosureIsVisibleAndNeverBecomesReferrerPolicy() throws Exception {
+        var result = analyze("""
+            {"alerts":[{"pluginId":"10037","alert":"X-Powered-By disclosure","riskcode":"1","confidence":"2"}]}
+            """);
+        assertTrue(check(result, "http.security.referrer_policy").isEmpty());
+        var policy = new com.dokor.argos.services.analysis.scoring.DefaultScorePolicy();
+        var enriched = new com.dokor.argos.services.analysis.scoring.ScoreEnricherService(policy)
+            .enrich(java.util.List.of(result));
+        var finding = check(enriched.getFirst(), "zap.alert.10037").orElseThrow();
+        assertTrue(finding.scorable());
+        assertEquals(0, finding.weight());
+        assertTrue(finding.tags().contains("security"));
+    }
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 

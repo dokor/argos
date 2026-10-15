@@ -6,7 +6,7 @@ import java.util.*;
 
 /** Pure, versioned ranking of actions. Never recomputes a historical scoring policy. */
 public final class ReportPriorityService {
-    public static final String VERSION = "priority-impact-v1";
+    public static final String VERSION = "priority-risk-v2";
     private static final Map<String, String> OBSERVATORY_CAUSES = Map.of(
         "content-security-policy", "http.security.csp",
         "strict-transport-security", "http.security.hsts",
@@ -79,9 +79,9 @@ public final class ReportPriorityService {
     }
 
     private static final Comparator<Candidate> ORDER = Comparator
-        .comparingDouble((Candidate c) -> c.gain().globalPoints() == null ? 0 : c.gain().globalPoints()).reversed()
-        .thenComparingInt(c -> switch (c.issue().severity()) { case critical -> 0; case important -> 1; case info -> 2; })
+        .comparingInt((Candidate c) -> switch (c.issue().severity()) { case critical -> 0; case important -> 1; case info -> 2; })
         .thenComparingInt(c -> switch (c.confidence()) { case "HIGH" -> 0; case "MEDIUM" -> 1; case "LOW" -> 2; default -> 3; })
+        .thenComparing(Comparator.comparingDouble((Candidate c) -> c.gain().globalPoints() == null ? 0 : c.gain().globalPoints()).reversed())
         .thenComparingInt(c -> c.issue().effort() == null ? 4 : c.issue().effort().ordinal())
         .thenComparing(c -> c.issue().categoryKey())
         .thenComparing(Candidate::cause)

@@ -4,7 +4,15 @@
 
 Le calcul a été livré dans [PR #254](https://github.com/dokor/argos/pull/254),
 fusionnée au commit `59e3a44f2fcfeac19f89948747372270b4ee469b`.
-La composition a été introduite avec la version 10 ; le catalogue actif est désormais V12, décrit dans [les seuils runtime](runtime-thresholds.md).
+La composition a été introduite avec la version 10 ; le catalogue actif est désormais V13.
+V13 conserve les poids et les [seuils runtime de V12](runtime-thresholds.md),
+mais exclut les succès non établis après une navigation interrompue et les
+mesures ZAP d'une page de challenge. Les alertes ZAP indépendantes sont visibles
+à poids nul ; 10037 reste une divulgation X-Powered-By, pas une politique Referrer.
+Les balises sociales gardent un poids de 1 même lorsqu'elles sont absentes :
+leur ratio vaut min(1, nombre de balises présentes / 3). Ajouter une balise ne
+peut plus diminuer la note. Ces changements modifient version et empreinte ;
+les rapports historiques ne sont pas recalculés.
 Performance, Sécurité, SEO et Accessibilité ont chacun un coefficient configuré
 de **25 %**. Ce choix donne à chaque domaine la même influence initiale ; le
 nombre de checks ou leurs poids internes ne décide plus de cette influence.

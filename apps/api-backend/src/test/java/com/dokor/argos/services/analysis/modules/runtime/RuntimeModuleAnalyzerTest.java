@@ -17,6 +17,19 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class RuntimeModuleAnalyzerTest {
+    @Test void failedNavigationCannotEarnPointsForZeroErrorsOrLowTraffic() throws Exception {
+        var mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        var response = mapper.readValue("""
+            {"navigation":{"status":"FAILED","reason":"TIMEOUT"},"console":{"errors":0},
+             "jsErrors":{"count":0},"network":{"requests":1,"failedRequests":0,"status5xx":0,"totalBytesEstimated":0}}
+            """, PlaywrightRuntimeClient.RuntimeAnalyzeResponse.class);
+        var result = analyze(response);
+        var policy = new com.dokor.argos.services.analysis.scoring.DefaultScorePolicy();
+        var enriched = new com.dokor.argos.services.analysis.scoring.ScoreEnricherService(policy).enrich(List.of(result));
+        assertTrue(enriched.getFirst().checks().stream().noneMatch(AuditCheckResult::scorable));
+        assertTrue(result.checks().stream().filter(c -> !c.key().equals("runtime.analysis.duration_ms"))
+            .allMatch(c -> "NAVIGATION_INCOMPLETE".equals(c.details().get("measurementReason"))));
+    }
 
     @Test void evidenceIsScopedToTheActualNetworkFinding() throws Exception {
         var mapper=new com.fasterxml.jackson.databind.ObjectMapper();

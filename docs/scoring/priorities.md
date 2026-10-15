@@ -1,4 +1,4 @@
-# Classement des priorités — priority-impact-v1 (#250)
+# Classement des priorités — priority-risk-v2
 
 ## Contribution, pas promesse de résultat
 
@@ -23,13 +23,12 @@ recalculée sous V10.
 
 ## Ordre déterministe et informations explicites
 
-Le tri est lexicographique : gain global décroissant (null traité comme
-absence de gain), puis gravité critical/important/info, confiance
-HIGH/MEDIUM/LOW/UNKNOWN, effort XS/S/M/L/inconnu, domaine, cause, finding et
+Le tri est lexicographique : gravité critical/important/info, confiance
+HIGH/MEDIUM/LOW/UNKNOWN, gain global décroissant (null traité comme absence
+de gain), effort XS/S/M/L/inconnu, domaine, cause, finding et
 module. La version du classement est indépendante de `scoringVersion`.
-La gravité demeure visible même lorsqu'une contribution supérieure fait
-passer une action moins sévère devant une autre. Les actions sans gain sont
-classées par gravité et les mêmes départages.
+Une alerte critique reste prioritaire même sans gain de score direct.
+Le gain décrit une contribution au modèle, jamais une mesure du risque métier.
 
 La confiance accepte uniquement `check.details.measurementConfidence`
 HIGH/MEDIUM/LOW, sinon UNKNOWN. Le nombre de sources ne prouve pas la

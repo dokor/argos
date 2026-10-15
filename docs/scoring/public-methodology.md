@@ -2,7 +2,7 @@
 
 Les routes `/methodologie-score` et `/en/scoring-method` décrivent
 DefaultScorePolicy et ScoreService. À la consolidation du 12 octobre 2026,
-le barème est V12 et la couverture weighted-coverage-v3. Les rapports historiques
+le barème est V13 et la couverture weighted-coverage-v3. Les rapports historiques
 gardent leurs propres versions et empreintes ; ne pas les recalculer.
 
 ## Sources et mise à jour

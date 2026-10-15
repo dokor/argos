@@ -7,6 +7,16 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class MeasurementCoverageTest {
+    @Test void challengeFindingsFromZapCannotEnterTheScoreButTlsRemainsMeasured() {
+        var http = new AuditModuleResult("http", "HTTP", null, Map.of("antiBotDetected", true), List.of());
+        var zap = new AuditModuleResult("zap", "ZAP", null, Map.of(), List.of(check("http.security.csp")));
+        var ssl = new AuditModuleResult("ssl", "TLS", null, Map.of(), List.of(check("ssl.grade")));
+        var enriched = new ScoreEnricherService(policy).enrich(List.of(http, zap, ssl));
+        assertFalse(enriched.get(1).checks().getFirst().scorable());
+        assertTrue(enriched.get(2).checks().getFirst().scorable());
+        assertEquals(MeasurementCoverage.State.BLOCKED_BY_ANTIBOT,
+            coverage(List.of(http, zap, ssl)).checks().stream().filter(c -> c.key().equals("http.security.csp")).findFirst().orElseThrow().state());
+    }
     private final ScorePolicy policy=new DefaultScorePolicy();
     private List<AuditModuleResult> complete() {
         Map<String,List<AuditCheckResult>> modules=new LinkedHashMap<>();
