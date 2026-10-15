@@ -110,3 +110,10 @@ export function safeAdminReturn(raw: unknown): string | null {
     ? raw
     : null;
 }
+
+/** Only the analysis list and its validated filters can be a run-detail return target. */
+export function safeAdminRunReturn(raw: unknown): string | null {
+  if (typeof raw !== "string" || raw.length > 2048 || /[\\#\x00-\x20]/.test(raw) || raw.split("?").length > 2) return null;
+  const [path, query] = raw.split("?");
+  return /^\/(?:en\/)?account\/admin\/runs$/.test(path) && adminQuery("admin/runs", new URLSearchParams(query)) ? raw : null;
+}
