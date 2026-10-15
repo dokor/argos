@@ -1,0 +1,31 @@
+# Intégration des rapports unifiés — PR 644
+
+Recette du 15 octobre 2026 sur données fictives uniquement, après intégration de `main` à `727eb806`.
+
+## MariaDB
+
+MariaDB **11.4.5** Windows, serveur jetable lié à `127.0.0.1:33364`, schéma `argos_credentials_test`. Sur Windows, `lower_case_table_names=2` conserve les noms de tables attendus par les migrations historiques (le réglage par défaut les met en minuscules et fait échouer le garde-fou V27 avant d’atteindre V29). Aucun accès à une base distante ou de production.
+
+Commande Maven : `mvn -B -P mariadb-integration -Dit.test=ReportSharingMigrationIT,AccountLifecycleIT,AuditPublicationIT,ReportRetentionIT,ReportCredentialMigrationIT verify`, avec les trois variables `ARGOS_TEST_CREDENTIALS_*` du runbook MariaDB.
+
+**78 tests réussis, aucun échec ni test ignoré.** Vérifications nouvelles : passage V28→V29 sur rapports existants, conservation du JSON, absence de partage par défaut, unicité et longueur du hash, précision milliseconde de l’expiration, validation Flyway et second démarrage sans migration supplémentaire. Les vraies routes Jersey vérifient propriétaire, CSRF, compte vérifié, synthèse anonyme, détail destinataire, historique privé, rotation, expiration et révocation.
+
+Deux tests historiques utilisaient le DAO actuel sur un schéma volontairement arrêté à V26. Ils sélectionnaient alors les colonnes de partage V29 inexistantes. Leurs assertions lisent maintenant les seules colonnes historiques ; les tests du lecteur actuel restent exécutés sur le schéma à jour. V29 elle-même n’a pas nécessité de modification. Son test est ajouté à la matrice CI MariaDB 11.4.
+
+## PDF
+
+`node scripts/e2e/report-pdf.mjs` : **24 exports A4**, FR/EN, synthèse/complet, rapports complet/partiel/historique/sans constat, puis accès public, partagé anonyme, partagé connecté et propriétaire. Les pages sont générées par le moteur Chromium via le vrai bouton d’export et son aperçu ; aucune recomposition du rapport par un outil PDF externe.
+
+`python scripts/e2e/check-report-pagination.py` (pypdf) : **110 pages**, numérotation `n / total`, absence de page vide et de jeton privé, familles de mesures conservées ensemble, titre du plan d’action avec sa première priorité. Poppler a rendu toutes les pages. Inspection visuelle des variantes longues FR/EN, synthèse publique, partagé connecté, historique, partiel et sans constat.
+
+Corrections : éviter les coupures dans les constats/priorités courts, démarrer les sections contenant des constats ou priorités sur une nouvelle page, conserver l’impression des barres de seuil même si les arrière-plans sont désactivés. Une preuve plus longue qu’une page peut toujours se poursuivre sur la suivante ; les cas synthétiques longs sont conservés dans la recette.
+
+Les PDF dépendent du moteur d’impression. Cette recette couvre Chromium ; elle ne certifie pas les dialogues système, Safari, Firefox ni PDF/UA.
+
+## Régressions et conflits
+
+874 tests frontend réussis et build production réussi. La matrice `connected-analysis.mjs` passe **148 scénarios**, FR/EN, clair/sombre, largeurs 320/390/768/1056/1440 px, y compris les contrôles automatisés de débordement et axe. Son ancienne attente « Diagnostic de la page » a été remplacée par le titre de domaine du lecteur unifié.
+
+Le conflit avec `main` concernait le défilement du bloc méthodologique supprimé par la refonte : suppression conservée, améliorations de navigation communes intégrées. Aucun déploiement ni fusion de la PR.
+
+Preuves locales ignorées par Git : `outputs/integration-644/` (journaux MariaDB, matrice PDF rendue avec Poppler, tests frontend), `outputs/pdf/report-fixtures/` (PDF et contrats) et `outputs/ui-review/clarte-analysis/` (captures/matrice). Elles ne sont pas directement accessibles aux reviewers distants.

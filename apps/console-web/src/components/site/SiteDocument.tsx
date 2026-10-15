@@ -119,7 +119,7 @@ export default function SiteDocument({
   lang?: Lang;
 }>) {
   return (
-    <html lang={lang}>
+    <html lang={lang} data-scroll-behavior="smooth">
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <script

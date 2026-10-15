@@ -207,7 +207,7 @@ public class ConfigurationService {
     }
 
     public String sslLabsApiUrl() {
-        return externalUrl("external.ssl-labs.url", null, "https://api.ssllabs.com/api/v3");
+        return trustedScannerUrl("external.ssl-labs.url", "https://api.ssllabs.com/api/v3");
     }
 
     public Duration sslLabsTimeout() {
@@ -216,7 +216,21 @@ public class ConfigurationService {
     }
 
     public String observatoryApiUrl() {
-        return externalUrl("external.observatory.url", null, "https://observatory-api.mdn.mozilla.net/api/v2");
+        return trustedScannerUrl("external.observatory.url", "https://observatory-api.mdn.mozilla.net/api/v2");
+    }
+
+    /** Shared environment kill switch. No activation by default. */
+    public boolean externalScansEnabled() {
+        return "true".equals(environment.get("ARGOS_EXTERNAL_SCANS_ENABLED"));
+    }
+
+    private String trustedScannerUrl(String path, String officialEndpoint) {
+        String endpoint = externalUrl(path, null, officialEndpoint);
+        // Configured scanners cannot target arbitrary services on the backend network.
+        if (!officialEndpoint.equals(endpoint)) {
+            throw new IllegalArgumentException("Only the official HTTPS scanner endpoint is allowed: " + path);
+        }
+        return endpoint;
     }
 
     private String externalUrl(String path, String envKey, String fallback) {

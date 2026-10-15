@@ -1042,6 +1042,9 @@ class AccountLifecycleIT extends MariaDbReportFixture {
             config.register(new com.dokor.argos.webservices.api.feedback.FeedbackWs(feedback(),new AccountCsrf(settings),new AccountRateLimiter(dao,tokens,clock,settings)));
             config.register(new com.dokor.argos.webservices.api.feedback.FeedbackAdminWs(feedback(),new AccountCsrf(settings)));
             config.register(new com.dokor.argos.webservices.api.account.AccountReportIntroductionWs(new AccountReportIntroductionService(sessions,mapper,clock,tokens),new AccountCsrf(settings)));
+            var sharing = new ReportSharingService(dao,sessions,reader,tokens,clock);
+            config.register(new com.dokor.argos.webservices.api.account.ReportAccessWs(sharing,new AccountCsrf(settings)));
+            config.register(new com.dokor.argos.webservices.api.report.SharedReportsWs(sharing));
             var admin = mock(com.dokor.argos.services.configuration.ConfigurationService.class);
             when(admin.adminApiToken()).thenReturn("synthetic-server-credential");
             config.register(
@@ -1779,6 +1782,41 @@ class AccountLifecycleIT extends MariaDbReportFixture {
         }
         sql("UPDATE ARG_AUDIT_RUN SET status='COMPLETED',created_at='2026-10-11 07:00:00' WHERE id="+run);
         return token;
+    }
+
+    @Test void reportSharingUsesRealMariaDbAndEnforcesAccessRotationExpiryAndRevocation() throws Exception {
+        var owner=user("share-owner@example.com",true);var recipient=user("share-recipient@example.com",true);var pending=user("share-pending@example.com",false);
+        var run=personal.create("https://example.com",bearer(owner),CSRF).audit();historyReport(run.runId(),92,"share-policy");
+        String path="/account/runs/"+run.runId()+"/share";
+        try(var http=new HttpFixture()) {
+            assertEquals(401,http.call("POST",path,null,"{\"days\":7}",true).statusCode());
+            assertEquals(403,http.call("POST",path,bearer(owner),"{\"days\":7}",false).statusCode());
+            assertEquals(404,http.call("POST",path,bearer(recipient),"{\"days\":7}",true).statusCode());
+            var created=http.call("POST",path,bearer(owner),"{\"days\":7}",true);assertEquals(200,created.statusCode(),created.body());
+            String first=mapper.readTree(created.body()).get("token").asText();
+            var summary=http.call("GET","/reports/shared/"+first,null,null,false);assertEquals(200,summary.statusCode(),summary.body());
+            assertEquals("summary",mapper.readTree(summary.body()).get("access").asText());
+            assertTrue(summary.headers().firstValue("cache-control").orElse("").contains("no-store"));
+            assertEquals(401,http.call("GET","/account/shared-reports/"+first,null,null,false).statusCode());
+            assertEquals(403,http.call("GET","/account/shared-reports/"+first,bearer(pending),null,false).statusCode());
+            assertEquals(200,http.call("GET","/account/shared-reports/"+first,bearer(recipient),null,false).statusCode());
+            assertEquals(404,http.call("GET","/account/runs/"+run.runId(),bearer(recipient),null,false).statusCode());
+            try(var c=source.getConnection();var s=c.prepareStatement("SELECT share_token_hash,share_expires_at FROM ARG_AUDIT_REPORT WHERE run_id=?")) {
+                s.setLong(1,run.runId());try(var rows=s.executeQuery()){assertTrue(rows.next());assertArrayEquals(tokens.sha256(first),rows.getBytes(1));assertNotNull(rows.getTimestamp(2));}
+            }
+            var rotated=http.call("POST",path,bearer(owner),"{\"days\":0}",true);assertEquals(200,rotated.statusCode(),rotated.body());
+            String second=mapper.readTree(rotated.body()).get("token").asText();
+            assertEquals(404,http.call("GET","/reports/shared/"+first,null,null,false).statusCode());
+            assertEquals(200,http.call("GET","/reports/shared/"+second,null,null,false).statusCode());
+            sql("UPDATE ARG_AUDIT_REPORT SET share_expires_at='2000-01-01' WHERE run_id="+run.runId());
+            assertEquals(404,http.call("GET","/reports/shared/"+second,null,null,false).statusCode());
+            var renewed=http.call("POST",path,bearer(owner),"{\"days\":30}",true);assertEquals(200,renewed.statusCode(),renewed.body());
+            String third=mapper.readTree(renewed.body()).get("token").asText();
+            assertEquals(403,http.call("DELETE",path,bearer(owner),null,false).statusCode());
+            assertEquals(404,http.call("DELETE",path,bearer(recipient),null,true).statusCode());
+            assertEquals(200,http.call("DELETE",path,bearer(owner),null,true).statusCode());
+            assertEquals(404,http.call("GET","/account/shared-reports/"+third,bearer(recipient),null,false).statusCode());
+        }
     }
 
     @Test void reportIntroductionRequiresOwnerCsrfExistingFindingsAndIsSeparatelyRevocable() throws Exception {

@@ -1,0 +1,151 @@
+name: Visual regression
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * 1'
+  # Exhaustive matrices are independent of the required functional journeys.
+  # Run them on visual assets/harness changes, or manually for a broader UI review.
+  pull_request:
+    paths:
+      - 'apps/console-web/**/*.scss'
+      - 'apps/console-web/**/*.css'
+      - 'apps/console-web/**/layout.tsx'
+      - 'apps/console-web/public/**'
+      - 'scripts/e2e/connected-*.mjs'
+      - 'scripts/e2e/account-history.mjs'
+      - 'scripts/e2e/public-header.mjs'
+      - 'scripts/e2e/acceptance-evidence*'
+      - 'docs/connected-space/reference/**'
+      - 'docs/connected-space/fixtures/**'
+      - 'scripts/e2e/visual-suites*'
+      - '.github/workflows/visual-regression.yml'
+permissions:
+  contents: read
+concurrency:
+  group: visual-regression-${{ github.ref }}
+  cancel-in-progress: true
+env:
+  API_BASE: http://127.0.0.1:8081
+  NEXT_TELEMETRY_DISABLED: '1'
+  APP_LOGS_ENABLED: 'false'
+  NEXT_PUBLIC_APP_LOGS_ENABLED: 'false'
+jobs:
+  build:
+    name: Build visual frontend once
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.21.0'
+          cache: npm
+          cache-dependency-path: apps/console-web/package-lock.json
+      - run: npm ci --prefix apps/console-web
+      - run: npm run build --prefix apps/console-web
+      - name: Package this revision's build without the compiler cache
+        run: tar --exclude=.next/cache -C apps/console-web -czf "$RUNNER_TEMP/visual-frontend.tgz" .next
+      - uses: actions/upload-artifact@v4
+        with:
+          name: visual-build-${{ github.sha }}
+          path: ${{ runner.temp }}/visual-frontend.tgz
+          if-no-files-found: error
+          retention-days: 1
+
+  visual:
+    name: Visual matrix (${{ matrix.group }})
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        group: [public, analysis, account, domains]
+    env:
+      CONNECTED_BASE_URL: http://127.0.0.1:3000
+      HISTORY_BASE_URL: http://127.0.0.1:3000
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.21.0'
+          cache: npm
+          cache-dependency-path: |
+            apps/console-web/package-lock.json
+            apps/playwright-service/package-lock.json
+      - run: npm ci --prefix apps/console-web
+      - run: npm ci --prefix apps/playwright-service
+      - name: Install controlled Chromium
+        working-directory: apps/playwright-service
+        run: npx playwright install --with-deps chromium
+      - uses: actions/download-artifact@v4
+        with:
+          name: visual-build-${{ github.sha }}
+          path: ${{ runner.temp }}
+      - name: Restore the shared frontend build
+        run: tar -xzf "$RUNNER_TEMP/visual-frontend.tgz" -C apps/console-web
+      - name: Start local frontend
+        run: |
+          mkdir -p outputs
+          npm run start --prefix apps/console-web -- --hostname 127.0.0.1 > "outputs/frontend-${{ matrix.group }}.log" 2>&1 &
+          node --input-type=module <<'JS'
+          let ready = false;
+          for (let i = 0; i < 60; i++) {
+            try { if ((await fetch('http://127.0.0.1:3000')).ok) { ready = true; break; } } catch {}
+            await new Promise(resolve => setTimeout(resolve, 500));
+          }
+          if (!ready) throw new Error('Visual frontend failed readiness');
+          JS
+      - name: Run independent visual suites
+        run: node scripts/e2e/visual-suites.mjs "${{ matrix.group }}"
+      - name: Preserve captures and diagnostics from this group
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-captures-${{ matrix.group }}-${{ github.sha }}
+          path: outputs/
+          if-no-files-found: error
+          retention-days: 14
+
+  evidence:
+    name: Exhaustive visual regression
+    needs: [build, visual]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Require every visual group to pass
+        env:
+          BUILD_RESULT: ${{ needs.build.result }}
+          VISUAL_RESULT: ${{ needs.visual.result }}
+        run: test "$BUILD_RESULT" = success && test "$VISUAL_RESULT" = success
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.21.0'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: visual-captures-*-${{ github.sha }}
+          path: outputs/
+          merge-multiple: true
+      - name: Assemble revision-bound visual evidence
+        env:
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          python3 docs/connected-space/validate.py
+          node --test scripts/e2e/acceptance-evidence.test.mjs scripts/e2e/visual-suites.test.mjs
+          node scripts/e2e/acceptance-evidence.mjs --visual-only
+      - name: Upload visual manifest and comparisons
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-acceptance-${{ github.sha }}
+          path: outputs/ui-review/clarte-acceptance/
+          if-no-files-found: error
+          retention-days: 14

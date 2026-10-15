@@ -104,7 +104,7 @@ class AuditPublicationIT extends MariaDbReportFixture {
         org.flywaydb.core.Flyway.configure().dataSource(source).target("26").load().migrate();
         assertEquals("FAILED",runs.getRun(6).orElseThrow().getStatus());
         assertEquals("LEGACY_REPORT_PUBLICATION_MISSING",runs.getRun(6).orElseThrow().getLastError());
-        assertTrue(reader.getByToken("synthetic-existing").isPresent());
+        assertTrue(historicalStoredReport("synthetic-existing").isPresent());
     }
     @Test void concurrentPublicPostsShareDomainAndAuditButCreateIndependentRuns() throws Exception {
         var domainInsert=new CyclicBarrier(2); var auditInsert=new CyclicBarrier(2);

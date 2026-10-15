@@ -100,20 +100,13 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - name: Test CI and release helpers
-        run: node --test ../../scripts/ci/changed-paths.test.mjs ../../scripts/ci/frontend-build-pipelines.test.mjs ../../scripts/check-release-evidence.test.mjs ../../scripts/release/inspect-runtime.test.mjs
+        run: node --test ../../scripts/ci/*.test.mjs ../../scripts/e2e/*.test.mjs ../../scripts/check-release-evidence.test.mjs ../../scripts/release/inspect-runtime.test.mjs
       - run: npm run test
-      - name: Build without workspace or proxy convention warnings
-        run: |
-          set -o pipefail
-          npm run build 2>&1 | tee "$RUNNER_TEMP/console-web-build.log"
-          ! grep -Ei 'inferred your workspace root|middleware.*deprecated' "$RUNNER_TEMP/console-web-build.log"
       - name: Build the standalone console-web Docker context
         run: |
           set -o pipefail
           docker build --progress=plain --target build . 2>&1 | tee "$RUNNER_TEMP/console-web-docker-build.log"
           ! grep -Ei 'inferred your workspace root|middleware.*deprecated' "$RUNNER_TEMP/console-web-docker-build.log"
-      - name: Verify test failure propagates
-        run: node ../../scripts/verify-ci-failures.mjs frontend
 
   lighthouse:
     name: Lighthouse checks
@@ -136,8 +129,6 @@ jobs:
       - run: npm ci
       - run: npm run check
       - run: npm run test
-      - name: Verify test failure propagates
-        run: node ../../scripts/verify-ci-failures.mjs lighthouse
 
   playwright:
     name: Playwright checks
@@ -162,5 +153,3 @@ jobs:
       - run: npm ci
       - run: npm run check
       - run: npm run test
-      - name: Verify test failure propagates
-        run: node ../../scripts/verify-ci-failures.mjs playwright

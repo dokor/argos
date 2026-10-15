@@ -25,9 +25,9 @@ try {
     });
     const prefix=lang==='en' ? '/en' : '';
     async function visit(path){await page.goto(base+prefix+path);await page.locator('[data-connected-shell] h1').waitFor();}
-    // Require the private reader and its observed measurements, not the former domain heading.
+    // The unified private reader uses the audited domain as its main heading.
     async function reportReady() {
-        await page.getByRole('heading',{name:lang==='fr' ? 'Diagnostic de la page':'Page diagnosis',exact:true}).waitFor();
+        await page.getByRole('heading',{name:'atelier.example',level:1,exact:true}).waitFor();
         await page.getByRole('button',{name:lang==='fr' ? 'Constats techniques':'Technical findings',exact:true}).waitFor();
         await page.getByRole('heading',{name:lang==='fr' ? 'Mesures observées':'Observed measurements',exact:true}).waitFor();
         const contextPanel=page.locator('details').filter({has:page.locator('summary').filter({hasText:lang==='fr' ? /^Contexte de la mesure$/ : /^Measurement context$/})});

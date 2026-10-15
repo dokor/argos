@@ -84,6 +84,13 @@ abstract class MariaDbReportFixture {
         publisher = new ReportPublishService(transactions,new AuditRunDao(transactions),reports,composer,summary,org.mockito.Mockito.mock(AhrefsDomainRatingClient.class),mapper);
     }
     protected void sql(String text) throws Exception { try(var connection=source.getConnection();var statement=connection.createStatement()){statement.execute(text);} }
+    // Historical migration assertions must not select columns introduced after their target version.
+    protected java.util.Optional<ReportDto> historicalStoredReport(String token) throws Exception {
+        try(var connection=source.getConnection();var statement=connection.prepareStatement("SELECT report_json FROM ARG_AUDIT_REPORT WHERE token_hash=? AND (expires_at IS NULL OR expires_at>NOW(3))")) {
+            statement.setBytes(1,tokens.sha256(token));
+            try(var rows=statement.executeQuery()){return rows.next()?java.util.Optional.of(mapper.readValue(rows.getString(1),ReportDto.class)):java.util.Optional.empty();}
+        }
+    }
     protected void legacyReport(long id,long run,String token,boolean expired) throws Exception {
         try(var connection=source.getConnection();var statement=connection.prepareStatement("INSERT INTO ARG_AUDIT_REPORT(id,audit_id,run_id,token_hash,public_token,domain,target_url,report_json,expires_at) VALUES(?,1,?,?,?,'example.com','https://example.com','{\"domain\":\"example.com\"}',?)")) {
             statement.setLong(1,id); statement.setLong(2,run); statement.setBytes(3,tokens.sha256(token)); statement.setString(4,token);

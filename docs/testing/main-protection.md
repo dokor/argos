@@ -42,3 +42,11 @@ contournement administrateur n'a été utilisé.
 
 Références : [rulesets](https://docs.github.com/en/rest/repos/rules),
 [checks requis](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks).
+
+## Sélection des jobs
+
+Les workflows requis restent présents sur chaque PR ; le [routage CI](ci.md)
+sélectionne leurs jobs selon les fichiers modifiés, y compris pour auth,
+MariaDB et la sécurité des collecteurs. Un push main utilise aussi ce filtrage.
+Pour un dossier complet de release, déclencher manuellement les workflows sur
+la même révision candidate ; les statuts sautés ne constituent pas une preuve.

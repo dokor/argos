@@ -25,7 +25,7 @@ class ReportCredentialMigrationIT extends MariaDbReportFixture {
         try(var connection=source.getConnection();var statement=connection.createStatement();var rows=statement.executeQuery("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND ((table_name='ARG_AUDIT_RUN' AND column_name='report_token') OR (table_name='ARG_AUDIT_REPORT' AND column_name='public_token'))")) {
             assertTrue(rows.next()); assertEquals(0,rows.getInt(1));
         }
-        assertEquals("example.com",reader.getByToken("synthetic-existing").orElseThrow().domain());
+        assertEquals("example.com",historicalStoredReport("synthetic-existing").orElseThrow().domain());
         assertTrue(runs.findByReportToken("synthetic-existing").isPresent());
         assertTrue(runs.findByReportToken("synthetic-pending").isPresent());
         assertTrue(runs.findByReportToken("synthetic-before-v5").isPresent());

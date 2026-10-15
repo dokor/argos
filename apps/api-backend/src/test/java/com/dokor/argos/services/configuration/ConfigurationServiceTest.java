@@ -192,4 +192,26 @@ class ConfigurationServiceTest {
         assertThrows(IllegalArgumentException.class, () -> service(config, Map.of()).validateResourcePools());
     }
 
+    @Test void externalScanActivationIsExplicitAndShared() {
+        assertFalse(service("", Map.of()).externalScansEnabled());
+        assertTrue(service("", Map.of("ARGOS_EXTERNAL_SCANS_ENABLED", "true")).externalScansEnabled());
+        for (String value : new String[]{"false", "TRUE", "1", "", " true "}) {
+            assertFalse(service("", Map.of("ARGOS_EXTERNAL_SCANS_ENABLED", value)).externalScansEnabled());
+        }
+    }
+
+    @Test void scannerEndpointsCannotBeRedirectedToAnotherService() {
+        String[] rejected = {"http://api.ssllabs.com/api/v3", "https://api.ssllabs.com.evil.com/api/v3",
+            "https://127.0.0.1/api/v3", "http://api-backend:8081", "https://api.ssllabs.com:444/api/v3",
+            "https://api.ssllabs.com/api/v3/../v4", "https://api.ssllabs.com/api/v3?secret=x",
+            "https://api.ssllabs.com/api/v3#fragment", "https://user:secret@api.ssllabs.com/api/v3"};
+        for (String value : rejected) {
+            var config = service("external.ssl-labs.url=\"" + value + "\"", Map.of());
+            assertThrows(IllegalArgumentException.class, config::sslLabsApiUrl);
+        }
+        var wrongProvider = service("external.observatory.url=\"https://api.ssllabs.com/api/v3\"", Map.of());
+        assertThrows(IllegalArgumentException.class, wrongProvider::observatoryApiUrl);
+        assertEquals("https://observatory-api.mdn.mozilla.net/api/v2",
+            service("external.observatory.url=\"https://observatory-api.mdn.mozilla.net/api/v2/\"", Map.of()).observatoryApiUrl());
+    }
 }

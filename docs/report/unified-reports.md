@@ -28,4 +28,4 @@ Les PDF reprennent la mosaïque et revérifient l’accès à leur préparation.
 
 ## Vérifications
 
-`mvn clean test` couvre notamment la projection publique, les mesures manquantes/zéro, la propriété, la rotation, la révocation et l’expiration des partages (tests SQL H2). `npm test` couvre les parcours publics/connectés, les liens de langue, les retours autorisés et les protections BFF/CSRF. La migration MariaDB et l’enregistrement PDF via le dialogue système doivent également être vérifiés dans l’environnement d’intégration ; les fixtures locales ne remplacent pas ces contrôles.
+`mvn clean test` couvre notamment la projection publique, les mesures manquantes/zéro, la propriété, la rotation, la révocation et l’expiration des partages (tests SQL H2). `npm test` couvre les parcours publics/connectés, les liens de langue, les retours autorisés et les protections BFF/CSRF. La [recette d’intégration](integration-644.md) vérifie aussi la migration sur MariaDB 11.4.5 et 24 exports PDF réellement paginés par Chromium.

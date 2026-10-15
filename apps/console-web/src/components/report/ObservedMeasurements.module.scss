@@ -29,5 +29,6 @@
 .note { margin-top:20px; font-size:12px; color:t.$text-muted; }
 .legend { display:flex; gap:16px; flex-wrap:wrap; margin-top:12px; span {display:flex;align-items:center;gap:6px;} i {width:6px;height:6px;border-radius:50%;} }
 .dot0 {background:var(--argos-measure-good);} .dot1 {background:var(--argos-measure-warning);} .dot2 {background:var(--argos-error);}
+.meter,.empty,.legend { print-color-adjust:exact; -webkit-print-color-adjust:exact; }
 @media(max-width:600px) { .grid {grid-template-columns:1fr 1fr;} .major,.secondary {grid-column:1/-1;} .errors dt {min-height:36px;} }
 @media print { .section {color:#0f172a;} .group {break-inside:avoid;} .tile {background:#fff;} .grid {grid-template-columns:repeat(4,minmax(0,1fr));} .errors {grid-template-columns:repeat(5,minmax(0,1fr));} .major,.secondary {grid-column:span 2;} }
