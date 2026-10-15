@@ -11,14 +11,17 @@ vi.mock("@/lib/account-client",()=>({accountFetch:vi.fn(),AccountClientError:cla
 const event={runId:"9007199254740992",batchId:"9007199254740993",state:"COUNTED",period:"2026-10",createdAt:"2026-10-13T08:00:00Z",countedAt:"2026-10-13T08:05:00Z",releasedAt:null,url:"https://example.com/real-page"};
 const page={items:[event],total:1,limit:20,offset:0,snapshotAt:"2026-10-14T08:00:00Z",period:"2026-10"};
 beforeEach(()=>{mock.query="";mock.push.mockReset();mock.session.denied=false;mock.session.usageError=false;mock.session.refreshUsage.mockReset();mock.session.usage={offer:"FREE",period:"2026-10",timezone:"UTC",startsAt:"2026-10-01T00:00:00Z",resetsAt:"2026-11-01T00:00:00Z",used:2,reserved:1,available:17,limit:20,canLaunch:true};vi.mocked(accountFetch).mockReset();vi.mocked(accountFetch).mockResolvedValue(page);});
-it.each(["fr","en"] as const)("shows the server quota and opaque run/batch references in %s",async lang=>{
+it.each(["fr","en"] as const)("shows human URL labels while preserving exact run/batch identifiers in %s",async lang=>{
  render(<LangProvider initialLang={lang}><UsageView/></LangProvider>);
  expect(screen.getByText("17")).toBeInTheDocument();expect(screen.getByText("FREE")).toBeInTheDocument();
+ expect(await screen.findByRole("link",{name:"example.com/real-page"})).toHaveAttribute("href",(lang==="en"?"/en":"")+"/account/runs/"+event.runId);
+ expect(screen.getByText(lang==="fr"?"octobre 2026":"October 2026")).toBeInTheDocument();
+ expect(screen.getAllByText(lang==="fr"?"Non communiqué par le serveur":"Not provided by the server")).toHaveLength(2);
+ const details=screen.getByText(lang==="fr"?"Identifiants techniques":"Technical identifiers").closest("details")!;expect(details).not.toHaveAttribute("open");fireEvent.click(details.querySelector("summary")!);
  const remaining=lang==="fr"?"crédits restants":"credits remaining";
  expect(screen.getByText("/ 20 "+remaining)).toBeInTheDocument();
  expect(screen.getByRole("meter",{name:remaining})).toHaveAttribute("value","17");
  expect(screen.getByRole("meter")).toHaveAttribute("aria-valuetext","17 / 20 "+remaining);
- expect(await screen.findByRole("link",{name:(lang==="fr"?"Voir l’analyse":"View analysis")+" #"+event.runId})).toHaveAttribute("href",(lang==="en"?"/en":"")+"/account/runs/"+event.runId);
  expect(screen.getByText((lang==="fr"?"Lot de domaine":"Domain batch")+" #"+event.batchId)).toBeInTheDocument();expect(document.querySelector('time[datetime="2026-11-01T00:00:00Z"]')).not.toBeNull();
 });
 it("drains the server-provided balance as credits are reserved and consumed, and refills when released",async()=>{
@@ -51,18 +54,18 @@ it("filters historical months without changing the current monthly quota and res
 it("clears the previous page immediately and ignores its response after a navigation",async()=>{
  let resolve!:(value:unknown)=>void;vi.mocked(accountFetch).mockImplementation(async()=>new Promise(r=>{resolve=r;}));
  const view=render(<UsageView/>);await waitFor(()=>expect(resolve).toBeDefined());const old=resolve;
- mock.query="period=2026-09";view.rerender(<UsageView/>);await waitFor(()=>expect(resolve).not.toBe(old));await act(async()=>old(page));expect(screen.queryByText(event.url)).not.toBeInTheDocument();
+ mock.query="period=2026-09";view.rerender(<UsageView/>);await waitFor(()=>expect(resolve).not.toBe(old));await act(async()=>old(page));expect(screen.queryByText("example.com/real-page")).not.toBeInTheDocument();
  await act(async()=>resolve({...page,items:[],total:0,period:"2026-09"}));expect(await screen.findByRole("heading",{name:"Aucune opération pour ce mois"})).toBeInTheDocument();
 });
 it("does not invent zero counters when usage is unavailable but still loads its ledger",async()=>{
- mock.session.usage=null;mock.session.usageError=true;render(<UsageView/>);expect(screen.getByRole("heading",{name:"Consommation indisponible"})).toBeInTheDocument();expect(await screen.findByText(event.url)).toBeInTheDocument();expect(screen.queryByText("17")).not.toBeInTheDocument();
+ mock.session.usage=null;mock.session.usageError=true;render(<UsageView/>);expect(screen.getByRole("heading",{name:"Consommation indisponible"})).toBeInTheDocument();expect(await screen.findByText("example.com/real-page")).toBeInTheDocument();expect(screen.queryByText("17")).not.toBeInTheDocument();
 });
 it("provides a recoverable ledger error and refreshes both sources deliberately",async()=>{
  vi.mocked(accountFetch).mockRejectedValue(new AccountClientError("account_unavailable",503));render(<UsageView/>);expect(await screen.findByRole("alert")).toHaveTextContent("Impossible de charger");
  vi.mocked(accountFetch).mockResolvedValue(page);fireEvent.click(screen.getByRole("button",{name:"Réessayer"}));await screen.findByRole("table");fireEvent.click(screen.getByRole("button",{name:"Actualiser"}));expect(mock.session.refreshUsage).toHaveBeenCalledTimes(1);
 });
 it("removes private ledger data immediately after a revoked session",async()=>{
- const view=render(<UsageView/>);await screen.findByText(event.url);mock.session.denied=true;view.rerender(<UsageView/>);expect(screen.queryByText(event.url)).not.toBeInTheDocument();expect(screen.queryByText("FREE")).not.toBeInTheDocument();
+ const view=render(<UsageView/>);await screen.findByText("example.com/real-page");mock.session.denied=true;view.rerender(<UsageView/>);expect(screen.queryByText("example.com/real-page")).not.toBeInTheDocument();expect(screen.queryByText("FREE")).not.toBeInTheDocument();
 });
 it("rejects malformed filters without a read and offers the current month",async()=>{
  mock.query="period=2026-13&offset=-1";render(<UsageView/>);expect(screen.getByRole("heading",{name:"Les filtres du journal sont invalides."})).toBeInTheDocument();expect(accountFetch).not.toHaveBeenCalled();fireEvent.click(screen.getAllByRole("button",{name:"Mois courant"}).at(-1)!);expect(mock.push).toHaveBeenCalledWith("/account/usage");
