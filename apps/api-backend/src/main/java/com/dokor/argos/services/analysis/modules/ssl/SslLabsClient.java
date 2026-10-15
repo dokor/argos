@@ -32,7 +32,7 @@ public class SslLabsClient {
     @Inject
     public SslLabsClient(ExternalHttpClient http, ConfigurationService config) {
         this(http, config.sslLabsApiUrl(), config.sslLabsTimeout(),
-            Duration.ofSeconds(5), Duration.ofSeconds(10), "true".equals(System.getenv("ARGOS_EXTERNAL_SCANS_ENABLED")));
+            Duration.ofSeconds(5), Duration.ofSeconds(10), config.externalScansEnabled());
     }
 
     SslLabsClient(ObjectMapper mapper, String apiBase, Duration budget, Duration initialPoll, Duration runningPoll) {
@@ -52,7 +52,7 @@ public class SslLabsClient {
 
     /** Prefer cached reports; a cache miss can start an assessment. Never force startNew. */
     public JsonNode analyze(String host) throws Exception {
-        com.dokor.argos.services.analysis.RemoteScanPolicy.requireAllowed(host, externalScansEnabled);
+        String target = com.dokor.argos.services.analysis.RemoteScanPolicy.requireAllowed(host, externalScansEnabled);
         var parent = AuditDeadline.current();
         var deadline = parent == null ? new AuditDeadline(budget) : parent.child(budget);
         try (var scope = deadline.enter()) {
@@ -61,10 +61,12 @@ public class SslLabsClient {
                 int polls = 0;
                 try {
                     while (true) {
-                        JsonNode result = get(apiBase + "/analyze?host=" + URLEncoder.encode(host, StandardCharsets.UTF_8)
-                            + "&fromCache=on&all=done");
+                        com.dokor.argos.services.analysis.RemoteScanPolicy.requireAllowed(target, externalScansEnabled);
+                        JsonNode result = get(apiBase + "/analyze?host=" + URLEncoder.encode(target, StandardCharsets.UTF_8)
+                            + "&fromCache=on&all=done&publish=off");
                         polls++;
-                        lastStatus = result.path("status").asText("UNKNOWN");
+                        String status = result.path("status").asText("UNKNOWN");
+                        lastStatus = java.util.Set.of("READY", "ERROR", "DNS", "IN_PROGRESS").contains(status) ? status : "UNKNOWN";
                         // Log upstream state without confusing pending results with transport failure/quota.
                         logger.info("ssl_labs_progress host={} status={} polls={} remainingMs={}",
                             com.dokor.argos.services.domain.audit.UrlNormalizer.sanitizeForLog("https://" + host),

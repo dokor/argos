@@ -1,5 +1,7 @@
 # Diagnostiquer SSL Labs et Observatory (#583)
 
+> Évolution : voir la [réactivation encadrée](remote-collectors-reactivation.md). Les constats de désactivation ci-dessous décrivent la configuration de production observée ; le Compose garde un défaut désactivé avec opt-in explicite.
+
 ## Cause établie dans la configuration livrée
 
 Le Compose backend impose `ARGOS_EXTERNAL_SCANS_ENABLED=false`. `RemoteScanPolicy` refuse donc les deux scans avant tout appel réseau : ces services résolvent et visitent la cible depuis leur propre infrastructure, sans la garantie de connexion épinglée du proxy Argos. Une exécution avec cette configuration doit donner `POLICY_DISABLED` pour les deux modules. La correction conserve cette protection et explique désormais cette indisponibilité au lieu de réduire toutes les causes à `ModuleUnavailableException`.

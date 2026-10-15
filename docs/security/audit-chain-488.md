@@ -64,7 +64,8 @@ deployment host; there is no production `--no-sandbox` fallback.
   `sendRequests=false`, an isolated internal network and no target egress.
 - Observatory and SSL Labs are disabled by default and in production compose:
   providers resolve/connect independently, so Argos cannot promise pinned
-  destinations there. Re-enabling them requires a separate provider controls review.
+  destinations there. The reviewed opt-in contract and remaining provider trust boundary are documented in
+  [remote collector reactivation](../analysis/remote-collectors-reactivation.md). Production activation requires explicit approval.
 - AI summaries are disabled in production compose. Prompt instructions and output
   bounds are defense in depth, not a tool/credential isolation guarantee. The
   existing credential-bearing Codex sidecar needs separate hardening before reuse.

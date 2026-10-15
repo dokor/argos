@@ -22,7 +22,8 @@ services:
     environment:
       - AUDIT_EGRESS_PROXY=http://audit-egress:3128
       # Third-party scanners cannot share the pinned connection guarantee.
-      - ARGOS_EXTERNAL_SCANS_ENABLED=false
+      # Opt-in only after operator approval of the remote-provider trust boundary.
+      - ARGOS_EXTERNAL_SCANS_ENABLED=${ARGOS_EXTERNAL_SCANS_ENABLED:-false}
       - JAVA_OPTS=-Xms256m -Xmx512m
       - NODE_ENV=production
       - JAVA_TOOL_OPTIONS=-Dconfig.file=/config/prod.conf

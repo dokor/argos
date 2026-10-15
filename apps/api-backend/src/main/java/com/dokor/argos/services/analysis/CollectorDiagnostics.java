@@ -13,7 +13,7 @@ public final class CollectorDiagnostics {
                          String failureCode, long completed, long failed, String observedAt) {}
     private final Map<String, Status> statuses = new LinkedHashMap<>();
     @Inject public CollectorDiagnostics(ConfigurationService config) {
-        boolean enabled = "true".equals(System.getenv("ARGOS_EXTERNAL_SCANS_ENABLED"));
+        boolean enabled = config.externalScansEnabled();
         register("ssl", config.sslLabsApiUrl(), enabled);
         register("observatory", config.observatoryApiUrl(), enabled);
     }
