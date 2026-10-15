@@ -41,3 +41,23 @@ Le test de pipeline `disabledSecurityCollectorsExplainEveryMissingControlAndOthe
 Aucune nouvelle analyse payante/consommatrice de quota ni modification de production n’a été effectuée. Pour confirmer le diagnostic réel, après déploiement autorisé, consulter `/api/monitoring/collectors`, relancer une seule page de démonstration via le parcours normal et conserver la liste de ses raisons de couverture. Le présent changement ne rend pas disponibles des mesures volontairement interdites.
 
 Références primaires : [API MDN Observatory v2](https://github.com/mdn/mdn-http-observatory#json-api), [FAQ MDN](https://developer.mozilla.org/en-US/observatory/docs/faq), [SSL Labs v3](https://github.com/ssllabs/ssllabs-scan/blob/master/ssllabs-api-docs-v3.md). Exploitation SSL/ZAP : [runbook](zap-ssl-operations.md).
+
+## Vérification de production du 15 octobre 2026 (#635)
+
+Constats obtenus via les commandes exécutées par l'exploitant, sans accès direct de l'agent au serveur :
+
+- Révision du conteneur backend : `4ff3660e381be01c29c8e02fba3be4552e7ba45d` (label OCI).
+- Environnement effectif : `ARGOS_EXTERNAL_SCANS_ENABLED=false`, `ZAP_API_URL=http://zap:8080`.
+- ZAP `2.17.0`, extension `exim 0.21.0`, conteneur healthy, zéro redémarrage et `OOMKilled=false`.
+- Run `6170463576008949821` : SSL et Observatory `UNAVAILABLE / POLICY_DISABLED`. Il s'agit du refus intentionnel des scans distants, pas d'une panne TLS ou fournisseur. Ne pas activer ces scans pour faire disparaître l'état de couverture limitée.
+- ZAP : `INTEGRATION_FAILURE` après 475 ms. La session conservée contient deux messages pour la cible : la réponse importée `HTTP/1.1 200` (type 15) et un message technique `HTTP/1.0 0` (type 0). La file passive est vide. Le client exigeait à tort `numberOfMessages == 1` : ce compteur porte sur l'historique, pas uniquement sur les entrées HAR.
+
+Le correctif accepte un historique cible non vide après l'import réussi dans une session neuve. Il conserve le HAR d'une seule entrée, `sendRequests=false`, le verrou de session, l'attente bornée du scanner passif et le refus d'un import vide ou d'une réponse invalide. Les options `sendRequests` et `maxMessages` ne sont pas exposées par exim 0.21.0 ; cette version importe passivement. Les conserver rend explicite le comportement attendu avec exim 0.22.0, qui les accepte.
+
+Les échecs de contrat ZAP produisent désormais `zap_operation_failed operation=… failureCode=…`, avec une opération constante et un code borné. Aucun corps HAR, message fournisseur, détail d'exception ou secret n'est ajouté aux logs. Un module absent ou un paramètre refusé devient `INTEGRATION_ENDPOINT`, une clé refusée `PROVIDER_AUTH_REQUIRED`, un import vide `INCOMPLETE_MEASUREMENTS`, et une réponse mal formée `INVALID_RESPONSE`.
+
+Sources du contrat vérifié : [CoreAPI ZAP 2.17.0](https://github.com/zaproxy/zaproxy/blob/v2.17.0/zap/src/main/java/org/zaproxy/zap/extension/api/CoreAPI.java), [importeur exim 0.21.0](https://github.com/zaproxy/zap-extensions/blob/exim-v0.21.0/addOns/exim/src/main/java/org/zaproxy/addon/exim/ImportExportApi.java).
+
+### Validation après déploiement autorisé
+
+La correction n'a pas encore été déployée ni validée sur un nouveau run de production. Après livraison, l'exploitant relance une seule analyse de démonstration et conserve son identifiant, la révision OCI et les logs : ZAP doit terminer `COMPLETED`, SSL/Observatory restent `UNAVAILABLE / POLICY_DISABLED`, et la couverture doit toujours refléter ces mesures absentes. Si ZAP échoue encore, relever `zap_operation_failed` et `module_failed` pour le même run. Ne clôturer #635 qu'après ce rejeu.
