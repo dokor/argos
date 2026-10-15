@@ -431,8 +431,12 @@ public final class ConnectedContracts {
         @JsonProperty(value = "importantCount", required = true) Long importantCount,
         @JsonProperty(value = "moduleStatuses", required = true) Map<String, ModuleStatus> moduleStatuses,
         @JsonProperty(value = "failureReason", required = true) String failureReason,
-        @JsonProperty(value = "reportAvailable", required = true) Boolean reportAvailable
+        @JsonProperty(value = "reportAvailable", required = true) Boolean reportAvailable,
+        @JsonProperty(value = "collectionGaps", required = false) List<CollectionGap> collectionGaps
     ) {
+        public PageResult(String pageId, String normalizedUrl, String runId, ExecutionStatus executionStatus, Completeness completeness, Score score, Coverage coverage, Long criticalCount, Long importantCount, Map<String, ModuleStatus> moduleStatuses, String failureReason, Boolean reportAvailable) {
+            this(pageId, normalizedUrl, runId, executionStatus, completeness, score, coverage, criticalCount, importantCount, moduleStatuses, failureReason, reportAvailable, null);
+        }
         public PageResult {
             required(pageId, "pageId");
             check(pageId.codePointCount(0, pageId.length()) >= 1, "pageId");
@@ -457,6 +461,7 @@ public final class ConnectedContracts {
             moduleStatuses = Map.copyOf(moduleStatuses);
             if (failureReason != null) { check(failureReason.codePointCount(0, failureReason.length()) >= 1, "failureReason"); check(failureReason.codePointCount(0, failureReason.length()) <= 64, "failureReason"); check(java.util.regex.Pattern.compile("^[A-Z][A-Z0-9_]*$").matcher(failureReason).find(), "failureReason"); }
             required(reportAvailable, "reportAvailable");
+            if (collectionGaps != null) { collectionGaps = List.copyOf(collectionGaps); check(collectionGaps.size() >= 0 && collectionGaps.size() <= 256, "collectionGaps"); for (var item : collectionGaps) { required(item, "item"); } }
         }
         @JsonAnySetter public void rejectUnknown(String name, Object value) {
             throw new IllegalArgumentException("Unknown connected field");
@@ -1613,6 +1618,31 @@ public final class ConnectedContracts {
             check(offer.codePointCount(0, offer.length()) >= 1, "offer");
             check(offer.codePointCount(0, offer.length()) <= 16, "offer");
             if (monthlyLimit != null) { check(monthlyLimit >= 0L, "monthlyLimit"); check(monthlyLimit <= 9007199254740991L, "monthlyLimit"); }
+        }
+        @JsonAnySetter public void rejectUnknown(String name, Object value) {
+            throw new IllegalArgumentException("Unknown connected field");
+        }
+    }
+
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    public record CollectionGap(
+        @JsonProperty(value = "ruleKey", required = true) String ruleKey,
+        @JsonProperty(value = "module", required = true) String module,
+        @JsonProperty(value = "reason", required = true) String reason
+    ) {
+        public CollectionGap {
+            required(ruleKey, "ruleKey");
+            check(ruleKey.codePointCount(0, ruleKey.length()) >= 1, "ruleKey");
+            check(ruleKey.codePointCount(0, ruleKey.length()) <= 200, "ruleKey");
+            check(java.util.regex.Pattern.compile("^[a-zA-Z0-9_.-]+$").matcher(ruleKey).find(), "ruleKey");
+            required(module, "module");
+            check(module.codePointCount(0, module.length()) >= 1, "module");
+            check(module.codePointCount(0, module.length()) <= 32, "module");
+            check(java.util.regex.Pattern.compile("^[a-z0-9_-]+$").matcher(module).find(), "module");
+            required(reason, "reason");
+            check(reason.codePointCount(0, reason.length()) >= 1, "reason");
+            check(reason.codePointCount(0, reason.length()) <= 64, "reason");
+            check(java.util.regex.Pattern.compile("^[A-Z][A-Z0-9_]*$").matcher(reason).find(), "reason");
         }
         @JsonAnySetter public void rejectUnknown(String name, Object value) {
             throw new IllegalArgumentException("Unknown connected field");

@@ -31,15 +31,15 @@ try {
   await page.getByRole("button", { name: copy.register, exact: true }).click();
   const registered = await registration;
   assert.equal(registered.status(), 200, "registration: " + ((await registered.json()).error ?? "failed"));
-  await page.getByRole("status").filter({ hasText: copy.sent }).waitFor();
+  await page.getByRole("status").filter({ hasText: copy.registrationSent }).waitFor();
   const mail = await fetch("http://127.0.0.1:33317/api/__test/mail/" + encodeURIComponent(email));
   assert.equal(mail.status, 200);
   const token = (await mail.json()).token;
   await page.goto("/account/verify#token=" + token);
   await page.waitForURL(base + "/account/verify");
   await page.getByRole("button", { name: copy.verify, exact: true }).click();
-  await page.getByRole("status").filter({ hasText: copy.done }).waitFor();
-  await page.getByRole("link", { name: copy.signIn, exact: true }).click();
+  await page.getByRole("status").filter({ hasText: copy.verifiedDone }).waitFor();
+  await page.getByRole("link", { name: copy.backToSignIn, exact: true }).click();
   await page.getByLabel(copy.email, { exact: true }).fill(email);
   await page.getByLabel(copy.password, { exact: true }).fill(password);
   await page.getByRole("button", { name: copy.signIn, exact: true }).click();

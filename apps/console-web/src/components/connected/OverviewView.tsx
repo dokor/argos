@@ -1,4 +1,5 @@
 "use client";
+import CollectionGaps, { RepeatedCollectionGaps } from "./CollectionGaps";
 import { quotaResetDate } from "@/lib/quota-date";
 import { useEffect } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -78,6 +79,10 @@ export default function OverviewView() {
       <li className={d.row} key={page.pageId}>
         <div>
           <strong className={d.url} title={page.normalizedUrl}>{compactUrl(page.normalizedUrl)}</strong>
+          <Link className={d.site} href={"/account/sites/" + page.domainId}>
+            {page.hostname}
+          </Link>
+          {r && <CollectionGaps page={r} />}
           <p className={d.states}>
             {a ? (
               <>
@@ -312,6 +317,7 @@ export default function OverviewView() {
                   <p className={d.meta}>
                     {number(data.pages.total)} {c.results}
                   </p>
+                  <RepeatedCollectionGaps pages={data.pages.items.flatMap(page => page.result ? [page.result] : [])} />
                   {data.pages.items.length ? (
                     <ul className={d.list}>{data.pages.items.map(pageRow)}</ul>
                   ) : (

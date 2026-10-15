@@ -52,7 +52,9 @@ public class AccountBrowserFixture extends MariaDbReportFixture {
         public Map<String, String> last(@PathParam("email") String email) {
             String text = messages.get(email);
             if (text == null || !text.contains("#token=")) throw new NotFoundException();
-            return Map.of("token", text.substring(text.indexOf("#token=") + 7));
+            int start = text.indexOf("http://localhost:3000/");
+            return Map.of("token", text.substring(text.indexOf("#token=") + 7),
+                    "url", start < 0 ? "" : text.substring(start));
         }
     }
 

@@ -5,6 +5,7 @@ import {readingSnapshot,subscribeReading} from "@/components/report/reportReadin
 import {safeAccountReturn} from "@/lib/account-return";
 import { usePathname } from "next/navigation";
 import Link from "@/components/LocalizedLink";
+import { clarteCopy } from "./clarteCopy";
 import ArgosIcon from "@/components/ArgosIcon";
 import ThemeToggle from "@/components/ThemeToggle";
 import LangToggle from "@/components/LangToggle";
@@ -67,6 +68,7 @@ export default function AccountShell({ children }: { children: ReactNode }) {
           <Link href="/account/usage" aria-current={pathname === "/account/usage" ? "page" : undefined} onClick={close} aria-label={c.usage}><NavigationIcon name="usage"/><span className={s.navLabel}>{c.usage}</span></Link>
           {admin && <Link href="/account/admin" aria-current={pathname.startsWith("/account/admin") ? "page" : undefined} onClick={close} aria-label={c.admin}><NavigationIcon name="admin"/><span className={s.navLabel}>{c.admin}</span></Link>}
         </div>
+        <Link className={s.helpLink} href="/faq" onClick={close} aria-label={c.help}><NavigationIcon name="help"/><span className={s.navLabel}>{c.help}</span></Link>
       </nav>
       {valid && <AccountMenu key={currentPath} profile={session.profile!} onOpen={close} compact={collapsed}/>}
     </aside>
@@ -86,8 +88,8 @@ export default function AccountShell({ children }: { children: ReactNode }) {
 }
 
 export function AccountFooter() {
-  const { t } = useLang(), c = t.connected;
-  return <footer className={s.footer}><span>Argos <span aria-hidden="true">·</span> {c.personalSpace}</span><nav aria-label={c.footer}>
-    <Link href="/faq">{c.help}</Link><Link href="/feedback">{c.contact}</Link><Link href="/informations-legales">{c.legal}</Link><Link href="/confidentialite">{c.privacy}</Link>
+  const { t, lang } = useLang(), c = t.connected, copy = clarteCopy[lang];
+  return <footer className={s.footer}><div className={s.footerIntro}><div><strong>Argos</strong><span>{copy.footer}</span></div><Link href="/feedback">{c.contact} <span aria-hidden="true">↗</span></Link></div><nav aria-label={c.footer}>
+    <Link href="/faq">{c.help}</Link><Link href="/">{copy.returnSite} <span aria-hidden="true">↗</span></Link><Link href="/informations-legales">{c.legal}</Link><Link href="/confidentialite">{c.privacy}</Link>
   </nav></footer>;
 }

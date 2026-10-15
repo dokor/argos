@@ -150,6 +150,28 @@ class AccountLifecycleIT extends MariaDbReportFixture {
     }
 
     @Test
+    void localizedEmailsCompleteVerificationAndResetWithoutReusingTokens() {
+        String email = "localized@example.com";
+        auth.register(email, PASSWORD, "Fixture", "en");
+        assertTrue(mail.messages.getLast().text().contains("/en/account/verify#token="));
+        String verification = mail.token(email);
+        auth.verify(verification);
+        assertEquals("ACTIVE", auth.login(email, PASSWORD, CSRF).context().user().getState());
+        error(400, () -> auth.verify(verification));
+        int count = mail.messages.size();
+        auth.register(email, PASSWORD, "Fixture", "en");
+        auth.send("absent@example.com", "RESET", "en");
+        assertEquals(count, mail.messages.size());
+        auth.send(email, "RESET", "en");
+        assertTrue(mail.messages.getLast().text().contains("/en/account/reset#token="));
+        String reset = mail.token(email);
+        auth.reset(reset, PASSWORD + " changed");
+        assertEquals("ACTIVE", auth.login(email, PASSWORD + " changed", CSRF).context().user().getState());
+        error(400, () -> auth.reset(reset, PASSWORD));
+        error(401, () -> auth.login(email, PASSWORD, CSRF));
+    }
+
+    @Test
     void migrationPreservesAnonymousRowsAndRejectsInvalidOwnerAndDuplicateEmail() throws Exception {
         try (var c = source.getConnection();
                 var st = c.createStatement();

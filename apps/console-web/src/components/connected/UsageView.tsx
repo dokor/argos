@@ -1,4 +1,6 @@
 "use client";
+import { clarteCopy } from "./clarteCopy";
+import { compactUrl } from "./compactCopy";
 import { quotaResetDate } from "@/lib/quota-date";
 import {useEffect,useState} from "react";
 import {useSearchParams,useRouter} from "next/navigation";
@@ -14,6 +16,8 @@ import c from "./Connected.module.scss";
 
 export default function UsageView() {
   const {t,lang}=useLang(),copy=t.usagePage,session=useAccountSession(),router=useRouter(),params=useSearchParams();
+  const clarity=clarteCopy[lang];
+  const month=(value:string)=>new Intl.DateTimeFormat(lang,{month:"long",year:"numeric",timeZone:"UTC"}).format(new Date(value+"-01T00:00:00Z"));
   const {usage,usageError,refreshUsage,invalidate}=session;
   const allowed=!!session.profile?.verified&&!session.denied;
   const period=params.get("period")??usage?.period,rawOffset=params.get("offset")??"0";
@@ -46,10 +50,11 @@ export default function UsageView() {
     {!allowed ? <EmptyState title={session.profile ? copy.verification:t.connected.sessionTitle} description={session.profile ? t.account.pending:t.account.errors.session_invalid} kind="error"><Link className={c.secondary} href="/account/settings">{t.connected.account}</Link></EmptyState> : <>
       <div className={s.grid}><Surface title={copy.monthly} action={usage&&<StatusBadge>{usage.offer}</StatusBadge>}>
         {usage ? <>
-          <p className={s.period}>{copy.currentPeriod} <strong>{usage.period}</strong> · {usage.timezone}</p>
+          <p className={s.period}>{copy.currentPeriod} <strong>{month(usage.period)}</strong> · {usage.timezone}</p>
           <p className={s.capacity}><strong>{usage.available===null ? copy.unlimited:number(usage.available)}</strong><span>{usage.limit===null ? copy.noLimit:"/ "+number(usage.limit)+" "+copy.available}</span></p>
           {usage.limit!==null&&usage.limit>0&&usage.available!==null&&<meter className={s.meter} min={0} max={usage.limit} value={Math.max(0,Math.min(usage.limit,usage.available))} aria-label={copy.available} aria-valuetext={`${number(usage.available)} / ${number(usage.limit)} ${copy.available}`}/>}
           <dl className={s.facts}><div><dt>{copy.used}</dt><dd>{number(usage.used)}</dd></div><div><dt>{copy.reserved}</dt><dd>{number(usage.reserved)}</dd></div><div><dt>{copy.limit}</dt><dd>{usage.limit===null ? copy.unlimited:number(usage.limit)}</dd></div></dl>
+          <dl className={s.facts}><div><dt>{clarity.domainLimit}</dt><dd className={s.unavailable}>{clarity.unavailable}</dd></div><div><dt>{clarity.concurrent}</dt><dd className={s.unavailable}>{clarity.unavailable}</dd></div></dl>
           <p className={s.reset}>{copy.reset} <time dateTime={usage.resetsAt}>{quotaResetDate(usage.resetsAt,lang,usage.timezone)}</time></p>
           <p className={s.hint}>{copy.calendar}</p>
           {!usage.canLaunch&&<p className={s.notice} role="status">{usage.limit===0 ? copy.zero:copy.exhausted}</p>}
@@ -72,10 +77,10 @@ export default function UsageView() {
         {invalid ? <EmptyState kind="error" title={copy.filterError}><button className={c.secondary} onClick={()=>navigate()}>{copy.currentMonth}</button></EmptyState> : <>
           {error&&<div className={s.notice}><p role="alert">{copy.historyError}</p><button className={c.secondary} onClick={()=>setRevision(v=>v+1)}>{t.connected.retry}</button></div>}
           {!data&&!error ? <EmptyState kind="loading" title={t.connected.loading}/> : data&&<>
-            <p className={s.snapshot}>{copy.month} {data.period} · {copy.updated} <time dateTime={data.snapshotAt}>{date(data.snapshotAt)}</time>{loading&&<span role="status"> · {t.connected.loading}</span>}</p>
-            {!data.items.length ? <EmptyState title={data.total ? copy.pageEmpty:copy.empty} description={data.total ? undefined:copy.emptyHint}>{data.total>0&&<button className={c.secondary} onClick={()=>navigate(data.period)}>{copy.first}</button>}</EmptyState> : <DataTable caption={copy.history+" · "+data.period} columns={[copy.date,copy.analysis,copy.state,copy.credits]}>{data.items.map(entry=><tr key={entry.runId}>
+            <p className={s.snapshot}>{copy.month} {month(data.period)} · {copy.updated} <time dateTime={data.snapshotAt}>{date(data.snapshotAt)}</time>{loading&&<span role="status"> · {t.connected.loading}</span>}</p>
+            {!data.items.length ? <EmptyState title={data.total ? copy.pageEmpty:copy.empty} description={data.total ? undefined:copy.emptyHint}>{data.total>0&&<button className={c.secondary} onClick={()=>navigate(data.period)}>{copy.first}</button>}</EmptyState> : <DataTable caption={copy.history+" · "+month(data.period)} columns={[copy.date,copy.analysis,copy.state,copy.credits]}>{data.items.map(entry=><tr key={entry.runId}>
               <td><time dateTime={eventDate(entry)}>{date(eventDate(entry))}</time>{entry.state==="RELEASED"&&!entry.releasedAt&&<p className={s.hint}>{copy.unknownRelease}</p>}</td>
-              <td><Link href={"/account/runs/"+entry.runId}>{copy.open+" #"+entry.runId}</Link><p className={s.url}>{entry.url}</p>{entry.batchId&&<p className={s.hint}>{copy.batch+" #"+entry.batchId}</p>}{entry.period!==data.period&&<p className={s.hint}>{copy.carried+" · "+entry.period}</p>}</td>
+              <td><Link className={s.url} title={entry.url} href={"/account/runs/"+entry.runId}>{compactUrl(entry.url)}</Link>{entry.batchId&&<p className={s.hint}>{clarity.domainBatch}</p>}<details className={s.identifiers}><summary>{clarity.identifiers}</summary><p>{copy.analysis} #{entry.runId}</p>{entry.batchId&&<p>{copy.batch} #{entry.batchId}</p>}</details>{entry.period!==data.period&&<p className={s.hint}>{copy.carried+" · "+entry.period}</p>}</td>
               <td><StatusBadge tone={entry.state==="COUNTED" ? "success":entry.state==="RESERVED" ? "warning":"neutral"}>{stateLabels[entry.state]}</StatusBadge></td>
               <td>{entry.state==="COUNTED" ? "1":entry.state==="RESERVED" ? copy.oneReserved:copy.noneConsumed}</td>
             </tr>)}</DataTable>}

@@ -5,7 +5,7 @@ import s from "./Connected.module.scss";
 export function PageHeading({ title, description, action }: { title: string; description?: string; action?: ReactNode }) {
   return <div className={s.heading}><div><h1>{title}</h1>{description && <p>{description}</p>}</div>{action && <div className={s.actions}>{action}</div>}</div>;
 }
-export function Surface({ title, children, action }: { title: string; children: ReactNode; action?: ReactNode }) {
+export function Surface({ title, children, action }: { title: ReactNode; children: ReactNode; action?: ReactNode }) {
   return <section className={s.surface}><div className={s.surfaceHeading}><h2>{title}</h2>{action}</div>{children}</section>;
 }
 export function KpiCard({ label, value, detail, href, actionLabel }: { label: string; value: string; detail: string; href?: string; actionLabel?: string }) {
