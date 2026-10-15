@@ -64,5 +64,5 @@ L'incident d'allocation du 5 octobre 2026 est consultable dans l'historique Git.
 La présence d'un workflow ne prouve pas l'enforcement GitHub. L'administrateur
 doit confronter les noms de checks actuels aux règles, vérifier les possibilités
 de contournement et constater le refus d'une PR avec check rouge ou manquant.
-Le [snapshot V1](../release/v1-readiness-2026-10-05.md) conserve les observations
+Le [snapshot V1](../archive/v1-readiness-2026-10-05.md) conserve les observations
 datées et validations différées ; il ne décrit pas la configuration actuelle.

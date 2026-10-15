@@ -1,5 +1,9 @@
 # Dossier go/no-go V1 — #259
 
+> Archive : ce compte rendu conserve son périmètre et ses résultats d'origine.
+> Pour la référence maintenue, consulter [la documentation courante](../release/runtime-provenance.md).
+> Voir [l'index des archives](README.md) pour les dates et limites.
+
 > Snapshot historique, non réévalué par le nettoyage documentaire. Les états et comptes datés ci-dessous ne décrivent pas le candidat courant. Pour les attestations ultérieures de rotation, voir [le registre des secrets](../security/secret-remediation.md).
 
 Décision du mainteneur du **5 octobre 2026 : clôture de coordination avec
@@ -17,7 +21,7 @@ checks main sont encore en attente d'exécution lors de cette décision ; aucun
 succès sur ce SHA n'est revendiqué. Le code combiné précédent a ses preuves ci-dessous.
 Les SHA/preuves ci-dessous et les états OPEN du JSON restent le snapshot historique
 antérieur aux fusions. La présente PR ajoute la [traçabilité des images et le
-collecteur de révision](runtime-provenance.md), testés sur fixtures uniquement.
+collecteur de révision](../release/runtime-provenance.md), testés sur fixtures uniquement.
 
 ## Décision de clôture et validations différées
 
@@ -66,7 +70,7 @@ séparée `coordinationDecision`. Aucun faux passage au vert n'est créé.
 | Dépendances npm de production | [Production dependency audit](https://github.com/dokor/argos/actions/runs/37352222382) | PASS : zéro vulnérabilité npm de production dans les trois apps JS |
 
 Les **13 liens de jobs exacts**, SHA des PR et résultats expurgés sont conservés
-dans le [snapshot JSON](v1-evidence-2026-10-05.json). Les artefacts CI ont une
+dans le [snapshot JSON](../release/v1-evidence-2026-10-05.json). Les artefacts CI ont une
 rétention de 14 jours : sauvegarder les preuves expurgées ou les rejouer avant
 expiration. Aucun dump, secret ou lien privé de production ne doit être publié.
 
@@ -88,7 +92,7 @@ sont des rôles proposés ; aucune acceptation nominative ou exclusion n'est acq
 | Comparabilité historique | #44 / [#287](https://github.com/dokor/argos/pull/287) | S / Java/frontend | CI_VERIFIED | Produit, Backend | Revue produit ; anciens scores jamais recomposés avec la policy active |
 | Couverture/confiance | #48 / [#286](https://github.com/dokor/argos/pull/286) | S / catalogue, E2E dégradé | CI_VERIFIED | Produit, QA | Seuil 80 % par domaine à accepter ; scoring version 11 |
 | Global/priorités | #249/#250 / #254/#270/#271 fusionnées | S / score/priorités | CI_VERIFIED | Produit, QA | Pas de doublon d'implémentation ; calibration produit distincte |
-| Audit technique | #128 / #238 fermée sans fusion ; récupéré dans #290 | [Archive sourcée](../archive/backend-audit-2026-07.md) | DOCUMENT_RECOVERED | Mainteneur, Tech Lead | Constats de juillet historiques, revue actuelle attendue |
+| Audit technique | #128 / #238 fermée sans fusion ; récupéré dans #290 | [Archive sourcée](backend-audit-2026-07.md) | DOCUMENT_RECOVERED | Mainteneur, Tech Lead | Constats de juillet historiques, revue actuelle attendue |
 | Accessibilité | #257/#260–#263 / #264–#267/#272 fusionnées | S / acceptation technique | TECHNICAL_PARTIAL | Produit/juridique, QA | #260 reste PROPOSED/RULES_PENDING, sans approbation réglementaire |
 | CI quatre apps | #258 / #268 fusionnée | S / quatre jobs verts | CI_VERIFIED | DevOps, QA | Choisir/rejouer SHA final après fusion |
 | Required checks | #258 | API main : 404 protection, règles [] | BLOCKED | Admin dépôt | Enforcement absent ; contextes proposés ci-dessous |
@@ -127,7 +131,7 @@ ni Traefik, ni disponibilité live des tiers, ni ARM64.
 
 ## Sécurité et dépendances
 
-Le [relevé détaillé](../archive/dependency-remediation-2026-10-05.md) décrit les
+Le [relevé détaillé](dependency-remediation-2026-10-05.md) décrit les
 upgrades Next 16.3.8, Vitest 4.1.11, Lighthouse 13.5.0, Playwright 1.63.0 et
 Node 24.21.0. Images headless alignées sur `v1.63.0-noble`. Les trois arbres npm
 de production n'ont plus de vulnérabilité déclarée au scan. Le frontend conserve
@@ -138,7 +142,7 @@ acceptation ; consigner décideur, date, justification et risque avant sortie.
 Le [lot secrets](../security/secret-remediation.md) retire les littéraux, valide
 la config au démarrage et ajoute Gitleaks. Il n'invalide pas les credentials
 anciennement publiés. Attester renouvellement/révocation et décision sur historique
-sans communiquer de valeurs. L'[archive #128](../archive/backend-audit-2026-07.md)
+sans communiquer de valeurs. L'[archive #128](backend-audit-2026-07.md)
 restaure le livrable de #238 sans nouvelle roadmap ni validation rétrospective.
 
 ## Required checks à proposer à l'administrateur

@@ -66,4 +66,4 @@ n’a signalé aucun des marqueurs explicites de brouillon qu’il recherche. Il
 prouve ni l’absence de toute trace de prompt ni la qualité éditoriale complète.
 
 Voir le [guide de revue](editorial-guide.md) et les
-[résultats réels de validation](../testing/editorial-coherence.md).
+[résultats réels de validation](../archive/editorial-coherence-2026-10-12.md).

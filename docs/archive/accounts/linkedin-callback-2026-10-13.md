@@ -1,5 +1,9 @@
 # Retour LinkedIn : diagnostic et restitution des refus (#548)
 
+> Archive : ce compte rendu conserve son périmètre et ses résultats d'origine.
+> Pour la référence maintenue, consulter [la documentation courante](../../accounts/operations.md).
+> Voir [l'index des archives](../README.md) pour les dates et limites.
+
 Revue du 13 octobre 2026 sur `main` 822a17e, dans une branche isolée.
 
 ## Diagnostic établi
