@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {mkdir} from 'node:fs/promises';
 import { chromium } from '../../apps/playwright-service/node_modules/playwright/index.mjs';
+import { reportReadingCopy } from '../../apps/console-web/src/components/report/reportReadingCopy.ts';
 const base='http://127.0.0.1:3000';
 const browser=await chromium.launch({args:['--no-sandbox']});
 const cases=['healthy','errors','redirect','partial','empty','unavailable','antibot','timeout'];
@@ -59,9 +60,18 @@ try {
     const methodCoverage=method.locator('dl > div').filter({has:page.getByText('Couverture pondérée du barème',{exact:true})});
     assert.equal(await methodCoverage.locator('dd').textContent(),weightedCoverage,'Method must retain the same weighted coverage');
     if(typeof report.scores.completeness==='number') {
-      const completeness=method.locator('dl > div').filter({has:page.getByText('Modules terminés, échoués ou ignorés',{exact:true})});
+      const completeness=method.locator('dl > div').filter({has:page.getByText(reportReadingCopy.fr.moduleCompleteness,{exact:true})});
       assert.equal(await completeness.count(),1,'Measurement details must expose exactly one module completeness row');
       assert.equal(await completeness.locator('dd').textContent(),`${report.scores.completeness} %`,'Module completeness must remain distinct from weighted coverage');
+    }
+    if(report.scores.moduleExecution) {
+      const execution=report.scores.moduleExecution;
+      const terminal=method.locator('dl > div').filter({has:page.getByText('Progression terminale des modules',{exact:true})});
+      assert.equal(await terminal.count(),1,'Measurement details must expose exactly one terminal progress row');
+      assert.equal(await terminal.locator('dd').textContent(),`${execution.terminalPercent} %`,'Terminal progress must match persisted execution counts');
+      const failed=method.locator('dl > div').filter({has:page.getByText('Modules en échec',{exact:true})});
+      assert.equal(await failed.count(),1,'Measurement details must expose exactly one failed modules row');
+      assert.equal(await failed.locator('dd').textContent(),`${execution.failed} / ${execution.total}`,'Failed modules must remain distinct from successes and terminal progress');
     }
     if(scenario==='errors') {
       const network=report.issues.find(issue=>issue.id==='runtime.network.5xx')?.structuredEvidence?.observed;
