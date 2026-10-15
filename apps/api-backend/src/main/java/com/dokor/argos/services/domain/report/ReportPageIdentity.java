@@ -28,12 +28,12 @@ public record ReportPageIdentity(String requested, String destination, boolean r
                 String segment = segments[index];
                 String decoded = URLDecoder.decode(segment, StandardCharsets.UTF_8);
                 boolean sensitive = hideNext || decoded.length() > 64
-                    || decoded.matches("(?=.*[0-9])(?=.*[a-zA-Z])[a-zA-Z0-9_=-]{24,}") || decoded.contains("@")
+                    || decoded.matches("(?=.*[0-9])(?=.*[a-zA-Z])[a-zA-Z0-9_=-]{24,}") || decoded.contains("@") || decoded.contains("/") || decoded.indexOf(92) >= 0
                     || decoded.matches("(?i).*(token|password|secret|api[_-]?key|session)[=:].*")
                     || decoded.codePoints().anyMatch(c -> Character.isISOControl(c) || c >= 0x202a && c <= 0x202e || c >= 0x2066 && c <= 0x2069);
                 if (index > 0) path.append('/');
                 path.append(sensitive ? "~redacted~" : segment);
-                hideNext = decoded.matches("(?i)(report|reset-password|reset|token|invite|verify|session|secret)");
+                hideNext = hideNext || decoded.matches("(?i)(report|reset-password|reset|tokens?|invite|verify|sessions?|secrets?|password|passwd|api[_-]?key|access[_-]?token|authorization)");
             }
             String rawPath = uri.getRawPath();
             String displayedPath = path.toString();

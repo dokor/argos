@@ -38,6 +38,10 @@ class ReportPageIdentityTest {
         assertTrue(identity.redirected());
         assertEquals("https://example.com/~redacted~", ReportPageIdentity.display("https://example.com/" + "x".repeat(80)));
         assertNull(ReportPageIdentity.display("javascript:alert(1)"));
+        assertEquals("https://example.com/password/~redacted~/~redacted~",
+            ReportPageIdentity.display("https://example.com/password/private/continuation"));
+        assertEquals("https://example.com/~redacted~",
+            ReportPageIdentity.display("https://example.com/reset%2Fprivate"));
     }
 
     @Test void leavesGeneralEvidenceAndLogsOriginOnly() {
