@@ -28,7 +28,7 @@ public class PublicReportComposer {
     public ReportDto compose(AuditReportJson internalReport) {
         logger.info("Composing public report from schemaVersion={}", internalReport.schemaVersion());
 
-        String url = com.dokor.argos.services.domain.audit.UrlNormalizer.sanitizeForLog(internalReport.normalizedUrl());
+        String url = ReportPageIdentity.display(internalReport.normalizedUrl());
         String domain = Urls.host(url, url);
 
         AuditScoreReport score = internalReport.score();
@@ -114,7 +114,10 @@ public class PublicReportComposer {
             antiBot,
             accessibilityEvidence(internalReport),
             accessibilityCompliance(internalReport)
-        );
+        ).withPageIdentity(ReportPageIdentity.from(internalReport.normalizedUrl(), internalReport.modules().stream()
+            .filter(m -> "http".equals(m.id()) && m.data() != null)
+            .map(m -> m.data().get("finalUrl")).filter(String.class::isInstance).map(String.class::cast)
+            .findFirst().orElse(null)));
     }
 
     private static ReportDto.ScoreCalculation calculation(AuditScoreReport score) {

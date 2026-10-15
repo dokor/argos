@@ -17,8 +17,19 @@ public record ReportDto(
     AccessibilityEvidence accessibilityEvidence,
     AccessibilityCompliance accessibilityCompliance,
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    ReportIntroduction introduction
+    ReportIntroduction introduction,
+    ReportPageIdentity pageIdentity
 ) {
+    public ReportDto(String generatedAt, String domain, String url, Site site, Scores scores,
+                     Summary summary, List<Issue> issues, Tech tech, AntiBot antiBot,
+                     AccessibilityEvidence evidence, AccessibilityCompliance compliance, ReportIntroduction introduction) {
+        this(generatedAt, domain, url, site, scores, summary, issues, tech, antiBot, evidence, compliance, introduction, null);
+    }
+    public ReportDto withPageIdentity(ReportPageIdentity identity) {
+        if (identity == null) return this;
+        return new ReportDto(generatedAt, domain, identity.requested(), site, scores, summary, issues, tech,
+            antiBot, accessibilityEvidence, accessibilityCompliance, introduction, identity);
+    }
     public ReportDto(String generatedAt, String domain, String url, Site site, Scores scores,
                      Summary summary, List<Issue> issues, Tech tech, AntiBot antiBot,
                      AccessibilityEvidence evidence, AccessibilityCompliance compliance) {
@@ -26,7 +37,7 @@ public record ReportDto(
     }
     public ReportDto withIntroduction(ReportIntroduction note) {
         return new ReportDto(generatedAt, domain, url, site, scores, summary, issues, tech, antiBot,
-            accessibilityEvidence, accessibilityCompliance, note);
+            accessibilityEvidence, accessibilityCompliance, note, pageIdentity);
     }
     public ReportDto(String generatedAt, String domain, String url, Site site, Scores scores,
                      Summary summary, List<Issue> issues, Tech tech, AntiBot antiBot) {

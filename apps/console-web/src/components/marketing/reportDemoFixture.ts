@@ -13,6 +13,7 @@ export function demoReport(lang: Lang, partial = false): Report {
   const domains = ["performance", "security", "seo", "a11y"];
   const aggregate = (key: string): CoverageAggregate => ({ key, measuredWeight: partial ? 1 : 2, expectedWeight: 2, ratio: partial ? 0.5 : 1, available: true, sufficient: !partial });
   return {
+    pageIdentity: { requested: "https://atelier.example/produit/sac", destination: "https://atelier.example/produit/sac", redacted: false, redirected: false },
     generatedAt: DEMO_DATE, domain: "Atelier Démo", url: "https://atelier.example/produit/sac", site: { title: "Atelier Démo — illustration" },
     scores: { global: 75, globalAvailable: true, completeness: partial ? 50 : 100,
       coverage: { version: DEMO_VERSION, threshold: 0.8, provisional: partial, global: aggregate("global"), domains: domains.map(aggregate),

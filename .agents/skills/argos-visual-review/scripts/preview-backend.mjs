@@ -23,6 +23,7 @@ function fixture(token) {
   const ratio = unavailable ? 0 : partial ? .55 : 1;
   const findings = empty ? [] : issues;
   return {
+    pageIdentity: { requested: "https://atelier.example/collection/sac-en-coton", destination: partial ? "https://atelier.example/collection/sac-recycle" : "https://atelier.example/collection/sac-en-coton", redacted: partial, redirected: partial },
     generatedAt: "2026-10-11T10:00:00Z", domain: "atelier.example", url: "https://atelier.example/collection/sac-en-coton",
     site: { title: "Atelier · Rapport de démonstration" }, tech: { cms: { name: "Commerce démo" } },
     scores: { global: empty ? 96 : 64, globalAvailable: !unavailable, completeness: ratio * 100,

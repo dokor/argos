@@ -1,10 +1,11 @@
+import ReportPageScope from "./ReportPageScope";
 import ObservedEvidence from "./ObservedEvidence";
 import s from './PrintableReport.module.scss';
 import type { Report } from './types';
 import type { Lang } from '@/lib/i18n/routes';
 import { buildReportModel } from './reportModel';
 import { findingContent, cleanEvidence, CATALOGUE_VERSION } from './findingCatalogue';
-import { globalScore, domainScore, partialReport, reportScope } from './reportSummaryModel';
+import { globalScore, domainScore, partialReport } from './reportSummaryModel';
 import { decisionCopy } from './decisionCopy';
 import { reportReadingCopy } from './reportReadingCopy';
 import { exportCopy } from './exportCopy';
@@ -24,7 +25,7 @@ export default function PrintableReport({report,lang,format}:{report:Report;lang
  const priorities=model.priorities.slice(0,format==='full'?6:3);
  const method=(process.env.NEXT_PUBLIC_SITE_URL||'https://argos.lelouet.fr')+(lang==='fr'?'/methodologie-score':'/en/scoring-method');
  return <main lang={lang} className={s.document}><header><p>ARGOS · {format==='full'?e.full:e.summary}</p><h1>{cleanEvidence(report.domain)}</h1>
- <p>{d.scope}: {reportScope(report.url)??d.scopeUnknown}</p><p>{t.hero.analyzedAt}: {Number.isFinite(date.getTime())?date.toLocaleString(lang,{timeZone:'UTC',timeZoneName:'short'}):d.dateUnknown}</p>
+ <ReportPageScope report={report} lang={lang} /><p>{t.hero.analyzedAt}: {Number.isFinite(date.getTime())?date.toLocaleString(lang,{timeZone:'UTC',timeZoneName:'short'}):d.dateUnknown}</p>
  <p>{e.private}</p></header>
  {report.introduction&&<section><h2>{introductionCopy[lang].title}</h2><p>{report.introduction.author} · {new Date(report.introduction.publishedAt).toLocaleDateString(lang,{timeZone:'UTC'})}</p><p>{report.introduction.context}</p>
  <ul>{report.introduction.findingKeys.map(key=>{const f=model.findings.find(f=>f.key===key);return f&&<li key={key}>{format==='full'?<a href={'#'+f.anchor}>{findingContent(f.issue,lang).title}</a>:findingContent(f.issue,lang).title} ({cleanEvidence(key)})</li>;})}</ul>
