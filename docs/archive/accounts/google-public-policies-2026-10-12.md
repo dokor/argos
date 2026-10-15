@@ -1,5 +1,9 @@
 # Pages publiques pour Google OAuth — issue #512
 
+> Archive : ce compte rendu conserve son périmètre et ses résultats d'origine.
+> Pour la référence maintenue, consulter [la documentation courante](../../accounts/operations.md).
+> Voir [l'index des archives](../README.md) pour les dates et limites.
+
 Validation locale le 12 octobre 2026, sur une branche dédiée à partir de `main` (`c863572`).
 
 ## Vérifications exécutées
@@ -22,4 +26,4 @@ Captures locales conservées dans `outputs/ui-review/google-public-policies/` du
 
 ## Mise en service
 
-La PR livre les pages et documente les URL dans `operations.md`. Après fusion et déploiement, vérifier leur accessibilité HTTPS publique puis renseigner les deux liens dans Google Auth Platform. Aucun compte activé, aucun changement des scopes/callbacks et aucun déploiement exécuté pour cette issue.
+La PR livre les pages et documente les URL dans [la procédure d’exploitation](../../accounts/operations.md). Après fusion et déploiement, vérifier leur accessibilité HTTPS publique puis renseigner les deux liens dans Google Auth Platform. Aucun compte activé, aucun changement des scopes/callbacks et aucun déploiement exécuté pour cette issue.

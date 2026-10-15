@@ -1,5 +1,9 @@
 # Validation éditoriale — 12 octobre 2026
 
+> Archive : ce compte rendu conserve son périmètre et ses résultats d'origine.
+> Pour la référence maintenue, consulter [la documentation courante](../product/editorial-guide.md).
+> Voir [l'index des archives](README.md) pour les dates et limites.
+
 Milestone 17, issues #478, #479 et #480. Revue effectuée par un agent sur le
 worktree `codex/editorial-coherence`, à partir de `c863572`. Aucun déploiement.
 
