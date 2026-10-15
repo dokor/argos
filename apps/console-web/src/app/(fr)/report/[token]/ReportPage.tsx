@@ -44,7 +44,7 @@ export default function ReportPage({ params, feedbackReference, embedded = false
   const note = noteState.report === report ? noteState.note : report.introduction;
   const showMethod = () => {
     setMethodOpen(true);
-    document.getElementById("report-method")?.scrollIntoView({ block: "start", behavior: "smooth" });
+    document.getElementById("report-method")?.scrollIntoView({ block: "start" });
     document.getElementById("report-method-toggle")?.focus({ preventScroll: true });
   };
   const selection: FindingSelection | undefined = reading.finding ? { key: reading.finding.key, request: 0 } : undefined;

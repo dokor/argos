@@ -21,6 +21,13 @@ html {
   line-height: 1.5;
 }
 
+/* Preserve the visual connection between an anchor and its destination. */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
 h1, h2, h3, h4, h5, h6 {
   font-size: inherit;
   font-weight: inherit;
