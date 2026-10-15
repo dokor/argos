@@ -58,6 +58,7 @@ it.each([["POST","admin/users"],["PATCH","admin/users/42/role"],["DELETE","admin
 });
 import { NextRequest, NextResponse } from "next/server";
 import { accountProxy, accountHeaders, safeAccountReturn, saveRunProof, claimContext, SESSION_COOKIE } from "./account-proxy";
+import { localizedAccountReturn } from "./account-navigation";
 it("protects introduction publication and revocation with CSRF and forwards only published fields", async () => {
   const path = ["report-introduction", "f".repeat(43)];
   const body = { author: "Fixture", context: "Synthetic context", nextStep: "Review together", findingKeys: ["html.title", "html.h1.count"] };
@@ -193,6 +194,20 @@ it("keeps email verification return paths in the browser without adding fields t
   expect(JSON.parse(fetchMock.mock.calls[0][1].body)).not.toHaveProperty("returnTo");
   expect(response.cookies.get("argos_account_return")?.value).toBe(returnTo);
   expect(response.cookies.get("argos_account_return")?.httpOnly).toBe(true);
+});
+it.each(["fr","en"] as const)("keeps the selected language and nested context through an OAuth callback in %s", async lang => {
+  const target = localizedAccountReturn("/en/account/runs/42?returnTo="+encodeURIComponent("/en/account?attention=priority&domainId=7"),lang);
+  const state="s".repeat(43), browser="b".repeat(43);
+  fetchMock.mockResolvedValue(new Response(JSON.stringify({state,url:"https://provider.example/authorize"}),{headers:{"X-Argos-OAuth-Browser":browser}}));
+  const started=await accountProxy(request("auth/oauth/github/start","POST",{intent:"login",returnTo:target}),["auth","oauth","github","start"]);
+  expect(started.cookies.get("argos_return_"+state)?.value).toBe(target);
+  const callback=request("auth/oauth/github/callback?state="+state+"&code=synthetic");
+  callback.cookies.set("argos_oauth_"+state,browser);
+  callback.cookies.set("argos_return_"+state,target);
+  fetchMock.mockResolvedValue(new Response('{"returnTo":"/account"}',{headers:{"X-Argos-Session":jwt}}));
+  const completed=await accountProxy(callback,["auth","oauth","github","callback"]);
+  expect(completed.headers.get("location")).toBe("https://argos.example"+target);
+  expect(completed.cookies.get("argos_account_return")?.value).toBe(target);
 });
 
 it.each(["auth/register", "auth/forgot"])("preserves the private return context and sends only its language for %s", async path => {

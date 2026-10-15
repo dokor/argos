@@ -41,9 +41,11 @@ export default function AccountView({mode="sign-in"}:{mode?:Mode}) {
   useEffect(() => {
     if (busy || !focusTarget.current) return;
     const target = focusTarget.current;
+    const element = target === "notice" ? noticeRef.current : formRef.current?.querySelector<HTMLInputElement>(`#${target}`);
+    // An earlier pending effect can run before the requested form is mounted.
+    if (!element || element.matches(":disabled")) return;
     focusTarget.current = null;
-    if (target === "notice") noticeRef.current?.focus();
-    else formRef.current?.querySelector<HTMLInputElement>(`#${target}`)?.focus();
+    element.focus();
   });
   useEffect(() => {
     let active = true;

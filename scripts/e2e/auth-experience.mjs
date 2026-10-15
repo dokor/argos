@@ -11,7 +11,7 @@ const browser = await chromium.launch({headless:true});
 let stage = 'start';
 const evidence = [];
 async function title(page, lang, mode) {
-  await page.waitForFunction(expected => document.title === expected, copy[lang].authTitles[mode] + ' | Argos');
+  await page.waitForFunction(expected => document.title === expected, copy[lang].authTitles[mode]);
   assert.match(await page.locator('meta[name="robots"]').getAttribute('content'), /noindex/);
   assert.equal(await page.locator('meta[name="referrer"]').getAttribute('content'), 'no-referrer');
 }
@@ -32,6 +32,7 @@ try {
     const target = prefix + '/account/settings?section=profile';
     stage = lang + '-metadata';
     for (const mode of ['sign-in','register','forgot','reset','verify']) {
+      stage = lang + '-metadata-' + mode;
       await page.goto(base + prefix + '/account/' + mode);
       await title(page, lang, mode);
     }
