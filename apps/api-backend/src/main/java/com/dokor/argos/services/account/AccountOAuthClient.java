@@ -45,7 +45,7 @@ public class AccountOAuthClient {
                                     "linkedin",
                                     "https://www.linkedin.com/oauth/v2/authorization",
                                     "https://www.linkedin.com/oauth/v2/accessToken",
-                                    "https://www.linkedin.com",
+                                    "https://www.linkedin.com/oauth",
                                     "https://www.linkedin.com/oauth/openid/jwks",
                                     "openid email profile",
                                     false),
@@ -60,16 +60,19 @@ public class AccountOAuthClient {
                                     true));
     private final AccountSettings settings;
     private final ObjectMapper mapper;
-    private final HttpClient http =
-            HttpClient.newBuilder()
-                    .connectTimeout(Duration.ofSeconds(5))
-                    .followRedirects(HttpClient.Redirect.NEVER)
-                    .build();
+    private final HttpClient http;
 
     @Inject
     public AccountOAuthClient(AccountSettings settings, ObjectMapper mapper) {
+        this(settings, mapper, HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(5))
+                .followRedirects(HttpClient.Redirect.NEVER).build());
+    }
+
+    AccountOAuthClient(AccountSettings settings, ObjectMapper mapper, HttpClient http) {
         this.settings = settings;
         this.mapper = mapper;
+        this.http = http;
     }
 
     public Provider provider(String name) {
@@ -107,7 +110,12 @@ public class AccountOAuthClient {
 
     public Identity exchange(String name, String code, String nonce, String verifier) {
         var p = provider(name);
-        if (code == null || code.length() > 2048) throw new AccountError(400, "oauth_invalid");
+        if (code == null || code.length() > 2048) {
+            AccountOAuthDiagnostics.rejected(name, AccountOAuthDiagnostics.Stage.CALLBACK_CONTEXT,
+                    AccountOAuthDiagnostics.Reason.INVALID_CONTEXT, 0);
+            throw new AccountError(400, "oauth_invalid");
+        }
+        var stage = AccountOAuthDiagnostics.Stage.TOKEN_EXCHANGE;
         try {
             var fields = new LinkedHashMap<String, String>();
             fields.put("grant_type", "authorization_code");
@@ -125,6 +133,7 @@ public class AccountOAuthClient {
                                     .POST(HttpRequest.BodyPublishers.ofString(form(fields)))
                                     .build());
             if (name.equals("github")) {
+                stage = AccountOAuthDiagnostics.Stage.PROVIDER_PROFILE;
                 String access = response.path("access_token").asText();
                 if (access.isBlank()) throw new Exception();
                 var user = get("https://api.github.com/user", access);
@@ -145,7 +154,9 @@ public class AccountOAuthClient {
                         verified,
                         user.path("name").asText(user.path("login").asText("Argos")));
             }
+            stage = AccountOAuthDiagnostics.Stage.ID_TOKEN_PARSING;
             var jwt = JWTParser.parse(response.path("id_token").asText());
+            stage = AccountOAuthDiagnostics.Stage.ID_TOKEN_VALIDATION;
             var validator =
                     new IDTokenValidator(
                             new Issuer(p.issuer()),
@@ -155,18 +166,25 @@ public class AccountOAuthClient {
                             new DefaultResourceRetriever(5000, 5000, 100000));
             validator.setMaxClockSkew(0);
             var claims = validateOidc(jwt, validator, nonce);
-            var object = claims.toJSONObject();
-            String subject = claims.getSubject().getValue();
-            if (subject.isBlank() || subject.length() > 200) throw new Exception();
-            String email = object.get("email") instanceof String e ? e : null;
-            return new Identity(
-                    p.issuer() + "|" + subject,
-                    email,
-                    Boolean.TRUE.equals(object.get("email_verified")),
-                    object.get("name") instanceof String n ? n : "Argos");
+            stage = AccountOAuthDiagnostics.Stage.IDENTITY_CLAIMS;
+            return oidcIdentity(p, claims);
         } catch (Exception invalid) {
+            AccountOAuthDiagnostics.rejected(name, stage, failureReason(invalid),
+                    invalid instanceof ProviderHttpFailure rejected ? rejected.status : 0);
             throw new AccountError(400, "oauth_invalid");
         }
+    }
+
+    private static AccountOAuthDiagnostics.Reason failureReason(Exception failure) {
+        if (failure instanceof ProviderHttpFailure) return AccountOAuthDiagnostics.Reason.HTTP_REJECTED;
+        if (failure instanceof HttpTimeoutException) return AccountOAuthDiagnostics.Reason.TIMEOUT;
+        if (failure instanceof com.fasterxml.jackson.core.JsonProcessingException
+                || failure instanceof java.text.ParseException)
+            return AccountOAuthDiagnostics.Reason.MALFORMED_RESPONSE;
+        if (failure instanceof java.io.IOException) return AccountOAuthDiagnostics.Reason.NETWORK_IO;
+        if (failure instanceof com.nimbusds.jose.proc.BadJOSEException || failure instanceof JOSEException)
+            return AccountOAuthDiagnostics.Reason.OIDC_REJECTED;
+        return AccountOAuthDiagnostics.Reason.UNEXPECTED_RESPONSE;
     }
 
     private JsonNode get(String uri, String access) throws Exception {
@@ -185,13 +203,38 @@ public class AccountOAuthClient {
         return validator.validate(jwt, new Nonce(nonce));
     }
 
+    static Identity oidcIdentity(
+            Provider provider, com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet claims)
+            throws Exception {
+        var object = claims.toJSONObject();
+        String subject = claims.getSubject().getValue();
+        if (subject.isBlank() || subject.length() > 200) throw new Exception();
+        String email = object.get("email") instanceof String e ? e : null;
+        // Keep existing LinkedIn account keys stable when correcting the validation issuer.
+        String namespace =
+                provider.name().equals("linkedin") ? "https://www.linkedin.com" : provider.issuer();
+        return new Identity(
+                namespace + "|" + subject,
+                email,
+                Boolean.TRUE.equals(object.get("email_verified")),
+                object.get("name") instanceof String n ? n : "Argos");
+    }
+
     private JsonNode json(HttpRequest request) throws Exception {
         var response = http.send(request, HttpResponse.BodyHandlers.ofInputStream());
         try (var body = response.body()) {
-            if (response.statusCode() != 200) throw new Exception();
+            if (response.statusCode() != 200) throw new ProviderHttpFailure(response.statusCode());
             byte[] bytes = body.readNBytes(100001);
             if (bytes.length > 100000) throw new Exception();
             return mapper.readTree(bytes);
+        }
+    }
+
+    private static final class ProviderHttpFailure extends Exception {
+        private final int status;
+
+        private ProviderHttpFailure(int status) {
+            this.status = status;
         }
     }
 

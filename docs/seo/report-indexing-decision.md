@@ -19,6 +19,6 @@ Sources : [Google, introduction robots.txt](https://developers.google.com/search
 | FAILED | Vue échec | 200 | noindex, nofollow | noindex, nofollow | Absents |
 | Expiré / inconnu | Vue introuvable | 200 | noindex, nofollow | noindex, nofollow | Absents |
 
-Les erreurs sont actuellement des réponses HTML 200 : ce lot ne modifie pas les codes métier ni la navigation. Le header assure la directive dès la réponse HTTP, même si Next streame certaines métadonnées. Le test vérifie le HTML reçu avant hydratation, le contenu de l’état, le sitemap, robots.txt et les href des pages publiques/exemples. Résultats détaillés : docs/testing/epic-373/report-indexing.json.
+Les erreurs sont actuellement des réponses HTML 200 : ce lot ne modifie pas les codes métier ni la navigation. Le header assure la directive dès la réponse HTTP, même si Next streame certaines métadonnées. Le test vérifie le HTML reçu avant hydratation, le contenu de l’état, le sitemap, robots.txt et les href des pages publiques/exemples. Résultats détaillés : outputs/report-indexing/report-indexing.json.
 
-Le backend conserve le contrôle par hash du token et l’expiration facultative. Les règles dashboard/login/api restent en place ; aucune autorisation ou publication de données utilisateur ajoutée.
+Le backend conserve le contrôle par hash du token et la [politique de rétention](../report/retention.md). Les règles dashboard/login/api restent en place ; aucune autorisation ou publication de données utilisateur ajoutée.

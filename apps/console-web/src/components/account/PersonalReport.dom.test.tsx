@@ -5,8 +5,8 @@ import { accountFetch, AccountClientError } from "@/lib/account-client";
 import PersonalReport from "./PersonalReport";
 const {session}=vi.hoisted(()=>({session:{profile:{verified:true},ready:true,denied:false,invalidate:vi.fn()}}));
 vi.mock("./AccountSession",()=>({useAccountSession:()=>session,PersonalNavigation:()=>null}));
-vi.mock("next/navigation",()=>({usePathname:()=>"/account/runs/42"}));
-vi.mock("@/app/(fr)/report/[token]/ReportPage",()=>({default:({params}:{params:{report:{domain:string}}})=><p>{params.report.domain}</p>}));
+vi.mock("next/navigation",()=>({usePathname:()=>"/account/runs/42",useSearchParams:()=>new URLSearchParams(window.location.search)}));
+vi.mock("./PrivateDiagnostic",()=>({default:({report}:{report:{domain:string}})=><p>{report.domain}</p>}));
 vi.mock("@/lib/account-client",()=>({accountFetch:vi.fn(),AccountClientError:class extends Error {constructor(public code:string,public status:number,public retryAfter=0){super(code);}}}));
 beforeEach(()=>{vi.useFakeTimers();vi.mocked(accountFetch).mockReset();session.denied=false;session.invalidate.mockReset();Object.defineProperty(document,"hidden",{value:false,configurable:true});});
 afterEach(()=>vi.useRealTimers());
@@ -50,4 +50,22 @@ it("does not retry a permanent 401 and caps 503 retries",async()=>{
   render(<PersonalReport runId="43"/>);
   await act(async()=>{await vi.advanceTimersByTimeAsync(60000);});
   expect(accountFetch).toHaveBeenCalledTimes(4);
+});
+
+it.each(["EXPIRED","UNAVAILABLE"])("does not substitute another report when the exact run is %s",async reportAvailability=>{
+  vi.mocked(accountFetch).mockResolvedValue({status:"COMPLETED",siteId:"7",reportAvailability});
+  render(<PersonalReport runId="42"/>);
+  await act(async()=>{await vi.advanceTimersByTimeAsync(6000);});
+  expect(accountFetch).toHaveBeenCalledTimes(1);
+  expect(screen.getByText(reportAvailability==="EXPIRED" ? "Ce rapport a expiré" : "Le rapport de cette analyse n’est pas disponible")).toBeInTheDocument();
+});
+it("reads a published report even if execution failed and never exposes the preceding run while navigating",async()=>{
+  vi.mocked(accountFetch).mockImplementation(async path=>path.endsWith("/report") ? {domain:"exact.example"} : {status:"FAILED",siteId:"7",reportAvailability:"AVAILABLE"});
+  const view=render(<PersonalReport runId="42"/>);
+  await act(async()=>{await vi.advanceTimersByTimeAsync(0);});
+  expect(screen.getByText("exact.example")).toBeInTheDocument();
+  expect(accountFetch).toHaveBeenCalledWith("runs/42/report","GET",undefined,expect.any(AbortSignal));
+  vi.mocked(accountFetch).mockReturnValue(new Promise(()=>{}));
+  view.rerender(<PersonalReport runId="43"/>);
+  expect(screen.queryByText("exact.example")).not.toBeInTheDocument();
 });

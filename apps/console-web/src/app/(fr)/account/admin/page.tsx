@@ -1,2 +1,2 @@
-import AdminView from "@/components/admin/AdminView";
-export default function Page(){return <AdminView/>;}
+import {redirect} from "next/navigation";
+export default function Page(){redirect("/account/admin/users");}

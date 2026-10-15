@@ -1,40 +1,18 @@
-# Accès aux audits — décision #218
+# Accès aux audits et rapports
 
-La session admin existante `argos_admin` / `ADMIN_TOKEN` reste vérifiée par Next.
-Chaque lecture admin passe par un Route Handler BFF, qui ajoute un Bearer
-`ADMIN_API_TOKEN` distinct. Java vérifie ce secret sur chaque endpoint de lecture
-admin, avant l'accès aux services/DB. Il ne fait confiance ni au cookie, ni à une
-identité fournie dans un header du navigateur. Comparaison en temps constant.
-Ce choix maintient l'auth mono-admin actuelle ; OAuth/multi-utilisateur est séparé.
+Le frontend administratif utilise exclusivement la session de compte Argos ACTIVE ADMIN, vérifiée côté Java. Voir le [contrat d’administration](../accounts/administration-contract.md) et le [retrait historique](../accounts/legacy-admin-transition.md).
 
 | Route | Next/BFF | Java | Credential |
-|---|---|---|---|
-| POST /api/audits | validation URL publique | validation URL publique | aucun |
-| GET /api/audits | cookie admin + proxy | Bearer serveur obligatoire | admin |
-| GET /api/audits/{id}/history | cookie admin + proxy | Bearer obligatoire | admin |
-| GET /api/audits/runs/{id} | cookie admin + proxy | Bearer obligatoire | admin |
+| --- | --- | --- | --- |
+| POST /api/audits | validation URL, CSRF si compte personnel | validation URL, droits personnels | public ou session de compte |
+| GET /api/audits et /api/audits/* | 410, sans requête upstream | routes opérateur direct sous Bearer conservées | aucun accès navigateur historique |
+| GET /api/account/admin/runs et /{id}/report | JWT du cookie, liste blanche | session ACTIVE ADMIN, rôle courant | session de compte |
+| GET /api/account/admin/analytics | JWT du cookie, périodes 7/30/90 | session ACTIVE ADMIN, rôle courant | session de compte |
 | GET /api/reports/{token} | proxy/SSR | lecture via token opaque | token rapport |
-| GET /api/reports/{token}/status | proxy/SSR | progression réduite, sans token/IDs/blob/erreur | token rapport |
+| GET /api/reports/{token}/status | proxy/SSR | progression réduite, sans IDs/blob/erreur | token rapport |
 
-Le polling de soumission publique utilise le token remis lors de la création.
-Le dashboard peut consulter un ID numérique après authentification admin.
-Le statut public n'écho pas le credential et les routes rapport ne le journalisent
-pas. Aucun cache partagé ne doit conserver les lectures privées.
+Le polling public utilise le token remis lors de la création. Les rapports administratifs s’ouvrent via `/account/admin/runs/{id}` sans reconstruire ce token. Les lectures privées utilisent `Cache-Control: private, no-store`.
 
-Traefik : console-web-api priorité 200 intercepte /api, devant api-backend priorité
-100. Le rewrite générique est un fallback, après tous les Route Handlers y compris dynamiques. Même
-en cas de routage direct vers Java ou d'accès réseau interne, son contrôle Bearer
-reste obligatoire. La config Traefik déployée est à confronter aux compose du dépôt.
+Traefik intercepte /api avec console-web avant api-backend. Les handlers Next ferment les anciennes lectures globales avant le rewrite. Les clients opérateur directs des anciennes routes Java restent soumis à AdminReadAccess ; les cookies du navigateur n’y accordent aucun droit.
 
-Configuration avant déploiement : choisir un secret aléatoire dédié et placer sa
-valeur dans `ADMIN_API_TOKEN` du fichier env monté de console-web et dans
-`admin-api.token` du prod.conf monté Java (ou environnement Java ADMIN_API_TOKEN).
-Aucune valeur par défaut ni secret n'est commité. Sans configuration, les lectures
-admin échouent fermées (401 Java / 503 BFF) ; la création reste disponible. Rotation :
-mettre à jour les deux services ensemble. Les secrets internes monitoring sont
-distincts. TLS extérieur et réseau backend non publié sont requis en exploitation.
-
-Tests : véritables requêtes HTTP sur les resources Jersey (backend direct, cookie
-ignoré, Bearer invalide/absent, statut réduit, création publique) et tests de Route
-Handlers Next (cookie absent/invalide, credential navigateur ignoré, header serveur,
-cache, indisponibilité de config). #227 garde le rate-limit comme sujet distinct.
+Le Bearer serveur `ADMIN_API_TOKEN` / `admin-api.token` reste configuré pour la collecte analytics consentie et les clients opérateur directs. Il est distinct des JWT de compte et des secrets de monitoring. Les headers d’identité ou de rôle du navigateur sont ignorés par le BFF. Les métriques de compte ne transforment jamais un JWT en credential serveur.

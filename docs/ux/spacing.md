@@ -29,14 +29,10 @@ Les puces et filtres secondaires utilisent une cible de 40 px au minimum. Les ti
 
 Les surfaces sans maquette spécifique gardent leurs tailles de contenu, mais leurs marges et rembourrages extérieurs suivent la même échelle. Les couleurs, la typographie et les points de rupture existants restent ceux des composants.
 
-## Comparaison
-
-Accueil en français, thème sombre, largeur 1440 px :
-
-| Avant | Après |
-| --- | --- |
-| ![Accueil avant](screenshots/home-desktop-before.png) | ![Accueil après](screenshots/home-desktop-after.png) |
-
 ## Vérification
 
-Compilation de production, ESLint et suite Vitest du frontend. L'accueil a été contrôlé à 390, 768 et 1440 px en français et en anglais, en thème sombre, puis à 390 px en thème clair. FAQ, accessibilité numérique, connexion et page introuvable ont été contrôlées en anglais à ces largeurs. Aucun défilement horizontal n'a été observé. Les pages sans données réelles (rapport publié, dashboard authentifié) sont couvertes par leurs composants et par les tests existants ; les états de progression et d'erreur ont été inspectés dans leurs modules SCSS.
+Contrôler les surfaces affectées en FR/EN, clair/sombre et aux largeurs mobile,
+tablette et bureau, avec zoom/reflow et clavier. Rejouer la [recette du header](../testing/public-header.md)
+ou celle du [rapport](../testing/report.md) selon le changement. Les captures
+avant/après de l'issue #140 restent dans Git ; les nouvelles vont dans outputs
+ou dans les artefacts de la PR, avec le SHA et le scénario.

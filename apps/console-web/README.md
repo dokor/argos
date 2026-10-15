@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Console web Argos
 
-## Getting Started
+Frontend Next.js App Router, React et TypeScript. Les versions installées sont
+définies dans `package.json` et `package-lock.json` ; utiliser Node.js 24 comme la
+CI et le Dockerfile. Les styles sont des SCSS Modules avec tokens `--argos-*`.
 
-First, run the development server:
+## Démarrage local
 
-```bash
+Depuis ce dossier :
+
+```sh
+npm ci
+cp .env.example .env.local
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Sous PowerShell, remplacer `cp` par `Copy-Item`. Ouvrir `http://localhost:3000`.
+Le [backend Java](../api-backend/README.md) doit être lancé sur le port 8081 pour
+les audits ; les pages publiques restent consultables sans lui.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Configuration
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+L'exemple `.env.example` ne contient aucun secret. `.env.local` reste ignoré.
 
-## Learn More
+| Variable | Usage |
+| --- | --- |
+| `API_BASE` | Origine Java, exclusivement serveur, sans suffixe `/api`. En local : `http://localhost:8081` ; défaut Docker : `http://api-backend:8081`. |
+| `ACCOUNT_ORIGIN` | Origine exacte autorisée par le BFF pour les comptes, identique à celle configurée dans Java. |
+| `NEXT_PUBLIC_SITE_URL` | Origine publique pour les métadonnées et liens. Les variables `NEXT_PUBLIC_*` sont intégrées au build client. |
+| `ADMIN_API_TOKEN` | Credential serveur pour les lectures admin historiques et la collecte analytics ; même valeur côté Java, jamais envoyée au navigateur. |
+| `PRODUCT_ANALYTICS_ENABLED` | Collecte optionnelle ; nécessite aussi la configuration Java et le consentement. Voir le [contrat](../../docs/product/product-analytics.md). |
+| `NEXT_PUBLIC_CALENDLY_URL` | Destination optionnelle du CTA rapport ; repli sur le contact public. |
+| `APP_LOGS_ENABLED`, `NEXT_PUBLIC_APP_LOGS_ENABLED` | Journaux serveur et client ; ne jamais y inclure de secret ou d'URL brute. |
 
-To learn more about Next.js, take a look at the following resources:
+Les comptes et l'administration par rôles utilisent des sessions distinctes du
+login historique. Voir [configuration et recette](../../docs/accounts/operations.md)
+avant de les activer ; ne pas retirer les anciennes routes tant que leur migration
+n'est pas réalisée.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Structure et contrats
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `src/app/(fr)` et `src/app/en` : routes publiques localisées, rapport et espaces privés.
+- `src/app/api` : BFF, validation des entrées et forwarding des credentials serveur.
+- `src/components/report` : affichage du rapport et compatibilité des rapports historiques.
+- `src/lib/i18n` : traductions FR/EN et résolution des routes.
+- `next.config.ts` : headers, redirections et proxy **fallback** vers Java, après
+  les Route Handlers dynamiques des comptes et de l'administration.
 
-## Deploy on Vercel
+Le navigateur appelle uniquement `/api/*` sur la même origine. `API_BASE` ne doit
+jamais devenir une variable publique. Conserver la validation SSRF dans le BFF
+et dans Java. Aucun `localStorage`, Tailwind ou shadcn/Radix.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Vérifications
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```sh
+npm run lint
+npm test
+npm run build
+```
+
+Le build produit `.next` ; `npm start` le sert en production. Les tests DOM sont
+exécutés par Vitest ; la [recette navigateur](../../docs/testing/controlled-e2e.md)
+est distincte. Pour contribuer, suivre le [guide racine](../../CONTRIBUTING.md).
+Le déploiement existant est Docker/Traefik : voir le [runbook](../../infra/RUNBOOK.md).

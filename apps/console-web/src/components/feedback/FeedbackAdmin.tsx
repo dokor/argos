@@ -1,11 +1,10 @@
 "use client";
+import AdminNavigation from "@/components/admin/AdminNavigation";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { accountFetch, AccountClientError } from "@/lib/account-client";
 import { feedbackStatuses, feedbackTypes } from "@/lib/feedback-request";
-import { useAccountSession, PersonalNavigation } from "@/components/account/AccountSession";
+import { useAccountSession } from "@/components/account/AccountSession";
 import { useLang } from "@/lib/i18n/LangContext";
-import SiteNav from "@/components/site/SiteNav";
-import SiteFooter from "@/components/site/SiteFooter";
 import Link from "@/components/LocalizedLink";
 import { feedbackCopy } from "./copy";
 import s from "./FeedbackForm.module.scss";
@@ -44,8 +43,8 @@ export default function FeedbackAdmin() {
     for (const [key, value] of new FormData(event.currentTarget)) if (typeof value === "string" && value) params.set(key, value);
     setQuery(params.toString()); setCursor(null); setSelected(null); list.refresh();
   }
-  return <><SiteNav /><PersonalNavigation /><main className={s.page}>
-    <h1>{c.admin}</h1><Link href="/account/admin">{c.back}</Link>
+  return <><main className={s.page}>
+    <h1>{c.admin}</h1>{allowed && <AdminNavigation active="feedback" />}<Link href="/account/admin">{c.back}</Link>
     {!session.ready ? <p role="status">{c.loading}</p> : !allowed ? <p role="alert">{c.denied}</p> : <>
       <form onSubmit={filter} className={s.filters}>
         <label>{c.type}<select name="type" defaultValue=""><option value="">{c.all}</option>{feedbackTypes.map(key => <option key={key} value={key}>{c.types[key]}</option>)}</select></label>
@@ -59,7 +58,7 @@ export default function FeedbackAdmin() {
       </table></div>}
       <div className={s.actions}><button disabled={!cursor || list.loading} onClick={() => { setCursor(null); setSelected(null); }}>{c.first}</button><button disabled={!list.data?.nextCursor || list.loading} onClick={() => { setCursor(list.data!.nextCursor); setSelected(null); }}>{c.next}</button></div>
     </>}
-  </main><SiteFooter /></>;
+  </main></>;
 }
 function FeedbackDetail({ id, c, denied, saved, close }: { id: string; c: Copy; denied: () => void; saved: () => void; close: () => void }) {
   const detail = usePrivateResource<Detail>("admin/feedback/" + id, denied);

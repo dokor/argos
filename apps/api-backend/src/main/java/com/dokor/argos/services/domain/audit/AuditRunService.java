@@ -52,6 +52,8 @@ public class AuditRunService {
                     return Optional.empty();
                 }
 
+                run.setClaimToken(token);
+                run.setStatus("RUNNING");
                 logger.info("Run claimed runId={}", run.getId());
                 return Optional.of(run);
             });
@@ -67,6 +69,8 @@ public class AuditRunService {
     public QueuedRun createQueuedRun(long auditId, Instant now, Long ownerUserId, java.sql.Connection connection) {
         if(ownerUserId!=null) {
             if(connection==null) return auditRunDao.usage().transaction(c -> createQueuedRun(auditId,now,ownerUserId,c));
+            auditRunDao.usage().lockOwner(ownerUserId,connection);
+            auditRunDao.lockAdmission(connection);
             auditRunDao.usage().admit(ownerUserId,connection);
         }
         logger.info("Creating QUEUED run for auditId={}", auditId);
@@ -82,7 +86,7 @@ public class AuditRunService {
         run.setReportTokenHash(tokenService.sha256(reportToken));
         run.setModuleStatuses(moduleStatusesJson);
 
-        AuditRun saved = connection == null ? auditRunDao.save(run) : auditRunDao.save(run,connection);
+        AuditRun saved = auditRunDao.saveQueued(run, connection);
         if(ownerUserId!=null) auditRunDao.usage().reserve(saved,connection);
         logger.debug("Run persisted: runId={}", saved.getId());
         return new QueuedRun(saved, reportToken);
@@ -114,6 +118,13 @@ public class AuditRunService {
         boolean updated = auditRunDao.updateModuleStatus(runId, moduleId, status,
             serializeModuleStatuses(INITIAL_MODULE_STATUSES), false);
         logger.debug("Module status transition runId={} module={} status={} updated={}", runId, moduleId, status, updated);
+    }
+
+    /** Progress written by a worker must retain the claim captured when it was dispatched. */
+    public void updateModuleStatus(long runId,String moduleId,String status,String expectedClaim) {
+        if(expectedClaim==null){updateModuleStatus(runId,moduleId,status);return;}
+        if(!AuditModule.containsId(moduleId)||!List.of(ModuleStatus.RUNNING,ModuleStatus.COMPLETED,ModuleStatus.FAILED,ModuleStatus.SKIPPED).contains(status))throw new IllegalArgumentException("Invalid module transition");
+        auditRunDao.updateModuleStatus(runId,moduleId,status,serializeModuleStatuses(INITIAL_MODULE_STATUSES),false,expectedClaim);
     }
 
     /**
@@ -160,6 +171,8 @@ public class AuditRunService {
     }
 
     // ─── Helpers ─────────────────────────────────────────────────────────────────
+
+    public String initialModuleStatusesJson() { return serializeModuleStatuses(INITIAL_MODULE_STATUSES); }
 
     private String serializeModuleStatuses(List<ModuleStatus> statuses) {
         try {

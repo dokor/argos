@@ -1,41 +1,49 @@
-# Intentions SEO des pages publiques — #386
+# Intentions des pages publiques
 
-État au 10 octobre 2026, basé sur origin/main 16d5ba5 et la pile #70/#376/#387. Les URL publiées sont à améliorer. Aucun export Search Console ni volume/difficulté/position vérifiable disponible. Les expressions sont des hypothèses éditoriales, pas des données de marché. Aucune URL générique concurrente de / n’est créée : le guide explique, la home lance l’outil.
+La home lance l'outil ; les guides expliquent une démarche ou un résultat.
+Les intentions ci-dessous sont des hypothèses éditoriales, sans volume de recherche,
+rang ni effet commercial démontré. Les routes listées sont présentes dans le dépôt
+au 12 octobre 2026 ; cela ne constitue pas une vérification de leur déploiement.
 
-## Matrice FR / EN
+| Page ou famille FR | Intention | Parcours attendu |
+| --- | --- | --- |
+| / | Lancer un audit transversal gratuit d'une URL publique | Formulaire, exemple, ressources |
+| /exemple-rapport | Comprendre constats, preuves et corrections | Exemple fictif, méthode, audit |
+| /faq | Répondre aux questions de fonctionnement | Méthode, exemple, contact |
+| /ressources | Choisir une ressource | Guides publiés, exemple puis formulaire |
+| /ressources/audit-technique-gratuit | Comprendre le périmètre d'un audit automatique | Checklist, méthode, audit |
+| /guides/checklist-audit-site-web | Vérifier soi-même une page | Exemple, méthode, formulaire contextualisé |
+| /ressources/audit-site-pme | Préparer un brief de corrections | Exemple PME, checklist, audit |
+| /ressources/audit-site-ecommerce | Examiner une fiche produit publique | Exemple commerce, limites du parcours, audit |
+| /methodologie-score | Interpréter score, couverture et limites | Preuves, exemple, audit |
+| /ressources/accessibilite-numerique | Comprendre le contexte français et les limites automatiques | Checklist, méthode, contrôles humains |
+| /test-vitesse-site-web | Lire les mesures de laboratoire disponibles | Méthode, exemple, audit transversal |
+| /analyse-seo-page | Vérifier title, description, canonical et H1 | Checklist, exemple, audit |
+| /verifier-entetes-securite | Interpréter les en-têtes HTTP | Références, checklist, audit |
+| /test-accessibilite-site-web | Comprendre un constat automatique et ses limites | Ressource réglementaire, checklist, audit |
 
-| URL | Langue | Intention / réponse | Principal / variantes | H1 actuel | Title actuel | CTA cible | Liens |
-|---|---|---|---|---|---|---|---|
-| / | FR | Utiliser le diagnostic transversal | audit site web gratuit / audit gratuit sans compte ; analyser une URL | Identifiez les problèmes techniques à corriger en priorité. | Audit de site web gratuit, sans compte / Argos | Analyser gratuitement | exemple, ressources → home ; home → exemple, domaines, ressources |
-| /en | EN | Utiliser le diagnostic transversal | free website audit / audit gratuit sans compte ; analyser une URL | Find the technical problems to fix first. | Free website audit, no account needed / Argos | Analyser gratuitement | exemple, ressources → home ; home → exemple, domaines, ressources |
-| /exemple-rapport | FR | Évaluer le résultat avant de soumettre une page | exemple rapport audit site web / exemple audit ; lire un rapport | Un constat, une preuve, une correction | Exemple de rapport Argos : preuves et corrections avant/après / Argos | Auditer ma page | home, FAQ → exemple ; exemple → méthode, audit, audiences |
-| /en/example-report | EN | Évaluer le résultat avant de soumettre une page | website audit report example / exemple audit ; lire un rapport | A finding, evidence, a correction | Argos example report: evidence and before/after corrections / Argos | Auditer ma page | home, FAQ → exemple ; exemple → méthode, audit, audiences |
-| /faq | FR | Résoudre une question sur le fonctionnement | questions audit Argos / gratuité ; délai ; confidentialité | Questions fréquentes | FAQ - Questions fréquentes / Argos | Contact / audit secondaire | footer → FAQ ; FAQ → exemple, méthode, audit |
-| /en/faq | EN | Résoudre une question sur le fonctionnement | Argos audit FAQ / gratuité ; délai ; confidentialité | Frequently asked questions | FAQ - Frequently asked questions / Argos | Contact / audit secondaire | footer → FAQ ; FAQ → exemple, méthode, audit |
-| /ressources | FR | Choisir une ressource et un parcours débutant | guides audit site web / comprendre un diagnostic ; checklist | Ressources pour mieux auditer votre site | Ressources pour auditer votre site web / Argos | Commencer par un exemple | nav → ressources ; ressources → guides publiés, audit |
-| /en/resources | EN | Choisir une ressource et un parcours débutant | website audit guides / comprendre un diagnostic ; checklist | Resources to audit your website | Website audit resources / Argos | Commencer par un exemple | nav → ressources ; ressources → guides publiés, audit |
-| /ressources/audit-technique-gratuit | FR | Comprendre le périmètre technique | audit technique site web / analyse technique ; audit automatique | Audit technique gratuit de votre site web | Audit technique gratuit de site web | Lancer un diagnostic | ressources → guide ; guide → checklist, méthode, audit |
-| /guides/checklist-audit-site-web | FR | Exécuter une démarche de vérification | checklist audit site web / liste contrôles site ; vérifier un site | Checklist d’audit de site web : les vérifications à faire soi-même | Checklist d’audit de site web : 6 étapes pratiques / Argos | Aider les contrôles automatisables | ressources → checklist ; checklist → exemple, audit |
-| /ressources/audit-site-pme | FR | Préparer un brief de corrections pour une PME | audit site web PME / audit page de service ; brief agence | Un audit de site web pour décider quoi améliorer en premier | Audit site web PME : priorisez les corrections | Analyser une page gratuitement | home, ressources → PME ; PME → checklist, méthode, audit |
-| /en/resources/small-business-website-audit | EN | Préparer un brief de corrections pour une PME | small business website audit / audit page de service ; brief agence | A website audit to decide what to improve first | Small business website audit: prioritize fixes / Argos | Analyser une page gratuitement | home, ressources → PME ; PME → checklist, méthode, audit |
-| /ressources/audit-site-ecommerce | FR | Examiner une fiche produit publique | audit site e-commerce / audit fiche produit ; diagnostic boutique | Analysez une page clé de votre boutique avant le parcours d&#x27;achat | Audit site e-commerce : SEO, vitesse et confiance | Analyser une page de ma boutique | home, ressources → commerce ; commerce → exemple, méthode, audit |
-| /en/resources/ecommerce-website-audit | EN | Examiner une fiche produit publique | ecommerce product page audit / audit fiche produit ; diagnostic boutique | Check a key store page before the purchase journey | E-commerce site audit: SEO, speed, and trust / Argos | Analyser une page de ma boutique | home, ressources → commerce ; commerce → exemple, méthode, audit |
-| /methodologie-score | FR | Interpréter score et couverture | calcul score Argos / méthode scoring ; note provisoire | Comment est calculé le score d&#x27;audit Argos ? | Comment est calculé le score d&#x27;audit de site web ? / Argos | Lire les preuves puis auditer | scores, exemple, footer → méthode ; méthode → exemple, audit |
-| /ressources/accessibilite-numerique | FR | Comprendre les limites et le contexte français | accessibilité numérique audit automatique / RGAA diagnostic ; contrôles manuels | RGAA et EAA : comprendre les obligations d’accessibilité numérique | Accessibilité numérique : RGAA, EAA, obligations et sanctions | Premier diagnostic automatique | ressources → guide ; guide → checklist, méthode, audit |
+À propos, confidentialité et informations légales apportent identité et confiance.
+Leurs objectifs ne justifient pas une nouvelle page d'acquisition générique.
 
-## Routes proposées, non publiées
+## Routes, textes et langues : une seule source
 
-| URL FR | Hypothèse principale | Réponse propre, H1/title cible | CTA et maillage |
-|---|---|---|---|
-| /test-vitesse-site-web | test vitesse site web | Lire LCP/FCP de laboratoire et choisir une correction ; #391. H1/title : test vitesse site web, explicité à la réalisation. | Audit transversal existant ; liens vers méthode, exemple et uniquement guides publiés. |
-| /analyse-seo-page | analyse SEO d’une page | Lire les preuves title/description/canonical, sans crawl ni backlinks ; #392. H1/title : analyse SEO d’une page, explicité à la réalisation. | Audit transversal existant ; liens vers méthode, exemple et uniquement guides publiés. |
-| /verifier-entetes-securite | vérifier les en-têtes de sécurité d’un site | Lire réponse HTTP et déploiement prudent CSP/HSTS ; #393. H1/title : vérifier les en-têtes de sécurité d’un site, explicité à la réalisation. | Audit transversal existant ; liens vers méthode, exemple et uniquement guides publiés. |
-| /test-accessibilite-site-web | test accessibilité site web | Détecter une alternative absente et compléter manuellement ; #394. H1/title : test accessibilité site web, explicité à la réalisation. | Audit transversal existant ; liens vers méthode, exemple et uniquement guides publiés. |
+Les titres, descriptions, H1 et canonical vivent dans les pages, pas dans un second
+inventaire à synchroniser. Les traductions complètes sont déclarées dans
+[languageRoutes](../../apps/console-web/src/lib/i18n/routes.ts), puis reprises par
+les métadonnées et le sitemap. Voir le [contrat anglais](english-public-guides.md)
+et les [pages d'acquisition](acquisition-page-contract.md). Aucun hreflang vers un
+texte non traduit, une route absente ou une redirection vers l'accueil.
 
-Les quatre routes sont confirmées. EN uniquement après traduction complète avec H1/title et mots-clés naturels : website speed test, on-page technical SEO analysis, security header check, automated accessibility check. Les guides LCP/CSP/HSTS #302–304 restent hors de ce lot et ne seront liés qu’après publication. À propos, confidentialité et informations légales servent la confiance, sans cibler une acquisition générique.
+Vérifier le HTML initial FR/EN (title, description, canonical, alternates, OG et
+Twitter), puis la réciprocité des langues, le sitemap et robots.txt. Les anciennes
+copies du HTML de la home et matrices JSON sont des résultats datés dans Git ; les
+nouveaux relevés vont dans les artefacts de recette.
 
-## Confrontation et suivi
+## Suivi
 
-Recherche exploratoire du 10 octobre 2026 : « audit site web gratuit sans compte » fait remonter des pages outil, notamment [RankProof](https://rankproof.eu/fr/tools/seo-website-audit) et [WebAnalyzer](https://webanalyzer.dev/fr). Leur propre présentation confirme une réponse orientée utilisation ; cela motive la home comme outil. Aucun rang précis ni performance de concurrent inféré. Une recherche multi-thèmes ne donne pas une segmentation suffisamment fiable : les routes spécialisées restent des hypothèses à valider.
-
-À réception de Search Console : exporter page canonique, pays/langue, requête, période 28 jours et précédente, clics, impressions, CTR, position moyenne et effectifs ; distinguer marque/non-marque, ne pas additionner moyennes sans pondération. Vérifier les groupes de requêtes, cannibalisation et snippets avant toute fusion. Suivre le passage au formulaire via #42 seulement si la collecte est qualifiée. Conserver FR/EN et canonical actuels ; aucune redirection décidée sans données.
+À réception de Search Console, relever par page canonique, pays/langue et requête :
+période de 28 jours et précédente, impressions, clics, CTR, position moyenne et
+effectifs. Distinguer marque/non-marque ; ne pas additionner des moyennes sans
+pondération. Examiner cannibalisation et snippets avant fusion ou redirection.
+Suivre le formulaire avec la [mesure interne](../product/product-analytics.md)
+uniquement si activée et qualifiée. Voir aussi le [suivi checklist](checklist-audit-site-web.md).

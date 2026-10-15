@@ -35,7 +35,32 @@ abstract class MariaDbReportFixture {
         source.setUser(System.getenv("ARGOS_TEST_CREDENTIALS_USER"));
         source.setPassword(System.getenv("ARGOS_TEST_CREDENTIALS_PASSWORD"));
     }
-    @BeforeEach void migrateHistoricalRows() throws Exception { migrateHistoricalRowsTo(null); }
+    @BeforeEach void migrateHistoricalRows() throws Exception {
+        // Runtime tests seed AFTER every current migration, including the one-time V27 reset.
+        var latest = Flyway.configure().dataSource(source).cleanDisabled(false).load();
+        latest.clean(); latest.migrate();
+        sql("INSERT INTO ARG_DOMAIN(id,hostname) VALUES(1,'example.com')");
+        sql("INSERT INTO ARG_AUDIT(id,input_url,normalized_url,domain_id) VALUES(1,'https://example.com','https://example.com',1)");
+        sql("INSERT INTO ARG_AUDIT_RUN(id,audit_id,status,report_token_hash) VALUES"
+                + "(1,1,'COMPLETED',UNHEX(SHA2('synthetic-existing',256))),"
+                + "(2,1,'QUEUED',UNHEX(SHA2('synthetic-pending',256))),"
+                + "(3,1,'COMPLETED',UNHEX(SHA2('synthetic-expired',256))),"
+                + "(4,1,'COMPLETED',UNHEX(SHA2('synthetic-before-v5',256))),"
+                + "(5,1,'FAILED',NULL)");
+        sql("UPDATE ARG_AUDIT_RUN SET last_error='LEGACY_REPORT_CREDENTIAL_UNAVAILABLE',finished_at=NOW(3) WHERE id=5");
+        sql("UPDATE ARG_AUDIT_ADMISSION SET pending=1 WHERE id=1");
+        for (long id : new long[]{1,3,4}) {
+            String token = id == 1 ? "synthetic-existing" : id == 3 ? "synthetic-expired" : "synthetic-before-v5";
+            try (var c=source.getConnection(); var s=c.prepareStatement(
+                    "INSERT INTO ARG_AUDIT_REPORT(id,audit_id,run_id,token_hash,domain,target_url,report_json,expires_at,diagnostic_json,measurement_completeness) VALUES(?,1,?,?,'example.com','https://example.com','{\"domain\":\"example.com\"}',?,?,'UNKNOWN')")) {
+                s.setLong(1,id); s.setLong(2,id); s.setBytes(3,tokens.sha256(token));
+                s.setTimestamp(4,id == 3 ? Timestamp.from(Instant.EPOCH) : null);
+                s.setString(5,mapper.writeValueAsString(com.dokor.argos.services.connected.summary.DiagnosticProjection.unknown()));
+                s.executeUpdate();
+            }
+        }
+        initializeServices();
+    }
     protected void migrateHistoricalRowsTo(String target) throws Exception {
         var baseline = Flyway.configure().dataSource(source).cleanDisabled(false).target(MigrationVersion.fromVersion("6")).load();
         baseline.clean(); baseline.migrate();
@@ -46,6 +71,9 @@ abstract class MariaDbReportFixture {
         var migration = Flyway.configure().dataSource(source);
         if(target != null) migration.target(MigrationVersion.fromVersion(target));
         migration.load().migrate();
+        initializeServices();
+    }
+    private void initializeServices() throws Exception {
         var transactions = new TransactionManagerQuerydsl(source,new Configuration(MySQLTemplates.DEFAULT));
         reports = new AuditReportDao(transactions);
         runs = new AuditRunService(new AuditRunDao(transactions),tokens,mapper);

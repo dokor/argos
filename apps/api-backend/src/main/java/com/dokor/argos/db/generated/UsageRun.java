@@ -11,6 +11,7 @@ public class UsageRun extends CrudEntityQuerydsl {
     @Column("period") private String period;
     @Column("state") private String state;
     @Column("created_at") private Instant createdAt;
+    @Column("released_at") private Instant releasedAt;
     @Column("counted_at") private Instant countedAt;
     @Override public String toString() { return "UsageRun#"+id; }
 }

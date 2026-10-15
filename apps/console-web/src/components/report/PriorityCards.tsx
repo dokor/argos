@@ -5,7 +5,9 @@ import { useLang } from "@/lib/i18n/LangContext";
 import { SEVERITY_COLORS } from "./reportColors";
 import type { ReportModel } from "./reportModel";
 import s from "./PriorityCards.module.scss";
-import { cleanEvidence, findingContent } from "./findingCatalogue";
+import { cleanEvidence, findingContent, findingEditorial } from "./findingCatalogue";
+import { isAggregateFinding } from "./findingPresentation";
+import { interpretationCopy } from "./reportInterpretation";
 
 type SevKey = "critical" | "important" | "opportunity";
 
@@ -18,7 +20,7 @@ export default function PriorityCards({ priorities, model, onSelectFinding, limi
     <section className={s.section}>
       <div className={s.sectionHead}>
         <h2 className={s.sectionTitle}>{tp.title}</h2>
-        <p className={s.sectionDesc}>{tp.desc}</p>
+        <p className={s.sectionDesc}>{interpretationCopy[lang].actions}</p>
       </div>
 
       {list.length === 0 ? (
@@ -54,13 +56,16 @@ export default function PriorityCards({ priorities, model, onSelectFinding, limi
                   )}
                 </div>
 
-                <h3 className={s.cardTitle}>{content?.recommendation ?? cleanEvidence(p.title)}</h3>
-                <p className={s.cardImpact}>{content?.impact ?? cleanEvidence(p.impact)}</p>
-                <div className={s.metadata}>
+                <h3 className={s.cardTitle}>{content?.title ?? findingEditorial(p.findingKey, lang).title}</h3>
+                <p className={s.cardImpact}>{content?.impact ?? findingEditorial(p.findingKey, lang).impact}</p>
+                {content && <><p>{content.qualification}</p><p>{content.recommendation}</p></>}
+                {isAggregateFinding(p.findingKey) && <p>{lang === "fr" ? "Cette note d’outil n’est pas une correction à chiffrer. Examiner les constats détaillés du même outil ci-dessous ; sans eux, demander le diagnostic source." : "This tool score is not an estimable correction. Inspect the detailed findings from the same tool below; without them, request the source diagnosis."}</p>}
+                <details className={s.explanation}><summary>{lang === "fr" ? "Sources et confiance de mesure" : "Sources and measurement confidence"}</summary><div className={s.metadata}>
                   <p>{domain ? (tp.domains as Record<string, string>)[domain] ?? tp.unknownDomain : tp.unknownDomain}</p>
+                  <p>{lang === "fr" ? "Titre source (langue d’origine)" : "Source title (original language)"}: {cleanEvidence(p.title)}</p>
                   <p>{tp.sourcesLabel} : {sources.map(cleanEvidence).join(", ") || "—"}</p>
                   <p>{tp.confidenceLabel} {p.confidence && Object.hasOwn(tp.confidence, p.confidence) ? tp.confidence[p.confidence] : tp.confidence.UNKNOWN}</p>
-                </div>
+                </div></details>
                 {p.rankReason && (
                   <details className={s.explanation}>
                     <summary>{tp.rankingDetails}</summary>
@@ -72,16 +77,15 @@ export default function PriorityCards({ priorities, model, onSelectFinding, limi
                   </details>
                 )}
                 {grouped && <p>{tp.groupedLabel} {resolution ? resolution.findings.length : new Set([p.findingKey, ...(p.relatedFindingKeys ?? [])].filter(Boolean)).size}</p>}
-                <p className={s.modelLimit}>{tp.confirmNext}</p>
                 {resolution && (
                   <div className={s.findingLinks}>
-                    {resolution.findings.map(finding => (
-                      <a key={finding.key} href={`#${finding.anchor}`} onClick={event => {
+                    {[...resolution.findings, ...(isAggregateFinding(p.findingKey) ? model?.findings.filter(f => !isAggregateFinding(f.key) && f.domain === domain && f.key.startsWith(p.findingKey!.split(".")[0] + ".") && !resolution.findings.some(r => r.key === f.key)) ?? [] : [])].map(finding => (
+                      <a key={finding.key} href={`#${finding.anchor}`} aria-label={`${tp.seeFinding}: ${findingContent(finding.issue, lang).title}`} onClick={event => {
                         if (onSelectFinding) {
                           event.preventDefault();
                           onSelectFinding(finding.key);
                         }
-                      }}>{tp.seeFinding}: {cleanEvidence(finding.issue.title)}</a>
+                      }}>{tp.seeFinding}</a>
                     ))}
                     {resolution.status !== "resolved" && <p>{resolution.status === "partial" ? tp.partialFindings : tp.missingFinding}</p>}
                   </div>

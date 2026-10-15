@@ -27,7 +27,9 @@ class LighthouseModuleAnalyzerTest {
             {"categories":{"performance":{"score":0.5,"auditRefs":[
                 {"id":"largest-contentful-paint","weight":10}]}},
              "audits":{"largest-contentful-paint":{"score":0.02,"scoreDisplayMode":"numeric",
-                 "title":"LCP","numericValue":4800,"numericUnit":"millisecond"}}}
+                 "title":"LCP","numericValue":4800,"numericUnit":"millisecond",
+                 "observedEvidence":{"version":"observed-evidence-v1","source":"lighthouse","items":[
+                   {"kind":"element","nodePath":"1,HTML,1,BODY,1,IMG"}],"inspected":2}}}}
             """));
         var result = new LighthouseModuleAnalyzer(client).analyze(ctx(), LoggerFactory.getLogger("test"));
         var audit = result.checks().stream().filter(c -> c.key().equals("lighthouse.audit.largest-contentful-paint"))
@@ -35,6 +37,8 @@ class LighthouseModuleAnalyzerTest {
         assertEquals(.02, audit.value());
         assertEquals(4800.0, audit.details().get("numericValue"));
         assertEquals("millisecond", audit.details().get("numericUnit"));
+        var observed = (com.dokor.argos.services.analysis.model.ObservedEvidence) audit.details().get("observed");
+        assertEquals("1,HTML,1,BODY,1,IMG", observed.items().getFirst().nodePath());
     }
 
     @Test

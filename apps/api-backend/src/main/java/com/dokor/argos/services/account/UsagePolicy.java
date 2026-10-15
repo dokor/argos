@@ -24,7 +24,7 @@ public class UsagePolicy {
                 var item = offers.getConfig(offer);
                 if (item.hasPath("monthly-limit")) {
                     long limit = item.getLong("monthly-limit");
-                    if (limit < 0 || item.getDouble("monthly-limit") != limit) throw new IllegalArgumentException("Invalid usage limit");
+                    if (limit > 9_007_199_254_740_991L || limit < 0 || item.getDouble("monthly-limit") != limit) throw new IllegalArgumentException("Invalid usage limit");
                     values.put(offer, limit);
                 }
             }

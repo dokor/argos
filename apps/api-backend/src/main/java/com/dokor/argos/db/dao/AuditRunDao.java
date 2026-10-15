@@ -35,6 +35,51 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
     }
     public com.dokor.argos.services.account.UsageService usage() { return usage; }
 
+    /** Admission and terminal publication both acquire queue before usage. */
+    public void lockAdmission(Connection c) {
+        try(var s=c.prepareStatement("SELECT id FROM ARG_AUDIT_ADMISSION WHERE id=1 FOR UPDATE");var r=s.executeQuery()) {
+            if(!r.next())throw new IllegalStateException("Audit admission missing");
+        }catch(java.sql.SQLException e){throw new IllegalStateException("Audit admission unavailable",e);}
+    }
+
+    /** Metadata is committed with the report; retention does not erase a batch outcome. */
+    public void recordBatchCompleteness(long runId,String completeness,Connection c) {
+        var page=com.dokor.argos.db.generated.QDomainBatchPage.table;
+        transactionManager.update(page,c).set(page.completeness,completeness).where(page.runId.eq(runId)).execute();
+    }
+
+    public enum Recovery { REQUEUED, FAILED, CANCELED, STALE }
+    /** The observation is fenced, including when two reapers overlap a fresh worker claim. */
+    public Recovery recoverStuck(AuditRun observed,int maxAttempts,Instant now,String initialModules) {
+        return transactionManager.executeAndReturn(c->{
+            var run=lockForPublication(observed.getId(),c).orElse(null);
+            if(run==null||observed.getClaimToken()==null||!"RUNNING".equals(run.getStatus())
+                ||!java.util.Objects.equals(run.getClaimToken(),observed.getClaimToken())
+                ||!java.util.Objects.equals(run.getStartedAt(),observed.getStartedAt()))return Recovery.STALE;
+            if(Boolean.TRUE.equals(run.getCancelRequested())){finishCanceled(run,now,c);return Recovery.CANCELED;}
+            if(run.getAttemptCount()!=null&&run.getAttemptCount()>=maxAttempts){
+                transactionManager.update(RUN,c).set(RUN.status,"FAILED").set(RUN.finishedAt,now).set(RUN.lastError,"AUDIT_WORKER_LOST").where(RUN.id.eq(run.getId())).execute();
+                usage.release(run,c);return Recovery.FAILED;
+            }
+            transactionManager.update(RUN,c).set(RUN.status,"QUEUED").setNull(RUN.claimToken).setNull(RUN.startedAt)
+                .setNull(RUN.finishedAt).setNull(RUN.lastError).set(RUN.moduleStatuses,initialModules).where(RUN.id.eq(run.getId())).execute();
+            return Recovery.REQUEUED;
+        });
+    }
+
+    /** Global durable admission, including anonymous and personal runs, before inserting the run. */
+    public AuditRun saveQueued(AuditRun run, Connection connection) {
+        if (connection == null) return usage.transaction(c -> saveQueued(run, c));
+        try (var statement = connection.prepareStatement(
+            "UPDATE ARG_AUDIT_ADMISSION SET pending=pending+1 WHERE id=1 AND pending<100")) {
+            if (statement.executeUpdate() != 1) throw new jakarta.ws.rs.WebApplicationException(
+                jakarta.ws.rs.core.Response.status(429).type("application/json")
+                    .header("Retry-After", "60").header("Cache-Control", "no-store")
+                    .entity(java.util.Map.of("error", "Audit queue full")).build());
+            return save(run, connection);
+        } catch (java.sql.SQLException error) { throw new IllegalStateException("Audit admission unavailable", error); }
+    }
+
     public Optional<AuditRun> findNextQueuedRun() {
         return Optional.ofNullable(
             transactionManager.selectQuery()
@@ -114,6 +159,22 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
             .from(RUN).where(RUN.id.eq(runId)).forUpdate().fetchOne());
     }
 
+    /** Caller authenticates the owner and holds its transaction; lock order: run -> usage. */
+    public boolean requestCancellation(long runId,long owner,Connection c,Instant now) {
+        var run=lockForPublication(runId,c).orElseThrow(com.dokor.argos.services.account.AccountError::missing);
+        if(!java.util.Objects.equals(run.getOwnerUserId(),owner)) throw com.dokor.argos.services.account.AccountError.missing();
+        if(!List.of("QUEUED","RUNNING").contains(run.getStatus())) return false;
+        transactionManager.update(RUN,c).set(RUN.cancelRequested,true).where(RUN.id.eq(runId)).execute();
+        run.setCancelRequested(true);
+        if("QUEUED".equals(run.getStatus())) finishCanceled(run,now,c);
+        return true;
+    }
+    public void finishCanceled(AuditRun run,Instant now,Connection c) {
+        long changed=transactionManager.update(RUN,c).set(RUN.status,"CANCELED").set(RUN.finishedAt,now)
+            .set(RUN.lastError,"CANCELED").where(RUN.id.eq(run.getId()),RUN.status.in("QUEUED","RUNNING")).execute();
+        if(changed==1) usage.release(run,c);
+    }
+
     /** Must execute in the transaction that inserts the report, with the same connection. */
     public boolean markCompleted(long runId, String claimToken, Instant finishedAt, String resultJson, Connection connection) {
         return transactionManager.update(RUN, connection)
@@ -143,6 +204,7 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
         return transactionManager.executeAndReturn(c -> {
             var run=lockForPublication(runId,c).orElse(null);
             if(run==null || !"RUNNING".equals(run.getStatus()) || claimToken!=null && !claimToken.equals(run.getClaimToken())) return false;
+            if(Boolean.TRUE.equals(run.getCancelRequested())) {finishCanceled(run,finishedAt,c);return true;}
             long updated=transactionManager.update(RUN,c)
             .set(RUN.status, AuditRunStatus.FAILED.name())
             .set(RUN.finishedAt, finishedAt)
@@ -192,19 +254,14 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
      * @return true si le run a bien été remis en QUEUED, false sinon
      */
     public boolean requeueStuckRun(long runId) {
-        long updated = transactionManager.update(RUN)
-            .set(RUN.status, AuditRunStatus.QUEUED.name())
-            .setNull(RUN.claimToken)
-            .setNull(RUN.startedAt)
-            .setNull(RUN.finishedAt)
-            .setNull(RUN.lastError)
-            .where(
-                RUN.id.eq(runId),
-                RUN.status.eq(AuditRunStatus.RUNNING.name())
-            )
-            .execute();
-
-        return updated == 1;
+        return transactionManager.executeAndReturn(c->{
+            var run=lockForPublication(runId,c).orElse(null);
+            if(run==null || !"RUNNING".equals(run.getStatus()))return false;
+            if(Boolean.TRUE.equals(run.getCancelRequested())){finishCanceled(run,Instant.now(),c);return false;}
+            return transactionManager.update(RUN,c).set(RUN.status,"QUEUED").setNull(RUN.claimToken)
+                .setNull(RUN.startedAt).setNull(RUN.finishedAt).setNull(RUN.lastError)
+                .where(RUN.id.eq(runId),RUN.status.eq("RUNNING")).execute()==1;
+        });
     }
 
     /**
@@ -253,6 +310,10 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
     /** One atomic UPDATE, without loading the run/result_json or overwriting another module. */
     public boolean updateModuleStatus(long runId, String moduleId, String status,
                                       String initialStatusesJson, boolean onlyRunning) {
+        return updateModuleStatus(runId,moduleId,status,initialStatusesJson,onlyRunning,null);
+    }
+    /** An old worker cannot overwrite progress belonging to a new claim. */
+    public boolean updateModuleStatus(long runId,String moduleId,String status,String initialStatusesJson,boolean onlyRunning,String expectedClaim) {
         StringExpression document = Expressions.stringTemplate(
             "CASE WHEN JSON_VALID({0}) THEN CASE WHEN JSON_TYPE({0}) = 'ARRAY' AND JSON_LENGTH({0}) > 0 "
                 + "THEN {0} ELSE {1} END ELSE {1} END", RUN.moduleStatuses, initialStatusesJson);
@@ -262,10 +323,10 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
         StringExpression current = Expressions.stringTemplate("JSON_UNQUOTE(JSON_EXTRACT({0}, {1}))", document, path);
         var allowed = onlyRunning ? current.eq("RUNNING") : "RUNNING".equals(status)
             ? current.eq("PENDING") : current.in("PENDING", "RUNNING");
-        var runState = onlyRunning ? RUN.status.in("RUNNING", "FAILED") : RUN.status.eq("RUNNING");
+        var runState = onlyRunning ? RUN.status.in("RUNNING", "FAILED", "CANCELED") : RUN.status.eq("RUNNING");
         return transactionManager.update(RUN)
             .set(RUN.moduleStatuses, Expressions.stringTemplate("JSON_SET({0}, {1}, {2})", document, path, status))
-            .where(RUN.id.eq(runId), runState, path.isNotNull(), allowed)
+            .where(RUN.id.eq(runId), runState, path.isNotNull(), allowed, expectedClaim==null?null:RUN.claimToken.eq(expectedClaim))
             .execute() == 1;
     }
 }

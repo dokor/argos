@@ -68,6 +68,8 @@ public class AuditProcessorService {
     private final AccessibilityComplianceRiskService accessibilityRiskService;
     private RemoteModuleExecutor remoteModuleExecutor;
     private AuditModuleExecutor auditModuleExecutor;
+    private CollectorDiagnostics collectorDiagnostics;
+    @Inject void configureCollectorDiagnostics(CollectorDiagnostics diagnostics) { collectorDiagnostics = diagnostics; }
 
     @Inject void configureAuditModuleExecutor(AuditModuleExecutor executor) { auditModuleExecutor=executor; }
 
@@ -129,7 +131,12 @@ public class AuditProcessorService {
             new AccessibilityComplianceRiskService());
     }
 
-    public void process(long runId) {
+    private com.dokor.argos.services.connected.ConnectedProfiles executionProfiles;
+    @Inject public void configureExecutionProfiles(com.dokor.argos.services.connected.ConnectedProfiles profiles){this.executionProfiles=profiles;}
+
+    public void process(long runId) { process(runId,null); }
+
+    public void process(long runId,String expectedClaim) {
         // Direct-constructor callers (unit fixtures) own a short-lived pool; Guice injects the shared pool.
         boolean ownedExecutor = remoteModuleExecutor == null;
         RemoteModuleExecutor remote = ownedExecutor ? new RemoteModuleExecutor(java.time.Duration.ofMinutes(2)) : remoteModuleExecutor;
@@ -142,7 +149,7 @@ public class AuditProcessorService {
         long auditStart = System.currentTimeMillis();
         logger.info("audit_start runId={}", runId);
         try (var scope=deadline.child(local.collectionBudget()).enter()) {
-            processInternal(runId, remote);
+            processInternal(runId, remote, expectedClaim);
         } finally {
             if (ownedExecutor) remote.close();
             if (ownedLocal) { local.close(); auditModuleExecutor=null; }
@@ -152,7 +159,7 @@ public class AuditProcessorService {
         }
     }
 
-    private void processInternal(long runId, RemoteModuleExecutor remote) {
+    private void processInternal(long runId, RemoteModuleExecutor remote, String expectedClaim) {
         var runOpt = auditRunService.getRun(runId);
         if (runOpt.isEmpty()) {
             logger.warn("Run not found runId={}", runId);
@@ -160,6 +167,13 @@ public class AuditProcessorService {
         }
 
         var run = runOpt.get();
+        if(expectedClaim!=null&&(!expectedClaim.equals(run.getClaimToken())||!"RUNNING".equals(run.getStatus())))return;
+        if(executionProfiles!=null&&run.getProfileSnapshot()!=null){
+            try {
+                var requested=objectMapper.readValue(run.getProfileSnapshot(),com.dokor.argos.services.connected.contract.ConnectedContracts.ProfileSnapshot.class);
+                if(!requested.equals(executionProfiles.snapshot(requested.profileId())))throw new IllegalArgumentException();
+            }catch(Exception changed){auditRunService.fail(runId,"ANALYSIS_PROFILE_CHANGED",run.getClaimToken());return;}
+        }
 
         Audit audit = auditDao.findById(run.getAuditId());
         if (audit == null) {
@@ -174,10 +188,10 @@ public class AuditProcessorService {
         if (normalizedUrl == null || normalizedUrl.isBlank()) {
             try {
                 normalizedUrl = urlNormalizer.normalize(inputUrl);
-                logger.info("Normalized URL computed inputUrl={} normalizedUrl={}", inputUrl, normalizedUrl);
+                logger.info("Normalized URL computed inputUrl={} normalizedUrl={}", UrlNormalizer.sanitizeForLog(inputUrl), UrlNormalizer.sanitizeForLog(normalizedUrl));
             } catch (Exception e) {
                 auditRunService.fail(runId, "URL_NORMALIZATION_FAILED", run.getClaimToken());
-                logger.warn("Run failed (normalization) runId={} error={}", runId, e.getMessage(), e);
+                logger.warn("Run failed (normalization) runId={} error={}", runId, e.getClass().getSimpleName());
                 return;
             }
         }
@@ -199,7 +213,7 @@ public class AuditProcessorService {
                 throw new IllegalStateException("HTTP must be the first audit module");
             final AuditContext baseContext = context;
             AuditModuleResult httpModule = runModule(
-                runId, httpDefinition, moduleStatuses,
+                runId, run.getClaimToken(), httpDefinition, moduleStatuses,
                 () -> httpModuleAnalyzer.analyze(baseContext, logger));
 
             // Enrichir le contexte avec les données HTTP (finalUrl, headers, body…)
@@ -220,28 +234,28 @@ public class AuditProcessorService {
             AuditDeadline collectionDeadline=AuditDeadline.current();
             try (var observatory = remote.submit(AuditModule.OBSERVATORY.id(), () -> collectionDeadline.call(() -> withHttpSnapshot(snapshotUnavailable, () -> observatoryModuleAnalyzer.analyze(ctx, logger))));
                  var ssl = remote.submit(AuditModule.SSL.id(), () -> collectionDeadline.call(() -> withHttpSnapshot(snapshotUnavailable, () -> sslLabsModuleAnalyzer.analyze(ctx, logger))))) {
-                auditRunService.updateModuleStatus(runId, AuditModule.OBSERVATORY.id(), "RUNNING");
-                auditRunService.updateModuleStatus(runId, AuditModule.SSL.id(), "RUNNING");
+                auditRunService.updateModuleStatus(runId, AuditModule.OBSERVATORY.id(), "RUNNING", run.getClaimToken());
+                auditRunService.updateModuleStatus(runId, AuditModule.SSL.id(), "RUNNING", run.getClaimToken());
 
                 List<AuditModuleResult> allModules = new ArrayList<>(AuditModule.ordered().size());
                 allModules.add(httpModule);
                 for (AuditModule module : AuditModule.ordered().subList(1, AuditModule.ordered().size())) {
                     AuditModuleResult result = switch (module) {
                         case HTTP -> throw new IllegalStateException("HTTP already executed");
-                        case HTML -> runModule(runId, module, moduleStatuses,
+                        case HTML -> runModule(runId, run.getClaimToken(), module, moduleStatuses,
                             () -> withHttpSnapshot(snapshotUnavailable, () -> htmlModuleAnalyzer.analyze(ctx, logger)));
-                        case RUNTIME -> runModule(runId, module, moduleStatuses,
+                        case RUNTIME -> runModule(runId, run.getClaimToken(), module, moduleStatuses,
                             () -> withHttpSnapshot(snapshotUnavailable, () -> runtimeModuleAnalyzer.analyze(ctx, logger)));
-                        case LIGHTHOUSE -> enrichLighthouse(runModule(runId, module, moduleStatuses,
+                        case LIGHTHOUSE -> enrichLighthouse(runModule(runId, run.getClaimToken(), module, moduleStatuses,
                             () -> withHttpSnapshot(snapshotUnavailable, () -> lighthouseModuleAnalyzer.analyze(ctx, logger))), httpModule, ctx);
-                        case OBSERVATORY -> runModule(runId, module, moduleStatuses,
+                        case OBSERVATORY -> runModule(runId, run.getClaimToken(), module, moduleStatuses,
                             observatory::await, observatory.startedAtMillis(), true);
-                        case SSL -> runModule(runId, module, moduleStatuses,
+                        case SSL -> runModule(runId, run.getClaimToken(), module, moduleStatuses,
                             ssl::await, ssl.startedAtMillis(), true);
-                        case ZAP -> runModule(runId, module, moduleStatuses,
+                        case ZAP -> runModule(runId, run.getClaimToken(), module, moduleStatuses,
                             () -> withHttpSnapshot(snapshotUnavailable, () -> zapModuleAnalyzer.analyze(ctx, logger)));
                         // Only Tech has a 24h domain cache. Observatory and SSL still run for each audit.
-                        case TECH -> runModule(runId, module, moduleStatuses,
+                        case TECH -> runModule(runId, run.getClaimToken(), module, moduleStatuses,
                             () -> withHttpSnapshot(snapshotUnavailable, () -> domainAnalysisService.getOrRunTechAnalysis(ctx, logger)));
                     };
                     allModules.add(result);
@@ -306,7 +320,7 @@ public class AuditProcessorService {
                     score
                 );
 
-                String json = objectMapper.writeValueAsString(report);
+                String json = objectMapper.writeValueAsString(AuditOutputSanitizer.tree(report, objectMapper));
 
                 try (var publicationBudget=AuditDeadline.current().publication().enter()) {
                     reportPublishService.completeAndPublish(runId, audit, report, json, run.getClaimToken());
@@ -317,13 +331,15 @@ public class AuditProcessorService {
                     score.global().ratio()
                 );
             }
+        } catch (com.dokor.argos.services.domain.audit.RunCanceledException e) {
+            logger.info("Run canceled runId={}",runId);
         } catch (Exception e) {
             // Marque le(s) module(s) resté(s) en RUNNING comme FAILED pour que la
             // vue de progression n'affiche pas un spinner infini sur ce module.
             if (auditRunService.fail(runId, "AUDIT_PROCESSING_FAILED", run.getClaimToken())) {
                 auditRunService.failRunningModules(runId);
             }
-            logger.warn("Run failed runId={} error={}", runId, e.getMessage(), e);
+            logger.warn("Run failed runId={} error={}", runId, e.getClass().getSimpleName());
         }
     }
 
@@ -404,19 +420,19 @@ public class AuditProcessorService {
      * TIMEOUT / FAILED) et, en cas d'échec, un résultat "indisponible" (WARN, non
      * scorable) est substitué afin que le reste de l'analyse se poursuive.
      */
-    private AuditModuleResult runModule(long runId, AuditModule module,
+    private AuditModuleResult runModule(long runId, String claim, AuditModule module,
                                         Map<String, String> statuses, ModuleCall call) {
-        return runModule(runId, module, statuses, call, System.currentTimeMillis(), false);
+        return runModule(runId, claim, module, statuses, call, System.currentTimeMillis(), false);
     }
 
-    private AuditModuleResult runModule(long runId, AuditModule module,
+    private AuditModuleResult runModule(long runId, String claim, AuditModule module,
                                         Map<String, String> statuses, ModuleCall call, long start, boolean started) {
         String moduleId = module.id();
         String title = module.fallbackTitle();
         MDC.put("module", moduleId);
         if (!started) {
             logger.info("module_start module={} runId={}", moduleId, runId);
-            auditRunService.updateModuleStatus(runId, moduleId, "RUNNING");
+            auditRunService.updateModuleStatus(runId, moduleId, "RUNNING", claim);
         }
         try {
             // Remote work already has its bounded future. Read finished results even after
@@ -453,7 +469,9 @@ public class AuditProcessorService {
                     ? ModuleOutcome.PARTIAL : ModuleOutcome.COMPLETED;
             }
             statuses.put(moduleId, outcome.name());
-            auditRunService.updateModuleStatus(runId, moduleId, outcome.liveStatus());
+            auditRunService.updateModuleStatus(runId, moduleId, outcome.liveStatus(), claim);
+            if (collectorDiagnostics != null) collectorDiagnostics.record(moduleId, outcome == ModuleOutcome.COMPLETED,
+                outcome == ModuleOutcome.PARTIAL ? new CollectorFailure(CollectorFailure.Code.INCOMPLETE_MEASUREMENTS) : null);
             logger.info("module_completed module={} status={} durationMs={}",
                 moduleId, outcome, System.currentTimeMillis() - start);
             return res;
@@ -465,9 +483,10 @@ public class AuditProcessorService {
             ModuleOutcome outcome = isTimeout(e) ? ModuleOutcome.TIMEOUT
                 : e instanceof ModuleUnavailableException ? ModuleOutcome.UNAVAILABLE : ModuleOutcome.FAILED;
             statuses.put(moduleId, outcome.name());
-            auditRunService.updateModuleStatus(runId, moduleId, outcome.liveStatus());
-            logger.warn("module_failed module={} status={} durationMs={} error={}", moduleId,
-                outcome, System.currentTimeMillis() - start, e.getMessage(), e);
+            auditRunService.updateModuleStatus(runId, moduleId, outcome.liveStatus(), claim);
+            if (collectorDiagnostics != null) collectorDiagnostics.record(moduleId, false, e);
+            logger.warn("module_failed module={} status={} durationMs={} error={} failureCode={}", moduleId,
+                outcome, System.currentTimeMillis() - start, e.getClass().getSimpleName(), CollectorFailure.classify(e));
             return annotateWithSource(fallbackModule(moduleId, title, outcome, e));
         } finally {
             MDC.remove("module");
@@ -502,7 +521,7 @@ public class AuditProcessorService {
             AuditSeverity.MEDIUM,
             false, 0.0, List.of(moduleId),
             false,
-            Map.of("error", safeMsg(e), "reason", reason),
+            Map.of("error", safeMsg(e), "reason", reason, "failureCode", CollectorFailure.classify(e).name()),
             message,
             "Relancer l'analyse ; si le problème persiste, vérifier la disponibilité du service concerné."
         );
@@ -510,13 +529,14 @@ public class AuditProcessorService {
             moduleId,
             title,
             moduleId + "=unavailable(" + reason.toLowerCase(Locale.ROOT) + ")",
-            Map.of("available", false, "error", safeMsg(e), "reason", reason),
+            Map.of("available", false, "error", safeMsg(e), "reason", reason,
+                "failureCode", CollectorFailure.classify(e).name(), "measurementState", "UNAVAILABLE",
+                "measurementReason", CollectorFailure.classify(e).name()),
             List.of(check)
         );
     }
 
     private static String safeMsg(Throwable e) {
-        String m = e.getMessage();
-        return (m == null || m.isBlank()) ? e.getClass().getSimpleName() : m;
+        return e.getClass().getSimpleName();
     }
 }

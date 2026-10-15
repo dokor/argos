@@ -1,8 +1,0 @@
-@use '../styles/tokens' as t;
-.card { background: t.$surface; border: 1px solid t.$border; border-radius: 8px; padding: 20px; display: grid; grid-template-rows: auto auto 1fr; gap: 12px; min-width: 0; }
-.header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; min-height: 40px; }
-.label { font-size: 14px; font-weight: 600; color: t.$text-muted; line-height: 1.5; }
-.icon { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: t.$text-muted; background: t.$surface-2; }
-.value { font-size: 32px; font-weight: 650; color: t.$text; line-height: 1.2; font-variant-numeric: tabular-nums; }
-.description { font-size: 13px; color: t.$text-muted; line-height: 1.5; }
-@media (max-width: 600px) { .card { padding: 16px; } .header { min-height: 64px; } .icon { display: none; } }

@@ -7,6 +7,9 @@ function log(event, fields = {}) {
   console.log(JSON.stringify({ ts: new Date().toISOString(), service: SERVICE, event, ...fields }));
 }
 const app = createRuntimeApp({ chromium, log });
-app.listen(PORT, '0.0.0.0', () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   log('startup', { port: Number(PORT) });
 });
+server.requestTimeout = 10000;
+server.headersTimeout = 10000;
+server.maxConnections = 32;

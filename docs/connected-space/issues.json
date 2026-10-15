@@ -1,0 +1,265 @@
+{
+  "schemaVersion": 1,
+  "repository": "dokor/argos",
+  "epic": 550,
+  "items": [
+    {
+      "id": "F01",
+      "number": 551,
+      "title": "[Clarté] Fixer les contrats typés et le modèle connecté propre",
+      "existing": false,
+      "dependsOn": [],
+      "requirements": [
+        "ARC-01",
+        "ARC-02",
+        "ARC-05",
+        "QA-03",
+        "QA-16"
+      ],
+      "body": "issues/F01.md"
+    },
+    {
+      "id": "F02",
+      "number": 552,
+      "title": "[Clarté] Construire le shell et les composants Clarté",
+      "existing": false,
+      "dependsOn": [
+        "F01"
+      ],
+      "requirements": [
+        "UI-01",
+        "UI-13",
+        "QA-01",
+        "QA-02"
+      ],
+      "body": "issues/F02.md"
+    },
+    {
+      "id": "F03",
+      "number": 553,
+      "title": "[Clarté] Intégrer analyse URL et diagnostic technique privé",
+      "existing": false,
+      "dependsOn": [
+        "F01",
+        "F02",
+        "F05",
+        "F14"
+      ],
+      "requirements": [
+        "UI-03",
+        "UI-04",
+        "UI-05",
+        "FUN-03",
+        "QA-05",
+        "QA-18"
+      ],
+      "body": "issues/F03.md"
+    },
+    {
+      "id": "F04",
+      "number": 554,
+      "title": "[Clarté] Intégrer compte personnel, sécurité et connexions",
+      "existing": false,
+      "dependsOn": [
+        "F01",
+        "F02"
+      ],
+      "requirements": [
+        "UI-10",
+        "FUN-08",
+        "QA-12"
+      ],
+      "body": "issues/F04.md"
+    },
+    {
+      "id": "F05",
+      "number": 555,
+      "title": "[Clarté] Unifier quotas personnels et réservations atomiques",
+      "existing": false,
+      "dependsOn": [
+        "F01",
+        "F02"
+      ],
+      "requirements": [
+        "UI-11",
+        "FUN-07",
+        "QA-09",
+        "QA-11"
+      ],
+      "body": "issues/F05.md"
+    },
+    {
+      "id": "F06",
+      "number": 10,
+      "title": "[Clarté] Découverte bornée de domaine pour Clarté",
+      "existing": true,
+      "dependsOn": [
+        "F01"
+      ],
+      "requirements": [
+        "FUN-06",
+        "ARC-04",
+        "QA-08"
+      ],
+      "body": "issues/F06.md"
+    },
+    {
+      "id": "F07",
+      "number": 12,
+      "title": "[Clarté] Orchestrer les lots de pages avec reprise durable",
+      "existing": true,
+      "dependsOn": [
+        "F01",
+        "F05",
+        "F06"
+      ],
+      "requirements": [
+        "FUN-07",
+        "ARC-03",
+        "QA-09",
+        "QA-10",
+        "QA-11"
+      ],
+      "body": "issues/F07.md"
+    },
+    {
+      "id": "F08",
+      "number": 556,
+      "title": "[Clarté] Produire les synthèses serveur des domaines",
+      "existing": false,
+      "dependsOn": [
+        "F01",
+        "F07"
+      ],
+      "requirements": [
+        "FUN-04",
+        "FUN-05",
+        "QA-06",
+        "QA-07",
+        "QA-17"
+      ],
+      "body": "issues/F08.md"
+    },
+    {
+      "id": "F09",
+      "number": 557,
+      "title": "[Clarté] Intégrer domaines, tunnel et détail de chaque page",
+      "existing": false,
+      "dependsOn": [
+        "F02",
+        "F03",
+        "F06",
+        "F07",
+        "F08"
+      ],
+      "requirements": [
+        "UI-06",
+        "UI-07",
+        "UI-08",
+        "UI-09",
+        "QA-01",
+        "QA-07",
+        "QA-14"
+      ],
+      "body": "issues/F09.md"
+    },
+    {
+      "id": "F10",
+      "number": 558,
+      "title": "[Clarté] Brancher dashboard et inventaire sur des KPI cohérents",
+      "existing": false,
+      "dependsOn": [
+        "F02",
+        "F03",
+        "F05",
+        "F08"
+      ],
+      "requirements": [
+        "UI-02",
+        "UI-04",
+        "FUN-01",
+        "FUN-02",
+        "QA-04",
+        "QA-17"
+      ],
+      "body": "issues/F10.md"
+    },
+    {
+      "id": "F11",
+      "number": 559,
+      "title": "[Clarté] Refaire administration des comptes et quotas",
+      "existing": false,
+      "dependsOn": [
+        "F01",
+        "F02",
+        "F04",
+        "F05"
+      ],
+      "requirements": [
+        "UI-12",
+        "FUN-08",
+        "QA-03",
+        "QA-13"
+      ],
+      "body": "issues/F11.md"
+    },
+    {
+      "id": "F12",
+      "number": 516,
+      "title": "[Clarté] Retirer l’ancien espace connecté sans coexistence",
+      "existing": true,
+      "dependsOn": [
+        "F03",
+        "F04",
+        "F09",
+        "F10",
+        "F11"
+      ],
+      "requirements": [
+        "ARC-05",
+        "QA-15",
+        "QA-16"
+      ],
+      "body": "issues/F12.md"
+    },
+    {
+      "id": "F13",
+      "number": 560,
+      "title": "[Clarté] Recetter Clarté de bout en bout et préparer la mise en service",
+      "existing": false,
+      "dependsOn": [
+        "F09",
+        "F10",
+        "F11",
+        "F12",
+        "F14"
+      ],
+      "requirements": [
+        "QA-01",
+        "QA-02",
+        "QA-03",
+        "QA-09",
+        "QA-10",
+        "QA-14",
+        "QA-15",
+        "QA-16",
+        "QA-17",
+        "QA-18"
+      ],
+      "body": "issues/F13.md"
+    },
+    {
+      "id": "F14",
+      "number": 538,
+      "title": "[Clarté] Collecter les preuves réelles nécessaires au diagnostic Clarté",
+      "existing": true,
+      "dependsOn": [],
+      "requirements": [
+        "QA-18",
+        "UI-05",
+        "FUN-05"
+      ],
+      "body": "issues/F14.md"
+    }
+  ]
+}

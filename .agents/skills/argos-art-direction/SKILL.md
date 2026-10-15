@@ -1,41 +1,52 @@
 ---
 name: argos-art-direction
-description: Concevoir ou améliorer l’UI des pages Argos avec une direction artistique sobre, éditoriale et centrée sur les données. Utiliser pour les changements visuels du frontend, pas pour les modifications backend seules.
+description: "Concevoir ou améliorer une page ou un composant Argos : parcours, hiérarchie, états et composition dans le système visuel existant. Utiliser pour les changements UI/UX du frontend, pas pour le backend seul ni une simple recherche documentaire."
 ---
 
 # Direction artistique Argos
 
-Argos est un outil de diagnostic : le visiteur doit comprendre ce qui a été mesuré, ce qui mérite son attention et comment agir. Donner à chaque écran une composition intentionnelle, plutôt qu’une collection de cartes interchangeables.
+Argos aide à comprendre ce qui a été mesuré, ce qui mérite une intervention et comment agir. Adapter la composition à cette tâche et au niveau de lecture de l'écran.
 
-## Parti pris
+## Cadrer avant de coder
 
-- Utiliser des surfaces neutres, une typographie nette et une seule couleur de marque indigo. Réserver rouge, ambre et vert aux statuts et mesures, accompagnés de texte.
-- Favoriser les séparateurs, les listes et l’espace pour organiser l’information. Garder les cartes pour des unités autonomes ou des choix cliquables. Éviter les panneaux imbriqués, les ombres répétées, les fonds à pois et les dégradés sans fonction.
-- Aligner à gauche les contenus explicatifs. Limiter les paragraphes à environ 65–75 caractères par ligne. Créer une hiérarchie perceptible entre titre, résultat, action et métadonnées.
-- Réutiliser la police du document ; chiffres tabulaires pour les scores et compteurs. Les textes de travail doivent rester lisibles sur mobile ; ne pas employer une taille de légende pour une recommandation.
-- Préférer des textes précis et des symboles sobres aux slogans génériques et aux emojis décoratifs.
+- Lire les composants concernés, les tokens et les styles globaux. Vérifier la stack dans le `package.json` courant ; les versions mentionnées dans les documents peuvent être anciennes.
+- Examiner le rendu existant avant une refonte. Pour un défaut local, reproduire le défaut et identifier le composant partagé responsable avant de modifier les styles.
+- Formuler un bref contrat dans la mise à jour de travail : qui utilise cet écran, quelle décision ou action il doit permettre, quel contenu doit dominer, quels états changent et comment le résultat sera vérifié. Déduire ces éléments du contexte disponible ; ne poser une question que si une information manquante change réellement la solution.
+- Distinguer les surfaces : l'accueil explique l'audit et permet de le lancer ; le rapport guide une décision ; l'administration facilite un travail répété. Une même grille de cartes ne répond pas nécessairement aux trois besoins.
+- Pour un nouveau parcours, prévoir l'entrée, l'action, le résultat et la reprise après erreur. Pour une retouche de bouton, une phrase suffit : ne pas imposer une phase de conception complète.
 
-## Cohérence des composants
+## Choisir une référence et réutiliser
 
-- Dans un même groupe d’actions, les CTA voisins ont la même hauteur, la même typographie, les mêmes espacements verticaux et des icônes alignées. La couleur et le traitement de bordure expriment la priorité ; une action secondaire ne doit pas être plus petite par accident. Partager la géométrie via `apps/console-web/src/styles/_controls.scss`, plutôt que répéter des valeurs dans chaque bouton.
-- Aligner les champs et leur bouton lorsqu’ils partagent une ligne ; garder des zones tactiles d’au moins 44 px. Autoriser un empilement sur mobile sans tronquer les libellés ni imposer une hauteur qui coupe un texte sur deux lignes.
-- Conserver le rythme des espacements, les rayons et les bordures entre composants comparables. Vérifier les bords communs, les alignements de texte et les dimensions des icônes, pas seulement la palette.
-- Les états chargement, succès et erreur ne doivent pas déplacer les CTA voisins. Réserver une place aux icônes et placer les messages hors du bouton ; garder un focus visible sans masquer le contenu.
-- Vérifier la graisse réellement rendue des titres : le reset global neutralise les styles natifs des titres et des listes. Définir explicitement la hiérarchie dans les modules (`editorial.headings` pour les ressources) et restaurer les puces ou la numérotation des listes de prose.
-- Aligner les bords extérieurs du contenu avec les gouttières de navigation ; ne pas ajouter une seconde marge mobile à une section déjà contenue dans une grille. Réserver une seule séparation entre deux sections et contrôler les cartes aux largeurs intermédiaires, où un score peut repousser un libellé.
-- Sur les lignes de constats, donner au titre une largeur lisible : les badges et chevrons passent sur une ligne distincte quand ils compriment le texte. Un écran sans débordement peut néanmoins avoir des mots coupés presque lettre par lettre ; vérifier la capture, pas seulement `scrollWidth`.
-- Adapter les marges d’ancrage à la hauteur réellement rendue des en-têtes fixes, y compris leurs deux lignes sur mobile. Les introductions publiques partagent `editorial.anchors`.
+Lire [les repères Argos](references/patterns.md) pour choisir un composant ou une composition. Ils désignent des points de réutilisation, pas des écrans certifiés sans défaut.
 
-## Mise en pratique
+Si l'utilisateur fournit une capture ou une maquette, relever sa hiérarchie, ses proportions, ses états et ses contraintes responsive ; comparer ensuite le rendu aux mêmes dimensions. Une référence externe apporte des principes, pas une nouvelle identité imposée à Argos. Si Figma est disponible et demandé, récupérer le contexte et la capture du même nœud ; traduire le résultat en SCSS Modules et composants existants. Une maquette inaccessible reste une limite à signaler, pas une invitation à inventer ses détails.
 
-Lire les composants concernés, `apps/console-web/src/styles/_tokens.scss` et `apps/console-web/src/app/globals.css`. Examiner le rendu avant une refonte. Formuler un bref parti pris pour l’écran puis implémenter dans les SCSS Modules existants. Les pages de ressources utilisent le mixin `styles/_editorial.scss` pour harmoniser les introductions.
+## Parti pris Argos
 
-Conserver les tokens sémantiques `--argos-*`, les thèmes clair/sombre, l’i18n FR/EN et les liens localisés. Ne pas introduire Tailwind, shadcn ou Radix. Une demande de design n’autorise ni une modification du scoring ni une publication.
+- Surfaces neutres, police du document, indigo de marque ; rouge, ambre et vert pour les statuts accompagnés de texte. Conserver les tokens sémantiques `--argos-*`, les thèmes clair/sombre, FR/EN et les liens localisés.
+- Donner la priorité au contenu : titre, résultat, prochaine action puis métadonnées. Aligner les explications à gauche, viser environ 65–75 caractères par ligne et utiliser des chiffres tabulaires pour les mesures.
+- Préférer listes, séparateurs et espace aux panneaux imbriqués. Les cartes servent des unités autonomes ou des choix cliquables. Les décorations, animations et nouvelles polices doivent servir un besoin explicite.
+- Écrire des libellés qui décrivent l'action et garder le même vocabulaire jusqu'au retour de succès. Un état vide, une erreur et une absence de mesure demandent des explications différentes.
+- Implémenter dans les SCSS Modules existants. Ne pas introduire Tailwind, daisyUI, shadcn ou Radix pour appliquer une référence. Ne pas changer le scoring ou publier à l'occasion d'une retouche de design.
 
-## Rapport
+## Définir les états utiles
 
-Conserver les trois modes de lecture du rapport : vue d’ensemble, plan d’action et constats techniques. L’identité, le périmètre, le score et la couverture donnent le contexte commun ; les actions et leurs liens ouvrent le constat canonique correspondant. Prévoir des liens d’accès direct aux sections. Garder les informations de couverture et les scores indisponibles visibles ; ne pas présenter l’absence de mesure comme un zéro ou une réussite.
+Pour chaque interaction modifiée, identifier les états pertinents : repos, focus, traitement, succès, erreur, désactivation ou données absentes. Préciser ce qui déclenche la transition, ce que l'utilisateur voit et comment il peut continuer. Ne pas ajouter artificiellement tous ces états à un élément statique.
 
-Les compteurs proviennent des constats canoniques construits depuis `report.issues`, les actions de `summary.priorities`. Respecter le classement du modèle courant, avec trois actions dans la vue d’ensemble et au plus six dans le plan d’action. Les gains sont théoriques : garder leur libellé et leurs limites à proximité. Les détails peuvent être repliés, mais le titre et l’impact de l’action restent visibles.
+Réserver l'espace nécessaire aux retours de traitement, conserver les saisies après un échec quand le flux le permet, et éviter les confirmations qui déplacent les boutons. Une action désactivée doit avoir une raison compréhensible. L'information indispensable et les actions doivent rester accessibles sans survol.
 
-Valider la composition au moyen du skill `argos-visual-review` lorsqu’il est disponible, sinon avec une inspection équivalente du navigateur. Signaler les limites de vérification effectivement rencontrées.
+## Implémenter puis critiquer
+
+Faire une première passe fonctionnelle avec les contenus réels ou les fixtures contrôlées, puis examiner le rendu :
+
+1. La tâche principale et le prochain geste sont-ils identifiables ?
+2. Les groupes, alignements, tailles de texte et espacements rendent-ils la hiérarchie lisible ?
+3. Les états et le passage au mobile conservent-ils le sens, les contrôles et les informations de couverture ?
+
+Corriger le défaut observé de plus fort impact, puis vérifier à nouveau la zone et ses consommateurs si un style partagé a changé. Ne pas masquer un défaut de grille par `overflow-x: hidden`, une police minuscule ou une cascade d'overrides. Les détails de géométrie et les invariants des rapports figurent dans [les repères Argos](references/patterns.md).
+
+Terminer avec [argos-visual-review](../argos-visual-review/SKILL.md), ou une inspection équivalente si ce skill n'est pas disponible. Ne déclarer le rendu validé qu'avec les preuves correspondantes.
+
+## Entretien du skill
+
+Pour réviser cette méthode, consulter [la sélection communautaire](../../../docs/ux/design-skills.md) et [les scénarios d'évaluation](../../../docs/testing/design-skills.md). Ces documents ne sont pas à charger pour une retouche UI ordinaire.

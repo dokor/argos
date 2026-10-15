@@ -31,3 +31,10 @@ describe("four stable Argos domains", () => {
     expect(select).toHaveBeenCalledWith("security");
   });
 });
+
+for (const lang of ["fr", "en"] as const) it(`inflects finding counts in ${lang}`, () => {
+  render(<LangProvider initialLang={lang}><ScoreGrid categories={[{key:"security",label:"Security",score:60,issues:1},{key:"seo",label:"SEO",score:70,issues:2}]} /></LangProvider>);
+  expect(screen.getByText(lang === "fr" ? "1 constat" : "1 finding")).toBeInTheDocument();
+  expect(screen.getByText(lang === "fr" ? "2 constats" : "2 findings")).toBeInTheDocument();
+  expect(screen.getAllByText(lang === "fr" ? "0 constats" : "0 findings")).toHaveLength(2);
+});

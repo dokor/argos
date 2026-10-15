@@ -28,7 +28,7 @@ public class PublicReportComposer {
     public ReportDto compose(AuditReportJson internalReport) {
         logger.info("Composing public report from schemaVersion={}", internalReport.schemaVersion());
 
-        String url = internalReport.normalizedUrl();
+        String url = ReportPageIdentity.display(internalReport.normalizedUrl());
         String domain = Urls.host(url, url);
 
         AuditScoreReport score = internalReport.score();
@@ -107,14 +107,17 @@ public class PublicReportComposer {
             url,
             new ReportDto.Site(siteTitle, null),
             new ReportDto.Scores(global100, completeness, byCategoryWithCounts,
-                score != null && score.global().maxScore() > 0.0, calculation(score), score == null ? null : score.coverage()),
+                score != null && score.global().maxScore() > 0.0, calculation(score), score == null ? null : score.coverage(), ModuleExecution.from(internalReport.meta())),
             new ReportDto.Summary(oneLiner, priorities, null),
             issues,
             tech,
             antiBot,
             accessibilityEvidence(internalReport),
             accessibilityCompliance(internalReport)
-        );
+        ).withPageIdentity(ReportPageIdentity.from(internalReport.normalizedUrl(), internalReport.modules().stream()
+            .filter(m -> "http".equals(m.id()) && m.data() != null)
+            .map(m -> m.data().get("finalUrl")).filter(String.class::isInstance).map(String.class::cast)
+            .findFirst().orElse(null)));
     }
 
     private static ReportDto.ScoreCalculation calculation(AuditScoreReport score) {
@@ -188,8 +191,10 @@ public class PublicReportComposer {
 
     private static String evidenceFrom(AuditCheckResult check) {
         if (check.details() == null || check.details().isEmpty()) return null;
-        // MVP : stringify court
-        return ReportEvidence.clean(check.details());
+        // Typed observations have their own renderer; never duplicate them as a map string.
+        var textDetails = new LinkedHashMap<>(check.details());
+        textDetails.remove("observed");
+        return textDetails.isEmpty() ? null : ReportEvidence.clean(textDetails);
     }
 
     private static int severityRank(ReportDto.IssueSeverity s) {

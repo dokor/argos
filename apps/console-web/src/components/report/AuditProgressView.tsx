@@ -67,7 +67,8 @@ export default function AuditProgressView({ token, initialStatus = null }: Props
 
   const [runStatus, setRunStatus] = useState<PublicReportStatusResponse | null>(initialStatus);
   const [errorKind, setErrorKind] = useState<ErrorKind | null>(null);
-  const [reportReady, setReportReady] = useState(false);
+  const [readyToken, setReadyToken] = useState<string | null>(null);
+  const reportReady = readyToken === token;
   const loggerRef = useRef(
     createLogger("report", {
       route: "/report/[token]",
@@ -81,7 +82,6 @@ export default function AuditProgressView({ token, initialStatus = null }: Props
     let cancelled = false;
     let polls = 0;
     const startedAt = Date.now();
-    setReportReady(false);
 
     loggerRef.current.info("report_progress_opened", {
       action: "poll_report_status",
@@ -138,7 +138,7 @@ export default function AuditProgressView({ token, initialStatus = null }: Props
             return;
           }
           if (cancelled) return;
-          setReportReady(true);
+              setReadyToken(token);
           loggerRef.current.info("report_progress_completed", {
             action: "refresh_report_page",
             details: { reportToken: maskToken(token) },

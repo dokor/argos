@@ -10,6 +10,20 @@ import com.querydsl.sql.Column;
 @Generated("com.coreoz.plume.db.querydsl.generation.IdBeanSerializer")
 public class AuditReport extends com.coreoz.plume.db.querydsl.crud.CrudEntityQuerydsl {
 
+    @Column("measurement_completeness") private String measurementCompleteness;
+    public String getMeasurementCompleteness(){return measurementCompleteness;}
+    public void setMeasurementCompleteness(String value){measurementCompleteness=value;}
+
+    @Column("diagnostic_json") private String diagnosticJson;
+    public String getDiagnosticJson(){return diagnosticJson;}
+    public void setDiagnosticJson(String value){diagnosticJson=value;}
+    @Column("critical_count") private Integer criticalCount;
+    public Integer getCriticalCount(){return criticalCount;}
+    public void setCriticalCount(Integer value){criticalCount=value;}
+    @Column("important_count") private Integer importantCount;
+    public Integer getImportantCount(){return importantCount;}
+    public void setImportantCount(Integer value){importantCount=value;}
+
     @Column("audit_id")
     @JsonSerialize(using=com.fasterxml.jackson.databind.ser.std.ToStringSerializer.class)
     private Long auditId;
@@ -43,6 +57,11 @@ public class AuditReport extends com.coreoz.plume.db.querydsl.crud.CrudEntityQue
 
     @Column("report_json")
     private String reportJson;
+
+    @Column("introduction_json")
+    private String introductionJson;
+    public String getIntroductionJson() { return introductionJson; }
+    public void setIntroductionJson(String value) { introductionJson = value; }
 
     @Column("run_id")
     @JsonSerialize(using=com.fasterxml.jackson.databind.ser.std.ToStringSerializer.class)

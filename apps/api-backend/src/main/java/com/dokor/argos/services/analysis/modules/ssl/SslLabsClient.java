@@ -27,19 +27,21 @@ public class SslLabsClient {
     private final Duration budget;
     private final Duration initialPoll;
     private final Duration runningPoll;
+    private final boolean externalScansEnabled;
 
     @Inject
     public SslLabsClient(ExternalHttpClient http, ConfigurationService config) {
         this(http, config.sslLabsApiUrl(), config.sslLabsTimeout(),
-            Duration.ofSeconds(5), Duration.ofSeconds(10));
+            Duration.ofSeconds(5), Duration.ofSeconds(10), config.externalScansEnabled());
     }
 
     SslLabsClient(ObjectMapper mapper, String apiBase, Duration budget, Duration initialPoll, Duration runningPoll) {
-        this(new ExternalHttpClient(mapper), apiBase, budget, initialPoll, runningPoll);
+        this(new ExternalHttpClient(mapper), apiBase, budget, initialPoll, runningPoll, true);
     }
 
     private SslLabsClient(ExternalHttpClient http, String apiBase, Duration budget,
-                          Duration initialPoll, Duration runningPoll) {
+                          Duration initialPoll, Duration runningPoll, boolean externalScansEnabled) {
+        this.externalScansEnabled = externalScansEnabled;
         if (budget.isZero() || budget.isNegative()) throw new IllegalArgumentException("SSL Labs timeout must be positive");
         this.http = http;
         this.apiBase = apiBase;
@@ -50,6 +52,7 @@ public class SslLabsClient {
 
     /** Prefer cached reports; a cache miss can start an assessment. Never force startNew. */
     public JsonNode analyze(String host) throws Exception {
+        String target = com.dokor.argos.services.analysis.RemoteScanPolicy.requireAllowed(host, externalScansEnabled);
         var parent = AuditDeadline.current();
         var deadline = parent == null ? new AuditDeadline(budget) : parent.child(budget);
         try (var scope = deadline.enter()) {
@@ -58,21 +61,23 @@ public class SslLabsClient {
                 int polls = 0;
                 try {
                     while (true) {
-                        JsonNode result = get(apiBase + "/analyze?host=" + URLEncoder.encode(host, StandardCharsets.UTF_8)
-                            + "&fromCache=on&all=done");
+                        com.dokor.argos.services.analysis.RemoteScanPolicy.requireAllowed(target, externalScansEnabled);
+                        JsonNode result = get(apiBase + "/analyze?host=" + URLEncoder.encode(target, StandardCharsets.UTF_8)
+                            + "&fromCache=on&all=done&publish=off");
                         polls++;
-                        lastStatus = result.path("status").asText("UNKNOWN");
+                        String status = result.path("status").asText("UNKNOWN");
+                        lastStatus = java.util.Set.of("READY", "ERROR", "DNS", "IN_PROGRESS").contains(status) ? status : "UNKNOWN";
                         // Log upstream state without confusing pending results with transport failure/quota.
                         logger.info("ssl_labs_progress host={} status={} polls={} remainingMs={}",
-                            com.dokor.argos.services.domain.audit.UrlNormalizer.sanitizeForLog(host),
-                            com.dokor.argos.services.domain.audit.UrlNormalizer.sanitizeForLog(lastStatus),
+                            com.dokor.argos.services.domain.audit.UrlNormalizer.sanitizeForLog("https://" + host),
+                            java.util.Set.of("READY", "ERROR", "DNS", "IN_PROGRESS").contains(lastStatus) ? lastStatus : "UNKNOWN",
                             polls, deadline.remainingNanos() / 1_000_000);
                         if ("READY".equals(lastStatus)) return result;
                         if ("ERROR".equals(lastStatus)) {
-                            throw new IllegalStateException("SSL Labs assessment failed (status=ERROR)");
+                            throw new com.dokor.argos.services.analysis.CollectorFailure(com.dokor.argos.services.analysis.CollectorFailure.Code.TARGET_ASSESSMENT_FAILED);
                         }
                         if (!"DNS".equals(lastStatus) && !"IN_PROGRESS".equals(lastStatus)) {
-                            throw new IllegalStateException("Unexpected SSL Labs assessment status");
+                            throw new com.dokor.argos.services.analysis.CollectorFailure(com.dokor.argos.services.analysis.CollectorFailure.Code.INVALID_RESPONSE);
                         }
                         Duration interval = "IN_PROGRESS".equals(lastStatus) ? runningPoll : initialPoll;
                         TimeUnit.NANOSECONDS.sleep(deadline.remaining(interval).toNanos());
@@ -92,10 +97,9 @@ public class SslLabsClient {
         try {
             JsonNode result = http.getJson(URI.create(url), Duration.ofSeconds(30), Duration.ofSeconds(15),
                 BoundedBodyHandlers.MAX_PAGE_BYTES, java.util.Map.of());
-            if (result.has("errors")) throw new IllegalStateException("SSL Labs API returned an invalid assessment");
+            if (result.has("errors")) throw new com.dokor.argos.services.analysis.CollectorFailure(com.dokor.argos.services.analysis.CollectorFailure.Code.INVALID_RESPONSE);
             return result;
         } catch (ExternalHttpClient.HttpStatusException status) {
-            if (status.statusCode() == 429) throw new IllegalStateException("SSL Labs API rate limit exceeded (HTTP 429)");
             throw status;
         }
     }

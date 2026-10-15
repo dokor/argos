@@ -24,6 +24,14 @@ public class QAuditRun extends com.querydsl.sql.RelationalPathBase<AuditRun> {
 
     public static final QAuditRun auditRun = new QAuditRun("ARG_AUDIT_RUN");
 
+    public final BooleanPath cancelRequested = createBoolean("cancelRequested");
+
+    public final StringPath idempotencyKey = createString("idempotencyKey");
+
+    public final StringPath requestFingerprint = createString("requestFingerprint");
+
+    public final StringPath profileSnapshot = createString("profileSnapshot");
+
     public final NumberPath<Long> auditId = createNumber("auditId", Long.class);
 
     public final StringPath claimToken = createString("claimToken");
@@ -81,6 +89,10 @@ public class QAuditRun extends com.querydsl.sql.RelationalPathBase<AuditRun> {
     }
 
     public void addMetadata() {
+        addMetadata(cancelRequested, ColumnMetadata.named("cancel_requested").ofType(Types.BOOLEAN).notNull());
+        addMetadata(profileSnapshot, ColumnMetadata.named("profile_snapshot").ofType(Types.LONGVARCHAR));
+        addMetadata(requestFingerprint, ColumnMetadata.named("request_fingerprint").ofType(Types.LONGVARCHAR));
+        addMetadata(idempotencyKey, ColumnMetadata.named("idempotency_key").ofType(Types.LONGVARCHAR));
         addMetadata(ownerUserId, ColumnMetadata.named("owner_user_id").withIndex(13).ofType(Types.BIGINT));
         addMetadata(auditId, ColumnMetadata.named("audit_id").withIndex(2).ofType(Types.BIGINT).withSize(19).notNull());
         addMetadata(claimToken, ColumnMetadata.named("claim_token").withIndex(9).ofType(Types.VARCHAR).withSize(64));

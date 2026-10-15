@@ -34,5 +34,5 @@ try {
   const robots=await(await fetch("http://localhost:3090/robots.txt")).text();assert.doesNotMatch(robots,/Disallow: (\/en)?\/report\//);
   const sitemap=await(await fetch("http://localhost:3090/sitemap.xml")).text();assert.ok(!sitemap.includes("/report/"));
   for(const route of ["/","/en","/exemple-rapport","/en/example-report"]){const html=await(await fetch("http://localhost:3090"+route)).text();assert.doesNotMatch(html,/href=["'][^"']*\/report\//);}
-  fs.mkdirSync("docs/testing/epic-373",{recursive:true});fs.writeFileSync("docs/testing/epic-373/report-indexing.json",JSON.stringify(rows,null,2)+"\n");console.log("12 controlled report HTTP/SSR scenarios and crawl/sitemap/public-link checks passed.");
+  fs.mkdirSync("outputs/report-indexing",{recursive:true});fs.writeFileSync("outputs/report-indexing/report-indexing.json",JSON.stringify(rows,null,2)+"\n");console.log("12 controlled report HTTP/SSR scenarios and crawl/sitemap/public-link checks passed.");
 }finally{server.kill();await new Promise(resolve=>api.close(resolve));}

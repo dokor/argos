@@ -103,8 +103,11 @@ public class AccountOAuthService {
             String code,
             String authorization,
             String csrf) {
-        if (!AccountCsrf.valid(raw) || !AccountCsrf.valid(browser))
+        if (!AccountCsrf.valid(raw) || !AccountCsrf.valid(browser)) {
+            AccountOAuthDiagnostics.rejected(provider, AccountOAuthDiagnostics.Stage.CALLBACK_CONTEXT,
+                    AccountOAuthDiagnostics.Reason.INVALID_CONTEXT, 0);
             throw new AccountError(400, "oauth_invalid");
+        }
         // Burn the state before external I/O. Failure and cancellation cannot replay the
         // transaction.
         var tx =
@@ -124,8 +127,12 @@ public class AccountOAuthService {
                                     || !t.getExpiresAt().isAfter(clock.instant())
                                     || !provider.equals(t.getProvider())
                                     || !MessageDigest.isEqual(
-                                            t.getBrowserHash(), tokens.sha256(browser)))
+                                            t.getBrowserHash(), tokens.sha256(browser))) {
+                                AccountOAuthDiagnostics.rejected(provider,
+                                        AccountOAuthDiagnostics.Stage.TRANSACTION,
+                                        AccountOAuthDiagnostics.Reason.INVALID_OR_EXPIRED_TRANSACTION, 0);
                                 throw new AccountError(400, "oauth_invalid");
+                            }
                             t.setConsumedAt(clock.instant());
                             dao.save(t, c);
                             return t;
@@ -173,7 +180,7 @@ public class AccountOAuthService {
                             existing = dao.identity(provider, identity.subject(), c, true);
                             if (user == null
                                     || existing.getDisabledAt() != null
-                                    || "ARCHIVED".equals(user.getState()))
+                                    || Set.of("ARCHIVED", "SUSPENDED").contains(user.getState()))
                                 throw AccountError.unauthorized();
                         } else {
                             String email =

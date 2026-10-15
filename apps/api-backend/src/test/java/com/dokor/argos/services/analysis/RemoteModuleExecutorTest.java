@@ -43,14 +43,19 @@ class RemoteModuleExecutorTest {
         }
     }
     @Test void deadlineCancelsTheCallAndLateResultCannotOverwriteAnything() throws Exception {
+        var started = new CountDownLatch(1);
         var interrupted = new CountDownLatch(1);
-        try (var executor = new RemoteModuleExecutor(Duration.ofMillis(100));
+        // Leave time for the worker to start on a loaded runner before testing cancellation.
+        try (var executor = new RemoteModuleExecutor(Duration.ofSeconds(5));
              var task = executor.submit("ssl", () -> {
+                 started.countDown();
                  try { new CountDownLatch(1).await(); return "late"; }
                  catch (InterruptedException stopped) { interrupted.countDown(); throw stopped; }
              })) {
+            assertTrue(started.await(2, TimeUnit.SECONDS));
             assertThrows(HttpTimeoutException.class, task::await);
             assertTrue(interrupted.await(2, TimeUnit.SECONDS));
+            assertThrows(CancellationException.class, task::await);
         }
     }
     @Test void closingThePoolInterruptsRunningCallsAndRejectsNewWork() throws Exception {

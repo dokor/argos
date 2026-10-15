@@ -9,19 +9,8 @@ import { argosApi, CreateAuditResponse } from "@/lib/ArgosApi";
 import { createLogger, safeError, sanitizeUrl } from "@/lib/logger";
 import { normalizeInputUrl } from "@/lib/url";
 
-/**
- * Hook partagé de soumission d'audit (issue #122).
- *
- * Factorise la logique « créer un audit → (optionnel) poller le statut →
- * rediriger vers le rapport » dupliquée entre le formulaire du dashboard
- * ({@code AuditForm}) et celui de la landing ({@code HeroAuditForm}).
- *
- * Deux comportements selon {@link UseAuditSubmitOptions.maxWaitMs} :
- * - `0` (défaut, dashboard) : redirige immédiatement dès qu'un `reportToken`
- *   est disponible, sans polling.
- * - `> 0` (landing) : passe en phase `polling`, redirige tôt si le run se
- *   termine, sinon au plus tard après `maxWaitMs`. La page `/report/{token}`
- *   prend ensuite le relais pour la progression live.
+/** Public audit creation and optional bounded polling before opening its private report link.
+ * Connected analyses use ConnectedAnalysisForm and /api/account/analyses.
  */
 
 export type AuditPhase = "idle" | "submitting" | "polling" | "redirecting" | "error";
@@ -30,12 +19,11 @@ export type AuditErrorKind = "create" | "failed" | "timeout";
 type AppLogger = ReturnType<typeof createLogger>;
 
 export type UseAuditSubmitOptions = {
-  /** Logger déjà contextualisé (canal + route + details). */
+  /** Logger dÃ©jÃ  contextualisÃ© (canal + route + details). */
   logger: AppLogger;
-  /** Route publique fixe utilisée pour attribuer les créations d'audit côté BFF. */
+  /** Route publique fixe utilisÃ©e pour attribuer les crÃ©ations d'audit cÃ´tÃ© BFF. */
   sourceRoute?: string;
-  personal?: boolean;
-  /** Fenêtre de polling (ms) avant redirection forcée ; 0 = redirection immédiate. */
+  /** FenÃªtre de polling (ms) avant redirection forcÃ©e ; 0 = redirection immÃ©diate. */
   maxWaitMs?: number;
   /** Intervalle de polling (ms). */
   pollIntervalMs?: number;
@@ -43,33 +31,32 @@ export type UseAuditSubmitOptions = {
   maxPolls?: number;
   /**
    * Ouvre le rapport dans un nouvel onglet au lieu de naviguer dans l'onglet
-   * courant (dashboard : #169). Repli automatique sur une navigation même
-   * onglet si le navigateur bloque la popup. Défaut : `false` (landing).
+   * courant. Repli automatique sur une navigation mÃªme
+   * onglet si le navigateur bloque la popup. DÃ©faut : `false` (landing).
    */
   openInNewTab?: boolean;
-  /** Notifié après création réussie de l'audit (ex: MAJ liste dashboard). */
+  /** NotifiÃ© aprÃ¨s crÃ©ation rÃ©ussie de l'audit . */
   onCreated?: (res: CreateAuditResponse, normalizedUrl: string) => void;
-  /** Notifié à chaque tick de polling (ex: animation d'étapes de la landing). */
+  /** NotifiÃ© Ã  chaque tick de polling (ex: animation d'Ã©tapes de la landing). */
   onPollTick?: () => void;
 };
 
 export type UseAuditSubmitResult = {
   phase: AuditPhase;
   errorKind: AuditErrorKind | null;
-  /** Erreur brute de création, pour afficher un message précis si besoin. */
+  /** Erreur brute de crÃ©ation, pour afficher un message prÃ©cis si besoin. */
   error: Error | null;
   submit: (rawUrl: string) => Promise<void>;
   reset: () => void;
 };
 
 const DEFAULT_POLL_INTERVAL_MS = 2500;
-const DEFAULT_MAX_POLLS = 48; // ~2 min à 2,5 s
+const DEFAULT_MAX_POLLS = 48; // ~2 min Ã  2,5 s
 
 export function useAuditSubmit(options: UseAuditSubmitOptions): UseAuditSubmitResult {
   const {
     logger,
     sourceRoute,
-    personal = false,
     maxWaitMs = 0,
     pollIntervalMs = DEFAULT_POLL_INTERVAL_MS,
     maxPolls = DEFAULT_MAX_POLLS,
@@ -91,8 +78,8 @@ export function useAuditSubmit(options: UseAuditSubmitOptions): UseAuditSubmitRe
   const pollCountRef = useRef(0);
   const pollErrorCountRef = useRef(0);
 
-  // Réfs stables pour les callbacks : évite de relancer l'effet de polling.
-  // Mises à jour en effet (pas pendant le render) pour rester lint-clean.
+  // RÃ©fs stables pour les callbacks : Ã©vite de relancer l'effet de polling.
+  // Mises Ã  jour en effet (pas pendant le render) pour rester lint-clean.
   const onPollTickRef = useRef(onPollTick);
   const onCreatedRef = useRef(onCreated);
   useEffect(() => {
@@ -110,17 +97,17 @@ export function useAuditSubmit(options: UseAuditSubmitOptions): UseAuditSubmitRe
 
       if (openInNewTab && typeof window !== "undefined") {
         // On n'utilise pas la feature "noopener" dans window.open : plusieurs
-        // navigateurs renvoient alors null même en cas de succès, ce qui
-        // fausserait la détection de blocage. On neutralise `opener` à la main
-        // (protection reverse-tabnabbing, ici même origine).
+        // navigateurs renvoient alors null mÃªme en cas de succÃ¨s, ce qui
+        // fausserait la dÃ©tection de blocage. On neutralise `opener` Ã  la main
+        // (protection reverse-tabnabbing, ici mÃªme origine).
         const win = window.open(href, "_blank");
         if (win) {
           win.opener = null;
-          // Onglet courant inchangé : on réactive le formulaire.
+          // Onglet courant inchangÃ© : on rÃ©active le formulaire.
           setPhase("idle");
           return;
         }
-        // Popup bloquée → repli sur une navigation dans l'onglet courant.
+        // Popup bloquÃ©e â†’ repli sur une navigation dans l'onglet courant.
       }
 
       setPhase("redirecting");
@@ -133,8 +120,8 @@ export function useAuditSubmit(options: UseAuditSubmitOptions): UseAuditSubmitRe
   useEffect(() => {
     if (phase !== "polling") return;
 
-    // Repli : au plus tard après maxWaitMs, on redirige vers la page rapport
-    // même si l'analyse est encore en cours (la page /report gère la suite).
+    // Repli : au plus tard aprÃ¨s maxWaitMs, on redirige vers la page rapport
+    // mÃªme si l'analyse est encore en cours (la page /report gÃ¨re la suite).
     const redirectTimer = setTimeout(() => {
       if (reportTokenRef.current) {
         clearInterval(id);
@@ -206,7 +193,7 @@ export function useAuditSubmit(options: UseAuditSubmitOptions): UseAuditSubmitRe
       if (!trimmed || submittingRef.current || (phase !== "idle" && phase !== "error")) return;
       submittingRef.current = true;
 
-      // Prepend https:// quand le schéma est omis (ex: "example.com"),
+      // Prepend https:// quand le schÃ©ma est omis (ex: "example.com"),
       // pour matcher le comportement du BFF/backend.
       const normalized = normalizeInputUrl(trimmed);
       setError(null);
@@ -221,12 +208,11 @@ export function useAuditSubmit(options: UseAuditSubmitOptions): UseAuditSubmitRe
       try {
         const res = await argosApi.createAudit({
           url: normalized,
-          ...(personal ? { personal:true } : {}),
           sourceRoute: publicRoute(sourceRoute ?? window.location.pathname),
           lang,
         });
         runIdRef.current = res.runId;
-        reportTokenRef.current = personal ? null : res.reportToken ?? null;
+        reportTokenRef.current = res.reportToken ?? null;
         pollCountRef.current = 0;
         pollErrorCountRef.current = 0;
 
@@ -237,21 +223,18 @@ export function useAuditSubmit(options: UseAuditSubmitOptions): UseAuditSubmitRe
           details: { runId: res.runId, status: res.status },
         });
 
-        if (personal) { window.dispatchEvent(new Event("argos-usage-refresh"));setPhase("redirecting"); router.push(localizedPath("/account/runs/"+res.runId,lang)); return; }
         if (maxWaitMs > 0) {
-          // Landing : poll puis redirection (tôt si terminé, sinon après la fenêtre).
+          // Landing : poll puis redirection (tÃ´t si terminÃ©, sinon aprÃ¨s la fenÃªtre).
           setPhase("polling");
         } else if (res.reportToken) {
-          // Dashboard : redirection immédiate.
+          // Public form: redirect immediately when no polling window is requested.
           redirectToReport(res.reportToken, "created", 0);
         } else {
-          // Pas de token et pas de fenêtre de polling : on réactive le formulaire.
+          // Pas de token et pas de fenÃªtre de polling : on rÃ©active le formulaire.
           setPhase("idle");
         }
       } catch (err) {
         submittingRef.current = false;
-        if (personal && err instanceof Error && "status" in err && err.status === 401) window.dispatchEvent(new Event("argos-account-invalid"));
-        if (personal) window.dispatchEvent(new Event("argos-usage-refresh"));
         setPhase("error");
         setErrorKind("create");
         setError(err instanceof Error ? err : new Error(String(err)));
@@ -261,7 +244,7 @@ export function useAuditSubmit(options: UseAuditSubmitOptions): UseAuditSubmitRe
         });
       }
     },
-    [phase, maxWaitMs, logger, redirectToReport, sourceRoute, lang, personal, router]
+    [phase, maxWaitMs, logger, redirectToReport, sourceRoute, lang]
   );
 
   const reset = useCallback(() => {

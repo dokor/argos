@@ -1,25 +1,25 @@
 import express from 'express';
-import { partitionNetworkErrors, registrableDomainForUrl } from './domain.mjs';
+import { resourceEvidence, evidenceEnvelope, EVIDENCE_LIMIT } from './evidence.mjs';
+import { analysisUrl } from './policy.mjs';
+import { proxyEndpoint, browserFlags, protectContext, safeOrigin } from './browser-policy.mjs';
+import { partitionNetworkErrors, registrableDomainForUrl, isFirstPartyUrl } from './domain.mjs';
 
 export function isValidAnalysisUrl(value) {
-  if (typeof value !== 'string' || !value || value.length > 2048
-      || value !== value.trim() || /[\r\n]/.test(value)) return false;
-  try {
-    const url = new URL(value);
-    return ['http:', 'https:'].includes(url.protocol) && !url.username && !url.password;
-  } catch { return false; }
+  try { analysisUrl(value); return true; } catch { return false; }
 }
 
 // Sanitise une URL avant journalisation : supprime les CR/LF (anti log-forging)
 // et borne la longueur pour éviter des lignes de log démesurées.
 function sanitizeUrlForLog(url) {
   if (typeof url !== 'string') return '';
-  return url.replace(/[\r\n]+/g, ' ').slice(0, 200);
+  return safeOrigin(url);
 }
 
-export function createRuntimeApp({ chromium, log = () => {} }) {
+export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env.AUDIT_EGRESS_PROXY, maxConcurrency = 2 }) {
+  if (!Number.isInteger(maxConcurrency) || maxConcurrency < 1 || maxConcurrency > 4) throw new Error('Invalid concurrency');
+  let active = 0;
   const app = express();
-  app.use(express.json({ limit: '1mb' }));
+  app.use(express.json({ limit: '8kb' }));
 
   // Sonde de disponibilité (healthcheck Docker + vérif amont). Volontairement
   // légère : ne lance pas de navigateur, répond immédiatement si le process est up.
@@ -30,6 +30,10 @@ export function createRuntimeApp({ chromium, log = () => {} }) {
   app.post('/analyze/runtime', async (req, res) => {
     const { url } = req.body ?? {};
     if (!isValidAnalysisUrl(url)) return res.status(400).json({ error: 'Invalid URL' });
+    let endpoint;
+    try { endpoint = proxyEndpoint(proxy); } catch { return res.status(503).json({ error: 'Collector unavailable' }); }
+    if (active >= maxConcurrency) return res.status(429).json({ error: 'Collector busy' });
+    active++;
     let browser;
     const timeoutMs = Number.isFinite(req.body?.timeoutMs) && req.body.timeoutMs > 0 ? Math.min(45000, req.body.timeoutMs) : 45000;
     const deadline = performance.now() + timeoutMs;
@@ -47,9 +51,14 @@ export function createRuntimeApp({ chromium, log = () => {} }) {
 
       const pageDomain = registrableDomainForUrl(url);
 
-      browser = await chromium.launch({ args: ['--no-sandbox'], timeout: remaining() });
+      browser = await chromium.launch({ chromiumSandbox: true, args: browserFlags(endpoint), timeout: remaining() });
       if (cancelled) throw new Error('Analysis timeout');
-      const context = await browser.newContext();
+      const context = await browser.newContext({ serviceWorkers: 'block', acceptDownloads: false });
+      await protectContext(context, () => {
+        // Pending CDP setup can reject during intentional browser cleanup.
+        // Keep cancelling active collection, but preserve an already collected result.
+        if (browser) cancel();
+      });
       const page = await context.newPage();
 
       const consoleSamples = [];
@@ -72,8 +81,8 @@ export function createRuntimeApp({ chromium, log = () => {} }) {
         if ((type === 'error' || type === 'warning') && consoleSamples.length < 10) {
           consoleSamples.push({
             type,
-            text: text.slice(0, 500),
-            location: loc?.url ? `${loc.url}:${loc.lineNumber ?? ''}:${loc.columnNumber ?? ''}` : undefined
+            text: '[site message redacted]',
+            location: loc?.url ? safeOrigin(loc.url) : undefined
           });
         }
       });
@@ -81,7 +90,7 @@ export function createRuntimeApp({ chromium, log = () => {} }) {
       const jsErrorSamples = [];
       page.on('pageerror', (err) => {
         if (jsErrorSamples.length < 10) {
-          jsErrorSamples.push({ message: String(err?.message ?? err).slice(0, 500) });
+          jsErrorSamples.push({ message: '[site message redacted]' });
         }
       });
 
@@ -91,6 +100,17 @@ export function createRuntimeApp({ chromium, log = () => {} }) {
       let status5xx = 0;
       const failedRequestUrls = [];
       const status5xxUrls = [];
+      const incidents=[];
+      let incidentCount=0;
+      function incident(rawUrl, type, status, failure) {
+        incidentCount++;
+        if(incidents.length>=EVIDENCE_LIMIT) return;
+        const resource=resourceEvidence(rawUrl); if(!resource) return;
+        // Chromium reason code only, never a site-controlled error message or stack.
+        const reason=typeof failure==='string' && /^net::ERR_[A-Z_]{1,60}$/.test(failure) ? failure : undefined;
+        const resourceType=['document','stylesheet','image','media','font','script','xhr','fetch','other'].includes(type)?type:undefined;
+        incidents.push({...resource, status, reason, resourceType});
+      }
       let totalBytesEstimated = 0;
 
       const byType = {};
@@ -109,7 +129,8 @@ export function createRuntimeApp({ chromium, log = () => {} }) {
 
       page.on('requestfailed', (request) => {
         failedRequests++;
-        failedRequestUrls.push(request.url());
+        incident(request.url(),request.resourceType?.(),undefined,request.failure?.()?.errorText);
+        if (failedRequestUrls.length < 300) failedRequestUrls.push(safeOrigin(request.url()));
       });
 
       page.on('response', async (response) => {
@@ -118,7 +139,8 @@ export function createRuntimeApp({ chromium, log = () => {} }) {
         if (status >= 400 && status < 500) status4xx++;
         if (status >= 500) {
           status5xx++;
-          status5xxUrls.push(url);
+          incident(url,response.request?.()?.resourceType?.(),status);
+          if (status5xxUrls.length < 300) status5xxUrls.push(safeOrigin(url));
         }
 
         // bytes estimation (best effort)
@@ -130,7 +152,7 @@ export function createRuntimeApp({ chromium, log = () => {} }) {
 
         // keep top 10 largest
         if (bytes > 0) {
-          const item = { url, bytes, type: (requests.get(url)?.type ?? 'other'), status };
+          const item = { url: safeOrigin(url), bytes, type: (requests.get(url)?.type ?? 'other'), status };
           topLargest.push(item);
           topLargest.sort((a, b) => b.bytes - a.bytes);
           if (topLargest.length > 10) topLargest.length = 10;
@@ -145,6 +167,10 @@ export function createRuntimeApp({ chromium, log = () => {} }) {
 
       try {
         const response = await page.goto(url, { waitUntil: 'load', timeout: remaining() });
+        if (response?.headers()['x-argos-egress-blocked'] === '1') {
+          navigation = { status: 'FAILED', reason: 'TARGET_BLOCKED' };
+          throw new Error('Target blocked');
+        }
         finalUrl = page.url();
 
         // timings best effort
@@ -160,8 +186,8 @@ export function createRuntimeApp({ chromium, log = () => {} }) {
         await page.waitForTimeout(Math.min(1500, remaining()));
       } catch (e) {
         // si le site bloque, on renvoie ce qu’on a
-        navigation = { status: 'FAILED', reason: 'NAVIGATION_ERROR' };
-        log('analyze.navigation_error', { url: safeUrl, error: String(e?.message ?? e).slice(0, 300) });
+        if (navigation.reason !== 'TARGET_BLOCKED') navigation = { status: 'FAILED', reason: 'NAVIGATION_ERROR' };
+        log('analyze.navigation_error', { url: safeUrl, error: 'Navigation failed' });
       } finally {
         // page.url() reflète aussi la dernière URL atteinte si la navigation échoue
         // après une redirection. La classification doit utiliser cette URL finale,
@@ -186,8 +212,8 @@ export function createRuntimeApp({ chromium, log = () => {} }) {
       });
 
       res.json({
-        url,
-        finalUrl,
+        url: safeOrigin(url),
+        finalUrl: safeOrigin(finalUrl),
         timings: { domContentLoadedMs, loadMs },
         navigation,
         console: {
@@ -209,6 +235,9 @@ export function createRuntimeApp({ chromium, log = () => {} }) {
           status5xxFirstParty: networkOwnership.status5xx.firstParty,
           status5xxThirdParty: networkOwnership.status5xx.thirdParty,
           totalBytesEstimated,
+          observedEvidence: evidenceEnvelope('runtime', incidents.map(item=>({...item,
+            ownership:isFirstPartyUrl(item.origin,finalUrl)?'FIRST_PARTY':'THIRD_PARTY'})), incidentCount,
+            incidentCount>incidents.length),
           byType,
           topLargest
         }
@@ -217,6 +246,7 @@ export function createRuntimeApp({ chromium, log = () => {} }) {
       log('analyze.error', { error: 'Collector failure' });
       if (!res.destroyed) res.status(cancelled ? 504 : 500).json({ error: cancelled ? 'Analysis timeout' : 'Internal Error' });
     } finally {
+      active--;
       clearTimeout(timer);
       res.removeListener('close', disconnected);
       if (browser) {

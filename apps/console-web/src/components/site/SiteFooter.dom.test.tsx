@@ -18,6 +18,7 @@ describe("shared footer (#317)", () => {
       "/ressources/audit-technique-gratuit",
       "/guides/checklist-audit-site-web",
       "/ressources/accessibilite-numerique",
+      "/conditions-utilisation",
       "/confidentialite",
       "/informations-legales",
       "/a-propos",
@@ -28,10 +29,12 @@ describe("shared footer (#317)", () => {
     expect(links.every((link) => Boolean(link.textContent?.trim()))).toBe(true);
     expect(hrefs.every((href) => Boolean(href) && href !== "#")).toBe(true);
   });
-  it("links translated guides in English and labels French-only service information", () => {
+  it("links guides and legal information in English", () => {
     render(<LangProvider initialLang="en"><SiteFooter /></LangProvider>);
     expect(screen.getByRole("link", { name: "Website audit checklist" })).toHaveAttribute("href", "/en/guides/website-audit-checklist");
-    expect(screen.getByRole("link", { name: "Privacy (French)" })).toHaveAttribute("href", "/confidentialite");
+    expect(screen.getByRole("link", { name: "Terms of use" })).toHaveAttribute("href", "/en/terms-of-use");
+    expect(screen.getByRole("link", { name: "Privacy" })).toHaveAttribute("href", "/en/privacy");
+    expect(screen.getByRole("link", { name: "Service information" })).toHaveAttribute("href", "/en/legal-information");
     expect(screen.getByRole("link", { name: "About Argos" })).toHaveAttribute("href", "/en/about");
   });
 });

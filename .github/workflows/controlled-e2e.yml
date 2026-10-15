@@ -37,6 +37,7 @@ jobs:
       ARGOS_TEST_CREDENTIALS_URL: jdbc:mariadb://127.0.0.1:3306/argos_credentials_test
       ARGOS_TEST_CREDENTIALS_USER: argos_fixture
       ARGOS_TEST_CREDENTIALS_PASSWORD: synthetic-fixture
+      ACCOUNT_ORIGIN: http://127.0.0.1:3000
       API_BASE: http://127.0.0.1:8081
       PLAYWRIGHT_SERVICE_URL: http://127.0.0.1:3016
       LIGHTHOUSE_SERVICE_URL: http://127.0.0.1:3017
@@ -88,30 +89,8 @@ jobs:
             if(!ready) throw new Error('Controlled service failed readiness');
           }
           JS
-      - name: Compare public header geometry and captures
-        run: node scripts/e2e/public-header.mjs
-      - name: Upload public header captures
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: public-header-${{ github.sha }}
-          path: outputs/public-header/
-          if-no-files-found: warn
-          retention-days: 14
       - name: Run real database and browser lifecycle
         run: mvn --batch-mode -f apps/api-backend/pom.xml -P mariadb-integration -Dit.test=ControlledAuditE2eIT verify
-      - name: Check private history layout, keyboard and accessibility
-        env:
-          HISTORY_BASE_URL: http://127.0.0.1:3000
-        run: node scripts/e2e/account-history.mjs
-      - name: Upload private history captures
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: account-history-${{ github.sha }}
-          path: outputs/account-history/
-          if-no-files-found: warn
-          retention-days: 14
       - name: Rehearse consistent backup and isolated restore
         env:
           DB_FIXTURE_CONTAINER: ${{ job.services.mariadb.id }}
@@ -132,6 +111,13 @@ jobs:
             outputs/controlled-e2e.json
             outputs/controlled-e2e-error.log
             outputs/controlled-restore.json
+            outputs/domain-e2e*.json
+            outputs/domain-e2e-error.log
+            outputs/admin-e2e*.json
+            outputs/admin-e2e-error.log
+            outputs/ui-review/clarte-domains/real/
+            outputs/ui-review/clarte-admin/real/
+            outputs/ui-review/clarte-evidence/real-*.pdf
             apps/api-backend/target/failsafe-reports/
           if-no-files-found: error
           retention-days: 14

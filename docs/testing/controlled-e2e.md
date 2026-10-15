@@ -1,6 +1,6 @@
 # Controlled audit E2E (#64)
 
-The `Controlled audit E2E` CI job runs a production Next build, actual Jersey HTTP resources, production audit orchestration, real Flyway/MariaDB 11.4, two competing queue workers, Chromium, and the runtime/Lighthouse HTTP apps. A separate browser harness submits the public form, opens progression, observes QUEUED → RUNNING → COMPLETED, verifies the domain heading and persisted weighted coverage beside the Argos score, opens measurement details from the summary with focus transfer, distinguishes module completeness from weighted coverage, and checks private reads are denied. Eight completed runs must each have one claim attempt and exactly one published report.
+The `Controlled audit E2E` CI job runs a production Next build, actual Jersey HTTP resources, production audit orchestration, real Flyway/MariaDB 11.4, two competing queue workers, Chromium, and the runtime/Lighthouse HTTP apps. A separate browser harness submits the public form, waits for the application to navigate to progression, observes QUEUED → RUNNING → COMPLETED, verifies the domain heading and persisted weighted coverage beside the Argos score, opens measurement details from the summary with focus transfer, distinguishes module completeness from weighted coverage, and checks private reads are denied. The healthy report is reloaded and its persisted scores are checked without another audit submission. Eight completed runs must each have one claim attempt and exactly one published report.
 
 ## Fixtures and boundaries
 
@@ -18,6 +18,30 @@ Use only an isolated MariaDB database named `argos_credentials_test` on localhos
 mvn -f apps/api-backend/pom.xml -P mariadb-integration -Dit.test=ControlledAuditE2eIT verify
 ```
 
-The browser harness is `scripts/e2e/browser.mjs`, distinct from the runtime audit service. It uses the repository's Playwright dependency to avoid adding another browser version. CI retains sanitized scenario/status/coverage evidence and test reports, without browser traces, screenshots, raw report JSON or URLs containing report credentials. Only synthetic fixtures are used. Public-site smoke tests are deliberately absent from deterministic CI; any future optional smoke target requires explicit authorization and a separate opt-in command.
+The browser harness is `scripts/e2e/browser.mjs`, distinct from the runtime audit service. It uses the repository's Playwright dependency to avoid adding another browser version. For each scenario, the retired Next numeric read `/api/audits/runs/{runId}` must return 410, `Cache-Control: private, no-store`, and only `{ "error": "resource_unavailable" }`, as specified in [the legacy admin transition](../accounts/legacy-admin-transition.md). A separate request to the local Java fixture verifies that the underlying read still returns 401 without a server credential. CI retains sanitized scenario/status/coverage evidence and test reports, without browser traces, screenshots, raw report JSON or URLs containing report credentials. Only synthetic fixtures are used. Public-site smoke tests are deliberately absent from deterministic CI; any future optional smoke target requires explicit authorization and a separate opt-in command.
+
+The module-completeness assertion uses the current French label from
+`reportReadingCopy.fr.moduleCompleteness`: “Modules entièrement réussis”.
+It requires exactly one matching definition-list row before reading its value,
+then compares that value to the persisted `scores.completeness`. An absent or
+duplicated row fails immediately. The obsolete label “Complétude opérationnelle
+des modules” caused a 30-second locator timeout after the report was already
+published; increasing the timeout would not fix that selector mismatch.
+When execution metadata is present, the same browser test independently compares
+terminal progress and failed-module counts with `scores.moduleExecution`.
 
 After the suite, CI makes a consistent `mariadb-dump --single-transaction --hex-blob`, restores it into a separate isolated database, and compares report counts and digests covering IDs, run IDs, token hashes and frozen JSON. Only a PASS evidence JSON is retained, never the dump. This verifies a current-schema data backup/restore on the fixture service; restoring a production pre-migration backup and testing the previous application binary remain operator release gates.
+
+## CI scope and retained evidence
+
+The required workflow runs the real audit, domain and administrative journeys
+(including their existing reload, quota, authorization and session-revocation
+assertions). Authentication has its own required `auth` job. Full visual
+matrices run independently in [Visual regression](../../.github/workflows/visual-regression.yml);
+they are not steps of `Controlled audit E2E`. See [CI routing](ci.md).
+
+The `controlled-e2e-<sha>` artifact retains the sanitized audit/domain/admin
+results, Failsafe reports, real domain/admin proof and captures, generated
+FR/EN PDFs, and the restore digest result. The SQL dump is never uploaded.
+The separate visual manifest explicitly has scope `visual-only`; no real
+server evidence is inferred from its simulated API responses.

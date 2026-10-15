@@ -47,7 +47,7 @@ describe("PriorityCards", () => {
     expect(screen.getByText(/Gain de score modélisé : 3,13 points globaux/)).toBeInTheDocument();
     expect(screen.getByText("Confiance de mesure : inconnue")).toBeInTheDocument();
     expect(screen.getByText("Constats regroupés : 2")).toBeInTheDocument();
-    expect(screen.getByText(/Le gain réel dépend/)).toBeInTheDocument();
+    expect(screen.getByText(/Seule une nouvelle analyse/)).toBeInTheDocument();
     expect(screen.getByText("Effort À estimer")).toBeInTheDocument();
   });
   it("restitue la raison et les limites en anglais", () => {
@@ -56,7 +56,7 @@ describe("PriorityCards", () => {
     expect(screen.getByText("Security")).toBeInTheDocument();
     expect(screen.getByText(/Modelled score gain: 3.13 global points/)).toBeInTheDocument();
     expect(screen.getByText("Measurement confidence: unknown")).toBeInTheDocument();
-    expect(screen.getByText(/Actual improvement depends/)).toBeInTheDocument();
+    expect(screen.getByText(/Only a new analysis/)).toBeInTheDocument();
   });
   it("n'annonce aucun gain pour un finding explicatif de poids nul", () => {
     render(<PriorityCards priorities={[{ ...action, rankReason: "NO_DIRECT_SCORE_GAIN", globalScoreGain: 12 }]} />);
@@ -70,16 +70,16 @@ describe("PriorityCards", () => {
   });
   it("conserve les cartes historiques et leur effort explicite", () => {
     render(<PriorityCards priorities={[{ severity: "critical", title: "Historical action", impact: "Impact", effort: "M" }]} />);
-    expect(screen.getByText("Historical action")).toBeInTheDocument();
+    expect(screen.getByText(/Titre source.*Historical action/)).toBeInTheDocument();
     expect(screen.getByText("Effort M")).toBeInTheDocument();
     expect(screen.getByText("Confiance de mesure : inconnue")).toBeInTheDocument();
   });
   it("limite la présentation à six actions sans reclassement client", () => {
     const list = Array.from({ length: 8 }, (_, i) => ({ ...action, findingKey: `key-${i}`, title: `Action ${i}` }));
     render(<PriorityCards priorities={list} />);
-    expect(screen.getByText("Action 0")).toBeInTheDocument();
-    expect(screen.getByText("Action 5")).toBeInTheDocument();
-    expect(screen.queryByText("Action 6")).not.toBeInTheDocument();
+    expect(screen.getByText(/Titre source.*Action 0/)).toBeInTheDocument();
+    expect(screen.getByText(/Titre source.*Action 5/)).toBeInTheDocument();
+    expect(screen.queryByText(/Titre source.*Action 6/)).not.toBeInTheDocument();
   });
   it("affiche l'état vide", () => {
     render(<PriorityCards priorities={[]} />);
@@ -88,6 +88,18 @@ describe("PriorityCards", () => {
 });
 
 describe("action resolution", () => {
+  it("keeps an aggregate rank while linking underlying tool findings without asserting a cause", () => {
+    const report = createDemoReport("fr");
+    report.issues = [
+      { ...report.issues[0], id: "lighthouse.score.performance", categoryKey: "performance", module: "lighthouse" },
+      { ...report.issues[1], id: "lighthouse.audit.unused-css", categoryKey: "performance", module: "lighthouse" },
+    ];
+    report.summary.priorities = [{ ...action, findingKey: report.issues[0].id, relatedFindingKeys: [], categoryKey: "performance", rank: 7 }];
+    render(<PriorityCards priorities={report.summary.priorities} model={buildReportModel(report)} />);
+    expect(screen.getByText("Priorité 7")).toBeInTheDocument();
+    expect(screen.getByText(/n’est pas une correction à chiffrer/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Des styles peu utilisés/ })).toHaveAttribute("href", "#" + buildReportModel(report).findings[1].anchor);
+  });
   const demoReport = createDemoReport("fr");
   beforeEach(() => { locale = "fr"; });
   it("preserves backend rank/order and counts actual unique grouped findings", () => {

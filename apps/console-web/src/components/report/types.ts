@@ -1,4 +1,6 @@
 export type Report = {
+  pageIdentity?: { requested: string | null; destination: string | null; redacted: boolean; redirected: boolean } | null;
+  introduction?: ReportIntroduction | null;
   generatedAt: string;
   domain: string;
   url: string;
@@ -20,8 +22,9 @@ export type Report = {
       configuredDomainWeights?: Record<string, number> | null;
       checks?: Array<{ key: string; module: string; domain: string; weight: number; score: number }> | null;
     } | null;
-    /** Part des modules réellement évalués (0-100). Analyse partielle si < 100. */
+    /** Part des modules entièrement réussis (0-100), distincte de la progression terminale. */
     completeness?: number | null;
+    moduleExecution?: { total: number; completed: number; partial: number; failed: number; skipped: number; pending: number; running: number; terminalPercent: number } | null;
     byCategory: CategoryScore[];
   };
   summary: {
@@ -39,6 +42,8 @@ export type Report = {
   accessibilityEvidence?: AccessibilityEvidence | null;
   accessibilityCompliance?: AccessibilityCompliance | null;
 };
+
+export type ReportIntroduction = { author: string; context: string; findingKeys: string[]; nextStep: string; publishedAt: string };
 
 export type AccessibilityEvidence = {
   /** Raw Lighthouse accessibility category score, independently of the Argos domain score. */
@@ -139,9 +144,19 @@ export type PriorityItem = {
   globalScoreGain?: number | null;
 };
 
+export type ObservedEvidence = {
+  version: "observed-evidence-v1";
+  source: "lighthouse" | "runtime";
+  state: "AVAILABLE" | "UNAVAILABLE";
+  inspected: number; truncated: boolean; redacted: boolean;
+  items: Array<{kind:"resource"|"element";origin?:string;resourceRef?:string;nodePath?:string;
+    status?:number;reason?:string;resourceType?:string;ownership?:"FIRST_PARTY"|"THIRD_PARTY"}>;
+};
+
 export type Issue = {
   structuredEvidence?: {
     source: string;
+    observed?: ObservedEvidence | null;
     measurement?: { value: number; unit: "ms" | "bytes" | "count" | "days" | "score/100" | "ratio" | "unitless" } | null;
     details?: Array<{ key: string; text: string }>;
   } | null;

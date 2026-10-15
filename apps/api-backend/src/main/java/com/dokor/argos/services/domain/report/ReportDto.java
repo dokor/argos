@@ -15,8 +15,30 @@ public record ReportDto(
     Tech tech,
     AntiBot antiBot,   // non nul uniquement si une protection anti-bot a été détectée (#195)
     AccessibilityEvidence accessibilityEvidence,
-    AccessibilityCompliance accessibilityCompliance
+    AccessibilityCompliance accessibilityCompliance,
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    ReportIntroduction introduction,
+    ReportPageIdentity pageIdentity
 ) {
+    public ReportDto(String generatedAt, String domain, String url, Site site, Scores scores,
+                     Summary summary, List<Issue> issues, Tech tech, AntiBot antiBot,
+                     AccessibilityEvidence evidence, AccessibilityCompliance compliance, ReportIntroduction introduction) {
+        this(generatedAt, domain, url, site, scores, summary, issues, tech, antiBot, evidence, compliance, introduction, null);
+    }
+    public ReportDto withPageIdentity(ReportPageIdentity identity) {
+        if (identity == null) return this;
+        return new ReportDto(generatedAt, domain, identity.requested(), site, scores, summary, issues, tech,
+            antiBot, accessibilityEvidence, accessibilityCompliance, introduction, identity);
+    }
+    public ReportDto(String generatedAt, String domain, String url, Site site, Scores scores,
+                     Summary summary, List<Issue> issues, Tech tech, AntiBot antiBot,
+                     AccessibilityEvidence evidence, AccessibilityCompliance compliance) {
+        this(generatedAt, domain, url, site, scores, summary, issues, tech, antiBot, evidence, compliance, null);
+    }
+    public ReportDto withIntroduction(ReportIntroduction note) {
+        return new ReportDto(generatedAt, domain, url, site, scores, summary, issues, tech, antiBot,
+            accessibilityEvidence, accessibilityCompliance, note, pageIdentity);
+    }
     public ReportDto(String generatedAt, String domain, String url, Site site, Scores scores,
                      Summary summary, List<Issue> issues, Tech tech, AntiBot antiBot) {
         this(generatedAt, domain, url, site, scores, summary, issues, tech, antiBot, null, null);
@@ -90,12 +112,17 @@ public record ReportDto(
 
     public record Scores(
         int global, // 0..100
-        Integer completeness, // 0..100 : part des modules évalués (null si inconnu). Voir issue #101.
+        Integer completeness, // 0..100 : part des modules entièrement réussis (null si inconnu), hors progression terminale.
         List<CategoryScore> byCategory,
         Boolean globalAvailable, // null pour les rapports historiques
         ScoreCalculation calculation,
-        com.dokor.argos.services.analysis.scoring.MeasurementCoverage coverage
+        com.dokor.argos.services.analysis.scoring.MeasurementCoverage coverage,
+        ModuleExecution moduleExecution
     ) {
+        public Scores(int global, Integer completeness, List<CategoryScore> categories, Boolean available,
+                      ScoreCalculation calculation, com.dokor.argos.services.analysis.scoring.MeasurementCoverage coverage) {
+            this(global, completeness, categories, available, calculation, coverage, null);
+        }
         public Scores(int global,Integer completeness,List<CategoryScore> categories,Boolean available,ScoreCalculation calculation) {
             this(global,completeness,categories,available,calculation,null);
         }
@@ -198,7 +225,13 @@ public record ReportDto(
         }
     }
 
-    public record StructuredEvidence(String source, Measurement measurement, List<EvidenceDetail> details) {}
+    public record StructuredEvidence(String source, Measurement measurement, List<EvidenceDetail> details,
+        @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+        com.dokor.argos.services.analysis.model.ObservedEvidence observed) {
+        public StructuredEvidence(String source, Measurement measurement, List<EvidenceDetail> details) {
+            this(source,measurement,details,null);
+        }
+    }
     public record Measurement(double value, String unit) {}
     public record EvidenceDetail(String key, String text) {}
 

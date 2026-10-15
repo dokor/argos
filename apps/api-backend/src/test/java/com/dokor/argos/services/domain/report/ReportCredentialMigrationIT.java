@@ -21,6 +21,7 @@ import static org.mockito.Mockito.*;
 @EnabledIfEnvironmentVariable(named="ARGOS_TEST_CREDENTIALS_URL", matches=".+")
 class ReportCredentialMigrationIT extends MariaDbReportFixture {
     @Test void migrationRemovesBothPlaintextColumnsAndPreservesLinks() throws Exception {
+        migrateHistoricalRowsTo("26"); // V7 preserves links until the explicitly destructive V27 cutover.
         try(var connection=source.getConnection();var statement=connection.createStatement();var rows=statement.executeQuery("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND ((table_name='ARG_AUDIT_RUN' AND column_name='report_token') OR (table_name='ARG_AUDIT_REPORT' AND column_name='public_token'))")) {
             assertTrue(rows.next()); assertEquals(0,rows.getInt(1));
         }

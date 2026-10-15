@@ -1,6 +1,6 @@
 # Mes sites — milestone 7
 
-Base : main 4754f91, epic #445, issues #446–#448.
+Contrat introduit par #445 (#446–#448).
 
 Les sites sont personnels, regroupés par hostname normalisé exact. HTTP/HTTPS,
 chemins, query et ports suivent UrlNormalizer sans nouvelle simplification.
@@ -98,5 +98,4 @@ erreurs permanentes. Au plus trois reprises GET transitoires, avec Retry-After.
 Aucune reprise POST automatique. Les retours FR/EN n'acceptent que les routes
 exactes compte/sites/sites-ID/runs-ID et les rapports partagés déjà autorisés.
 
-Historique, courbes, quotas, crawl, suppression de site et vérification DNS
-restent hors périmètre.
+L’[historique](history.md) et la [consommation](usage-contract.md) complètent ce contrat. Crawl, suppression de site et vérification DNS restent hors périmètre.

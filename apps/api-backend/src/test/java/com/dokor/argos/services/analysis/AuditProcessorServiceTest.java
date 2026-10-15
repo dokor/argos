@@ -92,6 +92,18 @@ class AuditProcessorServiceTest {
     }
 
     @Test
+    void staleClaimAndChangedProfileStopBeforeAnyNetworkModule() throws Exception {
+        var runs=mock(AuditRunService.class);var audits=mock(AuditDao.class);var http=mock(HttpModuleAnalyzer.class);var publication=mock(ReportPublishService.class);
+        var run=new AuditRun();run.setId(1L);run.setStatus("RUNNING");run.setClaimToken("current");when(runs.getRun(1)).thenReturn(Optional.of(run));
+        var processor=new AuditProcessorService(runs,audits,mock(UrlNormalizer.class),http,mock(HtmlModuleAnalyzer.class),mock(RuntimeModuleAnalyzer.class),mock(LighthouseModuleAnalyzer.class),mock(ObservatoryModuleAnalyzer.class),mock(SslLabsModuleAnalyzer.class),mock(ZapModuleAnalyzer.class),mock(DomainAnalysisService.class),mock(CheckMergerService.class),mock(ScoreEnricherService.class),mock(ScoreService.class),objectMapper(),publication);
+        var profiles=new com.dokor.argos.services.connected.ConnectedProfiles(new com.dokor.argos.services.analysis.scoring.DefaultScorePolicy());processor.configureExecutionProfiles(profiles);
+        processor.process(1,"stale");verify(runs,never()).fail(anyLong(),anyString(),anyString());verifyNoInteractions(audits,http,publication);
+        var snapshot=profiles.snapshot(com.dokor.argos.services.connected.ConnectedProfiles.DEFAULT_ID);
+        run.setProfileSnapshot(objectMapper().writeValueAsString(new com.dokor.argos.services.connected.contract.ConnectedContracts.ProfileSnapshot(snapshot.profileId(),snapshot.contractVersion(),snapshot.settingsProvenance(),snapshot.scoringVersion()+1,snapshot.scoringFingerprint())));
+        processor.process(1,"current");verify(runs).fail(1,"ANALYSIS_PROFILE_CHANGED","current");verifyNoInteractions(audits,http,publication);
+    }
+
+    @Test
     void shouldFailWhenAuditNotFound() {
         AuditRunService runService = mock(AuditRunService.class);
         AuditDao auditDao = mock(AuditDao.class);
@@ -359,7 +371,7 @@ class AuditProcessorServiceTest {
                 assertEquals(List.of("runtime.collect"), result.checks().stream().map(c -> c.key()).toList());
                 assertFalse(result.checks().getFirst().scorable());
                 assertEquals(false, result.data().get("available"));
-                verify(runs).updateModuleStatus(1L, "runtime", "FAILED");
+                verify(runs).updateModuleStatus(1L, "runtime", "FAILED", "synthetic-worker");
                 verify(runs, never()).fail(anyLong(), anyString(), nullable(String.class));
             }
         }
@@ -401,6 +413,33 @@ class AuditProcessorServiceTest {
                 .thenThrow(new ModuleUnavailableException("late", new java.net.http.HttpTimeoutException("timeout"))), "TIMEOUT");
         }
 
+        @Test void disabledSecurityCollectorsExplainEveryMissingControlAndOtherModulesContinue() throws Exception {
+            try (var remote = new RemoteModuleExecutor(Duration.ofSeconds(5))) {
+                var processor = processor(remote);
+                when(ssl.analyze(any(), any())).thenThrow(new ModuleUnavailableException("SSL unavailable",
+                    new CollectorFailure(CollectorFailure.Code.POLICY_DISABLED)));
+                when(observatory.analyze(any(), any())).thenThrow(new ModuleUnavailableException("Observatory unavailable",
+                    new CollectorFailure(CollectorFailure.Code.POLICY_DISABLED)));
+                processor.process(1L);
+                var report = ArgumentCaptor.forClass(AuditReportJson.class);
+                verify(publisher).completeAndPublish(eq(1L), any(), report.capture(), anyString(), nullable(String.class));
+                var modules = report.getValue().modules();
+                var coverage = com.dokor.argos.services.analysis.scoring.MeasurementCoverageService.compute(
+                    new com.dokor.argos.services.analysis.scoring.DefaultScorePolicy(), modules);
+                var missing = coverage.checks().stream().filter(c -> java.util.Set.of("ssl", "observatory").contains(c.module())).toList();
+                assertFalse(missing.isEmpty());
+                assertTrue(missing.stream().allMatch(c -> "POLICY_DISABLED".equals(c.reason())
+                    && c.state() == com.dokor.argos.services.analysis.scoring.MeasurementCoverage.State.UNAVAILABLE));
+                for (var module : modules) if (java.util.Set.of("ssl", "observatory").contains(module.id())) {
+                    assertFalse(module.checks().getFirst().scorable());
+                    assertEquals("POLICY_DISABLED", module.data().get("failureCode"));
+                }
+                var statuses = mapper.readTree(report.getValue().meta().get("moduleStatuses"));
+                for (String module : List.of("http", "html", "runtime", "lighthouse", "zap", "tech"))
+                    assertEquals("COMPLETED", statuses.path(module).asText());
+            }
+        }
+
         @Test void legacyUnavailableResultIsNormalizedWithoutDuplicateCheck() throws Exception {
             assertRuntimeFallback(module -> when(module.analyze(any(), any())).thenReturn(
                 new AuditModuleResult("runtime", "Runtime", "old", Map.of("available", false, "reason", "UNAVAILABLE"),
@@ -430,7 +469,7 @@ class AuditProcessorServiceTest {
                 assertEquals("PARTIAL", mapper.readTree(report.getValue().meta().get("moduleStatuses"))
                     .path("runtime").asText());
                 assertTrue(report.getValue().modules().get(2).checks().isEmpty());
-                verify(runs).updateModuleStatus(1L, "runtime", "COMPLETED");
+                verify(runs).updateModuleStatus(1L, "runtime", "COMPLETED", "synthetic-worker");
             }
         }
         @Test void remoteCallsHaveHttpContextOverlapLocalWorkAndPublishOneOrderedReport() throws Exception {
@@ -523,9 +562,9 @@ class AuditProcessorServiceTest {
                 verify(publisher).completeAndPublish(eq(1L), any(), report.capture(), anyString(), nullable(String.class));
                 assertEquals("true", report.getValue().meta().get("degraded"));
                 assertEquals("TIMEOUT", mapper.readTree(report.getValue().meta().get("moduleStatuses")).path("ssl").asText());
-                verify(runs).updateModuleStatus(1L, "ssl", "RUNNING");
-                verify(runs).updateModuleStatus(1L, "ssl", "FAILED");
-                verify(runs, never()).updateModuleStatus(1L, "ssl", "COMPLETED");
+                verify(runs).updateModuleStatus(1L, "ssl", "RUNNING", "synthetic-worker");
+                verify(runs).updateModuleStatus(1L, "ssl", "FAILED", "synthetic-worker");
+                verify(runs, never()).updateModuleStatus(1L, "ssl", "COMPLETED", "synthetic-worker");
                 assertFalse(report.getValue().modules().get(5).checks().getFirst().scorable());
             }
         }

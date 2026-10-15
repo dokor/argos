@@ -3,7 +3,6 @@ import {
   scoreColor,
   scoreBg,
   scoreChipTheme,
-  scoreKpiTheme,
   SEVERITY_COLORS,
   type SeverityKey,
 } from "./reportColors";
@@ -47,16 +46,6 @@ describe("scoreChipTheme (unifié #190)", () => {
     expect(t.bg).toMatch(/^#[0-9a-f]{6}$/i);
     expect(t.fg).toMatch(/^#[0-9a-f]{6}$/i);
     expect(t.border).toMatch(/^#[0-9a-f]{6}$/i);
-  });
-});
-
-describe("scoreKpiTheme (unifié #190)", () => {
-  it("aligne l'accent sur scoreColor", () => {
-    expect(scoreKpiTheme(90).accent).toBe(scoreColor(90));
-    expect(scoreKpiTheme(60).accent).toBe(scoreColor(60));
-  });
-  it("renvoie un thème neutre pour un score absent", () => {
-    expect(scoreKpiTheme(null).accent).toBe("#64748b");
   });
 });
 

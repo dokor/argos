@@ -41,22 +41,16 @@ final class ReportEvidence {
         ReportDto.Measurement measurement = value instanceof Number n && unit != null
             && Double.isFinite(n.doubleValue()) ? new ReportDto.Measurement(n.doubleValue(), unit) : null;
         List<ReportDto.EvidenceDetail> details = check.details() == null ? List.of()
-            : check.details().entrySet().stream().filter(entry -> entry.getValue() != null).limit(20)
+            : check.details().entrySet().stream().filter(entry -> entry.getValue() != null && !"observed".equals(entry.getKey())).limit(20)
                 .map(entry -> new ReportDto.EvidenceDetail(clean(entry.getKey()), clean(entry.getValue()))).toList();
         String source = check.measurementProvenance() != null && check.measurementProvenance().module() != null
             ? check.measurementProvenance().module() : module;
-        return new ReportDto.StructuredEvidence(source, measurement, details);
+        var observed = com.dokor.argos.services.analysis.model.ObservedEvidence.from(
+            check.details()==null?null:check.details().get("observed"));
+        return new ReportDto.StructuredEvidence(source, measurement, details, observed);
     }
 
     static String clean(Object value) {
-        String text = String.valueOf(value).replaceAll("[\\p{Cntrl}\\u202a-\\u202e\\u2066-\\u2069]", " ");
-        text = URL.matcher(text).replaceAll(match -> {
-            try {
-                URI uri = URI.create(match.group());
-                if (uri.getHost() == null) return "[URL]";
-                return Matcher.quoteReplacement(new URI(uri.getScheme(), null, uri.getHost(), uri.getPort(), uri.getPath(), null, null).toASCIIString());
-            } catch (Exception ignored) { return "[URL]"; }
-        });
-        return text.substring(0, Math.min(text.length(), 4000));
+        return com.dokor.argos.services.analysis.AuditOutputSanitizer.text(String.valueOf(value));
     }
 }

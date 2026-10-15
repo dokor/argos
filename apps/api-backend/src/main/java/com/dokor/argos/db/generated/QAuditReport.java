@@ -42,7 +42,12 @@ public class QAuditReport extends com.querydsl.sql.RelationalPathBase<AuditRepor
 
     public final StringPath logoUrl = createString("logoUrl");
 
+    public final StringPath measurementCompleteness=createString("measurementCompleteness");
+    public final StringPath diagnosticJson=createString("diagnosticJson");
+    public final NumberPath<Integer> criticalCount=createNumber("criticalCount",Integer.class);
+    public final NumberPath<Integer> importantCount=createNumber("importantCount",Integer.class);
     public final StringPath reportJson = createString("reportJson");
+    public final StringPath introductionJson = createString("introductionJson");
 
     public final NumberPath<Long> runId = createNumber("runId", Long.class);
 
@@ -84,6 +89,11 @@ public class QAuditReport extends com.querydsl.sql.RelationalPathBase<AuditRepor
     }
 
     public void addMetadata() {
+        addMetadata(measurementCompleteness, ColumnMetadata.named("measurement_completeness").ofType(Types.VARCHAR).withSize(16));
+        addMetadata(diagnosticJson,ColumnMetadata.named("diagnostic_json").ofType(Types.LONGVARCHAR));
+        addMetadata(criticalCount,ColumnMetadata.named("critical_count").ofType(Types.INTEGER));
+        addMetadata(importantCount,ColumnMetadata.named("important_count").ofType(Types.INTEGER));
+        addMetadata(introductionJson, ColumnMetadata.named("introduction_json").ofType(Types.LONGVARCHAR));
         addMetadata(provisional, ColumnMetadata.named("provisional").ofType(Types.BOOLEAN));
         addMetadata(auditId, ColumnMetadata.named("audit_id").withIndex(3).ofType(Types.BIGINT).withSize(19).notNull());
         addMetadata(createdAt, ColumnMetadata.named("created_at").withIndex(10).ofType(Types.TIMESTAMP).withSize(23).notNull());

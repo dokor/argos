@@ -8,6 +8,10 @@ La page canonique est `/guides/checklist-audit-site-web`. Les formulations SEO d
 2. Dans le rapport **Performances** de Search Console, filtrer sur l’URL exacte de la page. Relever chaque semaine impressions, clics, CTR et requêtes. Examiner notamment `checklist audit site web`, `checklist audit technique site web`, `comment auditer un site web`, `audit SEO technique étapes`, `audit performance site web` et `vérifications sécurité site web`, sans supposer qu’elles génèrent déjà du trafic.
 3. Compter dans les logs serveur du BFF les événements `audit_bff_backend_response_ok` dont `details.sourceRoute` vaut `/guides/checklist-audit-site-web`. Ils correspondent aux créations d’audit réussies depuis le formulaire en fin de guide. Le champ est limité à cette route et n’est pas transmis au backend Java. Vérifier que `APP_LOGS_ENABLED` n’est pas désactivé en production. Comparer ce nombre aux clics organiques comme repère, sans le traiter comme un taux de conversion exact : des visiteurs peuvent venir d’autres canaux ou bloquer la mesure.
 
-## Liens à compléter
+## Maillage à maintenir
 
-La page pointe aujourd’hui vers la ressource existante qui explique les résultats et vers la FAQ qui décrit le rapport privé. Quand la [méthodologie du score (#300)](https://github.com/dokor/argos/issues/300) et l’[exemple de rapport (#69)](https://github.com/dokor/argos/issues/69) seront publiés, remplacer ces liens par leurs nouvelles routes publiques et vérifier qu’elles répondent avant déploiement.
+La méthode et l'exemple sont publiés dans le dépôt aux routes
+`/methodologie-score` et `/exemple-rapport`, avec leurs équivalents anglais.
+Vérifier les liens réciproques avec la checklist et la FAQ dans les deux langues.
+Les [liens de correction](correction-guide-links.md) restent limités aux guides
+effectivement publiés ; une issue ouverte n'est pas une destination utilisable.

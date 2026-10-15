@@ -39,7 +39,7 @@ public class ObservatoryModuleAnalyzer {
         String hostname = Urls.host(url);
 
         if (hostname == null) {
-            logger.warn("Observatory module: could not extract hostname from url={}", url);
+            logger.warn("Observatory module: could not extract hostname from url={}", com.dokor.argos.services.domain.audit.UrlNormalizer.sanitizeForLog(url));
             throw new ModuleUnavailableException("Could not extract hostname from URL");
         }
 
@@ -49,12 +49,12 @@ public class ObservatoryModuleAnalyzer {
         try {
             result = client.scan(hostname);
         } catch (Exception e) {
-            logger.warn("Observatory module: API call failed hostname={} error={}", hostname, e.getMessage());
+            logger.warn("Observatory module: API call failed hostname={} error={}", hostname, e.getClass().getSimpleName());
             throw new ModuleUnavailableException("Observatory API unavailable", e);
         }
 
         if (result == null || result.isNull()) {
-            throw new ModuleUnavailableException("Observatory response is empty");
+            throw new ModuleUnavailableException("Observatory response is empty", new com.dokor.argos.services.analysis.CollectorFailure(com.dokor.argos.services.analysis.CollectorFailure.Code.INVALID_RESPONSE));
         }
         // Parse score
         int score = JsonNodes.intValue(result, "score", -1);
@@ -63,7 +63,7 @@ public class ObservatoryModuleAnalyzer {
         int testsFailed = JsonNodes.intValue(result, "tests_failed", -1);
         int testsQuantity = JsonNodes.intValue(result, "tests_quantity", -1);
         if (score < 0 && grade == null && testsPassed < 0 && testsFailed < 0 && testsQuantity < 0) {
-            throw new ModuleUnavailableException("Observatory response has no usable measurements");
+            throw new ModuleUnavailableException("Observatory response has no usable measurements", new com.dokor.argos.services.analysis.CollectorFailure(com.dokor.argos.services.analysis.CollectorFailure.Code.INVALID_RESPONSE));
         }
 
         List<AuditCheckResult> checks = new ArrayList<>();
@@ -100,7 +100,7 @@ public class ObservatoryModuleAnalyzer {
                 try {
                     failedTests = parseFailedTests(client.tests(scanId));
                 } catch (Exception e) {
-                    logger.warn("Observatory module: tests detail unavailable scanId={} error={}", scanId, e.getMessage());
+                    logger.warn("Observatory module: tests detail unavailable scanId={} error={}", scanId, e.getClass().getSimpleName());
                 }
             }
         }

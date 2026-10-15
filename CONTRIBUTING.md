@@ -41,16 +41,40 @@ commerciale.
 
 1. **Ouvrez une issue** avant toute contribution significative pour valider le
    besoin et l'approche.
-2. **Branche dédiée** : partez de `main`, nommez la branche
-   `feat/issue-<N>-<slug>`, `fix/…` ou `tech/…`.
-3. **Tests** : toute modification de code doit être couverte par des tests.
-   - Backend : `cd apps/api-backend && mvn test`
-   - Frontend : `cd apps/console-web && npm run lint && npm run test`
+2. **Branche dédiée** : partez de `main` à jour ; les branches Codex utilisent
+   `codex/<sujet>`. Préserver les modifications locales étrangères au sujet.
+3. **Vérifications adaptées** : installer les dépendances Node avec `npm ci`,
+   utiliser Java 21 / Maven 3.9+ et Node.js 24 comme la CI.
+   - Backend : `cd apps/api-backend && mvn clean verify` (tests, packaging, couverture).
+   - Frontend : `cd apps/console-web && npm run lint && npm test && npm run build`.
+   - Collecteur modifié : depuis son dossier, `npm run check && npm test`.
+   - Pour un comportement modifié, ajouter un test de régression utile. Pour une
+     suppression sans changement fonctionnel, conserver les tests des parcours
+     actifs et prouver l'absence de consommateurs avant suppression.
 4. **i18n** : toute chaîne visible doit exister dans `fr.json` **et** `en.json`.
 5. **Migrations DB** : créez une migration Flyway `V(N+1)` et mettez à jour
    l'entité et la classe `Q*` correspondantes.
 6. **Pull request** : décrivez le changement, liez l'issue (`Closes #N`), et
    attendez une review humaine. Aucun merge sans validation du mainteneur.
+
+### Configuration, nettoyage et preuves
+
+Les guides [backend](apps/api-backend/README.md) et
+[frontend](apps/console-web/README.md) décrivent la configuration locale. Garder
+les secrets hors du dépôt, `API_BASE` côté serveur et tous les appels navigateur
+sur `/api/*`. Conserver les contrôles SSRF, de propriété et les contrats FR/EN.
+
+Avant de supprimer du code ou une dépendance, chercher les imports, références
+dynamiques, points d'entrée du framework, scripts, tests et usages de génération.
+Documenter les éléments conservés ainsi que les sujets de suivi dans
+l'[inventaire de maintenance](docs/maintenance.md). Ne jamais supprimer une
+migration historique ni réécrire les données pour nettoyer le code.
+
+La PR précise les commandes, leurs résultats réels et les limites de validation.
+Les recettes MariaDB, navigateur et services externes ont leurs prérequis dans
+l'[index de tests](docs/README.md) ; un test simulé ne prouve pas une recette en
+production. Stocker logs et sorties ponctuelles dans `outputs/` ignoré ou dans
+les artefacts CI du SHA testé. Ne pas déployer ni fusionner sans demande explicite.
 
 ### Propriété intellectuelle des contributions
 
@@ -65,3 +89,12 @@ Toute copie ou version modifiée d'Argos, ainsi que tout travail dérivé, reste
 soumise à la BSL 1.1 et doit **afficher la licence de façon visible** (conserver
 le fichier `LICENSE`). Ces conditions s'appliquent aussi si vous recevez Argos
 d'un tiers.
+
+### Relecture des textes visibles
+
+Toute modification de texte public, d’interface ou de rapport suit le
+[guide rédactionnel FR/EN](docs/product/editorial-guide.md). L’inventaire des
+routes et sources est dans [editorial-inventory.md](docs/product/editorial-inventory.md).
+Le contrôle de structure fait partie de `npm run test` ; il ne remplace pas la
+relecture humaine avant publication. Consigner dans la PR le relecteur, la date,
+les parcours relus et les réserves ; indiquer clairement si cette revue est en attente.

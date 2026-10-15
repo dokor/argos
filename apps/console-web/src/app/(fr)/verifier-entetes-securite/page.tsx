@@ -1,6 +1,6 @@
 import TopicAuditPage, { type TopicAuditContent } from "@/components/marketing/TopicAuditPage";
-import { siteUrl } from "@/lib/i18n/metadata";
-export const metadata = { title: "Vérifier les en-têtes de sécurité d’une page", description: "Analysez CSP, HSTS et les autres en-têtes observés sur une URL avec Argos : preuves, corrections contextualisées et limites.", alternates: { canonical: siteUrl + "/verifier-entetes-securite" }, openGraph: { title: "Vérifier les en-têtes de sécurité", description: "Réponse HTTP, constat et correction à tester sur une URL publique.", url: siteUrl + "/verifier-entetes-securite" } };
+import { localizedMetadata } from "@/lib/i18n/metadata";
+export const metadata = localizedMetadata("/verifier-entetes-securite", "fr", "Vérifier les en-têtes de sécurité d’une page", "Analysez CSP, HSTS et les autres en-têtes observés sur une URL avec Argos : preuves, corrections contextualisées et limites.");
 const content: TopicAuditContent = {
   "route": "/verifier-entetes-securite",
   "title": "Vérifier les en-têtes de sécurité d’une page",

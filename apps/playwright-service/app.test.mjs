@@ -4,14 +4,16 @@ import { once } from 'node:events';
 import { createRuntimeApp } from './app.mjs';
 
 async function serverFor(t, chromium) {
-  const server = createRuntimeApp({ chromium }).listen(0, '127.0.0.1');
+  const server = createRuntimeApp({ chromium, proxy: 'http://127.0.0.1:3128' }).listen(0, '127.0.0.1');
   await once(server, 'listening');
   t.after(() => new Promise(resolve => { server.close(resolve); server.closeAllConnections(); }));
   return 'http://127.0.0.1:' + server.address().port;
 }
-function collector({ navigationFailure = false, contextFailure = false } = {}) {
+function collector({ navigationFailure = false, contextFailure = false, cdpFailure = null } = {}) {
   let closed = 0, launched = 0;
   const handlers = {};
+  const contextHandlers = {};
+  let rejectInstrumentation;
   const page = {
     on: (name, handler) => { handlers[name] = handler; },
     url: () => 'https://www.example.co.uk/final',
@@ -23,7 +25,7 @@ function collector({ navigationFailure = false, contextFailure = false } = {}) {
       handlers.pageerror(new Error('fixture page error'));
       handlers.request({ url: () => 'https://assets.example.co.uk/script.js',
         resourceType: () => 'script', method: () => 'GET' });
-      handlers.requestfailed({ url: () => 'https://assets.example.co.uk/script.js' });
+      handlers.requestfailed({ url: () => 'https://assets.example.co.uk/script.js?token=private-secret', resourceType: () => 'script', failure: () => ({errorText:'net::ERR_CONNECTION_RESET'}) });
       await handlers.response({ url: () => 'https://other.test/api', status: () => 503,
         headers: () => ({ 'content-length': '321' }) });
       if (navigationFailure) throw new Error('Timeout fixture');
@@ -36,9 +38,26 @@ function collector({ navigationFailure = false, contextFailure = false } = {}) {
     return {
       newContext: async () => {
         if (contextFailure) throw new Error('private context failure');
-        return { newPage: async () => page };
+        return {
+          route: async () => {}, routeWebSocket: async () => {},
+          on: (name, handler) => { contextHandlers[name] = handler; },
+          newCDPSession: async () => {
+            if (cdpFailure === 'active') throw new Error('Instrumentation unavailable');
+            return { send: () => new Promise((_resolve, reject) => { rejectInstrumentation = reject; }) };
+          },
+          newPage: async () => {
+            if (cdpFailure) void contextHandlers.page(page);
+            return page;
+          }
+        };
       },
-      close: async () => { closed++; }
+      close: async () => {
+        closed++;
+        if (rejectInstrumentation) {
+          rejectInstrumentation(new Error('Target closed'));
+          await new Promise(resolve => setImmediate(resolve));
+        }
+      }
     };
   } };
   return { chromium, closed: () => closed, launched: () => launched };
@@ -54,8 +73,8 @@ test('health and invalid inputs never launch Chromium', async t => {
   assert.deepEqual(await (await fetch(base + '/health')).json(),
     { status: 'ok', service: 'playwright-service' });
   assert.equal((await fetch(base + '/unknown')).status, 404);
-  for (const body of ['{}', 'null', '{"url":3}', '{"url":"ftp://example.test"}',
-    '{"url":"https://user:secret@example.test"}', '{']) {
+  for (const body of ['{}', 'null', '{"url":3}', '{"url":"ftp://example.com"}',
+    '{"url":"https://user:secret@example.com"}', '{']) {
     assert.equal((await fetch(base + '/analyze/runtime', { method: 'POST',
       headers: { 'content-type': 'application/json' }, body })).status, 400);
   }
@@ -69,7 +88,7 @@ test('runtime contract retains metrics and partitions errors using the final dom
   assert.equal(response.status, 200);
   const report = await response.json();
   assert.equal(report.url, 'https://example.co.uk');
-  assert.equal(report.finalUrl, 'https://www.example.co.uk/final');
+  assert.equal(report.finalUrl, 'https://www.example.co.uk');
   assert.deepEqual(report.navigation, { status: 'COMPLETED', reason: null });
   assert.equal(report.console.errors, 2);
   assert.equal(report.console.errorsFirstParty, 1);
@@ -80,6 +99,13 @@ test('runtime contract retains metrics and partitions errors using the final dom
   assert.equal(report.network.status5xxFirstParty, 0);
   assert.equal(report.network.status5xxThirdParty, 1);
   assert.equal(report.network.totalBytesEstimated, 321);
+  const evidence=report.network.observedEvidence;
+  assert.equal(evidence.version,'observed-evidence-v1');
+  assert.equal(evidence.items[0].ownership,'FIRST_PARTY');
+  assert.equal(evidence.items[0].reason,'net::ERR_CONNECTION_RESET');
+  assert.equal(evidence.items[1].ownership,'THIRD_PARTY');
+  assert.equal(evidence.items[1].status,503);
+  assert.doesNotMatch(JSON.stringify(evidence),/private-secret|script.js|\?token/);
   assert.equal(fake.closed(), 1);
 });
 
@@ -108,13 +134,35 @@ test('context and launch failures return a generic error and release acquired br
 });
 test('global request timeout closes the active browser rather than leaving navigation running', async t => {
   let rejectNavigation, closed = 0;
-  const page = { on: () => {}, url: () => 'https://example.test',
+  const page = { on: () => {}, url: () => 'https://example.com',
     goto: () => new Promise((_resolve, reject) => { rejectNavigation = reject; }) };
   const base = await serverFor(t, { launch: async () => ({
-    newContext: async () => ({ newPage: async () => page }),
+    newContext: async () => ({ route: async () => {}, routeWebSocket: async () => {}, on: () => {}, newPage: async () => page }),
     close: async () => { closed++; rejectNavigation?.(new Error('Browser closed')); }
   }) });
   const response = await fetch(base + '/analyze/runtime', { method: 'POST', headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ url: 'https://example.test', timeoutMs: 100 }) });
+    body: JSON.stringify({ url: 'https://example.com', timeoutMs: 100 }) });
   assert.equal(response.status, 504); assert.ok(closed >= 1);
+});
+
+for (const navigationFailure of [false, true]) {
+  test(`closing a browser with pending CDP setup preserves ${navigationFailure ? 'failed' : 'completed'} navigation`, async t => {
+    const fake = collector({ navigationFailure, cdpFailure: 'cleanup' });
+    const response = await analyze(await serverFor(t, fake.chromium));
+    assert.equal(response.status, 200);
+    const report = await response.json();
+    assert.deepEqual(report.navigation, navigationFailure
+      ? { status: 'FAILED', reason: 'NAVIGATION_ERROR' }
+      : { status: 'COMPLETED', reason: null });
+    assert.equal(report.console.errors, 2);
+    assert.equal(fake.closed(), 1);
+  });
+}
+
+test('CDP setup failures during collection still cancel the analysis', async t => {
+  const fake = collector({ cdpFailure: 'active' });
+  const response = await analyze(await serverFor(t, fake.chromium));
+  assert.equal(response.status, 504);
+  assert.deepEqual(await response.json(), { error: 'Analysis timeout' });
+  assert.ok(fake.closed() >= 1);
 });

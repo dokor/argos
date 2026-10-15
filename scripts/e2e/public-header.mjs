@@ -19,6 +19,7 @@ async function checkLayout(page, copy, signedIn, mobile) {
   const account = nav.getByRole('link', { name: signedIn ? copy.account.title : copy.nav.signUp, exact: true });
   const audit = nav.getByRole('link', { name: copy.nav.freeAudit, exact: true });
   await account.waitFor();
+  assert.equal(await nav.locator('a[href$="/dashboard"]').count(), 0, 'Obsolete console shortcut must not appear');
   await page.evaluate(() => document.fonts.ready);
   assert.ok(await account.isVisible(), 'Account text must remain visible');
   assert.ok(await audit.isVisible(), 'Audit CTA must remain visible');
@@ -54,7 +55,6 @@ try {
         await context.route('**/api/account/session', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ signedIn }) }));
         // Header visibility follows the verified session response, not cookie presence.
         // Server-side validation of real HttpOnly cookies is covered by account/session tests.
-        await context.route('**/api/auth/status', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ isAdmin: true }) }));
         const page = await context.newPage();
         const errors = [];
         page.on('pageerror', error => errors.push(error.message));
@@ -84,9 +84,6 @@ try {
           assert.equal(await toggle.getAttribute('aria-expanded'), 'true');
           await nav.getByRole('link', { name: copy.nav.guides, exact: true }).waitFor();
           assert.ok(await nav.getByRole('group', { name: 'Language' }).isVisible());
-          const consoleLink = nav.getByRole('link', { name: copy.nav.openConsole });
-          await consoleLink.waitFor({ state: 'visible' });
-          assert.ok(await consoleLink.isVisible());
           assert.ok(await nav.evaluate(el => el.scrollWidth <= el.clientWidth));
           await nav.screenshot({ path: output + '/' + state + '-menu.png' });
           await page.keyboard.press('Escape');

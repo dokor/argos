@@ -41,7 +41,7 @@ public class SslLabsModuleAnalyzer {
         String host = Urls.host(url);
 
         if (host == null) {
-            logger.warn("SSL Labs module: could not extract host from url={}", url);
+            logger.warn("SSL Labs module: could not extract host from url={}", com.dokor.argos.services.domain.audit.UrlNormalizer.sanitizeForLog(url));
             throw new ModuleUnavailableException("Could not extract host from URL");
         }
 
@@ -51,17 +51,17 @@ public class SslLabsModuleAnalyzer {
         try {
             result = client.analyze(host);
         } catch (Exception e) {
-            logger.warn("SSL Labs module: API failed host={} error={}", host, e.getMessage());
+            logger.warn("SSL Labs module: API failed host={} error={}", host, e.getClass().getSimpleName());
             throw new ModuleUnavailableException("SSL Labs API unavailable", e);
         }
 
         // Assess every address; aggregate each control independently.
         if (result == null || result.isNull()) {
-            throw new ModuleUnavailableException("SSL Labs response is empty");
+            throw new ModuleUnavailableException("SSL Labs response is empty", new com.dokor.argos.services.analysis.CollectorFailure(com.dokor.argos.services.analysis.CollectorFailure.Code.INVALID_RESPONSE));
         }
         JsonNode endpoints = result.path("endpoints");
         if ((!endpoints.isArray() || endpoints.isEmpty()) && JsonNodes.text(result.path("status")) == null) {
-            throw new ModuleUnavailableException("SSL Labs response has no usable measurements");
+            throw new ModuleUnavailableException("SSL Labs response has no usable measurements", new com.dokor.argos.services.analysis.CollectorFailure(com.dokor.argos.services.analysis.CollectorFailure.Code.INVALID_RESPONSE));
         }
 
         long nowMs = Instant.now().toEpochMilli();

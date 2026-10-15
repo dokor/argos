@@ -13,49 +13,13 @@ import AuditForm from "./AuditForm";
 import { argosApi } from "@/lib/ArgosApi";
 import { LangProvider } from "@/lib/i18n/LangContext";
 
-it("blocks new launches locally when capacity is exhausted",()=>{
-  vi.mocked(argosApi.createAudit).mockReset();render(<AuditForm mode="personal" initialUrl="https://example.com" launchBlocked/>);
-  expect(screen.getByRole("button")).toBeDisabled();fireEvent.submit(screen.getByRole("textbox").closest("form")!);
-  expect(argosApi.createAudit).not.toHaveBeenCalled();
-});
-it("shows quota errors distinctly and keeps the session valid",async()=>{
-  const invalid=vi.fn();window.addEventListener("argos-account-invalid",invalid);
-  vi.mocked(argosApi.createAudit).mockRejectedValue(Object.assign(new Error("HTTP 429"),{status:429,code:"quota_exceeded"}));
-  render(<AuditForm mode="personal" initialUrl="https://example.com"/>);fireEvent.submit(screen.getByRole("textbox").closest("form")!);
-  expect(await screen.findByRole("alert")).toHaveTextContent("capacité mensuelle");expect(invalid).not.toHaveBeenCalled();
-  expect(push).not.toHaveBeenCalled();window.removeEventListener("argos-account-invalid",invalid);
-});
-
-it("submits a personal audit once and navigates using runId without a report token", async () => {
-  push.mockReset();vi.mocked(argosApi.createAudit).mockReset();
-  let finish:(value:never)=>void=()=>{};
-  vi.mocked(argosApi.createAudit).mockReturnValue(new Promise(resolve=>{finish=resolve;}));
-  render(<AuditForm mode="personal" initialUrl="https://example.com/path"/>);
-  const form=screen.getByRole("textbox").closest("form")!;
-  fireEvent.submit(form);fireEvent.submit(form);
-  expect(argosApi.createAudit).toHaveBeenCalledTimes(1);
-  expect(argosApi.createAudit).toHaveBeenCalledWith(expect.objectContaining({personal:true,url:"https://example.com/path"}));
-  finish({runId:"42",status:"QUEUED"} as never);
-  await waitFor(()=>expect(push).toHaveBeenCalledWith("/account/runs/42"));
-});
-it("invalidates the shared private session when audit creation rejects it",async()=>{
-  const rejected=vi.fn();window.addEventListener("argos-account-invalid",rejected);
-  vi.mocked(argosApi.createAudit).mockRejectedValue(Object.assign(new Error("HTTP 401"),{status:401}));
-  render(<AuditForm mode="personal" initialUrl="https://example.com"/>);
-  fireEvent.submit(screen.getByRole("textbox").closest("form")!);
-  await waitFor(()=>expect(rejected).toHaveBeenCalledTimes(1));
-  window.removeEventListener("argos-account-invalid",rejected);
-});
-
 describe("AuditForm (soumission d'audit)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Le dashboard ouvre le rapport dans un nouvel onglet (#169) : on simule un
-    // window.open réussi (jsdom ne l'implémente pas nativement).
     vi.spyOn(window, "open").mockReturnValue({} as Window);
   });
 
-  it("crée un audit avec l'URL normalisée puis ouvre le rapport dans un nouvel onglet", async () => {
+  it("crée par défaut un audit public puis ouvre le rapport dans le même onglet", async () => {
     vi.mocked(argosApi.createAudit).mockResolvedValue({
       auditId: 1,
       runId: 2,
@@ -73,10 +37,9 @@ describe("AuditForm (soumission d'audit)", () => {
       expect(argosApi.createAudit).toHaveBeenCalledWith({ url: "https://example.com", sourceRoute: "/", lang: "fr" })
     );
     await waitFor(() =>
-      expect(window.open).toHaveBeenCalledWith("/report/tok123", "_blank")
+      expect(push).toHaveBeenCalledWith("/report/tok123")
     );
-    // Nouvel onglet ouvert : pas de navigation dans l'onglet courant.
-    expect(push).not.toHaveBeenCalled();
+    expect(window.open).not.toHaveBeenCalled();
   });
 
   it("n'appelle pas l'API quand l'URL est vide", () => {

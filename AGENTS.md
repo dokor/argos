@@ -1,6 +1,6 @@
 # Argos - Instructions pour agents IA
 
-Argos est un outil d'audit de site web : l'utilisateur soumet une URL, cinq modules d'analyse tournent en séquence, et un rapport scoré privé est produit en ~20 secondes.
+Argos est un outil d'audit de site web : l'utilisateur soumet une URL, huit modules d'analyse produisent un rapport scoré accessible par un lien privé. Le délai dépend des services distants. Voir les contrats actifs dans [docs/README.md](docs/README.md) et l'[inventaire de maintenance](docs/maintenance.md).
 
 ---
 
@@ -10,7 +10,7 @@ Argos est un outil d'audit de site web : l'utilisateur soumet une URL, cinq modu
 argos/
 ├── apps/
 │   ├── api-backend/        Java 21, Maven, Jersey/Grizzly - API REST + traitement des audits
-│   ├── console-web/        Next.js 14 App Router - frontend public + dashboard admin
+│   ├── console-web/        Next.js App Router - frontend public + comptes et administration
 │   ├── playwright-service/ Node.js - headless browser (runtime metrics)
 │   └── lighthouse-service/ Node.js - Lighthouse headless (perf/a11y scores)
 └── infra/
@@ -27,7 +27,7 @@ argos/
 - **DB** : MariaDB via HikariCP + QueryDSL SQL + Flyway migrations
 - **JSON** : Jackson ObjectMapper (injecté via Guice)
 - **Validation** : Jakarta Bean Validation (`@Valid`, `@NotBlank`, `@Size`)
-- **Build** : `mvn package` → fat JAR
+- **Build** : `mvn package` → JAR et dépendances dans `target/dist/api-backend/lib`
 
 ### Packages principaux
 | Package | Rôle |
@@ -36,12 +36,12 @@ argos/
 | `db.dao` | DAOs CRUD (`AuditDao`, `AuditRunDao`, `AuditReportDao`, `DomainDao`, `DomainAnalysisDao`) |
 | `services.analysis` | Orchestration des modules + scoring |
 | `services.analysis.modules.*` | Modules d'analyse : `http`, `html`, `runtime`, `lighthouse`, `observatory`, `ssl`, `zap`, `tech` |
-| `services.analysis.scoring` | `ScorePolicyV1`, `ScoreEnricherService`, `ScoreService` |
+| `services.analysis.scoring` | `DefaultScorePolicy`, `ScoreEnricherService`, `ScoreService` |
 | `services.domain.audit` | `AuditService`, `AuditRunService`, `UrlNormalizer` |
 | `services.domain.report` | `PublicReportComposer`, `ReportPublishService`, `ReportReadService` |
 | `services.domain.domain` | `DomainService` |
 | `services.token` | `TokenService` (génération de tokens base64url + SHA-256) |
-| `services.scheduler` | `SchedulerJobs` - tick toutes les `audit.scheduler.interval` (défaut : 1 min) |
+| `services.scheduler` | `SchedulerJobs` - délai `audit.scheduler.interval` après traitement (défaut : 5 s) |
 | `webservices.api` | `AuditsWs`, `ReportsWs`, `NewsletterWs` |
 | `webservices.internal` | `MonitoringWs`, `SwaggerWs` |
 
@@ -53,53 +53,14 @@ Le serveur Grizzly monte sur `/api` - toutes les routes JAX-RS sont donc préfix
 - `GET /api/reports/{token}` - rapport public
 - `GET /api/reports/{token}/status` - statut de progression (avant publication)
 
-### Flux d'audit (async)
-```
-POST /api/audits
-  → AuditService.createAudit()
-      → UrlNormalizer.normalize()          # SSRF + scheme + longueur
-      → DomainService.findOrCreate()
-      → AuditRunService.createQueuedRun()  # génère reportToken + moduleStatuses PENDING
-      ← CreateAuditResponse { runId, reportToken, status: QUEUED }
+### Flux, données et scoring
 
-Scheduler (tick 1 min)
-  → AuditService.processNextQueuedRun()
-      → AuditRunService.claimNextQueuedRun()   # atomic claim
-      → AuditProcessorService.process(runId)
-          # Pour chaque module :
-          → auditRunService.updateModuleStatus(runId, "http", "RUNNING")
-          → httpModuleAnalyzer.analyze()
-          → auditRunService.updateModuleStatus(runId, "http", "COMPLETED")
-          # ... même pattern pour html, runtime, lighthouse, observatory, ssl, zap, tech
-          → CheckMergerService.merge()
-          → ScoreEnricherService.enrich()
-          → ScoreService.compute()
-          → auditRunService.complete(runId, resultJson)
-          → reportPublishService.publishIfAbsent(runId, audit, report, preGeneratedToken)
-```
-
-### Entités DB importantes
-| Table | Champs clés |
-|---|---|
-| `ARG_AUDIT` | `id`, `domain_id`, `input_url`, `normalized_url`, `created_at` |
-| `ARG_AUDIT_RUN` | `id`, `audit_id`, `status` (QUEUED/RUNNING/COMPLETED/FAILED), `report_token`, `module_statuses` (JSON), `result_json`, `claim_token`, `started_at`, `finished_at` |
-| `ARG_AUDIT_REPORT` | `id`, `run_id`, `public_token`, `token_hash`, `domain`, `report_json`, `expires_at` |
-| `ARG_DOMAIN` | `id`, `hostname`, `created_at` |
-| `ARG_DOMAIN_ANALYSIS` | `id`, `domain_id`, `tech_json`, `analyzed_at` (cache 24h) |
-
-### Migrations Flyway
-- `V1` - tables de base (Audit, AuditRun, AuditReport)
-- `V2.0 / V2.1` - AuditReport
-- `V3` - newsletter
-- `V4` - Domain + DomainAnalysis
-- `V5` - `report_token` + `module_statuses` sur ARG_AUDIT_RUN
-
-### Scoring
-- **`ScorePolicyV1`** - overrides exacts par `checkKey` puis fallback par préfixe. Chaque règle définit `scorable`, `weight`, `tags[]`.
-- **`ScoreEnricherService`** - fusionne les tags du check + ceux de la policy via `mergeTags()` (LinkedHashSet, dédup).
-- **`ScoreService`** - accumule le score par tag (`byTag`). Un check porte un tag de **domaine** (`performance`/`security`/`seo`/`a11y`) et souvent un tag d'**outil** (`lighthouse`/`ssl`/`observatory`/`zap`/`runtime`).
-- **Policy active** : `ScorePolicyV7` (issue #197). Chaîne V2→…→V7. V7 rattache `runtime.*` au domaine `performance` (le tag `runtime` sert de provenance).
-- **`PublicReportComposer`** - **catégorisation par domaine** (issue #197) : `isBusinessTag()` ne retient que les 4 domaines `PRIORITY_CATEGORIES` (`performance`, `security`, `seo`, `a11y`) ; les tags d'outil et de module (`http`/`html`/`tech`) ne sont pas des catégories. Une issue n'apparaît donc que dans **une** catégorie (son domaine), plus de doublon. `buildIssues()` ignore les checks non-scorables (`scorable == false`).
+- Le scheduler réclame un run atomiquement, puis AuditProcessorService orchestre huit modules. SSL Labs et Observatory tournent dans un pool distant borné après HTTP ; les autres restent séquentiels. Voir [progression](docs/analysis/progress.md) et [budget global](docs/analysis/deadline.md).
+- La publication et la transition COMPLETED suivent le [contrat de publication atomique](docs/security/audit-publication.md). Ne pas les remplacer par deux écritures indépendantes.
+- Le lien du rapport est pré-généré à la création du run. Depuis V7, seules les empreintes sont stockées (report_token_hash sur ARG_AUDIT_RUN, token_hash sur ARG_AUDIT_REPORT). Voir [credentials](docs/security/report-credentials.md). Ne pas réintroduire report_token/public_token en clair ni régénérer le lien à la publication.
+- Le schéma courant est défini par toutes les migrations dans apps/api-backend/src/main/resources/db/migration et les classes db.generated ; conserver les migrations historiques, y compris les anciennes colonnes qu'elles décrivent.
+- DefaultScorePolicy est liée à ScorePolicy dans ApplicationModule. Le catalogue exact distingue domaine métier et provenance technique ; ScoreService normalise les domaines mesurables avant le global. Les anciens ScorePolicyV1…V8 ont été consolidés : ne pas les recréer.
+- PublicReportComposer et ses collaborateurs produisent un rapport avec catégories métier, couverture et priorités. Respecter les contrats [score](docs/scoring/domain-calibration.md), [couverture](docs/scoring/measurement-coverage.md) et [modèle de lecture](docs/report/read-model.md).
 
 ### Sécurité (UrlNormalizer)
 - Longueur max : 2048 chars
@@ -112,21 +73,21 @@ Scheduler (tick 1 min)
 db.dialect = MYSQL
 db.hikari.dataSourceClassName = org.mariadb.jdbc.MariaDbDataSource
 db.hikari."dataSource.url" = jdbc:mariadb://host/db
-audit.scheduler.interval = 1m
-http-grizzly.worker-threads-pool-size = 512
+audit.scheduler.interval = 5s
+http-grizzly.worker-threads-pool-size = 24
 ```
 En prod, injecté via `-Dconfig.file=/config/prod.conf` (volume Docker).
 
 ### Tests Java
 Situés dans `src/test/java/com/dokor/argos/`. Lancer avec `mvn test`.
-Fichiers clés : `UrlNormalizerTest`, `ScoreServiceTest`, `ScorePolicyV1Test`, `PublicReportComposerTest`, `HttpModuleAnalyzerTest`, `HtmlModuleAnalyzerTest`.
+Fichiers clés : `UrlNormalizerTest`, `ScoreServiceTest`, `DefaultScorePolicyTest`, `PublicReportComposerTest`, `HttpModuleAnalyzerTest`, `HtmlModuleAnalyzerTest`.
 
 ---
 
-## App 2 : `console-web` (Next.js 14 App Router)
+## App 2 : `console-web` (Next.js App Router)
 
 ### Stack technique
-- Next.js 14, TypeScript, **SCSS Modules** (système de style canonique)
+- Next.js 16, React 19, TypeScript, **SCSS Modules** (versions exactes dans `package.json`)
 - `"use client"` pour les pages interactives ; layouts = toujours Server Components
 - Internationalisation maison (`LangContext` + `fr.json` / `en.json`)
 - Styles : **SCSS Modules uniquement** - Tailwind et shadcn/ui ont été retirés (issue #124).
@@ -138,33 +99,32 @@ Fichiers clés : `UrlNormalizerTest`, `ScoreServiceTest`, `ScorePolicyV1Test`, `
 |---|---|---|
 | `/` | Server | Landing page publique |
 | `/report/[token]` | Server → Client | Rapport : SSR tente le fetch, si 404 → `AuditProgressView` (polling) |
-| `/dashboard` | Client | Console admin (auth par cookie `ADMIN_TOKEN`) |
-| `/login` | Client | Auth admin |
+| `/account/admin` | Client | Administration avec session de compte ACTIVE ADMIN |
+| `/account/admin/analytics` | Client | Mesure produit sous session ACTIVE ADMIN |
+| `/account/sign-in` | Client | Connexion au compte |
 | `/api/audits` | Route Handler | BFF : valide l'URL (SSRF, scheme, longueur) puis proxy vers Java |
-| `/api/auth/login` | Route Handler | Authentification admin |
+| `/api/account/*` | Route Handler | BFF des comptes et de l’administration |
 | `/api/newsletter` | Route Handler | Inscription newsletter |
 
 ### Variables d'environnement
 | Variable | Côté | Description |
 |---|---|---|
 | `API_BASE` | Serveur | URL interne du backend Java (ex: `http://api-backend:8081`) |
-| `ADMIN_PASSWORD` | Serveur | Mot de passe admin |
-| `ADMIN_TOKEN` | Serveur | Token de session admin |
 | `NEXT_PUBLIC_SITE_URL` | Client | URL publique du site (ex: `https://argos.lelouet.fr`) - défaut dans le code |
 | `NEXT_PUBLIC_CALENDLY_URL` | Client | URL Calendly pour le CTA |
 | `NEXT_PUBLIC_APP_LOGS_ENABLED` | Client | Active les logs structurés côté client |
 | `APP_LOGS_ENABLED` | Serveur | Active les logs structurés côté serveur |
 
 ### Proxy API
-`next.config.ts` - rewrite `afterFiles` : `/api/:path*` → `${API_BASE}/api/:path*`.
-Exception : la route `src/app/api/audits/route.ts` intercepte `POST /api/audits` avant le rewrite (validation BFF).
+`next.config.ts` - rewrite `fallback` : `/api/:path*` → `${API_BASE}/api/:path*`.
+Les Route Handlers BFF, y compris les routes dynamiques des comptes/admin, sont résolus avant ce proxy. Ne pas revenir à `afterFiles`, qui contournerait ces routes dynamiques.
 
 ### Architecture SSR / BFF (issue #136)
 - **Aucun appel navigateur → service externe en direct.** Le navigateur n'appelle que des chemins **same-origin `/api/*`**, résolus côté serveur :
-  - **Route handlers** (`src/app/api/*`) pour les flux avec validation/secrets : `POST/GET /api/audits` (SSRF + longueur), `POST /api/newsletter`, `POST /api/auth/login`.
+  - **Route handlers** (`src/app/api/*`) pour les flux avec validation/secrets : `POST/GET /api/audits` (SSRF + longueur), `POST /api/newsletter`, les mutations de compte.
   - **Rewrite proxy** pour les lectures restantes (`/api/reports/*`, `/api/audits/runs/*`, `/api/audits/*/history`).
 - `API_BASE` (URL interne du backend Java) est **exclusivement serveur** — jamais exposée au client. `argosApi.http()` (`src/lib/ArgosApi.ts`) utilise l'URL absolue en SSR et un chemin relatif côté client (proxifié).
-- **Frontière client/serveur** : la plupart des composants sont `"use client"` **parce que l'i18n (`LangContext`) et le thème (`ThemeContext`) sont des contextes client**, en plus de l'interactivité. Réduire davantage l'hydratation des contenus statiques suppose une **i18n résolue côté serveur** (chantier séparé). Les composants purs sans hook/événement ne portent pas la directive (ex. `KpiCard`, `StatusBadge`).
+- **Frontière client/serveur** : la plupart des composants sont `"use client"` **parce que l'i18n (`LangContext`) et le thème (`ThemeContext`) sont des contextes client**, en plus de l'interactivité. Réduire davantage l'hydratation des contenus statiques suppose une **i18n résolue côté serveur** (chantier séparé). Les composants purs sans hook/événement ne portent pas la directive (ex. `ArgosIcon`).
 
 ### Composants rapport (`src/components/report/`)
 | Composant | Rôle |
@@ -182,15 +142,15 @@ Exception : la route `src/app/api/audits/route.ts` intercepte `POST /api/audits`
 
 ### i18n
 Clés de traduction dans `src/lib/i18n/fr.json` et `en.json` :
-`layout`, `nav`, `landing`, `dashboard`, `report`, `auditForm`, `auditList`, `langToggle`
+`layout`, `nav`, `landing`, `report`, `auditForm`, `account`, `langToggle`
 
 Le one-liner du rapport est retourné comme clé (`"high"` | `"good"` | `"fair"` | `"low"`) par le backend et traduit côté frontend via `t.report.hero.oneLiner[key]`.
 
 ### SEO / Indexabilité
-- `src/app/robots.ts` - crawl autorisé sur `/`, bloqué sur `/dashboard/`, `/login/`, `/api/`, `/report/`
+- `src/app/robots.ts` - crawl autorisé sur `/`, API bloquée ; comptes et rapports portent noindex
 - `src/app/sitemap.ts` - homepage uniquement, changeFrequency weekly
 - `src/app/layout.tsx` - métadonnées OG complètes, JSON-LD `WebApplication`, `manifest.json`
-- `/login` et `/dashboard` ont des `layout.tsx` segment avec `robots: { index: false }` (les pages `"use client"` ne peuvent pas exporter `metadata`)
+- Les segments `/account` et `/en/account` ont des `layout.tsx` avec `robots: { index: false }` (les pages `"use client"` ne peuvent pas exporter `metadata`)
 - `public/og.png` - image OG 1200×630 générée avec Pillow (script `outputs/gen_og.py`)
 - `public/llms.txt` - description pour les crawlers IA
 
@@ -226,6 +186,11 @@ Le one-liner du rapport est retourné comme clé (`"high"` | `"good"` | `"fair"`
 
 ## Conventions de développement
 
+### Livraison dans une pull request
+- Toute modification de code Argos doit être livrée dans une PR : créer une branche dédiée ou mettre à jour la PR pertinente, exécuter les vérifications adaptées, pousser les changements et ouvrir la PR avant de considérer le travail terminé.
+- Fournir le lien de la PR dans la réponse finale. La création ou la mise à jour de la PR est autorisée pour les changements demandés ; sa fusion et le déploiement nécessitent une demande explicite.
+- Si l'accès distant empêche la création de la PR, conserver les changements et signaler précisément le blocage.
+
 ### Nommage Java
 - Classes de service : `XxxService` (logique métier), `XxxDao` (accès DB), `XxxWs` (endpoint REST)
 - Entités QueryDSL générées : ne pas modifier manuellement sauf pour ajouter des champs après migration Flyway
@@ -234,7 +199,7 @@ Le one-liner du rapport est retourné comme clé (`"high"` | `"good"` | `"fair"`
 ### Frontend
 - Pas de `metadata` dans les pages `"use client"` → utiliser un `layout.tsx` de segment
 - Ne jamais utiliser `localStorage` (non supporté dans l'environnement de rendu)
-- Les rewrites `afterFiles` sont contournés par les Route Handlers Next.js - utiliser un Route Handler pour intercepter avant proxy
+- Garder le proxy en `fallback` afin que les Route Handlers BFF statiques et dynamiques interceptent les requêtes avant Java
 
 ### Accessibilité (a11y)
 - Tout champ de saisie doit avoir un **nom accessible** : `<label htmlFor>` visible, ou à défaut `aria-label` (un `placeholder` ne suffit pas).
@@ -255,6 +220,6 @@ Le one-liner du rapport est retourné comme clé (`"high"` | `"good"` | `"fair"`
 - Ajouter les tests dans `src/test/java/com/dokor/argos/`
 
 ### Build & déploiement
-- Backend : `mvn package` → `target/api-backend-*.jar`
+- Backend : `mvn package` → `target/dist/api-backend/lib/*` (JAR et dépendances)
 - Frontend : `npm run build` depuis `apps/console-web/`
 - Déploiement : `docker compose -f infra/compose/<service>/docker-compose.prod.yml up -d --build`

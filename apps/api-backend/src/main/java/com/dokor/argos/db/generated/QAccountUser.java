@@ -19,10 +19,14 @@ public class QAccountUser extends RelationalPathBase<AccountUser> {
     public final StringPath offer = createString("offer");
     public final DateTimePath<Instant> createdAt = createDateTime("createdAt", Instant.class);
     public final DateTimePath<Instant> archivedAt = createDateTime("archivedAt", Instant.class);
+    public final NumberPath<Long> adminVersion = createNumber("adminVersion", Long.class);
+    public final StringPath suspendedFrom = createString("suspendedFrom");
     public final PrimaryKey<AccountUser> primary = createPrimaryKey(id);
 
     public QAccountUser(String variable) {
         super(AccountUser.class, forVariable(variable), null, "ARG_ACCOUNT_USER");
+        addMetadata(adminVersion, ColumnMetadata.named("admin_version").ofType(Types.BIGINT));
+        addMetadata(suspendedFrom, ColumnMetadata.named("suspended_from").ofType(Types.VARCHAR));
         addMetadata(id, ColumnMetadata.named("id").withIndex(1).ofType(Types.BIGINT));
         addMetadata(email, ColumnMetadata.named("email").withIndex(2).ofType(Types.VARCHAR));
         addMetadata(

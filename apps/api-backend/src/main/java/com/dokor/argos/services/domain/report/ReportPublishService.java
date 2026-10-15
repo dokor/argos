@@ -49,7 +49,7 @@ public class ReportPublishService {
         ReportDto dto = new ReportDto(composed.generatedAt(), composed.domain(), composed.url(),
             new ReportDto.Site(site == null ? null : site.title(), site == null ? null : site.logoUrl(), rating),
             composed.scores(), composed.summary(), composed.issues(), composed.tech(), composed.antiBot(),
-            composed.accessibilityEvidence(), composed.accessibilityCompliance());
+            composed.accessibilityEvidence(), composed.accessibilityCompliance()).withPageIdentity(composed.pageIdentity());
         Integer globalScore = publishedGlobalScore(internal, dto);
         AuditReport entity = new AuditReport();
         entity.setAuditId(audit.getId()); entity.setRunId(runId);
@@ -60,12 +60,19 @@ public class ReportPublishService {
         entity.setGlobalScore(globalScore);
         entity.setProvisional(dto.scores()==null || dto.scores().coverage()==null ? null : dto.scores().coverage().provisional());
         entity.setScoringVersion(globalScore == null ? null : internal.score().scoringVersion());
-        try { entity.setReportJson(mapper.writeValueAsString(dto)); }
+        try { entity.setReportJson(mapper.writeValueAsString(com.dokor.argos.services.analysis.AuditOutputSanitizer.tree(dto, mapper))); }
         catch (Exception error) { throw new IllegalStateException("Report serialization failed", error); }
+        try {
+            var diagnostic=com.dokor.argos.services.connected.summary.DiagnosticProjection.from(mapper.readTree(entity.getReportJson()),mapper.valueToTree(internal.score()));
+            entity.setDiagnosticJson(mapper.writeValueAsString(diagnostic));
+            entity.setCriticalCount(diagnostic.criticalCount()==null?null:Math.toIntExact(diagnostic.criticalCount()));
+            entity.setImportantCount(diagnostic.importantCount()==null?null:Math.toIntExact(diagnostic.importantCount()));
+        } catch (java.io.IOException invalid) { throw new IllegalStateException("Diagnostic projection failed",invalid); }
+        entity.setMeasurementCompleteness(ReportCompleteness.from(dto));
         entity.setCreatedAt(Instant.now());
         entity.setExpiresAt(retention.expiresAt(entity.getCreatedAt()));
 
-        return transactions.executeAndReturn(connection -> {
+        long outcome = transactions.executeAndReturn(connection -> {
             var run = runs.lockForPublication(runId, connection).orElseThrow(() -> new IllegalStateException("Run missing"));
             if (!Objects.equals(run.getAuditId(), audit.getId()) || !claimToken.equals(run.getClaimToken())) {
                 throw new IllegalStateException("Worker no longer owns this run");
@@ -73,6 +80,7 @@ public class ReportPublishService {
             var existing = reports.findByRunId(runId, connection);
             if ("COMPLETED".equals(run.getStatus()) && existing.isPresent()) return existing.get().getId();
             if (!"RUNNING".equals(run.getStatus()) || existing.isPresent()) throw new IllegalStateException("Run cannot be published");
+            if(Boolean.TRUE.equals(run.getCancelRequested())) {runs.finishCanceled(run,Instant.now(),connection);return 0L;}
             byte[] hash = run.getReportTokenHash();
             if (hash == null || hash.length != 32) throw new IllegalStateException("Missing report credential hash");
             entity.setTokenHash(hash);
@@ -80,9 +88,12 @@ public class ReportPublishService {
             if (!runs.markCompleted(runId, claimToken, Instant.now(), resultJson, connection)) {
                 throw new IllegalStateException("Run completion rejected");
             }
+            runs.recordBatchCompleteness(runId,ReportCompleteness.from(dto),connection);
             if(run.getOwnerUserId()!=null) runs.usage().published(run,entity.getCreatedAt(),connection);
             return reportId;
         });
+        if(outcome==0) throw new com.dokor.argos.services.domain.audit.RunCanceledException();
+        return outcome;
     }
 
     static Integer publishedGlobalScore(AuditReportJson internal, ReportDto report) {

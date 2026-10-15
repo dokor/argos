@@ -1,55 +1,67 @@
 "use client";
+import {safeOverviewReturn} from "@/lib/overview-request";
+import {useSearchParams} from "next/navigation";
+import {safeDomainReturn} from "@/lib/connected/domain-navigation";
 import { useEffect, useState } from "react";
 import { accountFetch, AccountClientError } from "@/lib/account-client";
-import { useAccountSession, PersonalNavigation } from "./AccountSession";
+import { useAccountSession } from "./AccountSession";
 import { useLang } from "@/lib/i18n/LangContext";
-import ReportPage from "@/app/(fr)/report/[token]/ReportPage";
+import PrivateDiagnostic from "./PrivateDiagnostic";
 import type { Report } from "@/components/report/types";
 import Link from "@/components/LocalizedLink";
-import s from "./AccountView.module.scss";
-import HistoryActions from "./HistoryActions";
-import type { HistoryContext } from "./history";
+import { PageHeading, EmptyState } from "@/components/connected/Primitives";
+import RunContext, { type PersonalRun } from "@/components/connected/RunContext";
+import { analysisCopy } from "@/components/connected/analysisCopy";
+import s from "@/components/connected/Analysis.module.scss";
+import ui from "@/components/connected/Connected.module.scss";
 export default function PersonalReport({ runId }: { runId: string }) {
-  const [history,setHistory]=useState<{runId:string;context:HistoryContext}|null>(null);
-  const [report,setReport]=useState<{runId:string;data:Report}|null>(null),[status,setStatus]=useState(""),[error,setError]=useState(""),[siteId,setSiteId]=useState<string|null>(null);
-  const {t}=useLang(),session=useAccountSession();
-  const allowed=session.profile?.verified && !session.denied;
-  const invalidate=session.invalidate;
+  const overviewReturn=safeOverviewReturn(useSearchParams().get("returnTo"));
+  const domainReturn=safeDomainReturn(useSearchParams().get("returnTo"));
+  const [result,setResult]=useState<{id:string;run:PersonalRun;report?:Report}|null>(null),[failure,setFailure]=useState<{id:string;code:string}|null>(null),[revision,setRevision]=useState(0);
+  const {t,lang}=useLang(),c=analysisCopy[lang],session=useAccountSession();
+  const allowed=session.profile?.verified && !session.denied,invalidate=session.invalidate;
   useEffect(()=>{
     let alive=true,terminal=false,inflight=false,retries=0;
     let timer:ReturnType<typeof setTimeout>|undefined;
     const controller=new AbortController();
-    queueMicrotask(()=>{if(alive){setReport(null);setSiteId(null);setError("");setStatus("");}});
+    queueMicrotask(()=>{if(alive){setResult(null);setFailure(null);}});
     if(!allowed) return ()=>{alive=false;};
     const schedule=(delay:number)=>{if(alive&&!terminal&&!document.hidden) timer=setTimeout(poll,delay);};
     async function poll() {
       if(!alive||terminal||inflight||document.hidden) return;
       inflight=true;
       try {
-        const run=await accountFetch<{status:string;siteId:string|null;historyContext?:HistoryContext}>("runs/"+runId,"GET",undefined,controller.signal);
+        const run=await accountFetch<PersonalRun>("runs/"+runId,"GET",undefined,controller.signal);
         if(!alive) return;
-        setHistory(run.historyContext ? {runId,context:run.historyContext} : null);
-        setSiteId(run.siteId);setStatus(t.account.statuses[run.status as keyof typeof t.account.statuses]??t.account.working);
-        if(run.status==="COMPLETED") {
-          const data=await accountFetch<Report>("runs/"+runId+"/report","GET",undefined,controller.signal);
-          if(alive) {setReport({runId,data});window.dispatchEvent(new Event("argos-usage-refresh"));}terminal=true;
-        } else if(run.status==="FAILED") {terminal=true;window.dispatchEvent(new Event("argos-usage-refresh"));}
+        setResult({id:runId,run});
+        if(run.reportAvailability==="AVAILABLE" || run.status==="COMPLETED" && !["EXPIRED","UNAVAILABLE"].includes(run.reportAvailability??"")) {
+          const report=await accountFetch<Report>("runs/"+runId+"/report","GET",undefined,controller.signal);
+          if(alive) {setResult({id:runId,run,report});window.dispatchEvent(new Event("argos-usage-refresh"));}terminal=true;
+        } else if(["COMPLETED","FAILED","CANCELED"].includes(run.status)) {terminal=true;window.dispatchEvent(new Event("argos-usage-refresh"));}
         retries=0;schedule(1500);
       } catch(reason) {
         if(!alive) return;
         invalidate(reason);
         const transient=!(reason instanceof AccountClientError) || reason.status===429 || reason.status>=500;
         if(transient && ++retries<=3) schedule(Math.max(reason instanceof AccountClientError ? reason.retryAfter*1000 : 0,1500*2**retries));
-        else {terminal=true;setError(reason instanceof AccountClientError ? reason.code : "account_unavailable");}
+        else {terminal=true;setFailure({id:runId,code:reason instanceof AccountClientError ? reason.code : "account_unavailable"});}
       } finally {inflight=false;}
     }
     const visibility=()=>{clearTimeout(timer);if(!document.hidden) void poll();};
     document.addEventListener("visibilitychange",visibility);void poll();
     return ()=>{alive=false;controller.abort();clearTimeout(timer);document.removeEventListener("visibilitychange",visibility);};
-  },[runId,t,allowed,invalidate]);
-  const back=<Link href={allowed && siteId ? "/account/sites/"+siteId : "/account/sites"}>{allowed && siteId ? t.account.sites.back : t.account.sites.title}</Link>;
-  if(!session.ready) return <main className={s.page}><p role="status">{t.account.working}</p></main>;
-  if(!allowed) return <main className={s.page}><h1>{t.account.openReport}</h1><p role="alert">{session.profile ? t.account.pending : t.account.errors.session_invalid}</p><Link href={"/account/sign-in?returnTo="+encodeURIComponent("/account/runs/"+runId)}>{t.account.signIn}</Link>{back}</main>;
-  if(report?.runId===runId) return <><PersonalNavigation/><div className={s.personalNav}>{back}</div>{history?.runId===runId && <div className={s.page}><HistoryActions context={history.context} launchBlocked={session.usage?.canLaunch===false}/></div>}<ReportPage params={{report:report.data}} feedbackReference={{runId}}/></>;
-  return <><PersonalNavigation/><main className={s.page}><h1>{t.account.openReport}</h1><p role={error ? "alert" : "status"}>{error==="resource_unavailable" ? t.account.sites.unavailable : error ? t.account.errors[error as keyof typeof t.account.errors]??t.account.errors.account_unavailable : status||t.account.working}</p>{back}{history?.runId===runId ? <HistoryActions context={history.context} launchBlocked={session.usage?.canLaunch===false}/> : <Link href="/account/sites?analyse=1">{t.account.sites.analyse}</Link>}</main></>;
+  },[runId,allowed,invalidate,revision]);
+  const current=result?.id===runId ? result : null,run=current?.run,report=current?.report,error=failure?.id===runId ? failure.code : "";
+  const back=<Link href={overviewReturn ?? domainReturn ?? (allowed && run?.siteId ? "/account/sites/"+run.siteId : "/account/sites")}>{overviewReturn ? t.overviewPage.back : domainReturn ? t.domainPage.backBatch : allowed && run?.siteId ? t.account.sites.back : t.account.sites.title}</Link>;
+  if(!session.ready) return <main className={ui.page}><p role="status">{t.account.working}</p></main>;
+  if(!allowed) return <main className={ui.page}><h1>{c.progress}</h1><p role="alert">{session.profile ? t.account.pending : t.account.errors.session_invalid}</p><Link href={"/account/sign-in?returnTo="+encodeURIComponent("/account/runs/"+runId)}>{t.account.signIn}</Link>{back}</main>;
+  const terminal=run && ["COMPLETED","FAILED","CANCELED"].includes(run.status);
+  const expired=run?.reportAvailability==="EXPIRED";
+  const unavailable=expired || run?.reportAvailability==="UNAVAILABLE" || error==="resource_unavailable";
+  const actions=<nav className={s.navigation} aria-label={c.progress}>{back}{run?.historyContext && <Link href={"/account/urls/"+run.historyContext.siteUrlId+"/history"}>{c.compare}</Link>}<Link href={"/account/analyses/new"+(run?.historyContext ? "?url="+encodeURIComponent(run.historyContext.normalizedUrl) : "")}>{c.fresh}</Link></nav>;
+  if(report && run) return <>{run.status==="FAILED" && <p className={s.context} role="status">{c.failedReport}</p>}<PrivateDiagnostic report={report} run={run} runId={runId} actions={actions}/></>;
+  return <>{actions}<main className={ui.page}><PageHeading title={c.progress} description={terminal ? undefined : c.durable}/>
+    {run && <p role="status">{t.account.statuses[run.status as keyof typeof t.account.statuses]??c.unknown}</p>}
+    {unavailable ? <EmptyState title={expired ? c.expired : c.unavailable} description={c.unavailableHint}/> : error ? <EmptyState kind="error" title={c.unavailable} description={t.account.errors[error as keyof typeof t.account.errors]??t.account.errors.account_unavailable}><button className={ui.secondary} onClick={()=>setRevision(v=>v+1)}>{c.refresh}</button></EmptyState> : run?.status==="FAILED" ? <p>{c.failureHint}</p> : !run ? <p role="status">{t.account.working}</p> : null}
+  </main>{run && <RunContext run={run} runId={runId}/>}</>;
 }

@@ -42,7 +42,7 @@ Les nombres employés par les tests sont uniquement des fixtures.
 
 La configuration est chargée au démarrage ; son activation ou l'affectation
 d'une offre à des comptes relève d'une décision d'exploitation et produit.
-Ce lot ne crée pas d'interface d'attribution commerciale ou de facturation.
+L’[administration](administration-contract.md) permet de modifier l’offre et le plafond individuel ; aucune facturation n’est ajoutée.
 Le quota est vérifié dans `AuditRunService.createQueuedRun`, point commun du
 moteur, même lorsqu'un appelant n'a pas fourni de connexion JDBC. Les futurs
 points d'entrée API/CI/programmation devront utiliser ce moteur avec le
@@ -51,7 +51,7 @@ propriétaire authentifié. Ces nouveaux points d'entrée ne sont pas livrés ic
 ## Registre et transactions
 
 `ARG_USAGE_RUN.id` est le run, unique, avec propriétaire, période, état
-`RESERVED`/`COUNTED`/`RELEASED`, dates de réservation et de débit. Les listes et
+`RESERVED`/`COUNTED`/`RELEASED`, dates de réservation, de débit et de libération. Les listes et
 compteurs ne lisent ni `result_json` ni `report_json`.
 
 - Admission et insertion du run/réservation appartiennent à la même
@@ -89,6 +89,7 @@ et n'expose aucune mutation de compteur/offre/plafond. Réponse privée no-store
   "used": 0,
   "reserved": 0,
   "limit": null,
+  "available": null,
   "canLaunch": true
 }
 ```
@@ -152,3 +153,15 @@ nécessite une pause des écritures et une conversion explicite des périodes
 existantes depuis `counted_at` ; ne pas changer le fuseau seul en cours de mois.
 Une restauration doit conserver runs, rapports, registre et historique Flyway
 ensemble. Pas de déploiement de production réalisé dans ce lot.
+
+## Extension Clarté F05
+
+Le [guide F05](../connected-space/usage-f05.md) décrit `/account/usage`, le
+journal privé paginé `GET /api/account/usage/events?period=YYYY-MM&limit=20&offset=0`
+et les primitives internes d'admission multiple et d'annulation. `available`
+est calculé par le serveur : null sans plafond, sinon max(0, limit-used-reserved).
+L'offre et le plafond effectifs sont relus sous verrou pour chaque admission.
+V21 ajoute `ARG_AUDIT_RUN.cancel_requested`, `ARG_USAGE_RUN.released_at` et
+l'index propriétaire/période/date. Les dates historiques de libération ne
+sont reprises que depuis un `finished_at` connu ; null reste explicite.
+Aucun endpoint de lot ou d'annulation utilisateur n'est activé par F05.

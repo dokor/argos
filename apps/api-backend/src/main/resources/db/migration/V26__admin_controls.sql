@@ -1,0 +1,10 @@
+ALTER TABLE ARG_ACCOUNT_USER DROP CONSTRAINT ck_account_state,
+ ADD CONSTRAINT ck_account_state CHECK(state IN ('PENDING','ACTIVE','SUSPENDED','ARCHIVED')),
+ ADD COLUMN admin_version BIGINT NOT NULL DEFAULT 0,
+ ADD COLUMN suspended_from VARCHAR(16) NULL,
+ ADD CONSTRAINT ck_admin_version CHECK(admin_version BETWEEN 0 AND 9007199254740991),
+ ADD CONSTRAINT ck_suspended_from CHECK(suspended_from IS NULL OR suspended_from IN ('ACTIVE','PENDING'));
+ALTER TABLE ARG_ADMIN_EVENT
+ ADD COLUMN old_state VARCHAR(16) NULL, ADD COLUMN new_state VARCHAR(16) NULL,
+ ADD COLUMN reason_code VARCHAR(32) NULL, ADD COLUMN request_id VARCHAR(64) NULL,
+ ADD KEY idx_admin_event_target(target_id,id);

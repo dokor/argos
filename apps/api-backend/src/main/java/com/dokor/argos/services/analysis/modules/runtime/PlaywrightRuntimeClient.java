@@ -156,8 +156,16 @@ public class PlaywrightRuntimeClient {
         Integer failedRequestsFirstParty,
         Integer failedRequestsThirdParty,
         Integer status5xxFirstParty,
-        Integer status5xxThirdParty
+        Integer status5xxThirdParty,
+        JsonNode observedEvidence
     ) {
+        public Network(Integer requests, Integer failedRequests, Integer status4xx, Integer status5xx,
+                       Long totalBytesEstimated, Map<String,Integer> byType, java.util.List<LargestResource> topLargest,
+                       Integer failedRequestsFirstParty, Integer failedRequestsThirdParty,
+                       Integer status5xxFirstParty, Integer status5xxThirdParty) {
+            this(requests,failedRequests,status4xx,status5xx,totalBytesEstimated,byType,topLargest,
+                failedRequestsFirstParty,failedRequestsThirdParty,status5xxFirstParty,status5xxThirdParty,null);
+        }
     }
 
     public record LargestResource(

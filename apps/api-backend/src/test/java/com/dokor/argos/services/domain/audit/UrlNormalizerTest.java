@@ -15,8 +15,31 @@ import static org.junit.jupiter.api.Assertions.*;
  * Chaque groupe couvre une règle de normalisation distincte.
  */
 class UrlNormalizerTest {
+    @Test void admissionDefaultsDoNotWeakenAbsoluteDiscoverySyntax() {
+        assertEquals("https://example.com/page",UrlNormalizer.normalizeAdmissionSyntax(" example.com/page#fragment "));
+        assertEquals("https://example.com/page",UrlNormalizer.normalizeSyntax("HTTPS://EXAMPLE.COM:443/page#fragment"));
+        assertThrows(IllegalArgumentException.class,()->UrlNormalizer.normalizeSyntax("example.com/page"));
+        assertThrows(IllegalArgumentException.class,()->UrlNormalizer.normalizeSyntax("file:///private"));
+    }
 
-    private final UrlNormalizer normalizer = new UrlNormalizer();
+    @Test void dnsFailsClosedAndChecksAllAnswersWithoutConnecting() throws Exception {
+        var mixed = new UrlNormalizer(host -> new InetAddress[]{InetAddress.getByName("8.8.8.8"), InetAddress.getByName("10.0.0.1")});
+        assertThrows(IllegalArgumentException.class, () -> mixed.normalize("https://example.com"));
+        assertThrows(IllegalArgumentException.class, () -> new UrlNormalizer(host -> { throw new java.net.UnknownHostException(); }).normalize("https://example.com"));
+        assertThrows(IllegalArgumentException.class, () -> new UrlNormalizer(host -> new InetAddress[0]).normalize("https://example.com"));
+    }
+
+    @ParameterizedTest @ValueSource(strings = {"https://u:p@example.com", "https://@example.com", "https://example.com:",
+        "http://2130706433", "http://127.1", "http://0x7f000001", "https://example.com:8443", "https://example.com\\@localhost",
+        "http://[::ffff:8.8.8.8]", "http://[2001:db8::1]", "http://[2002:808:808::1]", "http://[fe90::1]", "http://192.0.2.1", "http://198.18.0.1", "http://224.0.0.1"})
+    void refusesAmbiguityAndReservedRanges(String url) { assertThrows(IllegalArgumentException.class, () -> normalizer.normalize(url)); }
+
+    @Test void loggingNeverIncludesCredentialsPathsOrParameters() {
+        assertEquals("[invalid URL]", UrlNormalizer.sanitizeForLog("https://u:p@example.com/?token=secret"));
+        assertEquals("https://example.com", UrlNormalizer.sanitizeForLog("https://example.com/reset/secret?token=secret#private"));
+    }
+
+    private final UrlNormalizer normalizer = new UrlNormalizer(host -> new InetAddress[]{InetAddress.getByName("8.8.8.8")});
 
     // -------------------------
     // Schéma manquant
@@ -86,12 +109,12 @@ class UrlNormalizerTest {
 
     @Test
     void shouldPreserveNonDefaultPort() {
-        assertEquals("https://example.com:8080", normalizer.normalize("https://example.com:8080"));
+        assertThrows(IllegalArgumentException.class, () -> normalizer.normalize("https://example.com:8080"));
     }
 
     @Test
     void shouldPreserveNonDefaultHttpPort() {
-        assertEquals("http://example.com:8080", normalizer.normalize("http://example.com:8080"));
+        assertThrows(IllegalArgumentException.class, () -> normalizer.normalize("http://example.com:8080"));
     }
 
     // -------------------------

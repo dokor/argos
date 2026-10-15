@@ -14,7 +14,7 @@ vi.mock("next/navigation",()=>({usePathname:()=>state.path}));
 vi.mock("@/components/LocalizedLink",()=>({default:({href,children}:{href:string;children:React.ReactNode})=><a href={href}>{children}</a>}));
 vi.mock("@/components/site/SiteNav",()=>({default:()=>null}));
 vi.mock("@/components/site/SiteFooter",()=>({default:()=>null}));
-vi.mock("@/components/AuditForm",()=>({default:({initialUrl,mode}:{initialUrl:string;mode:string})=><div data-testid="audit-form">{mode}: {initialUrl}</div>}));
+vi.mock("@/components/connected/AnalysisForm",()=>({default:({initialUrl}:{initialUrl:string})=><div data-testid="audit-form">personal: {initialUrl}</div>}));
 vi.mock("@/lib/account-client",()=>({accountFetch:vi.fn(),AccountClientError:class extends Error {constructor(public code:string,public status:number){super(code);}}}));
 const context={siteId:"7",siteUrlId:"9",normalizedUrl:"https://example.com/path"};
 const item=(runId:string,reason:NonNullable<HistoryItem["comparison"]>["reason"]="COMPARABLE"):HistoryItem=>({runId,status:"COMPLETED",createdAt:"2026-10-11T07:00:00Z",finishedAt:null,reportAvailable:true,publishedAt:"2026-10-11T07:01:00Z",expiresAt:null,globalScore:80,scoringVersion:11,coverage:1,provisional:false,comparison:{reason,globalDelta:30,domains:[],contributions:[],coverageChanged:false}});
@@ -24,7 +24,7 @@ it("loads owner history, pages older runs and pre-fills a personal rerun",async(
   render(<HistoryView urlId="9"/>);
   expect(await screen.findByText("+30 points")).toBeInTheDocument();
   expect(screen.getByRole("link",{name:"Ouvrir le rapport"})).toHaveAttribute("href","/account/runs/2");
-  fireEvent.click(screen.getByRole("button",{name:"Relancer cette URL"}));
+  fireEvent.click(screen.getByRole("button",{name:"Analyser à nouveau cette URL"}));
   expect(screen.getByTestId("audit-form")).toHaveTextContent("personal: https://example.com/path");
   fireEvent.click(screen.getByRole("button",{name:"Plus anciennes"}));
   await waitFor(()=>expect(screen.getByRole("link",{name:"Ouvrir le rapport"})).toHaveAttribute("href","/account/runs/1"));

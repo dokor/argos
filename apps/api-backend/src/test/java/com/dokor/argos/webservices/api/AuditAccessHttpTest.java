@@ -47,6 +47,7 @@ class AuditAccessHttpTest {
         when(settings.adminApiToken()).thenReturn("synthetic-server-credential");
         var json = new WsJacksonJsonProvider(); json.setMapper(MAPPER);
         var config = new ResourceConfig().register(json)
+            .register(new com.dokor.argos.webservices.api.security.AuditBodyFilter())
             .register(new AuditsWs(AUDITS, QUERIES, new AdminReadAccess(settings), READS))
             .register(new ReportsWs(READS, RUNS))
             .register(new NewsletterWs(NEWSLETTER));
@@ -58,6 +59,10 @@ class AuditAccessHttpTest {
         server.start(); base = "http://127.0.0.1:" + server.getListeners().iterator().next().getPort();
     }
     @AfterAll static void stop() { if (server != null) server.shutdownNow(); }
+    @Test void directApiOversizedBodyIsRejectedBeforeTheAuditService() throws Exception {
+        assertEquals(413, post("/audits", "{\"url\":\"https://example.com\",\"padding\":\"" + "x".repeat(9000) + "\"}").statusCode());
+        verifyNoInteractions(AUDITS);
+    }
     @BeforeEach void resetMocks() { reset(AUDITS, QUERIES, RUNS, READS, NEWSLETTER); }
     private HttpResponse<String> get(String path, String header, String value) throws Exception {
         var request = HttpRequest.newBuilder(URI.create(base + path)).timeout(java.time.Duration.ofSeconds(10));
@@ -116,7 +121,7 @@ class AuditAccessHttpTest {
         var list = get("/audits?limit=999", "Authorization", authorization);
         assertEquals(200, list.statusCode());
         assertEquals("42", MAPPER.readTree(list.body()).get(0).path("runId").asText());
-        assertEquals("/dashboard/report/42",
+        assertEquals("/account/admin/runs/42",
             MAPPER.readTree(list.body()).get(0).path("reportUrl").asText());
         var listItem = MAPPER.readTree(list.body()).get(0);
         assertEquals(68, listItem.path("globalScore").asInt());

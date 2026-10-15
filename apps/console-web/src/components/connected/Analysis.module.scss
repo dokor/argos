@@ -1,0 +1,53 @@
+@use '../../styles/controls';
+.tabs { display: flex; gap: 24px; border-bottom: 1px solid var(--argos-border); margin-bottom: 24px; }
+.tabs a { display: inline-flex; min-height: 44px; align-items: center; padding-bottom: 12px; border-bottom: 2px solid transparent; }
+.tabs a[aria-current] { color: var(--argos-brand); border-color: var(--argos-brand); font-weight: 650; }
+.columns { display: grid; grid-template-columns: minmax(0,1.4fr) minmax(240px,1fr); gap: 20px; margin-bottom: 20px; }
+.form { display: grid; gap: 18px; }
+.form label { display: grid; gap: 8px; font-weight: 550; }
+.form input, .search input { width: 100%; min-width: 0; min-height: 44px; padding: 10px 12px; background: var(--argos-surface); border: 1px solid var(--argos-border); border-radius: 7px; color: var(--argos-text); font: inherit; }
+.form p, .context p, .muted { color: var(--argos-text-muted); line-height: 1.65; }
+.form h3 { font-size: 14px; font-weight: 650; margin-bottom: 6px; }
+.form button { justify-self: start; }
+.form button:disabled { opacity: .6; cursor: not-allowed; }
+.notice { padding: 14px; border-radius: 7px; background: var(--argos-brand-soft); border: 1px solid var(--argos-border); }
+.discovery { list-style: none; padding: 0; margin: 0; }
+.discovery li { padding: 17px 0; border-bottom: 1px solid var(--argos-border); }
+.discovery li:last-child { border: 0; }
+.discovery strong { display: block; margin-bottom: 6px; }
+.discovery p { color: var(--argos-text-muted); }
+.search { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; margin: 0 0 20px; }
+.search label { display: grid; gap: 6px; flex: 1; min-width: min(100%,220px); }
+.urlList { display: grid; list-style: none; gap: 18px; padding: 0; }
+.urlList > li { background: var(--argos-surface); border: 1px solid var(--argos-border); border-radius: 9px; padding: 22px; min-width: 0; }
+.urlList h2 { overflow-wrap: anywhere; margin-bottom: 20px; }
+.attempts { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 18px; }
+.attempts h3 { font-size: 13px; color: var(--argos-text-muted); margin-bottom: 10px; }
+.attempts p { margin: 8px 0; }
+.attempts a, .context a { display: inline-flex; align-items: center; min-height: 44px; color: var(--argos-brand); text-decoration: underline; text-underline-offset: 3px; }
+.follow { margin: 20px 0; padding: 18px 22px; background: var(--argos-surface); border: 1px solid var(--argos-border); border-radius: 9px; }
+.follow summary { cursor: pointer; min-height: 44px; display: list-item; align-content: center; font-weight: 550; }
+.context { margin: 0 28px 24px; padding: 22px; border: 1px solid var(--argos-border); background: var(--argos-surface); border-radius: 9px; overflow-wrap: anywhere; }
+.context h2 { margin-bottom: 12px; }
+.facts { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 14px; margin: 16px 0; }
+.facts dt { color: var(--argos-text-muted); font-size: 12px; margin-bottom: 4px; }
+.facts dd { margin: 0; overflow-wrap: anywhere; }
+.modules { list-style: none; margin: 18px 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.modules li { display: flex; justify-content: space-between; gap: 10px; border: 1px solid var(--argos-border); border-radius: 7px; padding: 12px; }
+.navigation { padding: 24px 28px 0; display: flex; flex-wrap: wrap; gap: 12px; }
+.navigation a { min-height: 44px; display: inline-flex; align-items: center; color: var(--argos-brand); }
+.error { color: var(--argos-error) !important; }
+@media(max-width:900px) { .columns { grid-template-columns: 1fr; } }
+@media(max-width:600px) { .attempts,.facts,.modules { grid-template-columns: 1fr; } .context { margin: 0 16px 20px; padding: 18px; } .navigation { padding: 18px 16px 0; } .urlList > li { padding: 18px; } }
+
+.columns > section { margin-bottom: 0; }
+
+.knownSection { scroll-margin-top: 160px; }
+.knownUrls { list-style: none; padding: 0; margin-top: 16px; }
+.knownUrls li { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 0; border-top: 1px solid var(--argos-border); }
+.knownUrls li > div { min-width: 0; }
+.knownUrls strong { display: block; overflow-wrap: anywhere; }
+.knownUrls li > a { flex-shrink: 0; }
+@media (max-width: 600px) { .knownUrls li { align-items: start; flex-direction: column; gap: 6px; } }
+
+.historyLink { display: inline-flex; align-items: center; min-height: 44px; color: var(--argos-brand); text-decoration: underline; text-underline-offset: 3px; }

@@ -21,7 +21,6 @@ export class ApiError extends Error {
 }
 
 export type CreateAuditRequest = {
-  personal?: boolean;
   url: string;
   /** Route fixe, attribuée uniquement avec consentement validé côté BFF. */
   sourceRoute?: string;
@@ -58,21 +57,6 @@ export type AuditRunStatusResponse = {
 
 export type PublicReportStatusResponse = Pick<AuditRunStatusResponse, "status" | "createdAt" | "startedAt" | "finishedAt" | "moduleStatuses">;
 
-export type AuditListItem = {
-  auditId: number;
-  hostname?: string;
-  inputUrl: string;
-  normalizedUrl: string;
-  runId: number;
-  status: "QUEUED" | "RUNNING" | "FAILED" | "COMPLETED";
-  createdAt?: string;
-  finishedAt?: string | null;
-  reportUrl?: string | null;
-  globalScore?: number | null;
-  /** Loaded only from the single-run endpoint when technical details are requested. */
-  resultJson?: string | null;
-};
-
 export type AuditHistoryItem = {
   calculation?: import("@/components/report/types").Report["scores"]["calculation"];
   coverage?: import("@/components/report/types").Coverage | null;
@@ -91,8 +75,6 @@ export type AuditHistoryItem = {
   /** Score global 0..100 issu du rapport publié, ou null si indisponible. */
   globalScore?: number | null;
 };
-
-export type AuditComparisonDetail = Pick<AuditHistoryItem, "calculation" | "coverage" | "comparison">;
 
 // API_BASE is only used server-side (SSR); client calls use relative paths proxied by next.config.ts
 const API_BASE: string = process.env.API_BASE ?? "http://api-backend:8081";
@@ -145,8 +127,6 @@ export async function http<T>(path: string, init?: RequestInit): Promise<T> {
   return (await res.json()) as T;
 }
 
-const limit = 100;
-
 export const argosApi = {
   createAudit: async (body: CreateAuditRequest): Promise<CreateAuditResponse> =>
     http<CreateAuditResponse>("/api/audits", {
@@ -155,23 +135,11 @@ export const argosApi = {
       body: JSON.stringify(body),
     }),
 
-  getList: (): Promise<AuditListItem[]> =>
-    http<AuditListItem[]>(`/api/audits?limit=${limit}`, { method: "GET" }),
-
   getReport: (token: string): Promise<Report> =>
     http<Report>(`/api/reports/${token}`, { method: "GET" }),
-
-  getRunsByRunId: (runId: string | number): Promise<AuditRunStatusResponse> =>
-    http<AuditRunStatusResponse>(`/api/audits/runs/${runId}`, { method: "GET" }),
 
   /** Statut d'un run via son reportToken - disponible avant publication du rapport. */
   getReportStatus: (token: string): Promise<PublicReportStatusResponse> =>
     http<PublicReportStatusResponse>(`/api/reports/${token}/status`, { method: "GET" }),
 
-  /** Historique des analyses (runs) d'un audit (une URL), du plus récent au plus ancien. */
-  getAuditHistory: (auditId: number, historyLimit = 20): Promise<AuditHistoryItem[]> =>
-    http<AuditHistoryItem[]>(`/api/audits/${auditId}/history?limit=${historyLimit}`, { method: "GET" }),
-
-  getComparisonDetail: (auditId: number, runId: number): Promise<AuditComparisonDetail> =>
-    http<AuditComparisonDetail>(`/api/audits/${auditId}/history/${runId}/comparison`, { method: "GET" }),
 };

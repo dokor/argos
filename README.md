@@ -40,7 +40,7 @@ apps/
 ### api-backend
 - Java 21 avec [Plume](https://github.com/Coreoz/Plume) (Guice + Grizzly + Jersey + QueryDSL)
 - MariaDB (via HikariCP + migrations Flyway)
-- Orchestration du pipeline d'analyse : HTTP → HTML → Runtime → Lighthouse → Observatory → SSL → ZAP (+ détection de stack technique mise en cache par domaine)
+- Pipeline de huit modules ; SSL Labs et Observatory sont exécutés dans un pool distant borné après HTTP, les autres modules restent séquentiels (voir [progression](docs/analysis/progress.md))
 - Calcul du score par module et score global
 - Génération des rapports accessibles via token unique (non indexable)
 - Synthèse exécutive optionnelle générée par Codex à partir des résultats Argos normalisés
@@ -61,7 +61,7 @@ apps/
 
 ### Prérequis
 - Java 21+, Maven 3.9+
-- Node.js 20+
+- Node.js 24 (même version majeure que la CI et les Dockerfiles)
 - MariaDB
 - Docker (optionnel)
 
@@ -69,29 +69,43 @@ apps/
 
 ```bash
 cd apps/api-backend
-# Configurer src/main/resources/application.conf
+# Préparer local.conf, DB_PASSWORD et INTERNAL_API_PASSWORD selon le guide backend
 mvn package
-java -cp "target/dist/api-backend/lib/*" com.dokor.argos.WebApplication
+java -Dconfig.file=local.conf -cp "target/dist/api-backend/lib/*" com.dokor.argos.WebApplication
 # → http://localhost:8081
 ```
 
 ### Services Node.js
 
 ```bash
-cd apps/lighthouse-service && npm install && node server.mjs
-cd apps/playwright-service && npm install && node server.mjs
+# Depuis la racine, dans deux terminaux distincts :
+cd apps/lighthouse-service && npm ci && npm start
+cd apps/playwright-service && npm ci && npx playwright install chromium && npm start
 ```
 
 ### Frontend
 
 ```bash
 cd apps/console-web
-npm install
+npm ci
+cp .env.example .env.local
 npm run dev
 # → http://localhost:3000
 ```
 
+Sous PowerShell, utiliser `Copy-Item .env.example .env.local`.
+Configuration détaillée : [backend](apps/api-backend/README.md),
+[frontend](apps/console-web/README.md), [index documentaire](docs/README.md).
+Lighthouse nécessite Chrome/Chromium installé et `CHROME_PATH` si la détection
+automatique ne le trouve pas. Les Dockerfiles des collecteurs installent les
+navigateurs et dépendances système nécessaires.
+
 ---
+
+## Documentation
+
+Le [sommaire de docs](docs/README.md) relie les contrats, procédures de test,
+décisions produit et références d’exploitation.
 
 ## Déploiement
 

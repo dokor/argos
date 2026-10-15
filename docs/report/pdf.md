@@ -1,0 +1,13 @@
+# Export PDF du rapport — #43
+
+Moteur retenu : impression dédiée du navigateur, sans dépendance serveur ni envoi du rapport à un fournisseur. Le bouton ouvre une fenêtre about:blank, revérifie le rapport par GET same-origin sans cache, puis propose Imprimer / enregistrer en PDF. L’utilisateur choisit Enregistrer en PDF dans le dialogue système ; l’interface annonce une prévisualisation prête, jamais un fichier sauvegardé qu’elle ne peut observer. Les popups bloquées, l’expiration et les erreurs ont un retour accessible. Désactiver les en-têtes/pieds de page du navigateur est annoncé ; la pagination du document reste présente.
+
+Synthèse : identité et date UTC, périmètre sans query/credentials, verdict canonique, compteurs uniques, notes/disponibilité, couverture/provisoire, trois priorités et limites. Complet : mêmes sources, jusqu’à six priorités backend et tous les constats uniques, indépendamment des filtres URL ; observation, preuves, source, confiance, action et vérification. Les modèles et catalogue FR/EN sont partagés avec le web. Aucun gain absent ni mesure historique n’est inventé.
+
+La fenêtre n’a ni token dans son URL ni lien de retour privé dans le PDF. Son titre générique Argos-format-date sert de nom de sauvegarde proposé. Aucun logo distant, QR de rapport, JSON admin, analytics ou lien de partage privé n’y est rendu. Les liens éditoriaux sont publics. Un lecteur ayant déjà sauvegardé un rapport ne peut être empêché de conserver sa copie ; l’export vérifie seulement l’accès au moment de sa préparation.
+
+## Vérification
+
+La [recette web/PDF](../testing/report.md) décrit les fixtures, commandes, sorties
+et contrôles de rendu. Les PDF et images générés restent dans outputs, sans
+résultats de recette versionnés dans ce contrat.

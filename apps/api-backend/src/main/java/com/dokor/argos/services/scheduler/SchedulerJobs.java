@@ -29,6 +29,11 @@ public class SchedulerJobs {
     public SchedulerJobs(Scheduler scheduler,ConfigurationService configuration,AuditQueueService queue,StuckAuditRunReaper reaper){this(scheduler,configuration,queue,reaper,null);}
     public SchedulerJobs(Scheduler scheduler,ConfigurationService configuration,AuditQueueService queue,StuckAuditRunReaper reaper,com.dokor.argos.services.analytics.ProductAnalyticsService analytics){this(scheduler,configuration,queue,reaper,analytics,null);}
     public SchedulerJobs(Scheduler scheduler,ConfigurationService configuration,AuditQueueService queue,StuckAuditRunReaper reaper,com.dokor.argos.services.analytics.ProductAnalyticsService analytics,com.dokor.argos.services.domain.report.ReportRetentionService retention) {this(scheduler,configuration,queue,reaper,analytics,retention,null);}
+    private com.dokor.argos.services.connected.batch.BatchReconciler batches;
+    @Inject public void batches(com.dokor.argos.services.connected.batch.BatchReconciler reconciler){this.batches=reconciler;}
+    private com.dokor.argos.services.connected.discovery.DiscoveryWorker discoveries;
+    @Inject public void discoveries(com.dokor.argos.services.connected.discovery.DiscoveryWorker worker){this.discoveries=worker;}
+
     @Inject
     public SchedulerJobs(
         Scheduler scheduler,
@@ -48,6 +53,8 @@ public class SchedulerJobs {
     }
 
     public void scheduleJobs() {
+        if(batches!=null) scheduler.schedule("Reconcile domain batches",batches::tick,Schedules.fixedDelaySchedule(Duration.ofSeconds(2)));
+        if(discoveries!=null) scheduler.schedule("Discover domain pages", discoveries::tick, Schedules.fixedDelaySchedule(Duration.ofSeconds(2)));
         if(feedback!=null) scheduler.schedule("Purge private feedback", feedback::purge, Schedules.fixedDelaySchedule(Duration.ofHours(1)));
         if(retention!=null) scheduler.schedule("Purge expired reports", retention::purgeExpiredReports, Schedules.fixedDelaySchedule(Duration.ofHours(1)));
         if(analytics!=null) scheduler.schedule("Purge product telemetry", analytics::purgeTelemetry, Schedules.fixedDelaySchedule(Duration.ofHours(1)));

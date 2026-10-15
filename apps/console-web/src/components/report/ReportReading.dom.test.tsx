@@ -20,18 +20,18 @@ describe("shared report navigation", () => {
     const user = userEvent.setup();
     const { container } = render(<LangProvider><ReportPage params={{ report }} /></LangProvider>);
     expect(screen.getByRole("button", { name: "Vue d’ensemble" })).toHaveAttribute("aria-pressed", "true");
-    const facts = screen.getByText(/6 constats uniques/).textContent;
+    const facts = screen.getByText(/Constats uniques : 6/).textContent;
     const actions = screen.getByRole("button", { name: "Plan d’action" });
     actions.focus(); await user.keyboard("{Enter}");
     expect(actions).toHaveAttribute("aria-pressed", "true");
     expect(window.location.search).toBe("?view=actions");
-    expect(screen.getByText(/6 constats uniques/).textContent).toBe(facts);
-    await user.click(screen.getByRole("link", { name: "Voir le constat: Load resources" }));
+    expect(screen.getByText(/Constats uniques : 6/).textContent).toBe(facts);
+    await user.click(screen.getAllByRole("link", { name: /^Voir le constat/ }).find(link => link.getAttribute("href") === `#${model.findings.find(f => f.key === "runtime.load")!.anchor}`)!);
     const finding = model.findings.find(item => item.key === "runtime.load")!;
     const detail = container.querySelector(`#${finding.anchor}`) as HTMLDetailsElement;
     expect(detail.open).toBe(true); expect(detail.querySelector("summary")).toHaveFocus();
     expect(screen.getByRole("button", { name: "Constats techniques" })).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByText(/6 constats uniques/).textContent).toBe(facts);
+    expect(screen.getByText(/Constats uniques : 6/).textContent).toBe(facts);
     expect(report.scores.global).toBe(73);
   });
   it("restores URL views and filters with history, keeps locale links and handles missing anchors", async () => {
@@ -72,13 +72,13 @@ describe("shared report navigation", () => {
     const detail = container.querySelector<HTMLElement>(`#${lcp.anchor}`)!;
     expect(within(detail).getByText(content.verification)).toBeInTheDocument();
     expect(container.textContent).not.toContain("0,02 s");
-    expect(screen.getByText(/2 constats uniques/)).toBeInTheDocument();
+    expect(screen.getByText(/Constats uniques : 2/)).toBeInTheDocument();
   });
   it("keeps counts and limitations factual when free-form AI has no grounding contract", () => {
     const ungrounded = { headline: "Zero findings and guaranteed compliance", summary: "Everything is fixed", keyPoints: ["Invented cause"] };
     const partial: Report = { ...report, summary: { ...report.summary, ai: { fr: ungrounded, en: ungrounded } }, scores: { ...report.scores, completeness: 50 } };
     render(<LangProvider initialLang="en"><ReportPage params={{ report: partial }} /></LangProvider>);
-    expect(screen.getByText(/6 unique findings/)).toBeInTheDocument();
+    expect(screen.getByText(/Unique findings: 6/)).toBeInTheDocument();
     expect(screen.getByText("Partial analysis: available findings do not cover every check.")).toBeInTheDocument();
     expect(screen.queryByText(/guaranteed compliance/)).not.toBeInTheDocument();
   });

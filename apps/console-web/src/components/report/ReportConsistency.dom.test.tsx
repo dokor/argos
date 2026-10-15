@@ -34,14 +34,14 @@ describe("historical report consistency", () => {
     expect(within(hero).getByText("6")).toBeInTheDocument();
     expect(screen.getByText("6 constats sur 6")).toHaveAttribute("role", "status");
     expect(container.querySelectorAll("details[id^='finding-']")).toHaveLength(6);
-    expect(within(container.querySelector("#cat-a11y")!).getByText("Accessible controls")).toBeInTheDocument();
-    expect(within(container.querySelector("#cat-unknown")!).getByText("No identifier")).toBeInTheDocument();
+    expect(within(container.querySelector("#cat-a11y")!).getByText(/Titre technique original: Accessible controls/)).toBeInTheDocument();
+    expect(within(container.querySelector("#cat-unknown")!).getByText(/Titre technique original: No identifier/)).toBeInTheDocument();
     expect(within(container.querySelector("#cat-unknown")!).getByText("Domaine non renseigné")).toBeInTheDocument();
     expect(screen.getByText(/Le lien détaillé vers le constat manque/)).toBeInTheDocument();
     expect(screen.getByText(/Certains constats de cette action/)).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: /^Voir le constat/ })).toHaveLength(2);
     expect(screen.getByText("Constats regroupés : 2")).toBeInTheDocument();
-    const gridLink = screen.getByRole("link", { name: /Accessibilité.*1 point/ });
+    const gridLink = screen.getByRole("link", { name: /Accessibilité.*1 constat/ });
     expect(gridLink).toHaveTextContent("65/100");
   });
 
@@ -50,7 +50,7 @@ describe("historical report consistency", () => {
     render(<Reader />);
     await user.click(screen.getByRole("button", { name: "Critiques" }));
     expect(screen.getByText("2 constats sur 6")).toHaveAttribute("role", "status");
-    const link = screen.getByRole("link", { name: "Voir le constat: Load resources" });
+    const link = screen.getAllByRole("link", { name: /^Voir le constat/ }).find(link => link.getAttribute("href") === `#${buildReportModel(report).findings.find(f => f.key === "runtime.load")!.anchor}`)!;
     await user.click(link);
     const finding = buildReportModel(report).findings.find(item => item.key === "runtime.load")!;
     const detail = document.getElementById(finding.anchor) as HTMLDetailsElement;

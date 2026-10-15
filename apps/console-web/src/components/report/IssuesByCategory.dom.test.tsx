@@ -36,7 +36,7 @@ describe("IssuesByCategory", () => {
 
     expect(within(document.querySelector("#cat-performance")!).getByText(/Titre technique original: HTTP status/)).toBeInTheDocument();
     expect(within(document.querySelector("#cat-a11y")!).getByText(/Titre technique original: Color contrast/)).toBeInTheDocument();
-    expect(within(document.querySelector("#cat-security")!).getByText("Libraries")).toBeInTheDocument();
+    expect(within(document.querySelector("#cat-security")!).getByText(/Titre technique original: Libraries/)).toBeInTheDocument();
   });
 });
 
@@ -60,7 +60,7 @@ for (const lang of ["fr", "en"] as const) describe("technical findings " + lang,
   it("offers a reset for an empty filter and exposes an accessible severity group", async () => {
     const {vi} = await import('vitest'); const change = vi.fn(); const user = userEvent.setup();
     render(<LangProvider initialLang={lang}><IssuesByCategory report={report} domain="seo" severity="critical" onFilterChange={change} /></LangProvider>);
-    expect(screen.getByRole('group', {name:lang === 'fr' ? 'Sévérité' : 'Severity'})).toBeInTheDocument();
+    expect(screen.getByRole('group', {name:lang === 'fr' ? 'Gravité' : 'Severity'})).toBeInTheDocument();
     await user.click(screen.getByRole('button', {name:lang === 'fr' ? 'Afficher tous les constats' : 'Show all findings'}));
     expect(change).toHaveBeenCalledWith('all','all');
   });

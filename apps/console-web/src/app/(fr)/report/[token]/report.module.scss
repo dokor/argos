@@ -86,3 +86,11 @@
 }
 
 .main { @include editorial.headings; }
+
+// Private diagnostic uses Clarté surfaces while keeping the public report unchanged.
+.embedded {
+  min-height: 0; background: var(--argos-canvas); padding: 24px 28px;
+  > section:first-of-type { border: 1px solid var(--argos-border); border-radius: 9px; }
+  .main { max-width: none; padding: 24px 0; gap: 24px; }
+}
+@media(max-width:600px) { .embedded { padding: 18px 16px; } }

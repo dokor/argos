@@ -20,7 +20,7 @@ jobs:
   integration:
     name: MariaDB integration (11.4)
     needs: changes
-    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.api == 'true') }}
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.integration == 'true') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     services:
@@ -65,18 +65,30 @@ jobs:
           docker exec "$DB_FIXTURE_CONTAINER" mariadb -uroot -psynthetic-root-fixture -e "
             CREATE DATABASE argos_progress_test;
             CREATE DATABASE argos_domain_cache_test;
+            CREATE DATABASE argos_querydsl_test;
             GRANT ALL PRIVILEGES ON argos_progress_test.* TO 'argos_fixture'@'%';
             GRANT ALL PRIVILEGES ON argos_domain_cache_test.* TO 'argos_fixture'@'%';
+            GRANT ALL PRIVILEGES ON argos_querydsl_test.* TO 'argos_fixture'@'%';
           "
       - name: Run MariaDB integration tests
         run: >-
           mvn --batch-mode -P mariadb-integration
-          -Dit.test=AccountLifecycleIT,ReportCredentialMigrationIT,AuditPublicationIT,ProductAnalyticsIT,ReportRetentionIT,AuditClaimIT,NewsletterPrivacyIT,AuditRunProgressIT,DomainAnalysisConcurrencyIT
+          -Dit.test=ClarteFreshStartMigrationIT,ConnectedModelIT,AccountLifecycleIT,ReportCredentialMigrationIT,AuditPublicationIT,ProductAnalyticsIT,ReportRetentionIT,AuditClaimIT,NewsletterPrivacyIT,AuditRunProgressIT,DomainAnalysisConcurrencyIT,AuditAdmissionIT,UsageIT,DiscoveryIT,BatchIT,DiagnosticMigrationIT,CanonicalCountsMigrationIT,OverviewIT
           verify
+      - name: Verify packaged startup and explicit QueryDSL preview
+        env:
+          QUERYDSL_SMOKE_JDBC_URL: jdbc:mariadb://127.0.0.1:3306/argos_querydsl_test
+          QUERYDSL_SMOKE_USER: argos_fixture
+          QUERYDSL_DB_PASSWORD: synthetic-fixture
+        run: bash scripts/querydsl-smoke.sh
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: mariadb-integration-11.4-${{ github.sha }}
-          path: apps/api-backend/target/failsafe-reports/
+          path: |
+            apps/api-backend/target/failsafe-reports/
+            apps/api-backend/target/querydsl-startup.log
+            apps/api-backend/target/querydsl-monitoring.json
+            apps/api-backend/target/querydsl-preview/
           if-no-files-found: error
           retention-days: 14
