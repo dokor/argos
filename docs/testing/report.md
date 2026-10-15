@@ -40,3 +40,7 @@ texte et métadonnées avec pypdf pour contrôler l'absence de token/lien privé
 Conserver ce bilan et les rendus avec le SHA dans les artefacts de la PR.
 Le relevé historique du 11 octobre comptait 42 pages ; il n'est pas une assertion
 de pagination à reproduire. Aucune conformité PDF/UA n'est déduite de ces tests.
+
+## Progression et réussite des modules (#588)
+
+`scores.completeness` reste le pourcentage de collectes entièrement réussies. `scores.moduleExecution`, optionnel pour les rapports historiques, expose les comptes total/completed/partial/failed/skipped/pending/running et terminalPercent. Les états internes PARTIAL, FAILED, UNAVAILABLE, TIMEOUT et SKIPPED terminent la progression sans devenir des réussites. Méthode et limites et les deux formats d’export partagent les mêmes libellés FR/EN. Le cas 6 COMPLETED + 2 erreurs donne 75 % de réussite et 100 % de progression terminale, sans modifier la couverture pondérée.
