@@ -61,3 +61,8 @@ Sources du contrat vérifié : [CoreAPI ZAP 2.17.0](https://github.com/zaproxy/z
 ### Validation après déploiement autorisé
 
 La correction n'a pas encore été déployée ni validée sur un nouveau run de production. Après livraison, l'exploitant relance une seule analyse de démonstration et conserve son identifiant, la révision OCI et les logs : ZAP doit terminer `COMPLETED`, SSL/Observatory restent `UNAVAILABLE / POLICY_DISABLED`, et la couverture doit toujours refléter ces mesures absentes. Si ZAP échoue encore, relever `zap_operation_failed` et `module_failed` pour le même run. Ne clôturer #635 qu'après ce rejeu.
+## Restitution dans la console (recette #635)
+
+Le détail administrateur charge le rapport disponible pour afficher les codes de cause enregistrés par module. Le dashboard traduit les mêmes codes dans « Détails de la mesure ». Les motifs sont issus du rapport historique ; ils ne décrivent pas la configuration actuelle. Un code inconnu ou absent reste indéterminé, une erreur de lecture du rapport est signalée séparément, et aucun message fournisseur brut n'est affiché.
+
+Le Compose versionné contient `ARGOS_EXTERNAL_SCANS_ENABLED=false`. Cela explique le chemin `POLICY_DISABLED` dans le code, mais ne prouve pas la configuration du conteneur déployé ni la cause d'une ancienne analyse. Avant de clôturer #635 côté exploitation, corréler le run signalé aux diagnostics internes ci-dessus et relever la révision et la configuration effectives. Cette correction d'affichage n'active aucun scan externe et ne démontre pas leur rétablissement en production.

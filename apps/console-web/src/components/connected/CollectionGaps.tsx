@@ -1,6 +1,7 @@
 "use client";
 import { useLang } from "@/lib/i18n/LangContext";
 import type { PageResult } from "@/lib/connected/contracts";
+import { collectorReason } from "@/lib/collector-reason";
 import s from "./CollectionGaps.module.scss";
 const copy = {
   fr: { partial: "Collecte partielle", failed: "Échec de l’exécution", canceled: "Analyse annulée", none: "Aucune mesure disponible", unknown: "Cause de l’incomplétude non précisée", unavailable: "Rapport indisponible ou expiré", modules: "Modules avec des mesures manquantes", checks: "Contrôles non mesurés", repeated: "Indisponibilités répétées parmi les pages affichées", shared: "La même indisponibilité est observée sur plusieurs pages ; cela ne prouve pas une cause commune.", shown: "pages affichées", unknownReason: "Motif non précisé" },
@@ -19,7 +20,7 @@ function reason(code: string, lang: "fr" | "en") {
     MODULE_UNAVAILABLE: ["Module indisponible", "Module unavailable"],
     UNAVAILABLE: ["Mesure indisponible", "Measurement unavailable"],
   };
-  return labels[code]?.[lang === "fr" ? 0 : 1] ?? copy[lang].unknownReason;
+  return collectorReason(code, lang) ?? labels[code]?.[lang === "fr" ? 0 : 1] ?? copy[lang].unknownReason;
 }
 export default function CollectionGaps({ page }: { page: PageResult }) {
   const { lang } = useLang(), c = copy[lang];

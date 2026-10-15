@@ -176,3 +176,11 @@
   line-height: 1.7;
   margin: 0 0 20px;
 }
+
+// Keep the disclosure alongside the status on wide rows; its content expands below.
+@media (min-width: 1051px) {
+  .row > div:first-child { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; }
+  .row .url, .row .historical, .row > div:first-child > .meta { grid-column: 1 / -1; }
+  .row .details[open] { grid-column: 1 / -1; }
+  .row .states { align-self: center; }
+}
