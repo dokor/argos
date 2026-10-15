@@ -42,7 +42,7 @@ class SslLabsClientTest {
         var client = client(Duration.ofSeconds(3), 8, 200, "READY");
         assertEquals("READY", client.analyze("example.com").path("status").asText());
         assertEquals(8, queries.size());
-        assertTrue(queries.stream().allMatch(q -> q.contains("fromCache=on") && q.contains("all=done") && !q.contains("startNew")));
+        assertTrue(queries.stream().allMatch(q -> q.contains("fromCache=on") && q.contains("all=done") && q.contains("publish=off") && !q.contains("startNew")));
     }
 
     @Test void cachedReadyNeedsOnlyOneCall() throws Exception {
@@ -80,4 +80,18 @@ class SslLabsClientTest {
         assertEquals(com.dokor.argos.services.analysis.CollectorFailure.Code.TARGET_ASSESSMENT_FAILED,
             com.dokor.argos.services.analysis.CollectorFailure.classify(error));
     }
-}
+    @Test void disabledClientNeverContactsTheProvider() throws Exception {
+        var config = org.mockito.Mockito.mock(com.dokor.argos.services.configuration.ConfigurationService.class);
+        org.mockito.Mockito.when(config.sslLabsApiUrl()).thenReturn("https://api.ssllabs.com/api/v3");
+        org.mockito.Mockito.when(config.sslLabsTimeout()).thenReturn(Duration.ofSeconds(90));
+        var http = org.mockito.Mockito.mock(com.dokor.argos.services.analysis.ExternalHttpClient.class);
+        var client = new SslLabsClient(http, config);
+        assertThrows(com.dokor.argos.services.analysis.CollectorFailure.class, () -> client.analyze("example.com"));
+        org.mockito.Mockito.verifyNoInteractions(http);
+    }
+
+    @Test void malformedHostNeverContactsTheProvider() throws Exception {
+        var client = client(Duration.ofSeconds(2), 1, 200, "READY");
+        assertThrows(IllegalArgumentException.class, () -> client.analyze("example.com:443"));
+        assertTrue(queries.isEmpty());
+    }}
