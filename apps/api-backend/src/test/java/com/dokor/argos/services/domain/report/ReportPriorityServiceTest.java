@@ -29,19 +29,19 @@ class ReportPriorityServiceTest {
         return check(key, AuditStatus.FAIL, AuditSeverity.HIGH, weight, domain, Map.of());
     }
 
-    @Test void lowerSeverityWithLargerGlobalContributionWins() {
+    @Test void criticalRiskPrecedesLowSeverityEvenWithLessModelledScoreGain() {
         var dto = compose(List.of(module("m",
             fail("security-small", 1, "security"),
             check("security-pass", AuditStatus.PASS, AuditSeverity.LOW, 99, "security", Map.of()),
             check("performance-large", AuditStatus.WARN, AuditSeverity.LOW, 10, "performance", Map.of()))));
         var first = dto.summary().priorities().getFirst();
-        assertEquals("performance-large", first.findingKey());
-        assertEquals(5, first.scoreLoss());
-        assertEquals(50, first.domainScoreGain());
-        assertEquals(25, first.globalScoreGain()); // two domains: effective weight 0.5, not configured 0.25
+        assertEquals("security-small", first.findingKey());
+        assertEquals(1, first.scoreLoss());
+        assertEquals(1, first.domainScoreGain());
+        assertEquals(0.5, first.globalScoreGain());
         assertEquals("MODELLED_SCORE_GAIN", first.rankReason());
         assertEquals(1, first.rank());
-        assertEquals("priority-impact-v1", first.rankingVersion());
+        assertEquals("priority-risk-v2", first.rankingVersion());
         assertEquals("security-small", dto.issues().getFirst().id()); // Hero source stays severity-sorted
     }
 
@@ -56,8 +56,8 @@ class ReportPriorityServiceTest {
     @Test void zeroWeightRemainsActionableWithoutClaimingScoreGain() {
         var dto = compose(List.of(module("m", fail("zero", 0, "a11y"),
             check("measured", AuditStatus.WARN, AuditSeverity.LOW, 10, "performance", Map.of()))));
-        assertEquals("measured", dto.summary().priorities().getFirst().findingKey());
-        var zero = dto.summary().priorities().get(1);
+        assertEquals("zero", dto.summary().priorities().getFirst().findingKey());
+        var zero = dto.summary().priorities().getFirst();
         assertEquals("NO_DIRECT_SCORE_GAIN", zero.rankReason());
         assertNull(zero.scoreLoss());
         assertNull(zero.domainScoreGain());

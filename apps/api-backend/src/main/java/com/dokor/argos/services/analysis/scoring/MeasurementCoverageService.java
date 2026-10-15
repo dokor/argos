@@ -14,7 +14,7 @@ public final class MeasurementCoverageService {
             m.data() != null && Boolean.TRUE.equals(m.data().get("antiBotDetected")));
     }
     public static boolean blocked(String module, String key, boolean antiBot) {
-        return antiBot && (Set.of("html", "runtime", "lighthouse", "tech").contains(module)
+        return antiBot && (Set.of("html", "runtime", "lighthouse", "tech", "zap").contains(module)
             || ("http".equals(module) && !Set.of("http.final_url.https", "http.redirect.count", "http.redirect.to_https").contains(key)));
     }
     public static boolean transportUnavailable(AuditModuleResult module) {

@@ -16,6 +16,25 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 class HtmlModuleAnalyzerTest {
+    @Test void addingSocialMetadataNeverReducesTheScoreOrChangesItsDenominator() {
+        var policy = new DefaultScorePolicy();
+        String[] tags = {"<meta property='og:title' content='title'>", "<meta property='og:description' content='desc'>",
+            "<meta property='og:image' content='image.png'>", "<meta name='twitter:card' content='summary'>"};
+        String head = "<title>Example</title>";
+        double previous = -1;
+        for (int count = 0; count <= tags.length; count++) {
+            var result = html("<html><head>" + head + "</head><body></body></html>");
+            var scored = new ScoreService(policy).compute(policy.version(), policy.fingerprint(),
+                new ScoreEnricherService(policy).enrich(List.of(result)));
+            var social = scored.checks().stream().filter(c -> c.key().equals("html.social.meta")).findFirst().orElseThrow();
+            assertTrue(social.scorable());
+            assertEquals(1, social.weight());
+            assertEquals(Math.min(1, count / 3.0), social.score(), 1e-9);
+            assertTrue(scored.global().ratio() >= previous);
+            previous = scored.global().ratio();
+            if (count < tags.length) head += tags[count];
+        }
+    }
 
     private final HtmlModuleAnalyzer analyzer = new HtmlModuleAnalyzer();
 

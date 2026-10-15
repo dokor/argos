@@ -451,7 +451,7 @@ public class HtmlModuleAnalyzer {
             message = "Certaines balises meta sociales sont absentes.";
             recommendation = "Ajoutez les balises OpenGraph (og:title, og:description, og:image) et Twitter card.";
         } else {
-            status = AuditStatus.INFO;
+            status = AuditStatus.WARN;
             severity = AuditSeverity.LOW;
             message = "Aucune balise meta sociale détectée.";
             recommendation = "Ajoutez des balises OpenGraph/Twitter pour améliorer les aperçus de partage sur les réseaux sociaux.";
@@ -479,7 +479,7 @@ public class HtmlModuleAnalyzer {
             ),
             message,
             recommendation
-        );
+        ).withScoreRatio(Math.min(1.0, presentCount / 3.0));
     }
 
     private static AuditCheckResult checkImagesAlt(int imgCount, int imgAltMissingCount) {
