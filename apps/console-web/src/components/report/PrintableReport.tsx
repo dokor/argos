@@ -1,3 +1,4 @@
+import ModuleExecutionFacts from "./ModuleExecutionFacts";
 import ReportPageScope from "./ReportPageScope";
 import ObservedEvidence from "./ObservedEvidence";
 import s from './PrintableReport.module.scss';
@@ -36,7 +37,7 @@ export default function PrintableReport({report,lang,format}:{report:Report;lang
  {score!==undefined&&score>=70&&model.counts.critical>0&&<p>{d.favourable}</p>}
  {!model.counts.total&&<p>{d.empty}</p>}{partialReport(report)&&<p>{report.antiBot?.detected?d.antiBot:r.partial}</p>}
  <p>{r.coverage}: {coverage?pct(coverage.global.ratio):d.coverageUnknown}</p><p>{d.coverageExplain}</p>
- <p>{r.moduleCompleteness}: {typeof report.scores.completeness==='number'?report.scores.completeness+' %':e.unknown}</p><p>{d.completenessExplain}</p>
+ <dl><ModuleExecutionFacts scores={report.scores} lang={lang} /></dl><p>{d.completenessExplain}</p>
  <table><caption>{r.score} / {e.coverage}</caption><thead><tr><th>{r.domain}</th><th>{r.score}</th><th>{e.coverage}</th></tr></thead><tbody>{model.groups.filter(g=>g.key!=='unknown').map(g=>{const value=domainScore(g.score?.score,g.key,coverage);return <tr key={g.key}><th scope="row">{title(g.key)}</th><td>{value===undefined?d.notEvaluated:value+'/100'}</td><td>{pct(coverage?.domains.find(row=>row.key===g.key)?.ratio)}</td></tr>;})}</tbody></table>
  <p>{d.automaticLimit}</p><p>{r.limits}</p></section>
  <section><h2>{r.actions}</h2><p>{interpretationCopy[lang].actions}</p>{!priorities.length&&<p>{t.priorityCards.empty}</p>}{priorities.map((resolved,index)=>{const p=resolved.priority;const grouped=new Set([p.findingKey,...(p.relatedFindingKeys??[])].filter(Boolean)).size>1;const content=!grouped&&resolved.findings.length===1?findingContent(resolved.findings[0].issue,lang):undefined;return <article key={index}>

@@ -1,5 +1,7 @@
 "use client";
 import { RepeatedCollectionGaps } from "../CollectionGaps";
+import DomainPageFilters from "./DomainPageFilters";
+import { findingTitle } from "@/components/report/findingCatalogue";
 import CommonFindingContent from "./CommonFindingContent";
 import { findingEditorial } from "@/components/report/findingCatalogue";
 import { useEffect, useState } from "react";
@@ -73,6 +75,10 @@ export default function DomainBatch({
       ? `domains/${domainId}/batches?limit=5&offset=${filters?.historyOffset ?? 0}`
       : null,
   );
+  const rule = filters?.query.get("ruleKey");
+  const filtered = !!filters && ["ruleKey", "scope", "query", "severity", "status", "completeness"].some(key => key === "scope" ? filters.query.has(key) && filters.query.get(key) !== "all" : filters.query.has(key));
+  const filteredLabel = lang === "fr" ? "Pages filtrées" : "Filtered pages";
+  const pageTitle = filtered ? filteredLabel : c.allPages;
   const [confirm, setConfirm] = useState(false),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
@@ -237,7 +243,7 @@ export default function DomainBatch({
               href={link({ tab: "pages", offset: null })}
               aria-current={filters?.tab === "pages" ? "page" : undefined}
             >
-              {c.allPages} ({batch.counts.selectedPages})
+              {pageTitle} ({filtered ? `${pages.data?.total ?? "—"} / ` : ""}{batch.counts.selectedPages})
             </Link>
           </nav>
           {filters?.tab === "summary" ? (
@@ -388,108 +394,17 @@ export default function DomainBatch({
               </Surface>
             </>
           ) : (
-            <Surface title={c.allPages}>
-              <form
-                key={params.toString()}
-                className={d.filters}
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  const form = new FormData(event.currentTarget),
-                    next = new URLSearchParams({ tab: "pages" });
-                  for (const [key, value] of form)
-                    if (String(value)) next.set(key, String(value));
-                  router.push(localizedPath(`${base}?${next}`, lang));
-                }}
-              >
-                <label>
-                  {c.query}
-                  <input
-                    name="query"
-                    type="search"
-                    maxLength={2048}
-                    defaultValue={filters?.query.get("query") ?? ""}
-                  />
-                </label>
-                {(
-                  [
-                    [
-                      "scope",
-                      c.scopeFilter,
-                      {
-                        all: c.all,
-                        problematic: c.priority,
-                        incomplete: c.incomplete,
-                      },
-                    ],
-                    ["severity", c.severity, c.severities],
-                    [
-                      "status",
-                      c.status,
-                      {
-                        QUEUED: c.states.QUEUED,
-                        RUNNING: c.states.RUNNING,
-                        COMPLETED: c.states.COMPLETED,
-                        FAILED: c.states.FAILED,
-                        CANCELED: c.states.CANCELED,
-                      },
-                    ],
-                    [
-                      "completeness",
-                      c.completeness,
-                      {
-                        FULL: c.states.FULL,
-                        PARTIAL: c.states.PARTIAL,
-                        NONE: c.states.NONE,
-                        UNKNOWN: c.states.UNKNOWN,
-                      },
-                    ],
-                    [
-                      "sort",
-                      c.sort,
-                      { priority: c.prioritySort, url: c.urlSort },
-                    ],
-                  ] as const
-                ).map(([key, label, options]) => (
-                  <label key={key}>
-                    {label}
-                    <select
-                      aria-label={label}
-                      name={key}
-                      defaultValue={filters?.query.get(key) ?? ""}
-                    >
-                      <option value="">{c.all}</option>
-                      {Object.entries(options).map(([value, text]) => (
-                        <option key={value} value={value}>
-                          {text}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                ))}
-                {filters?.query.get("ruleKey") && (
-                  <>
-                    <input
-                      type="hidden"
-                      name="rule"
-                      value={filters.query.get("ruleKey")!}
-                    />
-                    {filters.query.get("definitionVersion") && (
-                      <input
-                        type="hidden"
-                        name="definitionVersion"
-                        value={filters.query.get("definitionVersion")!}
-                      />
-                    )}
-                    <p>
-                      {c.rule}: {filters.query.get("ruleKey")}
-                    </p>
-                  </>
-                )}
-                <button className={s.secondary}>{c.apply}</button>
-                <Link className={d.link} href={`${base}?tab=pages`}>
-                  {c.reset}
-                </Link>
-              </form>
+            <Surface title={pageTitle}>
+              {filtered && <div className={d.filterContext} role="status">
+                {rule && <><p><strong>{findingTitle(rule,lang)}</strong></p><details><summary>{lang === "fr" ? "Identifiant du contrôle" : "Check identifier"}</summary><code>{rule}</code></details></>}
+                <p>{lang === "fr" ? "Pages correspondant aux filtres" : "Pages matching the filters"}: {pages.data?.total ?? "—"} / {batch.counts.selectedPages} {lang === "fr" ? "pages du lot" : "batch pages"}</p>
+              </div>}
+              <DomainPageFilters key={params.toString()} query={filters!.query} base={base} onSubmit={(event) => {
+                event.preventDefault();
+                const form = new FormData(event.currentTarget), next = new URLSearchParams({ tab:"pages" });
+                for (const [key,value] of form) if (String(value)) next.set(key,String(value));
+                router.push(localizedPath(`${base}?${next}`,lang));
+              }} />
               {pages.error && (
                 <DomainError code={pages.error} retry={pages.reload} />
               )}
@@ -498,7 +413,7 @@ export default function DomainBatch({
               ) : (
                 pages.data && (
                   <>
-                    <PageTable pages={pages.data.items} returnTo={returnTo} />
+                    <PageTable pages={pages.data.items} returnTo={returnTo} caption={pageTitle} />
                     <Pagination
                       {...pages.data}
                       href={(offset) => link({ offset: String(offset) })}
