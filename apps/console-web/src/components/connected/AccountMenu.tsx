@@ -10,7 +10,7 @@ import { localizedPath } from "@/lib/i18n/routes";
 import s from "./AccountMenu.module.scss";
 
 /** A disclosure with normal link/button tab order, shared by desktop and mobile. */
-export default function AccountMenu({ profile, onOpen }: { profile: AccountProfile; onOpen: () => void }) {
+export default function AccountMenu({ profile, onOpen, compact = false }: { profile: AccountProfile; onOpen: () => void; compact?: boolean }) {
   const { t, lang } = useLang(), router = useRouter(), session = useAccountSession();
   const [open, setOpen] = useState(false), [busy, setBusy] = useState(false), [error, setError] = useState("");
   const root = useRef<HTMLDivElement>(null), trigger = useRef<HTMLButtonElement>(null);
@@ -47,7 +47,7 @@ export default function AccountMenu({ profile, onOpen }: { profile: AccountProfi
     router.refresh();
   }
 
-  return <div ref={root} className={s.root} onBlur={event => {
+  return <div ref={root} className={s.root} data-compact={compact} onBlur={event => {
     if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
   }} onKeyDown={event => {
     if (event.key === "Escape" && open) {

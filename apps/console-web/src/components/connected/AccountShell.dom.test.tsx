@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import AccountShell from "./AccountShell";
 import { LangProvider } from "@/lib/i18n/LangContext";
 const state = vi.hoisted(() => ({ path: "/account/integrations", session: {
@@ -16,6 +16,42 @@ beforeEach(() => {
   Object.assign(state.session, { ready: true, denied: false, error: "", profile: { displayName: "Camille", verified: true, admin: false }, usage: { offer: "FREE", limit: 100, used: 32, reserved: 4, available:64 }, usageError: false });
 });
 const content = <main><h1>Private page</h1><p>Private result</p></main>;
+it("collapses and restores navigation without losing accessible destinations or the current page", () => {
+  const view = render(<AccountShell>{content}</AccountShell>);
+  const shell = view.container.querySelector("[data-connected-shell]")!;
+  const navigation = screen.getByRole("navigation", { name: "Navigation de l’espace connecté" });
+  expect(shell).toHaveAttribute("data-collapsed", "false");
+  const toggle = screen.getByRole("button", { name: "Réduire le menu" });
+  fireEvent.click(toggle);
+  expect(toggle).toHaveAttribute("aria-expanded", "false");
+  expect(shell).toHaveAttribute("data-collapsed", "true");
+  expect(screen.getByRole("button", { name: /Menu du compte/ }).parentElement).toHaveAttribute("data-compact", "true");
+  for (const label of ["Vue d’ensemble", "Analyse de site", "Domaines", "Intégrations — Bientôt", "Mon compte", "Offre et quotas", "Aide"]) {
+    expect(within(navigation).getByRole("link", { name: label })).toBeInTheDocument();
+  }
+  const integrations = within(navigation).getByRole("link", { name: "Intégrations — Bientôt" });
+  expect(integrations).toHaveAttribute("aria-current", "page");
+  fireEvent.keyDown(integrations, { key: "Escape" });
+  expect(shell).toHaveAttribute("data-tooltip-dismissed", "true");
+  fireEvent.focus(integrations);
+  expect(shell).toHaveAttribute("data-tooltip-dismissed", "false");
+  fireEvent.scroll(navigation);
+  expect(shell).toHaveAttribute("data-tooltip-dismissed", "true");
+  state.path = "/account/domains";
+  view.rerender(<AccountShell>{content}</AccountShell>);
+  expect(shell).toHaveAttribute("data-collapsed", "true");
+  expect(within(navigation).getByRole("link", { name: "Domaines" })).toHaveAttribute("aria-current", "page");
+  fireEvent.click(screen.getByRole("button", { name: "Déployer le menu" }));
+  expect(shell).toHaveAttribute("data-collapsed", "false");
+  expect(screen.getByRole("button", { name: /Menu du compte/ }).parentElement).toHaveAttribute("data-compact", "false");
+});
+it("localizes compact controls and preserves English navigation destinations", () => {
+  state.path = "/en/account/integrations";
+  render(<LangProvider initialLang="en"><AccountShell>{content}</AccountShell></LangProvider>);
+  fireEvent.click(screen.getByRole("button", { name: "Collapse menu" }));
+  expect(screen.getByRole("button", { name: "Expand menu" })).toHaveAttribute("aria-expanded", "false");
+  expect(screen.getByRole("link", { name: "Integrations — Soon" })).toHaveAttribute("href", "/en/account/integrations");
+});
 it("shares one footer, real available credits and a current navigation item", () => {
   render(<AccountShell>{content}</AccountShell>);
   expect(screen.getAllByRole("contentinfo")).toHaveLength(1);

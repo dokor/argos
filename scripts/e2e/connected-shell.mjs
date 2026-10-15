@@ -73,6 +73,20 @@ try {
       assert.equal(await menu.getAttribute('aria-expanded'), 'false');
       assert.equal(await menu.evaluate(el => el === document.activeElement), true, 'Escape restores focus');
     }
+    if (width > 900) {
+      const collapse=page.getByRole('button',{name:c.collapseMenu,exact:true});
+      await collapse.focus();await page.keyboard.press('Enter');
+      await page.locator('[data-connected-shell][data-collapsed="true"]').waitFor();
+      const triggerBox=await accountMenu.boundingBox(),sidebarBox=await page.locator('aside').boundingBox();
+      assert.ok(triggerBox&&sidebarBox&&triggerBox.x>=sidebarBox.x&&triggerBox.x+triggerBox.width<=sidebarBox.x+sidebarBox.width+1,'Account control fits the compact sidebar');
+      await accountMenu.focus();await page.keyboard.press('Enter');
+      await accountPanel.waitFor();
+      assert.equal(await accountPanel.getByRole('button',{name:copies[lang].account.logout,exact:true}).count(),1,'Logout remains reachable in compact mode');
+      await check('compact-account');
+      await page.keyboard.press('Escape');
+      assert.equal(await accountMenu.evaluate(el=>el===document.activeElement),true);
+      await page.getByRole('button',{name:c.expandMenu,exact:true}).click();
+    }
     await check('integrations');
     // Session and quota states at both ends of the responsive matrix, in FR/EN and both themes.
     if ([320, 1440].includes(width)) for (const nextMode of ['user', 'pending', 'quota-error', 'zero', 'unlimited', 'expired', 'error', 'loading']) {

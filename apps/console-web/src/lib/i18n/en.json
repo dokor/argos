@@ -1,5 +1,7 @@
 {
   "connected": {
+    "collapseMenu": "Collapse menu",
+    "expandMenu": "Expand menu",
     "accountMenu": "Account menu",
     "signingOut": "Signing out…",
     "unlimitedCredits": "Unlimited credits",
