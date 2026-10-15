@@ -62,6 +62,10 @@ public class AccountAuthService {
     }
 
     public void register(String raw, String password, String name) {
+        register(raw, password, name, "fr");
+    }
+
+    public void register(String raw, String password, String name, String language) {
         available();
         String email = email(raw);
         String hash = passwords.hash(password);
@@ -79,7 +83,7 @@ public class AccountAuthService {
                         u.setCreatedAt(clock.instant());
                         dao.save(u, c);
                         password(u, hash, c);
-                        issue(u, "VERIFY", null, c);
+                        issue(u, "VERIFY", null, c, language);
                         sessions.event("register", "accepted", u.getId(), null, c);
                         return null;
                     });
@@ -118,6 +122,10 @@ public class AccountAuthService {
     }
 
     public void send(String raw, String purpose) {
+        send(raw, purpose, "fr");
+    }
+
+    public void send(String raw, String purpose, String language) {
         available();
         String email = email(raw);
         dao.transaction(
@@ -131,7 +139,7 @@ public class AccountAuthService {
                                     && dao.identities(u.getId(), c).stream()
                                             .noneMatch(i -> i.getProvider().equals("password")))
                         return null;
-                    issue(u, purpose, null, c);
+                    issue(u, purpose, null, c, language);
                     return null;
                 });
     }
@@ -214,6 +222,10 @@ public class AccountAuthService {
     }
 
     public void issue(AccountUser user, String purpose, Long session, Connection c) {
+        issue(user, purpose, session, c, "fr");
+    }
+
+    private void issue(AccountUser user, String purpose, Long session, Connection c, String language) {
         if (user.getEmail() == null) throw new AccountError(400, "email_required");
         var q = QAccountToken.table;
         dao.transactions
@@ -233,10 +245,7 @@ public class AccountAuthService {
         t.setTokenHash(tokens.sha256(raw));
         t.setExpiresAt(clock.instant().plus(settings.tokenTtl(purpose)));
         dao.save(t, c);
-        String path =
-                purpose.equals("VERIFY")
-                        ? "/account/verify"
-                        : purpose.equals("RESET") ? "/account/reset" : "/account";
+        String path = emailPath(purpose, language);
         String message =
                 purpose.equals("REAUTH")
                         ? "Code de confirmation / Confirmation code: " + raw
@@ -246,6 +255,12 @@ public class AccountAuthService {
                                 + "#token="
                                 + raw;
         mail.send(user.getEmail(), "Argos — " + purpose, message);
+    }
+
+    static String emailPath(String purpose, String language) {
+        String prefix = "en".equals(language) ? "/en" : "";
+        return prefix + ("VERIFY".equals(purpose) ? "/account/verify"
+                : "RESET".equals(purpose) ? "/account/reset" : "/account");
     }
 
     public void reauth(String auth, String csrf, String password, String code) {

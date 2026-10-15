@@ -122,6 +122,8 @@ describe("account screens", () => {
     fireEvent.submit(screen.getByRole("button", { name: lang === "fr" ? "Créer un compte" : "Create an account" }).closest("form")!);
     await waitFor(() => expect(accountFetch).toHaveBeenCalledWith("auth/register", "POST", expect.objectContaining({ displayName: "Fixture" })));
     expect(await screen.findByRole("status")).toHaveTextContent(lang === "fr" ? "email" : "email");
+    expect(screen.queryByLabelText(lang === "fr" ? "Mot de passe" : "Password")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: lang === "fr" ? "Corriger l’adresse email" : "Correct email address" }));
     expect(screen.getByLabelText(lang === "fr" ? "Mot de passe" : "Password")).toHaveValue("");
   });
   it("requires an explicit POST to consume the email fragment token", async () => {
@@ -220,7 +222,7 @@ it.each([
     expect(await screen.findByRole("button", { name: prefix + provider })).toBeEnabled();
   }
   fireEvent.click(screen.getByRole("button", { name: prefix + "GitHub" }));
-  await waitFor(() => expect(accountFetch).toHaveBeenCalledWith("auth/oauth/github/start", "POST", { intent: "login", returnTo }));
+  await waitFor(() => expect(accountFetch).toHaveBeenCalledWith("auth/oauth/github/start", "POST", { intent: "login", returnTo: (lang === "en" ? "/en" : "") + returnTo }));
   expect(await screen.findByRole("alert")).toHaveTextContent(lang === "fr" ? "La connexion au fournisseur a échoué." : "Provider sign-in failed.");
 });
 

@@ -86,7 +86,7 @@ it.each(["fr", "en"] as const)("explains reset, prevents duplicate requests and 
   expect(restored).toHaveValue("fixture@example.invalid");
   fireEvent.change(restored, { target: { value: "corrected@example.invalid" } });
   fireEvent.submit(restored.closest("form")!);
-  expect(accountFetch).toHaveBeenLastCalledWith("auth/forgot", "POST", { email: "corrected@example.invalid" });
+  expect(accountFetch).toHaveBeenLastCalledWith("auth/forgot", "POST", { email: "corrected@example.invalid", returnTo: (lang === "fr" ? "" : "/en") + "/account/sites" });
   await act(async () => finish({ sent: true }));
 });
 
@@ -116,7 +116,7 @@ it.each(["fr", "en"] as const)("retains a localized public exit, preferences and
     const header = within(screen.getByRole("banner"));
     expect(header.getByRole("link", { name: /Argos/ })).toHaveAttribute("href", lang === "fr" ? "/" : "/en");
     expect(header.getByRole("button", { name: lang === "fr" ? "Passer en thème sombre" : "Switch to dark theme" })).toBeInTheDocument();
-    expect(header.getByRole("link", { name: "English" })).toHaveAttribute("href", "/en/account/" + mode);
+    expect(header.getByRole("link", { name: "English" }).getAttribute("href")?.split("?")[0]).toBe("/en/account/" + mode);
     const footer = within(screen.getByRole("contentinfo"));
     expect(footer.getByRole("link", { name: lang === "fr" ? "Aide" : "Help" })).toHaveAttribute("href", lang === "fr" ? "/faq" : "/en/faq");
     expect(footer.getByRole("link", { name: "Contact" })).toHaveAttribute("href", PUBLIC_CONTACT.emailHref);

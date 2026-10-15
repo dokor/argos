@@ -19,6 +19,8 @@ const content = <main><h1>Private page</h1><p>Private result</p></main>;
 it("shares one footer, real available credits and a current navigation item", () => {
   render(<AccountShell>{content}</AccountShell>);
   expect(screen.getAllByRole("contentinfo")).toHaveLength(1);
+  expect(screen.getByRole("link",{name:"Retour au site"})).toHaveAttribute("href","/");
+  expect(screen.getAllByRole("link",{name:"Aide"})).toHaveLength(2);
   expect(screen.getByRole("link", { name: "64 crédits restants" })).toHaveAttribute("href", "/account/usage");
   expect(screen.getByRole("link", { name: /Intégrations/ })).toHaveAttribute("aria-current", "page");
   expect(screen.queryByRole("link", { name: "Administration" })).not.toBeInTheDocument();

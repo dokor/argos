@@ -163,6 +163,7 @@ export type PageResult = {
   readonly moduleStatuses: Readonly<Record<string, ModuleStatus>>;
   readonly failureReason: string | null;
   readonly reportAvailable: boolean;
+  readonly collectionGaps?: ReadonlyArray<CollectionGap> | null;
 };
 
 export type BatchCounts = {
@@ -501,4 +502,10 @@ export type AdminMutation = {
 export type OfferLimit = {
   readonly offer: string;
   readonly monthlyLimit: number | null;
+};
+
+export type CollectionGap = {
+  readonly ruleKey: string;
+  readonly module: string;
+  readonly reason: string;
 };
