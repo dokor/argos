@@ -88,7 +88,7 @@ try {
       await mkdir('outputs/ui-review/clarte-evidence',{recursive:true});
       for(const lang of ['fr','en']) {
         await page.goto(base+(lang==='en'?'/en':'')+'/report/'+token);
-        await page.getByText(lang==='fr'?'Export et navigation du propriétaire':'Export and owner navigation',{exact:true}).click();
+        await page.getByLabel(lang==='fr'?'Format PDF':'PDF format').locator('option[value="full"]').waitFor({state:'attached'});
         await page.getByLabel(lang==='fr'?'Format PDF':'PDF format').selectOption('full');
         const opened=page.waitForEvent('popup');
         await page.getByRole('button',{name:lang==='fr'?'Exporter en PDF':'Export PDF',exact:true}).click();
