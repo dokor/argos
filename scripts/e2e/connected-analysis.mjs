@@ -25,13 +25,17 @@ try {
     });
     const prefix=lang==='en' ? '/en' : '';
     async function visit(path){await page.goto(base+prefix+path);await page.locator('[data-connected-shell] h1').waitFor();}
+    // Require the private reader and its observed measurements, not the former domain heading.
+    async function reportReady() {
+        await page.getByRole('heading',{name:lang==='fr' ? 'Diagnostic de la page':'Page diagnosis',exact:true}).waitFor();
+        await page.getByRole('button',{name:lang==='fr' ? 'Constats techniques':'Technical findings',exact:true}).waitFor();
+        await page.getByRole('heading',{name:lang==='fr' ? 'Mesures observées':'Observed measurements',exact:true}).waitFor();
+        const contextPanel=page.locator('details').filter({has:page.locator('summary').filter({hasText:lang==='fr' ? /^Contexte de la mesure$/ : /^Measurement context$/})});
+        if(!await contextPanel.evaluate(element=>element.open)) await contextPanel.locator('summary').first().click();
+        await page.getByRole('heading',{name:lang==='fr' ? 'Contexte de cette analyse':'Analysis context',exact:true}).waitFor();
+    }
     async function check(name) {
       // Require the actual report throughout capture, not merely its transient h1.
-      const reportReady=async()=>{
-        await page.getByRole('heading',{name:'atelier.example',exact:true}).waitFor();
-        await page.getByRole('button',{name:lang==='fr' ? 'Constats techniques':'Technical findings',exact:true}).waitFor();
-        await page.getByRole('heading',{name:lang==='fr' ? 'Contexte de cette analyse':'Analysis context',exact:true}).waitFor();
-      };
       if(name==='partial-report') await reportReady();
       await page.evaluate(()=>document.fonts.ready);
       assert.equal(await page.locator('h1').count(),1,name+': one title');
@@ -65,7 +69,7 @@ try {
     await check('site');
     await page.getByRole('link',{name:lang==='fr' ? 'Ouvrir le rapport':'Open report'}).click();
     await page.waitForURL(/account\/runs\/43$/);
-    await page.getByRole('heading',{name:'atelier.example',exact:true}).waitFor();await check('partial-report');
+    await reportReady();await check('partial-report');
     await page.getByRole('button',{name:lang==='fr' ? 'Constats techniques':'Technical findings',exact:true}).click();
     await page.getByRole('link',{name:lang==='fr' ? 'Comparaison et historique':'Comparison and history',exact:true}).first().click();
     await page.getByRole('heading',{name:lang==='fr' ? 'Historique de cette URL':'History for this URL',exact:true}).waitFor();
@@ -74,8 +78,8 @@ try {
     if([320,1440].includes(width)) {
       for(const [id,name] of [['44','expired'],['45','failed'],['47','unmeasured'],['48','legacy']]) {
         await visit('/account/runs/'+id);
-        await page.getByRole('heading',{name:lang==='fr' ? 'Contexte de cette analyse':'Analysis context'}).waitFor();
-        if(['47','48'].includes(id)) await page.getByRole('heading',{name:'atelier.example',exact:true}).waitFor();
+        if(['47','48'].includes(id)) await reportReady();
+        else await page.getByRole('heading',{name:lang==='fr' ? 'Contexte de cette analyse':'Analysis context'}).waitFor();
         await check(name);
       }
       quota=true;await visit('/account/analyses/new');await page.getByText(lang==='fr' ? 'Configuration par défaut des collecteurs' : 'Default collector configuration',{exact:false}).waitFor();
