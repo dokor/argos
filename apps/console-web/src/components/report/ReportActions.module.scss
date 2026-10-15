@@ -18,3 +18,14 @@
 .status {min-height:22px;}
 .invitation a:focus-visible,.share button:focus-visible,.share summary:focus-visible {outline:3px solid t.$brand;outline-offset:3px;}
 @media(max-width:700px){.invitation{flex-direction:column;align-items:stretch;padding:20px;}.links{align-items:flex-start;}}
+
+.share {position:relative;}
+.share details {border:0;padding:0;}
+.share summary {@include controls.cta-geometry;background:t.$brand;border-color:t.$brand;color:t.$on-brand;list-style:none;}
+.share summary::-webkit-details-marker{display:none;}
+.share details[open] {position:relative;max-width:480px;}
+.share details[open]>:not(summary) {background:t.$surface;}
+.invitation {padding:22px 24px;gap:22px;font-size:14px;}
+.links {gap:0;}
+.sharePanel {position:absolute;top:calc(100% + 8px);right:0;width:460px;max-width:calc(100vw - 32px);padding:20px;background:var(--argos-surface);border:1px solid var(--argos-border);border-radius:8px;box-shadow:0 8px 24px #0002;z-index:31;}
+@media(max-width:700px){.share,.share details[open]{position:static;}.sharePanel{left:0;right:0;width:100%;max-width:100%;}}

@@ -31,7 +31,7 @@ describe("historical report consistency", () => {
   it("shows six unique findings, including unknown and historically empty domains, with consistent hero and group counts", () => {
     const { container } = render(<Reader />);
     const hero = screen.getByRole("heading", { level: 1 }).closest("section")!;
-    expect(within(hero).getByText("6")).toBeInTheDocument();
+    expect(within(hero).getByText(/Constats uniques : 6/)).toBeInTheDocument();
     expect(screen.getByText("6 constats sur 6")).toHaveAttribute("role", "status");
     expect(container.querySelectorAll("details[id^='finding-']")).toHaveLength(6);
     expect(within(container.querySelector("#cat-a11y")!).getByText(/Titre technique original: Accessible controls/)).toBeInTheDocument();

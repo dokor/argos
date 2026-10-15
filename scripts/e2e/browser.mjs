@@ -89,6 +89,7 @@ try {
       for(const lang of ['fr','en']) {
         await page.goto(base+(lang==='en'?'/en':'')+'/report/'+token);
         await page.getByLabel(lang==='fr'?'Format PDF':'PDF format').locator('option[value="full"]').waitFor({state:'attached'});
+  await page.locator('details').filter({has:page.locator('summary').filter({hasText:lang==='fr'?'Exporter en PDF':'Export PDF'})}).locator('summary').click();
         await page.getByLabel(lang==='fr'?'Format PDF':'PDF format').selectOption('full');
         const opened=page.waitForEvent('popup');
         await page.getByRole('button',{name:lang==='fr'?'Exporter en PDF':'Export PDF',exact:true}).click();

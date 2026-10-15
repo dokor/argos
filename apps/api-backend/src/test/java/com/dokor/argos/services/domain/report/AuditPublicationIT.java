@@ -28,6 +28,22 @@ import static org.mockito.Mockito.*;
 
 @EnabledIfEnvironmentVariable(named="ARGOS_TEST_CREDENTIALS_URL", matches=".+")
 class AuditPublicationIT extends MariaDbReportFixture {
+    @Test void historicalMeasurementReadUsesRetainedRunWithoutChangingPublishedSnapshot() throws Exception {
+        String snapshot=reports.findByRunId(1).orElseThrow().getReportJson();
+        String internal="""
+            {"schemaVersion":1,"modules":[{"id":"runtime","data":{"network":{"requests":44,"status5xx":0},"private":"SECRET"},"checks":[]}]}
+            """;
+        try(var c=source.getConnection();var statement=c.prepareStatement("UPDATE ARG_AUDIT_RUN SET result_json=? WHERE id=1")) {
+            statement.setString(1,internal);statement.executeUpdate();
+        }
+        var dto=reader.getByToken("synthetic-existing").orElseThrow();
+        assertEquals(44,dto.measurements().requests());assertEquals(0,dto.measurements().http5xx());
+        assertNull(dto.measurements().lcpMs());
+        assertFalse(mapper.writeValueAsString(dto.publicSummary()).contains("SECRET"));
+        assertEquals(snapshot,reports.findByRunId(1).orElseThrow().getReportJson());
+        sql("UPDATE ARG_AUDIT_RUN SET result_json=NULL WHERE id=1");
+        assertNull(reader.getByRunId(1).orElseThrow().measurements());
+    }
     private TransactionManagerQuerydsl transactions() {
         return new TransactionManagerQuerydsl(source, new Configuration(MySQLTemplates.DEFAULT));
     }

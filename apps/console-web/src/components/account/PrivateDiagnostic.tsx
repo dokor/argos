@@ -7,6 +7,6 @@ import {useLang} from "@/lib/i18n/LangContext";
 import s from "./PrivateDiagnostic.module.scss";
 export default function PrivateDiagnostic({report,run,runId,actions}:{report:Report;run:PersonalRun;runId:string;actions:ReactNode}) {
   const {lang}=useLang();
-  return <><div className={s.navigation}>{actions}</div><ReportPage params={{report}} embedded runId={runId} feedbackReference={{runId}}/>
+  return <><ReportPage params={{report}} embedded runId={runId} feedbackReference={{runId}} workspaceActions={actions}/>
     <details className={s.secondary}><summary>{lang==="fr"?"Contexte de la mesure":"Measurement context"}</summary><RunContext run={run} runId={runId} complete/></details></>;
 }

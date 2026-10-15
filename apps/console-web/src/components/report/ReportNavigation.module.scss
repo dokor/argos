@@ -5,3 +5,8 @@
  span {font-size:12px;}
  @media(max-width:600px){gap:14px;button{font-size:13px;}}
 }
+
+.navigation {gap:24px;margin:0;padding:0;}
+.navigation button {gap:7px;font-size:14px;padding:12px 0;min-height:46px;display:inline-flex;align-items:center;}
+@media(max-width:700px){.navigation{gap:14px;}.navigation button{font-size:13px;}}
+@media(max-width:420px){.navigation{gap:8px;}.navigation button{font-size:12px;}}

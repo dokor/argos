@@ -11,7 +11,7 @@ import s from './ReportExport.module.scss';
 import printStyle from './PrintableReport.module.scss';
 import type {Report} from './types';
 import {accountFetch} from '@/lib/account-client';
-export default function ReportExport({report:current,runId,shared=false}:{report?:Report;runId?:string;shared?:boolean}={}) {
+export default function ReportExport({report:current,runId,shared=false,compact=false}:{report?:Report;runId?:string;shared?:boolean;compact?:boolean}={}) {
  const {lang}=useLang();const e=exportCopy[lang];const path=usePathname();const token=path?.match(/^\/(?:en\/)?(?:report|share)\/([A-Za-z0-9_-]+)$/)?.[1];
  const [format,setFormat]=useState<ExportFormat>('summary');const [state,setState]=useState<'idle'|'busy'|'ready'|'failed'>('idle');
  async function prepare() {
@@ -40,6 +40,7 @@ export default function ReportExport({report:current,runId,shared=false}:{report
   } catch {preview.close();setState('failed');}
  }
  if(!token&&!current)return null;
- return <section className={s.export} aria-label={e.export}><label>{e.format}<select value={current?.access==='summary'?'summary':format} onChange={event=>setFormat(event.target.value as ExportFormat)}><option value="summary">{e.summary}</option>{current?.access!=='summary'&&<option value="full">{e.full}</option>}</select></label>
+ const form=<section className={s.export} aria-label={e.export}><label>{e.format}<select value={current?.access==='summary'?'summary':format} onChange={event=>setFormat(event.target.value as ExportFormat)}><option value="summary">{e.summary}</option>{current?.access!=='summary'&&<option value="full">{e.full}</option>}</select></label>
  <button type="button" onClick={prepare} disabled={state==='busy'}>{state==='busy'?e.busy:e.export}</button><p role="status" aria-live="polite">{state==='ready'?e.ready:state==='failed'?e.failed:''}</p></section>;
+ return compact?<details className={s.compact}><summary>{e.export}</summary>{form}</details>:form;
 }

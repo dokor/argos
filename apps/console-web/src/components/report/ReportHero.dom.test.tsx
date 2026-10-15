@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 
 // RelaunchButton (#9) utilise useRouter via useAuditSubmit : on mocke le routing.
 vi.mock("next/navigation", () => ({
@@ -53,7 +53,7 @@ describe("ReportHero (rendu du rapport)", () => {
     render(<ReportHero report={report} />);
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("example.com");
     // 3 issues au total (1 critique + 1 important + 1 info).
-    expect(screen.getByText("3")).toBeInTheDocument();
+    expect(screen.getByText(/Constats uniques : 3/)).toBeInTheDocument();
   });
 
   it("affiche le DR avec la date et l'attribution Ahrefs quand il est disponible", () => {
@@ -61,6 +61,7 @@ describe("ReportHero (rendu du rapport)", () => {
       ...report.site, domainRating: { score: 42.4, fetchedAt: "2026-10-06T12:00:00Z" },
     } }} />);
     expect(screen.getByText("DR 42/100")).toBeInTheDocument();
+    fireEvent.click(screen.getByText("Informations sur la mesure"));
     expect(screen.getByRole("link", { name: "Domain Rating by Ahrefs" }))
       .toHaveAttribute("href", "https://ahrefs.com/");
     expect(screen.getByText(/mesuré le/)).toBeInTheDocument();

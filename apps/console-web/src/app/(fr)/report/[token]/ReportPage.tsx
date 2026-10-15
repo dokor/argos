@@ -1,5 +1,5 @@
 "use client";
-import {useEffect,useMemo,useState} from "react";
+import {useEffect,useMemo,useState,type ReactNode} from "react";
 import {usePathname} from "next/navigation";
 import ReportFeedback,{FeedbackReportContext} from "@/components/feedback/ReportFeedback";
 import type {FeedbackReference} from "@/lib/feedback-request";
@@ -11,7 +11,7 @@ import ReportNavigation from "@/components/report/ReportNavigation";
 import {useReportReading} from "@/components/report/reportReading";
 import {reportReadingCopy} from "@/components/report/reportReadingCopy";
 import ScoreGrid from "@/components/report/ScoreGrid";
-import PriorityCards from "@/components/report/PriorityCards";
+import ReportPriorityList from "@/components/report/ReportPriorityList";
 import IssuesByCategory from "@/components/report/IssuesByCategory";
 import AccessibilitySection from "@/components/report/AccessibilitySection";
 import ObservedMeasurements from "@/components/report/ObservedMeasurements";
@@ -24,10 +24,9 @@ import ReportIntroductionEditor from "@/components/report/ReportIntroductionEdit
 import type {Report} from "@/components/report/types";
 import {useLang} from "@/lib/i18n/LangContext";
 import s from "./report.module.scss";
-import actions from "@/components/report/ReportActions.module.scss";
 
-type Params={params:{report:Report};feedbackReference?:FeedbackReference;embedded?:boolean;shared?:boolean;runId?:string;demo?:boolean};
-export default function ReportPage({params,feedbackReference,embedded=false,shared=false,runId,demo=false}:Readonly<Params>){
+type Params={params:{report:Report};feedbackReference?:FeedbackReference;embedded?:boolean;shared?:boolean;runId?:string;demo?:boolean;workspaceActions?:ReactNode};
+export default function ReportPage({params,feedbackReference,embedded=false,shared=false,runId,demo=false,workspaceActions}:Readonly<Params>){
   const pathname=usePathname(),{lang}=useLang(),fr=lang==="fr";
   const token=/^\/(?:en\/)?(?:report|share)\/([A-Za-z0-9_-]{20,512})$/.exec(pathname??"")?.[1];
   const [loaded,setLoaded]=useState<{initial:Report;value:Report}|null>(null);
@@ -53,20 +52,21 @@ export default function ReportPage({params,feedbackReference,embedded=false,shar
   const reference=feedbackReference??(!shared&&token?{reportToken:token}:undefined);
   const Content=demo?"div":"main";
   return <FeedbackReportContext.Provider value={reference}><div className={s.page+" "+(embedded?s.embedded:"")} id={demo?undefined:"top"}>
-    {!embedded&&!demo&&<ReportHeader/>}
-    <ReportHero demo={demo} personal={embedded||shared||demo} report={report} model={model} introduction={locked?null:note} onSelectFinding={selectFinding} onActions={()=>reading.navigate({view:"actions",anchor:""})}/>
+    {!embedded&&!demo&&<ReportHeader signedIn={!locked}/>}
     <Content className={s.main}>
-      {shared&&<p>{fr?"Rapport partagé · Lecture seule · Historique du propriétaire non partagé":"Shared report · Read only · Owner history not shared"}</p>}
-      {!demo&&<div className={actions.toolbar}>{runId&&<OwnerReportShare runId={runId}/>}<ReportExport report={report} runId={runId} shared={shared}/></div>}
+      <ReportHero demo={demo} report={report} model={model} introduction={locked?null:note} onSelectFinding={selectFinding} onActions={()=>reading.navigate({view:"actions",anchor:""})}
+        context={<span>{shared?(fr?"Rapport partagé · Lecture seule · Historique du propriétaire non partagé":"Shared report · Read only · Owner history not shared"):runId?(fr?"Mes sites / Rapport enregistré":"My sites / Saved report"):demo?(fr?"Exemple · Données fictives":"Example · Fictional data"):(fr?"Votre analyse est prête":"Your analysis is ready")}</span>}
+        actions={!demo&&<>{runId&&<OwnerReportShare runId={runId}/>}<ReportExport compact report={report} runId={runId} shared={shared}/></>}/>
       {locked&&reading.view==="overview"&&<ReportAccountPrompt shared={shared}/>}
       {!embedded&&!shared&&!demo&&!locked&&<><RunClaim/><PublicReportHistory/></>}
+      {runId&&<div className={s.workspace}><span>{fr?"Rapport enregistré · Espace personnel":"Saved report · Personal workspace"}</span>{workspaceActions}</div>}
       <ReportNavigation view={reading.view} onChange={view=>reading.navigate({view,anchor:""})} locked={locked}/>
       {reading.missing&&<p role="status">{copy.missing}</p>}
       {reading.view==="overview"?<section className={s.view} id="report-overview" aria-label={copy.overview}>
-        <ScoreGrid categories={report.scores.byCategory} model={model} coverage={report.scores.coverage} onSelectDomain={domain=>reading.navigate({view:"technical",domain,severity:"all",anchor:""})}/>
+        <ScoreGrid compact categories={report.scores.byCategory} model={model} coverage={report.scores.coverage} onSelectDomain={domain=>reading.navigate({view:"technical",domain,severity:"all",anchor:""})}/>
         <ObservedMeasurements report={report} lang={lang}/>
-        {locked?<section className={s.summaryPriorities}><h2>{fr?"Par où commencer":"Where to start"}</h2>{report.summary.priorities.slice(0,3).map((p,i)=><article key={i}><span>{String(i+1).padStart(2,"0")}</span><div><h3>{p.title}</h3><p>{p.impact}</p></div><button onClick={()=>reading.navigate({view:"technical",anchor:""})}>{fr?"Voir les détails →":"View details →"}</button></article>)}</section>:<PriorityCards priorities={report.summary.priorities} model={model} onSelectFinding={selectFinding} limit={3}/>}
-      </section>:locked?<ReportAccountPrompt shared={shared}/>:reading.view==="actions"?<section className={s.view} id="report-actions" aria-label={copy.actions}><PriorityCards priorities={report.summary.priorities} model={model} onSelectFinding={selectFinding}/></section>:<section className={s.view} id="report-technical" aria-label={copy.technical}><IssuesByCategory report={report} model={model} selection={selection} domain={reading.domain} severity={reading.severity} onFilterChange={(domain,severity)=>reading.navigate({domain,severity,anchor:""})}/><AccessibilitySection report={report}/></section>}
+        <ReportPriorityList priorities={report.summary.priorities} model={model} onSelectFinding={selectFinding} locked={locked} onDetails={()=>reading.navigate({view:"technical",anchor:""})}/>
+      </section>:locked?<ReportAccountPrompt shared={shared}/>:reading.view==="actions"?<section className={s.view} id="report-actions" aria-label={copy.actions}><ReportPriorityList priorities={report.summary.priorities} model={model} onSelectFinding={selectFinding} limit={6} onDetails={()=>reading.navigate({view:"technical",anchor:""})}/></section>:<section className={s.view} id="report-technical" aria-label={copy.technical}><IssuesByCategory report={report} model={model} selection={selection} domain={reading.domain} severity={reading.severity} onFilterChange={(domain,severity)=>reading.navigate({domain,severity,anchor:""})}/><AccessibilitySection report={report}/></section>}
       {!locked&&!shared&&!demo&&<ReportIntroductionEditor key={token} token={token} model={model} onPublished={note=>setNoteState({report,note})}/>}
       {!demo&&!shared&&<ReportFeedback/>}
     </Content>

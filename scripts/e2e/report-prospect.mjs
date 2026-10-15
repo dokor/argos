@@ -89,6 +89,7 @@ try{
  // Eight printable exports, using the same-origin fresh report read, both formats and languages.
  for(const key of ['complete','introduced'])for(const lang of ['fr','en'])for(const format of ['summary','full']){
   await page.goto('http://localhost:3102'+(lang==='en'?'/en':'')+'/report/'+tokenFor(key));await page.getByText(lang==='fr'?'Export et navigation du propriétaire':'Export and owner navigation',{exact:true}).click();
+  await page.locator('details').filter({has:page.locator('summary').filter({hasText:lang==='fr'?'Exporter en PDF':'Export PDF'})}).locator('summary').click();
   await page.getByLabel(lang==='fr'?'Format PDF':'PDF format').selectOption(format);const popupPromise=page.waitForEvent('popup');await page.getByRole('button',{name:lang==='fr'?'Exporter en PDF':'Export PDF',exact:true}).click();const popup=await popupPromise;
   await popup.locator('main').waitFor();await page.getByText(lang==='fr'?'Prévisualisation prête.':'Preview ready.',{exact:false}).waitFor();await popup.evaluate(()=>document.fonts.ready);
   const html=await popup.content();assert.ok(!html.includes(tokenFor(key)));assert.ok(!html.includes('token=private'));assert.ok(!html.includes('user:private'));
