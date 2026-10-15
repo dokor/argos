@@ -14,7 +14,19 @@ public final class AuditOutputSanitizer {
     private static final Pattern URL = Pattern.compile("https?://[^\\s<>\\\"}\\]]+", Pattern.CASE_INSENSITIVE);
     private static final Pattern CREDENTIAL = Pattern.compile("(?i)(bearer\\s+\\S+|(?:token|password|secret|api[_-]?key)\\s*[=:]\\s*[^\\s,;]+|nonce-[^'\\s;]+)");
     private AuditOutputSanitizer() {}
-    public static JsonNode tree(Object value, ObjectMapper mapper) { return clean(mapper.valueToTree(value), 0); }
+    public static JsonNode tree(Object value, ObjectMapper mapper) {
+        JsonNode result = clean(mapper.valueToTree(value), 0);
+        // Only this typed identity may retain an independently sanitized display path.
+        if (value instanceof com.dokor.argos.services.domain.report.ReportDto report && report.pageIdentity() != null) {
+            var identity = com.dokor.argos.services.domain.report.ReportPageIdentity.from(
+                report.pageIdentity().requested(), report.pageIdentity().destination());
+            ((ObjectNode) result).set("url", mapper.valueToTree(identity.requested()));
+            ((ObjectNode) result).set("pageIdentity", mapper.valueToTree(
+                new com.dokor.argos.services.domain.report.ReportPageIdentity(identity.requested(), identity.destination(),
+                    report.pageIdentity().redacted() || identity.redacted(), report.pageIdentity().redirected())));
+        }
+        return result;
+    }
     private static JsonNode clean(JsonNode node, int depth) {
         if (depth > 30) return TextNode.valueOf("[truncated]");
         if (node.isObject()) {

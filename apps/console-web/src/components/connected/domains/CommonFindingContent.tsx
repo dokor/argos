@@ -8,8 +8,10 @@ export default function CommonFindingContent({ finding }: { finding: CommonFindi
   const { lang, c } = useDomainText();
   const content = findingEditorial(finding.ruleKey, lang);
   return <>
-    <h3>{c.impact}</h3><p>{content.impact}</p>
-    <h3>{c.recommendation}</h3><p>{content.recommendation}</p>
+    <div className={d.findingBody}>
+      <div><h3>{c.impact}</h3><p>{content.impact}</p></div>
+      <div><h3>{c.recommendation}</h3><p>{content.recommendation}</p></div>
+    </div>
     <details className={d.source}><summary>{lang === "fr" ? "Textes source conservés (langue d’origine)" : "Retained source text (original language)"}</summary>
       <p><code>{finding.ruleKey}</code></p>
       {finding.title && <p>{cleanEvidence(finding.title)}</p>}

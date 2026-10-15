@@ -38,6 +38,14 @@ public class MonitoringWs {
     private final ObjectWriter metricsJsonWriter;
 
     private final BasicAuthenticator<String> basicAuthenticator;
+    @Inject private com.dokor.argos.services.analysis.CollectorDiagnostics collectorDiagnostics;
+
+    @GET
+    @Path("/collectors")
+    public java.util.List<com.dokor.argos.services.analysis.CollectorDiagnostics.Status> collectors(@Context ContainerRequestContext requestContext) {
+        basicAuthenticator.requireAuthentication(requestContext);
+        return collectorDiagnostics.snapshot();
+    }
 
     @Inject
     public MonitoringWs(

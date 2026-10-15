@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { accountFetch, AccountClientError } from "@/lib/account-client";
 import { useAccountSession } from "./AccountSession";
 import { useLang } from "@/lib/i18n/LangContext";
-import ReportPage from "@/app/(fr)/report/[token]/ReportPage";
+import PrivateDiagnostic from "./PrivateDiagnostic";
 import type { Report } from "@/components/report/types";
 import Link from "@/components/LocalizedLink";
 import { PageHeading, EmptyState } from "@/components/connected/Primitives";
@@ -59,7 +59,7 @@ export default function PersonalReport({ runId }: { runId: string }) {
   const expired=run?.reportAvailability==="EXPIRED";
   const unavailable=expired || run?.reportAvailability==="UNAVAILABLE" || error==="resource_unavailable";
   const actions=<nav className={s.navigation} aria-label={c.progress}>{back}{run?.historyContext && <Link href={"/account/urls/"+run.historyContext.siteUrlId+"/history"}>{c.compare}</Link>}<Link href={"/account/analyses/new"+(run?.historyContext ? "?url="+encodeURIComponent(run.historyContext.normalizedUrl) : "")}>{c.fresh}</Link></nav>;
-  if(report && run) return <>{actions}{run.status==="FAILED" && <p className={s.context} role="status">{c.failedReport}</p>}<ReportPage embedded params={{report}} feedbackReference={{runId}}/><RunContext runId={runId} run={run} complete/><section className={s.context}><h2>{c.compare}</h2><p>{c.compareHint}</p>{run.historyContext && <Link href={"/account/urls/"+run.historyContext.siteUrlId+"/history"}>{c.compare}</Link>}</section></>;
+  if(report && run) return <>{run.status==="FAILED" && <p className={s.context} role="status">{c.failedReport}</p>}<PrivateDiagnostic report={report} run={run} runId={runId} actions={actions}/></>;
   return <>{actions}<main className={ui.page}><PageHeading title={c.progress} description={terminal ? undefined : c.durable}/>
     {run && <p role="status">{t.account.statuses[run.status as keyof typeof t.account.statuses]??c.unknown}</p>}
     {unavailable ? <EmptyState title={expired ? c.expired : c.unavailable} description={c.unavailableHint}/> : error ? <EmptyState kind="error" title={c.unavailable} description={t.account.errors[error as keyof typeof t.account.errors]??t.account.errors.account_unavailable}><button className={ui.secondary} onClick={()=>setRevision(v=>v+1)}>{c.refresh}</button></EmptyState> : run?.status==="FAILED" ? <p>{c.failureHint}</p> : !run ? <p role="status">{t.account.working}</p> : null}

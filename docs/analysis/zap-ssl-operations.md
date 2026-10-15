@@ -28,6 +28,11 @@ synthétique puis sa disparition au second audit de la même URL corrigée.
 
 ## SSL Labs
 
+Les scans SSL Labs et Observatory sont désactivés par la politique du Compose actuel.
+Avant de diagnostiquer une panne fournisseur ou de modifier un délai, consulter
+[les codes de diagnostic et la supervision](security-collector-diagnostics.md).
+
+
 L'API `analyze?fromCache=on` rend un résultat en cache, ou peut démarrer une analyse
 si le cache manque. SSL Labs indique que les analyses prennent généralement au moins
 60s. Le client attend maintenant jusqu'à `ssl-labs.timeout=90s`, toujours limité par

@@ -36,9 +36,9 @@ public final class AccountOverviewDao {
 WITH latest AS (
  SELECT u.id page_id,s.id domain_id,d.hostname,a.normalized_url,r.id run_id,r.status,r.created_at,r.finished_at,
  p.id report_id,p.global_score,p.provisional,p.critical_count,p.important_count,p.measurement_completeness,
- CASE WHEN JSON_VALUE(p.diagnostic_json,'$.version')=1 AND JSON_VALUE(p.diagnostic_json,'$.available') IN ('true','1')
+ CASE WHEN JSON_VALUE(p.diagnostic_json,'$.version')=2 AND JSON_VALUE(p.diagnostic_json,'$.available') IN ('true','1')
  THEN JSON_VALUE(p.diagnostic_json,'$.coverageRatio') END coverage_ratio,
- CASE WHEN JSON_VALUE(p.diagnostic_json,'$.version')=1 AND JSON_VALUE(p.diagnostic_json,'$.available') IN ('true','1')
+ CASE WHEN JSON_VALUE(p.diagnostic_json,'$.version')=2 AND JSON_VALUE(p.diagnostic_json,'$.available') IN ('true','1')
  THEN JSON_VALUE(p.diagnostic_json,'$.coverageVersion') END coverage_version
  FROM ARG_ACCOUNT_SITE_URL u JOIN ARG_ACCOUNT_SITE s ON s.id=u.site_id
  JOIN ARG_DOMAIN d ON d.id=s.domain_id JOIN ARG_AUDIT a ON a.id=u.audit_id

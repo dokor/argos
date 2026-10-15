@@ -61,7 +61,7 @@ describe("account screens", () => {
     expect(signIn.parentElement).toHaveTextContent(lang === "fr" ? "Vous avez déjà un compte ?" : "Already have an account?");
     expect(screen.queryByRole("link", { name: /oublié|Forgot password|Retour au site|Back to the site/ })).not.toBeInTheDocument();
   });
-  it.each(["forgot", "reset", "verify"] as const)("offers only a return to sign-in on the %s screen", async mode => {
+  it.each(["forgot"] as const)("offers a return to sign-in on the %s screen", async mode => {
     render(<AccountView mode={mode} />);
     await waitFor(() => expect(accountFetch).toHaveBeenCalledWith("auth/providers"));
     expect(screen.getAllByRole("link")).toHaveLength(1);
@@ -220,4 +220,107 @@ it.each([
   fireEvent.click(screen.getByRole("button", { name: prefix + "GitHub" }));
   await waitFor(() => expect(accountFetch).toHaveBeenCalledWith("auth/oauth/github/start", "POST", { intent: "login", returnTo }));
   expect(await screen.findByRole("alert")).toHaveTextContent(lang === "fr" ? "La connexion au fournisseur a échoué." : "Provider sign-in failed.");
+});
+
+// Regression coverage for the public auth recovery and validation paths (#599–#601).
+it.each(["fr", "en"] as const)("recovers missing or invalid email links without an unusable form in %s", async lang => {
+  for (const mode of ["reset", "verify"] as const) {
+    window.history.replaceState(null, "", "/account/" + mode);
+    const view = render(<LangProvider initialLang={lang}><AccountView mode={mode}/></LangProvider>);
+    await screen.findByRole("heading",{name:lang === "fr" ? "Ce lien ne permet pas de poursuivre" : "This link cannot be used to continue"});
+    expect(screen.queryByLabelText(lang === "fr" ? "Mot de passe" : "Password")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    const recovery = screen.getByRole("link",{name:mode === "reset" ? (lang === "fr" ? "Demander un nouveau lien" : "Request a new link") : (lang === "fr" ? "Mot de passe oublié" : "Forgot password")});
+    expect(recovery.getAttribute("href")).toContain("/account/forgot?returnTo=");
+    if(mode === "verify") expect(screen.getByRole("link",{name:lang === "fr" ? "Se connecter pour renvoyer un email" : "Sign in to resend an email"}).getAttribute("href")).toContain(encodeURIComponent((lang === "fr" ? "" : "/en") + "/account/settings?section=profile"));
+    view.unmount();
+  }
+});
+it.each(["reset","verify"] as const)("offers recovery after the server rejects a %s token and never retries that token", async mode => {
+  window.history.replaceState(null,"","/account/" + mode + "#token=" + "x".repeat(43));
+  const fallback = vi.mocked(accountFetch).getMockImplementation()!;
+  vi.mocked(accountFetch).mockImplementation(async (path,...args) => {
+    if(path === "auth/" + mode) throw new AccountClientError("token_invalid",400);
+    return fallback(path,...args);
+  });
+  render(<AccountView mode={mode}/>);
+  const submit = await screen.findByRole("button",{name:mode === "reset" ? "Réinitialiser mon mot de passe" : "Vérifier mon adresse"});
+  if(mode === "reset") fireEvent.change(screen.getByLabelText("Mot de passe"),{target:{value:"long synthetic password"}});
+  fireEvent.submit(submit.closest("form")!);
+  const alert = await screen.findByRole("alert");
+  await waitFor(()=>expect(alert).toHaveFocus());
+  expect(alert).toHaveTextContent("invalide, expiré ou déjà utilisé");
+  expect(screen.queryByRole("button")).not.toBeInTheDocument();
+  expect(screen.queryByLabelText("Mot de passe")).not.toBeInTheDocument();
+  expect(window.location.hash).toBe("");
+  expect(vi.mocked(accountFetch).mock.calls.filter(c=>c[0] === "auth/"+mode)).toHaveLength(1);
+});
+it.each(["reset","verify"] as const)("completes %s with a focused success message and no stale form", async mode => {
+  window.history.replaceState(null,"","/account/"+mode+"#token="+"v".repeat(43));
+  render(<AccountView mode={mode}/>);
+  const submit = await screen.findByRole("button",{name:mode === "reset" ? "Réinitialiser mon mot de passe" : "Vérifier mon adresse"});
+  if(mode === "reset") fireEvent.change(screen.getByLabelText("Mot de passe"),{target:{value:"long synthetic password"}});
+  fireEvent.submit(submit.closest("form")!);
+  const status = await screen.findByRole("status");
+  await waitFor(()=>expect(status).toHaveFocus());
+  expect(status).toHaveTextContent(mode === "reset" ? "réinitialisé" : "vérifiée");
+  expect(screen.queryByRole("button")).not.toBeInTheDocument();
+  expect(screen.getByRole("link",{name:"Revenir à la connexion"})).toBeInTheDocument();
+});
+it("offers an explicit account switch without logging out the existing session",async()=>{
+  render(<AccountSession><AccountView mode="sign-in"/></AccountSession>);
+  const change = await screen.findByRole("button",{name:"Utiliser un autre compte"});
+  expect(screen.queryByLabelText("Mot de passe")).not.toBeInTheDocument();
+  fireEvent.click(change);
+  await waitFor(()=>expect(screen.getByLabelText("Adresse email")).toHaveFocus());
+  expect(screen.getByText(/session actuelle est conservée/)).toBeInTheDocument();
+  expect(vi.mocked(accountFetch).mock.calls.some(c=>c[0] === "auth/logout")).toBe(false);
+});
+it.each(["fr","en"] as const)("explains a refused login, preserves input and focuses the error in %s",async lang=>{
+  const fallback = vi.mocked(accountFetch).getMockImplementation()!;
+  vi.mocked(accountFetch).mockImplementation(async (path,...args)=>{
+    if(path === "auth/login") throw new AccountClientError("credentials_invalid",401);
+    return fallback(path,...args);
+  });
+  render(<LangProvider initialLang={lang}><AccountView mode="sign-in"/></LangProvider>);
+  const email = screen.getByLabelText(lang === "fr" ? "Adresse email" : "Email address");
+  const password = screen.getByLabelText(lang === "fr" ? "Mot de passe" : "Password");
+  fireEvent.change(email,{target:{value:"test@example.invalid"}});
+  fireEvent.change(password,{target:{value:"short"}});
+  fireEvent.submit(screen.getByRole("button",{name:lang === "fr" ? "Se connecter" : "Sign in"}).closest("form")!);
+  const alert = await screen.findByRole("alert");
+  await waitFor(()=>expect(alert).toHaveFocus());
+  expect(alert).toHaveTextContent(lang === "fr" ? "Adresse email ou mot de passe incorrect" : "Incorrect email address or password");
+  expect(email).toHaveValue("test@example.invalid");expect(password).toHaveValue("short");
+});
+it.each(["fr","en"] as const)("validates creation before sending and associates errors and hints in %s",async lang=>{
+  render(<LangProvider initialLang={lang}><AccountView mode="register"/></LangProvider>);
+  const name=screen.getByLabelText(lang === "fr" ? "Nom d’affichage" : "Display name"),password=screen.getByLabelText(lang === "fr" ? "Mot de passe" : "Password");
+  fireEvent.change(name,{target:{value:" "}});
+  fireEvent.change(screen.getByLabelText(lang === "fr" ? "Adresse email" : "Email address"),{target:{value:"test@example.invalid"}});
+  fireEvent.change(password,{target:{value:"😀".repeat(14)}});
+  const form=screen.getByRole("button",{name:lang === "fr" ? "Créer un compte" : "Create an account"}).closest("form")!;
+  fireEvent.submit(form);
+  await waitFor(()=>expect(name).toHaveFocus());
+  expect(name).toHaveAttribute("aria-invalid","true");expect(password).toHaveAttribute("aria-describedby","password-hint password-error");
+  expect(password).toHaveAccessibleDescription(/15.*128/);
+  expect(vi.mocked(accountFetch).mock.calls.some(c=>c[0] === "auth/register")).toBe(false);
+  fireEvent.change(name,{target:{value:"Fixture"}});
+  fireEvent.submit(form);
+  await waitFor(()=>expect(password).toHaveFocus());
+  fireEvent.change(password,{target:{value:"😀".repeat(128)}});
+  fireEvent.submit(form);
+  await waitFor(()=>expect(accountFetch).toHaveBeenCalledWith("auth/register","POST",expect.objectContaining({password:"😀".repeat(128)})));
+});
+it("maps server field errors to an accessible field without losing the entered name",async()=>{
+  const fallback=vi.mocked(accountFetch).getMockImplementation()!;
+  vi.mocked(accountFetch).mockImplementation(async(path,...args)=>{if(path === "auth/register")throw new AccountClientError("name_invalid",400);return fallback(path,...args);});
+  render(<AccountView mode="register"/>);
+  fireEvent.change(screen.getByLabelText("Nom d’affichage"),{target:{value:"Fixture"}});
+  fireEvent.change(screen.getByLabelText("Adresse email"),{target:{value:"test@example.invalid"}});
+  fireEvent.change(screen.getByLabelText("Mot de passe"),{target:{value:"long synthetic password"}});
+  fireEvent.submit(screen.getByRole("button",{name:"Créer un compte"}).closest("form")!);
+  await waitFor(()=>expect(screen.getByLabelText("Nom d’affichage")).toHaveFocus());
+  expect(screen.getByLabelText("Nom d’affichage")).toHaveValue("Fixture");
+  expect(screen.getByLabelText("Nom d’affichage")).toHaveAttribute("aria-describedby","name-hint name-error");
 });
