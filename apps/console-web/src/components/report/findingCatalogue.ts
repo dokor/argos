@@ -235,3 +235,8 @@ export function findingContent(issue: Issue, lang: Lang): FindingContent {
     qualification: findingQualification(issue, lang), missingInformation: missingLocation(issue, lang),
   };
 }
+
+/** Localized rule label for navigation; source text remains in the diagnosis. */
+export function findingTitle(key: string, lang: Lang): string {
+  return catalogue[key]?.[lang][0] ?? (lang === "fr" ? "Contrôle technique à examiner" : "Technical check to review");
+}
