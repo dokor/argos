@@ -413,3 +413,12 @@
   color: var(--argos-text-muted);
   margin-bottom: 12px;
 }
+
+.pageFilters { margin-block: 16px; }
+.pageFilters .filters { margin-block: 12px; }
+.advancedFilters { margin-block: 8px 16px; }
+.advancedFilters > summary, .filterContext summary { cursor: pointer; min-height: 44px; padding-block: 10px; }
+.advancedFilters > summary:focus-visible, .filterContext summary:focus-visible { outline: 3px solid var(--argos-brand); outline-offset: 3px; }
+.filterContext { border-left: 3px solid var(--argos-brand); padding: 8px 16px; margin-block: 16px; overflow-wrap: anywhere; }
+.filterContext strong { font-weight: 650; }
+.filterContext p { margin-block: 4px; }

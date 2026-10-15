@@ -196,16 +196,18 @@ export function PageList({
 export function PageTable({
   pages,
   returnTo,
+  caption,
 }: {
   pages: readonly PageResult[];
   returnTo: string;
+  caption?: string;
 }) {
   const { c } = useDomainText();
   return pages.length ? (
     <div className={d.pageTable}>
       <p className={d.tableHint}>{c.tableHint}</p>
       <DataTable
-        caption={c.allPages}
+        caption={caption ?? c.allPages}
         columns={[c.url, c.execution, c.coverage, c.score, c.details]}
       >
         {pages.map((page) => (
