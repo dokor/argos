@@ -413,6 +413,33 @@ class AuditProcessorServiceTest {
                 .thenThrow(new ModuleUnavailableException("late", new java.net.http.HttpTimeoutException("timeout"))), "TIMEOUT");
         }
 
+        @Test void disabledSecurityCollectorsExplainEveryMissingControlAndOtherModulesContinue() throws Exception {
+            try (var remote = new RemoteModuleExecutor(Duration.ofSeconds(5))) {
+                var processor = processor(remote);
+                when(ssl.analyze(any(), any())).thenThrow(new ModuleUnavailableException("SSL unavailable",
+                    new CollectorFailure(CollectorFailure.Code.POLICY_DISABLED)));
+                when(observatory.analyze(any(), any())).thenThrow(new ModuleUnavailableException("Observatory unavailable",
+                    new CollectorFailure(CollectorFailure.Code.POLICY_DISABLED)));
+                processor.process(1L);
+                var report = ArgumentCaptor.forClass(AuditReportJson.class);
+                verify(publisher).completeAndPublish(eq(1L), any(), report.capture(), anyString(), nullable(String.class));
+                var modules = report.getValue().modules();
+                var coverage = com.dokor.argos.services.analysis.scoring.MeasurementCoverageService.compute(
+                    new com.dokor.argos.services.analysis.scoring.DefaultScorePolicy(), modules);
+                var missing = coverage.checks().stream().filter(c -> java.util.Set.of("ssl", "observatory").contains(c.module())).toList();
+                assertFalse(missing.isEmpty());
+                assertTrue(missing.stream().allMatch(c -> "POLICY_DISABLED".equals(c.reason())
+                    && c.state() == com.dokor.argos.services.analysis.scoring.MeasurementCoverage.State.UNAVAILABLE));
+                for (var module : modules) if (java.util.Set.of("ssl", "observatory").contains(module.id())) {
+                    assertFalse(module.checks().getFirst().scorable());
+                    assertEquals("POLICY_DISABLED", module.data().get("failureCode"));
+                }
+                var statuses = mapper.readTree(report.getValue().meta().get("moduleStatuses"));
+                for (String module : List.of("http", "html", "runtime", "lighthouse", "zap", "tech"))
+                    assertEquals("COMPLETED", statuses.path(module).asText());
+            }
+        }
+
         @Test void legacyUnavailableResultIsNormalizedWithoutDuplicateCheck() throws Exception {
             assertRuntimeFallback(module -> when(module.analyze(any(), any())).thenReturn(
                 new AuditModuleResult("runtime", "Runtime", "old", Map.of("available", false, "reason", "UNAVAILABLE"),

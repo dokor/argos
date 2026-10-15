@@ -68,12 +68,12 @@ public class ExternalHttpClient {
         try {
             JsonNode json = mapper.readTree(response.body());
             if (json == null || !json.isObject()) {
-                throw new IllegalStateException("External service returned invalid JSON object");
+                throw new CollectorFailure(CollectorFailure.Code.INVALID_RESPONSE);
             }
             return json;
         } catch (JsonProcessingException invalid) {
             // Jackson's exception can embed source text; keep it out of structured logs.
-            throw new IllegalStateException("External service returned invalid JSON", invalid);
+            throw new CollectorFailure(CollectorFailure.Code.INVALID_RESPONSE);
         }
     }
 

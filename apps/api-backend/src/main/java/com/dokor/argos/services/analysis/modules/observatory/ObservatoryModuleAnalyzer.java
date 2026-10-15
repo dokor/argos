@@ -54,7 +54,7 @@ public class ObservatoryModuleAnalyzer {
         }
 
         if (result == null || result.isNull()) {
-            throw new ModuleUnavailableException("Observatory response is empty");
+            throw new ModuleUnavailableException("Observatory response is empty", new com.dokor.argos.services.analysis.CollectorFailure(com.dokor.argos.services.analysis.CollectorFailure.Code.INVALID_RESPONSE));
         }
         // Parse score
         int score = JsonNodes.intValue(result, "score", -1);
@@ -63,7 +63,7 @@ public class ObservatoryModuleAnalyzer {
         int testsFailed = JsonNodes.intValue(result, "tests_failed", -1);
         int testsQuantity = JsonNodes.intValue(result, "tests_quantity", -1);
         if (score < 0 && grade == null && testsPassed < 0 && testsFailed < 0 && testsQuantity < 0) {
-            throw new ModuleUnavailableException("Observatory response has no usable measurements");
+            throw new ModuleUnavailableException("Observatory response has no usable measurements", new com.dokor.argos.services.analysis.CollectorFailure(com.dokor.argos.services.analysis.CollectorFailure.Code.INVALID_RESPONSE));
         }
 
         List<AuditCheckResult> checks = new ArrayList<>();
