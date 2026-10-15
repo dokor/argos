@@ -1,6 +1,5 @@
 "use client";
-import UsageStrip from "../UsageStrip";
-import { clarteCopy } from "../clarteCopy";
+import DomainScopeGuide from "./DomainScopeGuide";
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "@/components/LocalizedLink";
@@ -39,7 +38,6 @@ export default function DomainNew() {
     router = useRouter(),
     params = useSearchParams(),
     session = useAccountSession();
-  const guide = clarteCopy[lang];
   const discoveryId = params.get("discovery"),
     request = readDomainRequest(params.get("request")),
     valid =
@@ -450,7 +448,7 @@ export default function DomainNew() {
                     retry={activeBatches.reload}
                   />
                 )}
-              </Surface><aside><Surface title={guide.before}><div className={d.scopeGuide}>{[[guide.scope,guide.scopeHint],[guide.free,guide.freeHint],[guide.selection,guide.selectionHint]].map(([title,text])=><div key={title}><h3>{title}</h3><p>{text}</p></div>)}</div></Surface><UsageStrip/></aside></div>
+              </Surface><DomainScopeGuide /></div>
             </>
           ) : (
             <>

@@ -31,7 +31,7 @@ vi.mock("./useDomainResource", () => ({
     reload: vi.fn(),
     data: !path
       ? null
-      : path === "domain-batches"
+      : (path === "domain-batches" || path === "domain-discoveries")
         ? []
         : path === "analysis-profiles"
           ? {
@@ -149,4 +149,13 @@ it("rejects a recovery intent for a different discovery", () => {
   expect(
     screen.queryByRole("button", { name: fr.domainPage.retryRequest }),
   ).toBeNull();
+});
+
+it("keeps scope inputs and their discovery validations beside the quota guide", () => {
+  state.query = ""; render(<DomainNew />);
+  expect(screen.getByRole("complementary", { name: "Avant l’analyse" })).toBeInTheDocument();
+  expect(screen.getByLabelText(fr.domainPage.hostname)).toBeRequired();
+  expect(screen.getByLabelText(fr.domainPage.maxUrls)).toHaveAttribute("max", "50");
+  expect(screen.getByLabelText(fr.domainPage.maxDepth)).toHaveAttribute("min", "0");
+  expect(screen.getByLabelText(fr.domainPage.maxDepth)).toHaveAttribute("max", "3");
 });
