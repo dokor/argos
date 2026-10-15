@@ -19,7 +19,7 @@ const content = <main><h1>Private page</h1><p>Private result</p></main>;
 it("shares one footer, real available credits and a current navigation item", () => {
   render(<AccountShell>{content}</AccountShell>);
   expect(screen.getAllByRole("contentinfo")).toHaveLength(1);
-  expect(screen.getByRole("link", { name: /64 crédits/ })).toHaveAttribute("href", "/account/usage");
+  expect(screen.getByRole("link", { name: "64 crédits restants" })).toHaveAttribute("href", "/account/usage");
   expect(screen.getByRole("link", { name: /Intégrations/ })).toHaveAttribute("aria-current", "page");
   expect(screen.queryByRole("link", { name: "Administration" })).not.toBeInTheDocument();
 });
@@ -77,7 +77,7 @@ it("localizes navigation and handles unlimited and zero quota without fake count
   expect(screen.getByRole("link", { name: /Unlimited credits/ })).toBeInTheDocument();
   expect(screen.getByRole("link", { name: /Integrations/ })).toHaveAttribute("href", "/en/account/integrations");
   state.session.usage.limit = 0; state.session.usage.available=0; view.rerender(<LangProvider initialLang="en"><AccountShell>{content}</AccountShell></LangProvider>);
-  expect(screen.getByRole("link", { name: /0 credits/ })).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "0 credits remaining" })).toBeInTheDocument();
 });
 it("does not install private chrome around public authentication forms", () => {
   state.path = "/account/sign-in";
