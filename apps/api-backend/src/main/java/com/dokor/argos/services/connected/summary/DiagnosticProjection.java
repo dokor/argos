@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import java.util.*;
 
-/** Frozen read model V1: no current catalogue, raw evidence, HTML or report credentials. */
+/** Frozen read model V2: no current catalogue, raw evidence, HTML or report credentials. */
 public record DiagnosticProjection(
         int version,
         boolean available,
@@ -29,10 +29,46 @@ public record DiagnosticProjection(
             boolean evidenceAvailable) {}
 
     public static DiagnosticProjection unknown() {
-        return new DiagnosticProjection(1, false, null, null, null, null, List.of());
+        return new DiagnosticProjection(2, false, null, null, null, null, List.of());
     }
 
     public static DiagnosticProjection from(JsonNode report, JsonNode score) {
+        return canonical(report, weighted(report, score));
+    }
+
+    /** Same population as the reader: report.issues, first occurrence of each ID, including zero-weight details. */
+    public static DiagnosticProjection canonical(JsonNode report, DiagnosticProjection weighted) {
+        if (report == null || !report.path("issues").isArray()) return unknown();
+        var findings = CanonicalFindings.from(report);
+        var rules = new ArrayList<Rule>(weighted.rules());
+        for (var issue : findings) {
+            String key = issue.path("id").asText("");
+            if (key.isBlank() || key.length() > 200 || key.chars().anyMatch(Character::isISOControl)) continue;
+            String category = CanonicalFindings.category(issue);
+            if (!Set.of("security", "performance", "seo", "a11y").contains(category)) continue;
+            if (!Set.of("critical", "important", "info").contains(issue.path("severity").asText())) continue;
+            String module = issue.path("module").asText("");
+            String definition = HexFormat.of().formatHex(new TokenService().sha256("published-finding-v2|" + report.path("scores").path("calculation").path("scoringVersion").asText("unknown")
+                + "|" + report.path("scores").path("calculation").path("scoringFingerprint").asText("unknown")
+                + "|" + category + "|" + module + "|" + key));
+            // Keep frozen coverage definitions for comparisons, while using the reader's canonical severity/text.
+            var existing = rules.stream().filter(r -> r.key().equals(key)).findFirst().orElse(null);
+            if (existing != null) {
+                if (!"FAIL".equals(existing.outcome())) continue;
+                definition = existing.definitionVersion(); rules.removeIf(r -> r.key().equals(key));
+            }
+            rules.add(new Rule(key, definition, category, module.matches("[a-z0-9_-]{1,32}") ? List.of(module) : List.of(),
+                "FAIL", null, issue.path("severity").asText().toUpperCase(Locale.ROOT), text(issue, "title", 512),
+                text(issue, "impact", 1000), text(issue, "recommendation", 1000), hasEvidence(issue)));
+        }
+        rules.sort(Comparator.comparing(Rule::key));
+        return new DiagnosticProjection(2, true,
+            findings.stream().filter(i -> "critical".equals(i.path("severity").asText())).count(),
+            findings.stream().filter(i -> "important".equals(i.path("severity").asText())).count(),
+            weighted.coverageRatio(), weighted.coverageVersion(), List.copyOf(rules));
+    }
+
+    private static DiagnosticProjection weighted(JsonNode report, JsonNode score) {
         if (report == null || score == null) return unknown();
         var coverage = report.path("scores").path("coverage");
         var calculation = report.path("scores").path("calculation");
