@@ -215,6 +215,19 @@ public class RuntimeModuleAnalyzer {
         data.put("available", true);
         boolean timingsPartial = r.timings() == null || r.timings().domContentLoadedMs() == null || r.timings().loadMs() == null;
         String navigationStatus = r.navigation() != null && r.navigation().status() != null ? r.navigation().status() : "UNKNOWN";
+        // An interrupted navigation can establish a defect, never the absence of defects.
+        // Retain the observation but exclude its unsupported positive conclusion from scoring.
+        if (r.navigation() != null && !"COMPLETED".equals(navigationStatus)) {
+            checks.replaceAll(c -> {
+                if (c.status() != AuditStatus.PASS) return c;
+                var details = new LinkedHashMap<String, Object>(c.details());
+                details.put("measurementState", "UNAVAILABLE");
+                details.put("measurementReason", "NAVIGATION_INCOMPLETE");
+                return AuditCheckResult.of(c.key(), c.title(), AuditStatus.INFO, c.severity(),
+                    false, 0, c.tags(), c.value(), details,
+                    "Navigation incomplète : impossible de conclure à l'absence de problème.", null);
+            });
+        }
         data.put("navigation", nullableMap("status", navigationStatus,
             "reason", r.navigation() != null ? r.navigation().reason() : "LEGACY_RESPONSE"));
         data.put("partial", timingsPartial || (r.navigation() != null && !"COMPLETED".equals(navigationStatus))

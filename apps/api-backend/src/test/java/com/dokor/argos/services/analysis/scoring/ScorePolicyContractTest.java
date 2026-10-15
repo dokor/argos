@@ -70,7 +70,7 @@ class ScorePolicyContractTest {
 
         assertEquals(ScoreApplicability.VISIBLE_DIAGNOSTIC, lighthouseAudit.applicability());
         assertEquals(0.0, lighthouseAudit.weight());
-        assertEquals(ScoreApplicability.INFORMATIONAL, zapAlert.applicability());
+        assertEquals(ScoreApplicability.VISIBLE_DIAGNOSTIC, zapAlert.applicability());
         assertEquals(ScoreApplicability.INFORMATIONAL, unknownHttp.applicability());
     }
 

@@ -233,7 +233,7 @@ public class HttpModuleAnalyzer {
         checks.add(checkContentType(lastHeaders));
 
         // 7) Security headers (HSTS, CSP, etc.)
-        checks.addAll(checkSecurityHeaders(lastHeaders));
+        checks.addAll(checkSecurityHeaders(lastHeaders, finalUrl));
 
         // 7b) Attributs de sécurité des cookies (Secure / HttpOnly) — issue #151
         checks.add(checkCookieFlags(lastCookies));
@@ -606,7 +606,7 @@ public class HttpModuleAnalyzer {
         );
     }
 
-    private static List<AuditCheckResult> checkSecurityHeaders(Map<String, String> headers) {
+    static List<AuditCheckResult> checkSecurityHeaders(Map<String, String> headers, String finalUrl) {
         List<AuditCheckResult> out = new ArrayList<>();
 
         out.add(checkHeaderPresence(
@@ -663,6 +663,12 @@ public class HttpModuleAnalyzer {
             "Ajoutez Permissions-Policy pour restreindre les fonctionnalités sensibles du navigateur."
         ));
 
+        if (finalUrl == null || !finalUrl.toLowerCase(Locale.ROOT).startsWith("https://")) {
+            var hsts = out.getFirst();
+            out.set(0, AuditCheckResult.of(hsts.key(), hsts.title(), AuditStatus.WARN, hsts.severity(),
+                false, 0, hsts.tags(), hsts.value(), hsts.details(),
+                "HSTS ne peut pas protéger une réponse servie en HTTP.", "Servez la page en HTTPS et configurez HSTS."));
+        }
         return out;
     }
 
@@ -846,7 +852,8 @@ public class HttpModuleAnalyzer {
         String value = headers.get(headerKeyLowerCase);
         boolean present = value != null && !value.isBlank();
 
-        AuditStatus status = present ? AuditStatus.PASS : AuditStatus.WARN;
+        boolean effective = SecurityHeaderValidation.effective(headerKeyLowerCase, value, headers);
+        AuditStatus status = effective ? AuditStatus.PASS : AuditStatus.WARN;
 
         return AuditCheckResult.of(
             checkKey,
@@ -858,8 +865,9 @@ public class HttpModuleAnalyzer {
             List.of(),      // tags filled later
             value,
             present ? Map.of(headerKeyLowerCase, value) : Map.of(),
-            present ? (label + " est présent.") : (label + " est absent."),
-            present ? null : recommendationIfMissing
+            effective ? (label + " : configuration restrictive reconnue (ou équivalent CSP).")
+                : present ? (label + " : configuration restrictive non établie ; à vérifier.") : (label + " est absent."),
+            effective ? null : recommendationIfMissing
         );
     }
 

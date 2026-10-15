@@ -20,7 +20,7 @@ class DefaultScorePolicyTest {
 
     @Test
     void versionAndFingerprintExposeTheActiveRubric() {
-        assertEquals(12, policy.version());
+        assertEquals(13, policy.version());
         assertTrue(policy.fingerprint().matches("[0-9a-f]{64}"));
         assertEquals(policy.fingerprint(), new DefaultScorePolicy().fingerprint());
     }
@@ -164,10 +164,11 @@ class DefaultScorePolicyTest {
     // ------------------------------------------------------------------ ZAP informatif
 
     @Test
-    void genericZapAlertsAreInformationalOnly() {
+    void genericZapAlertsRemainVisibleWithoutChangingTheScore() {
         ScorePolicy.ScoreRule rule = policy.ruleFor("zap", "zap.alert.10038");
-        assertFalse(rule.scorable());
+        assertTrue(rule.scorable());
         assertEquals(0.0, rule.weight());
+        assertEquals(BusinessCategory.SECURITY, rule.businessCategory());
     }
 
     @Test

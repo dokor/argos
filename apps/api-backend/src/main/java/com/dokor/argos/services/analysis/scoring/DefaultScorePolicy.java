@@ -22,7 +22,7 @@ import java.util.*;
  * et son empreinte déterministe ; la V10 versionne son calcul global par domaine.
  * La V11 ajoute la couverture ; la V12 rend les seuils réseau runtime monotones (#327).
  * <p>
- * {@link #version()} est fixé à <b>12</b> pour identifier les rapports utilisant
+ * {@link #version()} est fixé à <b>13</b> pour identifier les rapports utilisant
  * ce catalogue explicite avec pondération globale par domaine.
  *
  * <h3>Principes</h3>
@@ -63,8 +63,8 @@ public class DefaultScorePolicy implements ScorePolicy {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultScorePolicy.class);
 
-    /** V12 score les seuils réseau runtime en PASS/WARN à poids constant (#327). */
-    private static final int VERSION = 12;
+    /** V13 : résultats partiels, visibilité ZAP et progression monotone des balises sociales. */
+    private static final int VERSION = 13;
 
     private final Map<String, ScoreRule> catalogue;
     private final String fingerprint;
@@ -217,6 +217,9 @@ public class DefaultScorePolicy implements ScorePolicy {
         // nouvelle clé Lighthouse automatiquement.
         if (checkKey != null && checkKey.startsWith("lighthouse.audit.")) {
             return diagnostic(BusinessCategory.NONE, TechnicalSource.LIGHTHOUSE);
+        }
+        if (checkKey != null && checkKey.startsWith("zap.alert.")) {
+            return diagnostic(BusinessCategory.SECURITY, TechnicalSource.ZAP);
         }
 
         return informational(TechnicalSource.fromTag(moduleId));

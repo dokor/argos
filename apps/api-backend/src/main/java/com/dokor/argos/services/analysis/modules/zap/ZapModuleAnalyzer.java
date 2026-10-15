@@ -22,11 +22,10 @@ public class ZapModuleAnalyzer {
 
     /** Mapping of ZAP pluginId → existing check key */
     private static final Map<String, String> PLUGIN_KEY_MAP = Map.of(
-        "10098", "http.security.csp",
+        "10038", "http.security.csp",
         "10035", "http.security.hsts",
         "10021", "http.security.x_content_type_options",
-        "10020", "http.security.x_frame_options",
-        "10037", "http.security.referrer_policy"
+        "10020", "http.security.x_frame_options"
     );
 
     private final ZapClient client;

@@ -21,6 +21,28 @@ import static org.mockito.Mockito.when;
  * des faux positifs (confidence=0) et conservation de la gravité maximale (issue #157).
  */
 class ZapModuleAnalyzerTest {
+    @Test void corsMisconfigurationCannotOverwriteTheCspFinding() throws Exception {
+        var result = analyze("""
+            {"alerts":[{"pluginId":"10098","alert":"Cross-Domain Misconfiguration","riskcode":"2","confidence":"2"},
+                       {"pluginId":"10038","alert":"CSP Header Not Set","riskcode":"2","confidence":"2"}]}
+            """);
+        assertEquals("CSP Header Not Set", check(result, "http.security.csp").orElseThrow().title());
+        assertEquals("Cross-Domain Misconfiguration", check(result, "zap.alert.10098").orElseThrow().title());
+        assertEquals(2, result.data().get("distinctFindings"));
+    }
+    @Test void poweredByDisclosureIsVisibleAndNeverBecomesReferrerPolicy() throws Exception {
+        var result = analyze("""
+            {"alerts":[{"pluginId":"10037","alert":"X-Powered-By disclosure","riskcode":"1","confidence":"2"}]}
+            """);
+        assertTrue(check(result, "http.security.referrer_policy").isEmpty());
+        var policy = new com.dokor.argos.services.analysis.scoring.DefaultScorePolicy();
+        var enriched = new com.dokor.argos.services.analysis.scoring.ScoreEnricherService(policy)
+            .enrich(java.util.List.of(result));
+        var finding = check(enriched.getFirst(), "zap.alert.10037").orElseThrow();
+        assertTrue(finding.scorable());
+        assertEquals(0, finding.weight());
+        assertTrue(finding.tags().contains("security"));
+    }
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 

@@ -34,3 +34,5 @@ La couverture passe en weighted-coverage-v3, afin que les comparaisons avec
 l'ancien calcul ne produisent pas de delta trompeur. Les rapports historiques
 restent figés. Les poids du barème ne changent pas et un même contrôle n'est
 compté qu'une fois, indépendamment du nombre d'adresses.
+
+La réponse SSL Labs v3 associe chaque chaîne à des identifiants de certificats dans le tableau hôte `certs`. La validité et l'expiration sont résolues par identifiant de certificat feuille, jamais par position dans ce tableau. Plusieurs certificats servis retiennent le pire constat ; une référence absente ou ambiguë ne produit pas de succès. Le diagnostic TLS sur le domaine soumis reste indépendant de la réussite du téléchargement HTML.

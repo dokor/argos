@@ -2,7 +2,7 @@ import express from 'express';
 import { resourceEvidence, evidenceEnvelope, EVIDENCE_LIMIT } from './evidence.mjs';
 import { analysisUrl } from './policy.mjs';
 import { proxyEndpoint, browserFlags, protectContext, safeOrigin } from './browser-policy.mjs';
-import { partitionNetworkErrors, registrableDomainForUrl, isFirstPartyUrl } from './domain.mjs';
+import { partitionNetworkErrors, isFirstPartyUrl } from './domain.mjs';
 
 export function isValidAnalysisUrl(value) {
   try { analysisUrl(value); return true; } catch { return false; }
@@ -49,8 +49,6 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
       const startedAt = Date.now();
       log('analyze.start', { url: safeUrl });
 
-      const pageDomain = registrableDomainForUrl(url);
-
       browser = await chromium.launch({ chromiumSandbox: true, args: browserFlags(endpoint), timeout: remaining() });
       if (cancelled) throw new Error('Analysis timeout');
       const context = await browser.newContext({ serviceWorkers: 'block', acceptDownloads: false });
@@ -63,18 +61,20 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
 
       const consoleSamples = [];
       let consoleErrors = 0;
-      let consoleErrorsFirstParty = 0;
+      const consoleErrorOrigins = new Map();
+      let consoleOriginsComplete = true;
       let consoleWarnings = 0;
 
       page.on('console', (msg) => {
         const type = msg.type(); // log, error, warning, ...
-        const text = msg.text();
         const loc = msg.location?.();
         if (type === 'error') {
           consoleErrors++;
           // Sans URL de localisation (script inline / eval) : attribué au site.
-          const d = loc?.url ? registrableDomainForUrl(loc.url) : pageDomain;
-          if (!d || d === pageDomain) consoleErrorsFirstParty++;
+          const origin = loc?.url ? safeOrigin(loc.url) : '';
+          if (consoleErrorOrigins.has(origin) || consoleErrorOrigins.size < 300)
+            consoleErrorOrigins.set(origin, (consoleErrorOrigins.get(origin) ?? 0) + 1);
+          else consoleOriginsComplete = false;
         }
         if (type === 'warning') consoleWarnings++;
 
@@ -88,7 +88,9 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
       });
 
       const jsErrorSamples = [];
+      let jsErrorCount = 0;
       page.on('pageerror', (err) => {
+        jsErrorCount++;
         if (jsErrorSamples.length < 10) {
           jsErrorSamples.push({ message: '[site message redacted]' });
         }
@@ -112,6 +114,7 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
         incidents.push({...resource, status, reason, resourceType});
       }
       let totalBytesEstimated = 0;
+      let bytesComplete = true;
 
       const byType = {};
       const topLargest = [];
@@ -146,7 +149,8 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
         // bytes estimation (best effort)
         let bytes = 0;
         const cl = response.headers()?.['content-length'];
-        if (cl && /^\d+$/.test(cl)) bytes = parseInt(cl, 10);
+        if (cl && /^\d+$/.test(cl) && Number.isSafeInteger(Number(cl))) bytes = Number(cl);
+        else if (status !== 204 && status !== 304) bytesComplete = false;
 
         totalBytesEstimated += bytes;
 
@@ -159,11 +163,13 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
         }
       });
 
-      const t0 = Date.now();
+      const t0 = performance.now();
       let finalUrl = url;
       let domContentLoadedMs = null;
       let loadMs = null;
       let navigation = { status: 'COMPLETED', reason: null };
+      page.on('domcontentloaded', () => { domContentLoadedMs = Math.round(performance.now() - t0); });
+      page.on('load', () => { loadMs = Math.round(performance.now() - t0); });
 
       try {
         const response = await page.goto(url, { waitUntil: 'load', timeout: remaining() });
@@ -172,15 +178,6 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
           throw new Error('Target blocked');
         }
         finalUrl = page.url();
-
-        // timings best effort
-        // on mesure depuis t0
-        // DCL: on peut l'obtenir via waitForLoadState
-        await page.waitForLoadState('domcontentloaded', { timeout: remaining() });
-        domContentLoadedMs = Date.now() - t0;
-
-        // déjà waitUntil=load, donc loadMs ~ now - t0
-        loadMs = Date.now() - t0;
 
         // petit idle pour capturer XHR tardifs (MVP)
         await page.waitForTimeout(Math.min(1500, remaining()));
@@ -201,12 +198,15 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
       if (cancelled) throw new Error('Analysis timeout');
 
       const networkOwnership = partitionNetworkErrors({ failedRequestUrls, status5xxUrls }, finalUrl);
+      const consoleErrorsFirstParty = consoleOriginsComplete
+        ? [...consoleErrorOrigins].reduce((count, [origin, occurrences]) =>
+            count + (!origin || isFirstPartyUrl(origin, finalUrl) ? occurrences : 0), 0) : null;
 
       log('analyze.done', {
         url: safeUrl,
         durationMs: Date.now() - startedAt,
         consoleErrors,
-        jsErrors: jsErrorSamples.length,
+        jsErrors: jsErrorCount,
         failedRequests,
         status5xx
       });
@@ -217,24 +217,24 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
         timings: { domContentLoadedMs, loadMs },
         navigation,
         console: {
-          errors: consoleErrors,
+          errors: consoleOriginsComplete ? consoleErrors : null,
           errorsFirstParty: consoleErrorsFirstParty,
           warnings: consoleWarnings,
           samples: consoleSamples
         },
-        jsErrors: { count: jsErrorSamples.length, samples: jsErrorSamples },
+        jsErrors: { count: jsErrorCount, samples: jsErrorSamples },
         network: {
           requests: Object.values(byType).length
             ? Object.values(byType).reduce((a, b) => a + b, 0)
             : 0,
-          failedRequests,
-          failedRequestsFirstParty: networkOwnership.failedRequests.firstParty,
-          failedRequestsThirdParty: networkOwnership.failedRequests.thirdParty,
+          failedRequests: failedRequests <= failedRequestUrls.length ? failedRequests : null,
+          failedRequestsFirstParty: failedRequests <= failedRequestUrls.length ? networkOwnership.failedRequests.firstParty : null,
+          failedRequestsThirdParty: failedRequests <= failedRequestUrls.length ? networkOwnership.failedRequests.thirdParty : null,
           status4xx,
-          status5xx,
-          status5xxFirstParty: networkOwnership.status5xx.firstParty,
-          status5xxThirdParty: networkOwnership.status5xx.thirdParty,
-          totalBytesEstimated,
+          status5xx: status5xx <= status5xxUrls.length ? status5xx : null,
+          status5xxFirstParty: status5xx <= status5xxUrls.length ? networkOwnership.status5xx.firstParty : null,
+          status5xxThirdParty: status5xx <= status5xxUrls.length ? networkOwnership.status5xx.thirdParty : null,
+          totalBytesEstimated: bytesComplete ? totalBytesEstimated : null,
           observedEvidence: evidenceEnvelope('runtime', incidents.map(item=>({...item,
             ownership:isFirstPartyUrl(item.origin,finalUrl)?'FIRST_PARTY':'THIRD_PARTY'})), incidentCount,
             incidentCount>incidents.length),

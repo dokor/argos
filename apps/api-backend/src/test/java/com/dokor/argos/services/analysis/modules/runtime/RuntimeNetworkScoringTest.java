@@ -98,7 +98,7 @@ class RuntimeNetworkScoringTest {
     }
 
     @Test
-    void frozenV11ReportIsNotRecalculatedOrComparedWithV12() throws Exception {
+    void frozenV11ReportIsNotRecalculatedOrComparedWithCurrentPolicy() throws Exception {
         var current = new PublicReportComposer().compose(audit(true, 120, 3_000_000, true));
         var mapper = new ObjectMapper();
         var historicalJson = mapper.valueToTree(current);
@@ -109,7 +109,7 @@ class RuntimeNetworkScoringTest {
         String frozen = mapper.writeValueAsString(historicalJson);
         var historical = mapper.readValue(frozen, ReportDto.class);
 
-        assertEquals(12, current.scores().calculation().scoringVersion());
+        assertEquals(13, current.scores().calculation().scoringVersion());
         var comparison = AuditComparisonService.compare(historical, current);
         assertEquals(AuditComparisonService.Reason.METHODOLOGY_CHANGED, comparison.reason());
         assertNull(comparison.globalDelta());
@@ -147,7 +147,8 @@ class RuntimeNetworkScoringTest {
         var enriched = enricher.enrich(modules);
         var score = new ScoreService(policy).compute(enricher.scoringVersion(), enricher.scoringFingerprint(), enriched);
         return new AuditReportJson(2, "https://example.com", "https://example.com",
-            Instant.EPOCH, Map.of(), enriched, score);
+            Instant.EPOCH, Map.of("measurementFingerprint", "runtime-test-profile",
+                "scopeFingerprint", "same-exact-page"), enriched, score);
     }
 
     private static ScoreAggregate performance(AuditReportJson report) {
