@@ -51,8 +51,8 @@ export default function UsageView() {
       <div className={s.grid}><Surface title={copy.monthly} action={usage&&<StatusBadge>{usage.offer}</StatusBadge>}>
         {usage ? <>
           <p className={s.period}>{copy.currentPeriod} <strong>{month(usage.period)}</strong> · {usage.timezone}</p>
-          <p className={s.capacity}><strong>{usage.available===null ? copy.unlimited:number(usage.available)}</strong><span>{usage.limit===null ? copy.noLimit:copy.available+" / "+number(usage.limit)}</span></p>
-          {usage.limit!==null&&usage.limit>0&&<meter className={s.meter} min={0} max={usage.limit} value={Math.min(usage.limit,usage.used+usage.reserved)} aria-label={copy.occupied}/>}
+          <p className={s.capacity}><strong>{usage.available===null ? copy.unlimited:number(usage.available)}</strong><span>{usage.limit===null ? copy.noLimit:"/ "+number(usage.limit)+" "+copy.available}</span></p>
+          {usage.limit!==null&&usage.limit>0&&usage.available!==null&&<meter className={s.meter} min={0} max={usage.limit} value={Math.max(0,Math.min(usage.limit,usage.available))} aria-label={copy.available} aria-valuetext={`${number(usage.available)} / ${number(usage.limit)} ${copy.available}`}/>}
           <dl className={s.facts}><div><dt>{copy.used}</dt><dd>{number(usage.used)}</dd></div><div><dt>{copy.reserved}</dt><dd>{number(usage.reserved)}</dd></div><div><dt>{copy.limit}</dt><dd>{usage.limit===null ? copy.unlimited:number(usage.limit)}</dd></div></dl>
           <dl className={s.facts}><div><dt>{clarity.domainLimit}</dt><dd className={s.unavailable}>{clarity.unavailable}</dd></div><div><dt>{clarity.concurrent}</dt><dd className={s.unavailable}>{clarity.unavailable}</dd></div></dl>
           <p className={s.reset}>{copy.reset} <time dateTime={usage.resetsAt}>{quotaResetDate(usage.resetsAt,lang,usage.timezone)}</time></p>

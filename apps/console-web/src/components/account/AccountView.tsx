@@ -42,7 +42,6 @@ export default function AccountView({mode="sign-in"}:{mode?:Mode}) {
     const target = focusTarget.current === "notice"
       ? noticeRef.current
       : formRef.current?.querySelector<HTMLInputElement>(`#${focusTarget.current}`);
-    // A pending effect can run before the account-switch form is mounted.
     // Keep the request until the target exists in the committed DOM.
     if (!target) return;
     focusTarget.current = null;

@@ -16,7 +16,7 @@ export default function NewAnalysis() {
   return <main className={ui.page}><PageHeading title={c.title} description={c.intro}/><AnalysisNavigation active="new"/>
     {!session.ready ? <p role="status">{t.account.working}</p> : !session.profile?.verified || session.denied ? <p role="alert">{session.profile ? t.account.pending : t.account.errors.session_invalid}</p> : <>
       <div className={s.columns}><Surface title={c.formTitle}><AnalysisForm key={initialUrl} initialUrl={initialUrl}/></Surface><Surface title={c.discover}><ul className={s.discovery}>{c.categories.map((category,index)=><li key={category}><strong>{category}</strong><p>{c.descriptions[index]}</p></li>)}</ul></Surface></div>
-      <Surface title={c.known} action={<Link href="/account/sites">{c.sites}</Link>}><p className={s.muted}>{c.knownHint}</p><KnownUrls/></Surface>
+      <div id="known-urls" className={s.knownSection}><Surface title={c.known} action={<Link href="/account/sites">{c.sites}</Link>}><p className={s.muted}>{c.knownHint}</p><KnownUrls/></Surface></div>
     </>}
   </main>;
 }

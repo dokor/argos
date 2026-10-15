@@ -18,7 +18,26 @@ it.each(["fr","en"] as const)("shows human URL labels while preserving exact run
  expect(screen.getByText(lang==="fr"?"octobre 2026":"October 2026")).toBeInTheDocument();
  expect(screen.getAllByText(lang==="fr"?"Non communiqué par le serveur":"Not provided by the server")).toHaveLength(2);
  const details=screen.getByText(lang==="fr"?"Identifiants techniques":"Technical identifiers").closest("details")!;expect(details).not.toHaveAttribute("open");fireEvent.click(details.querySelector("summary")!);
+ const remaining=lang==="fr"?"crédits restants":"credits remaining";
+ expect(screen.getByText("/ 20 "+remaining)).toBeInTheDocument();
+ expect(screen.getByRole("meter",{name:remaining})).toHaveAttribute("value","17");
+ expect(screen.getByRole("meter")).toHaveAttribute("aria-valuetext","17 / 20 "+remaining);
  expect(screen.getByText((lang==="fr"?"Lot de domaine":"Domain batch")+" #"+event.batchId)).toBeInTheDocument();expect(document.querySelector('time[datetime="2026-11-01T00:00:00Z"]')).not.toBeNull();
+});
+it("drains the server-provided balance as credits are reserved and consumed, and refills when released",async()=>{
+ const usage=mock.session.usage!;
+ Object.assign(usage,{used:0,reserved:0,available:20});
+ const view=render(<UsageView/>);await screen.findByRole("table");
+ expect(screen.getByRole("meter")).toHaveAttribute("value","20");
+ Object.assign(usage,{reserved:3,available:17});view.rerender(<UsageView/>);
+ expect(screen.getByRole("meter")).toHaveAttribute("value","17");
+ Object.assign(usage,{used:3,reserved:0});view.rerender(<UsageView/>);
+ expect(screen.getByRole("meter")).toHaveAttribute("value","17");
+ Object.assign(usage,{used:19,reserved:1,available:0,canLaunch:false});view.rerender(<UsageView/>);
+ expect(screen.getByRole("meter")).toHaveAttribute("value","0");
+ expect(screen.getByRole("status")).toHaveTextContent("Le plafond est atteint ou réservé");
+ Object.assign(usage,{reserved:0,available:1,canLaunch:true});view.rerender(<UsageView/>);
+ expect(screen.getByRole("meter")).toHaveAttribute("value","1");
 });
 it("renders zero capacity without an invalid meter and preserves reading access",async()=>{
  Object.assign(mock.session.usage!,{limit:0,available:0,canLaunch:false});render(<UsageView/>);expect(await screen.findByRole("status")).toHaveTextContent("Votre plafond est fixé à zéro");expect(screen.queryByRole("meter")).not.toBeInTheDocument();expect(screen.getByRole("link",{name:/Contacter/})).toHaveAttribute("href","/feedback");

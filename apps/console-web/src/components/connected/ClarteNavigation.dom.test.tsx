@@ -7,7 +7,7 @@ import UsageStrip from "./UsageStrip";
 import DomainCommonMetric from "./domains/DomainCommonMetric";
 const state=vi.hoisted(()=>({data:null as unknown,error:"",usage:null as unknown,usageError:false,paths:[] as (string|null)[]}));
 vi.mock("next/navigation",()=>({usePathname:()=>"/account/analyses/new"}));
-vi.mock("./domains/useDomainResource",()=>({activeStatus:()=>false,useDomainResource:(path:string|null)=>{state.paths.push(path);return {data:path?state.data:null,error:state.error,reload:vi.fn()};}}));
+vi.mock("./domains/useDomainResource",()=>({activeStatus:(value:{status:string})=>["QUEUED","RUNNING"].includes(value.status),useDomainResource:(path:string|null)=>{state.paths.push(path);return {data:path?state.data:null,error:state.error,reload:vi.fn()};}}));
 vi.mock("@/components/account/AccountSession",()=>({useAccountSession:()=>({usage:state.usage,usageError:state.usageError,refreshUsage:vi.fn()})}));
 beforeEach(()=>{
   Object.assign(state,{data:null,error:"",usage:null,usageError:false,paths:[]});

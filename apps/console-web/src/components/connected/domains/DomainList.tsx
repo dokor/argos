@@ -104,7 +104,7 @@ export default function DomainList() {
                     <dt>{c.priority}</dt>
                     <dd>{domain.counts.priorityPages}</dd>
                   </div>
-                  <DomainCommonMetric domainId={domain.id} batchId={domain.latestBatchId}/>
+                  <DomainCommonMetric domainId={domain.id} batchId={domain.latestBatchId} />
                   <div>
                     <dt>
                       {c.complete} / {c.selected}
