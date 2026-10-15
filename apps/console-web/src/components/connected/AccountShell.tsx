@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode, type CSSProperties } from "react";
 import {readingSnapshot,subscribeReading} from "@/components/report/reportReading";
 import {safeAccountReturn} from "@/lib/account-return";
 import { usePathname } from "next/navigation";
 import Link from "@/components/LocalizedLink";
+import ConnectedIcon from "./ConnectedIcon";
+import { clarteCopy } from "./clarteCopy";
 import ArgosIcon from "@/components/ArgosIcon";
 import ThemeToggle from "@/components/ThemeToggle";
 import LangToggle from "@/components/LangToggle";
@@ -30,6 +32,7 @@ export default function AccountShell({ children }: { children: ReactNode }) {
   const menuButton = useRef<HTMLButtonElement>(null);
   const [collapsed, setCollapsed] = useState(false);
   const [tooltipDismissed, setTooltipDismissed] = useState(false);
+  const [tooltipPosition, setTooltipPosition] = useState({ left: 0, top: 0 });
   const open = openPath === pathname;
   if (/^\/account\/(sign-in|register|verify|forgot|reset)$/.test(pathname)) return children;
   const isAccount = pathname === "/account/settings";
@@ -39,19 +42,27 @@ export default function AccountShell({ children }: { children: ReactNode }) {
   const context = pathname === "/account" ? c.overview : pathname.startsWith("/account/admin") ? c.admin : isSites ? c.sites
     : pathname.startsWith("/account/domains") ? c.domains : pathname === "/account/usage" ? c.usage : pathname === "/account/integrations" ? c.integrations : c.account;
   const close = () => setOpenPath(null);
-  return <div className={s.shell} data-connected-shell data-collapsed={collapsed} data-tooltip-dismissed={tooltipDismissed}>
+  const positionTooltip = (target: EventTarget) => {
+    if (!(target instanceof Element)) return;
+    const item = target.closest("#account-navigation a, #account-navigation button");
+    if (!item) return;
+    const rect = item.getBoundingClientRect();
+    setTooltipPosition({ left: rect.right, top: rect.top + rect.height / 2 });
+    setTooltipDismissed(false);
+  };
+  return <div className={s.shell} data-connected-shell data-collapsed={collapsed} data-tooltip-dismissed={tooltipDismissed} style={{ "--argos-nav-tooltip-left": `${tooltipPosition.left}px`, "--argos-nav-tooltip-top": `${tooltipPosition.top}px` } as CSSProperties}>
     <a href="#account-content" className={s.skip}>{c.skip}</a>
     <aside className={s.sidebar} data-open={open} onKeyDown={event => {
       if (event.key === "Escape") {
         setTooltipDismissed(true);
         if (open) { close(); menuButton.current?.focus(); }
       }
-    }} onFocusCapture={() => setTooltipDismissed(false)} onMouseOver={() => setTooltipDismissed(false)}>
+    }} onFocusCapture={event => positionTooltip(event.target)} onMouseOver={event => positionTooltip(event.target)}>
       <div className={s.brandRow}>
         <Link href="/account" className={s.brand} aria-label={c.workspace}><ArgosIcon size={25}/><span>Argos</span></Link>
         <button ref={menuButton} className={s.menu} type="button" aria-expanded={open} aria-controls="account-navigation" onClick={() => setOpenPath(open ? null : pathname)}>{open ? c.closeMenu : c.menu}</button>
       </div>
-      <nav id="account-navigation" className={s.navigation} aria-label={c.navigation}>
+      <nav id="account-navigation" className={s.navigation} aria-label={c.navigation} onScroll={() => setTooltipDismissed(true)}>
         <div className={s.navHeading}>
           <p className={s.navCaption}>{c.workspace}</p>
           <button type="button" className={s.collapseToggle} aria-label={collapsed ? c.expandMenu : c.collapseMenu} aria-expanded={!collapsed} aria-controls="account-navigation" onClick={() => setCollapsed(value => !value)}>
@@ -67,6 +78,7 @@ export default function AccountShell({ children }: { children: ReactNode }) {
           <Link href="/account/usage" aria-current={pathname === "/account/usage" ? "page" : undefined} onClick={close} aria-label={c.usage}><NavigationIcon name="usage"/><span className={s.navLabel}>{c.usage}</span></Link>
           {admin && <Link href="/account/admin" aria-current={pathname.startsWith("/account/admin") ? "page" : undefined} onClick={close} aria-label={c.admin}><NavigationIcon name="admin"/><span className={s.navLabel}>{c.admin}</span></Link>}
         </div>
+        <Link className={s.helpLink} href="/faq" onClick={close} aria-label={c.help}><ConnectedIcon name="help"/><span className={s.navLabel}>{c.help}</span></Link>
       </nav>
       {valid && <AccountMenu key={currentPath} profile={session.profile!} onOpen={close} compact={collapsed}/>}
     </aside>
@@ -86,8 +98,8 @@ export default function AccountShell({ children }: { children: ReactNode }) {
 }
 
 export function AccountFooter() {
-  const { t } = useLang(), c = t.connected;
-  return <footer className={s.footer}><span>Argos <span aria-hidden="true">·</span> {c.personalSpace}</span><nav aria-label={c.footer}>
-    <Link href="/faq">{c.help}</Link><Link href="/feedback">{c.contact}</Link><Link href="/informations-legales">{c.legal}</Link><Link href="/confidentialite">{c.privacy}</Link>
+  const { t, lang } = useLang(), c = t.connected, copy = clarteCopy[lang];
+  return <footer className={s.footer}><div className={s.footerIntro}><div><strong>Argos</strong><span>{copy.footer}</span></div><Link href="/feedback">{c.contact} <span aria-hidden="true">↗</span></Link></div><nav aria-label={c.footer}>
+    <Link href="/faq">{c.help}</Link><Link href="/">{copy.returnSite} <span aria-hidden="true">↗</span></Link><Link href="/informations-legales">{c.legal}</Link><Link href="/confidentialite">{c.privacy}</Link>
   </nav></footer>;
 }

@@ -1,0 +1,91 @@
+[
+  {
+    "route": "/account/domains/new",
+    "width": 1056,
+    "h1": 1,
+    "scrollWidth": 1041,
+    "viewport": 1056
+  },
+  {
+    "route": "/account/settings",
+    "width": 1056,
+    "h1": 1,
+    "scrollWidth": 1041,
+    "viewport": 1056
+  },
+  {
+    "route": "/account/domains/new",
+    "width": 390,
+    "h1": 1,
+    "scrollWidth": 375,
+    "viewport": 390
+  },
+  {
+    "route": "/account/settings",
+    "width": 390,
+    "h1": 1,
+    "scrollWidth": 375,
+    "viewport": 390
+  },
+  {
+    "route": "/account/analyses/new",
+    "width": 390,
+    "h1": 1,
+    "scrollWidth": 375,
+    "viewport": 390
+  },
+  {
+    "route": "/account/usage",
+    "width": 390,
+    "h1": 1,
+    "scrollWidth": 375,
+    "viewport": 390
+  },
+  {
+    "route": "/account/integrations",
+    "width": 390,
+    "h1": 1,
+    "scrollWidth": 375,
+    "viewport": 390
+  },
+  {
+    "route": "/en/account/domains/new",
+    "width": 390,
+    "h1": 1,
+    "scrollWidth": 375,
+    "viewport": 390
+  },
+  {
+    "route": "/en/account/settings",
+    "width": 390,
+    "h1": 1,
+    "scrollWidth": 375,
+    "viewport": 390
+  },
+  {
+    "route": "/en/account/analyses/new",
+    "width": 390,
+    "h1": 1,
+    "scrollWidth": 375,
+    "viewport": 390
+  },
+  {
+    "route": "/en/account/usage",
+    "width": 390,
+    "h1": 1,
+    "scrollWidth": 375,
+    "viewport": 390
+  },
+  {
+    "route": "/en/account/domains",
+    "width": 320,
+    "scrollWidth": 305,
+    "viewport": 320
+  },
+  {
+    "route": "/en/account/domains/new",
+    "width": 768,
+    "scrollWidth": 753,
+    "viewport": 768
+  }
+]

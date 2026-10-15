@@ -62,6 +62,9 @@ class ConnectedContractsTest {
         assertEquals("9007199254740993", encoded.get("pageId").textValue());
         assertTrue(encoded.get("criticalCount").isNull());
         assertTrue(encoded.get("score").get("value").isNull());
+        var legacy = ((ObjectNode) encoded).deepCopy();
+        legacy.remove("collectionGaps");
+        assertNull(mapper.treeToValue(legacy, PageResult.class).collectionGaps());
         var partial = new PageResult("1", "https://example.com/", "2", ExecutionStatus.COMPLETED,
                 Completeness.PARTIAL, new Score(72L, true, "INSUFFICIENT_COVERAGE"),
                 new Coverage(0.6, "weighted-coverage-v3"), 0L, 2L,

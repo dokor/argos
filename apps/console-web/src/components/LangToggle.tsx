@@ -7,13 +7,15 @@ import { accountRoutes, frenchPath, languageRoutes, localizedPath } from "@/lib/
 import { useLang, Lang } from "@/lib/i18n/LangContext";
 import s from "./LangToggle.module.scss";
 import { readingSnapshot, subscribeReading } from "./report/reportReading";
+import { authLanguagePath, type AuthLanguageContext } from "@/lib/account-navigation";
 
 type Props = {
   className?: string;
   variant?: "light" | "dark";
+  authContext?: AuthLanguageContext;
 };
 
-export default function LangToggle({ className, variant = "light" }: Props) {
+export default function LangToggle({ className, variant = "light", authContext }: Props) {
   const { lang } = useLang();
   const pathname = usePathname();
   const suffix = useSyncExternalStore(subscribeReading, readingSnapshot, () => "");
@@ -31,7 +33,7 @@ export default function LangToggle({ className, variant = "light" }: Props) {
         <Fragment key={l}>
           {i === 1 && <span className={s.sep} aria-hidden="true" />}
           <Link
-            href={localizedPath(pathname + suffix, l)}
+            href={authContext ? authLanguagePath(pathname + suffix, l, authContext) : localizedPath(pathname + suffix, l)}
             hrefLang={l}
             lang={l}
             className={`${s.option} ${lang === l ? s.active : ""}`}

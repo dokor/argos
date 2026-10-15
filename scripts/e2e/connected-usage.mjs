@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
 import {chromium} from '../../apps/playwright-service/node_modules/playwright/index.mjs';
-import {response,usage} from './connected-usage-fixture.mjs';
+import {response,usage,items} from './connected-usage-fixture.mjs';
 import fr from '../../apps/console-web/src/lib/i18n/fr.json' with {type:'json'};
 import en from '../../apps/console-web/src/lib/i18n/en.json' with {type:'json'};
 const base=process.env.CONNECTED_BASE_URL??'http://127.0.0.1:3030';assert.ok(['127.0.0.1','localhost'].includes(new URL(base).hostname));
@@ -34,27 +34,36 @@ try{
    const violations=await page.evaluate(async()=> (await window.axe.run(document.querySelector('[data-connected-shell]'),{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}})).violations.map(v=>({id:v.id,nodes:v.nodes.map(n=>n.target)})));
    assert.deepEqual(violations,[],name);const file=`${name}-${lang}-${theme}-${width}.png`;await page.screenshot({path:`${output}/${file}`,fullPage:true});evidence.push({name,lang,theme,width,screenshot:file,axeViolations:0,overflow:false});
   }
-  await visit();await page.getByRole('link',{name:labels.open+' #9007199254740992'}).waitFor();
-  assert.equal(await page.getByRole('link',{name:labels.open+' #9007199254740992'}).getAttribute('href'),prefix+'/account/runs/9007199254740992');await check('current');
+  const runLink=id=>page.locator(`main a[href="${prefix}/account/runs/${id}"]`);
+  await visit();await runLink(items[0].runId).waitFor();
+  assert.equal(await runLink(items[0].runId).getAttribute('title'),items[0].url,'The compact URL retains its complete destination');
+  assert.ok((await runLink(items[0].runId).innerText()).includes('atelier.example/collection/'),'The ledger identifies the analyzed page');
+  const identifiers=runLink(items[0].runId).locator('..').locator('details');
+  assert.equal(await identifiers.getAttribute('open'),null,'Technical identifiers start collapsed');
+  await identifiers.locator('summary').click();
+  assert.ok((await identifiers.innerText()).includes('#'+items[0].runId),'Exact run identifier stays available without numeric truncation');
+  assert.ok((await identifiers.innerText()).includes('#'+items[0].batchId),'Exact batch identifier stays available');
+  await identifiers.locator('summary').click();await check('current');
   const meter=page.getByRole('meter',{name:(lang==='fr'?fr:en).usagePage.available,exact:true});
   await meter.waitFor();
   assert.equal(await meter.getAttribute('value'),String(usage.available),'The gauge represents the remaining credits supplied by the server');
   assert.equal(await meter.getAttribute('max'),String(usage.limit));
   await page.getByRole('button',{name:labels.current,exact:true}).focus();await page.keyboard.press('Tab');
-  const ledgerRegion=page.getByRole('region',{name:(lang==='fr'?'Journal de consommation':'Usage ledger')+' · 2026-10'});
+  const displayedMonth=new Intl.DateTimeFormat(lang,{month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(usage.period+'-01T00:00:00Z'));
+  const ledgerRegion=page.getByRole('region',{name:(lang==='fr'?'Journal de consommation':'Usage ledger')+' · '+displayedMonth});
   assert.ok(await ledgerRegion.evaluate(el=>el===document.activeElement),'Keyboard reaches ledger region');
   if(width<768){await page.keyboard.press('ArrowRight');await page.waitForFunction(()=>document.querySelector('main [role=region]').scrollLeft>0);}
 
-  await page.getByRole('button',{name:labels.next,exact:true}).click();await page.waitForURL(/offset=20/);await page.getByRole('link',{name:labels.open+' #2020'}).waitFor();assert.equal(await page.locator('tbody tr').count(),4);await check('page-two');
+  await page.getByRole('button',{name:labels.next,exact:true}).click();await page.waitForURL(/offset=20/);await runLink('2020').waitFor();assert.equal(await page.locator('tbody tr').count(),4);await check('page-two');
   const languageLink=page.getByRole('link',{name:lang==='fr'?'English':'Français',exact:true});assert.ok((await languageLink.getAttribute('href')).includes('offset=20'));
-  await page.getByLabel(labels.month).fill('2026-09');await page.getByRole('button',{name:labels.show,exact:true}).click();await page.waitForURL(/period=2026-09$/);assert.ok(!new URL(page.url()).searchParams.has('offset'));await page.getByRole('link',{name:labels.open+' #2010'}).waitFor();await check('prior-month');
+  await page.getByLabel(labels.month).fill('2026-09');await page.getByRole('button',{name:labels.show,exact:true}).click();await page.waitForURL(/period=2026-09$/);assert.ok(!new URL(page.url()).searchParams.has('offset'));await runLink('2010').waitFor();await check('prior-month');
   assert.equal(await page.getByRole('link',{name:`${usage.available} ${(lang==='fr'?fr:en).connected.credits}`,exact:true}).count(),1,'Historic filter never changes current quota');
   await page.getByLabel(labels.month).fill('2026-08');await page.getByRole('button',{name:labels.show,exact:true}).click();await page.getByRole('heading',{name:labels.empty}).waitFor();await check('empty');
   if([320,1440].includes(width)){
    for(const variant of ['zero','unlimited','exhausted','quota-error','ledger-error']){
     mode=variant;await visit();
     if(variant==='ledger-error'){await page.locator('main').getByRole('alert').waitFor();}
-    else {await page.getByRole('link',{name:labels.open+' #9007199254740992'}).waitFor();}
+    else {await runLink(items[0].runId).waitFor();}
     await check(variant);
     if(variant==='ledger-error'){mode='normal';await page.getByRole('button',{name:labels.retry,exact:true}).click();await page.getByRole('table').waitFor();}
    }

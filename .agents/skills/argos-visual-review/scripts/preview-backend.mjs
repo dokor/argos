@@ -69,6 +69,7 @@ function fixture(token) {
   };
 }
 const tokens = new Set(["review-complete", "review-partial", "review-unavailable", "review-empty", "review-details"]);
+const port = Number(process.env.ARGOS_PREVIEW_PORT ?? 3018);
 createServer((req, res) => {
   res.setHeader("Content-Type", "application/json; charset=utf-8");
   res.setHeader("Cache-Control", "no-store");
@@ -110,4 +111,4 @@ createServer((req, res) => {
     res.end(JSON.stringify({ status: token === "review-running" || token === "review-finalizing" ? "RUNNING" : token === "review-failed" ? "FAILED" : "COMPLETED", moduleStatuses: JSON.stringify(modules) }));
   } else if (!status && tokens.has(token)) res.end(JSON.stringify(fixture(token)));
   else { res.writeHead(404); res.end("{}"); }
-}).listen(3018, "127.0.0.1", () => console.log("Visual fixtures: http://127.0.0.1:3018 (GET only)"));
+}).listen(port, "127.0.0.1", () => console.log(`Visual fixtures: http://127.0.0.1:${port} (GET only)`));

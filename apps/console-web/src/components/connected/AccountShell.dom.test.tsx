@@ -26,7 +26,7 @@ it("collapses and restores navigation without losing accessible destinations or 
   expect(toggle).toHaveAttribute("aria-expanded", "false");
   expect(shell).toHaveAttribute("data-collapsed", "true");
   expect(screen.getByRole("button", { name: /Menu du compte/ }).parentElement).toHaveAttribute("data-compact", "true");
-  for (const label of ["Vue d’ensemble", "Analyse de site", "Domaines", "Intégrations — Bientôt", "Mon compte", "Offre et quotas"]) {
+  for (const label of ["Vue d’ensemble", "Analyse de site", "Domaines", "Intégrations — Bientôt", "Mon compte", "Offre et quotas", "Aide"]) {
     expect(within(navigation).getByRole("link", { name: label })).toBeInTheDocument();
   }
   const integrations = within(navigation).getByRole("link", { name: "Intégrations — Bientôt" });
@@ -35,6 +35,8 @@ it("collapses and restores navigation without losing accessible destinations or 
   expect(shell).toHaveAttribute("data-tooltip-dismissed", "true");
   fireEvent.focus(integrations);
   expect(shell).toHaveAttribute("data-tooltip-dismissed", "false");
+  fireEvent.scroll(navigation);
+  expect(shell).toHaveAttribute("data-tooltip-dismissed", "true");
   state.path = "/account/domains";
   view.rerender(<AccountShell>{content}</AccountShell>);
   expect(shell).toHaveAttribute("data-collapsed", "true");
@@ -53,6 +55,8 @@ it("localizes compact controls and preserves English navigation destinations", (
 it("shares one footer, real available credits and a current navigation item", () => {
   render(<AccountShell>{content}</AccountShell>);
   expect(screen.getAllByRole("contentinfo")).toHaveLength(1);
+  expect(screen.getByRole("link",{name:"Retour au site"})).toHaveAttribute("href","/");
+  expect(screen.getAllByRole("link",{name:"Aide"})).toHaveLength(2);
   expect(screen.getByRole("link", { name: "64 crédits restants" })).toHaveAttribute("href", "/account/usage");
   expect(screen.getByRole("link", { name: /Intégrations/ })).toHaveAttribute("aria-current", "page");
   expect(screen.queryByRole("link", { name: "Administration" })).not.toBeInTheDocument();

@@ -26,7 +26,7 @@
 .brandRow { display: flex; align-items: center; min-height: 66px; padding: 10px 22px; border-bottom: 1px solid var(--argos-border); }
 .brand { display: inline-flex; gap: 10px; align-items: center; min-height: 44px; font-size: 22px; font-weight: 750; }
 .brand svg { color: var(--argos-brand); }
-.navigation { display: flex; flex: 1; flex-direction: column; gap: 6px; padding: 24px 12px; }
+.navigation { display: flex; flex: 1; min-height: 0; overflow-y: auto; flex-direction: column; gap: 6px; padding: 24px 12px; }
 .navHeading { display: flex; align-items: center; justify-content: space-between; min-height: 44px; margin-bottom: 6px; }
 .navCaption { font-size: 11px; letter-spacing: .025em; text-transform: uppercase; white-space: nowrap; color: var(--argos-text-muted); padding-left: 10px; }
 .navigation a, .unavailable { position: relative; display: flex; align-items: center; gap: 10px; padding: 10px; min-height: 44px; border-radius: 7px; overflow-wrap: anywhere; }
@@ -36,7 +36,7 @@
 .collapseToggle { position: relative; display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 44px; min-height: 44px; padding: 10px; border-radius: 7px; color: var(--argos-text-muted); text-align: left; }
 .collapseToggle > svg { flex-shrink: 0; }
 .collapseToggle:hover { background: var(--argos-canvas); }
-.toggleLabel { position: absolute; left: 100%; top: 50%; transform: translateY(-50%); width: max-content; padding: 8px 12px; background: var(--argos-surface); color: var(--argos-text); border: 1px solid var(--argos-border); border-radius: 7px; font-size: 13px; z-index: 60; visibility: hidden; }
+.toggleLabel { position: fixed; left: var(--argos-nav-tooltip-left); top: var(--argos-nav-tooltip-top); transform: translateY(-50%); width: max-content; padding: 8px 12px; background: var(--argos-surface); color: var(--argos-text); border: 1px solid var(--argos-border); border-radius: 7px; font-size: 13px; z-index: 60; visibility: hidden; }
 .shell:not([data-tooltip-dismissed='true']) .collapseToggle:is(:hover, :focus-visible) .toggleLabel { visibility: visible; }
 // Collapse is opt-in on desktop; mobile always keeps the full text disclosure.
 @media (min-width: 901px) {
@@ -48,7 +48,7 @@
     .navigation a, .collapseToggle { justify-content: center; padding-inline: 10px; }
     .identity { justify-content: center; padding-inline: 10px; }
     .navLabel, .toggleLabel {
-      position: absolute; left: 100%; top: 50%; transform: translateY(-50%);
+      position: fixed; left: var(--argos-nav-tooltip-left); top: var(--argos-nav-tooltip-top); transform: translateY(-50%);
       width: max-content; max-width: 240px; padding: 8px 12px;
       background: var(--argos-surface); color: var(--argos-text); border: 1px solid var(--argos-border);
       border-radius: 7px; font-size: 13px; font-weight: 400; z-index: 60;
@@ -142,7 +142,7 @@ a.kpi:hover { border-color: var(--argos-brand); }
   .brandRow { display: contents; }
   .brand { grid-column: 1; grid-row: 1; font-size: 20px; gap: 7px; }
   .menu { grid-column: 3; grid-row: 1; display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 6px 8px; font-size: 13px; border: 1px solid var(--argos-border); border-radius: 6px; }
-  .navigation { display: none; grid-column: 1 / -1; grid-row: 2; }
+  .navigation { display: none; min-height: auto; overflow: visible; grid-column: 1 / -1; grid-row: 2; }
   .sidebar[data-open='true'] .navigation { display: flex; border-bottom: 1px solid var(--argos-border); padding: 12px 14px; }
   .navBottom { margin-top: 8px; }
   .topbar { padding: 8px 14px; min-height: 60px; gap: 6px; }
@@ -157,3 +157,23 @@ a.kpi:hover { border-color: var(--argos-brand); }
   .previewNotice { padding: 12px 14px; }
 }
 .kpiAction { color: var(--argos-brand); font-size: 13px; margin-top: auto; padding-top: 12px; }
+
+.textLink { display:inline-flex;align-items:center;min-height:44px;color:var(--argos-brand);text-decoration:underline;text-underline-offset:3px; }
+
+.navigation svg { flex-shrink:0; }
+.integrationNav { display:flex;flex-wrap:wrap;gap:3px 8px; }
+.integrationNav .soon { margin-left:0; }
+.navigation .helpLink { margin-top:auto;padding-top:24px;color:var(--argos-brand); }
+.identity:hover { background:var(--argos-brand-soft); }
+.footer { display:block;padding-block:20px;font-size:13px; }
+.footerIntro { display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--argos-border);padding-bottom:16px;margin-bottom:12px; }
+.footerIntro > div { display:flex;gap:12px;align-items:center;flex-wrap:wrap; }
+.footerIntro strong { font-size:20px;color:var(--argos-text); }
+.footerIntro a { gap:8px; }
+.iconTitle { display:flex;align-items:center;gap:12px; }
+.iconSquare { display:grid;place-items:center;width:40px;height:40px;border-radius:8px;background:var(--argos-brand-soft);color:var(--argos-brand); }
+@media(max-width:900px) { .navigation .helpLink { padding-top:10px; } }
+
+.sidebar { position:sticky;top:0;height:100dvh;overflow:visible; }
+@media(min-width:901px) and (max-height:760px) { .navigation { padding-inline:8px;scrollbar-width:thin; } }
+@media(max-width:900px) { .sidebar { position:static;height:auto;overflow:visible; } }

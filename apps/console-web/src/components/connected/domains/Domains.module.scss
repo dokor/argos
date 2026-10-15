@@ -455,6 +455,14 @@
   .finding > summary .reach { text-align: left; min-width: 0; }
 }
 
+.scopeLayout { display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:20px;align-items:start; }
+.scopeGuide > div + div { border-top:1px solid var(--argos-border);padding-top:16px;margin-top:16px; }
+.scopeGuide h3 { font-weight:650;margin-bottom:6px; }
+.scopeGuide p { color:var(--argos-text-muted);overflow-wrap:anywhere; }
+@media(max-width:900px) { .scopeLayout { grid-template-columns:minmax(0,1fr); } }
+
+
+.scopeLayout .columns { align-items:end; }
 .metrics .commonMetric { flex-direction: column; justify-content: start; }
 .commonMetric dt { order: 2; }
 .commonMetric dd:not(.metricHint) { order: 1; }

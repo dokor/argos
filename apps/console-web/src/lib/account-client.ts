@@ -17,7 +17,7 @@ export async function accountFetch<T>(path: string, method = "GET", body?: unkno
   const data = await response.json().catch(() => ({}));
   if (!response.ok) { if (response.status === 403 && data.error === "csrf_invalid") csrf = null; if (response.status === 401 && typeof window !== "undefined" && path !== "me" && path !== "auth/login") window.dispatchEvent(new Event("argos-account-invalid")); throw new AccountClientError(path === "auth/login" && response.status === 401 ? "credentials_invalid" : data.error ?? (response.status === 429 ? "rate_limited" : response.status === 401 ? "session_invalid" : "account_unavailable"), response.status, Number(response.headers.get("retry-after")) || 0); }
   if (["auth/login","auth/verify"].includes(path) && typeof window !== "undefined") window.dispatchEvent(new Event("argos-account-login"));
-  if (["auth/logout","me/archive"].includes(path) && typeof window !== "undefined") {clearPendingAnalysis();window.dispatchEvent(new Event("argos-account-invalid"));}
+  if (["auth/logout","auth/reset","me/archive"].includes(path) && typeof window !== "undefined") {clearPendingAnalysis();window.dispatchEvent(new Event("argos-account-invalid"));}
   if (/^runs\/\d+\/claim$/.test(path) && typeof window !== "undefined") window.dispatchEvent(new Event("argos-usage-refresh"));
   return data as T;
 }

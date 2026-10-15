@@ -41,3 +41,7 @@ La projection suit la rétention du rapport. Un rapport expiré est immédiateme
 - Tests des contrats Java/TypeScript, BFF et filtres ; suites Java/frontend, lint, build et CI MariaDB.
 
 La recette visuelle de l’interface domaine et la connexion des actions de la maquette restent suivies par F09 (#557).
+
+## Causes des diagnostics incomplets (#587)
+
+Les lignes paginées de la vue d’ensemble lisent aussi les statuts de modules et la projection diagnostique figée du rapport exact disponible. Seuls les identifiants des contrôles non mesurés et des codes de motif sont exposés dans `collectionGaps`, jamais les textes bruts des erreurs. La synthèse réutilise ces données. Les récurrences affichées portent explicitement sur les pages présentées, pas sur un total extrapolé ni une cause commune supposée.

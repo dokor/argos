@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, type ReactNode, type RefObject } from "react";
+import CollectionGaps from "../CollectionGaps";
 import Link from "@/components/LocalizedLink";
 import { useLang } from "@/lib/i18n/LangContext";
 import type { PageResult } from "@/lib/connected/contracts";
@@ -144,16 +145,14 @@ export function ReportLink({
   returnTo: string;
 }) {
   const { c } = useDomainText();
-  return page.reportAvailable ? (
+  return (
     <Link
       className={d.link}
       href={`/account/runs/${page.runId}?returnTo=${encodeURIComponent(returnTo)}`}
     >
-      {c.diagnostic}
+      {page.reportAvailable ? c.diagnostic : c.details}
       <span className={d.srOnly}> — {page.normalizedUrl}</span>
     </Link>
-  ) : (
-    <span className={d.muted}>{c.reportUnavailable}</span>
   );
 }
 export function PageList({
@@ -172,6 +171,7 @@ export function PageList({
         <li key={page.pageId} className={d.pageRow}>
           <div>
             <strong title={page.normalizedUrl}>{compactUrl(page.normalizedUrl, true)}</strong>
+            <CollectionGaps page={page} />
             <div className={d.badges}>
               <State value={page.executionStatus} />
               <State value={page.completeness} />
@@ -180,11 +180,7 @@ export function PageList({
                 {page.importantCount ?? "—"}
               </span>
             </div>
-            {page.failureReason && (
-              <p>
-                <Reason value={page.failureReason} />
-              </p>
-            )}
+
           </div>
           <ReportLink page={page} returnTo={returnTo} />
         </li>

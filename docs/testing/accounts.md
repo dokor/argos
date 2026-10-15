@@ -39,6 +39,7 @@ mvn -Duser.timezone=UTC test-compile dependency:build-classpath -Dmdep.includeSc
 
 | Sujet | Commande navigateur | Options JVM supplémentaires de la fixture | Contrôles essentiels |
 | --- | --- | --- | --- |
+| UX authentification | `node scripts/e2e/auth-experience.mjs` | aucune | Inscription FR/EN, email capturé, vérification, connexion et destination avec contexte, reset, liens utilisés, changement de langue, titres et historique |
 | Comptes | `node apps/console-web/scripts/check-accounts.mjs` | aucune | Inscription, vérification email POST, retour rapport, claim, révocation, archivage, lien partagé conservé/expiré |
 | Sites | `node apps/console-web/scripts/check-sites.mjs` | aucune | Ajout sans audit, deux URL, hostname refusé, deux propriétaires, rattachement, session et dernière tentative/dernier rapport distincts |
 | Consommation | `node apps/console-web/scripts/check-usage.mjs` | `-Dargos.usage.fixture-limit=2` | Deux réservations, refus 429, débit unique après publication, libération après échec, claim rejoué |
@@ -55,6 +56,13 @@ mvn -Duser.timezone=UTC -P mariadb-integration -Dit.test=AccountLifecycleIT,Usag
 ```
 
 ## Limites et preuves
+
+La recette UX authentification est aussi exécutée par `Authentication UX E2E`
+sur une MariaDB jetable en CI. Elle utilise les vraies routes Next/Java et
+`AccountBrowserFixture`, avec capture locale des emails (aucun SMTP sortant).
+Elle conserve ses résultats sans jetons dans `outputs/auth-experience/`.
+L'URL capturée comprend le fragment à usage unique ; ne pas publier les réponses
+brutes de `/api/__test/mail/*`. Les origines du script sont fixes et locales.
 
 Les recettes comptes/sites/usage/admin/feedback traversent Next, Java et MariaDB
 réels. Les rapports publiés sont synthétiques ; elles ne prouvent pas les moteurs
