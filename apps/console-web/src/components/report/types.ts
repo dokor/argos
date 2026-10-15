@@ -1,4 +1,6 @@
 export type Report = {
+  access?: "summary" | "full" | null;
+  measurements?: Partial<Record<"lcpMs" | "fcpMs" | "responseMs" | "loadMs" | "transferredBytes" | "requests" | "htmlBytes" | "scripts" | "jsErrors" | "consoleErrors" | "failedRequests" | "http4xx" | "http5xx", number | null>> | null;
   pageIdentity?: { requested: string | null; destination: string | null; redacted: boolean; redirected: boolean } | null;
   introduction?: ReportIntroduction | null;
   generatedAt: string;

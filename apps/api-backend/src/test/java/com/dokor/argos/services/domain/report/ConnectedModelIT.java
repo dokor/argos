@@ -30,7 +30,7 @@ class ConnectedModelIT extends MariaDbReportFixture {
     }
 
     @Test void freshDatabaseHasTheNewModelAndNoSyntheticProductionRecords() throws Exception {
-        assertEquals("28", Flyway.configure().dataSource(source).load().info().current().getVersion().toString());
+        assertEquals("29", Flyway.configure().dataSource(source).load().info().current().getVersion().toString());
         for (var table : List.of("ARG_ACCOUNT_USER", "ARG_DOMAIN_DISCOVERY", "ARG_DOMAIN_DISCOVERY_PAGE", "ARG_DOMAIN_BATCH", "ARG_DOMAIN_BATCH_PAGE", "ARG_USAGE_RUN")) {
             try (var c = source.getConnection(); var s = c.createStatement(); var r = s.executeQuery("SELECT COUNT(*) FROM " + table)) {
                 assertTrue(r.next()); assertEquals(0, r.getLong(1), table);

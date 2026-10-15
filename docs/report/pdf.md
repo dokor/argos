@@ -1,6 +1,6 @@
 # Export PDF du rapport — #43
 
-Moteur retenu : impression dédiée du navigateur, sans dépendance serveur ni envoi du rapport à un fournisseur. Le bouton ouvre une fenêtre about:blank, revérifie le rapport par GET same-origin sans cache, puis propose Imprimer / enregistrer en PDF. L’utilisateur choisit Enregistrer en PDF dans le dialogue système ; l’interface annonce une prévisualisation prête, jamais un fichier sauvegardé qu’elle ne peut observer. Les popups bloquées, l’expiration et les erreurs ont un retour accessible. Désactiver les en-têtes/pieds de page du navigateur est annoncé ; la pagination du document reste présente.
+Moteur retenu : impression dédiée du navigateur, sans dépendance serveur ni envoi du rapport à un fournisseur. Le bouton ouvre une fenêtre about:blank, revérifie le rapport par GET same-origin sans cache, via la route publique ou authentifiée correspondant à son accès, puis propose Imprimer / enregistrer en PDF. L’utilisateur choisit Enregistrer en PDF dans le dialogue système ; l’interface annonce une prévisualisation prête, jamais un fichier sauvegardé qu’elle ne peut observer. Les popups bloquées, l’expiration et les erreurs ont un retour accessible. Désactiver les en-têtes/pieds de page du navigateur est annoncé ; la pagination du document reste présente.
 
 Synthèse : identité et date UTC, périmètre sans query/credentials, verdict canonique, compteurs uniques, notes/disponibilité, couverture/provisoire, trois priorités et limites. Complet : mêmes sources, jusqu’à six priorités backend et tous les constats uniques, indépendamment des filtres URL ; observation, preuves, source, confiance, action et vérification. Les modèles et catalogue FR/EN sont partagés avec le web. Aucun gain absent ni mesure historique n’est inventé.
 
@@ -11,3 +11,4 @@ La fenêtre n’a ni token dans son URL ni lien de retour privé dans le PDF. So
 La [recette web/PDF](../testing/report.md) décrit les fixtures, commandes, sorties
 et contrôles de rendu. Les PDF et images générés restent dans outputs, sans
 résultats de recette versionnés dans ce contrat.
+Les rapports public, connecté et partagé utilisent cet export. La synthèse anonyme ne contient pas de preuves ni de corrections détaillées ; le format complet exige l’accès authentifié. Les deux formats reprennent les treize mesures de la mosaïque, sans TTI. Voir le [contrat unifié](unified-reports.md).

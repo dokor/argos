@@ -4,7 +4,7 @@
 
 La commande `node scripts/e2e/report-pdf.mjs --web` construit une version de production contre un backend local fictif. Elle couvre les trois vues de six rapports (complet, partiel, historique, vide, protection anti-bot, scores indisponibles), FR/EN, clair/sombre et 360/768/1024/1440 px. Chaque combinaison vérifie titre principal accessible, absence de débordement, reflow à 200 %, focus clavier, unicité des constats techniques et contraste des textes rendus. Les résultats sont écrits dans outputs/report-validation/web-matrix.json. Les interactions FR/EN couvrent le lien priorité→constat, le focus du détail ouvert, retour/avance et la remise à zéro des filtres.
 
-Les contrôles calculés ne constituent pas une certification WCAG ni une validation avec lecteur d’écran. Les exports PDF sont vérifiés séparément : 16 exports, formats synthèse/complet, quatre fixtures FR/EN. Le nombre de pages dépend du rendu courant.
+Les contrôles calculés ne constituent pas une certification WCAG ni une validation avec lecteur d’écran. Les exports PDF sont vérifiés séparément : 24 exports, formats synthèse/complet, quatre fixtures FR/EN et parcours public/propriétaire/partagé. Le nombre de pages dépend du rendu courant.
 
 ## Recette humaine à obtenir
 
@@ -26,6 +26,7 @@ exécuter séparément (ports 3090/3091 réservés par les fixtures) :
 ```sh
 node scripts/e2e/report-pdf.mjs --web
 node scripts/e2e/report-pdf.mjs
+python scripts/e2e/check-report-pagination.py
 ```
 
 Chaque commande compile Next contre un backend local contrôlé. Le mode web
@@ -38,6 +39,7 @@ Pour compléter la vérification PDF, rendre toutes les pages avec Poppler,
 inspecter les pages longues/finales, accents, césures et pagination ; extraire
 texte et métadonnées avec pypdf pour contrôler l'absence de token/lien privé.
 Conserver ce bilan et les rendus avec le SHA dans les artefacts de la PR.
+Le contrôle Python nécessite pypdf. La [recette du 15 octobre](../report/integration-644.md) couvre 24 PDF et 110 pages, avec rendus Poppler et corrections de pagination.
 Le relevé historique du 11 octobre comptait 42 pages ; il n'est pas une assertion
 de pagination à reproduire. Aucune conformité PDF/UA n'est déduite de ces tests.
 

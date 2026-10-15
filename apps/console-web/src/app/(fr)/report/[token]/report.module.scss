@@ -94,3 +94,10 @@
   .main { max-width: none; padding: 24px 0; gap: 24px; }
 }
 @media(max-width:600px) { .embedded { padding: 18px 16px; } }
+.summaryPriorities h2 {font-size:20px;font-weight:650;}
+.summaryPriorities article {display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:center;gap:16px;border-bottom:1px solid t.$border;padding:18px 0;}
+.summaryPriorities article>span,.summaryPriorities p {color:t.$text-muted;}
+.summaryPriorities h3 {font-size:15px;font-weight:600;}
+.summaryPriorities button {color:t.$brand;min-height:44px;font-weight:600;}
+.summaryPriorities button:focus-visible {outline:3px solid t.$brand;outline-offset:3px;}
+@media(max-width:600px){.summaryPriorities article{grid-template-columns:24px minmax(0,1fr);}.summaryPriorities button{grid-column:2;text-align:left;}}

@@ -205,6 +205,7 @@ public class HtmlModuleAnalyzer {
         data.put("hasOgImage", hasOgImage);
         data.put("hasTwitterCard", hasTwitterCard);
         data.put("scriptCount", scriptCount);
+        data.put("htmlBytes", html == null ? null : html.getBytes(java.nio.charset.StandardCharsets.UTF_8).length);
         data.put("imgCount", imgCount);
         data.put("imgAltMissingCount", imgAltMissingCount);
         data.put("anchorCount", aCount);

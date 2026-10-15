@@ -32,7 +32,7 @@ const copy = {
     ],
     coverageTitle: "Ce que cet exemple ne démontre pas",
     coverage: "Les preuves portent uniquement sur trois contrôles HTML. Les en-têtes HTTP, TLS, services de sécurité, mesures du navigateur et scores Lighthouse ne sont pas mesurés ici. Ces trois preuves seules ne permettent pas de calculer un score global mesuré. Les deux pages restent noindex pour éviter d’indexer la boutique fictive ; cet état est intentionnel et inchangé après correction.",
-    privacy: "Vos rapports restent accessibles par leur lien privé et exclus de l’indexation. Cette page publique est une ressource éditoriale distincte, sans accès aux rapports utilisateurs.",
+    privacy: "Les liens de rapport donnent accès à la synthèse publique ; les preuves et corrections détaillées nécessitent une connexion. Les rapports sont exclus de l’indexation. Cette page publique est une ressource éditoriale distincte, sans accès aux rapports utilisateurs.",
     next: "Appliquer la méthode à votre site", pme: "Prioriser pour un site PME", ecommerce: "Prioriser pour un e-commerce", audit: "Lancer l’audit d’une page publique",
   },
   en: {
@@ -58,7 +58,7 @@ const copy = {
     ],
     coverageTitle: "What this example does not demonstrate",
     coverage: "Evidence covers only three HTML checks. HTTP headers, TLS, security services, browser measurements and Lighthouse scores are not measured here. These three pieces of evidence alone cannot produce a measured overall score. Both demo pages remain noindex to keep the fictional store out of search; this is intentional and unchanged after correction.",
-    privacy: "Your reports remain accessible through their private link and excluded from indexing. This public page is a separate editorial resource with no access to user reports.",
+    privacy: "Report links open a public summary; detailed evidence and corrections require sign-in. Reports are excluded from indexing. This public page is a separate editorial resource with no access to user reports.",
     next: "Apply the method to your site", pme: "Prioritize for a small business", ecommerce: "Prioritize for an e-commerce site", audit: "Audit a public page",
   },
 } as const;

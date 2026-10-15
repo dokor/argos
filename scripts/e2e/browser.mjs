@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import {mkdir} from 'node:fs/promises';
 import { chromium } from '../../apps/playwright-service/node_modules/playwright/index.mjs';
-import { reportReadingCopy } from '../../apps/console-web/src/components/report/reportReadingCopy.ts';
 const base='http://127.0.0.1:3000';
 const browser=await chromium.launch({args:['--no-sandbox']});
 const cases=['healthy','errors','redirect','partial','empty','unavailable','antibot','timeout'];
@@ -56,27 +55,14 @@ try {
     const weightedCoverage=`${Math.round(report.scores.coverage.global.ratio*100)} %`;
     const summaryCoverage=summary.getByText('Couverture pondérée du barème',{exact:true}).locator('..');
     assert.ok((await summaryCoverage.textContent()).includes(weightedCoverage),'Summary must show persisted weighted coverage beside the score');
-    await summary.getByRole('link',{name:'Comprendre la mesure',exact:true}).click();
-    const method=page.locator('#report-method');
-    await method.getByRole('heading',{name:'Méthode et limites',exact:true}).waitFor();
-    assert.notEqual(await method.getAttribute('open'),null,'Summary link must open measurement details');
-    assert.equal(await page.locator(':focus').getAttribute('id'),'report-method-toggle','Measurement details must receive keyboard focus');
-    const methodCoverage=method.locator('dl > div').filter({has:page.getByText('Couverture pondérée du barème',{exact:true})});
-    assert.equal(await methodCoverage.locator('dd').textContent(),weightedCoverage,'Method must retain the same weighted coverage');
-    if(typeof report.scores.completeness==='number') {
-      const completeness=method.locator('dl > div').filter({has:page.getByText(reportReadingCopy.fr.moduleCompleteness,{exact:true})});
-      assert.equal(await completeness.count(),1,'Measurement details must expose exactly one module completeness row');
-      assert.equal(await completeness.locator('dd').textContent(),`${report.scores.completeness} %`,'Module completeness must remain distinct from weighted coverage');
-    }
-    if(report.scores.moduleExecution) {
-      const execution=report.scores.moduleExecution;
-      const terminal=method.locator('dl > div').filter({has:page.getByText('Progression terminale des modules',{exact:true})});
-      assert.equal(await terminal.count(),1,'Measurement details must expose exactly one terminal progress row');
-      assert.equal(await terminal.locator('dd').textContent(),`${execution.terminalPercent} %`,'Terminal progress must match persisted execution counts');
-      const failed=method.locator('dl > div').filter({has:page.getByText('Modules en échec',{exact:true})});
-      assert.equal(await failed.count(),1,'Measurement details must expose exactly one failed modules row');
-      assert.equal(await failed.locator('dd').textContent(),`${execution.failed} / ${execution.total}`,'Failed modules must remain distinct from successes and terminal progress');
-    }
+    assert.equal(report.access,'summary');
+    assert.ok(report.issues.every(issue=>!issue.structuredEvidence&&!issue.evidence&&!issue.recommendation),'Anonymous report must omit technical proofs and corrections');
+    assert.equal(await page.locator('#report-method').count(),0,'Retired methodology block must remain absent');
+    const measures=page.getByRole('region',{name:'Mesures observ\u00e9es',exact:true});
+    await measures.waitFor();
+    for(const family of ['Chargement','Ressources','Erreurs']) await measures.getByRole('heading',{name:family,exact:true}).waitFor();
+    assert.equal(await measures.locator('dt').count(),13);
+    assert.equal(await page.getByLabel('Format PDF').locator('option[value="full"]').count(),0,'Anonymous export must only offer the summary');
     if(scenario==='healthy') {
       await page.reload();
       await page.getByRole('heading',{name:'Score Argos',exact:true}).waitFor();
@@ -86,15 +72,23 @@ try {
       assert.equal(submissions,1,'Reopening a report must not submit another audit');
     }
     if(scenario==='errors') {
-      const network=report.issues.find(issue=>issue.id==='runtime.network.5xx')?.structuredEvidence?.observed;
+      assert.ok(process.env.REPORT_FIXTURE_SESSION,'Verified fixture session is supplied in memory');
+      const denied=await page.request.get(`${base}/api/account/reports/${token}`);
+      assert.equal(denied.status(),401,'Technical details require authentication');
+      await page.context().addCookies([{name:'argos_account',value:process.env.REPORT_FIXTURE_SESSION,url:base,httpOnly:true,sameSite:'Lax'}]);
+      const detailedResponse=await page.request.get(`${base}/api/account/reports/${token}`);
+      assert.equal(detailedResponse.status(),200);
+      const detailed=await detailedResponse.json();
+      assert.equal(detailed.access,'full');
+      const network=detailed.issues.find(issue=>issue.id==='runtime.network.5xx')?.structuredEvidence?.observed;
       assert.ok(network?.items.some(item=>item.status===503 && item.ownership==='FIRST_PARTY'),'Real Runtime 503 observation must survive publication');
-      const element=report.issues.filter(issue=>issue.id.startsWith('lighthouse.audit.')).flatMap(issue=>issue.structuredEvidence?.observed?.items??[]).find(item=>item.kind==='element');
+      const element=detailed.issues.filter(issue=>issue.id.startsWith('lighthouse.audit.')).flatMap(issue=>issue.structuredEvidence?.observed?.items??[]).find(item=>item.kind==='element');
       assert.ok(element,'Real Lighthouse DOM observation must survive publication');
-      assert.ok(!JSON.stringify(report).includes('synthetic-proof-secret'),'Private request parameters must not reach the published report');
+      assert.ok(!JSON.stringify(detailed).includes('synthetic-proof-secret'),'Private request parameters must not reach the published report');
       await mkdir('outputs/ui-review/clarte-evidence',{recursive:true});
       for(const lang of ['fr','en']) {
         await page.goto(base+(lang==='en'?'/en':'')+'/report/'+token);
-        await page.getByText(lang==='fr'?'Export et navigation du propriétaire':'Export and owner navigation',{exact:true}).click();
+        await page.getByLabel(lang==='fr'?'Format PDF':'PDF format').locator('option[value="full"]').waitFor({state:'attached'});
         await page.getByLabel(lang==='fr'?'Format PDF':'PDF format').selectOption('full');
         const opened=page.waitForEvent('popup');
         await page.getByRole('button',{name:lang==='fr'?'Exporter en PDF':'Export PDF',exact:true}).click();

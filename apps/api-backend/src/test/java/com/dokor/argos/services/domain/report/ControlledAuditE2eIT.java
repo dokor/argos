@@ -289,13 +289,14 @@ class ControlledAuditE2eIT extends MariaDbReportFixture {
                 root = root.getParent().getParent();
             var evidence = root.resolve("outputs/controlled-e2e.json");
             Files.createDirectories(evidence.getParent());
-            browser =
+            var publicBrowser =
                     new ProcessBuilder("node", root.resolve("scripts/e2e/browser.mjs").toString())
                             .directory(root.toFile())
                             .redirectOutput(evidence.toFile())
                             .redirectError(
-                                    root.resolve("outputs/controlled-e2e-error.log").toFile())
-                            .start();
+                                    root.resolve("outputs/controlled-e2e-error.log").toFile());
+            publicBrowser.environment().put("REPORT_FIXTURE_SESSION", domainInterface.jwt);
+            browser = publicBrowser.start();
             assertTrue(
                     browser.waitFor(8, TimeUnit.MINUTES),
                     "Controlled browser suite must terminate");

@@ -9,6 +9,12 @@ import com.querydsl.sql.Column;
  */
 @Generated("com.coreoz.plume.db.querydsl.generation.IdBeanSerializer")
 public class AuditReport extends com.coreoz.plume.db.querydsl.crud.CrudEntityQuerydsl {
+    @Column("share_token_hash") private byte[] shareTokenHash;
+    public byte[] getShareTokenHash(){return shareTokenHash;}
+    public void setShareTokenHash(byte[] value){shareTokenHash=value;}
+    @Column("share_expires_at") private java.time.Instant shareExpiresAt;
+    public java.time.Instant getShareExpiresAt(){return shareExpiresAt;}
+    public void setShareExpiresAt(java.time.Instant value){shareExpiresAt=value;}
 
     @Column("measurement_completeness") private String measurementCompleteness;
     public String getMeasurementCompleteness(){return measurementCompleteness;}

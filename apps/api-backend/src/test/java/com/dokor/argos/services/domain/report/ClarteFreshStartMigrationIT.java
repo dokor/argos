@@ -31,7 +31,7 @@ class ClarteFreshStartMigrationIT extends MariaDbReportFixture {
         assertEquals(history, history());
         assertEquals(schema, schema(), "Columns, indexes and constraints remain in place");
         assertEquals(1, number("SELECT COUNT(*) FROM flyway_schema_history WHERE version='27' AND success=1 AND checksum IS NOT NULL"));
-        assertTrue(reader.getByToken("synthetic-existing").isEmpty());
+        assertTrue(historicalStoredReport("synthetic-existing").isEmpty());
         assertTrue(runs.findByReportToken("synthetic-pending").isEmpty());
         assertThrows(SQLException.class, () -> sql("INSERT INTO ARG_ACCOUNT_SITE(id,owner_user_id,domain_id,created_at) VALUES(1,10,1,NOW(3))"));
     }
@@ -78,7 +78,7 @@ class ClarteFreshStartMigrationIT extends MariaDbReportFixture {
             assertThrows(FlywayException.class, () -> resetVersion().migrate());
             assertEquals(before, counts());
             assertEquals(pending, number("SELECT pending FROM ARG_AUDIT_ADMISSION WHERE id=1"));
-            assertTrue(reader.getByToken("synthetic-existing").isPresent());
+            assertTrue(historicalStoredReport("synthetic-existing").isPresent());
             assertEquals(0, number("SELECT COUNT(*) FROM flyway_schema_history WHERE version='27' AND success=1"));
         } finally {
             sql("DROP TRIGGER fixture_reset_failure");

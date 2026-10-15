@@ -26,7 +26,7 @@ for (const lang of ["fr", "en"] as const) {
       const data = { ...report, site: { title: "A marketing page" }, url: "https://user:secret@example.com/catalog?token=secret#private" };
       const { container } = show(data);
       expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(report.domain);
-      expect(screen.getByText(/HTML/)).toHaveTextContent("A marketing page");
+      expect(screen.getByText(/A marketing page/)).toHaveTextContent("A marketing page");
       expect(container.textContent).not.toContain("secret");
       expect(screen.getByText(copy.privacy)).toBeInTheDocument();
       expect(screen.getByText(copy.verdict.critical)).toBeInTheDocument();
@@ -40,18 +40,9 @@ for (const lang of ["fr", "en"] as const) {
       expect(screen.getByText(copy.provisional)).toBeInTheDocument();
       expect(within(screen.getByRole("heading", { level: 1 }).closest("section")!).getByText(copy.antiBot)).toBeInTheDocument();
       expect(within(screen.getByRole("heading", { level: 1 }).closest("section")!).getByText(/40 % —/)).toBeInTheDocument();
-      const method = screen.getByRole("link", { name: copy.methodLink });
-      await userEvent.click(method);
-      const details = document.getElementById("report-method") as HTMLDetailsElement;
-      expect(details.open).toBe(true);
-      expect(document.getElementById("report-method-toggle")).toHaveFocus();
-      expect(within(details).getByText("75 %")).toBeInTheDocument();
-      expect(within(details).getByText(copy.completenessExplain)).toBeInTheDocument();
-      expect(within(details).getByText(copy.confidenceExplain)).toBeInTheDocument();
-      expect(within(details).getByText(`${copy.scoring}: 12`)).toBeInTheDocument();
-      expect(within(details).getByText(copy.automaticLimit)).toBeInTheDocument();
-      expect(within(details).getByText(copy.lighthouse)).toBeInTheDocument();
-      expect(within(details).getByText(`${copy.missingModules}:`).parentElement).toHaveTextContent("ssl, runtime");
+      expect(screen.queryByRole("link", { name: copy.methodLink })).not.toBeInTheDocument();
+      expect(document.getElementById("report-method")).toBeNull();
+      expect(screen.getAllByText(lang === "fr" ? "Non mesuré" : "Not measured")).toHaveLength(13);
     });
     it("handles unavailable, historical, empty and absent AI states without invented certainty", async () => {
       show({ ...report, issues: [], summary: { oneLiner: "high", priorities: [], ai: null }, scores: { global: 0, globalAvailable: false, completeness: 50, byCategory: [] } });
@@ -61,10 +52,7 @@ for (const lang of ["fr", "en"] as const) {
       expect(screen.getByText(copy.verdict.unavailable)).toBeInTheDocument();
       expect(screen.getByText(copy.empty)).toBeInTheDocument();
       expect(within(hero).getByText(copy.coverageUnknown)).toBeInTheDocument();
-      await userEvent.click(screen.getByRole("link", { name: copy.methodLink }));
-      const details = document.getElementById("report-method")!;
-      expect(within(details).getByText("50 %")).toBeInTheDocument();
-      expect(within(details).getByText(copy.coverageUnknown)).toBeInTheDocument();
+      expect(document.getElementById("report-method")).toBeNull();
       expect(screen.queryByText(/50 % —/)).not.toBeInTheDocument();
     });
     it("opens the action plan and domain selection through shared URL navigation", async () => {

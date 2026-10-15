@@ -231,6 +231,8 @@ final class DomainInterfaceFixture {
                                 AccountAccess.class,
                                 AccountAccess::value))
                 .register(AccountContextFactory.binding(sessions))
+                .register(new com.dokor.argos.webservices.api.account.ReportAccessWs(
+                        new ReportSharingService(accounts, sessions, fixture.reader, fixture.tokens, clock), csrf))
                 .register(
                         new AccountWs(
                                 accounts,

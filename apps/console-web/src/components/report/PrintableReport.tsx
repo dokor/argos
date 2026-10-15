@@ -1,4 +1,5 @@
 import ModuleExecutionFacts from "./ModuleExecutionFacts";
+import ObservedMeasurements from "./ObservedMeasurements";
 import ReportPageScope from "./ReportPageScope";
 import ObservedEvidence from "./ObservedEvidence";
 import s from './PrintableReport.module.scss';
@@ -16,8 +17,9 @@ import { isAggregateFinding } from './findingPresentation';
 import fr from '@/lib/i18n/fr.json';
 import en from '@/lib/i18n/en.json';
 export type ExportFormat = 'summary'|'full';
-export default function PrintableReport({report,lang,format}:{report:Report;lang:Lang;format:ExportFormat}) {
+export default function PrintableReport({report,lang,format:requestedFormat}:{report:Report;lang:Lang;format:ExportFormat}) {
  const model=buildReportModel(report); const d=decisionCopy[lang];const r=reportReadingCopy[lang]; const e=exportCopy[lang];const t=(lang==='fr'?fr:en).report;
+ const format=report.access==='summary'?'summary':requestedFormat;
  const score=globalScore(report); const verdict=model.counts.critical?'critical':score===undefined?'unavailable':model.counts.important?'important':model.counts.opportunity?'opportunity':'empty';
  const facts=Object.entries(model.counts).reduce((text,[key,value])=>text.replace('{'+key+'}',String(value)),r.summaryFacts as string);
  const date=new Date(report.generatedAt); const coverage=report.scores.coverage;
@@ -40,9 +42,10 @@ export default function PrintableReport({report,lang,format}:{report:Report;lang
  <dl><ModuleExecutionFacts scores={report.scores} lang={lang} /></dl><p>{d.completenessExplain}</p>
  <table><caption>{r.score} / {e.coverage}</caption><thead><tr><th>{r.domain}</th><th>{r.score}</th><th>{e.coverage}</th></tr></thead><tbody>{model.groups.filter(g=>g.key!=='unknown').map(g=>{const value=domainScore(g.score?.score,g.key,coverage);return <tr key={g.key}><th scope="row">{title(g.key)}</th><td>{value===undefined?d.notEvaluated:value+'/100'}</td><td>{pct(coverage?.domains.find(row=>row.key===g.key)?.ratio)}</td></tr>;})}</tbody></table>
  <p>{d.automaticLimit}</p><p>{r.limits}</p></section>
+ <ObservedMeasurements report={report} lang={lang}/>
  <section><h2>{r.actions}</h2><p>{interpretationCopy[lang].actions}</p>{!priorities.length&&<p>{t.priorityCards.empty}</p>}{priorities.map((resolved,index)=>{const p=resolved.priority;const grouped=new Set([p.findingKey,...(p.relatedFindingKeys??[])].filter(Boolean)).size>1;const content=!grouped&&resolved.findings.length===1?findingContent(resolved.findings[0].issue,lang):undefined;return <article key={index}>
  <h3>{t.priorityCards.rankLabel} {p.rank??index+1} · {content?.title??findingEditorial(p.findingKey,lang).title}</h3><p>{content?.impact??findingEditorial(p.findingKey,lang).impact}</p>
- {content&&<><p>{content.qualification}</p><p>{content.recommendation}</p></>}
+ {format==='full'&&content&&<><p>{content.qualification}</p><p>{content.recommendation}</p></>}
  {isAggregateFinding(p.findingKey)&&<p>{lang==='fr'?'Cette note d’outil n’est pas une correction à chiffrer. Examiner les constats détaillés ; sans eux, demander le diagnostic source.':'This tool score is not an estimable correction. Inspect detailed findings; without them, request the source diagnosis.'}</p>}
  <p>{title(p.categoryKey??resolved.findings[0]?.domain??'unknown')} · {t.priorityCards.effortLabel} {p.effort??t.priorityCards.effortUnknown}</p>
  <p>{t.priorityCards.confidenceLabel} {p.confidence&&Object.hasOwn(t.priorityCards.confidence,p.confidence)?t.priorityCards.confidence[p.confidence]:t.priorityCards.confidence.UNKNOWN}</p>

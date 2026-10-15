@@ -19,7 +19,7 @@ export default function LangToggle({ className, variant = "light", authContext }
   const { lang } = useLang();
   const pathname = usePathname();
   const suffix = useSyncExternalStore(subscribeReading, readingSnapshot, () => "");
-  const hasLanguageRoute = Boolean(languageRoutes[frenchPath(pathname)] || accountRoutes[frenchPath(pathname)]) || /^\/(en\/)?(?:report|account\/(?:runs|sites|urls|domains|admin\/(?:runs|users)))\//.test(pathname);
+  const hasLanguageRoute = Boolean(languageRoutes[frenchPath(pathname)] || accountRoutes[frenchPath(pathname)]) || /^\/(en\/)?(?:report|share|account\/(?:runs|sites|urls|domains|admin\/(?:runs|users)))\//.test(pathname);
 
   if (!hasLanguageRoute) return <div className={`${s.toggle} ${s[variant]}${className ? ` ${className}` : ""}`} role="group" aria-label="Language"><span className={`${s.option} ${s.active}`} aria-current="page" lang="fr">FR</span><span className={s.sep} aria-hidden="true" /><Link href="/en/resources" hrefLang="en" lang="en" className={`${s.option} ${s.fallback}`} aria-label="English guides — this page is available in French only" title="English guides — this page is available in French only"><span>EN</span><small>guides</small></Link></div>;
 
