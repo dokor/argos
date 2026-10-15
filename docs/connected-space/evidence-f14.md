@@ -89,3 +89,7 @@ référence figée. Résultats au SHA et limites d’exécution dans la PR. La r
 ciblée ne remplace pas F13, une certification WCAG, une recette avec fournisseurs
 réels ou une vérification humaine de toutes les causes proposées par les outils.
 Aucune fusion, réinitialisation de base ou mise en production dans ce lot.
+
+## Non-régression du diagnostic privé (#590)
+
+Le lecteur privé de la PR #612 ne présente pas les métadonnées avec la même structure HTML que le lecteur public. Le test `connected-evidence.mjs` retrouve donc chaque accordéon par son ancre canonique `finding-*`, commune aux liens du rapport, plutôt que par une balise `code` située dans ses détails. Les assertions sur les preuves, les quatre états, le clavier, le responsive et axe restent exercées.
