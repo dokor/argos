@@ -13,13 +13,21 @@ vi.mock("./domains/useDomainResource", () => ({ activeStatus: () => false, follo
 } }));
 beforeEach(() => window.history.replaceState(null, "", "/account"));
 it("keeps actionable KPI links, exact relaunch URLs and measurement details while bounding recent runs", () => {
-  const { container } = render(<OverviewView/>);
+  render(<OverviewView/>);
   expect(screen.getByRole("link", { name: /Voir les corrections/ })).toHaveAttribute("href", "/account?attention=priority");
   const recent = screen.getByRole("heading", { name: "Dernier diagnostic" }).closest("section")!;
   expect(within(recent).getAllByRole("listitem")).toHaveLength(1);
   expect(within(recent).getByRole("link", { name: "Tous mes sites et historiques" })).toHaveAttribute("href", "/account/sites");
   expect(screen.getByRole("link", { name: "Relancer https://atelier.example/collections" })).toHaveAttribute("href", "/account/analyses/new?url=https%3A%2F%2Fatelier.example%2Fcollections");
-  expect(container.querySelectorAll("details")).toHaveLength(6);
+  const measurements = screen.getAllByText("Détails de la mesure", { selector: "summary" });
+  expect(measurements).toHaveLength(6);
+  for (const summary of measurements) {
+    const panel = summary.closest("details")!;
+    expect(panel).not.toHaveAttribute("open");
+    const unmeasured = within(panel).getByText(/^Contrôles non mesurés \(\d+\)$/, { selector: "summary" });
+    expect(unmeasured.closest("details")).not.toHaveAttribute("open");
+    expect(unmeasured).not.toBeVisible();
+  }
 });
 it("exposes reach on closed rules and limits examples without losing the affected-page or return context", () => {
   window.history.replaceState(null, "", "/account/domains/101/batches/201");

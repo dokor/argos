@@ -85,7 +85,7 @@ Aucun de ces éléments n'est déduit d'une fusion GitHub.
 
 Les conditions de sortie demeurent dans
 [#259](https://github.com/dokor/argos/issues/259) et la
-[note NO-GO V1](../release/v1-readiness-2026-10-05.md). Les preuves techniques
+[note NO-GO V1](../archive/v1-readiness-2026-10-05.md). Les preuves techniques
 ci-dessus complètent son volet accessibilité ; elles ne remplacent pas les
 validations réglementaires, de sécurité et d'exploitation restantes.
 

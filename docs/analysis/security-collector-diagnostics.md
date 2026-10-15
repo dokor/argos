@@ -43,3 +43,9 @@ Le test de pipeline `disabledSecurityCollectorsExplainEveryMissingControlAndOthe
 Aucune nouvelle analyse payante/consommatrice de quota ni modification de production n’a été effectuée. Pour confirmer le diagnostic réel, après déploiement autorisé, consulter `/api/monitoring/collectors`, relancer une seule page de démonstration via le parcours normal et conserver la liste de ses raisons de couverture. Le présent changement ne rend pas disponibles des mesures volontairement interdites.
 
 Références primaires : [API MDN Observatory v2](https://github.com/mdn/mdn-http-observatory#json-api), [FAQ MDN](https://developer.mozilla.org/en-US/observatory/docs/faq), [SSL Labs v3](https://github.com/ssllabs/ssllabs-scan/blob/master/ssllabs-api-docs-v3.md). Exploitation SSL/ZAP : [runbook](zap-ssl-operations.md).
+
+## Restitution dans la console (recette #635)
+
+Le détail administrateur charge le rapport disponible pour afficher les codes de cause enregistrés par module. Le dashboard traduit les mêmes codes dans « Détails de la mesure ». Les motifs sont issus du rapport historique ; ils ne décrivent pas la configuration actuelle. Un code inconnu ou absent reste indéterminé, une erreur de lecture du rapport est signalée séparément, et aucun message fournisseur brut n'est affiché.
+
+Le Compose versionné contient `ARGOS_EXTERNAL_SCANS_ENABLED=false`. Cela explique le chemin `POLICY_DISABLED` dans le code, mais ne prouve pas la configuration du conteneur déployé ni la cause d'une ancienne analyse. Avant de clôturer #635 côté exploitation, corréler le run signalé aux diagnostics internes ci-dessus et relever la révision et la configuration effectives. Cette correction d'affichage n'active aucun scan externe et ne démontre pas leur rétablissement en production.

@@ -67,3 +67,14 @@ it.each(["fr","en"] as const)("keeps the shared administration and safe detail r
  expect(navigation.querySelectorAll("a")).toHaveLength(5);
  expect(navigation.querySelector('[aria-current="page"]')).toHaveTextContent(lang==="fr"?"Analyses":"Analyses");
 });
+
+it("loads recorded collector causes without opening the full report", async () => {
+ api.mockImplementation(async (path: string) => path.endsWith("/report")
+  ? {scores:{coverage:{checks:[{module:"ssl",state:"UNAVAILABLE",reason:"POLICY_DISABLED"}]}}}
+  : {id:"41",site:"atelier.example",status:"COMPLETED",attempts:1,reportAvailable:true,modules:{ssl:"FAILED"}});
+ render(<LangProvider><AdminView runId="41"/></LangProvider>);
+ await screen.findByText("Collecte désactivée par la politique Argos", {exact:false});
+ expect(screen.queryByRole("heading",{name:"Report fixture"})).not.toBeInTheDocument();
+ fireEvent.click(screen.getByRole("button",{name:"Ouvrir le rapport"}));
+ await screen.findByRole("heading",{name:"Report fixture"});
+});
