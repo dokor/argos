@@ -110,6 +110,18 @@ it("requires CSRF for additions and never permits deletion",async()=>{
   expect(fetchMock).not.toHaveBeenCalled();
 });
 const csrf = "c".repeat(43), jwt = "synthetic.signed.credential", fetchMock = vi.fn();
+it("maps a rejected login without deleting an existing session, while protected 401s still delete it", async () => {
+  fetchMock.mockImplementation(async () => Response.json({error:"session_invalid",detail:"private"},{status:401}));
+  const login = await accountProxy(request("auth/login","POST",{email:"test@example.invalid",password:"invalid"}),["auth","login"]);
+  expect(login.status).toBe(401);
+  expect(await login.json()).toEqual({error:"credentials_invalid"});
+  expect(login.cookies.has("argos_account")).toBe(false);
+  expect(login.headers.get("cache-control")).toContain("no-store");
+  for (const path of ["me","sessions","auth/renew"]) {
+    const protectedResponse = await accountProxy(request(path,path === "auth/renew" ? "POST" : "GET",path === "auth/renew" ? {} : undefined),path.split("/"));
+    expect(protectedResponse.cookies.get("argos_account")?.maxAge).toBe(0);
+  }
+});
 it("exposes only the current owner's read-only usage and rejects identity queries",async()=>{
   fetchMock.mockResolvedValue(new Response('{"used":2,"limit":null}'));
   expect((await accountProxy(request("usage"),["usage"])).status).toBe(200);
