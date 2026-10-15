@@ -57,11 +57,11 @@ public class SslLabsModuleAnalyzer {
 
         // Assess every address; aggregate each control independently.
         if (result == null || result.isNull()) {
-            throw new ModuleUnavailableException("SSL Labs response is empty");
+            throw new ModuleUnavailableException("SSL Labs response is empty", new com.dokor.argos.services.analysis.CollectorFailure(com.dokor.argos.services.analysis.CollectorFailure.Code.INVALID_RESPONSE));
         }
         JsonNode endpoints = result.path("endpoints");
         if ((!endpoints.isArray() || endpoints.isEmpty()) && JsonNodes.text(result.path("status")) == null) {
-            throw new ModuleUnavailableException("SSL Labs response has no usable measurements");
+            throw new ModuleUnavailableException("SSL Labs response has no usable measurements", new com.dokor.argos.services.analysis.CollectorFailure(com.dokor.argos.services.analysis.CollectorFailure.Code.INVALID_RESPONSE));
         }
 
         long nowMs = Instant.now().toEpochMilli();

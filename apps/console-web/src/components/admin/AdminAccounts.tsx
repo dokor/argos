@@ -1,4 +1,5 @@
 "use client";
+import { quotaResetDate } from "@/lib/quota-date";
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "@/components/LocalizedLink";
@@ -203,9 +204,7 @@ export default function AdminAccounts({
                             [c.limit, number(data.usage.limit)],
                             [
                               c.renewal,
-                              date(data.usage.resetsAt) +
-                                " · " +
-                                data.usage.timezone,
+                              quotaResetDate(data.usage.resetsAt, lang, data.usage.timezone),
                             ],
                           ].map(([key, value]) => (
                             <div key={key}>

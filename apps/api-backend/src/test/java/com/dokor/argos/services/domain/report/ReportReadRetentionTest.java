@@ -12,6 +12,19 @@ import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ReportReadRetentionTest {
+    @Test void restoresHistoricalRequestedPageWithoutExposingQueryOrInventingDestination() {
+        var dao = mock(AuditReportDao.class); var tokens = new TokenService(); var entity = new AuditReport();
+        entity.setCreatedAt(Instant.now()); entity.setTokenHash(tokens.sha256("synthetic-link"));
+        entity.setTargetUrl("https://example.com/demo/atelier/avant.html?token=synthetic-secret");
+        entity.setReportJson("{\"domain\":\"example.com\",\"url\":\"https://example.com\"}");
+        when(dao.findByTokenHash(any())).thenReturn(Optional.of(entity));
+        when(dao.findByRunId(1)).thenReturn(Optional.of(entity));
+        var reader = new ReportReadService(dao, tokens, new ObjectMapper());
+        for (var report : java.util.List.of(reader.getByToken("synthetic-link").orElseThrow(), reader.getByRunId(1).orElseThrow())) {
+            assertEquals("https://example.com/demo/atelier/avant.html", report.url());
+            assertTrue(report.pageIdentity().redacted()); assertNull(report.pageIdentity().destination());
+        }
+    }
     @Test void historicalExpiryRevokesTokenRunAndPolling() {
         var dao=mock(AuditReportDao.class);var tokens=new TokenService();var entity=new AuditReport();
         entity.setCreatedAt(Instant.now().minus(1461,ChronoUnit.DAYS));entity.setTokenHash(tokens.sha256("synthetic-link"));entity.setReportJson("{\"domain\":\"fixture.invalid\"}");

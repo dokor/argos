@@ -64,6 +64,9 @@ public class ReportReadService {
     private Optional<ReportDto> deserialize(AuditReport entity) {
         try {
             var report = objectMapper.readValue(entity.getReportJson(), ReportDto.class);
+            // Old report_json kept only the origin; target_url retains the admission identity.
+            if (report.pageIdentity() == null && entity.getTargetUrl() != null)
+                report = report.withPageIdentity(ReportPageIdentity.from(entity.getTargetUrl(), null));
             ReportIntroduction note = null;
             if (entity.getIntroductionJson() != null) {
                 try { note = objectMapper.readValue(entity.getIntroductionJson(), ReportIntroduction.class); }

@@ -1,0 +1,28 @@
+// @vitest-environment jsdom
+import { beforeEach, expect, it, vi } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
+import { LangProvider } from "@/lib/i18n/LangContext";
+import PrivateDiagnostic from "./PrivateDiagnostic";
+import type { Report } from "@/components/report/types";
+vi.mock("@/components/report/ReportExport", () => ({ default: () => null }));
+vi.mock("@/components/feedback/ReportFeedback", async () => { const { createContext } = await import("react"); return { default: () => null, FeedbackReportContext: createContext(undefined) }; });
+const report: Report = { generatedAt: "2026-10-13T10:00:00Z", url: "https://example.test/", domain: "example.test", site: {}, scores: { global: 80, globalAvailable: false, byCategory: [], completeness: 60 }, summary: { oneLiner: "fair", priorities: [] }, issues: [
+  { id: "lighthouse.audit.largest-contentful-paint", categoryKey: "performance", severity: "critical", title: "LCP", impact: "Slow", recommendation: "Check", structuredEvidence: { source: "lighthouse", measurement: { value: 4900, unit: "ms" } } },
+  { id: "html.meta.description", categoryKey: "seo", severity: "info", title: "Description", impact: "", recommendation: "Describe" },
+] };
+beforeEach(() => window.history.replaceState(null, "", "/account/runs/42?returnTo=%2Faccount%3Fattention%3Dpriority"));
+it.each(["fr", "en"] as const)("keeps scope, missing score, canonical findings and deep links in %s", lang => {
+  const { container } = render(<LangProvider initialLang={lang}><PrivateDiagnostic report={report} run={{ status: "COMPLETED", siteId: "1", historyContext: { siteId: "1", siteUrlId: "2", normalizedUrl: "https://example.test/collections" } }} runId="42" actions={<a href="/account?attention=priority">Back</a>}/></LangProvider>);
+  expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(lang === "fr" ? "Diagnostic de la page" : "Page diagnosis");
+  expect(screen.getAllByText(/https:\/\/example.test\/collections/).length).toBeGreaterThan(0);
+  expect(screen.getAllByText(lang === "fr" ? /4 900/ : /4,900/).length).toBeGreaterThan(0);
+  expect(screen.queryByText("80")).not.toBeInTheDocument();
+  expect(container.querySelectorAll("details[id^='finding-']")).toHaveLength(2);
+  fireEvent.click(screen.getByRole("button", { name: lang === "fr" ? "Constats techniques" : "Technical findings" }));
+  expect(window.location.search).toContain("returnTo=");
+  const selects = screen.getAllByRole("combobox");
+  fireEvent.change(selects[0], { target: { value: "seo" } });
+  expect(container.querySelectorAll("details[id^='finding-']")).toHaveLength(1);
+  fireEvent.click(screen.getByRole("button", { name: lang === "fr" ? "Vue d’ensemble" : "Overview" }));
+  expect(container.querySelectorAll("details[id^='finding-']")).toHaveLength(2);
+});

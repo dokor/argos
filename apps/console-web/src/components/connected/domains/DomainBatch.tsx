@@ -36,6 +36,7 @@ import {
 } from "./DomainUi";
 import s from "../Connected.module.scss";
 import d from "./Domains.module.scss";
+import { compactCopy, compactUrl } from "../compactCopy";
 export default function DomainBatch({
   domainId,
   batchId,
@@ -44,6 +45,7 @@ export default function DomainBatch({
   batchId: string;
 }) {
   const { c, lang } = useDomainText(),
+    compact = compactCopy[lang],
     params = useSearchParams(),
     router = useRouter(),
     session = useAccountSession();
@@ -174,6 +176,7 @@ export default function DomainBatch({
                 <dd>{dateLabel(batch.createdAt, lang)}</dd>
               </div>
             </dl>
+            <details className={d.scopeDetails}><summary>{compact.scope}</summary>
             <p className={d.muted}>{c.profileHint}</p>
             <p className={d.muted}>
               {phrase(c.limitText, {
@@ -183,6 +186,7 @@ export default function DomainBatch({
                 requests: batch.discovery.effectiveLimits.requestsPerHost,
               })}
             </p>
+            </details>
             {batch.discovery.truncated && (
               <p className={d.notice}>
                 {c.truncated} · <Reason value={batch.discovery.stopReason} />
@@ -275,6 +279,10 @@ export default function DomainBatch({
                           {finding.provenance.join(", ")}
                         </span>
                       </div>
+                      <span className={d.reach}>
+                        <strong>{finding.affectedPages} / {finding.evaluatedPages}</strong>
+                        <span>{compact.affected} / {compact.evaluated}</span>
+                      </span>
                       <StatusBadge
                         tone={
                           finding.severity === "CRITICAL"
@@ -316,10 +324,12 @@ export default function DomainBatch({
                         ))}
                       </ul>
                     )}
+                    <div className={d.findingBody}><div>
                     <h3>{c.impact}</h3>
                     <p>{finding.impact ?? c.descriptionUnavailable}</p>
-                    <h3>{c.recommendation}</h3>
+                    </div><div><h3>{c.recommendation}</h3>
                     <p>{finding.recommendation ?? c.descriptionUnavailable}</p>
+                    </div></div>
                     <p className={d.muted}>
                       {finding.evidenceAvailable ? c.evidence : c.noEvidence}
                     </p>
@@ -332,13 +342,10 @@ export default function DomainBatch({
                     {pages.data && (
                       <>
                         <h3>{c.examples}</h3>
-                        <PageList
-                          pages={pages.data.items.filter((page) =>
-                            finding.examplePageIds.includes(page.pageId),
-                          )}
-                          returnTo={returnTo}
-                          empty={c.reportUnavailable}
-                        />
+                        <ul className={d.examples}>
+                          {pages.data.items.filter(page => finding.examplePageIds.includes(page.pageId)).slice(0, 3).map(page =>
+                            <li key={page.pageId}>{page.reportAvailable ? <Link title={page.normalizedUrl} href={`/account/runs/${page.runId}?returnTo=${encodeURIComponent(returnTo)}`}>{compactUrl(page.normalizedUrl, true)}<span className={d.srOnly}> — {c.diagnostic}</span></Link> : <span>{compactUrl(page.normalizedUrl, true)} — {c.reportUnavailable}</span>}</li>)}
+                        </ul>
                       </>
                     )}
                   </details>
