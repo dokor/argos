@@ -62,9 +62,14 @@ deployment host; there is no production `--no-sandbox` fallback.
 - HTTP/HTML/technology analysis operates on bounded snapshots. XML external
   entities remain disabled. ZAP remains an offline passive HAR import, with
   `sendRequests=false`, an isolated internal network and no target egress.
-- Observatory and SSL Labs are disabled by default and in production compose:
-  providers resolve/connect independently, so Argos cannot promise pinned
-  destinations there. Re-enabling them requires a separate provider controls review.
+- Observatory and SSL Labs are enabled by default in production Compose after
+  explicit operator acceptance of provider-controlled connections. Set
+  `ARGOS_EXTERNAL_SCANS_ENABLED=false` to disable both; outside Compose the
+  application still defaults to disabled. Providers resolve/connect independently,
+  so Argos cannot promise pinned destinations there. The safeguards and remaining
+  provider trust boundary are documented in
+  [remote collector reactivation](../analysis/remote-collectors-reactivation.md).
+  This approval does not authorize merging or deploying the change.
 - AI summaries are disabled in production compose. Prompt instructions and output
   bounds are defense in depth, not a tool/credential isolation guarantee. The
   existing credential-bearing Codex sidecar needs separate hardening before reuse.

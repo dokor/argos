@@ -23,11 +23,13 @@ public class ObservatoryClient {
 
     private final ExternalHttpClient http;
     private final String apiBase;
+    private final boolean externalScansEnabled;
 
     @Inject
     public ObservatoryClient(ExternalHttpClient http, ConfigurationService config) {
         this.http = http;
         this.apiBase = config.observatoryApiUrl();
+        this.externalScansEnabled = config.externalScansEnabled();
     }
 
     /**
@@ -35,10 +37,10 @@ public class ObservatoryClient {
      * Uses POST with empty body (application/x-www-form-urlencoded).
      */
     public JsonNode scan(String hostname) throws Exception {
-        com.dokor.argos.services.analysis.RemoteScanPolicy.requireAllowed(hostname);
+        String target = com.dokor.argos.services.analysis.RemoteScanPolicy.requireAllowed(hostname, externalScansEnabled);
         return ExternalServiceCall.timed(logger, "observatory", hostname, () -> {
             URI endpoint = URI.create(apiBase + "/scan?host="
-                + URLEncoder.encode(hostname, StandardCharsets.UTF_8));
+                + URLEncoder.encode(target, StandardCharsets.UTF_8));
             return http.postJson(endpoint, null, "application/x-www-form-urlencoded",
                 Duration.ofSeconds(30), Duration.ofSeconds(15), BoundedBodyHandlers.MAX_PAGE_BYTES, Map.of());
         });

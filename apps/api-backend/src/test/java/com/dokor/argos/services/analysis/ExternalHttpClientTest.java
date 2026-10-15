@@ -108,5 +108,9 @@ class ExternalHttpClientTest {
             () -> client.getJson(endpoint("/redirect"), Duration.ofSeconds(2),
                 Duration.ofSeconds(1), 1024, Map.of()));
         assertEquals(302, error.statusCode());
+        var postError = assertThrows(ExternalHttpClient.HttpStatusException.class,
+            () -> client.postJson(endpoint("/redirect"), null, "application/x-www-form-urlencoded",
+                Duration.ofSeconds(2), Duration.ofSeconds(1), 1024, Map.of()));
+        assertEquals(302, postError.statusCode());
     }
 }
