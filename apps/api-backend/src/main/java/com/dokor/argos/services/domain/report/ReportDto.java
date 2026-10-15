@@ -200,8 +200,12 @@ public record ReportDto(
     public record AiSummaryLocale(
         String headline,
         String summary,
-        List<String> keyPoints
+        List<String> keyPoints,
+        List<String> sourceFindingKeys
     ) {
+        public AiSummaryLocale(String headline, String summary, List<String> keyPoints) {
+            this(headline, summary, keyPoints, null);
+        }
     }
 
     public record Priority(
