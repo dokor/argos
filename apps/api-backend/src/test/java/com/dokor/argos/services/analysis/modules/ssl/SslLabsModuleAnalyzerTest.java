@@ -21,6 +21,40 @@ import static org.mockito.Mockito.when;
  * « indisponible/inconnu » (INFO, non scoré) vs « médiocre » (WARN/FAIL) - issue #100.
  */
 class SslLabsModuleAnalyzerTest {
+    @Test void v3CertificatesAreResolvedByLeafIdNotArrayOrder() throws Exception {
+        var result = analyze("""
+            {"status":"READY","certs":[
+              {"id":"intermediate","issues":0,"notAfter":2050000000000},
+              {"id":"leaf","issues":4,"notAfter":1000000000000}],
+             "endpoints":[{"grade":"T","statusMessage":"Ready","details":{
+               "certChains":[{"certIds":["leaf","intermediate"]}]}}]}
+            """);
+        assertEquals(AuditStatus.FAIL, check(result,"ssl.certificate.valid").status());
+        assertEquals(AuditStatus.FAIL, check(result,"ssl.certificate.expiry_days").status());
+        assertEquals(1000000000000L, check(result,"ssl.certificate.expiry_days").details().get("notAfterMs"));
+    }
+
+    @Test void missingV3LeafDoesNotFallBackToAnUnrelatedOrLegacyCertificate() throws Exception {
+        var result = analyze("""
+            {"certs":[{"id":"other","issues":0,"notAfter":2050000000000}],
+             "endpoints":[{"grade":"A","details":{
+               "cert":{"issues":0,"notAfter":2050000000000},
+               "certChains":[{"certIds":["missing"]}]}}]}
+            """);
+        assertEquals(AuditStatus.INFO, check(result,"ssl.certificate.valid").status());
+        assertEquals(AuditStatus.INFO, check(result,"ssl.certificate.expiry_days").status());
+    }
+
+    @Test void everyServedV3LeafContributesToCertificateHealth() throws Exception {
+        var result = analyze("""
+            {"certs":[{"id":"rsa","issues":0,"notAfter":2050000000000},
+                      {"id":"ecdsa","issues":16,"notAfter":1000000000000}],
+             "endpoints":[{"grade":"T","details":{"certChains":[
+               {"certIds":["rsa"]},{"certIds":["ecdsa"]}]}}]}
+            """);
+        assertEquals(AuditStatus.FAIL, check(result,"ssl.certificate.valid").status());
+        assertEquals(AuditStatus.FAIL, check(result,"ssl.certificate.expiry_days").status());
+    }
 
     @Test
     void literalNullGradeRemainsUnavailable() throws Exception {

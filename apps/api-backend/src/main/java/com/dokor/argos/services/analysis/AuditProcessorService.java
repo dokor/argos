@@ -233,7 +233,9 @@ public class AuditProcessorService {
             logger.info("module_start module={} runId={}", AuditModule.SSL.id(), runId);
             AuditDeadline collectionDeadline=AuditDeadline.current();
             try (var observatory = remote.submit(AuditModule.OBSERVATORY.id(), () -> collectionDeadline.call(() -> withHttpSnapshot(snapshotUnavailable, () -> observatoryModuleAnalyzer.analyze(ctx, logger))));
-                 var ssl = remote.submit(AuditModule.SSL.id(), () -> collectionDeadline.call(() -> withHttpSnapshot(snapshotUnavailable, () -> sslLabsModuleAnalyzer.analyze(ctx, logger))))) {
+                 // TLS assessment does not require an HTML response. In particular, a failed
+                 // certificate handshake must not suppress the independent TLS diagnosis.
+                 var ssl = remote.submit(AuditModule.SSL.id(), () -> collectionDeadline.call(() -> sslLabsModuleAnalyzer.analyze(ctx, logger)))) {
                 auditRunService.updateModuleStatus(runId, AuditModule.OBSERVATORY.id(), "RUNNING", run.getClaimToken());
                 auditRunService.updateModuleStatus(runId, AuditModule.SSL.id(), "RUNNING", run.getClaimToken());
 

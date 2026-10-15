@@ -15,6 +15,15 @@ import static org.junit.jupiter.api.Assertions.*;
  * Chaque groupe couvre une règle de normalisation distincte.
  */
 class UrlNormalizerTest {
+    @ParameterizedTest
+    @ValueSource(strings = {"/a%2Fb?value=x%26y", "/a%3Fb?x=%3D%23%25", "/caf%C3%A9?x=1&x=2"})
+    void encodedComponentsPreserveTheRequestedResource(String suffix) {
+        String expected = "https://example.com" + suffix;
+        assertEquals(expected, normalizer.normalize(expected));
+        assertEquals(expected, UrlNormalizer.normalizeSyntax(expected));
+        assertEquals(expected, UrlNormalizer.normalizeAdmissionSyntax(expected));
+        assertEquals(expected, normalizer.normalize(normalizer.normalize(expected)));
+    }
     @Test void admissionDefaultsDoNotWeakenAbsoluteDiscoverySyntax() {
         assertEquals("https://example.com/page",UrlNormalizer.normalizeAdmissionSyntax(" example.com/page#fragment "));
         assertEquals("https://example.com/page",UrlNormalizer.normalizeSyntax("HTTPS://EXAMPLE.COM:443/page#fragment"));
