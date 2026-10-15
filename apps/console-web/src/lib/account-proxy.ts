@@ -97,10 +97,11 @@ export async function accountProxy(request: NextRequest, parts: string[]): Promi
       const parsed = value as Record<string, unknown>;
       if (request.method === "PUT" && path.startsWith("report-introduction/") && !validIntroduction(parsed)) return privateError("introduction_invalid",400);
       if(path.startsWith("admin/") && !(path.startsWith("admin/feedback/") ? feedbackTreatment(parsed) : path.endsWith("/suspension") ? adminSuspension(parsed) : adminEntitlement(parsed))) return privateError("payload_invalid",400);
-      if (path.endsWith("/start") || path === "auth/register" || path === "auth/confirm-email") {
+      if (path.endsWith("/start") || path === "auth/register" || path === "auth/forgot" || path === "auth/confirm-email") {
         returnTo = safeAccountReturn(parsed.returnTo);
         linkIntent = parsed.intent === "link";
         preserveReturn = !path.endsWith("/start");
+        headers.set("Accept-Language", returnTo.startsWith("/en/") ? "en" : "fr");
         // Report tokens stay in the browser's HttpOnly return cookie, never in the OAuth DB row.
         if (preserveReturn) delete parsed.returnTo;
         else parsed.returnTo = returnTo.startsWith("/en/") ? "/en/account" : "/account";
@@ -227,7 +228,7 @@ export async function accountProxy(request: NextRequest, parts: string[]): Promi
     if (upstream.ok && preserveReturn) response.cookies.set("argos_account_return", returnTo, accountCookieOptions(86400));
     const jwt = upstream.headers.get("x-argos-session");
     if (upstream.ok && jwt) response.cookies.set(SESSION_COOKIE, jwt, accountCookieOptions(900));
-    if (upstream.status === 401 && path !== "auth/login" || upstream.ok && (path === "auth/logout" || path === "me/archive"))
+    if (upstream.status === 401 && path !== "auth/login" || upstream.ok && (path === "auth/logout" || path === "auth/reset" || path === "me/archive"))
       response.cookies.set(SESSION_COOKIE, "", accountCookieOptions(0));
     if (upstream.status === 429) response.headers.set("Retry-After", upstream.headers.get("retry-after") ?? "900");
     if (upstream.ok && path.endsWith("/start")) {

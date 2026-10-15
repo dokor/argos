@@ -99,7 +99,7 @@ public class AccountAuthWs {
     public Response register(Registration b) {
         if (b == null) throw new AccountError(400, "payload_invalid");
         mutation("email", AccountAuthService.email(b.email()));
-        auth.register(b.email(), b.password(), b.displayName());
+        auth.register(b.email(), b.password(), b.displayName(), request().getHeaderString("Accept-Language"));
         return ok(Map.of("accepted", true));
     }
 
@@ -138,7 +138,7 @@ public class AccountAuthWs {
     public Response forgot(Email b) {
         if (b == null) throw new AccountError(400, "payload_invalid");
         mutation("email", AccountAuthService.email(b.email()));
-        auth.send(b.email(), "RESET");
+        auth.send(b.email(), "RESET", request().getHeaderString("Accept-Language"));
         return ok(Map.of("accepted", true));
     }
 

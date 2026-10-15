@@ -8,7 +8,7 @@ import PasswordInput from "./PasswordInput";
 import { useLang } from "@/lib/i18n/LangContext";
 import { localizedPath } from "@/lib/i18n/routes";
 import { accountFetch, AccountClientError } from "@/lib/account-client";
-import { safeAccountReturn } from "@/lib/account-return";
+import { localizedAccountReturn } from "@/lib/account-navigation";
 import { oauthCallbackError } from "@/lib/oauth-callback-error";
 import { accountFormErrors, type AccountField, type AccountFieldErrors } from "@/lib/account-form-validation";
 import { useAccountSession } from "./AccountSession";
@@ -20,7 +20,8 @@ export default function AccountView({mode="sign-in"}:{mode?:Mode}) {
   const { t, lang } = useLang(), copy = t.account, router = useRouter();
   const [providers, setProviders] = useState<string[]>([]);
   const [enabled, setEnabled] = useState(true), [busy, setBusy] = useState(false), [message, setMessage] = useState(""), [error, setError] = useState("");
-  const [token, setToken] = useState(""), [returnTo, setReturnTo] = useState("/account/sites");
+  const [token, setToken] = useState(""), [returnTo, setReturnTo] = useState(() => localizedAccountReturn(null, lang));
+  const [returnReady, setReturnReady] = useState(false);
   const [name, setName] = useState(""), [email, setEmail] = useState(""), [password, setPassword] = useState("");
   const session = useAccountSession();
   const [switchAccount, setSwitchAccount] = useState(false), [initialized, setInitialized] = useState(false);
@@ -45,20 +46,24 @@ export default function AccountView({mode="sign-in"}:{mode?:Mode}) {
     else formRef.current?.querySelector<HTMLInputElement>(`#${target}`)?.focus();
   });
   useEffect(() => {
+    let active = true;
     // Read fragment tokens after hydration, then remove them before further navigation.
     const initialize = () => {
+    if (!active) return;
     const raw = new URLSearchParams(window.location.search).get("returnTo");
-    const safe = raw && safeAccountReturn(raw) === raw ? raw : localizedPath("/account/sites", lang);
-    if (raw) setReturnTo(safe);
-    else void accountFetch<{ returnTo: string }>("return").then(value => setReturnTo(value.returnTo === "/account/sites" ? localizedPath("/account/sites", lang) : value.returnTo)).catch(() => setReturnTo(safe));
+    const safe = localizedAccountReturn(raw, lang);
+    setReturnReady(false);
+    if (raw !== null) { setReturnTo(safe); setReturnReady(true); }
+    else void accountFetch<{ returnTo: string }>("return").then(value => { if (active) { setReturnTo(localizedAccountReturn(value.returnTo, lang)); setReturnReady(true); } }).catch(() => { if (active) { setReturnTo(safe); setReturnReady(true); } });
     const value = new URLSearchParams(window.location.hash.slice(1)).get("token");
     if (value) { setToken(value); window.history.replaceState(null, "", window.location.pathname + window.location.search); }
     const callbackError = new URLSearchParams(window.location.search).get("error");
     if (callbackError !== null) setError(copy.errors[oauthCallbackError(callbackError)]);
-    void accountFetch<{ providers: string[]; enabled: boolean }>("auth/providers").then(p => { setProviders(p.providers); setEnabled(p.enabled); }).catch(fail);
+    void accountFetch<{ providers: string[]; enabled: boolean }>("auth/providers").then(p => { if (active) { setProviders(p.providers); setEnabled(p.enabled); } }).catch(reason => { if (active) fail(reason); });
     setInitialized(true);
     };
     queueMicrotask(initialize);
+    return () => { active = false; };
     // Mode/language form initialization only.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, lang]);
@@ -74,9 +79,9 @@ export default function AccountView({mode="sign-in"}:{mode?:Mode}) {
     const first = Object.keys(validation)[0] as AccountField | undefined;
     if (first) { setError(""); focusTarget.current = first; return; }
     await act(async () => {
-      if (mode === "register") { await accountFetch("auth/register", "POST", { email, password, displayName: name, returnTo }); setMessage(copy.sent); setPassword(""); }
+      if (mode === "register") { await accountFetch("auth/register", "POST", { email, password, displayName: name, returnTo }); setMessage(copy.registrationSent); setPassword(""); focusTarget.current = "notice"; }
       if (mode === "sign-in") { await accountFetch("auth/login", "POST", { email, password }); router.push(returnTo); router.refresh(); }
-      if (mode === "forgot") { await accountFetch("auth/forgot", "POST", { email }); setMessage(copy.forgotSent); focusTarget.current = "notice"; }
+      if (mode === "forgot") { await accountFetch("auth/forgot", "POST", { email, returnTo }); setMessage(copy.forgotSent); focusTarget.current = "notice"; }
       if (mode === "verify") { await accountFetch("auth/verify", "POST", { token }); setMessage(copy.verifiedDone); setToken(""); focusTarget.current = "notice"; }
       if (mode === "reset") { await accountFetch("auth/reset", "POST", { token, password }); setMessage(copy.resetDone); setPassword(""); setToken(""); focusTarget.current = "notice"; }
     });
@@ -94,13 +99,14 @@ export default function AccountView({mode="sign-in"}:{mode?:Mode}) {
     </div>;
   };
   const recovery = tokenMode && initialized && !token && !message;
-  const showForm = (!tokenMode || initialized && !!token && !message) && (!connected || switchAccount) && !(mode === "forgot" && message);
+  const showForm = (!tokenMode || initialized && !!token && !message) && (!connected || switchAccount) && !(["register", "forgot"].includes(mode) && message);
   const settings = localizedPath("/account/settings?section=profile", lang);
-  return <AuthShell><main className={`${s.page} ${a.page}`}><h1>{title}</h1>
+  return <AuthShell authContext={{returnTo: returnReady ? returnTo : undefined, token}}><main className={`${s.page} ${a.page}`}><h1>{title}</h1>
     {error && <p ref={noticeRef} tabIndex={-1} className={`${s.notice} ${s.error}`} role="alert">{error}</p>}{message && <p ref={noticeRef} tabIndex={-1} className={s.notice} role="status">{message}</p>}
     {!enabled && <p role="status">{copy.unavailable}</p>}
     {mode === "forgot" && !message && <p className={a.intro}>{copy.forgotIntro}</p>}
-    {mode === "forgot" && message && <button className={`${s.button} ${a.correction}`} type="button" onClick={() => { setMessage(""); focusTarget.current = "email"; }}>{copy.correctEmail}</button>}
+    {mode === "register" && !message && <p className={a.intro}>{copy.registrationIntro}</p>}
+    {["register", "forgot"].includes(mode) && message && <button className={`${s.button} ${a.correction}`} type="button" onClick={() => { setMessage(""); focusTarget.current = "email"; }}>{copy.correctEmail}</button>}
     {connected && <section className={s.notice}><p>{switchAccount ? copy.switchAccountHint : copy.connectedHint}</p><div className={s.links}><Link href={returnTo}>{copy.continueToAccount}</Link>{!switchAccount && <button className={s.button} type="button" onClick={() => { focusTarget.current = "email"; setSwitchAccount(true); }}>{copy.switchAccount}</button>}</div></section>}
     {tokenMode && !initialized && <p role="status">{copy.working}</p>}
     {recovery && <section className={s.recovery} aria-labelledby="recovery-title"><h2 id="recovery-title">{copy.recoveryTitle}</h2><p>{mode === "reset" ? copy.tokenMissing : copy.verifyRecovery}</p><div className={s.links}>
@@ -108,7 +114,7 @@ export default function AccountView({mode="sign-in"}:{mode?:Mode}) {
       <Link href={"/account/forgot?returnTo=" + encodeURIComponent(returnTo)}>{mode === "reset" ? copy.requestReset : copy.forgot}</Link>
     </div></section>}
     {showForm && ["register", "sign-in"].includes(mode) && <p className={s.policies}>
-      {copy.policyIntro} <Link href="/conditions-utilisation">{copy.policyTerms}</Link> {copy.policyAnd} <Link href="/confidentialite">{copy.policyPrivacy}</Link>.
+      {mode === "register" ? copy.registrationPolicyIntro : copy.policyIntro} <Link href="/conditions-utilisation">{copy.policyTerms}</Link> {copy.policyAnd} <Link href="/confidentialite">{copy.policyPrivacy}</Link>.
     </p>}
     {showForm && <form ref={formRef} className={s.form} onSubmit={submit}>
       {mode === "register" && field("name", copy.name, name, setName, "text", "name")}
