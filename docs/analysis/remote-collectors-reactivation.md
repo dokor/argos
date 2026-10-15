@@ -4,7 +4,7 @@
 
 Les collecteurs peuvent fonctionner avec les API officielles existantes : SSL Labs v3 et MDN Observatory v2. Le 15 octobre 2026, depuis l'environnement de développement, une analyse du seul domaine Argos a abouti à `READY`, grade `A+`, `isPublic=false` chez SSL Labs et `score=80`, `grade=B+`, 11 tests réussis et 1 échoué chez Observatory. Ces appels ne prouvent pas la connectivité depuis le backend de production et n'ont pas modifié sa configuration.
 
-Le Compose conserve les collecteurs désactivés par défaut. Il accepte désormais un opt-in d'exploitation via `ARGOS_EXTERNAL_SCANS_ENABLED`, lu de façon identique par les deux clients et le monitoring. La valeur exacte `true` est nécessaire ; absence, valeur inconnue et `false` restent désactivées. Une activation par défaut a été refusée par la revue automatique : la frontière de confiance distante ci-dessous doit être approuvée explicitement avant activation. Cette PR ne constitue ni un déploiement ni une validation de production.
+Le 15 octobre 2026, l'exploitant a explicitement accepté que Qualys et MDN contrôlent leurs propres connexions aux sites analysés et autorisé l'activation par défaut dans la PR #640. Le Compose fournit donc `ARGOS_EXTERNAL_SCANS_ENABLED=true` par défaut ; une valeur explicite `false` permet de désactiver les deux collecteurs. Les clients et le monitoring lisent la même configuration et seule la valeur exacte `true` active les collecteurs. Hors Compose, une variable absente ou inconnue reste désactivée. Cette approbation n'autorise ni fusion ni déploiement ; cette PR ne constitue pas une validation de production.
 
 ## Deux frontières réseau distinctes
 
@@ -23,11 +23,11 @@ Le code public MDN vérifie les noms et leur résolution, refuse les adresses IP
 - Budgets globaux et de modules conservés : pool distant de 2 tâches et file de 2, budget distant par défaut 2 minutes, SSL Labs 90 secondes, HTTP 30 secondes et corps borné. Les admissions d'audits existantes restent applicables. HTTP 429 n'est pas réessayé en boucle : il reste `PROVIDER_RATE_LIMITED`.
 - Les protections SSRF du proxy épinglé, les réseaux des navigateurs et l'isolement de ZAP ne changent pas. Aucune mesure absente ne devient un succès ou une faute du site.
 
-## Validation et exploitation après approbation
+## Validation lors du déploiement autorisé
 
-Avant l'activation autorisée, vérifier que `prod.conf` ne surcharge pas les deux endpoints vers une ancienne URL ou un proxy : ces configurations échouent désormais à la construction du client. Ne pas partager le fichier complet ni ses secrets.
+Avant le déploiement autorisé, vérifier que `prod.conf` ne surcharge pas les deux endpoints vers une ancienne URL ou un proxy : ces configurations échouent désormais à la construction du client. Ne pas partager le fichier complet ni ses secrets.
 
-Après approbation explicite de la frontière fournisseur et déploiement autorisé, l'exploitant peut fixer `ARGOS_EXTERNAL_SCANS_ENABLED=true` dans l'environnement Compose persistant (par exemple le `.env` du répertoire de déploiement). Le Compose l'interpole avec un défaut `false`. Modifier uniquement l'environnement d'une commande sans le conserver ferait perdre l'activation au prochain déploiement. Recréer le backend par la procédure habituelle ; aucun changement de pare-feu, ouverture de port ou accès Internet supplémentaire de ZAP n'est nécessaire.
+Lors d'un prochain déploiement autorisé séparément, le Compose interpolera `ARGOS_EXTERNAL_SCANS_ENABLED` avec un défaut `true` (variable absente ou vide). Une valeur `false` déjà présente dans l'environnement Compose ou son `.env` reste prioritaire : la vérifier avant livraison. Pour désactiver durablement les collecteurs, conserver `ARGOS_EXTERNAL_SCANS_ENABLED=false` dans l'environnement Compose persistant. La prise en compte exige de recréer le backend par la procédure habituelle ; aucun changement de pare-feu, ouverture de port ou accès Internet supplémentaire de ZAP n'est nécessaire. Aucun déploiement n'est effectué dans cette PR.
 
 Puis :
 

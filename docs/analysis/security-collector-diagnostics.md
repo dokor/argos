@@ -1,6 +1,6 @@
 # Diagnostiquer SSL Labs et Observatory (#583)
 
-> Évolution : voir la [réactivation encadrée](remote-collectors-reactivation.md). Les constats de désactivation ci-dessous décrivent la configuration de production observée ; le Compose garde un défaut désactivé avec opt-in explicite.
+> Évolution : voir la [réactivation encadrée](remote-collectors-reactivation.md). Les constats de désactivation ci-dessous décrivent la configuration de production observée ; la PR #640 active les collecteurs par défaut dans le Compose après acceptation explicite de la frontière fournisseur. Un override `ARGOS_EXTERNAL_SCANS_ENABLED=false` reste disponible ; aucun déploiement effectué.
 
 ## Cause établie dans la configuration livrée
 
