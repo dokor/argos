@@ -184,7 +184,7 @@ class OverviewIT extends MariaDbReportFixture {
         seed();
         var gap = new DiagnosticProjection.Rule("ssl.grade", "a".repeat(64), "security", List.of("ssl"),
                 "UNAVAILABLE", "TIMEOUT", null, null, null, null, false);
-        var diagnostic = new DiagnosticProjection(1, true, 0L, 0L, .5, "fixture", List.of(gap));
+        var diagnostic = new DiagnosticProjection(2, true, 0L, 0L, .5, "fixture", List.of(gap));
         execute("UPDATE ARG_AUDIT_REPORT SET diagnostic_json=? WHERE run_id=100", mapper.writeValueAsString(diagnostic));
         execute("UPDATE ARG_AUDIT_RUN SET module_statuses=? WHERE id=100", "[{\"id\":\"ssl\",\"status\":\"FAILED\"}]");
         var page = service.pages(a, new AccountOverviewDao.Filter(null, null, null, 100, 0)).items().stream()
