@@ -1,4 +1,5 @@
 import { createServer } from "node:http";
+import { connectedFixture } from "./connected-fixtures.mjs";
 
 // Fictional fixtures for visual QA only. No production data and no mutation.
 const categories = [
@@ -77,7 +78,9 @@ createServer((req, res) => {
   const usage = { offer: "DEMO", period: "2026-10", timezone: "UTC", startsAt: "2026-10-01T00:00:00Z", resetsAt: "2026-11-01T00:00:00Z", used: 12, reserved: 2, limit: 50, canLaunch: true };
   // Account roles below are fictional fixture responses, never production access.
   if (path === "/api/account/me") return send({ displayName: "Administration démo", email: "admin@atelier.example", verified: true, admin: true });
-  if (path === "/api/account/usage") return send(usage);
+  if (path === "/api/account/usage") return send({ ...usage, available: 36 });
+  const connected = connectedFixture(path, params, fixture, { ...usage, available: 36 });
+  if (connected !== undefined) return send(connected);
   if (path === "/api/account/admin/queue") return send({ queued: 3, running: 2 });
   const users = [{ id: "101", displayName: "Camille · Atelier de démonstration au nom volontairement long", email: "contact-avec-une-adresse-volontairement-longue@atelier.example", state: "ACTIVE", role: "USER", offer: "DEMO", createdAt: "2026-10-11T10:00:00Z" }, { id: "102", displayName: "Morgan", email: "morgan@atelier.example", state: "ARCHIVED", role: "USER", offer: "DEMO", createdAt: "2026-10-10T09:00:00Z" }];
   if (path === "/api/account/admin/users") return send({ items: users.filter(u => (!params.get("q") || (u.displayName+u.email).toLowerCase().includes(params.get("q").toLowerCase())) && (!params.get("state") || u.state === params.get("state"))), nextCursor: null });
