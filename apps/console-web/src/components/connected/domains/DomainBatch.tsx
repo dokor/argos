@@ -1,4 +1,6 @@
 "use client";
+import CommonFindingContent from "./CommonFindingContent";
+import { findingEditorial } from "@/components/report/findingCatalogue";
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "@/components/LocalizedLink";
@@ -273,7 +275,7 @@ export default function DomainBatch({
                   >
                     <summary>
                       <div>
-                        <strong>{finding.title ?? finding.ruleKey}</strong>
+                        <strong>{findingEditorial(finding.ruleKey, lang).title}</strong>
                         <span className={d.muted}>
                           {c.categories[finding.category]} ·{" "}
                           {finding.provenance.join(", ")}
@@ -324,12 +326,7 @@ export default function DomainBatch({
                         ))}
                       </ul>
                     )}
-                    <div className={d.findingBody}><div>
-                    <h3>{c.impact}</h3>
-                    <p>{finding.impact ?? c.descriptionUnavailable}</p>
-                    </div><div><h3>{c.recommendation}</h3>
-                    <p>{finding.recommendation ?? c.descriptionUnavailable}</p>
-                    </div></div>
+                    <CommonFindingContent finding={finding} />
                     <p className={d.muted}>
                       {finding.evidenceAvailable ? c.evidence : c.noEvidence}
                     </p>
