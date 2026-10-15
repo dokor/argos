@@ -64,3 +64,17 @@ npm run start -- --hostname 127.0.0.1 --port 3039
 Le serveur de fixtures écoute uniquement sur loopback et refuse toute écriture.
 Ouvrir `/account/domains`, `/account/analyses/new`, `/account/domains/new`,
 `/account/settings`, `/account/usage`, `/account/integrations` et leurs variantes `/en`.
+
+## Validation finale
+
+- Branche remise à jour sur `40b63050` (PR #613, #615 et #616 intégrées).
+- `npm run build` et `npm run lint` : réussis.
+- `npx vitest run --maxWorkers=2` : **82 fichiers, 785 tests réussis**.
+- Vérification éditoriale FR/EN et ses trois tests : réussis.
+- Le passage global a révélé une course de focus existante au changement de
+  compte : l’effet pouvait consommer la demande avant le montage du champ.
+  La demande est désormais conservée jusqu’à l’existence de sa cible. Les 45
+  tests de cet écran passent ; le navigateur confirme le focus sur `email`
+  après « Utiliser un autre compte », sans déconnexion ni soumission.
+- Nouveau contrôle desktop/mobile après rebase : colonnes et champs alignés,
+  ratio complet/retenu sur une seule ligne, aucun débordement du document.
