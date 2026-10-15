@@ -107,7 +107,7 @@ public class PublicReportComposer {
             url,
             new ReportDto.Site(siteTitle, null),
             new ReportDto.Scores(global100, completeness, byCategoryWithCounts,
-                score != null && score.global().maxScore() > 0.0, calculation(score), score == null ? null : score.coverage()),
+                score != null && score.global().maxScore() > 0.0, calculation(score), score == null ? null : score.coverage(), ModuleExecution.from(internalReport.meta())),
             new ReportDto.Summary(oneLiner, priorities, null),
             issues,
             tech,
