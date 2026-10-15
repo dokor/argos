@@ -27,7 +27,7 @@ it.each(["fr","en"] as const)("explains registration and offers a non-revealing 
   fireEvent.change(screen.getByLabelText(c.email),{target:{value:"fixture@example.invalid"}});
   fireEvent.change(screen.getByLabelText(c.password),{target:{value:"synthetic long passphrase"}});
   await waitFor(()=>expect(accountFetch).toHaveBeenCalledWith("auth/providers"));
-  fireEvent.submit(screen.getByRole("button",{name:c.register,exact:true}).closest("form")!);
+  fireEvent.submit(screen.getByRole("button",{name:c.register}).closest("form")!);
   const status=await screen.findByRole("status");
   expect(status).toHaveTextContent(c.registrationSent);
   await waitFor(()=>expect(status).toHaveFocus());
@@ -48,10 +48,10 @@ it.each(["fr","en"] as const)("uses the selected language for direct, cookie and
     vi.mocked(accountFetch).mockImplementation(async path=>path === "auth/providers" ? {providers:[],enabled:true} : {returnTo:context});
     const view=render(<LangProvider initialLang={lang}><AccountView/></LangProvider>);
     const target=localizedAccountReturn(source ?? context,lang);
-    await waitFor(()=>expect(screen.getByRole("link",{name:c.forgot,exact:true})).toHaveAttribute("href",(lang === "en" ? "/en" : "")+"/account/forgot?returnTo="+encodeURIComponent(target)));
+    await waitFor(()=>expect(screen.getByRole("link",{name:c.forgot})).toHaveAttribute("href",(lang === "en" ? "/en" : "")+"/account/forgot?returnTo="+encodeURIComponent(target)));
     fireEvent.change(screen.getByLabelText(c.email),{target:{value:"fixture@example.invalid"}});
     fireEvent.change(screen.getByLabelText(c.password),{target:{value:"synthetic passphrase"}});
-    fireEvent.submit(screen.getByRole("button",{name:c.signIn,exact:true}).closest("form")!);
+    fireEvent.submit(screen.getByRole("button",{name:c.signIn}).closest("form")!);
     await waitFor(()=>expect(push).toHaveBeenLastCalledWith(target));
     view.unmount();
   }
@@ -60,9 +60,9 @@ it.each(["fr","en"] as const)("uses the selected language for direct, cookie and
 it("keeps a scrubbed verification token and localizes context in language links until it is consumed",async()=>{
   window.history.replaceState(null,"","/account/verify?returnTo="+encodeURIComponent("/account/settings?section=profile")+"#token=synthetic-token");
   render(<AccountView mode="verify"/>);
-  const verify=await screen.findByRole("button",{name:fr.account.verify,exact:true});
+  const verify=await screen.findByRole("button",{name:fr.account.verify});
   await waitFor(()=>expect(window.location.hash).toBe(""));
-  const link=screen.getByRole("link",{name:"English",exact:true});
+  const link=screen.getByRole("link",{name:"English"});
   const href=new URL(link.getAttribute("href")!,"https://fixture.invalid");
   expect(href.pathname).toBe("/en/account/verify");
   expect(href.searchParams.get("returnTo")).toBe("/en/account/settings?section=profile");
