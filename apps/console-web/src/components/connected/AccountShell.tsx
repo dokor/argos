@@ -5,7 +5,6 @@ import {readingSnapshot,subscribeReading} from "@/components/report/reportReadin
 import {safeAccountReturn} from "@/lib/account-return";
 import { usePathname } from "next/navigation";
 import Link from "@/components/LocalizedLink";
-import ConnectedIcon from "./ConnectedIcon";
 import { clarteCopy } from "./clarteCopy";
 import ArgosIcon from "@/components/ArgosIcon";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -78,7 +77,7 @@ export default function AccountShell({ children }: { children: ReactNode }) {
           <Link href="/account/usage" aria-current={pathname === "/account/usage" ? "page" : undefined} onClick={close} aria-label={c.usage}><NavigationIcon name="usage"/><span className={s.navLabel}>{c.usage}</span></Link>
           {admin && <Link href="/account/admin" aria-current={pathname.startsWith("/account/admin") ? "page" : undefined} onClick={close} aria-label={c.admin}><NavigationIcon name="admin"/><span className={s.navLabel}>{c.admin}</span></Link>}
         </div>
-        <Link className={s.helpLink} href="/faq" onClick={close} aria-label={c.help}><ConnectedIcon name="help"/><span className={s.navLabel}>{c.help}</span></Link>
+        <Link className={s.helpLink} href="/faq" onClick={close} aria-label={c.help}><NavigationIcon name="help"/><span className={s.navLabel}>{c.help}</span></Link>
       </nav>
       {valid && <AccountMenu key={currentPath} profile={session.profile!} onOpen={close} compact={collapsed}/>}
     </aside>
