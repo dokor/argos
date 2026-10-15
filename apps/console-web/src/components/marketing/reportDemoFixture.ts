@@ -1,7 +1,7 @@
 import type { Report, Issue, CoverageAggregate } from "@/components/report/types";
 import type { Lang } from "@/lib/i18n/routes";
 
-export const DEMO_VERSION = "illustrative-report-v1";
+export const DEMO_VERSION = "illustrative-report-v2";
 export const DEMO_DATE = "2026-10-10T00:00:00Z";
 export function demoReport(lang: Lang, partial = false): Report {
   const fr = lang === "fr";
@@ -13,6 +13,7 @@ export function demoReport(lang: Lang, partial = false): Report {
   const domains = ["performance", "security", "seo", "a11y"];
   const aggregate = (key: string): CoverageAggregate => ({ key, measuredWeight: partial ? 1 : 2, expectedWeight: 2, ratio: partial ? 0.5 : 1, available: true, sufficient: !partial });
   return {
+    measurements: {lcpMs:partial?null:4200,fcpMs:null,responseMs:320,loadMs:partial?null:5200,transferredBytes:3800000,requests:62,htmlBytes:48000,scripts:14,jsErrors:2,consoleErrors:3,failedRequests:1,http4xx:null,http5xx:0},
     pageIdentity: { requested: "https://atelier.example/produit/sac", destination: "https://atelier.example/produit/sac", redacted: false, redirected: false },
     generatedAt: DEMO_DATE, domain: "Atelier Démo", url: "https://atelier.example/produit/sac", site: { title: "Atelier Démo — illustration" },
     scores: { global: 75, globalAvailable: true, completeness: partial ? 50 : 100,

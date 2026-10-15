@@ -1,4 +1,17 @@
 import { beforeEach, afterEach, it, expect, vi } from "vitest";
+it("validates shared-link creation and enforces CSRF before forwarding",async()=>{
+ const path=["runs","42","share"];
+ expect((await accountProxy(request(path.join("/"),"POST",{days:30},false),path)).status).toBe(403);
+ for(const body of [{days:365},{days:"30"},{days:30,ownerId:99}])expect((await accountProxy(request(path.join("/"),"POST",body),path)).status).toBe(400);
+ expect(fetchMock).not.toHaveBeenCalled();fetchMock.mockResolvedValue(Response.json({token:"a".repeat(43)}));
+ expect((await accountProxy(request(path.join("/"),"POST",{days:30}),path)).status).toBe(200);
+ expect(fetchMock.mock.calls[0][1].headers.get("authorization")).toBe("Bearer "+jwt);
+});
+it.each(["reports","shared-reports"])("forwards authenticated %s reads privately",async kind=>{
+ const path=[kind,"a".repeat(43)];fetchMock.mockResolvedValue(Response.json({access:"full"}));
+ const response=await accountProxy(request(path.join("/")),path);expect(response.status).toBe(200);expect(response.headers.get("cache-control")).toContain("no-store");
+ expect(fetchMock.mock.calls[0][1].headers.get("authorization")).toBe("Bearer "+jwt);
+});
 it("forwards only the implemented connected profile catalogue with a private account session", async () => {
   fetchMock.mockResolvedValue(Response.json({ defaultProfileId: "server-default-v1", items: [] }));
   const response = await accountProxy(request("analysis-profiles"), ["analysis-profiles"]);

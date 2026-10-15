@@ -18,8 +18,30 @@ public record ReportDto(
     AccessibilityCompliance accessibilityCompliance,
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     ReportIntroduction introduction,
-    ReportPageIdentity pageIdentity
+    ReportPageIdentity pageIdentity,
+    ObservedMeasurements measurements,
+    String access
 ) {
+    public ReportDto(String generatedAt, String domain, String url, Site site, Scores scores,
+                     Summary summary, List<Issue> issues, Tech tech, AntiBot antiBot,
+                     AccessibilityEvidence evidence, AccessibilityCompliance compliance, ReportIntroduction introduction,
+                     ReportPageIdentity identity) {
+        this(generatedAt,domain,url,site,scores,summary,issues,tech,antiBot,evidence,compliance,introduction,identity,null,"full");
+    }
+    public ReportDto withMeasurements(ObservedMeasurements values) {
+        return new ReportDto(generatedAt,domain,url,site,scores,summary,issues,tech,antiBot,
+            accessibilityEvidence,accessibilityCompliance,introduction,pageIdentity,values,access);
+    }
+    /** Public summaries never contain proofs, corrections or accessibility element evidence. */
+    public ReportDto publicSummary() {
+        var publicIssues = issues == null ? List.<Issue>of() : issues.stream().map(i -> new Issue(
+            i.id(),i.categoryKey(),i.categoryKeys(),i.module(),i.severity(),i.title(),i.impact(),null,null,i.effort(),i.confidence(),null)).toList();
+        var publicScores = scores == null ? null : new Scores(scores.global(),scores.completeness(),scores.byCategory(),
+            scores.globalAvailable(),null,scores.coverage(),scores.moduleExecution());
+        return new ReportDto(generatedAt,domain,url,site,publicScores,
+            summary == null ? null : new Summary(summary.oneLiner(),summary.priorities(),null),publicIssues,null,antiBot,
+            null,null,null,pageIdentity,measurements,"summary");
+    }
     public ReportDto(String generatedAt, String domain, String url, Site site, Scores scores,
                      Summary summary, List<Issue> issues, Tech tech, AntiBot antiBot,
                      AccessibilityEvidence evidence, AccessibilityCompliance compliance, ReportIntroduction introduction) {
@@ -28,7 +50,7 @@ public record ReportDto(
     public ReportDto withPageIdentity(ReportPageIdentity identity) {
         if (identity == null) return this;
         return new ReportDto(generatedAt, domain, identity.requested(), site, scores, summary, issues, tech,
-            antiBot, accessibilityEvidence, accessibilityCompliance, introduction, identity);
+            antiBot, accessibilityEvidence, accessibilityCompliance, introduction, identity, measurements, access);
     }
     public ReportDto(String generatedAt, String domain, String url, Site site, Scores scores,
                      Summary summary, List<Issue> issues, Tech tech, AntiBot antiBot,
@@ -37,7 +59,7 @@ public record ReportDto(
     }
     public ReportDto withIntroduction(ReportIntroduction note) {
         return new ReportDto(generatedAt, domain, url, site, scores, summary, issues, tech, antiBot,
-            accessibilityEvidence, accessibilityCompliance, note, pageIdentity);
+            accessibilityEvidence, accessibilityCompliance, note, pageIdentity, measurements, access);
     }
     public ReportDto(String generatedAt, String domain, String url, Site site, Scores scores,
                      Summary summary, List<Issue> issues, Tech tech, AntiBot antiBot) {

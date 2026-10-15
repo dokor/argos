@@ -49,3 +49,14 @@
 .links a { display: inline-flex; align-items: center; min-height: 44px; }
 .stat:first-child { padding-left: 0; }
 @media(max-width:640px) { .stat { padding-inline: 0 12px; } .stat:nth-child(2) { border-right: 0; } }
+.eyebrow { text-transform:uppercase;letter-spacing:1.4px;font-size:12px;color:t.$text-muted;font-weight:600;margin-bottom:8px; }
+.topRow { grid-template-columns:175px minmax(0,1fr);align-items:center;margin-top:24px;padding-block:24px;border-top:1px solid t.$border; }
+.scoreBlock {grid-column:1;grid-row:1;border:0;background:none;padding:0;}
+.decision {grid-column:2;grid-row:1;}
+.scoreNumber strong {font-size:66px;}
+.criticalVerdict {border:0;padding:0;}
+.statsRow {display:flex;flex-wrap:wrap;margin-top:0;}
+.measurementNotes { display:grid;grid-template-columns:minmax(220px,1fr) 2fr;gap:24px; }
+.measurementNotes .coverage { border:0;padding:0;margin:0 0 16px;color:t.$text-muted; }
+@media(max-width:640px){.measurementNotes{grid-template-columns:1fr;gap:0;}}
+@media(max-width:640px){.topRow{grid-template-columns:1fr;}.scoreBlock,.decision{grid-column:auto;grid-row:auto;}.scoreNumber strong{font-size:54px;}}

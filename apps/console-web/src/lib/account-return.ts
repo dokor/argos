@@ -47,7 +47,7 @@ export function safeAccountReturn(raw: unknown): string {
   }
   return typeof raw === "string" &&
     raw.length <= 600 &&
-    /^\/(?:en\/)?(?:account(?:\/(?:usage|settings(?:\?section=(?:profile|security|connections))?|analyses\/new|sites(?:\/[1-9]\d{0,18})?|runs\/[1-9]\d{0,18}|urls\/[1-9]\d{0,18}\/history))?|report\/[A-Za-z0-9_-]{20,512})$/.test(
+    /^\/(?:en\/)?(?:account(?:\/(?:usage|settings(?:\?section=(?:profile|security|connections))?|analyses\/new|sites(?:\/[1-9]\d{0,18})?|runs\/[1-9]\d{0,18}|urls\/[1-9]\d{0,18}\/history))?|(?:report|share)\/[A-Za-z0-9_-]{20,512})$/.test(
       raw,
     )
     ? raw

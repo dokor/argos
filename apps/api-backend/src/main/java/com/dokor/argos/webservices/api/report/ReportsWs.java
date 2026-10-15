@@ -47,7 +47,7 @@ public class ReportsWs {
         }
 
         if(analytics!=null) analytics.viewed(token,authorization,consent);
-        return Response.ok(reportOpt.get())
+        return Response.ok(reportOpt.get().publicSummary())
             .header("X-Robots-Tag", "noindex, nofollow")
             .header("Cache-Control", "private, no-store")
             .build();

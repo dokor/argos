@@ -33,7 +33,7 @@ public class AiReportSummaryService {
                 report.antiBot(),
                 report.accessibilityEvidence(),
                 report.accessibilityCompliance()
-            ).withPageIdentity(report.pageIdentity()))
+            ).withPageIdentity(report.pageIdentity()).withMeasurements(report.measurements()))
             .orElse(report);
     }
 }

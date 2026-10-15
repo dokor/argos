@@ -79,6 +79,15 @@ public class LighthouseModuleAnalyzer {
 
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("available", true);
+        Map<String,Object> observedMetrics = new LinkedHashMap<>();
+        for (var metric : Map.of("lcpMs","largest-contentful-paint","fcpMs","first-contentful-paint").entrySet()) {
+            var audit = lhr.path("audits").path(metric.getValue());
+            var numeric = audit.path("numericValue");
+            if (numeric.isNumber() && Double.isFinite(numeric.asDouble()) && numeric.asDouble() >= 0
+                && !"error".equals(audit.path("scoreDisplayMode").asText())
+                && "millisecond".equals(audit.path("numericUnit").asText())) observedMetrics.put(metric.getKey(), numeric.asDouble());
+        }
+        data.put("observedMetrics", observedMetrics);
         data.put("partial", categoryScores.size() < CATEGORIES.length);
         data.put("requestedUrl", url);
         data.put("finalUrl", JsonNodes.nonBlankText(lhr.at("/finalDisplayedUrl")));

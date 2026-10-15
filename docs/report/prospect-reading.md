@@ -10,7 +10,7 @@ La gravité du rapport vient du statut et de la sévérité du contrôle source 
 
 La moyenne, la couverture globale et la couverture d’un domaine décrivent des dimensions différentes. La limite des domaines moins couverts est explicitée à proximité du chiffre, même avec une couverture globale suffisante. Les agrégats gardent leur rang mais ouvrent aussi les constats détaillés disponibles du même outil et du même domaine. Sans ces détails, le rapport demande le diagnostic source plutôt que de proposer une cause inventée.
 
-La vue d’ensemble présente trois priorités et une aide concrète avant les scores détaillés. Les trois modes et leurs liens canoniques sont conservés. L’export et la navigation privée sont secondaires. Le résultat automatique d’accessibilité et sa limite restent visibles ; les détails sont repliés dans la synthèse et le plan d’action.
+La vue d’ensemble présente les scores, la mosaïque des mesures observées puis trois priorités. Les trois modes et leurs liens canoniques sont conservés. L’export et la navigation privée sont secondaires. Le résultat automatique d’accessibilité et sa limite restent visibles ; les détails sont repliés dans la synthèse et le plan d’action.
 
 La collecte ne conserve pas toujours les ressources/éléments et leur emplacement. Le rendu le dit explicitement. La collecte bornée F14 et ses limites de confidentialité sont décrites dans le [contrat des preuves observées](../connected-space/evidence-f14.md). Les rapports historiques ne sont pas enrichis rétroactivement.
 
@@ -30,7 +30,7 @@ La publication est explicite et comprend uniquement :
 
 La migration Flyway `V18` ajoute `ARG_AUDIT_REPORT.introduction_json`. Le JSON automatique `report_json` reste inchangé. Le lecteur du rapport ajoute uniquement la note publiée à la réponse, après les mêmes contrôles d’accès et d’expiration que les mesures. Les drafts, identifiants de compte, autres rapports et notes internes ne sont pas exposés.
 
-Tout détenteur du lien peut lire l’introduction publiée, sans connexion, et ouvrir les preuves canoniques sélectionnées. Il ne peut pas modifier la note. La prévisualisation utilise ce même composant de lecture, sans navigation privée. La note figure dans les deux formats PDF. Une nouvelle préparation d’export relit le rapport sans cache. Retirer la note supprime son accès futur ; les copies et PDF déjà transmis ne sont pas rappelés. Sans note, le rapport standard est conservé.
+Tout détenteur du lien avec une session vérifiée peut lire l’introduction publiée et ouvrir les preuves canoniques sélectionnées. La synthèse anonyme exclut ces données ; voir le [contrat unifié](unified-reports.md). Il ne peut pas modifier la note. La prévisualisation utilise ce même composant de lecture, sans navigation privée. La note figure dans les deux formats PDF. Une nouvelle préparation d’export relit le rapport sans cache. Retirer la note supprime son accès futur ; les copies et PDF déjà transmis ne sont pas rappelés. Sans note, le rapport standard est conservé.
 
 La migration V18 doit être appliquée avant d’exécuter cette version du backend. Aucun déploiement n’est réalisé dans ce lot.
 

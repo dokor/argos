@@ -15,10 +15,11 @@ import ShareReportButton from "./ShareReportButton";
 import s from "./ReportHero.module.scss";
 import { scoreLimit, interpretationCopy } from "./reportInterpretation";
 
-export default function ReportHero({ report, model = buildReportModel(report), onActions, onMethod, introduction = report.introduction, onSelectFinding, personal = false }: {
-  personal?: boolean; report: Report; model?: ReportModel; onActions?: () => void; onMethod?: () => void; introduction?: ReportIntroduction | null; onSelectFinding?: (key: string) => void;
+export default function ReportHero({ report, model = buildReportModel(report), onActions, onMethod, introduction = report.introduction, onSelectFinding, personal = false, demo=false }: {
+  demo?:boolean; personal?: boolean; report: Report; model?: ReportModel; onActions?: () => void; onMethod?: () => void; introduction?: ReportIntroduction | null; onSelectFinding?: (key: string) => void;
 }) {
   const { t, lang } = useLang();
+  const Title=demo?"h2":"h1";
   const copy = decisionCopy[lang];
   const reading = reportReadingCopy[lang];
   const score = globalScore(report);
@@ -30,7 +31,8 @@ export default function ReportHero({ report, model = buildReportModel(report), o
   return <section className={s.hero} aria-labelledby="report-domain">
     <div className={s.heroInner}>
       <div className={s.identity}>
-        <h1 id="report-domain" className={s.siteName}>{report.domain}</h1>
+        <p className={s.eyebrow}>{lang === "fr" ? "Rapport d’audit" : "Audit report"}</p>
+        <Title id="report-domain" className={s.siteName}>{report.domain}</Title>
         <details><summary>{interpretationCopy[lang].metadata}</summary><div className={s.meta}>
           <span>{t.report.hero.analyzedAt} {Number.isFinite(date.getTime())
             ? <time dateTime={report.generatedAt}>{date.toLocaleDateString(t.report.hero.locale, { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })}</time>
@@ -48,7 +50,7 @@ export default function ReportHero({ report, model = buildReportModel(report), o
           <ReportSummary report={report} model={model} />
           <div className={s.links}>
             <a href="?view=actions" onClick={event => { if (onActions) { event.preventDefault(); onActions(); } }}>{copy.actions}</a>
-            <a href="#report-method" onClick={event => { if (onMethod) { event.preventDefault(); onMethod(); } }}>{copy.methodLink}</a>
+            {onMethod && <a href="#report-method" onClick={event => { event.preventDefault(); onMethod(); }}>{copy.methodLink}</a>}
           </div>
           {!personal && <div className={s.actions}>
             <RelaunchButton url={report.pageIdentity && !report.pageIdentity.redacted ? report.url : ""} />
@@ -60,11 +62,13 @@ export default function ReportHero({ report, model = buildReportModel(report), o
           {score !== undefined ? <p className={s.scoreNumber} aria-label={`Score ${score}/100`}><strong>{score}</strong><span>/100</span></p>
             : <p className={s.notEvaluated}>{copy.notEvaluated}</p>}
           {score !== undefined && <p className={s.scoreState}>{partialReport(report) ? copy.provisional : copy.measured}</p>}
+        </div>
+      </div>
+      <div className={s.measurementNotes}>
           <p className={s.coverage}><strong>{reading.coverage}</strong><br />{coverage
             ? `${Math.round(coverage.global.ratio * 100)} % — ${coverage.global.sufficient ? t.report.measurementCoverage.sufficient : copy.insufficient}`
             : copy.coverageUnknown}</p>
           <p className={s.coverage}>{scoreLimit(report, lang)}</p>
-        </div>
       </div>
       {model.counts.total > 0 && <p className={s.privacy}>{interpretationCopy[lang].severity}</p>}
       <div className={s.statsRow}>

@@ -56,6 +56,8 @@ public class QAuditReport extends com.querydsl.sql.RelationalPathBase<AuditRepor
     public final StringPath targetUrl = createString("targetUrl");
 
     public final SimplePath<byte[]> tokenHash = createSimple("tokenHash", byte[].class);
+    public final SimplePath<byte[]> shareTokenHash = createSimple("shareTokenHash", byte[].class);
+    public final DateTimePath<java.time.Instant> shareExpiresAt = createDateTime("shareExpiresAt", java.time.Instant.class);
 
     public final com.querydsl.sql.PrimaryKey<AuditReport> primary = createPrimaryKey(id);
 
@@ -89,6 +91,8 @@ public class QAuditReport extends com.querydsl.sql.RelationalPathBase<AuditRepor
     }
 
     public void addMetadata() {
+        addMetadata(shareTokenHash, ColumnMetadata.named("share_token_hash").ofType(Types.BINARY).withSize(32));
+        addMetadata(shareExpiresAt, ColumnMetadata.named("share_expires_at").ofType(Types.TIMESTAMP));
         addMetadata(measurementCompleteness, ColumnMetadata.named("measurement_completeness").ofType(Types.VARCHAR).withSize(16));
         addMetadata(diagnosticJson,ColumnMetadata.named("diagnostic_json").ofType(Types.LONGVARCHAR));
         addMetadata(criticalCount,ColumnMetadata.named("critical_count").ofType(Types.INTEGER));

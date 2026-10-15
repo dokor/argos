@@ -30,4 +30,5 @@
 .filters select { min-height: 44px; background: var(--argos-surface); color: var(--argos-text); border: 1px solid var(--argos-border); border-radius: 6px; padding: 8px; }
 @media(max-width:640px) { .metrics { grid-template-columns: repeat(2,minmax(0,1fr)); } .proofGrid { grid-template-columns: 1fr; } .hero,.metric,.findings,.secondary { padding: 16px; } .heroTop { gap: 12px; } .metric > strong { font-size: 25px; } }
 .page > nav { padding: 0; margin-bottom: 20px; }
+.navigation { margin-bottom:20px; }
 .page > section, .page > details { margin-bottom: 24px; }

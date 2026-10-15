@@ -81,6 +81,8 @@ ul, ol {
   --argos-brand: #4f46e5;
   --argos-brand-soft: #eef2ff;
   --argos-on-brand: #ffffff;
+  --argos-measure-good: #247344;
+  --argos-measure-warning: #925512;
   --argos-error: #b91c1c;
   --argos-error-soft: #fef2f2;
 }
@@ -100,6 +102,8 @@ ul, ol {
     --argos-brand: #a5b4fc;
     --argos-brand-soft: #1e2547;
     --argos-on-brand: #0f172a;
+    --argos-measure-good: #87d6a5;
+    --argos-measure-warning: #e9b96a;
     --argos-error: #fca5a5;
     --argos-error-soft: #29171e;
   }
@@ -119,7 +123,9 @@ ul, ol {
   --argos-brand: #a5b4fc;
   --argos-brand-soft: #1e2547;
   --argos-on-brand: #0f172a;
-  --argos-error: #fca5a5;
+  --argos-measure-good: #87d6a5;
+    --argos-measure-warning: #e9b96a;
+    --argos-error: #fca5a5;
   --argos-error-soft: #29171e;
 }
 

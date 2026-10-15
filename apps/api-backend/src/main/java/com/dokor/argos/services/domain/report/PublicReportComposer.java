@@ -117,7 +117,7 @@ public class PublicReportComposer {
         ).withPageIdentity(ReportPageIdentity.from(internalReport.normalizedUrl(), internalReport.modules().stream()
             .filter(m -> "http".equals(m.id()) && m.data() != null)
             .map(m -> m.data().get("finalUrl")).filter(String.class::isInstance).map(String.class::cast)
-            .findFirst().orElse(null)));
+            .findFirst().orElse(null))).withMeasurements(ObservedMeasurements.from(internalReport));
     }
 
     private static ReportDto.ScoreCalculation calculation(AuditScoreReport score) {
