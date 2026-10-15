@@ -11,7 +11,7 @@ import java.sql.*;
 import java.time.Instant;
 import java.util.*;
 
-/** SQL aggregates before pagination. No report bodies, rules or evidence leave the database. */
+/** SQL aggregates before pagination; bounded page rows include a frozen diagnostic, never report bodies or raw evidence. */
 @Singleton
 public final class AccountOverviewDao {
     public record Filter(String attention, String query, Long domainId, int limit, long offset) {
@@ -34,8 +34,8 @@ public final class AccountOverviewDao {
     private static final String PROJECTION =
             """
 WITH latest AS (
- SELECT u.id page_id,s.id domain_id,d.hostname,a.normalized_url,r.id run_id,r.status,r.created_at,r.finished_at,
- p.id report_id,p.global_score,p.provisional,p.critical_count,p.important_count,p.measurement_completeness,
+ SELECT u.id page_id,s.id domain_id,d.hostname,a.normalized_url,r.id run_id,r.status,r.created_at,r.finished_at,r.module_statuses,
+ p.id report_id,p.diagnostic_json,p.global_score,p.provisional,p.critical_count,p.important_count,p.measurement_completeness,
  CASE WHEN JSON_VALUE(p.diagnostic_json,'$.version')=2 AND JSON_VALUE(p.diagnostic_json,'$.available') IN ('true','1')
  THEN JSON_VALUE(p.diagnostic_json,'$.coverageRatio') END coverage_ratio,
  CASE WHEN JSON_VALUE(p.diagnostic_json,'$.version')=2 AND JSON_VALUE(p.diagnostic_json,'$.available') IN ('true','1')
@@ -224,9 +224,10 @@ WHERE s.owner_user_id=? AND u.id IN (
                                 new Coverage(ratio, r.getString("coverage_version")),
                                 published ? number(r, "critical_count") : null,
                                 published ? number(r, "important_count") : null,
-                                Map.of(),
+                                com.dokor.argos.services.connected.summary.CollectionDiagnostics.modules(r.getString("module_statuses")),
                                 "FAILED".equals(status) ? "ANALYSIS_FAILED" : null,
-                                published),
+                                published,
+                                com.dokor.argos.services.connected.summary.CollectionDiagnostics.gaps(r.getString("diagnostic_json"))),
                 r.getString("hostname"));
     }
 

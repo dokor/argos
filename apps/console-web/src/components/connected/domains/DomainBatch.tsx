@@ -1,4 +1,5 @@
 "use client";
+import { RepeatedCollectionGaps } from "../CollectionGaps";
 import DomainPageFilters from "./DomainPageFilters";
 import { findingTitle } from "@/components/report/findingCatalogue";
 import CommonFindingContent from "./CommonFindingContent";
@@ -384,6 +385,7 @@ export default function DomainBatch({
                 }
               >
                 <p className={d.muted}>{c.coverageHint}</p>
+                <RepeatedCollectionGaps pages={batch.incompletePages} />
                 <PageList
                   pages={batch.incompletePages}
                   returnTo={returnTo}
