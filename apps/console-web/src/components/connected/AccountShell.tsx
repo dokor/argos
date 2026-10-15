@@ -14,6 +14,7 @@ import { useAccountSession } from "@/components/account/AccountSession";
 import { EmptyState, PageHeading } from "./Primitives";
 import QuotaSummary from "./QuotaSummary";
 import NavigationIcon from "./NavigationIcon";
+import AccountMenu from "./AccountMenu";
 import s from "./Connected.module.scss";
 
 /** One chrome for private pages; authorization still belongs to each Java resource. */
@@ -48,7 +49,6 @@ export default function AccountShell({ children }: { children: ReactNode }) {
     }} onFocusCapture={() => setTooltipDismissed(false)} onMouseOver={() => setTooltipDismissed(false)}>
       <div className={s.brandRow}>
         <Link href="/account" className={s.brand} aria-label={c.workspace}><ArgosIcon size={25}/><span>Argos</span></Link>
-        <Link className={s.mobileAccount} href="/account/settings" aria-current={isAccount ? "page" : undefined} onClick={close}>{c.account}</Link>
         <button ref={menuButton} className={s.menu} type="button" aria-expanded={open} aria-controls="account-navigation" onClick={() => setOpenPath(open ? null : pathname)}>{open ? c.closeMenu : c.menu}</button>
       </div>
       <nav id="account-navigation" className={s.navigation} aria-label={c.navigation}>
@@ -68,7 +68,7 @@ export default function AccountShell({ children }: { children: ReactNode }) {
           {admin && <Link href="/account/admin" aria-current={pathname.startsWith("/account/admin") ? "page" : undefined} onClick={close} aria-label={c.admin}><NavigationIcon name="admin"/><span className={s.navLabel}>{c.admin}</span></Link>}
         </div>
       </nav>
-      {valid && <div className={s.identity}><span className={s.avatar} aria-hidden="true">{session.profile?.displayName.slice(0, 1).toUpperCase()}</span><div><strong>{session.profile?.displayName}</strong><span>{c.personalSpace}</span></div></div>}
+      {valid && <AccountMenu key={currentPath} profile={session.profile!} onOpen={close} compact={collapsed}/>}
     </aside>
     <div className={s.workspace}>
       <header className={s.topbar}><p>{c.workspace}<span aria-hidden="true"> / </span><strong>{context}</strong></p><QuotaSummary/><div className={s.preferences}><ThemeToggle/><LangToggle/></div></header>

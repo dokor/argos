@@ -7,7 +7,7 @@ const state = vi.hoisted(() => ({ path: "/account/integrations", session: {
   ready: true, denied: false, error: "", profile: { displayName: "Camille", verified: true, admin: false },
   usage: { offer: "FREE", limit: 100 as number | null, used: 32, reserved: 4, available:64 }, usageError: false, refreshUsage: vi.fn(),
 } }));
-vi.mock("next/navigation", () => ({ usePathname: () => state.path }));
+vi.mock("next/navigation", () => ({ usePathname: () => state.path, useRouter: () => ({replace: vi.fn(), refresh: vi.fn()}) }));
 vi.mock("@/components/account/AccountSession", () => ({ useAccountSession: () => state.session }));
 vi.mock("@/components/ThemeToggle", () => ({ default: () => <button>Theme</button> }));
 vi.mock("@/components/LangToggle", () => ({ default: () => <span>FR / EN</span> }));
@@ -25,6 +25,7 @@ it("collapses and restores navigation without losing accessible destinations or 
   fireEvent.click(toggle);
   expect(toggle).toHaveAttribute("aria-expanded", "false");
   expect(shell).toHaveAttribute("data-collapsed", "true");
+  expect(screen.getByRole("button", { name: /Menu du compte/ }).parentElement).toHaveAttribute("data-compact", "true");
   for (const label of ["Vue d’ensemble", "Analyse de site", "Domaines", "Intégrations — Bientôt", "Mon compte", "Offre et quotas"]) {
     expect(within(navigation).getByRole("link", { name: label })).toBeInTheDocument();
   }
@@ -40,6 +41,7 @@ it("collapses and restores navigation without losing accessible destinations or 
   expect(within(navigation).getByRole("link", { name: "Domaines" })).toHaveAttribute("aria-current", "page");
   fireEvent.click(screen.getByRole("button", { name: "Déployer le menu" }));
   expect(shell).toHaveAttribute("data-collapsed", "false");
+  expect(screen.getByRole("button", { name: /Menu du compte/ }).parentElement).toHaveAttribute("data-compact", "false");
 });
 it("localizes compact controls and preserves English navigation destinations", () => {
   state.path = "/en/account/integrations";
@@ -51,7 +53,7 @@ it("localizes compact controls and preserves English navigation destinations", (
 it("shares one footer, real available credits and a current navigation item", () => {
   render(<AccountShell>{content}</AccountShell>);
   expect(screen.getAllByRole("contentinfo")).toHaveLength(1);
-  expect(screen.getByRole("link", { name: /64 crédits/ })).toHaveAttribute("href", "/account/usage");
+  expect(screen.getByRole("link", { name: "64 crédits restants" })).toHaveAttribute("href", "/account/usage");
   expect(screen.getByRole("link", { name: /Intégrations/ })).toHaveAttribute("aria-current", "page");
   expect(screen.queryByRole("link", { name: "Administration" })).not.toBeInTheDocument();
 });
@@ -67,6 +69,7 @@ it("removes private children and quota immediately on session invalidation, keep
   const view = render(<AccountShell>{content}</AccountShell>);
   state.session.denied = true; view.rerender(<AccountShell>{content}</AccountShell>);
   expect(screen.queryByText("Private result")).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: /Menu du compte/ })).not.toBeInTheDocument();
   expect(screen.queryByRole("link", { name: /crédits/ })).not.toBeInTheDocument();
   expect(screen.getByRole("link", { name: "Se connecter" })).toHaveAttribute("href", "/account/sign-in?returnTo=%2Faccount%2Furls%2F9%2Fhistory");
   state.path = "/en/account/runs/9";
@@ -109,13 +112,24 @@ it("localizes navigation and handles unlimited and zero quota without fake count
   expect(screen.getByRole("link", { name: /Unlimited credits/ })).toBeInTheDocument();
   expect(screen.getByRole("link", { name: /Integrations/ })).toHaveAttribute("href", "/en/account/integrations");
   state.session.usage.limit = 0; state.session.usage.available=0; view.rerender(<LangProvider initialLang="en"><AccountShell>{content}</AccountShell></LangProvider>);
-  expect(screen.getByRole("link", { name: /0 credits/ })).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "0 credits remaining" })).toBeInTheDocument();
 });
 it("does not install private chrome around public authentication forms", () => {
   state.path = "/account/sign-in";
   render(<AccountShell>{content}</AccountShell>);
   expect(screen.queryByRole("navigation")).not.toBeInTheDocument();
   expect(screen.queryByRole("contentinfo")).not.toBeInTheDocument();
+});
+it("closes navigation when the account opens and dismisses the account panel on route change", () => {
+  vi.stubGlobal("matchMedia", () => ({addEventListener: vi.fn(), removeEventListener: vi.fn()}));
+  const view = render(<AccountShell>{content}</AccountShell>);
+  const navigation = screen.getByRole("button", {name: "Menu"});
+  fireEvent.click(navigation);
+  fireEvent.click(screen.getByRole("button", {name: /Menu du compte/}));
+  expect(navigation).toHaveAttribute("aria-expanded", "false");
+  expect(screen.getByRole("region", {name: "Menu du compte"})).toBeInTheDocument();
+  state.path = "/account/sites"; view.rerender(<AccountShell>{content}</AccountShell>);
+  expect(screen.queryByRole("region", {name: "Menu du compte"})).not.toBeInTheDocument();
 });
 it("does not replace an unavailable quota with zero or block access to results", () => {
   state.session.usage = null as unknown as typeof state.session.usage; state.session.usageError = true;
