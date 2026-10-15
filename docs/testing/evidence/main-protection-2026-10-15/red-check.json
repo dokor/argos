@@ -1,0 +1,99 @@
+{
+  "checkedAtUtc": "2026-10-15T14:16:36.1407072Z",
+  "rulesetId": 25165356,
+  "scenario": "single_real_failing_test",
+  "pullRequest": 631,
+  "url": "https://github.com/dokor/argos/pull/631",
+  "baseRef": "main",
+  "headRevision": "c6aabe33922d6db1c67c36602f430b7a3fe5e9f2",
+  "isDraft": false,
+  "mergeable": "MERGEABLE",
+  "mergeStateStatus": "BLOCKED",
+  "missingRequiredChecks": [],
+  "failedRequiredChecks": [
+    "Frontend checks"
+  ],
+  "allOtherRequiredChecksSucceeded": true,
+  "testFailure": {
+    "marker": "MAIN_PROTECTION_NEGATIVE_PROBE",
+    "passed": 856,
+    "failed": 1,
+    "exitCode": 1,
+    "jobUrl": "https://github.com/dokor/argos/actions/runs/38747546330/job/116465128960"
+  },
+  "checks": [
+    {
+      "name": "Audit egress and browser isolation",
+      "status": "COMPLETED",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/dokor/argos/actions/runs/38747546550/job/116465060067"
+    },
+    {
+      "name": "auth",
+      "status": "COMPLETED",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/dokor/argos/actions/runs/38747546452/job/116465059767"
+    },
+    {
+      "name": "Secret scan",
+      "status": "COMPLETED",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/dokor/argos/actions/runs/38747546552/job/116465061126"
+    },
+    {
+      "name": "API backend tests",
+      "status": "COMPLETED",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/dokor/argos/actions/runs/38747546330/job/116465129972"
+    },
+    {
+      "name": "Controlled audit E2E",
+      "status": "COMPLETED",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/dokor/argos/actions/runs/38747546392/job/116465167848"
+    },
+    {
+      "name": "MariaDB integration (11.4)",
+      "status": "COMPLETED",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/dokor/argos/actions/runs/38747546521/job/116465151254"
+    },
+    {
+      "name": "Production dependency audit (console-web)",
+      "status": "COMPLETED",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/dokor/argos/actions/runs/38747546338/job/116465126756"
+    },
+    {
+      "name": "Frontend checks",
+      "status": "COMPLETED",
+      "conclusion": "FAILURE",
+      "detailsUrl": "https://github.com/dokor/argos/actions/runs/38747546330/job/116465128960"
+    },
+    {
+      "name": "Production dependency audit (playwright-service)",
+      "status": "COMPLETED",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/dokor/argos/actions/runs/38747546338/job/116465222771"
+    },
+    {
+      "name": "Lighthouse checks",
+      "status": "COMPLETED",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/dokor/argos/actions/runs/38747546330/job/116465128957"
+    },
+    {
+      "name": "Production dependency audit (lighthouse-service)",
+      "status": "COMPLETED",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/dokor/argos/actions/runs/38747546338/job/116465298187"
+    },
+    {
+      "name": "Playwright checks",
+      "status": "COMPLETED",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/dokor/argos/actions/runs/38747546330/job/116465128802"
+    }
+  ],
+  "limitations": "Read-only GitHub merge decision; no merge mutation attempted and no bypass used."
+}

@@ -2,12 +2,8 @@ name: Authentication UX E2E
 on:
   workflow_dispatch:
   pull_request:
-    paths:
-      - 'apps/console-web/**'
-      - 'apps/api-backend/src/**/account/**'
-      - 'apps/api-backend/src/test/java/com/dokor/argos/services/domain/report/AccountBrowserFixture.java'
-      - 'scripts/e2e/auth-experience.mjs'
-      - '.github/workflows/auth-experience.yml'
+  push:
+    branches: [main]
 permissions:
   contents: read
 concurrency:

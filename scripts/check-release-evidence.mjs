@@ -4,7 +4,7 @@ import { pathToFileURL } from 'node:url';
 export const REQUIRED_CHECKS = [
   'API backend tests', 'Frontend checks', 'Lighthouse checks', 'Playwright checks',
   'MariaDB integration (11.4)',
-  'Controlled audit E2E', 'Secret scan',
+  'Controlled audit E2E', 'auth', 'Secret scan',
   'Audit egress and browser isolation',
   'Production dependency audit (console-web)',
   'Production dependency audit (playwright-service)',

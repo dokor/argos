@@ -12,6 +12,7 @@ En cas d'échec de détection, les jobs conservent un repli vers l'exécution.
 | Lighthouse checks / Playwright checks | [ci.yml](../../.github/workflows/ci.yml) | Syntaxe, contrats HTTP/concurrence et probe négative |
 | Intégration DB | [MariaDB](mariadb.md) | Migrations, transactions, droits et concurrence sur MariaDB 11.4 |
 | Controlled audit E2E | [Procédure](controlled-e2e.md) | Navigateur, pipeline, fixtures contrôlées et restauration |
+| auth | [Authentication UX E2E](../../.github/workflows/auth-experience.yml) | Inscription, email capturé, vérification, connexion, reset et navigation FR/EN |
 | Secrets et dépendances | [Secrets](../security/secret-remediation.md), workflows dédiés | Arbre/commits introduits, dépendances npm de production |
 
 Java 21, Node 24.21.0 et Ubuntu 24.04 sont les versions fixées dans ci.yml lors
@@ -29,7 +30,7 @@ Installer les dépendances de chaque application, puis lancer ses commandes de
 ci.yml. Pour les helpers sans dépendances applicatives, depuis la racine :
 
 ```sh
-node --test scripts/ci/changed-paths.test.mjs scripts/check-release-evidence.test.mjs scripts/release/inspect-runtime.test.mjs
+node --test scripts/ci/changed-paths.test.mjs scripts/ci/frontend-build-pipelines.test.mjs scripts/check-release-evidence.test.mjs scripts/release/inspect-runtime.test.mjs
 ```
 
 Depuis chaque application JS :
@@ -61,8 +62,20 @@ L'incident d'allocation du 5 octobre 2026 est consultable dans l'historique Git.
 
 ## Protection de main et release
 
-La présence d'un workflow ne prouve pas l'enforcement GitHub. L'administrateur
-doit confronter les noms de checks actuels aux règles, vérifier les possibilités
-de contournement et constater le refus d'une PR avec check rouge ou manquant.
+Le ruleset [main: PR and required CI](https://github.com/dokor/argos/rules/25165356)
+est actif depuis le 15 octobre 2026 : PR obligatoire, douze checks issus de
+GitHub Actions, branche à jour, aucun acteur de contournement, suppression et
+force push bloqués. Aucune approbation d'un second compte n'est imposée.
+La configuration et les preuves négatives sont dans
+[Protection de main](main-protection.md). Un check absent bloque la fusion ;
+les jobs conditionnels `SKIPPED` sont acceptés par GitHub pour les chemins non
+concernés. Le dossier de release exige pour sa part des succès réellement
+exécutés sur la révision candidate, y compris `auth`.
+
+Le workflow d'authentification se déclenche sur chaque PR et push main pour
+éviter qu'un filtre de chemins laisse ce check obligatoire absent. Son nom
+de job `auth` fait partie du contrat de protection : coordonner tout renommage
+avec le ruleset et le vérificateur du dossier de release.
+
 Le [snapshot V1](../release/v1-readiness-2026-10-05.md) conserve les observations
 datées et validations différées ; il ne décrit pas la configuration actuelle.
