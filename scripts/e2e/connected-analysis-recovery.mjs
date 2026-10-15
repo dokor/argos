@@ -31,11 +31,15 @@ try {
     });
     const prefix=lang==='en'?'/en':'';
     await page.goto(base+prefix+'/account/analyses/new');
-    const launch=page.getByRole('button',{name:lang==='fr'?'Lancer l’analyse':'Start analysis',exact:true});
-    await page.getByLabel(lang==='fr'?'URL de la page':'Page URL',{exact:true}).fill(fixture.normalizedUrl);
+    const input=page.getByLabel(lang==='fr'?'URL de la page':'Page URL',{exact:true});
+    const form=page.locator('form').filter({has:input});
+    const launch=form.getByRole('button',{name:lang==='fr'?'Lancer l’analyse':'Start analysis',exact:true});
+    await input.fill(fixture.normalizedUrl);
+    // Wait for profiles and quota before exercising the keyboard submission.
+    await launch.click({trial:true});
     await launch.focus();await page.keyboard.press('Enter');
-    await page.getByRole('button',{name:lang==='fr'?'Réessayer':'Try again',exact:true}).waitFor();
-    assert.equal(admissions,1);
+    await form.getByRole('button',{name:lang==='fr'?'Réessayer':'Try again',exact:true}).waitFor();
+    assert.equal(admissions,1,'The analysis retry must follow exactly one admission');
     assert.ok(await page.getByLabel(lang==='fr'?'URL de la page':'Page URL',{exact:true}).getAttribute('readonly')!==null);
     await page.evaluate(()=>document.fonts.ready);
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth+1));
