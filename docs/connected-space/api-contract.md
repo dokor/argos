@@ -77,6 +77,7 @@ est transversal. Statut terminal : tous complets→COMPLETED ; tous sans rapport
 score:{value:number|null,provisional:boolean,reason:string|null},
 coverage:{ratio:number|null,version:string|null}, criticalCount, importantCount,
 moduleStatuses, failureReason nullable, reportAvailable:boolean.
+Extension #587 : collectionGaps optionnel (256 maximum), identifiants ruleKey/module et code de motif assaini uniquement, sans preuve brute.
 Si aucun rapport, les compteurs de constats sont null, pas 0. Une projection
 liste peut résumer les modules ; le run fournit le détail complet.
 

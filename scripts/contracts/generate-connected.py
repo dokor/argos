@@ -101,15 +101,23 @@ for name,schema in SCHEMAS.items():
         ts.append('export type '+name+' = typeof '+values+'[number];\n')
         continue
     props=schema['properties']
-    if set(schema['required']) != set(props) or schema.get('additionalProperties') is not False:
-        raise ValueError('Records must explicitly declare every field, including nullable fields: '+name)
+    required_fields = set(schema['required'])
+    if not required_fields <= set(props) or schema.get('additionalProperties') is not False:
+        raise ValueError('Records must explicitly declare their closed fields: '+name)
+    if any(not value.get('nullable') for field,value in props.items() if field not in required_fields):
+        raise ValueError('Optional record fields must explicitly support null for older payloads: '+name)
     java.extend(['', '    @JsonInclude(JsonInclude.Include.ALWAYS)', '    public record '+name+'(',
-        ',\n'.join('        @JsonProperty(value = "'+field+'", required = true) '+java_type(s)+' '+field for field,s in props.items()), '    ) {', '        public '+name+' {'])
+        ',\n'.join('        @JsonProperty(value = "'+field+'", required = '+str(field in required_fields).lower()+') '+java_type(s)+' '+field for field,s in props.items()), '    ) {'])
+    if required_fields != set(props):
+        parameters = ', '.join(java_type(s)+' '+field for field,s in props.items() if field in required_fields)
+        arguments = ', '.join(field if field in required_fields else 'null' for field in props)
+        java.extend(['        public '+name+'('+parameters+') {', '            this('+arguments+');', '        }'])
+    java.append('        public '+name+' {')
     for field,s in props.items():
-        java.extend('            '+line for line in validators(field,s))
+        java.extend('            '+line for line in validators(field,s,field in required_fields))
     java.extend(['        }','        @JsonAnySetter public void rejectUnknown(String name, Object value) {',
         '            throw new IllegalArgumentException("Unknown connected field");', '        }','    }'])
-    ts.extend(['export type '+name+' = {', *['  readonly '+field+': '+ts_type(s)+';' for field,s in props.items()], '};',''])
+    ts.extend(['export type '+name+' = {', *['  readonly '+field+('' if field in required_fields else '?')+': '+ts_type(s)+';' for field,s in props.items()], '};',''])
 java.append('}')
 outputs={ROOT/'apps/api-backend/src/main/java/com/dokor/argos/services/connected/contract/ConnectedContracts.java':'\n'.join(java)+'\n',
  ROOT/'apps/console-web/src/lib/connected/contracts.ts':'\n'.join(ts)}

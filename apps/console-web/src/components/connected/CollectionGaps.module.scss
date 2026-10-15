@@ -1,0 +1,8 @@
+.gaps { margin-block: 8px; overflow-wrap: anywhere; }
+.gaps p { margin-block: 6px; }
+.gaps summary { cursor: pointer; min-height: 44px; padding-block: 10px; }
+.gaps summary:focus-visible { outline: 3px solid var(--argos-brand); outline-offset: 3px; }
+.gaps ul, .repeated ul { list-style: disc; padding-left: 22px; }
+.repeated { margin-block: 16px; border-bottom: 1px solid var(--argos-border); padding-bottom: 16px; }
+.repeated h3 { font-weight: 650; }
+.repeated p { max-width: 75ch; margin-block: 8px; color: var(--argos-text-muted); }

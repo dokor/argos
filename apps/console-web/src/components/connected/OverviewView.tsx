@@ -1,4 +1,5 @@
 "use client";
+import CollectionGaps, { RepeatedCollectionGaps } from "./CollectionGaps";
 import { useEffect } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "@/components/LocalizedLink";
@@ -78,6 +79,7 @@ export default function OverviewView() {
           <Link className={d.site} href={"/account/sites/" + page.domainId}>
             {page.hostname}
           </Link>
+          {r && <CollectionGaps page={r} />}
           <p className={d.states}>
             {a ? (
               <>
@@ -306,6 +308,7 @@ export default function OverviewView() {
                   <p className={d.meta}>
                     {number(data.pages.total)} {c.results}
                   </p>
+                  <RepeatedCollectionGaps pages={data.pages.items.flatMap(page => page.result ? [page.result] : [])} />
                   {data.pages.items.length ? (
                     <ul className={d.list}>{data.pages.items.map(pageRow)}</ul>
                   ) : (

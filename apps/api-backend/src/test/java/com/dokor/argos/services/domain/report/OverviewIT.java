@@ -180,6 +180,27 @@ class OverviewIT extends MariaDbReportFixture {
     }
 
     @Test
+    void collectionGapsBelongToTheExactLatestPrivateReport() throws Exception {
+        seed();
+        var gap = new DiagnosticProjection.Rule("ssl.grade", "a".repeat(64), "security", List.of("ssl"),
+                "UNAVAILABLE", "TIMEOUT", null, null, null, null, false);
+        var diagnostic = new DiagnosticProjection(1, true, 0L, 0L, .5, "fixture", List.of(gap));
+        execute("UPDATE ARG_AUDIT_REPORT SET diagnostic_json=? WHERE run_id=100", mapper.writeValueAsString(diagnostic));
+        execute("UPDATE ARG_AUDIT_RUN SET module_statuses=? WHERE id=100", "[{\"id\":\"ssl\",\"status\":\"FAILED\"}]");
+        var page = service.pages(a, new AccountOverviewDao.Filter(null, null, null, 100, 0)).items().stream()
+                .filter(p -> p.pageId().equals("100")).findFirst().orElseThrow();
+        assertEquals("100", page.result().runId());
+        assertEquals(ModuleStatus.FAILED, page.result().moduleStatuses().get("ssl"));
+        assertEquals("TIMEOUT", page.result().collectionGaps().getFirst().reason());
+        assertEquals(0, service.pages(b, filter(null, 100, 0)).total());
+        run(9000, 100, 10, "FAILED", "2026-10-13 09:00:00");
+        var newer = service.pages(a, new AccountOverviewDao.Filter(null, null, null, 100, 0)).items().stream()
+                .filter(p -> p.pageId().equals("100")).findFirst().orElseThrow();
+        assertEquals("9000", newer.result().runId());
+        assertTrue(newer.result().collectionGaps().isEmpty());
+    }
+
+    @Test
     void canonicalCountersAndFilteredPaginationUseTheSamePrivateProjection() throws Exception {
         seed();
         var all = service.overview(a, filter(null, 2, 0));

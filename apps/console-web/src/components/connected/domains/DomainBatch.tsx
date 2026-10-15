@@ -1,4 +1,5 @@
 "use client";
+import { RepeatedCollectionGaps } from "../CollectionGaps";
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "@/components/LocalizedLink";
@@ -374,6 +375,7 @@ export default function DomainBatch({
                 }
               >
                 <p className={d.muted}>{c.coverageHint}</p>
+                <RepeatedCollectionGaps pages={batch.incompletePages} />
                 <PageList
                   pages={batch.incompletePages}
                   returnTo={returnTo}

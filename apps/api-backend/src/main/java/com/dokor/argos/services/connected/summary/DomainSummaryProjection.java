@@ -63,7 +63,8 @@ public final class DomainSummaryProjection {
                         published && d.available() ? d.importantCount() : null,
                         modules,
                         s.status().equals("FAILED") ? "ANALYSIS_FAILED" : null,
-                        published);
+                        published,
+                        published ? CollectionDiagnostics.gaps(row.diagnostic()) : List.of());
         return new Page(result, published ? d : DiagnosticProjection.unknown());
     }
 
