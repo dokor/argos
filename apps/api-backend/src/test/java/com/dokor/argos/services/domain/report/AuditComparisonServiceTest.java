@@ -6,6 +6,30 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class AuditComparisonServiceTest {
+    @Test void frozenCollectorProfileAndExactScopeAreRequiredForNewComparisons() throws Exception {
+        var mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        var raw = mapper.valueToTree(fixture(13, "policy", .5, MeasurementCoverage.State.MEASURED, false));
+        var calc = (com.fasterxml.jackson.databind.node.ObjectNode) raw.path("scores").path("calculation");
+        calc.put("measurementFingerprint", "collector-a"); calc.put("scopeFingerprint", "scope-a");
+        var previous = mapper.treeToValue(raw, ReportDto.class);
+        assertEquals(AuditComparisonService.Reason.COMPARABLE, AuditComparisonService.compare(previous, previous).reason());
+        calc.put("measurementFingerprint", "collector-b");
+        assertEquals(AuditComparisonService.Reason.METHODOLOGY_CHANGED, AuditComparisonService.compare(previous, mapper.treeToValue(raw, ReportDto.class)).reason());
+        calc.put("measurementFingerprint", "collector-a"); calc.put("scopeFingerprint", "scope-b");
+        assertEquals(AuditComparisonService.Reason.SCOPE_CHANGED, AuditComparisonService.compare(previous, mapper.treeToValue(raw, ReportDto.class)).reason());
+        calc.remove("scopeFingerprint");
+        assertEquals(AuditComparisonService.Reason.EVIDENCE_MISSING, AuditComparisonService.compare(previous, mapper.treeToValue(raw, ReportDto.class)).reason());
+    }
+    @Test void changedOrRedactedDestinationCannotProduceAnImprovementClaim() {
+        var base = fixture(13, "frozen", .5, MeasurementCoverage.State.MEASURED, false);
+        var previous = base.withPageIdentity(ReportPageIdentity.from("https://example.com", "https://example.com/a"));
+        var changed = base.withPageIdentity(ReportPageIdentity.from("https://example.com", "https://example.com/b"));
+        assertEquals(AuditComparisonService.Reason.SCOPE_CHANGED, AuditComparisonService.compare(previous, changed).reason());
+        var redacted = base.withPageIdentity(ReportPageIdentity.from("https://example.com", "https://example.com/a?token=secret"));
+        assertEquals(AuditComparisonService.Reason.EVIDENCE_MISSING, AuditComparisonService.compare(previous, redacted).reason());
+        assertEquals(AuditComparisonService.Reason.EVIDENCE_MISSING, AuditComparisonService.compare(base, previous).reason());
+        assertEquals(AuditComparisonService.Reason.COMPARABLE, AuditComparisonService.compare(previous, previous).reason());
+    }
     @Test void changedMeasurementProvenanceOrCoverageVersionPreventsComparison() throws Exception {
         var mapper = new com.fasterxml.jackson.databind.ObjectMapper();
         var previous = fixture(11, "frozen", .5, MeasurementCoverage.State.MEASURED, false);

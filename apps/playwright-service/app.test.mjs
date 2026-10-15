@@ -9,26 +9,32 @@ async function serverFor(t, chromium) {
   t.after(() => new Promise(resolve => { server.close(resolve); server.closeAllConnections(); }));
   return 'http://127.0.0.1:' + server.address().port;
 }
-function collector({ navigationFailure = false, contextFailure = false, cdpFailure = null } = {}) {
+function collector({ navigationFailure = false, contextFailure = false, cdpFailure = null,
+  jsCount = 1, contentLength = '321', failureCount = 1, finalUrl = 'https://www.example.co.uk/final' } = {}) {
   let closed = 0, launched = 0;
   const handlers = {};
   const contextHandlers = {};
   let rejectInstrumentation;
   const page = {
     on: (name, handler) => { handlers[name] = handler; },
-    url: () => 'https://www.example.co.uk/final',
+    url: () => finalUrl,
     goto: async () => {
       handlers.console({ type: () => 'error', text: () => 'fixture',
         location: () => ({ url: 'https://assets.example.co.uk/script.js' }) });
       handlers.console({ type: () => 'error', text: () => 'third party',
         location: () => ({ url: 'https://other.test/script.js' }) });
-      handlers.pageerror(new Error('fixture page error'));
+      if (finalUrl.startsWith('https://other.test/')) handlers.console({ type: () => 'error',
+        location: () => ({ url: 'https://other.test/second.js' }) });
+      for (let i = 0; i < jsCount; i++) handlers.pageerror(new Error('fixture page error'));
       handlers.request({ url: () => 'https://assets.example.co.uk/script.js',
         resourceType: () => 'script', method: () => 'GET' });
-      handlers.requestfailed({ url: () => 'https://assets.example.co.uk/script.js?token=private-secret', resourceType: () => 'script', failure: () => ({errorText:'net::ERR_CONNECTION_RESET'}) });
+      for (let i = 0; i < failureCount; i++) handlers.requestfailed({ url: () => 'https://assets.example.co.uk/script.js?token=private-secret', resourceType: () => 'script', failure: () => ({errorText:'net::ERR_CONNECTION_RESET'}) });
       await handlers.response({ url: () => 'https://other.test/api', status: () => 503,
-        headers: () => ({ 'content-length': '321' }) });
+        headers: () => ({ 'content-length': contentLength }) });
       if (navigationFailure) throw new Error('Timeout fixture');
+      handlers.domcontentloaded();
+      await new Promise(resolve => setTimeout(resolve, 15));
+      handlers.load();
     },
     waitForLoadState: async () => {},
     waitForTimeout: async () => {}
@@ -99,6 +105,7 @@ test('runtime contract retains metrics and partitions errors using the final dom
   assert.equal(report.network.status5xxFirstParty, 0);
   assert.equal(report.network.status5xxThirdParty, 1);
   assert.equal(report.network.totalBytesEstimated, 321);
+  assert.ok(report.timings.loadMs > report.timings.domContentLoadedMs);
   const evidence=report.network.observedEvidence;
   assert.equal(evidence.version,'observed-evidence-v1');
   assert.equal(evidence.items[0].ownership,'FIRST_PARTY');
@@ -107,6 +114,28 @@ test('runtime contract retains metrics and partitions errors using the final dom
   assert.equal(evidence.items[1].status,503);
   assert.doesNotMatch(JSON.stringify(evidence),/private-secret|script.js|\?token/);
   assert.equal(fake.closed(), 1);
+});
+
+test('sample caps never cap the JS count or fabricate complete network totals', async t => {
+  const fake = collector({ jsCount: 37, failureCount: 301, contentLength: undefined });
+  // Explicit empty header models chunked/compressed responses without Content-Length.
+  const unknownBytes = collector({ contentLength: '' });
+  const report = await (await analyze(await serverFor(t, fake.chromium))).json();
+  assert.equal(report.jsErrors.count, 37);
+  assert.equal(report.jsErrors.samples.length, 10);
+  assert.equal(report.network.failedRequests, null);
+  assert.equal(report.network.failedRequestsFirstParty, null);
+  const unknown = await (await analyze(await serverFor(t, unknownBytes.chromium))).json();
+  assert.equal(unknown.network.totalBytesEstimated, null);
+});
+
+test('console ownership follows a redirect to another registrable domain', async t => {
+  const fake = collector({ finalUrl: 'https://other.test/final' });
+  const report = await (await analyze(await serverFor(t, fake.chromium))).json();
+  assert.equal(report.console.errors, 3);
+  assert.equal(report.console.errorsFirstParty, 2);
+  assert.equal(report.network.failedRequestsFirstParty, 0);
+  assert.equal(report.network.status5xxFirstParty, 1);
 });
 
 test('navigation timeout returns partial observations and closes the browser', async t => {

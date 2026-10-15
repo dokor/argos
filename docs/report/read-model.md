@@ -63,3 +63,9 @@ Les tests couvrent aussi le contrat actuel, les catégories vides, les ids absen
 et les collisions, les priorités regroupées, la conservation des scores et
 sévérités, les filtres, le focus et les compteurs du rendu. Le backend et le barème
 ne changent pas ; les rapports stockés ne sont pas migrés.
+
+## Synthèse optionnelle et preuves
+
+La synthèse générée est exclue lorsque le score est indisponible, la couverture insuffisante, un challenge détecté ou aucun constat disponible. Chaque point doit référencer une clé de constat réellement transmise au modèle (`sourceFindingKeys`, même ordre que `keyPoints`). Les versions FR/EN doivent citer les mêmes constats ; les clés absentes, inventées, répétées ou de cardinalité incohérente rejettent la synthèse entière. Les références sont conservées dans le rapport ; les anciens JSON sans références restent lisibles mais ne satisfont pas la validation d'une nouvelle synthèse.
+
+Cette validation garantit l'existence des sources, pas l'exactitude sémantique de toute paraphrase générée. La synthèse reste un commentaire optionnel, sans intervention dans les notes, les constats techniques ou leur classement. La calibration des impacts commerciaux, les garanties de conformité et la validation humaine d'un texte libre ne sont pas déduites des scores.
