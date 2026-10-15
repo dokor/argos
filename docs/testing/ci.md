@@ -77,5 +77,5 @@ Le workflow d'authentification se déclenche sur chaque PR et push main pour
 de job `auth` fait partie du contrat de protection : coordonner tout renommage
 avec le ruleset et le vérificateur du dossier de release.
 
-Le [snapshot V1](../release/v1-readiness-2026-10-05.md) conserve les observations
+Le [snapshot V1](../archive/v1-readiness-2026-10-05.md) conserve les observations
 datées et validations différées ; il ne décrit pas la configuration actuelle.

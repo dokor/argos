@@ -14,7 +14,7 @@ dans son propre `docker compose` (cf. `infra/compose/<service>/`).
 Versions proposées par #284/#289 ; relever Node et digests effectivement actifs
 avant acceptation Raspberry. Services : Node ≥22.19 ; CI : Node 24.21.0.
 Image multi-architecture ne remplace pas les tests ARM64/ressources. Voir le
-[dossier V1](../docs/release/v1-readiness-2026-10-05.md) pour migration et rollback V7.
+[dossier V1](../docs/archive/v1-readiness-2026-10-05.md) pour migration et rollback V7.
 
 Réseau interne partagé : `argos_internal` (externe). `api-backend` les joint via
 `PLAYWRIGHT_SERVICE_URL` / `LIGHTHOUSE_SERVICE_URL`.
