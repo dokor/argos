@@ -1,4 +1,5 @@
 "use client";
+import { quotaResetDate } from "@/lib/quota-date";
 import { useEffect } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "@/components/LocalizedLink";
@@ -219,7 +220,7 @@ export default function OverviewView() {
                         ? c.unlimited
                         : number(data.usage.available)
                     }
-                    detail={`${c.reserved}: ${number(data.usage.reserved)} · ${c.resets} ${date(data.usage.resetsAt)}`}
+                    detail={`${c.reserved}: ${number(data.usage.reserved)} · ${c.resets} ${quotaResetDate(data.usage.resetsAt, lang, data.usage.timezone)}`}
                     href="/account/usage"
                     actionLabel={compact.quota}
                   />
