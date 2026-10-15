@@ -21,6 +21,23 @@ public final class AuditComparisonService {
             return unavailable(Reason.EVIDENCE_MISSING,false);
         boolean changed=!Objects.equals(ca.version(),cb.version()) || Double.compare(ca.threshold(),cb.threshold())!=0 || !sameCoverage(ca,cb);
         if(!Objects.equals(previous.url(),current.url())) return unavailable(Reason.SCOPE_CHANGED,changed);
+        var oldPage = previous.pageIdentity(); var newPage = current.pageIdentity();
+        boolean exactScope = a.scopeFingerprint() != null && b.scopeFingerprint() != null;
+        if (a.measurementFingerprint() != null || b.measurementFingerprint() != null) {
+            if (a.measurementFingerprint() == null || b.measurementFingerprint() == null || !exactScope)
+                return unavailable(Reason.EVIDENCE_MISSING, changed);
+            if (!Objects.equals(a.measurementFingerprint(), b.measurementFingerprint()))
+                return unavailable(Reason.METHODOLOGY_CHANGED, changed);
+        }
+        if (exactScope && !Objects.equals(a.scopeFingerprint(), b.scopeFingerprint()))
+            return unavailable(Reason.SCOPE_CHANGED, changed);
+        if (!exactScope && (oldPage != null || newPage != null)) {
+            if (oldPage == null || newPage == null || oldPage.redacted() || newPage.redacted()
+                || oldPage.destination() == null || newPage.destination() == null)
+                return unavailable(Reason.EVIDENCE_MISSING, changed);
+            if (!Objects.equals(oldPage.destination(), newPage.destination()))
+                return unavailable(Reason.SCOPE_CHANGED, changed);
+        }
         if(a.scoringVersion()!=b.scoringVersion() || !Objects.equals(a.scoringFingerprint(),b.scoringFingerprint()) || !a.configuredDomainWeights().equals(b.configuredDomainWeights())) return unavailable(Reason.METHODOLOGY_CHANGED,changed);
         if(changed) return unavailable(Reason.COVERAGE_CHANGED,true);
         if(ca.provisional() || cb.provisional()) return unavailable(Reason.INSUFFICIENT_COVERAGE,false);
@@ -55,7 +72,7 @@ public final class AuditComparisonService {
         if(previous.size()!=a.checks().size() || previous.size()!=b.checks().size()) return false;
         for(var check:b.checks()) {
             var earlier=previous.remove(check.key());
-            if(earlier==null || !Objects.equals(earlier.domain(),check.domain()) || !Objects.equals(earlier.module(),check.module()) || earlier.state()!=check.state() || Double.compare(earlier.weight(),check.weight())!=0 || !Objects.equals(earlier.reason(),check.reason()) || !Objects.equals(earlier.measurementModule(),check.measurementModule()) || !Objects.equals(earlier.measurementSources(),check.measurementSources())) return false;
+            if(earlier==null || !Objects.equals(earlier.domain(),check.domain()) || !Objects.equals(earlier.module(),check.module()) || earlier.state()!=check.state() || Double.compare(earlier.weight(),check.weight())!=0 || !Objects.equals(earlier.reason(),check.reason()) || !Objects.equals(earlier.confidence(),check.confidence()) || !Objects.equals(earlier.measurementModule(),check.measurementModule()) || !Objects.equals(earlier.measurementSources(),check.measurementSources())) return false;
         }
         return previous.isEmpty();
     }

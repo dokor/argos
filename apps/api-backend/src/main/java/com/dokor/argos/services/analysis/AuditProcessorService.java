@@ -286,6 +286,9 @@ public class AuditProcessorService {
 
                 Map<String, String> meta = new LinkedHashMap<>();
                 meta.put("generator", "argos-api-backend");
+                meta.put("measurementFingerprint", MeasurementContract.fingerprint(run.getProfileSnapshot()));
+                String scopeFingerprint = MeasurementContract.scope(context.normalizedUrl(), context.finalUrl());
+                if (scopeFingerprint != null) meta.put("scopeFingerprint", scopeFingerprint);
                 meta.put("schemaVersion", String.valueOf(REPORT_SCHEMA_VERSION));
                 meta.put("scoringVersion", String.valueOf(scoringVersion));
                 meta.put("scoringFingerprint", scoringFingerprint);

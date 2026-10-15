@@ -107,7 +107,7 @@ public class PublicReportComposer {
             url,
             new ReportDto.Site(siteTitle, null),
             new ReportDto.Scores(global100, completeness, byCategoryWithCounts,
-                score != null && score.global().maxScore() > 0.0, calculation(score), score == null ? null : score.coverage(), ModuleExecution.from(internalReport.meta())),
+                score != null && score.global().maxScore() > 0.0, calculation(score, internalReport.meta()), score == null ? null : score.coverage(), ModuleExecution.from(internalReport.meta())),
             new ReportDto.Summary(oneLiner, priorities, null),
             issues,
             tech,
@@ -120,7 +120,7 @@ public class PublicReportComposer {
             .findFirst().orElse(null))).withMeasurements(ObservedMeasurements.from(internalReport));
     }
 
-    private static ReportDto.ScoreCalculation calculation(AuditScoreReport score) {
+    private static ReportDto.ScoreCalculation calculation(AuditScoreReport score, Map<String, String> meta) {
         // Un ancien barème n'a pas de composition par domaine : ne pas l'inventer.
         if (score == null || score.byDomain() == null || score.byDomain().isEmpty()
             || score.domainWeights() == null) return null;
@@ -130,7 +130,8 @@ public class PublicReportComposer {
                 score.domainWeights().getOrDefault(domain.id(), 0.0))).toList(),
             score.configuredDomainWeights(),
             score.checks().stream().filter(check -> check.weight()>0).map(check -> new ReportDto.CheckCalculation(
-                check.key(),check.moduleId(),pickCategoryKey(check.moduleId(),check.tags()),check.weight(),check.score())).toList());
+                check.key(),check.moduleId(),pickCategoryKey(check.moduleId(),check.tags()),check.weight(),check.score())).toList(),
+            meta == null ? null : meta.get("measurementFingerprint"), meta == null ? null : meta.get("scopeFingerprint"));
     }
 
     private static AccessibilityEvidence accessibilityEvidence(AuditReportJson report) {

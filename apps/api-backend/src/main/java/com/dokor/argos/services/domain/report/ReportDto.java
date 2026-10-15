@@ -158,8 +158,14 @@ public record ReportDto(
         String scoringFingerprint,
         List<DomainCalculation> domains,
         java.util.Map<String,Double> configuredDomainWeights,
-        List<CheckCalculation> checks
+        List<CheckCalculation> checks,
+        String measurementFingerprint,
+        String scopeFingerprint
     ) {
+        public ScoreCalculation(int version, String fingerprint, List<DomainCalculation> domains,
+                                java.util.Map<String, Double> weights, List<CheckCalculation> checks) {
+            this(version, fingerprint, domains, weights, checks, null, null);
+        }
         public ScoreCalculation(int version,String fingerprint,List<DomainCalculation> domains) {
             this(version,fingerprint,domains,null,null);
         }
