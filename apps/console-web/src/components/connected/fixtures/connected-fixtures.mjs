@@ -8,6 +8,12 @@ const counts = { selectedPages: 6, completePages: 5, partialPages: 1, failedPage
 const commonFindings = ["Script de navigation introuvable", "Image principale trop lourde", "Champ de formulaire sans nom accessible"].map((title, i) => ({ ruleKey: ["runtime.network.failed_requests", "lighthouse.audit.largest-contentful-paint", "lighthouse.audit.label"][i], definitionVersion: "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", category: i === 2 ? "a11y" : "performance", provenance: [i ? "lighthouse" : "runtime"], severity: i ? "IMPORTANT" : "CRITICAL", titleKey: "fixture", title, impact: "Une ressource ou un élément limite le parcours observé.", recommendation: "Vérifier la ressource commune, corriger son intégration et relancer les pages concernées avec le même profil.", affectedPages: 6-i, evaluatedPages: 6, selectedPages: 6, examplePageIds: ["1","2","3","4","5"], evidenceAvailable: true, notEvaluatedPages: 0, exclusions: [] }));
 const batch = { id: "201", domainId: "101", discoveryId: "301", hostname: "atelier.example", profileSnapshot: profile, createdAt: date, finishedAt: date, status: "PARTIAL", cancelRequested: false, counts, commonFindings, problematicPages: pages.slice(0,3), incompletePages: pages.slice(4,5), usage: { reserved: 0, counted: 6, released: 0 }, snapshotAt: date, version: 1, discovery: { eligiblePages: 6, excludedPages: 2, truncated: true, stopReason: "URL_LIMIT", effectiveLimits: { maxUrls: 6, maxDepth: 2, durationSeconds: 60, requestsPerHost: 2 } } };
 export function connectedFixture(path, params, baseReport, usage) {
+  if(path === "/api/account/admin/runs/401") return {id:"401",userId:"101",site:"atelier.example",status:"COMPLETED",createdAt:date,reportAvailable:true,modules:{http:"COMPLETED",ssl:"FAILED",observatory:"FAILED",zap:"FAILED"},failureCode:null,attempts:1};
+  if(path === "/api/account/admin/runs/401/report") {
+    const report=baseReport("review-partial");
+    report.scores.coverage.checks.push(...["ssl","observatory"].map(module=>({key:module+".grade",domain:"security",module,weight:1,state:"UNAVAILABLE",reason:"POLICY_DISABLED",confidence:"HIGH"})));
+    return report;
+  }
   if(path === "/api/account/auth/providers") return {providers:[]};
   if(path === "/api/account/methods") return [{id:"1",provider:"password"}];
   if(path === "/api/account/sessions") return [{id:"1",createdAt:date,current:true}];
@@ -18,9 +24,10 @@ export function connectedFixture(path, params, baseReport, usage) {
   const history=path.match(/^\/api\/account\/urls\/([1-6])\/history$/);
   if(history) {const p=pages[Number(history[1])-1];return {context:{siteId:"101",siteUrlId:p.pageId,normalizedUrl:p.normalizedUrl},items:[{runId:p.runId,status:"COMPLETED",createdAt:date,finishedAt:date,reportAvailable:true,publishedAt:date,expiresAt:null,globalScore:p.score.value,scoringVersion:12,coverage:1,provisional:false,comparison:null}],nextCursor:null};}
   if(path === "/api/account/overview") {
-    const tracked = pages.map(page => ({ pageId: page.pageId, domainId: "101", hostname: "atelier.example", normalizedUrl: page.normalizedUrl, latestAttempt: attempt(page), latestAvailableReport: { runId: page.runId, publishedAt: date, expiresAt: null, score: page.score }, result: page }));
+    const overviewPages = pages.map(page => ({ ...page, completeness: "PARTIAL", score: {...page.score, provisional:true}, coverage:{ratio:.82,version:"fixture"}, moduleStatuses:{http:"COMPLETED",ssl:"FAILED",observatory:"FAILED"}, collectionGaps:[{ruleKey:"ssl.grade",module:"ssl",reason:"POLICY_DISABLED"},{ruleKey:"observatory.grade",module:"observatory",reason:"POLICY_DISABLED"}] }));
+    const tracked = overviewPages.map(page => ({ pageId: page.pageId, domainId: "101", hostname: "atelier.example", normalizedUrl: page.normalizedUrl, latestAttempt: attempt(page), latestAvailableReport: { runId: page.runId, publishedAt: date, expiresAt: null, score: page.score }, result: page }));
     const selected = tracked.filter(p => (!params.get("query") || p.normalizedUrl.includes(params.get("query"))) && (params.get("attention") !== "incomplete" || p.result.completeness !== "FULL"));
-    return { snapshotAt: date, scope: "LATEST_ATTEMPT_PER_URL", trackedUrls: 6, priorityUrls: 6, incompleteUrls: 1, activeRuns: 0, usage, recentRuns: pages.map(p => ({ pageId:p.pageId, domainId:"101", hostname:"atelier.example", normalizedUrl: p.normalizedUrl, attempt: attempt(p) })), activeAttempts: [], priorityPages: tracked, pages: { items: selected, total: selected.length, limit: 6, offset: 0 } };
+    return { snapshotAt: date, scope: "LATEST_ATTEMPT_PER_URL", trackedUrls: 6, priorityUrls: 6, incompleteUrls: 6, activeRuns: 0, usage, recentRuns: pages.map(p => ({ pageId:p.pageId, domainId:"101", hostname:"atelier.example", normalizedUrl: p.normalizedUrl, attempt: attempt(p) })), activeAttempts: [], priorityPages: tracked, pages: { items: selected, total: selected.length, limit: 6, offset: 0 } };
   }
   if(path === "/api/account/domains/101/batches/201") return batch;
   if(path === "/api/account/domains/101/batches/201/pages") return { items: pages, total: 6, limit: 100, offset: 0 };
