@@ -101,12 +101,17 @@ public record ReportDto(
 
     public record Scores(
         int global, // 0..100
-        Integer completeness, // 0..100 : part des modules évalués (null si inconnu). Voir issue #101.
+        Integer completeness, // 0..100 : part des modules entièrement réussis (null si inconnu), hors progression terminale.
         List<CategoryScore> byCategory,
         Boolean globalAvailable, // null pour les rapports historiques
         ScoreCalculation calculation,
-        com.dokor.argos.services.analysis.scoring.MeasurementCoverage coverage
+        com.dokor.argos.services.analysis.scoring.MeasurementCoverage coverage,
+        ModuleExecution moduleExecution
     ) {
+        public Scores(int global, Integer completeness, List<CategoryScore> categories, Boolean available,
+                      ScoreCalculation calculation, com.dokor.argos.services.analysis.scoring.MeasurementCoverage coverage) {
+            this(global, completeness, categories, available, calculation, coverage, null);
+        }
         public Scores(int global,Integer completeness,List<CategoryScore> categories,Boolean available,ScoreCalculation calculation) {
             this(global,completeness,categories,available,calculation,null);
         }

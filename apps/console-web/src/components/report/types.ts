@@ -21,8 +21,9 @@ export type Report = {
       configuredDomainWeights?: Record<string, number> | null;
       checks?: Array<{ key: string; module: string; domain: string; weight: number; score: number }> | null;
     } | null;
-    /** Part des modules réellement évalués (0-100). Analyse partielle si < 100. */
+    /** Part des modules entièrement réussis (0-100), distincte de la progression terminale. */
     completeness?: number | null;
+    moduleExecution?: { total: number; completed: number; partial: number; failed: number; skipped: number; pending: number; running: number; terminalPercent: number } | null;
     byCategory: CategoryScore[];
   };
   summary: {
