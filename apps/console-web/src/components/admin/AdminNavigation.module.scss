@@ -1,0 +1,5 @@
+@use '../../styles/tokens' as t;
+.nav { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-block: 16px 24px; }
+.nav a { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 4px; color: t.$text; text-decoration: underline; text-underline-offset: 5px; overflow-wrap: anywhere; }
+.nav a[aria-current] { color: t.$brand; font-weight: 650; text-decoration-thickness: 3px; }
+.nav a:focus-visible { outline: 3px solid t.$brand; outline-offset: 3px; }

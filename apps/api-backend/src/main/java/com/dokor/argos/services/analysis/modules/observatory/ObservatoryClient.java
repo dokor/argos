@@ -38,21 +38,15 @@ public class ObservatoryClient {
         com.dokor.argos.services.analysis.RemoteScanPolicy.requireAllowed(hostname);
         return ExternalServiceCall.timed(logger, "observatory", hostname, () -> {
             URI endpoint = URI.create(apiBase + "/scan?host="
-                + URLEncoder.encode(hostname, StandardCharsets.UTF_8) + "&rescan=false");
+                + URLEncoder.encode(hostname, StandardCharsets.UTF_8));
             return http.postJson(endpoint, null, "application/x-www-form-urlencoded",
                 Duration.ofSeconds(30), Duration.ofSeconds(15), BoundedBodyHandlers.MAX_PAGE_BYTES, Map.of());
         });
     }
 
-    /**
-     * Récupère le détail des tests individuels d'un scan (en-têtes/politiques
-     * évalués, pass/fail, description). Utilisé pour produire des recommandations
-     * actionnables (issue #171). GET /tests?scan={scanId}.
-     */
+    /** Compatibility seam for historical analyzer fixtures; MDN v2 has no tests endpoint. */
     public JsonNode tests(int scanId) throws Exception {
-        return ExternalServiceCall.timed(logger, "observatory-tests", "scan=" + scanId, () -> {
-            return http.getJson(URI.create(apiBase + "/tests?scan=" + scanId),
-                Duration.ofSeconds(30), Duration.ofSeconds(15), BoundedBodyHandlers.MAX_PAGE_BYTES, Map.of());
-        });
+        // MDN v2 exposes aggregate scan measurements only. The retired v1 /tests route is not supported.
+        return com.fasterxml.jackson.databind.node.JsonNodeFactory.instance.objectNode();
     }
 }

@@ -2,7 +2,7 @@ import type { Issue } from "./types";
 import type { Lang } from "@/lib/i18n/routes";
 import { describeObservation, findingQualification, missingLocation } from "./findingPresentation";
 
-export const CATALOGUE_VERSION = "report-content-v3";
+export const CATALOGUE_VERSION = "report-content-v4";
 export type FindingContent = { title: string; observation: string; impact: string; recommendation: string; verification: string; qualification: string; missingInformation: string };
 type Copy = [title: string, impact: string, recommendation: string, verification: string];
 const catalogue: Record<string, Record<Lang, Copy>> = {};
@@ -201,6 +201,9 @@ add(["lighthouse.audit.meta-description"],
 add(["lighthouse.audit.interaction-to-next-paint", "lighthouse.audit.inp-breakdown-insight"],
   ["La réponse aux interactions est à examiner", "Une réponse visuelle tardive peut donner l’impression que le contrôle ne répond pas.", "Reproduire les interactions concernées et examiner les tâches qui retardent la mise à jour visuelle.", "Comparer le délai de réponse aux mêmes interactions dans des conditions comparables."],
   ["Review interaction responsiveness", "A delayed visual response can make a control appear unresponsive.", "Reproduce the affected interactions and inspect tasks delaying the visual update.", "Compare response delays for the same interactions under comparable conditions."]);
+add(["lighthouse.audit.is-crawlable"],
+  ["L’intention d’indexation de la page est à vérifier", "Une directive noindex peut écarter la page des résultats ; elle peut être intentionnelle.", "Confirmer si cette page doit être indexée avant de modifier les directives robots.", "Inspecter meta robots et X-Robots-Tag, puis vérifier leur cohérence avec le périmètre souhaité."],
+  ["Review whether page indexing is intended", "A noindex directive can exclude the page from search results; it may be intentional.", "Confirm whether this page should be indexed before changing robots directives.", "Inspect meta robots and X-Robots-Tag, then check consistency with the intended scope."]);
 export const supportedFindingKeys = Object.keys(catalogue);
 export function cleanEvidence(text?: string | null): string {
   return (text ?? "").replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f\u202a-\u202e\u2066-\u2069]/g, "")
@@ -209,18 +212,26 @@ export function cleanEvidence(text?: string | null): string {
       catch { return "[URL]"; }
     }).slice(0, 4000);
 }
+export function findingEditorial(key: string | null | undefined, lang: Lang) {
+  const copy = key ? catalogue[key]?.[lang] : undefined;
+  const fallback: Copy = lang === "fr"
+    ? ["Contrôle technique à examiner", "L’effet sur les utilisateurs n’est pas documenté pour ce contrôle ; le vérifier sur le parcours concerné.", "Reproduire le contrôle source et identifier les éléments concernés avant de définir la correction.", "Reproduire l’observation puis relancer le contrôle dans les mêmes conditions."]
+    : ["Technical check to review", "The effect on users is not documented for this check; verify it in the affected journey.", "Reproduce the source check and identify the affected elements before defining a correction.", "Reproduce the observation, then repeat the check under the same conditions."];
+  const resolved = copy ?? fallback;
+  return { title: resolved[0], impact: resolved[1], recommendation: resolved[2], verification: resolved[3] };
+}
 export function findingContent(issue: Issue, lang: Lang): FindingContent {
-  const copy = issue.id ? catalogue[issue.id]?.[lang] : undefined;
+  const copy = findingEditorial(issue.id, lang);
   const uncertain = issue.confidence !== "HIGH" && issue.confidence !== "MEDIUM";
   const confirm = lang === "fr" ? "Confirmer le signal et son périmètre avant toute correction. " : "Confirm the signal and its scope before making changes. ";
-  const recommendation = copy?.[2] ?? (lang === "en" ? cleanEvidence(issue.recommendation) : "Reproduire le contrôle source et identifier les éléments concernés avant de définir la correction.");
-  const title = copy?.[0] ?? (lang === "fr" ? "Contrôle technique à examiner" : cleanEvidence(issue.title) || "Technical check to review");
+  const recommendation = copy.recommendation;
+  const title = copy.title;
   return {
     title,
     observation: describeObservation(issue, title, lang),
-    impact: copy?.[1] ?? (lang === "fr" ? "L’effet sur les utilisateurs n’est pas documenté pour ce contrôle ; le vérifier sur le parcours concerné." : "The effect on users is not documented for this check; verify it in the affected journey."),
+    impact: copy.impact,
     recommendation: recommendation ? (uncertain ? confirm : "") + recommendation : confirm.trim(),
-    verification: copy?.[3] ?? (lang === "fr" ? "Reproduire l’observation puis relancer le contrôle dans les mêmes conditions." : "Reproduce the observation, then repeat the check under the same conditions."),
+    verification: copy.verification,
     qualification: findingQualification(issue, lang), missingInformation: missingLocation(issue, lang),
   };
 }

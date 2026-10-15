@@ -1,0 +1,33 @@
+.page { h2 { font-size: 20px; font-weight: 600; } h3 { font-size: 14px; font-weight: 600; } p { margin: 8px 0; overflow-wrap: anywhere; } }
+.hero,.metric,.findings,.secondary { background: var(--argos-surface); border: 1px solid var(--argos-border); border-radius: 10px; padding: 22px; min-width: 0; }
+.heroTop { display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap; align-items: center; }
+.eyebrow { text-transform: uppercase; letter-spacing: .12em; font-size: 12px; color: var(--argos-text-muted); }
+.score { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; font-variant-numeric: tabular-nums; }
+.score > strong { font-size: 46px; font-weight: 600; line-height: 1.2; }
+.score > :last-child { margin-left: 12px; align-self: center; }
+.identity,.muted { color: var(--argos-text-muted); font-size: 13px; line-height: 1.6; }
+.metrics { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; margin-top: 16px; }
+.metric > strong { display: block; font-size: 28px; font-weight: 600; margin-top: 12px; font-variant-numeric: tabular-nums; }
+.metric > strong span { font-size: 14px; }
+.metric p { color: var(--argos-text-muted); font-size: 13px; }
+.finding { border-bottom: 1px solid var(--argos-border); scroll-margin-top: 110px; }
+.finding:last-child { border-bottom: 0; }
+.finding > summary { display: flex; gap: 16px; align-items: center; justify-content: space-between; min-height: 76px; padding: 18px 0; cursor: pointer; list-style: none; }
+.finding > summary::-webkit-details-marker { display: none; }
+.finding strong { font-weight: 600; }
+.finding small { display: block; color: var(--argos-text-muted); margin-top: 6px; }
+.chevron { color: var(--argos-brand); }
+.finding[open] > summary .chevron { font-size: 0; }
+.finding[open] > summary .chevron::after { content: "−"; font-size: 16px; }
+.proofGrid { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 24px; padding-bottom: 22px; }
+.proofGrid > div { min-width: 0; }
+.proofGrid h3:not(:first-child) { margin-top: 20px; }
+.proof { padding: 14px; background: var(--argos-canvas); border: 1px solid var(--argos-border); border-radius: 8px; font-size: 13px; overflow-wrap: anywhere; }
+.metadata { color: var(--argos-text-muted); font-size: 13px; overflow-wrap: anywhere; }
+.metadata summary,.secondary > summary { min-height: 44px; padding: 12px 0; cursor: pointer; }
+.filters { display: flex; gap: 16px; flex-wrap: wrap; margin: 16px 0; }
+.filters label { display: grid; gap: 6px; flex: 1; min-width: 150px; }
+.filters select { min-height: 44px; background: var(--argos-surface); color: var(--argos-text); border: 1px solid var(--argos-border); border-radius: 6px; padding: 8px; }
+@media(max-width:640px) { .metrics { grid-template-columns: repeat(2,minmax(0,1fr)); } .proofGrid { grid-template-columns: 1fr; } .hero,.metric,.findings,.secondary { padding: 16px; } .heroTop { gap: 12px; } .metric > strong { font-size: 25px; } }
+.page > nav { padding: 0; margin-bottom: 20px; }
+.page > section, .page > details { margin-bottom: 24px; }

@@ -1,5 +1,6 @@
 "use client";
 
+import AdminNavigation from "./AdminNavigation";
 import { useEffect, useState } from "react";
 import Link from "@/components/LocalizedLink";
 import { useAccountSession } from "@/components/account/AccountSession";
@@ -43,6 +44,7 @@ export default function AnalyticsView() {
   return <><main className={s.main}>
     <Link href="/account/admin">{c.back}</Link><h1>{c.title}</h1><p>{c.intro}</p>
     {!session.ready ? <p role="status">{c.loading}</p> : !allowed ? <><p role="alert">{c.denied}</p><Link href="/account/sign-in">{c.signIn}</Link></> : <>
+      <AdminNavigation active="analytics" />
       <div className={s.controls}><label htmlFor="analytics-period">{c.period}</label>
         <select id="analytics-period" value={days} onChange={event => setDays(Number(event.target.value))}>
           {[7, 30, 90].map(value => <option key={value} value={value}>{value} {c.days}</option>)}

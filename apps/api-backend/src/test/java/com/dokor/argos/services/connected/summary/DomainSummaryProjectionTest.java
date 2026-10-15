@@ -132,7 +132,9 @@ class DomainSummaryProjectionTest {
                         fixture, fixture.path("domains").get(0).path("pages").get(0));
         var original = DiagnosticProjection.from(e.report(), e.score());
         e.score().put("scoringFingerprint", "other");
-        assertFalse(DiagnosticProjection.from(e.report(), e.score()).available());
+        assertTrue(DiagnosticProjection.from(e.report(), e.score()).available());
+        assertEquals(original.criticalCount(), DiagnosticProjection.from(e.report(), e.score()).criticalCount());
+        assertTrue(DiagnosticProjection.from(e.report(), e.score()).rules().stream().noneMatch(r -> "PASS".equals(r.outcome())));
         ((ObjectNode) e.report().path("scores").path("calculation"))
                 .put("scoringFingerprint", "other");
         assertNotEquals(
@@ -143,8 +145,9 @@ class DomainSummaryProjectionTest {
                         .definitionVersion());
         e.score().putArray("checks");
         var unknown = DiagnosticProjection.from(e.report(), e.score());
-        assertFalse(unknown.available());
-        assertNull(unknown.criticalCount());
+        assertTrue(unknown.available());
+        assertEquals(original.criticalCount(), unknown.criticalCount());
+        assertTrue(unknown.rules().stream().noneMatch(r -> "PASS".equals(r.outcome())));
     }
 
     @Test
