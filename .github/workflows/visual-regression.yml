@@ -1,0 +1,211 @@
+name: Visual regression
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * 1'
+  # Exhaustive matrices are independent of the required functional journeys.
+  # Run them on visual assets/harness changes, or manually for a broader UI review.
+  pull_request:
+    paths:
+      - 'apps/console-web/**/*.scss'
+      - 'apps/console-web/**/*.css'
+      - 'apps/console-web/**/layout.tsx'
+      - 'apps/console-web/public/**'
+      - 'scripts/e2e/connected-*.mjs'
+      - 'scripts/e2e/account-history.mjs'
+      - 'scripts/e2e/public-header.mjs'
+      - 'scripts/e2e/acceptance-evidence*'
+      - 'docs/connected-space/reference/**'
+      - '.github/workflows/visual-regression.yml'
+permissions:
+  contents: read
+concurrency:
+  group: visual-regression-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  visual:
+    name: Exhaustive visual regression
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      API_BASE: http://127.0.0.1:8081
+      NEXT_TELEMETRY_DISABLED: '1'
+      APP_LOGS_ENABLED: 'false'
+      NEXT_PUBLIC_APP_LOGS_ENABLED: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.21.0'
+          cache: npm
+          cache-dependency-path: |
+            apps/console-web/package-lock.json
+            apps/playwright-service/package-lock.json
+      - run: npm ci --prefix apps/console-web
+      - run: npm ci --prefix apps/playwright-service
+      - name: Install controlled Chromium
+        working-directory: apps/playwright-service
+        run: npx playwright install --with-deps chromium
+      - name: Build frontend
+        run: npm run build --prefix apps/console-web
+      - name: Start local frontend
+        run: |
+          mkdir -p outputs
+          npm run start --prefix apps/console-web -- --hostname 127.0.0.1 > outputs/frontend-visual.log 2>&1 &
+          node --input-type=module <<'JS'
+          let ready = false;
+          for (let i = 0; i < 60; i++) {
+            try { if ((await fetch('http://127.0.0.1:3000')).ok) { ready = true; break; } } catch {}
+            await new Promise(resolve => setTimeout(resolve, 500));
+          }
+          if (!ready) throw new Error('Visual frontend failed readiness');
+          JS
+      - name: Check retired connected routes and public/auth rendering
+        env:
+          CONNECTED_BASE_URL: http://127.0.0.1:3000
+        run: node scripts/e2e/connected-cleanup.mjs
+      - name: Upload connected cleanup evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: connected-cleanup-${{ github.sha }}
+          path: outputs/ui-review/clarte-cleanup/
+          retention-days: 14
+      - name: Compare public header geometry and captures
+        run: node scripts/e2e/public-header.mjs
+      - name: Upload public header captures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-header-${{ github.sha }}
+          path: outputs/public-header/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Check observed evidence rendering with synthetic responses
+        env:
+          CONNECTED_BASE_URL: http://127.0.0.1:3000
+        run: node scripts/e2e/connected-evidence.mjs
+      - name: Upload observed evidence captures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: connected-evidence-${{ github.sha }}
+          path: outputs/ui-review/clarte-evidence/
+          retention-days: 14
+      - name: Check private history layout, keyboard and accessibility
+        env:
+          HISTORY_BASE_URL: http://127.0.0.1:3000
+        run: node scripts/e2e/account-history.mjs
+      - name: Upload private history captures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: account-history-${{ github.sha }}
+          path: outputs/account-history/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Check Clarte shell across languages, themes and widths
+        env:
+          CONNECTED_BASE_URL: http://127.0.0.1:3000
+        run: node scripts/e2e/connected-shell.mjs
+      - name: Upload Clarte shell captures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: connected-shell-${{ github.sha }}
+          path: outputs/ui-review/clarte-shell/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Check Clarte URL analysis and diagnostic
+        env:
+          CONNECTED_BASE_URL: http://127.0.0.1:3000
+        run: |
+          node scripts/e2e/connected-analysis.mjs
+          node scripts/e2e/connected-analysis-recovery.mjs
+      - name: Upload Clarte diagnostic captures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: connected-analysis-${{ github.sha }}
+          path: |
+            outputs/ui-review/clarte-analysis/
+            outputs/ui-review/clarte-analysis-recovery/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Check Clarte account settings and protected actions
+        env:
+          CONNECTED_BASE_URL: http://127.0.0.1:3000
+        run: node scripts/e2e/connected-account.mjs
+      - name: Upload Clarte account captures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: connected-account-${{ github.sha }}
+          path: outputs/ui-review/clarte-account/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Check Clarte usage ledger and quota states
+        env:
+          CONNECTED_BASE_URL: http://127.0.0.1:3000
+        run: node scripts/e2e/connected-usage.mjs
+      - name: Upload Clarte usage captures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: connected-usage-${{ github.sha }}
+          path: outputs/ui-review/clarte-usage/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Check Clarte domain interface and recovery
+        env:
+          CONNECTED_BASE_URL: http://127.0.0.1:3000
+        run: node scripts/e2e/connected-domains.mjs
+      - name: Upload domain captures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: connected-domains-${{ github.sha }}
+          path: |
+            outputs/ui-review/clarte-domains/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Check Clarte overview and latest-attempt inventory
+        env:
+          CONNECTED_BASE_URL: http://127.0.0.1:3000
+        run: node scripts/e2e/connected-overview.mjs
+      - name: Upload overview captures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: connected-overview-${{ github.sha }}
+          path: outputs/ui-review/clarte-overview/
+          if-no-files-found: warn
+      - name: Check Clarte administration and protected changes
+        env:
+          CONNECTED_BASE_URL: http://127.0.0.1:3000
+        run: node scripts/e2e/connected-admin.mjs
+      - name: Upload administrative captures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: connected-admin-${{ github.sha }}
+          path: |
+            outputs/ui-review/clarte-admin/
+          retention-days: 14
+      - name: Assemble revision-bound visual evidence
+        env:
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          python3 docs/connected-space/validate.py
+          node --test scripts/e2e/acceptance-evidence.test.mjs
+          node scripts/e2e/acceptance-evidence.mjs --visual-only
+      - name: Upload Clarte acceptance manifest and comparisons
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-acceptance-${{ github.sha }}
+          path: outputs/ui-review/clarte-acceptance/
+          if-no-files-found: warn
+          retention-days: 14

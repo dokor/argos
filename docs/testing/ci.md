@@ -2,16 +2,18 @@
 
 Les sources sont les [workflows](../../.github/workflows) et le
 [classificateur de chemins](../../scripts/ci/changed-paths.mjs). Les PR exécutent
-les jobs concernés ; un push main ou workflow_dispatch demande la matrice complète.
+les jobs fonctionnels concernés ; un push main ou workflow_dispatch demande tous
+les contrôles fonctionnels. Les matrices visuelles ont leur propre déclenchement.
 En cas d'échec de détection, les jobs conservent un repli vers l'exécution.
 
 | Contrôle | Source | Périmètre |
 | --- | --- | --- |
 | API backend tests | [ci.yml](../../.github/workflows/ci.yml) | Maven verify, couverture, ZAP passif isolé |
-| Frontend checks | [ci.yml](../../.github/workflows/ci.yml) | Scripts CI/release, lint, Vitest, build Next et probe négative |
-| Lighthouse checks / Playwright checks | [ci.yml](../../.github/workflows/ci.yml) | Syntaxe, contrats HTTP/concurrence et probe négative |
+| Frontend checks | [ci.yml](../../.github/workflows/ci.yml) | Scripts CI/release, lint, Vitest et build Next dans le contexte Docker de production |
+| Lighthouse checks / Playwright checks | [ci.yml](../../.github/workflows/ci.yml) | Syntaxe et contrats HTTP/concurrence |
 | Intégration DB | [MariaDB](mariadb.md) | Migrations, transactions, droits et concurrence sur MariaDB 11.4 |
 | Controlled audit E2E | [Procédure](controlled-e2e.md) | Navigateur, pipeline, fixtures contrôlées et restauration |
+| Exhaustive visual regression | [Visual regression](../../.github/workflows/visual-regression.yml) | Matrices FR/EN, thèmes, largeurs, axe, clavier et comparaisons de captures ; API simulée |
 | auth | [Authentication UX E2E](../../.github/workflows/auth-experience.yml) | Inscription, email capturé, vérification, connexion, reset et navigation FR/EN |
 | Secrets et dépendances | [Secrets](../security/secret-remediation.md), workflows dédiés | Arbre/commits introduits, dépendances npm de production |
 
@@ -24,24 +26,49 @@ persisté. Pas de secret de production ni runner Raspberry. Les déploiements so
 des workflows séparés ; une CI verte n'est ni une validation ARM64 ni une preuve
 de configuration correcte des protections de branche.
 
-## Rejouer et vérifier la propagation des échecs
+## Rejouer les vérifications
 
 Installer les dépendances de chaque application, puis lancer ses commandes de
 ci.yml. Pour les helpers sans dépendances applicatives, depuis la racine :
 
 ```sh
-node --test scripts/ci/changed-paths.test.mjs scripts/ci/frontend-build-pipelines.test.mjs scripts/check-release-evidence.test.mjs scripts/release/inspect-runtime.test.mjs
+node --test scripts/ci/*.test.mjs scripts/e2e/acceptance-evidence.test.mjs scripts/check-release-evidence.test.mjs scripts/release/inspect-runtime.test.mjs
 ```
 
-Depuis chaque application JS :
+Chaque suite JavaScript est exécutée une seule fois. Le test ciblé du pipeline
+Docker vérifie la propagation des codes de sortie malgré la capture des logs ;
+on ne relance plus toute la suite avec une panne ajoutée artificiellement.
+Le build Docker remplace le second build Next du job frontend. Les builds des
+harness navigateur restent distincts, car leurs proxys visent des API locales
+différentes résolues au build.
 
-```sh
-node ../../scripts/verify-ci-failures.mjs frontend
-# ou lighthouse / playwright
-```
+## Parcours utilisateur et matrices visuelles
 
-La probe crée sa fixture réservée, exige un code non nul et le marqueur
-CI_NEGATIVE_PROBE, puis la retire. Un échec réel n'est jamais ignoré.
+Le job obligatoire `Controlled audit E2E` conserve les huit audits contrôlés,
+les parcours domaine/administration avec API et MariaDB réelles, les exports PDF
+et la sauvegarde/restauration. Le formulaire doit naviguer lui-même vers le
+rapport ; recharger un rapport publié ne doit pas relancer l'audit.
+L'authentification réelle reste dans le check obligatoire `auth`.
+
+`Visual regression` exécute les matrices exhaustives indépendamment : chaque
+lundi à 03:00 UTC, à la demande sur la ref choisie, et sur les PR modifiant les
+styles, layouts, assets publics ou harness visuels listés dans son YAML. Pour
+une modification visuelle uniquement en TSX hors layout, lancer ce workflow
+manuellement ou attendre le passage hebdomadaire. Ce check n'est pas ajouté
+aux contrôles obligatoires de fusion/release. Il n'utilise ni MariaDB ni les
+collecteurs d'audit : ses réponses API sont simulées.
+
+Les preuves fonctionnelles sont dans `controlled-e2e-<sha>` ; les captures et
+le manifeste `clarte-visual-v1` dans `visual-acceptance-<sha>` et les artefacts
+visuels associés. Le mode `--visual-only` du manifeste exige toujours la
+matrice complète, mais ne revendique aucune preuve serveur. Pour une recette
+combinée, réunir les deux familles d'artefacts de la **même révision testée**
+avant de lancer le mode complet de `acceptance-evidence.mjs`.
+
+Les noms des douze checks obligatoires sont conservés. Les tests de sécurité,
+les migrations/transactions et le contrôle de démarrage du backend empaqueté
+restent exécutés ; le harness navigateur assemble toujours explicitement
+les ressources Java (voir les limites dans la procédure E2E).
 
 ## Diagnostiquer un run bloqué ou rouge
 
@@ -73,7 +100,9 @@ concernés. Le dossier de release exige pour sa part des succès réellement
 exécutés sur la révision candidate, y compris `auth`.
 
 Le workflow d'authentification se déclenche sur chaque PR et push main pour
-éviter qu'un filtre de chemins laisse ce check obligatoire absent. Son nom
+éviter qu'un filtre de workflow laisse ce check obligatoire absent. Son job suit
+la détection des chemins E2E (sauté sur documentation seule, repli vers
+l'exécution si la détection échoue). Son nom
 de job `auth` fait partie du contrat de protection : coordonner tout renommage
 avec le ruleset et le vérificateur du dossier de release.
 

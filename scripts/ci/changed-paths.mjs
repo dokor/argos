@@ -36,14 +36,13 @@ export function classify(paths) {
   const frontend = common || contracts || matches((path) =>
     path.startsWith('apps/console-web/') ||
     path.startsWith('scripts/release/') ||
-    path.startsWith('scripts/check-release-evidence') ||
-    path === 'scripts/verify-ci-failures.mjs'
+    path.startsWith('scripts/check-release-evidence')
   );
   const playwright = common || matches((path) =>
-    path.startsWith('apps/playwright-service/') || path === 'scripts/verify-ci-failures.mjs'
+    path.startsWith('apps/playwright-service/')
   );
   const lighthouse = common || matches((path) =>
-    path.startsWith('apps/lighthouse-service/') || path === 'scripts/verify-ci-failures.mjs'
+    path.startsWith('apps/lighthouse-service/')
   );
   const dependency = (app) => common || matches((path) =>
     path === `apps/${app}/package.json` ||

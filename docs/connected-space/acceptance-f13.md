@@ -9,8 +9,16 @@ ni une autorisation de mise en service ni une certification d'accessibilité.
 
 Le workflow [Controlled audit E2E](../../.github/workflows/controlled-e2e.yml)
 rejoue les harness existants sur un build de production, une MariaDB 11.4
-jetable et les vrais collecteurs Chromium. Il termine par
-[`acceptance-evidence.mjs`](../../scripts/e2e/acceptance-evidence.mjs) :
+jetable et les vrais collecteurs Chromium. Les matrices visuelles sont désormais
+exécutées séparément par [Visual regression](../../.github/workflows/visual-regression.yml).
+Ce workflow produit un manifeste `clarte-visual-v1` avec `--visual-only`, sans
+revendiquer de preuve serveur. Les preuves intégrées et PDFs restent dans
+`controlled-e2e-<sha>` ; le manifeste visuel est dans `visual-acceptance-<sha>`.
+Voir les [déclenchements et limites](../testing/ci.md).
+
+Pour reconstituer la recette complète décrite ci-dessous, réunir les deux
+familles d’artefacts de la même révision testée, puis exécuter le mode complet
+de [`acceptance-evidence.mjs`](../../scripts/e2e/acceptance-evidence.mjs) :
 
 - vérification de la présence des matrices nominales FR/EN, clair/sombre,
   320/390/768/1056/1440 (390/1056 pour les observations F14) ; un run limité
@@ -20,7 +28,7 @@ jetable et les vrais collecteurs Chromium. Il termine par
   des refus administratifs et de la sauvegarde/restauration ;
 - seize paires maquette/produit, huit écrans en FR clair 1056/390, avec contrôle
   des empreintes de la référence figée ; aucun remplacement de baseline ;
-- manifeste dans `connected-acceptance-<sha>` avec provenance, navigateurs,
+- manifeste combiné dans `outputs/ui-review/clarte-acceptance/` avec provenance, navigateurs,
   nombres de cas, références aux autres artefacts et limites.
 
 Le manifeste échoue si un résultat requis manque. Il n'attribue pas de succès
