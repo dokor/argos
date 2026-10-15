@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { LangProvider } from "@/lib/i18n/LangContext";
 import { accountFetch, AccountClientError } from "@/lib/account-client";
 import AccountSession from "./AccountSession";
@@ -9,6 +10,7 @@ import AccountSettings from "./AccountSettings";
 import RunClaim from "./RunClaim";
 const { push } = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock("./AccountView.module.scss", () => ({ default: {} }));
+vi.mock("./AuthShell", () => ({ default: ({ children }: { children: ReactNode }) => children }));
 vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams(window.location.search), useRouter: () => ({ push, refresh: vi.fn() }), usePathname: () => "/report/" + "r".repeat(43) }));
 vi.mock("@/components/site/SiteNav", () => ({ default: () => null })); vi.mock("@/components/site/SiteFooter", () => ({ default: () => null }));
 vi.mock("@/lib/account-client", () => ({ accountFetch: vi.fn(), AccountClientError: class extends Error { constructor(public code: string, public status: number) { super(code); } } }));

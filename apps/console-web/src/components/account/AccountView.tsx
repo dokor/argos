@@ -3,8 +3,8 @@ import SocialProviderLogo, { socialProviderNames } from "./SocialProviderLogo";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "@/components/LocalizedLink";
-import SiteNav from "@/components/site/SiteNav";
-import SiteFooter from "@/components/site/SiteFooter";
+import AuthShell from "./AuthShell";
+import PasswordInput from "./PasswordInput";
 import { useLang } from "@/lib/i18n/LangContext";
 import { localizedPath } from "@/lib/i18n/routes";
 import { accountFetch, AccountClientError } from "@/lib/account-client";
@@ -13,6 +13,7 @@ import { oauthCallbackError } from "@/lib/oauth-callback-error";
 import { accountFormErrors, type AccountField, type AccountFieldErrors } from "@/lib/account-form-validation";
 import { useAccountSession } from "./AccountSession";
 import s from "./AccountView.module.scss";
+import a from "./AuthView.module.scss";
 type Mode = "sign-in" | "register" | "verify" | "forgot" | "reset";
 
 export default function AccountView({mode="sign-in"}:{mode?:Mode}) {
@@ -75,7 +76,7 @@ export default function AccountView({mode="sign-in"}:{mode?:Mode}) {
     await act(async () => {
       if (mode === "register") { await accountFetch("auth/register", "POST", { email, password, displayName: name, returnTo }); setMessage(copy.sent); setPassword(""); }
       if (mode === "sign-in") { await accountFetch("auth/login", "POST", { email, password }); router.push(returnTo); router.refresh(); }
-      if (mode === "forgot") { await accountFetch("auth/forgot", "POST", { email }); setMessage(copy.sent); }
+      if (mode === "forgot") { await accountFetch("auth/forgot", "POST", { email }); setMessage(copy.forgotSent); focusTarget.current = "notice"; }
       if (mode === "verify") { await accountFetch("auth/verify", "POST", { token }); setMessage(copy.verifiedDone); setToken(""); focusTarget.current = "notice"; }
       if (mode === "reset") { await accountFetch("auth/reset", "POST", { token, password }); setMessage(copy.resetDone); setPassword(""); setToken(""); focusTarget.current = "notice"; }
     });
@@ -85,16 +86,21 @@ export default function AccountView({mode="sign-in"}:{mode?:Mode}) {
     const hint = id === "name" ? copy.nameHint : id === "password" && mode !== "sign-in" ? copy.passwordHint : null;
     const invalid = fieldErrors[id];
     const describedBy = [hint && `${id}-hint`, invalid && `${id}-error`].filter(Boolean).join(" ") || undefined;
-    return <div className={s.field}><label htmlFor={id}>{label}</label><input className={s.input} id={id} type={type} value={value} onChange={e => { set(e.target.value); setFieldErrors(previous => ({ ...previous, [id]: undefined })); }} autoComplete={autoComplete} required disabled={busy} maxLength={id === "name" ? 100 : type === "password" ? 256 : 254} aria-describedby={describedBy} aria-invalid={invalid ? true : undefined}/>
+    const props = { className: s.input, id, value, onChange: (e: React.ChangeEvent<HTMLInputElement>) => { set(e.target.value); setFieldErrors(previous => ({ ...previous, [id]: undefined })); }, autoComplete, required: true, disabled: busy, maxLength: id === "name" ? 100 : type === "password" ? 256 : 254, "aria-describedby": describedBy, "aria-invalid": invalid ? true : undefined };
+    return <div className={s.field}><label htmlFor={id}>{label}</label>
+      {type === "password" ? <PasswordInput key={mode} {...props}/> : <input {...props} type={type}/>}
       {hint && <p id={`${id}-hint`}>{hint}</p>}{invalid && <p id={`${id}-error`} className={s.fieldError}>{copy.errors[invalid]}</p>}
+      {id === "password" && mode === "sign-in" && <Link className={a.recoveryLink} href={"/account/forgot?returnTo=" + encodeURIComponent(returnTo)}>{copy.forgot}</Link>}
     </div>;
   };
   const recovery = tokenMode && initialized && !token && !message;
-  const showForm = (!tokenMode || initialized && !!token && !message) && (!connected || switchAccount);
+  const showForm = (!tokenMode || initialized && !!token && !message) && (!connected || switchAccount) && !(mode === "forgot" && message);
   const settings = localizedPath("/account/settings?section=profile", lang);
-  return <><div className={s.chrome}><SiteNav /></div><main className={s.page}><h1>{title}</h1>
+  return <AuthShell><main className={`${s.page} ${a.page}`}><h1>{title}</h1>
     {error && <p ref={noticeRef} tabIndex={-1} className={`${s.notice} ${s.error}`} role="alert">{error}</p>}{message && <p ref={noticeRef} tabIndex={-1} className={s.notice} role="status">{message}</p>}
     {!enabled && <p role="status">{copy.unavailable}</p>}
+    {mode === "forgot" && !message && <p className={a.intro}>{copy.forgotIntro}</p>}
+    {mode === "forgot" && message && <button className={`${s.button} ${a.correction}`} type="button" onClick={() => { setMessage(""); focusTarget.current = "email"; }}>{copy.correctEmail}</button>}
     {connected && <section className={s.notice}><p>{switchAccount ? copy.switchAccountHint : copy.connectedHint}</p><div className={s.links}><Link href={returnTo}>{copy.continueToAccount}</Link>{!switchAccount && <button className={s.button} type="button" onClick={() => { focusTarget.current = "email"; setSwitchAccount(true); }}>{copy.switchAccount}</button>}</div></section>}
     {tokenMode && !initialized && <p role="status">{copy.working}</p>}
     {recovery && <section className={s.recovery} aria-labelledby="recovery-title"><h2 id="recovery-title">{copy.recoveryTitle}</h2><p>{mode === "reset" ? copy.tokenMissing : copy.verifyRecovery}</p><div className={s.links}>
@@ -108,8 +114,9 @@ export default function AccountView({mode="sign-in"}:{mode?:Mode}) {
       {mode === "register" && field("name", copy.name, name, setName, "text", "name")}
       {["register", "sign-in", "forgot"].includes(mode) && field("email", copy.email, email, setEmail, "email", "email")}
       {["register", "sign-in", "reset"].includes(mode) && field("password", copy.password, password, setPassword, "password", mode === "sign-in" ? "current-password" : "new-password")}
-      <button className={s.button} disabled={busy || !enabled || ["verify", "reset"].includes(mode) && !token}>{busy ? copy.working : title}</button>
+      <button className={`${s.button} ${a.primary}`} aria-busy={busy} disabled={busy || !enabled || ["verify", "reset"].includes(mode) && !token}>{busy ? copy.working : mode === "forgot" ? copy.sendResetLink : title}</button>
     </form>}
+    {mode === "forgot" && <p className={a.providerHint}>{copy.forgotProviderHint}</p>}
     {showForm && ["register", "sign-in"].includes(mode) && providers.length > 0 && <section className={s.social} aria-label={copy.social}>
       <p className={s.socialDivider} aria-hidden="true">{copy.socialSeparator}</p>
       <div className={s.socialActions}>{providers.map(provider => <button type="button" className={`${s.button} ${s.socialButton}`} disabled={busy || !enabled} key={provider} onClick={() => void social(provider)}>
@@ -118,10 +125,9 @@ export default function AccountView({mode="sign-in"}:{mode?:Mode}) {
       </button>)}</div>
     </section>}
     <div className={s.links}>
-      {mode === "sign-in" && <Link href={"/account/forgot?returnTo=" + encodeURIComponent(returnTo)}>{copy.forgot}</Link>}
       {mode === "register" && <p>{copy.alreadyRegistered} <Link href={"/account/sign-in?returnTo=" + encodeURIComponent(returnTo)}>{copy.signIn}</Link></p>}
       {mode === "sign-in" && <p>{copy.noAccount} <Link href={"/account/register?returnTo=" + encodeURIComponent(returnTo)}>{copy.register}</Link></p>}
       {["forgot", "reset", "verify"].includes(mode) && <Link href={"/account/sign-in?returnTo=" + encodeURIComponent(returnTo)}>{copy.backToSignIn}</Link>}
     </div>
-  </main><SiteFooter /></>;
+  </main></AuthShell>;
 }
