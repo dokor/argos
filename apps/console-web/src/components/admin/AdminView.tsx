@@ -1,4 +1,5 @@
 "use client";
+import CollectorDiagnostics from "./CollectorDiagnostics";
 import AdminNavigation from "./AdminNavigation";
 import { adminQuery, safeAdminRunReturn } from "@/lib/admin-request";
 import { localizedPath } from "@/lib/i18n/routes";
@@ -112,7 +113,7 @@ export default function AdminView({ runId }: { runId?: string }) {
       onDenied,
     ),
     report = useResource<Report>(
-      allowed && runId && reportOpen ? "admin/runs/" + runId + "/report" : null,
+      allowed && runId && run.data?.reportAvailable ? "admin/runs/" + runId + "/report" : null,
       onDenied,
     );
   function filters(e: FormEvent<HTMLFormElement>) {
@@ -122,7 +123,7 @@ export default function AdminView({ runId }: { runId?: string }) {
       if (typeof v === "string" && v.trim()) q.set(k, v.trim());
     navigate(q);
   }
-  if (allowed && report.data)
+  if (allowed && reportOpen && report.data)
     return (
       <>
         <div className={s.returnBar}><AdminNavigation active="runs" />
@@ -167,6 +168,7 @@ export default function AdminView({ runId }: { runId?: string }) {
                   </div>
                 ))}
               </dl>
+              <CollectorDiagnostics modules={run.data.modules} coverage={report.data?.scores.coverage} loading={report.loading} unavailable={report.error != null} />
               {!!run.data.reportAvailable && (
                 <button
                   onClick={() => {
