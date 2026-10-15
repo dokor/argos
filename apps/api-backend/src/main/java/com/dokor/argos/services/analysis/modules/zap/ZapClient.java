@@ -2,6 +2,7 @@ package com.dokor.argos.services.analysis.modules.zap;
 
 import com.dokor.argos.logging.ExternalServiceCall;
 import com.dokor.argos.services.analysis.AuditDeadline;
+import com.dokor.argos.services.analysis.CollectorFailure;
 import com.dokor.argos.services.analysis.BoundedBodyHandlers;
 import com.dokor.argos.services.analysis.ExternalHttpClient;
 import com.dokor.argos.services.configuration.ConfigurationService;
@@ -70,19 +71,21 @@ public class ZapClient {
                 return ExternalServiceCall.timed(logger, "zap", context.finalUrl(), () -> {
                     // One dedicated daemon per backend. Drain cancelled work before replacing its session.
                     awaitPassiveScan(deadline);
-                    requireOk(call("core/action/newSession/", Map.of("overwrite", "true")));
-                    requireOk(call("exim/action/importHar/", Map.of(
+                    requireOk("core/action/newSession/", call("core/action/newSession/", Map.of("overwrite", "true")));
+                    requireOk("exim/action/importHar/", call("exim/action/importHar/", Map.of(
                         "data", har(context, body.length), "sendRequests", "false", "maxMessages", "1")));
-                    // ZAP also records internal/API messages; count only the imported target snapshot.
+                    // This is a history count, not a HAR entry count: ZAP can also add site-tree messages.
+                    // A successful one-entry import must leave at least one target message in the fresh session.
                     int imported = call("core/view/numberOfMessages/", Map.of("baseurl", context.finalUrl()))
                         .path("numberOfMessages").asInt(-1);
-                    if (imported != 1) {
-                        throw new IllegalStateException("ZAP did not import the HTTP snapshot (messages=" + imported + ")");
+                    if (imported < 1) {
+                        throw unavailable("core/view/numberOfMessages/", imported < 0
+                            ? CollectorFailure.Code.INVALID_RESPONSE : CollectorFailure.Code.INCOMPLETE_MEASUREMENTS);
                     }
                     awaitPassiveScan(deadline);
                     JsonNode result = call("core/view/alerts/", Map.of(
                         "baseurl", context.finalUrl(), "start", "0", "count", "100"));
-                    if (!result.path("alerts").isArray()) throw new IllegalStateException("Invalid ZAP alerts response");
+                    if (!result.path("alerts").isArray()) throw unavailable("core/view/alerts/", CollectorFailure.Code.INVALID_RESPONSE);
                     return result;
                 });
             } finally {
@@ -94,7 +97,7 @@ public class ZapClient {
     private void awaitPassiveScan(AuditDeadline deadline) throws Exception {
         while (true) {
             int remaining = call("pscan/view/recordsToScan/", Map.of()).path("recordsToScan").asInt(-1);
-            if (remaining < 0) throw new IllegalStateException("Invalid ZAP passive scan status");
+            if (remaining < 0) throw unavailable("pscan/view/recordsToScan/", CollectorFailure.Code.INVALID_RESPONSE);
             if (remaining == 0) return;
             TimeUnit.NANOSECONDS.sleep(deadline.remaining(pollInterval).toNanos());
         }
@@ -126,12 +129,27 @@ public class ZapClient {
         JsonNode json = http.postJson(URI.create(apiUrl + "/JSON/" + operation), form,
             "application/x-www-form-urlencoded", Duration.ofSeconds(15), Duration.ofSeconds(5),
             BoundedBodyHandlers.MAX_PAGE_BYTES, headers);
-        if (json.has("code")) throw new IllegalStateException("ZAP API rejected " + operation);
+        if (json.has("code")) {
+            // Only bounded categories are logged; upstream messages/details can contain the HAR or secrets.
+            CollectorFailure.Code code = switch (json.path("code").asText()) {
+                case "no_implementor", "bad_action", "bad_view", "missing_parameter", "illegal_parameter" ->
+                    CollectorFailure.Code.INTEGRATION_ENDPOINT;
+                case "bad_api_key" -> CollectorFailure.Code.PROVIDER_AUTH_REQUIRED;
+                default -> CollectorFailure.Code.INTEGRATION_FAILURE;
+            };
+            throw unavailable(operation, code);
+        }
         return json;
     }
 
-    private static void requireOk(JsonNode response) {
-        if (!"OK".equals(response.path("Result").asText())) throw new IllegalStateException("ZAP action did not complete");
+    private static void requireOk(String operation, JsonNode response) {
+        if (!"OK".equals(response.path("Result").asText())) throw unavailable(operation, CollectorFailure.Code.INVALID_RESPONSE);
+    }
+
+    private static CollectorFailure unavailable(String operation, CollectorFailure.Code code) {
+        // operation is always one of the constant API paths in this client, never a target URL.
+        logger.warn("zap_operation_failed operation={} failureCode={}", operation, code);
+        return new CollectorFailure(code);
     }
 
     private static String encode(String value) { return URLEncoder.encode(value, StandardCharsets.UTF_8); }
