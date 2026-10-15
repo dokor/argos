@@ -16,6 +16,10 @@
 .links a { display: inline-flex; align-items: center; min-height: 44px; color: var(--argos-brand); text-decoration: underline; text-underline-offset: .2em; }
 .notice { max-width: 34rem; margin-bottom: 1rem; padding: .75rem; border: 1px solid var(--argos-border); border-radius: .5rem; overflow-wrap: anywhere; font: inherit; }
 .error { color: var(--argos-error); background: var(--argos-error-soft); border-color: var(--argos-error); }
+.fieldError { color: var(--argos-error); }
+.input[aria-invalid="true"] { border-color: var(--argos-error); }
+.notice:focus { outline: 3px solid var(--argos-text); outline-offset: 3px; }
+.recovery { max-width: 34rem; margin-block: 1.5rem; }
 @media (max-width: 480px) { .page { margin: 1.5rem auto; } .card { padding: 1rem; } .button { min-height: 44px; } }
 
 .page a:focus-visible { outline:3px solid var(--argos-text);outline-offset:3px; }

@@ -8,8 +8,8 @@ export function PageHeading({ title, description, action }: { title: string; des
 export function Surface({ title, children, action }: { title: string; children: ReactNode; action?: ReactNode }) {
   return <section className={s.surface}><div className={s.surfaceHeading}><h2>{title}</h2>{action}</div>{children}</section>;
 }
-export function KpiCard({ label, value, detail, href }: { label: string; value: string; detail: string; href?: string }) {
-  const content = <><span className={s.kpiLabel}>{label}</span><strong className={s.kpiValue}>{value}</strong><span className={s.muted}>{detail}</span></>;
+export function KpiCard({ label, value, detail, href, actionLabel }: { label: string; value: string; detail: string; href?: string; actionLabel?: string }) {
+  const content = <><span className={s.kpiLabel}>{label}</span><strong className={s.kpiValue}>{value}</strong><span className={s.muted}>{detail}</span>{href && actionLabel && <span className={s.kpiAction}>{actionLabel} <span aria-hidden="true">→</span></span>}</>;
   return href ? <Link className={s.kpi} href={href}>{content}</Link> : <div className={s.kpi}>{content}</div>;
 }
 export function StatusBadge({ children, tone = "neutral" }: { children: ReactNode; tone?: "neutral" | "success" | "warning" | "danger" }) {

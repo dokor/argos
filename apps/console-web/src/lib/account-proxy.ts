@@ -219,12 +219,15 @@ export async function accountProxy(request: NextRequest, parts: string[]): Promi
       response.cookies.set("argos_oauth_" + state, "", accountCookieOptions(0));
       response.cookies.set("argos_return_" + state, "", accountCookieOptions(0));
     response.cookies.set("argos_intent_" + state, "", accountCookieOptions(0));
+    } else if (path === "auth/login" && upstream.status === 401) {
+      // This endpoint authenticates supplied credentials, not the existing cookie.
+      response = privateError("credentials_invalid", 401);
     } else response = new NextResponse(data, { status: upstream.status, headers: { "Content-Type": "application/json" } });
     response.headers.set("Cache-Control", "private, no-store");
     if (upstream.ok && preserveReturn) response.cookies.set("argos_account_return", returnTo, accountCookieOptions(86400));
     const jwt = upstream.headers.get("x-argos-session");
     if (upstream.ok && jwt) response.cookies.set(SESSION_COOKIE, jwt, accountCookieOptions(900));
-    if (upstream.status === 401 || upstream.ok && (path === "auth/logout" || path === "me/archive"))
+    if (upstream.status === 401 && path !== "auth/login" || upstream.ok && (path === "auth/logout" || path === "me/archive"))
       response.cookies.set(SESSION_COOKIE, "", accountCookieOptions(0));
     if (upstream.status === 429) response.headers.set("Retry-After", upstream.headers.get("retry-after") ?? "900");
     if (upstream.ok && path.endsWith("/start")) {
