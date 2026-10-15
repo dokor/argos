@@ -13,7 +13,8 @@ jetable et les vrais collecteurs Chromium. Les matrices visuelles sont désormai
 exécutées séparément par [Visual regression](../../.github/workflows/visual-regression.yml).
 Ce workflow produit un manifeste `clarte-visual-v1` avec `--visual-only`, sans
 revendiquer de preuve serveur. Les preuves intégrées et PDFs restent dans
-`controlled-e2e-<sha>` ; le manifeste visuel est dans `visual-acceptance-<sha>`.
+`controlled-e2e-<sha>` ; les captures par groupe sont dans
+`visual-captures-<groupe>-<sha>` et le manifeste dans `visual-acceptance-<sha>`.
 Voir les [déclenchements et limites](../testing/ci.md).
 
 Pour reconstituer la recette complète décrite ci-dessous, réunir les deux

@@ -11,6 +11,12 @@ on:
         value: ${{ jobs.detect.outputs.playwright }}
       lighthouse:
         value: ${{ jobs.detect.outputs.lighthouse }}
+      integration:
+        value: ${{ jobs.detect.outputs.integration }}
+      auth:
+        value: ${{ jobs.detect.outputs.auth }}
+      security:
+        value: ${{ jobs.detect.outputs.security }}
       e2e:
         value: ${{ jobs.detect.outputs.e2e }}
       dependency_frontend:
@@ -32,6 +38,9 @@ jobs:
       frontend: ${{ steps.paths.outputs.frontend }}
       playwright: ${{ steps.paths.outputs.playwright }}
       lighthouse: ${{ steps.paths.outputs.lighthouse }}
+      integration: ${{ steps.paths.outputs.integration }}
+      auth: ${{ steps.paths.outputs.auth }}
+      security: ${{ steps.paths.outputs.security }}
       e2e: ${{ steps.paths.outputs.e2e }}
       dependency_frontend: ${{ steps.paths.outputs.dependency_frontend }}
       dependency_playwright: ${{ steps.paths.outputs.dependency_playwright }}

@@ -2,8 +2,9 @@
 
 Les sources sont les [workflows](../../.github/workflows) et le
 [classificateur de chemins](../../scripts/ci/changed-paths.mjs). Les PR exécutent
-les jobs fonctionnels concernés ; un push main ou workflow_dispatch demande tous
-les contrôles fonctionnels. Les matrices visuelles ont leur propre déclenchement.
+les jobs fonctionnels concernés, comme les pushes sur main. Une exécution manuelle
+(`workflow_dispatch`) demande tous les contrôles du workflow choisi. Les matrices
+visuelles ont leur propre déclenchement.
 En cas d'échec de détection, les jobs conservent un repli vers l'exécution.
 
 | Contrôle | Source | Périmètre |
@@ -32,7 +33,7 @@ Installer les dépendances de chaque application, puis lancer ses commandes de
 ci.yml. Pour les helpers sans dépendances applicatives, depuis la racine :
 
 ```sh
-node --test scripts/ci/*.test.mjs scripts/e2e/acceptance-evidence.test.mjs scripts/check-release-evidence.test.mjs scripts/release/inspect-runtime.test.mjs
+node --test scripts/ci/*.test.mjs scripts/e2e/*.test.mjs scripts/check-release-evidence.test.mjs scripts/release/inspect-runtime.test.mjs
 ```
 
 Chaque suite JavaScript est exécutée une seule fois. Le test ciblé du pipeline
@@ -41,6 +42,42 @@ on ne relance plus toute la suite avec une panne ajoutée artificiellement.
 Le build Docker remplace le second build Next du job frontend. Les builds des
 harness navigateur restent distincts, car leurs proxys visent des API locales
 différentes résolues au build.
+
+## Déclenchement selon les changements
+
+La comparaison utilise le merge-base pour une PR, et les SHA avant/après pour
+un push main (tous les commits du push sont couverts). Les suppressions et les
+anciens chemins des renommages sont inclus. Une première révision sans base
+valide demande tous les contrôles ; une comparaison Git en échec déclenche le
+repli complet des jobs dépendants.
+
+| Changement seul | Jobs applicatifs exécutés |
+| --- | --- |
+| Documentation | Aucun ; le scan de secrets reste systématique |
+| Test unitaire frontend | Frontend checks |
+| Test unitaire Java | API backend tests |
+| Test MariaDB IT | API backend tests et MariaDB integration |
+| Code frontend | Frontend checks, audit E2E et auth |
+| Code backend | API backend tests, MariaDB, audit E2E et auth |
+| Collecteur Runtime ou Lighthouse | Tests du collecteur, audit E2E, sécurité Docker |
+| Script navigateur auth | Auth uniquement |
+| Harness visuel | Workflow visuel ; tests de helpers si le manifeste/dispatcher change |
+| Lockfile d’un service | Tests de ses consommateurs et audit de ses dépendances |
+| Workflow spécialisé | Ses propres jobs, sans relancer les autres services |
+| Routage partagé ou action commune | Repli conservateur sur tous les contrôles |
+
+Les fixtures Java et contrats partagés déclenchent tous leurs consommateurs.
+Le routage reste volontairement conservateur pour le code frontend/backend :
+on ne tente pas de reconstruire un graphe d’imports fichier par fichier.
+Les trois audits npm sont indépendants et démarrent en parallèle. Ils tournent
+aussi chaque jour à 04:00 UTC, car une vulnérabilité peut être publiée sans
+modification du lockfile. Les tests de sécurité Docker ciblent les collecteurs,
+la passerelle egress, leurs configurations infra et le harness de sécurité.
+
+Les workflows portant des checks requis restent déclenchés : seuls leurs jobs
+coûteux sont sautés. Cela conserve les statuts attendus par la protection de
+branche. Les déploiements conservent leurs filtres par service et leur
+sérialisation existants ; aucune autorisation de déploiement n'est ajoutée.
 
 ## Parcours utilisateur et matrices visuelles
 
@@ -58,9 +95,18 @@ manuellement ou attendre le passage hebdomadaire. Ce check n'est pas ajouté
 aux contrôles obligatoires de fusion/release. Il n'utilise ni MariaDB ni les
 collecteurs d'audit : ses réponses API sont simulées.
 
+Un seul build Next est partagé par quatre groupes indépendants (public,
+analyse, compte et domaines), exécutables simultanément sur quatre runners au
+maximum. Chaque groupe conserve ses répertoires de captures distincts dans
+`visual-captures-<groupe>-<sha>`. Le job final exige la réussite de tous les
+groupes puis assemble la matrice complète ; un groupe rouge ne peut pas être
+masqué par les autres. Le build intermédiaire est conservé un jour, les preuves
+quatorze jours. Le parallélisme réduit le chemin critique mais les installations
+par runner ajoutent du travail ; la disponibilité des runners limite le gain.
+
 Les preuves fonctionnelles sont dans `controlled-e2e-<sha>` ; les captures et
 le manifeste `clarte-visual-v1` dans `visual-acceptance-<sha>` et les artefacts
-visuels associés. Le mode `--visual-only` du manifeste exige toujours la
+`visual-captures-<groupe>-<sha>` associés. Le mode `--visual-only` du manifeste exige toujours la
 matrice complète, mais ne revendique aucune preuve serveur. Pour une recette
 combinée, réunir les deux familles d'artefacts de la **même révision testée**
 avant de lancer le mode complet de `acceptance-evidence.mjs`.
@@ -97,11 +143,18 @@ La configuration et les preuves négatives sont dans
 [Protection de main](main-protection.md). Un check absent bloque la fusion ;
 les jobs conditionnels `SKIPPED` sont acceptés par GitHub pour les chemins non
 concernés. Le dossier de release exige pour sa part des succès réellement
-exécutés sur la révision candidate, y compris `auth`.
+exécutés sur la révision candidate, y compris `auth`. Un push filtré n'est donc
+pas un dossier complet de release. Pour certifier une révision, lancer
+manuellement `ci.yml`, `mariadb-integration.yml`, `controlled-e2e.yml`,
+`auth-experience.yml`, `audit-security.yml`, `dependency-audit.yml` et
+`secrets.yml` sur la même ref, puis vérifier que tous les runs portent le SHA
+candidat. Le vérificateur de release continue de refuser un check sauté ou des
+preuves d'une autre révision.
 
 Le workflow d'authentification se déclenche sur chaque PR et push main pour
 éviter qu'un filtre de workflow laisse ce check obligatoire absent. Son job suit
-la détection des chemins E2E (sauté sur documentation seule, repli vers
+la détection des chemins auth (sauté sur documentation/tests unitaires seuls ou
+modifications des collecteurs sans changement de dépendance navigateur, repli vers
 l'exécution si la détection échoue). Son nom
 de job `auth` fait partie du contrat de protection : coordonner tout renommage
 avec le ruleset et le vérificateur du dossier de release.
