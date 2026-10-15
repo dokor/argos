@@ -19,7 +19,7 @@ jobs:
     needs: changes
     if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.e2e == 'true') }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 15
     services:
       mariadb:
         image: mariadb:11.4
@@ -89,144 +89,8 @@ jobs:
             if(!ready) throw new Error('Controlled service failed readiness');
           }
           JS
-      - name: Check retired connected routes and public/auth rendering
-        env:
-          CONNECTED_BASE_URL: http://127.0.0.1:3000
-        run: node scripts/e2e/connected-cleanup.mjs
-      - name: Upload connected cleanup evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: connected-cleanup-${{ github.sha }}
-          path: outputs/ui-review/clarte-cleanup/
-          retention-days: 14
-      - name: Compare public header geometry and captures
-        run: node scripts/e2e/public-header.mjs
-      - name: Upload public header captures
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: public-header-${{ github.sha }}
-          path: outputs/public-header/
-          if-no-files-found: warn
-          retention-days: 14
       - name: Run real database and browser lifecycle
         run: mvn --batch-mode -f apps/api-backend/pom.xml -P mariadb-integration -Dit.test=ControlledAuditE2eIT verify
-      - name: Check observed evidence in connected reports
-        env:
-          CONNECTED_BASE_URL: http://127.0.0.1:3000
-        run: node scripts/e2e/connected-evidence.mjs
-      - name: Upload observed evidence visual and real PDF checks
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: connected-evidence-${{ github.sha }}
-          path: outputs/ui-review/clarte-evidence/
-          retention-days: 14
-      - name: Check private history layout, keyboard and accessibility
-        env:
-          HISTORY_BASE_URL: http://127.0.0.1:3000
-        run: node scripts/e2e/account-history.mjs
-      - name: Upload private history captures
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: account-history-${{ github.sha }}
-          path: outputs/account-history/
-          if-no-files-found: warn
-          retention-days: 14
-      - name: Check Clarte shell across languages, themes and widths
-        env:
-          CONNECTED_BASE_URL: http://127.0.0.1:3000
-        run: node scripts/e2e/connected-shell.mjs
-      - name: Upload Clarte shell captures
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: connected-shell-${{ github.sha }}
-          path: outputs/ui-review/clarte-shell/
-          if-no-files-found: warn
-          retention-days: 14
-      - name: Check Clarte URL analysis and diagnostic
-        env:
-          CONNECTED_BASE_URL: http://127.0.0.1:3000
-        run: |
-          node scripts/e2e/connected-analysis.mjs
-          node scripts/e2e/connected-analysis-recovery.mjs
-      - name: Upload Clarte diagnostic captures
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: connected-analysis-${{ github.sha }}
-          path: |
-            outputs/ui-review/clarte-analysis/
-            outputs/ui-review/clarte-analysis-recovery/
-          if-no-files-found: warn
-          retention-days: 14
-      - name: Check Clarte account settings and protected actions
-        env:
-          CONNECTED_BASE_URL: http://127.0.0.1:3000
-        run: node scripts/e2e/connected-account.mjs
-      - name: Upload Clarte account captures
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: connected-account-${{ github.sha }}
-          path: outputs/ui-review/clarte-account/
-          if-no-files-found: warn
-          retention-days: 14
-      - name: Check Clarte usage ledger and quota states
-        env:
-          CONNECTED_BASE_URL: http://127.0.0.1:3000
-        run: node scripts/e2e/connected-usage.mjs
-      - name: Upload Clarte usage captures
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: connected-usage-${{ github.sha }}
-          path: outputs/ui-review/clarte-usage/
-          if-no-files-found: warn
-          retention-days: 14
-      - name: Check Clarte domain interface and recovery
-        env:
-          CONNECTED_BASE_URL: http://127.0.0.1:3000
-        run: node scripts/e2e/connected-domains.mjs
-      - name: Upload domain visual and real lifecycle evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: connected-domains-${{ github.sha }}
-          path: |
-            outputs/ui-review/clarte-domains/
-            outputs/domain-e2e.json
-            outputs/domain-e2e-error.log
-          if-no-files-found: warn
-          retention-days: 14
-      - name: Check Clarte overview and latest-attempt inventory
-        env:
-          CONNECTED_BASE_URL: http://127.0.0.1:3000
-        run: node scripts/e2e/connected-overview.mjs
-      - name: Upload overview captures
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: connected-overview-${{ github.sha }}
-          path: outputs/ui-review/clarte-overview/
-          if-no-files-found: warn
-      - name: Check Clarte administration and protected changes
-        env:
-          CONNECTED_BASE_URL: http://127.0.0.1:3000
-        run: node scripts/e2e/connected-admin.mjs
-      - name: Upload administrative visual and real evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: connected-admin-${{ github.sha }}
-          path: |
-            outputs/ui-review/clarte-admin/
-            outputs/admin-e2e.json
-            outputs/admin-e2e-error.log
-          retention-days: 14
       - name: Rehearse consistent backup and isolated restore
         env:
           DB_FIXTURE_CONTAINER: ${{ job.services.mariadb.id }}
@@ -239,21 +103,6 @@ jobs:
           restored=$(docker exec "$DB_FIXTURE_CONTAINER" mariadb -uroot -psynthetic-root-fixture -N argos_restore_test -e "$query")
           test "$original" = "$restored"
           printf '%s\n' '{"fixture":"isolated-mariadb-11.4","backup":"single-transaction-hex-blob","restore":"PASS","reportCountAndHashDigestEqual":true}' > outputs/controlled-restore.json
-      - name: Assemble revision-bound Clarte acceptance evidence
-        env:
-          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
-        run: |
-          python3 docs/connected-space/validate.py
-          node --test scripts/e2e/acceptance-evidence.test.mjs
-          node scripts/e2e/acceptance-evidence.mjs
-      - name: Upload Clarte acceptance manifest and comparisons
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: connected-acceptance-${{ github.sha }}
-          path: outputs/ui-review/clarte-acceptance/
-          if-no-files-found: warn
-          retention-days: 14
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -262,6 +111,13 @@ jobs:
             outputs/controlled-e2e.json
             outputs/controlled-e2e-error.log
             outputs/controlled-restore.json
+            outputs/domain-e2e*.json
+            outputs/domain-e2e-error.log
+            outputs/admin-e2e*.json
+            outputs/admin-e2e-error.log
+            outputs/ui-review/clarte-domains/real/
+            outputs/ui-review/clarte-admin/real/
+            outputs/ui-review/clarte-evidence/real-*.pdf
             apps/api-backend/target/failsafe-reports/
           if-no-files-found: error
           retention-days: 14

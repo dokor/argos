@@ -98,7 +98,7 @@ de la galerie dans le build de production. L’historique couvre 8 scénarios
 avec pagination, relance, clavier, liens localisés et invalidation de session.
 
 Les résultats et captures sont écrits dans `outputs/ui-review/clarte-shell`
-et `outputs/account-history`. La CI `Controlled audit E2E` les rejoue et
+et `outputs/account-history`. La CI `Visual regression` les rejoue et
 publie les artefacts `connected-shell-<sha>` et `account-history-<sha>`.
 La version de Chromium figure dans `results.json` ; hauteur du viewport : 900 px.
 Deux captures représentatives sont versionnées dans [evidence/f02](evidence/f02/README.md).

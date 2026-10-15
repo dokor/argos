@@ -57,7 +57,7 @@ F05/#555 reste nécessaire pour le parcours complet offres/quotas et l’admissi
 - `node scripts/e2e/connected-analysis.mjs` : réponses synthétiques injectées dans le navigateur, pas une preuve d’autorisation SQL. 148 combinaisons écran/langue/thème/largeur, dont 320/390/768/1056/1440, progression après reload, recherche, rapport exact, partiel, expiré, échec, non-mesuré, ancien rapport, quota et texte 200 %. Clavier, un H1/footer, absence de débordement et axe. `CLARTE_BROWSER_PATH` peut sélectionner un Chromium local ; `CONNECTED_BASE_URL` reste loopback.
 - `node scripts/e2e/account-history.mjs` : comparaison et relance depuis l’historique. Les recettes backend réelles `check-sites.mjs` et `check-usage.mjs` sont adaptées à la nouvelle page ; leurs prérequis sont dans `docs/testing/accounts.md`.
 
-Captures et résultats : `outputs/ui-review/clarte-analysis/` (ignoré), publiés par `Controlled audit E2E` comme artefact `connected-analysis-{sha}`. Les fixtures ne sont importées ni par Next ni par Java. Le serveur optionnel `node scripts/e2e/connected-analysis-fixture.mjs --serve` écoute en lecture seule sur `127.0.0.1:3021` pour l’inspection humaine ; ne jamais le déployer.
+Captures et résultats : `outputs/ui-review/clarte-analysis/` (ignoré), publiés par `Visual regression` comme artefact `visual-captures-analysis-{sha}`. Les fixtures ne sont importées ni par Next ni par Java. Le serveur optionnel `node scripts/e2e/connected-analysis-fixture.mjs --serve` écoute en lecture seule sur `127.0.0.1:3021` pour l’inspection humaine ; ne jamais le déployer.
 
 ## Préparation de la recette QA-18
 

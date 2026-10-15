@@ -10,7 +10,12 @@ concurrency:
   group: audit-security-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  changes:
+    uses: ./.github/workflows/changed-paths.yml
+
   security:
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.security == 'true') }}
     name: Audit egress and browser isolation
     runs-on: ubuntu-24.04
     timeout-minutes: 20

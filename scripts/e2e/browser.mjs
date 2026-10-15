@@ -11,7 +11,10 @@ try {
   for(const scenario of cases) {
     activeScenario=scenario;
     const page=await browser.newPage();
-    const states=new Set(); let token; let creation;
+    const states=new Set(); let token; let creation; let submissions=0;
+    page.on('request',request=>{
+      if(new URL(request.url()).pathname==='/api/audits' && request.method()==='POST') submissions++;
+    });
     page.on('response',async response=>{
       if(response.url().endsWith('/status') && response.ok()) {
         try {states.add((await response.json()).status);} catch { /* Navigation can cancel a poll. */ }
@@ -26,7 +29,8 @@ try {
     assert.equal(response.status(),200,'Controlled fixture submission must succeed');
     creation=await response.json();token=creation.reportToken;activeToken=token;assert.equal(creation.status,'QUEUED');states.add('QUEUED');
     assert.equal(typeof token,'string');
-    await page.goto(`${base}/report/${token}`);
+    // Let the application navigate; forcing goto would hide a broken submit flow.
+    await page.waitForURL(url=>url.pathname===`/report/${token}`);
     await page.getByRole('heading',{name:/Analyse en (attente|cours)/}).waitFor({timeout:15000});
     let report;
     for(let attempt=0;attempt<180;attempt++) {
@@ -72,6 +76,14 @@ try {
       const failed=method.locator('dl > div').filter({has:page.getByText('Modules en échec',{exact:true})});
       assert.equal(await failed.count(),1,'Measurement details must expose exactly one failed modules row');
       assert.equal(await failed.locator('dd').textContent(),`${execution.failed} / ${execution.total}`,'Failed modules must remain distinct from successes and terminal progress');
+    }
+    if(scenario==='healthy') {
+      await page.reload();
+      await page.getByRole('heading',{name:'Score Argos',exact:true}).waitFor();
+      const persisted=await page.request.get(`${base}/api/reports/${token}`);
+      assert.equal(persisted.status(),200);
+      assert.deepEqual((await persisted.json()).scores,report.scores,'Reopening must retain the published scores');
+      assert.equal(submissions,1,'Reopening a report must not submit another audit');
     }
     if(scenario==='errors') {
       const network=report.issues.find(issue=>issue.id==='runtime.network.5xx')?.structuredEvidence?.observed;
