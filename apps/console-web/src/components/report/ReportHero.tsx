@@ -1,83 +1,53 @@
 "use client";
-
-import ReportPageScope from "./ReportPageScope";
-
-import { buildReportModel, ReportModel } from "./reportModel";
-import type { Report, ReportIntroduction } from "./types";
+import type {ReactNode} from "react";
+import {buildReportModel, type ReportModel} from "./reportModel";
+import type {Report, ReportIntroduction} from "./types";
+import {useLang} from "@/lib/i18n/LangContext";
+import {decisionCopy} from "./decisionCopy";
+import {reportReadingCopy} from "./reportReadingCopy";
+import {globalScore, partialReport, reportScope} from "./reportSummaryModel";
+import {scoreLimit, interpretationCopy} from "./reportInterpretation";
 import ReportIntroductionView from "./ReportIntroductionView";
-import { useLang } from "@/lib/i18n/LangContext";
-import { decisionCopy } from "./decisionCopy";
-import { reportReadingCopy } from "./reportReadingCopy";
-import { globalScore, partialReport } from "./reportSummaryModel";
-import ReportSummary from "./ReportSummary";
-import RelaunchButton from "./RelaunchButton";
-import ShareReportButton from "./ShareReportButton";
+import ReportPageScope from "./ReportPageScope";
 import s from "./ReportHero.module.scss";
-import { scoreLimit, interpretationCopy } from "./reportInterpretation";
 
-export default function ReportHero({ report, model = buildReportModel(report), onActions, onMethod, introduction = report.introduction, onSelectFinding, personal = false, demo=false }: {
-  demo?:boolean; personal?: boolean; report: Report; model?: ReportModel; onActions?: () => void; onMethod?: () => void; introduction?: ReportIntroduction | null; onSelectFinding?: (key: string) => void;
+export default function ReportHero({report,model=buildReportModel(report),onActions,introduction=report.introduction,onSelectFinding,demo=false,actions,context}: {
+ report:Report;model?:ReportModel;onActions?:()=>void;onMethod?:()=>void;introduction?:ReportIntroduction|null;onSelectFinding?:(key:string)=>void;personal?:boolean;demo?:boolean;actions?:ReactNode;context?:ReactNode;
 }) {
-  const { t, lang } = useLang();
-  const Title=demo?"h2":"h1";
-  const copy = decisionCopy[lang];
-  const reading = reportReadingCopy[lang];
-  const score = globalScore(report);
-  const coverage = report.scores.coverage;
-  const date = new Date(report.generatedAt);
-  const domainRating = report.site?.domainRating;
-  const hasDomainRating = domainRating != null && Number.isFinite(domainRating.score)
-    && domainRating.score >= 0 && domainRating.score <= 100;
-  return <section className={s.hero} aria-labelledby="report-domain">
-    <div className={s.heroInner}>
-      <div className={s.identity}>
-        <p className={s.eyebrow}>{lang === "fr" ? "Rapport d’audit" : "Audit report"}</p>
-        <Title id="report-domain" className={s.siteName}>{report.domain}</Title>
-        <details><summary>{interpretationCopy[lang].metadata}</summary><div className={s.meta}>
-          <span>{t.report.hero.analyzedAt} {Number.isFinite(date.getTime())
-            ? <time dateTime={report.generatedAt}>{date.toLocaleDateString(t.report.hero.locale, { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })}</time>
-            : copy.dateUnknown}</span>
-          {report.site?.title && <span>{copy.siteTitle}: {report.site.title}</span>}
-          {hasDomainRating && <span className={s.domainRating} title={t.report.hero.domainRatingTooltip}>
-            <strong>DR {Math.round(domainRating.score)}/100</strong> · {t.report.hero.domainRatingFetchedAt} {new Date(domainRating.fetchedAt).toLocaleDateString(t.report.hero.locale, { timeZone: "UTC" })} · <a href="https://ahrefs.com/" target="_blank" rel="noopener noreferrer">Domain Rating by Ahrefs</a>
-          </span>}
-        </div><p className={s.privacy}>{copy.privacy}</p></details>
-        <div className={s.scope}><ReportPageScope report={report} lang={lang} /></div>
-      </div>
-      {introduction && <ReportIntroductionView note={introduction} model={model} lang={lang} onSelectFinding={onSelectFinding} />}
-      <div className={s.topRow}>
-        <div className={s.decision}>
-          <ReportSummary report={report} model={model} />
-          <div className={s.links}>
-            <a href="?view=actions" onClick={event => { if (onActions) { event.preventDefault(); onActions(); } }}>{copy.actions}</a>
-            {onMethod && <a href="#report-method" onClick={event => { event.preventDefault(); onMethod(); }}>{copy.methodLink}</a>}
-          </div>
-          {!personal && <div className={s.actions}>
-            <RelaunchButton url={report.pageIdentity && !report.pageIdentity.redacted ? report.url : ""} />
-            <ShareReportButton />
-          </div>}
-        </div>
-        <div className={s.scoreBlock}>
-          <h2 className={s.scoreTitle}>{reading.score}</h2>
-          {score !== undefined ? <p className={s.scoreNumber} aria-label={`Score ${score}/100`}><strong>{score}</strong><span>/100</span></p>
-            : <p className={s.notEvaluated}>{copy.notEvaluated}</p>}
-          {score !== undefined && <p className={s.scoreState}>{partialReport(report) ? copy.provisional : copy.measured}</p>}
-        </div>
-      </div>
-      <div className={s.measurementNotes}>
-          <p className={s.coverage}><strong>{reading.coverage}</strong><br />{coverage
-            ? `${Math.round(coverage.global.ratio * 100)} % — ${coverage.global.sufficient ? t.report.measurementCoverage.sufficient : copy.insufficient}`
-            : copy.coverageUnknown}</p>
-          <p className={s.coverage}>{scoreLimit(report, lang)}</p>
-      </div>
-      {model.counts.total > 0 && <p className={s.privacy}>{interpretationCopy[lang].severity}</p>}
-      <div className={s.statsRow}>
-        {(["critical", "important", "opportunity"] as const).map(key => <div key={key} className={s.stat}>
-          <strong className={key === "critical" && model.counts.critical ? s.criticalCount : s.statValue}>{model.counts[key]}</strong>
-          <span className={s.statLabel}>{t.report.hero.severity[key]}</span>
-        </div>)}
-        <div className={s.stat}><strong className={s.statValue}>{model.counts.total}</strong><span className={s.statLabel}>{model.counts.total === 1 ? t.report.hero.issuesOne : t.report.hero.issues}</span></div>
-      </div>
-    </div>
-  </section>;
+ const {t,lang}=useLang(),fr=lang==="fr",copy=decisionCopy[lang],reading=reportReadingCopy[lang];
+ const score=globalScore(report),coverage=report.scores.coverage,counts=model.counts,date=new Date(report.generatedAt),Title=demo?"h2":"h1";
+ const verdict=counts.critical?"critical":score===undefined?"unavailable":counts.important?"important":counts.opportunity?"opportunity":"empty";
+ const url=reportScope(report.pageIdentity?.requested??report.url);
+ const facts=Object.entries(counts).reduce((text,[key,value])=>text.replace(`{${key}}`,String(value)),reading.summaryFacts as string);
+ return <section className={s.hero} aria-labelledby="report-domain">
+  {context&&<div className={s.context}>{context}</div>}
+  <div className={s.identityRow}><div className={s.identity}>
+   <p className={s.eyebrow}>{fr?"Rapport d’audit":"Audit report"}</p>
+   <Title id="report-domain" className={s.siteName}>{report.domain}</Title>
+   <p className={s.url}>{url??(fr?"Adresse indisponible":"Address unavailable")}</p>
+   <p className={s.date}>{Number.isFinite(date.getTime())?<time dateTime={report.generatedAt}>{date.toLocaleString(t.report.hero.locale,{day:"numeric",month:"long",year:"numeric",hour:"2-digit",minute:"2-digit",timeZone:"UTC"})} UTC</time>:copy.dateUnknown} · {fr?"Analyse ponctuelle":"Point-in-time analysis"}</p>
+  </div>{actions&&<div className={s.actions}>{actions}</div>}</div>
+  <div className={s.result}>
+   <div className={s.scoreBlock}><h2 className={s.scoreTitle}>{reading.score}</h2>
+    {score!==undefined?<p className={s.scoreNumber} aria-label={`Score ${score}/100`}><strong>{score}</strong><span>/100</span></p>:<p>{copy.notEvaluated}</p>}
+    {score!==undefined&&partialReport(report)&&<p className={s.provisional}>{copy.provisional}</p>}
+    <p className={s.coverage}>{coverage?`${fr?"Couverture":"Coverage"} ${Math.round(coverage.global.ratio*100)} %`:copy.coverageUnknown}</p>
+   </div>
+   <div className={s.decision}><h2>{copy.verdict[verdict]}</h2>
+    {score!==undefined&&score>=70&&counts.critical>0&&<p>{copy.favourable}</p>}
+    {!counts.total&&<p>{copy.empty}</p>}
+    {report.antiBot?.detected?<p>{copy.antiBot}</p>:partialReport(report)&&<p>{reading.partial}</p>}
+    <div className={s.stats}>{(["critical","important","opportunity"] as const).map(key=><span key={key} className={counts[key]?s[key]:undefined}><b>{counts[key]}</b> {t.report.hero.severity[key]}</span>)}</div>
+    <a className={s.actionLink} aria-label={copy.actions} href="?view=actions" onClick={event=>{if(onActions){event.preventDefault();onActions();}}}>{copy.actions} <span aria-hidden="true">→</span></a>
+   </div>
+  </div>
+  <details className={s.metadata}><summary>{interpretationCopy[lang].metadata}</summary>
+   <p>{facts}</p>
+   {coverage&&<p><span>{reading.coverage}</span><br/><span>{`${Math.round(coverage.global.ratio*100)} % — ${coverage.global.sufficient?t.report.measurementCoverage.sufficient:copy.insufficient}`}</span></p>}
+   {report.site?.title&&<p>{copy.siteTitle}: {report.site.title}</p>}
+   {report.site?.domainRating&&Number.isFinite(report.site.domainRating.score)&&report.site.domainRating.score>=0&&report.site.domainRating.score<=100&&<p><strong>DR {Math.round(report.site.domainRating.score)}/100</strong> · {t.report.hero.domainRatingFetchedAt} {new Date(report.site.domainRating.fetchedAt).toLocaleDateString(t.report.hero.locale,{timeZone:"UTC"})} · <a href="https://ahrefs.com/" target="_blank" rel="noopener noreferrer">Domain Rating by Ahrefs</a></p>}
+   <ReportPageScope report={report} lang={lang}/><p>{scoreLimit(report,lang)}</p><p>{interpretationCopy[lang].severity}</p><p>{copy.privacy}</p>
+  </details>
+  {introduction&&<ReportIntroductionView note={introduction} model={model} lang={lang} onSelectFinding={onSelectFinding}/>}
+ </section>;
 }

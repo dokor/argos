@@ -64,6 +64,17 @@ public class ReportReadService {
     private Optional<ReportDto> deserialize(AuditReport entity) {
         try {
             var report = objectMapper.readValue(entity.getReportJson(), ReportDto.class);
+            // Published snapshots predating measurements stay immutable. Recover only the
+            // numeric allowlist from the retained run; never expose or recompose raw evidence.
+            if (report.measurements() == null && entity.getRunId() != null) {
+                try {
+                    var retained = auditReportDao.retainedResult(entity.getRunId());
+                    if (retained.isPresent()) report = report.withMeasurements(ObservedMeasurements.from(
+                        objectMapper.readValue(retained.get(), com.dokor.argos.services.analysis.model.AuditReportJson.class)));
+                } catch (Exception unavailable) {
+                    logger.warn("Historical measurements unavailable reportId={}", entity.getId());
+                }
+            }
             // Old report_json kept only the origin; target_url retains the admission identity.
             if (report.pageIdentity() == null && entity.getTargetUrl() != null)
                 report = report.withPageIdentity(ReportPageIdentity.from(entity.getTargetUrl(), null));

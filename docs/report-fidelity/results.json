@@ -1,0 +1,642 @@
+[
+  {
+    "mode": "visitor",
+    "lang": "fr",
+    "width": 320,
+    "theme": "light",
+    "reportWidth": 305,
+    "reportHeight": 3758.59375,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "owner",
+    "lang": "fr",
+    "width": 320,
+    "theme": "light",
+    "reportWidth": 305,
+    "reportHeight": 3606.984375,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "shared",
+    "lang": "fr",
+    "width": 320,
+    "theme": "light",
+    "reportWidth": 305,
+    "reportHeight": 3714.25,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "shared-connected",
+    "lang": "fr",
+    "width": 320,
+    "theme": "light",
+    "reportWidth": 305,
+    "reportHeight": 3318.4375,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "visitor",
+    "lang": "en",
+    "width": 320,
+    "theme": "light",
+    "reportWidth": 305,
+    "reportHeight": 3630.296875,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "owner",
+    "lang": "en",
+    "width": 320,
+    "theme": "light",
+    "reportWidth": 305,
+    "reportHeight": 3500.375,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "shared",
+    "lang": "en",
+    "width": 320,
+    "theme": "light",
+    "reportWidth": 305,
+    "reportHeight": 3564.265625,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "shared-connected",
+    "lang": "en",
+    "width": 320,
+    "theme": "light",
+    "reportWidth": 305,
+    "reportHeight": 3211.828125,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "visitor",
+    "lang": "fr",
+    "width": 320,
+    "theme": "dark",
+    "reportWidth": 305,
+    "reportHeight": 3758.59375,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "owner",
+    "lang": "fr",
+    "width": 320,
+    "theme": "dark",
+    "reportWidth": 305,
+    "reportHeight": 3606.984375,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "shared",
+    "lang": "fr",
+    "width": 320,
+    "theme": "dark",
+    "reportWidth": 305,
+    "reportHeight": 3714.25,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "shared-connected",
+    "lang": "fr",
+    "width": 320,
+    "theme": "dark",
+    "reportWidth": 305,
+    "reportHeight": 3318.4375,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "visitor",
+    "lang": "en",
+    "width": 320,
+    "theme": "dark",
+    "reportWidth": 305,
+    "reportHeight": 3630.296875,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "owner",
+    "lang": "en",
+    "width": 320,
+    "theme": "dark",
+    "reportWidth": 305,
+    "reportHeight": 3500.375,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "shared",
+    "lang": "en",
+    "width": 320,
+    "theme": "dark",
+    "reportWidth": 305,
+    "reportHeight": 3564.265625,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "shared-connected",
+    "lang": "en",
+    "width": 320,
+    "theme": "dark",
+    "reportWidth": 305,
+    "reportHeight": 3211.828125,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "visitor",
+    "lang": "fr",
+    "width": 390,
+    "theme": "light",
+    "reportWidth": 375,
+    "reportHeight": 3509.90625,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "owner",
+    "lang": "fr",
+    "width": 390,
+    "theme": "light",
+    "reportWidth": 375,
+    "reportHeight": 3325.984375,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "shared",
+    "lang": "fr",
+    "width": 390,
+    "theme": "light",
+    "reportWidth": 375,
+    "reportHeight": 3434.875,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "shared-connected",
+    "lang": "fr",
+    "width": 390,
+    "theme": "light",
+    "reportWidth": 375,
+    "reportHeight": 3109.4375,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "visitor",
+    "lang": "en",
+    "width": 390,
+    "theme": "light",
+    "reportWidth": 375,
+    "reportHeight": 3431.8125,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "owner",
+    "lang": "en",
+    "width": 390,
+    "theme": "light",
+    "reportWidth": 375,
+    "reportHeight": 3269.578125,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "shared",
+    "lang": "en",
+    "width": 390,
+    "theme": "light",
+    "reportWidth": 375,
+    "reportHeight": 3347.1875,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "shared-connected",
+    "lang": "en",
+    "width": 390,
+    "theme": "light",
+    "reportWidth": 375,
+    "reportHeight": 3016.4375,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "visitor",
+    "lang": "fr",
+    "width": 390,
+    "theme": "dark",
+    "reportWidth": 375,
+    "reportHeight": 3509.90625,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "owner",
+    "lang": "fr",
+    "width": 390,
+    "theme": "dark",
+    "reportWidth": 375,
+    "reportHeight": 3325.984375,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "shared",
+    "lang": "fr",
+    "width": 390,
+    "theme": "dark",
+    "reportWidth": 375,
+    "reportHeight": 3416.875,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "shared-connected",
+    "lang": "fr",
+    "width": 390,
+    "theme": "dark",
+    "reportWidth": 375,
+    "reportHeight": 3091.4375,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "visitor",
+    "lang": "en",
+    "width": 390,
+    "theme": "dark",
+    "reportWidth": 375,
+    "reportHeight": 3431.8125,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "owner",
+    "lang": "en",
+    "width": 390,
+    "theme": "dark",
+    "reportWidth": 375,
+    "reportHeight": 3269.578125,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "shared",
+    "lang": "en",
+    "width": 390,
+    "theme": "dark",
+    "reportWidth": 375,
+    "reportHeight": 3347.1875,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "shared-connected",
+    "lang": "en",
+    "width": 390,
+    "theme": "dark",
+    "reportWidth": 375,
+    "reportHeight": 3016.4375,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "visitor",
+    "lang": "fr",
+    "width": 768,
+    "theme": "light",
+    "reportWidth": 753,
+    "reportHeight": 2211.71875,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "owner",
+    "lang": "fr",
+    "width": 768,
+    "theme": "light",
+    "reportWidth": 753,
+    "reportHeight": 2143.921875,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "shared",
+    "lang": "fr",
+    "width": 768,
+    "theme": "light",
+    "reportWidth": 753,
+    "reportHeight": 2099.46875,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "shared-connected",
+    "lang": "fr",
+    "width": 768,
+    "theme": "light",
+    "reportWidth": 753,
+    "reportHeight": 1905.71875,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "visitor",
+    "lang": "en",
+    "width": 768,
+    "theme": "light",
+    "reportWidth": 753,
+    "reportHeight": 2194.90625,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "owner",
+    "lang": "en",
+    "width": 768,
+    "theme": "light",
+    "reportWidth": 753,
+    "reportHeight": 2127.109375,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "shared",
+    "lang": "en",
+    "width": 768,
+    "theme": "light",
+    "reportWidth": 753,
+    "reportHeight": 2060.96875,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "shared-connected",
+    "lang": "en",
+    "width": 768,
+    "theme": "light",
+    "reportWidth": 753,
+    "reportHeight": 1888.90625,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "visitor",
+    "lang": "fr",
+    "width": 768,
+    "theme": "dark",
+    "reportWidth": 753,
+    "reportHeight": 2211.71875,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "owner",
+    "lang": "fr",
+    "width": 768,
+    "theme": "dark",
+    "reportWidth": 753,
+    "reportHeight": 2143.921875,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "shared",
+    "lang": "fr",
+    "width": 768,
+    "theme": "dark",
+    "reportWidth": 753,
+    "reportHeight": 2099.46875,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "shared-connected",
+    "lang": "fr",
+    "width": 768,
+    "theme": "dark",
+    "reportWidth": 753,
+    "reportHeight": 1905.71875,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "visitor",
+    "lang": "en",
+    "width": 768,
+    "theme": "dark",
+    "reportWidth": 753,
+    "reportHeight": 2194.90625,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "owner",
+    "lang": "en",
+    "width": 768,
+    "theme": "dark",
+    "reportWidth": 753,
+    "reportHeight": 2127.109375,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "shared",
+    "lang": "en",
+    "width": 768,
+    "theme": "dark",
+    "reportWidth": 753,
+    "reportHeight": 2060.96875,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "shared-connected",
+    "lang": "en",
+    "width": 768,
+    "theme": "dark",
+    "reportWidth": 753,
+    "reportHeight": 1888.90625,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "visitor",
+    "lang": "fr",
+    "width": 1120,
+    "theme": "light",
+    "reportWidth": 1105,
+    "reportHeight": 2175.125,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "owner",
+    "lang": "fr",
+    "width": 1120,
+    "theme": "light",
+    "reportWidth": 893,
+    "reportHeight": 2129.53125,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "shared",
+    "lang": "fr",
+    "width": 1120,
+    "theme": "light",
+    "reportWidth": 1105,
+    "reportHeight": 2041.1875,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "shared-connected",
+    "lang": "fr",
+    "width": 1120,
+    "theme": "light",
+    "reportWidth": 1105,
+    "reportHeight": 1869.125,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "visitor",
+    "lang": "en",
+    "width": 1120,
+    "theme": "light",
+    "reportWidth": 1105,
+    "reportHeight": 2175.125,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "owner",
+    "lang": "en",
+    "width": 1120,
+    "theme": "light",
+    "reportWidth": 893,
+    "reportHeight": 2110.9375,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "shared",
+    "lang": "en",
+    "width": 1120,
+    "theme": "light",
+    "reportWidth": 1105,
+    "reportHeight": 2025.125,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "shared-connected",
+    "lang": "en",
+    "width": 1120,
+    "theme": "light",
+    "reportWidth": 1105,
+    "reportHeight": 1869.125,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "visitor",
+    "lang": "fr",
+    "width": 1120,
+    "theme": "dark",
+    "reportWidth": 1105,
+    "reportHeight": 2175.125,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "owner",
+    "lang": "fr",
+    "width": 1120,
+    "theme": "dark",
+    "reportWidth": 893,
+    "reportHeight": 2129.53125,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "shared",
+    "lang": "fr",
+    "width": 1120,
+    "theme": "dark",
+    "reportWidth": 1105,
+    "reportHeight": 2041.1875,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "shared-connected",
+    "lang": "fr",
+    "width": 1120,
+    "theme": "dark",
+    "reportWidth": 1105,
+    "reportHeight": 1869.125,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "visitor",
+    "lang": "en",
+    "width": 1120,
+    "theme": "dark",
+    "reportWidth": 1105,
+    "reportHeight": 2175.125,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "owner",
+    "lang": "en",
+    "width": 1120,
+    "theme": "dark",
+    "reportWidth": 893,
+    "reportHeight": 2110.9375,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "shared",
+    "lang": "en",
+    "width": 1120,
+    "theme": "dark",
+    "reportWidth": 1105,
+    "reportHeight": 2025.125,
+    "overflow": false,
+    "errors": 0
+  },
+  {
+    "mode": "shared-connected",
+    "lang": "en",
+    "width": 1120,
+    "theme": "dark",
+    "reportWidth": 1105,
+    "reportHeight": 1869.125,
+    "overflow": false,
+    "errors": 0
+  }
+]

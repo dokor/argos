@@ -43,4 +43,11 @@ public class AuditReportDao extends CrudDaoQuerydsl<AuditReport> {
         return Optional.ofNullable(transactionManager.selectQuery(connection).select(REPORT)
             .from(REPORT).where(REPORT.runId.eq(runId)).fetchOne());
     }
+
+    /** Internal result for a report already authorized and checked for expiry by the reader. */
+    public Optional<String> retainedResult(long runId) {
+        var run = com.dokor.argos.db.generated.QAuditRun.auditRun;
+        return Optional.ofNullable(transactionManager.selectQuery().select(run.resultJson)
+            .from(run).where(run.id.eq(runId)).fetchOne());
+    }
 }

@@ -87,6 +87,7 @@ try{
  }else{
  for(const lang of ['fr','en'])for(const [fixture,report] of Object.entries(fixtures))for(const format of ['summary','full']){
   await page.goto('http://localhost:3090'+(lang==='en'?'/en':'')+'/report/fixture-'+fixture+'-controlled?view=technical&domain=security&severity=critical');
+  await page.locator('details').filter({has:page.locator('summary').filter({hasText:lang==='fr'?'Exporter en PDF':'Export PDF'})}).locator('summary').click();
   await page.getByLabel(lang==='fr'?'Format PDF':'PDF format').selectOption(format);
   const popupPromise=page.waitForEvent('popup');await page.getByRole('button',{name:lang==='fr'?'Exporter en PDF':'Export PDF',exact:true}).click();const popup=await popupPromise;
   await popup.locator('main').waitFor();await page.getByText(lang==='fr'?'Prévisualisation prête.':'Preview ready.',{exact:false}).waitFor();await popup.evaluate(()=>document.fonts.ready);
@@ -102,6 +103,7 @@ try{
   const route=audience==='public'?'/report/fixture-complete-controlled':audience==='owner'?'/account/runs/644':'/share/'+sharedToken;
   await page.goto('http://localhost:3090'+(lang==='en'?'/en':'')+route);
   const format=connected?'full':'summary';
+  await page.locator('details').filter({has:page.locator('summary').filter({hasText:lang==='fr'?'Exporter en PDF':'Export PDF'})}).locator('summary').click();
   await page.getByLabel(lang==='fr'?'Format PDF':'PDF format').selectOption(format);
   if(!connected)assert.equal(await page.getByLabel(lang==='fr'?'Format PDF':'PDF format').locator('option').count(),1);
   const opened=page.waitForEvent('popup');await page.getByRole('button',{name:lang==='fr'?'Exporter en PDF':'Export PDF',exact:true}).click();const popup=await opened;
@@ -113,7 +115,7 @@ try{
   const name=[audience,lang,format].join('-');await popup.pdf({path:output+'/'+name+'.pdf',format:'A4',preferCSSPageSize:true,printBackground:false,tagged:true});
   rows.push({fixture:audience,lang,format,findings:count,title:await popup.title(),url:'about:blank'});await popup.close();
  }
- await context.clearCookies();await page.goto('http://localhost:3090/report/fixture-expiring-controlled');await page.getByRole('button',{name:'Exporter en PDF',exact:true}).click();await page.getByText('Export impossible',{exact:false}).waitFor();
+ await context.clearCookies();await page.goto('http://localhost:3090/report/fixture-expiring-controlled');await page.locator('summary').filter({hasText:'Exporter en PDF'}).click();await page.getByRole('button',{name:'Exporter en PDF',exact:true}).click();await page.getByText('Export impossible',{exact:false}).waitFor();
  fs.mkdirSync(output,{recursive:true});fs.writeFileSync('outputs/pdf/report-fixtures/pdf-contract.json',JSON.stringify(rows,null,2)+'\n');console.log(rows.length+' PDF fixtures exported; public, owner and shared access, expiration, formats, unique counts and token-free previews verified.');
  }
 }finally{await browser?.close();server.kill();await new Promise(resolve=>api.close(resolve));}

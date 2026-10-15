@@ -1,0 +1,16 @@
+@use '../../styles/tokens' as t;
+.section h2 {font-size:20px;font-weight:650;line-height:1.35;letter-spacing:-.4px;margin-bottom:12px;}
+.section ol {list-style:none;padding:0;margin:0;}
+.section li {display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:13px;align-items:center;padding:18px 0;border-bottom:1px solid t.$border;}
+.rank {align-self:start;padding-top:2px;color:t.$text-muted;font-variant-numeric:tabular-nums;}
+.section h3 {font-size:15px;font-weight:650;line-height:1.4;margin:0;}
+.severity {font-size:11px;font-weight:650;margin-bottom:4px;}
+.severity[data-severity=critical] {color:var(--argos-error);}
+.severity[data-severity=important] {color:var(--argos-measure-warning);}
+.impact {font-size:13px;color:t.$text-muted;margin-top:5px;}
+.link {color:t.$brand;font-size:14px;font-weight:600;min-height:44px;text-align:left;}
+.section details {font-size:13px;margin-top:10px;}
+.section summary,.section details button {cursor:pointer;min-height:44px;}
+.section details button {display:block;color:t.$brand;}
+.link:focus-visible,.section button:focus-visible,.section summary:focus-visible{outline:3px solid t.$brand;outline-offset:3px;}
+@media(max-width:700px){.section li{grid-template-columns:24px minmax(0,1fr);}.link{grid-column:2;}}
