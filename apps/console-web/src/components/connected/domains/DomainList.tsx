@@ -1,4 +1,5 @@
 "use client";
+import DomainCommonMetric from "./DomainCommonMetric";
 import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "@/components/LocalizedLink";
@@ -85,6 +86,7 @@ export default function DomainList() {
                         : c.noBatch}
                     </p>
                     {domain.batchStatus && <State value={domain.batchStatus} />}
+                    <p>{c.incomplete} : {domain.counts.partialPages + domain.counts.failedPages + domain.counts.canceledPages + domain.counts.unknownPages}</p>
                   </div>
                   <Link
                     className={s.secondary}
@@ -102,15 +104,7 @@ export default function DomainList() {
                     <dt>{c.priority}</dt>
                     <dd>{domain.counts.priorityPages}</dd>
                   </div>
-                  <div>
-                    <dt>{c.incomplete}</dt>
-                    <dd>
-                      {domain.counts.partialPages +
-                        domain.counts.failedPages +
-                        domain.counts.canceledPages +
-                        domain.counts.unknownPages}
-                    </dd>
-                  </div>
+                  <DomainCommonMetric domainId={domain.id} batchId={domain.latestBatchId}/>
                   <div>
                     <dt>
                       {c.complete} / {c.selected}

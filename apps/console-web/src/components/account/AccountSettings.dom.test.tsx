@@ -68,7 +68,7 @@ it("stops before the protected mutation if reauthentication finishes after unmou
 it("keeps changes unsaved when profile update fails and reports an error",async()=>{
  state.section="profile";const base=vi.mocked(accountFetch).getMockImplementation()!;vi.mocked(accountFetch).mockImplementation(async(...args)=>{if(args[1]==="PATCH")throw new AccountClientError("account_unavailable",503);return base(...args);});
  render(<AccountSettings/>);fireEvent.change(await screen.findByLabelText("Nom d’affichage"),{target:{value:"Camille edited"}});fireEvent.submit(screen.getByRole("button",{name:"Enregistrer"}).closest("form")!);
- expect(await screen.findByRole("alert")).toHaveTextContent("indisponible");expect(screen.getByLabelText("Nom d’affichage")).toHaveValue("Camille edited");expect(screen.queryByRole("status")).not.toBeInTheDocument();
+ expect(await screen.findByRole("alert")).toHaveTextContent("indisponible");expect(screen.getByLabelText("Nom d’affichage")).toHaveValue("Camille edited");expect(screen.queryByText("Opération effectuée.")).not.toBeInTheDocument();expect(screen.getByRole("status")).toHaveTextContent("Chargement du quota");
 });
 
 it("preserves the report destination while confirming an unverified email",async()=>{
