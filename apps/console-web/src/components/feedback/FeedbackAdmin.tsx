@@ -1,4 +1,5 @@
 "use client";
+import AdminNavigation from "@/components/admin/AdminNavigation";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { accountFetch, AccountClientError } from "@/lib/account-client";
 import { feedbackStatuses, feedbackTypes } from "@/lib/feedback-request";
@@ -43,7 +44,7 @@ export default function FeedbackAdmin() {
     setQuery(params.toString()); setCursor(null); setSelected(null); list.refresh();
   }
   return <><main className={s.page}>
-    <h1>{c.admin}</h1><Link href="/account/admin">{c.back}</Link>
+    <h1>{c.admin}</h1>{allowed && <AdminNavigation active="feedback" />}<Link href="/account/admin">{c.back}</Link>
     {!session.ready ? <p role="status">{c.loading}</p> : !allowed ? <p role="alert">{c.denied}</p> : <>
       <form onSubmit={filter} className={s.filters}>
         <label>{c.type}<select name="type" defaultValue=""><option value="">{c.all}</option>{feedbackTypes.map(key => <option key={key} value={key}>{c.types[key]}</option>)}</select></label>
