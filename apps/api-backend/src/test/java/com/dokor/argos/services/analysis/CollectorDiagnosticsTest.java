@@ -32,7 +32,6 @@ class CollectorDiagnosticsTest {
         when(config.observatoryApiUrl()).thenReturn("https://observatory-api.mdn.mozilla.net/api/v2");
         var monitoring = new CollectorDiagnostics(config);
         assertEquals(2, monitoring.snapshot().size());
-        if (!"true".equals(System.getenv("ARGOS_EXTERNAL_SCANS_ENABLED")))
             assertTrue(monitoring.snapshot().stream().allMatch(s -> "POLICY_DISABLED".equals(s.failureCode())));
         monitoring.record("ssl", false, new ModuleUnavailableException("https://private.invalid/?token=secret", new ExternalHttpClient.HttpStatusException(429)));
         assertEquals("PROVIDER_RATE_LIMITED", monitoring.snapshot().getFirst().failureCode());
@@ -44,4 +43,11 @@ class CollectorDiagnosticsTest {
         assertFalse(new ObjectMapper().writeValueAsString(monitoring.snapshot()).contains("private.invalid"));
         assertEquals(2, monitoring.snapshot().size());
     }
-}
+    @Test void enabledMonitoringUsesTheSameConfigurationAsTheClients() {
+        var config = mock(ConfigurationService.class);
+        when(config.sslLabsApiUrl()).thenReturn("https://api.ssllabs.com/api/v3");
+        when(config.observatoryApiUrl()).thenReturn("https://observatory-api.mdn.mozilla.net/api/v2");
+        when(config.externalScansEnabled()).thenReturn(true);
+        var statuses = new CollectorDiagnostics(config).snapshot();
+        assertTrue(statuses.stream().allMatch(s -> s.enabled() && "NOT_OBSERVED".equals(s.state()) && s.failureCode() == null));
+    }}
