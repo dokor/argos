@@ -1,4 +1,5 @@
 "use client";
+import DomainScopeGuide from "./DomainScopeGuide";
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "@/components/LocalizedLink";
@@ -331,7 +332,7 @@ export default function DomainNew() {
                   </Link>
                 </div>
               ))}
-              <Surface title={c.stepScope}>
+              <div className={d.scopeLayout}><Surface title={c.stepScope}>
                 <form
                   className={d.form}
                   onSubmit={(event) => {
@@ -447,7 +448,7 @@ export default function DomainNew() {
                     retry={activeBatches.reload}
                   />
                 )}
-              </Surface>
+              </Surface><DomainScopeGuide /></div>
             </>
           ) : (
             <>
