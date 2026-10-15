@@ -21,11 +21,13 @@ mvn -f apps/api-backend/pom.xml -P mariadb-integration -Dit.test=ControlledAudit
 The browser harness is `scripts/e2e/browser.mjs`, distinct from the runtime audit service. It uses the repository's Playwright dependency to avoid adding another browser version. For each scenario, the retired Next numeric read `/api/audits/runs/{runId}` must return 410, `Cache-Control: private, no-store`, and only `{ "error": "resource_unavailable" }`, as specified in [the legacy admin transition](../accounts/legacy-admin-transition.md). A separate request to the local Java fixture verifies that the underlying read still returns 401 without a server credential. CI retains sanitized scenario/status/coverage evidence and test reports, without browser traces, screenshots, raw report JSON or URLs containing report credentials. Only synthetic fixtures are used. Public-site smoke tests are deliberately absent from deterministic CI; any future optional smoke target requires explicit authorization and a separate opt-in command.
 
 The module-completeness assertion uses the current French label from
-`reportReadingCopy.fr.moduleCompleteness`: “Modules terminés, échoués ou ignorés”.
+`reportReadingCopy.fr.moduleCompleteness`: “Modules entièrement réussis”.
 It requires exactly one matching definition-list row before reading its value,
 then compares that value to the persisted `scores.completeness`. An absent or
 duplicated row fails immediately. The obsolete label “Complétude opérationnelle
 des modules” caused a 30-second locator timeout after the report was already
 published; increasing the timeout would not fix that selector mismatch.
+When execution metadata is present, the same browser test independently compares
+terminal progress and failed-module counts with `scores.moduleExecution`.
 
 After the suite, CI makes a consistent `mariadb-dump --single-transaction --hex-blob`, restores it into a separate isolated database, and compares report counts and digests covering IDs, run IDs, token hashes and frozen JSON. Only a PASS evidence JSON is retained, never the dump. This verifies a current-schema data backup/restore on the fixture service; restoring a production pre-migration backup and testing the previous application binary remain operator release gates.
