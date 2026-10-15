@@ -142,11 +142,11 @@ try {
   await page.getByRole("link", { name: c.open, exact: true }).click();
   await page.waitForURL(base + stable);
   await page.getByRole("heading", { name: c.history, exact: true }).waitFor();
-  assert.ok(
-    await page
-      .getByRole("link", { name: new RegExp("#" + admitted.id + "$") })
-      .count(),
-  );
+  const historyLink = page.getByRole("link", {
+    name: new RegExp("#" + admitted.id + "$"),
+  });
+  await historyLink.waitFor();
+  assert.equal(await historyLink.getAttribute("href"), stable);
   // A second launch is a distinct historical resource; canceling it cannot replace the first.
   await page.goto(base + "/account/domains/new?discovery=" + discovery);
   await page.getByRole("button", { name: c.selectNone, exact: true }).click();
