@@ -1,12 +1,13 @@
 "use client";
 
 import ModuleExecutionFacts from "./ModuleExecutionFacts";
+import ReportPageScope from "./ReportPageScope";
+
 import Link from "@/components/LocalizedLink";
 import { useLang } from "@/lib/i18n/LangContext";
 import { CATALOGUE_VERSION } from "./findingCatalogue";
 import { decisionCopy } from "./decisionCopy";
 import { reportReadingCopy } from "./reportReadingCopy";
-import { reportScope } from "./reportSummaryModel";
 import type { ReportModel } from "./reportModel";
 import type { Report } from "./types";
 import s from "./ReportMethod.module.scss";
@@ -44,7 +45,7 @@ export default function ReportMethod({ report, model, open, onToggle }: {
     <div className={s.body}>
       <h2>{copy.method}</h2>
       <dl className={s.facts}>
-        <div><dt>{copy.scope}</dt><dd>{reportScope(report.url) ?? copy.scopeUnknown}</dd></div>
+        <div><dt>{copy.scope}</dt><dd><ReportPageScope report={report} lang={lang} /></dd></div>
         <div><dt>{t.report.hero.analyzedAt}</dt><dd>{Number.isFinite(new Date(report.generatedAt).getTime()) ? <time dateTime={report.generatedAt}>{new Date(report.generatedAt).toLocaleString(t.report.hero.locale, { timeZone: "UTC", timeZoneName: "short" })}</time> : copy.dateUnknown}</dd></div>
         <div><dt>{reading.coverage}</dt><dd>{coverage ? `${Math.round(coverage.global.ratio * 100)} %` : copy.coverageUnknown}</dd></div>
         <ModuleExecutionFacts scores={report.scores} lang={lang} />

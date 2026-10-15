@@ -77,6 +77,7 @@ class SslLabsClientTest {
     @Test void upstreamAssessmentErrorNeverReturnsIncompleteData() throws Exception {
         var error = assertThrows(IllegalStateException.class,
             () -> client(Duration.ofSeconds(2), 1, 200, "ERROR").analyze("example.com"));
-        assertTrue(error.getMessage().contains("status=ERROR"));
+        assertEquals(com.dokor.argos.services.analysis.CollectorFailure.Code.TARGET_ASSESSMENT_FAILED,
+            com.dokor.argos.services.analysis.CollectorFailure.classify(error));
     }
 }

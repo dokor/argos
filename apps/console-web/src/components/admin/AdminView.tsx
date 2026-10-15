@@ -1,4 +1,8 @@
 "use client";
+import AdminNavigation from "./AdminNavigation";
+import { adminQuery, safeAdminRunReturn } from "@/lib/admin-request";
+import { localizedPath } from "@/lib/i18n/routes";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { accountFetch, AccountClientError } from "@/lib/account-client";
 import { useAccountSession } from "@/components/account/AccountSession";
@@ -82,11 +86,16 @@ function stateLabel(value: string | undefined, c: AdminCopy) {
 export default function AdminView({ runId }: { runId?: string }) {
   const { lang, t } = useLang(),
     c = copy[lang],
-    session = useAccountSession();
+    session = useAccountSession(), params = useSearchParams(), router = useRouter();
   const [denied, setDenied] = useState(false),
-    [query, setQuery] = useState(""),
-    [cursor, setCursor] = useState<string | null>(null),
     [reportOpen, setReportOpen] = useState(false);
+  const query = adminQuery("admin/runs", new URLSearchParams(params));
+  const listQuery = query ? new URLSearchParams({ limit: "20", ...Object.fromEntries(query) }) : null;
+  const cursor = query?.get("cursor");
+  const listUrl = "/account/admin/runs" + (params.size ? "?" + params.toString() : "");
+  const returnTo = safeAdminRunReturn(params.get("returnTo")) ?? "/account/admin/runs";
+  const navigate = (next: URLSearchParams) => router.push(localizedPath("/account/admin/runs" + (next.size ? "?" + next : ""), lang));
+  useEffect(() => { window.dispatchEvent(new Event("argos-reading")); }, [params]);
   const onDenied = useCallback(() => setDenied(true), []),
     allowed =
       session.ready && !!session.profile?.admin && !session.denied && !denied;
@@ -95,14 +104,7 @@ export default function AdminView({ runId }: { runId?: string }) {
     onDenied,
   );
   const list = useResource<Page>(
-    allowed && !runId
-      ? "admin/runs?" +
-          new URLSearchParams({
-            limit: "20",
-            ...Object.fromEntries(new URLSearchParams(query)),
-            ...(cursor ? { cursor } : {}),
-          })
-      : null,
+    allowed && !runId && listQuery ? "admin/runs?" + listQuery : null,
     onDenied,
   );
   const run = useResource<Run>(
@@ -118,15 +120,13 @@ export default function AdminView({ runId }: { runId?: string }) {
     const q = new URLSearchParams();
     for (const [k, v] of new FormData(e.currentTarget))
       if (typeof v === "string" && v.trim()) q.set(k, v.trim());
-    setQuery(q.toString());
-    setCursor(null);
-    list.refresh();
+    navigate(q);
   }
   if (allowed && report.data)
     return (
       <>
-        <div className={s.returnBar}>
-          <Link href="/account/admin/runs">{c.back}</Link>
+        <div className={s.returnBar}><AdminNavigation active="runs" />
+          <Link href={returnTo}>{c.back}</Link>
         </div>
         <ReportPage embedded params={{ report: report.data }} />
       </>
@@ -136,17 +136,16 @@ export default function AdminView({ runId }: { runId?: string }) {
       <h1>
         {c.title} · {c.runs}
       </h1>
-      <Link href="/account/admin/users">{c.users}</Link>
+      {allowed && <AdminNavigation active="runs" />}
       {!session.ready ? (
         <p role="status">{c.loading}</p>
       ) : !allowed ? (
         <p role="alert">{c.denied}</p>
       ) : runId ? (
         <>
-          <Link href="/account/admin/runs">{c.back}</Link>
+          <div className={s.actions}><Link href={returnTo}>{c.back}</Link><button onClick={run.refresh}>{c.refresh}</button></div>
           {run.loading && <p role="status">{c.loading}</p>}
           {run.error != null && <p role="alert">{message(run.error, c)}</p>}
-          <button onClick={run.refresh}>{c.refresh}</button>
           {run.data && (
             <section className={s.card}>
               <h2>{run.data.site ?? run.data.id}</h2>
@@ -211,18 +210,18 @@ export default function AdminView({ runId }: { runId?: string }) {
               {c.refresh}
             </button>
           </section>
-          <form className={s.filters} onSubmit={filters}>
+          <form key={params.toString()} className={s.filters} onSubmit={filters}>
             <label>
               {c.user}
-              <input name="user" />
+              <input name="user" defaultValue={query?.get("user") ?? ""} />
             </label>
             <label>
               {c.site}
-              <input name="site" maxLength={253} />
+              <input name="site" maxLength={253} defaultValue={query?.get("site") ?? ""} />
             </label>
             <label>
               {c.status}
-              <select name="status">
+              <select name="status" defaultValue={query?.get("status") ?? ""}>
                 <option value="">{c.all}</option>
                 {["QUEUED", "RUNNING", "COMPLETED", "FAILED", "CANCELED"].map(
                   (v) => (
@@ -235,15 +234,15 @@ export default function AdminView({ runId }: { runId?: string }) {
             </label>
             <label>
               {c.from}
-              <input name="from" type="date" />
+              <input name="from" type="date" defaultValue={query?.get("from") ?? ""} />
             </label>
             <label>
               {c.until}
-              <input name="until" type="date" />
+              <input name="until" type="date" defaultValue={query?.get("until") ?? ""} />
             </label>
             <button>{c.apply}</button>
           </form>
-          {list.loading ? (
+          {!query ? <p role="alert">{c.invalid}</p> : list.loading ? (
             <p role="status">{c.loading}</p>
           ) : list.error != null ? (
             <p role="alert">{message(list.error, c)}</p>
@@ -277,7 +276,7 @@ export default function AdminView({ runId }: { runId?: string }) {
                       <td>{stateLabel(row.status, c)}</td>
                       <td>{date(row.createdAt, lang)}</td>
                       <td>
-                        <Link href={"/account/admin/runs/" + row.id}>
+                        <Link href={"/account/admin/runs/" + row.id + "?" + new URLSearchParams({ returnTo: listUrl })}>
                           {c.detail}
                         </Link>
                       </td>
@@ -292,13 +291,13 @@ export default function AdminView({ runId }: { runId?: string }) {
           <div className={s.actions}>
             <button
               disabled={!cursor || list.loading}
-              onClick={() => setCursor(null)}
+              onClick={() => { const next = new URLSearchParams(query ?? undefined); next.delete("cursor"); navigate(next); }}
             >
               {c.first}
             </button>
             <button
               disabled={!list.data?.nextCursor || list.loading}
-              onClick={() => setCursor(list.data!.nextCursor)}
+              onClick={() => { const next = new URLSearchParams(query ?? undefined); next.set("cursor", list.data!.nextCursor!); navigate(next); }}
             >
               {c.next}
             </button>

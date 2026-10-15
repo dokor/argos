@@ -1,4 +1,5 @@
 export type Report = {
+  pageIdentity?: { requested: string | null; destination: string | null; redacted: boolean; redirected: boolean } | null;
   introduction?: ReportIntroduction | null;
   generatedAt: string;
   domain: string;

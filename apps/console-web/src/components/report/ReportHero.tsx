@@ -1,12 +1,14 @@
 "use client";
 
+import ReportPageScope from "./ReportPageScope";
+
 import { buildReportModel, ReportModel } from "./reportModel";
 import type { Report, ReportIntroduction } from "./types";
 import ReportIntroductionView from "./ReportIntroductionView";
 import { useLang } from "@/lib/i18n/LangContext";
 import { decisionCopy } from "./decisionCopy";
 import { reportReadingCopy } from "./reportReadingCopy";
-import { globalScore, reportScope, partialReport } from "./reportSummaryModel";
+import { globalScore, partialReport } from "./reportSummaryModel";
 import ReportSummary from "./ReportSummary";
 import RelaunchButton from "./RelaunchButton";
 import ShareReportButton from "./ShareReportButton";
@@ -21,7 +23,6 @@ export default function ReportHero({ report, model = buildReportModel(report), o
   const reading = reportReadingCopy[lang];
   const score = globalScore(report);
   const coverage = report.scores.coverage;
-  const scope = reportScope(report.url);
   const date = new Date(report.generatedAt);
   const domainRating = report.site?.domainRating;
   const hasDomainRating = domainRating != null && Number.isFinite(domainRating.score)
@@ -39,7 +40,7 @@ export default function ReportHero({ report, model = buildReportModel(report), o
             <strong>DR {Math.round(domainRating.score)}/100</strong> · {t.report.hero.domainRatingFetchedAt} {new Date(domainRating.fetchedAt).toLocaleDateString(t.report.hero.locale, { timeZone: "UTC" })} · <a href="https://ahrefs.com/" target="_blank" rel="noopener noreferrer">Domain Rating by Ahrefs</a>
           </span>}
         </div><p className={s.privacy}>{copy.privacy}</p></details>
-        <p className={s.scope}>{copy.scope}: {scope ?? copy.scopeUnknown}</p>
+        <div className={s.scope}><ReportPageScope report={report} lang={lang} /></div>
       </div>
       {introduction && <ReportIntroductionView note={introduction} model={model} lang={lang} onSelectFinding={onSelectFinding} />}
       <div className={s.topRow}>
@@ -50,7 +51,7 @@ export default function ReportHero({ report, model = buildReportModel(report), o
             <a href="#report-method" onClick={event => { if (onMethod) { event.preventDefault(); onMethod(); } }}>{copy.methodLink}</a>
           </div>
           {!personal && <div className={s.actions}>
-            <RelaunchButton url={report.url} />
+            <RelaunchButton url={report.pageIdentity && !report.pageIdentity.redacted ? report.url : ""} />
             <ShareReportButton />
           </div>}
         </div>

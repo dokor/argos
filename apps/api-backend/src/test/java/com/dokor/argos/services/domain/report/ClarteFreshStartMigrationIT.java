@@ -26,7 +26,7 @@ class ClarteFreshStartMigrationIT extends MariaDbReportFixture {
         before.forEach((table, count) -> assertTrue(count > 0, "Unseeded family: " + table));
         var history = history();
         var schema = schema();
-        assertEquals(1, latest().migrate().migrationsExecuted);
+        assertEquals(1, resetVersion().migrate().migrationsExecuted);
         assertReset();
         assertEquals(history, history());
         assertEquals(schema, schema(), "Columns, indexes and constraints remain in place");
@@ -37,14 +37,14 @@ class ClarteFreshStartMigrationIT extends MariaDbReportFixture {
     }
 
     @Test void restartKeepsNewAccountsAuditsAndQueueState() throws Exception {
-        latest().migrate();
+        resetVersion().migrate();
         sql("INSERT INTO ARG_ACCOUNT_USER(id,email,display_name,state,created_at) VALUES(20,'new@example.com','New','ACTIVE',NOW(3))");
         sql("INSERT INTO ARG_DOMAIN(id,hostname) VALUES(20,'new.example.com')");
         sql("INSERT INTO ARG_AUDIT(id,input_url,normalized_url,domain_id) VALUES(20,'https://new.example.com','https://new.example.com',20)");
         var run = runs.createQueuedRun(20, Instant.now());
         var before = counts();
-        assertEquals(0, latest().migrate().migrationsExecuted);
-        assertEquals(0, latest().migrate().migrationsExecuted);
+        assertEquals(0, resetVersion().migrate().migrationsExecuted);
+        assertEquals(0, resetVersion().migrate().migrationsExecuted);
         assertEquals(before, counts());
         assertTrue(runs.findByReportToken(run.reportToken()).isPresent());
         assertEquals(1, number("SELECT pending FROM ARG_AUDIT_ADMISSION WHERE id=1"));
@@ -53,19 +53,19 @@ class ClarteFreshStartMigrationIT extends MariaDbReportFixture {
     }
 
     @Test void emptyInstallationAndRestartHaveOnlyTechnicalSeeds() throws Exception {
-        var flyway = Flyway.configure().dataSource(source).cleanDisabled(false).load();
+        var flyway = Flyway.configure().dataSource(source).cleanDisabled(false).target("27").load();
         flyway.clean(); flyway.migrate();
         assertReset();
-        assertEquals(0, latest().migrate().migrationsExecuted);
-        assertEquals("27", latest().info().current().getVersion().toString());
+        assertEquals(0, resetVersion().migrate().migrationsExecuted);
+        assertEquals("27", resetVersion().info().current().getVersion().toString());
     }
 
     @Test void preAccountSchemaUpgradesThroughHistoryThenResets() throws Exception {
         migrateHistoricalRowsTo("6");
         assertTrue(number("SELECT COUNT(*) FROM ARG_AUDIT_REPORT") > 0);
-        latest().migrate();
+        resetVersion().migrate();
         assertReset();
-        assertEquals("27", latest().info().current().getVersion().toString());
+        assertEquals("27", resetVersion().info().current().getVersion().toString());
     }
 
     @Test void lateSqlFailureRollsBackAllDeletesAndTechnicalCounters() throws Exception {
@@ -75,7 +75,7 @@ class ClarteFreshStartMigrationIT extends MariaDbReportFixture {
         // Fails after deleting runs (including their admission-trigger updates).
         sql("CREATE TRIGGER fixture_reset_failure BEFORE DELETE ON ARG_DOMAIN FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='synthetic reset failure'");
         try {
-            assertThrows(FlywayException.class, () -> latest().migrate());
+            assertThrows(FlywayException.class, () -> resetVersion().migrate());
             assertEquals(before, counts());
             assertEquals(pending, number("SELECT pending FROM ARG_AUDIT_ADMISSION WHERE id=1"));
             assertTrue(reader.getByToken("synthetic-existing").isPresent());
@@ -84,8 +84,8 @@ class ClarteFreshStartMigrationIT extends MariaDbReportFixture {
             sql("DROP TRIGGER fixture_reset_failure");
         }
         // Repair is confined to this disposable test after inspecting the injected failure.
-        latest().repair();
-        latest().migrate();
+        resetVersion().repair();
+        resetVersion().migrate();
         assertReset();
     }
 
@@ -94,14 +94,14 @@ class ClarteFreshStartMigrationIT extends MariaDbReportFixture {
         var before = counts();
         sql("ALTER TABLE ARG_NEWSLETTER_SUBSCRIBER ENGINE=MyISAM");
         try {
-            assertThrows(FlywayException.class, () -> latest().migrate());
+            assertThrows(FlywayException.class, () -> resetVersion().migrate());
             assertEquals(before, counts());
         } finally {
             sql("ALTER TABLE ARG_NEWSLETTER_SUBSCRIBER ENGINE=InnoDB");
         }
     }
 
-    private Flyway latest() { return Flyway.configure().dataSource(source).load(); }
+    private Flyway resetVersion() { return Flyway.configure().dataSource(source).target("27").load(); }
 
     private void assertReset() throws Exception {
         var counts = counts();

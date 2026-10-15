@@ -7,6 +7,7 @@ import { phrase } from "@/lib/connected/domain-navigation";
 import { EmptyState, StatusBadge, DataTable } from "../Primitives";
 import s from "../Connected.module.scss";
 import d from "./Domains.module.scss";
+import { compactUrl } from "../compactCopy";
 export function useDomainText() {
   const { t, lang } = useLang();
   return { c: t.domainPage, lang };
@@ -170,7 +171,7 @@ export function PageList({
       {pages.map((page) => (
         <li key={page.pageId} className={d.pageRow}>
           <div>
-            <strong>{page.normalizedUrl}</strong>
+            <strong title={page.normalizedUrl}>{compactUrl(page.normalizedUrl, true)}</strong>
             <div className={d.badges}>
               <State value={page.executionStatus} />
               <State value={page.completeness} />
