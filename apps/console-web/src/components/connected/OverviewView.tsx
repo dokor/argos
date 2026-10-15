@@ -1,5 +1,6 @@
 "use client";
 import CollectionGaps, { RepeatedCollectionGaps } from "./CollectionGaps";
+import { quotaResetDate } from "@/lib/quota-date";
 import { useEffect } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "@/components/LocalizedLink";
@@ -15,10 +16,12 @@ import { State, Pagination } from "./domains/DomainUi";
 import { EmptyState, KpiCard, PageHeading, Surface } from "./Primitives";
 import s from "./Connected.module.scss";
 import d from "./Overview.module.scss";
+import { compactCopy, compactUrl } from "./compactCopy";
 const pending = (data: Overview) => data.activeRuns > 0;
 export default function OverviewView() {
   const { t, lang } = useLang(),
     c = t.overviewPage,
+    compact = compactCopy[lang],
     params = useSearchParams(),
     pathname = usePathname(),
     router = useRouter();
@@ -54,7 +57,7 @@ export default function OverviewView() {
   const runRow = (run: RecentRun) => (
     <li key={run.attempt.runId} className={d.run}>
       <div>
-        <strong className={d.url}>{run.normalizedUrl}</strong>
+        <strong className={d.url} title={run.normalizedUrl}>{compactUrl(run.normalizedUrl)}</strong>
         <p>
           <State value={run.attempt.executionStatus} />{" "}
           <time dateTime={run.attempt.createdAt}>
@@ -75,7 +78,7 @@ export default function OverviewView() {
     return (
       <li className={d.row} key={page.pageId}>
         <div>
-          <strong className={d.url}>{page.normalizedUrl}</strong>
+          <strong className={d.url} title={page.normalizedUrl}>{compactUrl(page.normalizedUrl)}</strong>
           <Link className={d.site} href={"/account/sites/" + page.domainId}>
             {page.hostname}
           </Link>
@@ -98,6 +101,8 @@ export default function OverviewView() {
               <span>{c.noMeasurement}</span>
             )}
           </p>
+          <details className={d.details}><summary>{compact.details}</summary>
+          <Link className={d.site} href={"/account/sites/" + page.domainId}>{page.hostname}</Link>
           {a && (
             <p className={d.meta}>
               {c.lastAttempt}{" "}
@@ -117,6 +122,7 @@ export default function OverviewView() {
                   }).format(r.coverage.ratio)}
             </p>
           )}
+          </details>
           {a && a.executionStatus === "FAILED" && (
             <p className={d.meta}>{c.failedHint}</p>
           )}
@@ -203,12 +209,14 @@ export default function OverviewView() {
                     value={number(data.priorityUrls)}
                     detail={`${number(data.trackedUrls)} ${c.tracked} · ${c.measured}`}
                     href="/account?attention=priority"
+                    actionLabel={compact.corrections}
                   />
                   <KpiCard
                     label={c.incomplete}
                     value={number(data.incompleteUrls)}
                     detail={c.incompleteHint}
                     href="/account?attention=incomplete"
+                    actionLabel={compact.coverage}
                   />
                   <KpiCard
                     label={c.credits}
@@ -217,8 +225,9 @@ export default function OverviewView() {
                         ? c.unlimited
                         : number(data.usage.available)
                     }
-                    detail={`${c.reserved}: ${number(data.usage.reserved)} · ${c.resets} ${date(data.usage.resetsAt)}`}
+                    detail={`${c.reserved}: ${number(data.usage.reserved)} · ${c.resets} ${quotaResetDate(data.usage.resetsAt, lang, data.usage.timezone)}`}
                     href="/account/usage"
+                    actionLabel={compact.quota}
                   />
                 </div>
                 <p className={d.scope}>
@@ -340,12 +349,13 @@ export default function OverviewView() {
                   />
                 </Surface>
                 <div className={s.twoColumns}>
-                  <Surface title={c.recent}>
+                  <Surface title={compact.recent}>
                     {data.recentRuns.length ? (
-                      <ul className={d.list}>{data.recentRuns.map(runRow)}</ul>
+                      <ul className={d.list}>{data.recentRuns.slice(0, 1).map(runRow)}</ul>
                     ) : (
                       <p className={d.meta}>{c.noRuns}</p>
                     )}
+                    <Link className={d.action} href="/account/sites">{compact.history}</Link>
                   </Surface>
                   <Surface title={c.domainTitle}>
                     <p className={d.promotion}>{c.domainHint}</p>

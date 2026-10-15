@@ -1,4 +1,6 @@
 "use client";
+import AdminNavigation from "./AdminNavigation";
+import { quotaResetDate } from "@/lib/quota-date";
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "@/components/LocalizedLink";
@@ -125,23 +127,7 @@ export default function AdminAccounts({
         </p>
       ) : (
         <>
-          <nav className={a.nav} aria-label={c.title}>
-            <Link
-              href="/account/admin/users"
-              aria-current={!journal ? "page" : undefined}
-            >
-              {c.users}
-            </Link>
-            <Link
-              href="/account/admin/events"
-              aria-current={journal ? "page" : undefined}
-            >
-              {c.journal}
-            </Link>
-            <Link href="/account/admin/runs">{c.runs}</Link>
-            <Link href="/account/admin/feedback">{c.feedback}</Link>
-            <Link href="/account/admin/analytics">{c.analytics}</Link>
-          </nav>
+          <AdminNavigation active={journal ? "events" : "users"} />
           {notice && (
             <p className={a.notice} role="status">
               {notice}
@@ -203,9 +189,7 @@ export default function AdminAccounts({
                             [c.limit, number(data.usage.limit)],
                             [
                               c.renewal,
-                              date(data.usage.resetsAt) +
-                                " · " +
-                                data.usage.timezone,
+                              quotaResetDate(data.usage.resetsAt, lang, data.usage.timezone),
                             ],
                           ].map(([key, value]) => (
                             <div key={key}>

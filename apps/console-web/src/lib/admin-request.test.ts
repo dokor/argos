@@ -1,5 +1,5 @@
 import {it,expect} from "vitest";
-import {adminEntitlement,adminSuspension,adminPath,adminQuery,safeAdminReturn} from "./admin-request";
+import {adminEntitlement,adminSuspension,adminPath,adminQuery,safeAdminReturn,safeAdminRunReturn} from "./admin-request";
 const common={expectedVersion:3,reasonCode:"SUPPORT_REQUEST",confirmation:true};
 it("separates suspension and entitlement payloads",()=>{expect(adminSuspension({...common,suspended:true})).toBe(true);expect(adminEntitlement({...common,offer:"FREE",monthlyLimit:null})).toBe(true);expect(adminEntitlement({...common,suspended:true})).toBe(false);});
 it.each([{expectedVersion:-1},{expectedVersion:1.5},{reasonCode:"free text"},{confirmation:false},{role:"ADMIN"},{confirmed:true}])("rejects invalid administrative input %j",extra=>{expect(adminSuspension({...common,suspended:true,...extra})).toBe(false);});
@@ -9,3 +9,13 @@ it("opens the scoped journal and rejects overlong IDs or role mutations",()=>{ex
 
 import {safeAccountReturn} from "./account-return";
 it("preserves filtered administrative detail return after reauthentication",()=>{const path="/en/account/admin/users/9007199254740993?returnTo="+encodeURIComponent("/en/account/admin/users?q=Morgan");expect(safeAccountReturn(path)).toBe(path);expect(safeAccountReturn("/account/admin/users/42?returnTo=https%3A%2F%2Fevil.example")).toBe("/account/sites");});
+
+it("bounds analysis returns and preserves the context across reauthentication",()=>{
+ const list="/en/account/admin/runs?site=atelier.example&status=FAILED&cursor=9007199254740993";
+ expect(safeAdminRunReturn(list)).toBe(list);expect(safeAccountReturn(list)).toBe(list);
+ const detail="/en/account/admin/runs/9007199254740993?returnTo="+encodeURIComponent(list);
+ expect(safeAccountReturn(detail)).toBe(detail);
+ for(const path of ["https://evil.example/account/admin/runs","//evil.example","/account/admin/users?site=atelier.example","/account/admin/runs?returnTo=https://evil.example","/account/admin/runs?site=x&site=y","/account/admin/runs?cursor=0","/account/admin/runs#fragment"])
+  expect(safeAdminRunReturn(path)).toBeNull();
+ expect(safeAccountReturn("/account/admin/runs/42?returnTo=https://evil.example")).toBe("/account/sites");
+});

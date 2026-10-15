@@ -20,7 +20,7 @@ public final class DomainSummaryProjection {
         if (s.reportAvailable() && row.diagnostic() != null)
             try {
                 var parsed = mapper.readValue(row.diagnostic(), DiagnosticProjection.class);
-                if (parsed.version() == 1 && parsed.rules() != null) d = parsed;
+                if (parsed.version() == 2 && parsed.rules() != null) d = parsed;
             } catch (java.io.IOException ignored) {
             }
         var modules = new TreeMap<String, ModuleStatus>();

@@ -1,10 +1,10 @@
-import {safeAdminReturn} from "./admin-request";
+import {safeAdminReturn, safeAdminRunReturn} from "./admin-request";
 import {safeOverviewReturn} from "./overview-request";
 import { safeDomainReturn, validDomainId } from "./connected/domain-navigation";
 import { domainSummaryQuery } from "./domain-summary-request";
 // Pure allowlist shared by server redirects and client forms.
 export function safeAccountReturn(raw: unknown): string {
-  const admin=safeAdminReturn(raw);if(admin)return admin;
+  const admin=safeAdminReturn(raw) ?? safeAdminRunReturn(raw);if(admin)return admin;
   if(typeof raw==="string"&&/^\/(?:en\/)?account\/admin(?:\/users\/[1-9]\d{0,18}|\/events|\/runs)?$/.test(raw))return raw;
   const overview = safeOverviewReturn(raw);
   if (overview) return overview;
@@ -20,6 +20,12 @@ export function safeAccountReturn(raw: unknown): string {
     if(adminUser&&validDomainId(adminUser[1])&&raw.split("?").length<=2){
       const q=new URLSearchParams(query),back=safeAdminReturn(q.get("returnTo"));
       if(q.size===1&&back)return path+"?returnTo="+encodeURIComponent(back);
+    }
+    const adminRun=/^\/(?:en\/)?account\/admin\/runs\/([1-9][0-9]{0,18})$/.exec(path);
+    if(adminRun&&validDomainId(adminRun[1])&&raw.split("?").length<=2){
+      const q=new URLSearchParams(query),back=safeAdminRunReturn(q.get("returnTo"));
+      if(q.size===1&&back)return path+"?returnTo="+encodeURIComponent(back);
+      if(q.size===0)return path;
     }
     const run = /^\/(?:en\/)?account\/runs\/([1-9][0-9]{0,18})$/.exec(path);
     const returnTo = new URLSearchParams(query).get("returnTo");

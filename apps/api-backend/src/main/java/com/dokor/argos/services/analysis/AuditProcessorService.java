@@ -68,6 +68,8 @@ public class AuditProcessorService {
     private final AccessibilityComplianceRiskService accessibilityRiskService;
     private RemoteModuleExecutor remoteModuleExecutor;
     private AuditModuleExecutor auditModuleExecutor;
+    private CollectorDiagnostics collectorDiagnostics;
+    @Inject void configureCollectorDiagnostics(CollectorDiagnostics diagnostics) { collectorDiagnostics = diagnostics; }
 
     @Inject void configureAuditModuleExecutor(AuditModuleExecutor executor) { auditModuleExecutor=executor; }
 
@@ -468,6 +470,8 @@ public class AuditProcessorService {
             }
             statuses.put(moduleId, outcome.name());
             auditRunService.updateModuleStatus(runId, moduleId, outcome.liveStatus(), claim);
+            if (collectorDiagnostics != null) collectorDiagnostics.record(moduleId, outcome == ModuleOutcome.COMPLETED,
+                outcome == ModuleOutcome.PARTIAL ? new CollectorFailure(CollectorFailure.Code.INCOMPLETE_MEASUREMENTS) : null);
             logger.info("module_completed module={} status={} durationMs={}",
                 moduleId, outcome, System.currentTimeMillis() - start);
             return res;
@@ -480,8 +484,9 @@ public class AuditProcessorService {
                 : e instanceof ModuleUnavailableException ? ModuleOutcome.UNAVAILABLE : ModuleOutcome.FAILED;
             statuses.put(moduleId, outcome.name());
             auditRunService.updateModuleStatus(runId, moduleId, outcome.liveStatus(), claim);
-            logger.warn("module_failed module={} status={} durationMs={} error={}", moduleId,
-                outcome, System.currentTimeMillis() - start, e.getClass().getSimpleName());
+            if (collectorDiagnostics != null) collectorDiagnostics.record(moduleId, false, e);
+            logger.warn("module_failed module={} status={} durationMs={} error={} failureCode={}", moduleId,
+                outcome, System.currentTimeMillis() - start, e.getClass().getSimpleName(), CollectorFailure.classify(e));
             return annotateWithSource(fallbackModule(moduleId, title, outcome, e));
         } finally {
             MDC.remove("module");
@@ -516,7 +521,7 @@ public class AuditProcessorService {
             AuditSeverity.MEDIUM,
             false, 0.0, List.of(moduleId),
             false,
-            Map.of("error", safeMsg(e), "reason", reason),
+            Map.of("error", safeMsg(e), "reason", reason, "failureCode", CollectorFailure.classify(e).name()),
             message,
             "Relancer l'analyse ; si le problème persiste, vérifier la disponibilité du service concerné."
         );
@@ -524,7 +529,9 @@ public class AuditProcessorService {
             moduleId,
             title,
             moduleId + "=unavailable(" + reason.toLowerCase(Locale.ROOT) + ")",
-            Map.of("available", false, "error", safeMsg(e), "reason", reason),
+            Map.of("available", false, "error", safeMsg(e), "reason", reason,
+                "failureCode", CollectorFailure.classify(e).name(), "measurementState", "UNAVAILABLE",
+                "measurementReason", CollectorFailure.classify(e).name()),
             List.of(check)
         );
     }

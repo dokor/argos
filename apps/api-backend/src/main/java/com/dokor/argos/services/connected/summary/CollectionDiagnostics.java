@@ -12,7 +12,7 @@ public final class CollectionDiagnostics {
         if (raw == null || raw.length() > 2_000_000) return List.of();
         try {
             var d = MAPPER.readValue(raw, DiagnosticProjection.class);
-            if (d == null || d.version() != 1 || d.rules() == null || d.rules().size() > 256) return List.of();
+            if (d == null || d.version() != 2 || d.rules() == null || d.rules().size() > 256) return List.of();
             var gaps = new LinkedHashSet<CollectionGap>();
             for (var r : d.rules()) {
                 if (r == null || r.outcome() == null || !Set.of("UNAVAILABLE", "BLOCKED_BY_ANTIBOT", "UNKNOWN").contains(r.outcome())) continue;
