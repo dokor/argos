@@ -86,6 +86,25 @@ it("protects introduction publication and revocation with CSRF and forwards only
 });
 import { GET as csrfRoute } from "@/app/api/account/csrf/route";
 import { POST as create } from "@/app/api/audits/route";
+it("preserves scope, cookie identity and quota rejection for a targeted audit",async()=>{
+  const scope={kind:"check",target:"html.title"};
+  const req=request("audits","POST",{url:"https://example.com",scope,ownerId:"forged"});
+  fetchMock.mockResolvedValue(Response.json({error:"quota_exceeded"},{status:429,headers:{"Retry-After":"60"}}));
+  const response=await create(req);
+  expect(response.status).toBe(429);expect(response.headers.get("Retry-After")).toBe("60");
+  expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({url:"https://example.com",scope});
+  expect(fetchMock.mock.calls[0][1].headers["X-Argos-Account-Session"]).toBe("Bearer "+jwt);
+});
+it("applies CSRF and SSRF validation to a targeted audit before forwarding",async()=>{
+  const scope={kind:"category",target:"seo"};
+  expect((await create(request("audits","POST",{url:"https://example.com",scope},false))).status).toBe(403);
+  expect((await create(request("audits","POST",{url:"http://127.0.0.1/",scope}))).status).toBe(400);
+  expect(fetchMock).not.toHaveBeenCalled();
+});
+it.each([{kind:"category",target:"ssl"},{kind:"check",target:"html.title",ownerId:99},{kind:"full",target:"html.title"}])("rejects invalid analysis scope %j",async scope=>{
+  expect((await create(request("audits","POST",{url:"https://example.com",scope}))).status).toBe(400);
+  expect(fetchMock).not.toHaveBeenCalled();
+});
 it.each(["/account/urls/9/history","/en/account/urls/9/history"])("preserves history return destination %s",path=>expect(safeAccountReturn(path)).toBe(path));
 it("forwards history pagination with cookie identity only",async()=>{
   fetchMock.mockResolvedValue(new Response('{"items":[],"nextCursor":null}'));

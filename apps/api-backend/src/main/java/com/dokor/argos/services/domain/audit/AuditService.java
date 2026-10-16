@@ -20,6 +20,8 @@ public class AuditService {
     private final AuditRunService auditRunService;
     private final UrlNormalizer urlNormalizer;
     private final DomainService domainService;
+    private com.dokor.argos.services.analysis.AuditScopeCatalogue scopes = new com.dokor.argos.services.analysis.AuditScopeCatalogue(new com.dokor.argos.services.analysis.scoring.DefaultScorePolicy());
+    @Inject void configureScopes(com.dokor.argos.services.analysis.AuditScopeCatalogue scopes) { this.scopes = scopes; }
 
     @Inject
     public AuditService(AuditDao auditDao, AuditRunService auditRunService,
@@ -37,6 +39,10 @@ public class AuditService {
         return createAudit(inputUrl,null,null);
     }
     public CreatedAudit createAudit(String inputUrl,Long ownerUserId,java.sql.Connection connection) {
+        return createAudit(inputUrl,ownerUserId,connection,null);
+    }
+    public CreatedAudit createAudit(String inputUrl,Long ownerUserId,java.sql.Connection connection,com.dokor.argos.services.analysis.AuditScope requestedScope) {
+        var scope = scopes.validate(requestedScope);
         logger.info("AuditService.createAudit inputUrl={}", UrlNormalizer.sanitizeForLog(inputUrl));
         String normalizedUrl = urlNormalizer.normalize(inputUrl);
         String hostname = urlNormalizer.extractHostname(normalizedUrl);
@@ -50,7 +56,8 @@ public class AuditService {
         candidate.setCreatedAt(now);
         Audit audit = auditDao.findOrCreate(candidate);
 
-        var created = auditRunService.createQueuedRun(audit.getId(), now,ownerUserId,connection);
+        var created = scope.partial() ? auditRunService.createQueuedRun(audit.getId(), now,ownerUserId,connection,scope)
+            : auditRunService.createQueuedRun(audit.getId(), now,ownerUserId,connection);
         AuditRun run = created.run();
         logger.info("Run created: auditId={}, runId={}, status={}", audit.getId(), run.getId(), run.getStatus());
         return new CreatedAudit(run.getId(), run.getAuditId(), run.getStatus(),

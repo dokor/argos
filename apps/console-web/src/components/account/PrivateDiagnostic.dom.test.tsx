@@ -5,6 +5,7 @@ import { LangProvider } from "@/lib/i18n/LangContext";
 import PrivateDiagnostic from "./PrivateDiagnostic";
 import type { Report } from "@/components/report/types";
 vi.mock("@/components/report/ReportExport", () => ({ default: () => null }));
+vi.mock("@/components/report/ScopedRelaunch", () => ({ default: () => null }));
 vi.mock("@/components/feedback/ReportFeedback", async () => { const { createContext } = await import("react"); return { default: () => null, FeedbackReportContext: createContext(undefined) }; });
 const report: Report = { generatedAt: "2026-10-13T10:00:00Z", url: "https://example.test/", domain: "example.test", measurements: {lcpMs:4900}, site: {}, scores: { global: 80, globalAvailable: false, byCategory: [], completeness: 60 }, summary: { oneLiner: "fair", priorities: [] }, issues: [
   { id: "lighthouse.audit.largest-contentful-paint", categoryKey: "performance", severity: "critical", title: "LCP", impact: "Slow", recommendation: "Check", structuredEvidence: { source: "lighthouse", measurement: { value: 4900, unit: "ms" } } },

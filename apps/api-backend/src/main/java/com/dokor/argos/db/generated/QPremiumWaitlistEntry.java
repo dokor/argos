@@ -6,7 +6,7 @@ import java.sql.Types;
 import java.time.Instant;
 import static com.querydsl.core.types.PathMetadataFactory.forVariable;
 
-/** Mapping maintained with V34__premium_waitlist.sql. */
+/** Mapping maintained with V35__premium_waitlist.sql. */
 public class QPremiumWaitlistEntry extends RelationalPathBase<PremiumWaitlistEntry> {
     public static final QPremiumWaitlistEntry premiumWaitlistEntry = new QPremiumWaitlistEntry("ARG_PREMIUM_WAITLIST");
     public final NumberPath<Long> id = createNumber("id", Long.class);

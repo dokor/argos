@@ -7,7 +7,7 @@ non cochée. L’action ne crée ni compte, ni abonnement newsletter.
 
 ## Données et choix du lot
 
-- Table dédiée `ARG_PREMIUM_WAITLIST` (V34), entité `PremiumWaitlistEntry` et
+- Table dédiée `ARG_PREMIUM_WAITLIST` (V35), entité `PremiumWaitlistEntry` et
   mapping `QPremiumWaitlistEntry` : email normalisé, langue, date et version du
   consentement, expiration. Aucun lien avec `ARG_NEWSLETTER_SUBSCRIBER`.
 - Consentement `premium-2026-10-16`, contact ultérieur uniquement pour cette

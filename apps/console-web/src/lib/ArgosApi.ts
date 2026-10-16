@@ -22,10 +22,12 @@ export class ApiError extends Error {
 
 export type CreateAuditRequest = {
   url: string;
+  scope?: AuditScope;
   /** Route fixe, attribuée uniquement avec consentement validé côté BFF. */
   sourceRoute?: string;
   lang?: "fr" | "en";
 };
+export type AuditScope = { kind: "full"; target?: never } | { kind: "category" | "check"; target: string };
 
 export type CreateAuditResponse = {
   auditId: string | number;

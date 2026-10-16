@@ -12,6 +12,7 @@ export type Report = {
     domainRating?: { score: number; fetchedAt: string } | null;
   };
   scores: {
+    scope?: { kind: "full" | "category" | "check"; target: string | null; executedModules: string[]; newCheckKeys: string[]; reusedCheckKeys: string[] } | null;
     global: number;
     globalAvailable?: boolean | null;
     coverage?: Coverage | null;
@@ -92,6 +93,7 @@ export type AccessibilityCompliance = {
 };
 
 export type TechSummary = {
+  hosting?: { method: string; observedAt: string; applicationHost: HostingProvider | null; cdnProxies: HostingProvider[]; networkProvider: HostingProvider | null; originStatus: string } | null;
   cms?: {
     name?: string;
     confidence?: number;
@@ -116,6 +118,8 @@ export type TechSummary = {
     evidence?: string[];
   };
 };
+
+export type HostingProvider = { name: string; confidence: string; evidence: string[] };
 
 export type Effort = "XS" | "S" | "M" | "L";
 export type Severity = "critical" | "important" | "opportunity" | "info";

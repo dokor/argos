@@ -32,7 +32,7 @@ class AuditRunProgressIT {
         source.setUser(System.getenv("ARGOS_TEST_MARIADB_USER"));
         source.setPassword(System.getenv("ARGOS_TEST_MARIADB_PASSWORD"));
         try (var connection = source.getConnection(); var statement = connection.createStatement()) {
-            statement.execute("CREATE TABLE IF NOT EXISTS ARG_AUDIT_RUN (id BIGINT PRIMARY KEY, status VARCHAR(32), module_statuses LONGTEXT, result_json LONGTEXT) ENGINE=InnoDB");
+            statement.execute("CREATE TABLE IF NOT EXISTS ARG_AUDIT_RUN (id BIGINT PRIMARY KEY, status VARCHAR(32), module_statuses LONGTEXT, result_json LONGTEXT, execution_scope LONGTEXT) ENGINE=InnoDB");
         }
     }
     @BeforeEach void initialRun() throws Exception {

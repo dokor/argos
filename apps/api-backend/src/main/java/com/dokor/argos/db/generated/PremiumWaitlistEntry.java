@@ -4,7 +4,7 @@ import com.coreoz.plume.db.querydsl.crud.CrudEntityQuerydsl;
 import com.querydsl.sql.Column;
 import java.time.Instant;
 
-/** Mapping maintained with V34__premium_waitlist.sql. */
+/** Mapping maintained with V35__premium_waitlist.sql. */
 public class PremiumWaitlistEntry extends CrudEntityQuerydsl {
     @Column("id") private Long id;
     @Column("email") private String email;

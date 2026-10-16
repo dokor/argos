@@ -48,6 +48,9 @@ public class AccountRunsService {
     }
 
     public Created create(String url, String authorization, String csrf) {
+        return create(url,authorization,csrf,null);
+    }
+    public Created create(String url, String authorization, String csrf, com.dokor.argos.services.analysis.AuditScope scope) {
         return dao.transaction(
                 c -> {
                     AccountSessionService.Context context =
@@ -55,8 +58,8 @@ public class AccountRunsService {
                                     ? null
                                     : sessions.require(authorization, csrf, true, true, c);
                     var created =
-                            audits.createAudit(
-                                    url, context == null ? null : context.user().getId(), c);
+                            scope == null ? audits.createAudit(url, context == null ? null : context.user().getId(), c)
+                                : audits.createAudit(url, context == null ? null : context.user().getId(), c, scope);
                     if (context != null) { sites.follow(context.user().getId(),created.auditId(),c); return new Created(created, null); }
                     String secret = tokens.generateToken();
                     var claim = new AccountRunClaim();
