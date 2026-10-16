@@ -3,7 +3,7 @@ package com.dokor.argos.services.analytics;
 import com.dokor.argos.db.dao.AuditReportDao;
 import com.dokor.argos.services.configuration.ConfigurationService;
 import com.dokor.argos.services.token.TokenService;
-import com.dokor.argos.webservices.api.audits.AdminReadAccess;
+import com.dokor.argos.services.security.AdminReadAccess;
 import com.typesafe.config.ConfigFactory;
 import jakarta.ws.rs.NotAuthorizedException;
 import org.junit.jupiter.api.Test;
