@@ -18,7 +18,8 @@ public class FeedbackWs {
  @Context private Provider<ContainerRequestContext> requests;
  @Context private Provider<org.glassfish.grizzly.http.server.Request> nativeRequests;
  @Inject public FeedbackWs(FeedbackService feedback,AccountCsrf csrf,AccountRateLimiter rate) {this.feedback=feedback;this.csrf=csrf;this.rate=rate;}
- @POST public Response submit(FeedbackService.Submission body) {
+ @POST @com.dokor.argos.webservices.api.security.AntiBot("feedback")
+    public Response submit(FeedbackService.Submission body) {
   var request=requests.get();String token=csrf.require(request);
   rate.check("feedback",token,AccountAuthWs.remote(nativeRequests.get()));
   return AccountAuthWs.ok(feedback.submit(request.getHeaderString("Authorization"),token,body));

@@ -1,4 +1,5 @@
 "use client";
+import ContextHelp from "@/components/ui/ContextHelp";
 
 import { CategoryScore, Coverage } from "./types";
 import { useLang } from "@/lib/i18n/LangContext";
@@ -25,6 +26,7 @@ export default function ScoreGrid({ categories, model, coverage, onSelectDomain,
     <div className={s.sectionHead}>
       <div><h2 id="report-domains" className={compact?s.srOnly:s.sectionTitle}>{ts.title}</h2>{!compact&&<p className={s.sectionDesc}>{ts.desc}</p>}</div>
     </div>
+<ContextHelp topic="report"/>
     <div className={s.grid}>
       {BUSINESS_DOMAINS.map(key => {
         const category = categories?.find(category => category.key === key);

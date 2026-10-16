@@ -73,7 +73,7 @@ it.each(["fr", "en"] as const)("explains reset, prevents duplicate requests and 
   expect(submit).toHaveAttribute("aria-busy", "true");
   expect(email).toBeDisabled();
   fireEvent.submit(submit.closest("form")!);
-  expect(vi.mocked(accountFetch).mock.calls.filter(call => call[0] === "auth/forgot")).toHaveLength(1);
+  await waitFor(()=>expect(vi.mocked(accountFetch).mock.calls.filter(call => call[0] === "auth/forgot")).toHaveLength(1));
   await act(async () => finish({ sent: true }));
   const notice = await screen.findByRole("status");
   expect(notice).toHaveFocus();
@@ -86,7 +86,7 @@ it.each(["fr", "en"] as const)("explains reset, prevents duplicate requests and 
   expect(restored).toHaveValue("fixture@example.invalid");
   fireEvent.change(restored, { target: { value: "corrected@example.invalid" } });
   fireEvent.submit(restored.closest("form")!);
-  expect(accountFetch).toHaveBeenLastCalledWith("auth/forgot", "POST", { email: "corrected@example.invalid", returnTo: (lang === "fr" ? "" : "/en") + "/account/sites" });
+  await waitFor(()=>expect(accountFetch).toHaveBeenLastCalledWith("auth/forgot", "POST", { email: "corrected@example.invalid", returnTo: (lang === "fr" ? "" : "/en") + "/account/sites" }));
   await act(async () => finish({ sent: true }));
 });
 
@@ -126,3 +126,5 @@ it.each(["fr", "en"] as const)("retains a localized public exit, preferences and
     view.unmount();
   }
 });
+
+vi.mock("@/components/security/useAntiBot",()=>({useAntiBot:()=>({verify:async()=>undefined,element:null})}));

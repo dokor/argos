@@ -1,5 +1,6 @@
 "use client";
 import { inputHints } from "@/lib/input-hints";
+import ContextHelp from "@/components/ui/ContextHelp";
 import { allDiscoveryPages } from "@/lib/connected/discovery-pages";
 import DomainScopeGuide from "./DomainScopeGuide";
 import { useEffect, useRef, useState } from "react";
@@ -279,6 +280,7 @@ export default function DomainNew() {
       </Link>
       <PageHeading title={c.newTitle} description={c.newIntro} action={discoveryId ?
         <Link className={s.secondary} href="/account/domains/new">{c.new}</Link> : undefined} />
+      <ContextHelp topic="domain"/>
       <ol className={d.steps}>
         <li aria-current={!discoveryId ? "step" : undefined}>{c.stepScope}</li>
         <li aria-current={discoveryId ? "step" : undefined}>

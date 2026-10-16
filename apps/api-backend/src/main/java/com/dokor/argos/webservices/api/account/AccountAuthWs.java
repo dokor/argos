@@ -96,6 +96,7 @@ public class AccountAuthWs {
 
     @POST
     @Path("/register")
+    @com.dokor.argos.webservices.api.security.AntiBot("register")
     public Response register(Registration b) {
         if (b == null) throw new AccountError(400, "payload_invalid");
         mutation("email", AccountAuthService.email(b.email()));
@@ -126,6 +127,7 @@ public class AccountAuthWs {
 
     @POST
     @Path("/resend")
+    @com.dokor.argos.webservices.api.security.AntiBot("resend")
     public Response resend(Email b) {
         if (b == null) throw new AccountError(400, "payload_invalid");
         mutation("email", AccountAuthService.email(b.email()));
@@ -135,6 +137,7 @@ public class AccountAuthWs {
 
     @POST
     @Path("/forgot")
+    @com.dokor.argos.webservices.api.security.AntiBot("forgot")
     public Response forgot(Email b) {
         if (b == null) throw new AccountError(400, "payload_invalid");
         mutation("email", AccountAuthService.email(b.email()));

@@ -5,6 +5,7 @@ import { LangProvider } from "@/lib/i18n/LangContext";
 import FeedbackForm from "./FeedbackForm";
 import ReportFeedback, { FeedbackReportContext } from "./ReportFeedback";
 vi.mock("@/lib/account-client",()=>({accountAuditHeaders:async()=>({"X-Argos-CSRF":"c".repeat(43)})}));
+vi.mock("@/components/security/useAntiBot",()=>({useAntiBot:()=>({verify:async()=>undefined,element:null})}));
 const fetchMock=vi.fn();
 beforeEach(()=>{fetchMock.mockReset();vi.stubGlobal("fetch",fetchMock);});
 afterEach(()=>vi.unstubAllGlobals());
@@ -38,8 +39,10 @@ it("does not confirm a successful HTTP response without a server receipt acknowl
 it("requires a real report context for false positives and communicates rate-limit errors",async()=>{
   const view=render(<LangProvider><ReportFeedback findingKey="http.hsts"/></LangProvider>);expect(screen.queryByRole("button")).toBeNull();
   view.rerender(<LangProvider><FeedbackReportContext.Provider value={{reportToken:"t".repeat(43)}}><ReportFeedback findingKey="http.hsts"/></FeedbackReportContext.Provider></LangProvider>);
+  HTMLDialogElement.prototype.showModal=function(){this.setAttribute("open","");};HTMLDialogElement.prototype.close=function(){this.removeAttribute("open");};
   fireEvent.click(screen.getByRole("button",{name:"Signaler un faux positif"}));expect(screen.getByText(/Le score et les preuves restent inchangés/)).toBeInTheDocument();
   fetchMock.mockResolvedValue(new Response('{}',{status:429,headers:{"Retry-After":"30"}}));
+  fireEvent.click(screen.getByRole("checkbox"));
   fireEvent.change(screen.getByLabelText("Description"),{target:{value:"Incorrect on fixture"}});fireEvent.click(screen.getByRole("button",{name:"Envoyer le retour"}));
   expect(await screen.findByRole("alert")).toHaveTextContent("30");
   await waitFor(()=>expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({type:"FALSE_POSITIVE",findingKey:"http.hsts",reportToken:"t".repeat(43)}));

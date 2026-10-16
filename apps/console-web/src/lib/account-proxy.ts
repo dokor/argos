@@ -56,6 +56,8 @@ export function accountHeaders(request: NextRequest, mutation: boolean): Headers
     headers.set("Origin", origin());
     headers.set("X-Argos-CSRF", request.headers.get("x-argos-csrf")!);
   }
+  const proof = request.headers.get("x-argos-captcha");
+  if (proof && proof.length <= 2048) headers.set("X-Argos-Captcha", proof);
   const csrf = request.cookies.get(CSRF_COOKIE)?.value;
   if (csrf) headers.set("Cookie", CSRF_COOKIE + "=" + csrf);
   return headers;

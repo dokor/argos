@@ -98,3 +98,5 @@ describe("AuditForm (soumission d'audit)", () => {
     expect(alert.textContent).not.toContain("Service temporarily unavailable");
   });
 });
+
+vi.mock("@/components/security/useAntiBot",()=>({useAntiBot:()=>({verify:async()=>undefined,element:null})}));

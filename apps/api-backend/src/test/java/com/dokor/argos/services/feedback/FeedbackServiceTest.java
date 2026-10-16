@@ -41,6 +41,11 @@ class FeedbackServiceTest {
   }
   assertThrows(AccountError.class,()->FeedbackService.validate(new FeedbackService.Submission("BUG","x",null,null,null,null,null,null,null,"spam")));
  }
+ @Test void acceptsBoundedUrlsAsDataAndRejectsExecutableOrCredentialUrls() {
+  var b=new FeedbackService.Submission("BUG","fixture","DOMAINS",null,null,null,null,null,null,null,"https://example.com/a/../b\nhttps://other.example/");
+  assertEquals("https://example.com/b\nhttps://other.example/",FeedbackService.validate(b).urls());
+  for(String url:List.of("javascript:alert(1)","https://user:password@example.com/","https://example.com/\n".repeat(6),"not a url")) assertThrows(AccountError.class,()->FeedbackService.validate(new FeedbackService.Submission("BUG","fixture",null,null,null,null,null,null,null,null,url)));
+ }
  @Test void anonymousSuggestionStoresOnlySubmittedContextAndReturnsReceipt() {
   var result=service.submit(null,csrf,submission("SUGGESTION","<script>fixture</script>",null,null,null));
   assertEquals(Map.of("accepted",true,"receipt","42"),result);
