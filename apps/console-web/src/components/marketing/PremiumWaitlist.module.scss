@@ -1,0 +1,20 @@
+@use '../../styles/tokens' as t;
+@use '../../styles/controls' as controls;
+.section { padding-block: t.$section-space; background: t.$canvas; border-block: 1px solid t.$border; color: t.$text; scroll-margin-top: 136px; }
+.container { width: min(100% - 48px, 960px); margin-inline: auto; }
+.container h2 { font-size: clamp(24px, 3vw, 32px); line-height: 1.25; font-weight: 650; margin-bottom: 16px; }
+.container p { max-width: 70ch; line-height: 1.65; }
+.container form { max-width: 740px; margin-top: 24px; }
+.container label { font-weight: 600; }
+.row { display: flex; align-items: stretch; gap: 12px; margin-top: 8px; }
+.row input { min-width: 0; flex: 1; min-height: 44px; padding: 8px 12px; background: t.$surface; border: 1px solid t.$border; border-radius: t.$radius-sm; }
+.row button { @include controls.cta-geometry; color: var(--argos-action-text); background: var(--argos-action-bg); border-color: var(--argos-action-bg); }
+.row button[aria-disabled=true] { opacity: .65; cursor: default; }
+.container .consent { display: flex; align-items: center; gap: 12px; min-height: 44px; margin-block: 12px; font-weight: 400; }
+.consent input { flex-shrink: 0; width: 20px; height: 20px; accent-color: t.$brand; }
+.privacy { color: t.$text-muted; font-size: 14px; }
+.privacy a { text-decoration: underline; text-underline-offset: 3px; }
+.container :is(input,button,a):focus-visible { outline: 3px solid t.$brand; outline-offset: 3px; }
+.message { min-height: 3.5em; margin-top: 12px; }
+.message [role=alert] { color: var(--argos-error); }
+@media(max-width: 700px) { .section { padding-block: t.$section-space-mobile; } .container { width: calc(100% - 32px); } .row { flex-direction: column; } }

@@ -1,7 +1,12 @@
+import { technicalGuides } from "./technicalGuides";
 // Stable dates refer to first source publication and substantive content revision.
 // Evidence and revision rules: docs/product/editorial-provenance.md.
 export type EditorialRecord = { firstVersion: string; revised: string; translatedAt?: string; minutes: number; sourcesAnchor: string; sourceUrls: string[] };
 export const editorialPages: Record<string, EditorialRecord> = {
+  ...Object.fromEntries(Object.values(technicalGuides).map(guide => [guide.route, {
+    firstVersion: "2026-10-16", revised: "2026-10-16", translatedAt: "2026-10-16",
+    minutes: 6, sourcesAnchor: "#references", sourceUrls: guide.sources.map(source => source.href),
+  }])),
   "/guides/checklist-audit-site-web": {
     "translatedAt": "2026-10-11",
     "firstVersion": "2026-10-07",

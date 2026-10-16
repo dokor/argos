@@ -11,6 +11,16 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class SchedulerJobsTest {
+    @Test void registersPremiumRetentionAndInvokesItsPurge() {
+        when(configuration.auditSchedulerInterval()).thenReturn(Duration.ofSeconds(5));
+        when(configuration.auditStuckCheckInterval()).thenReturn(Duration.ofMinutes(1));
+        var service = mock(com.dokor.argos.services.domain.premium.PremiumWaitlistService.class);
+        var jobs = new SchedulerJobs(scheduler, configuration, audits, reaper);
+        jobs.premiumWaitlist(service); jobs.scheduleJobs();
+        var task = ArgumentCaptor.forClass(Runnable.class);
+        verify(scheduler).schedule(eq("Purge expired premium interest"), task.capture(), any(Schedule.class));
+        task.getValue().run(); verify(service).purge();
+    }
     private final Scheduler scheduler = mock(Scheduler.class);
     private final ConfigurationService configuration = mock(ConfigurationService.class);
     private final AuditQueueService audits = mock(AuditQueueService.class);

@@ -5,6 +5,7 @@ import SiteNav from "@/components/site/SiteNav";
 import SiteFooter from "@/components/site/SiteFooter";
 import { useLang } from "@/lib/i18n/LangContext";
 import { languageRoutes } from "@/lib/i18n/routes";
+import { technicalGuides } from "@/lib/technicalGuides";
 import s from "./page.module.scss";
 
 const copy = {
@@ -85,7 +86,7 @@ export default function ResourcesPage() {
           <section className={s.section} aria-labelledby="guides-title">
             <h2 id="guides-title">{c.guidesTitle}</h2>
             <div className={s.grid}>
-              {c.guides.map((item) => (
+              {[...Object.values(technicalGuides).map(g => ({ href: g.route, title: g[lang].title, description: g[lang].description })), ...c.guides].map((item) => (
                 <article key={item.href} className={s.card}>
                   <h3>{item.title}</h3>
                   <p className={s.cardMeta}>{cardMeta(item.href)}</p>

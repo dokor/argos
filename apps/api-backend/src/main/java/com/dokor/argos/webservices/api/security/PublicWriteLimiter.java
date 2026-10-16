@@ -11,7 +11,7 @@ import java.util.function.LongSupplier;
 /** Per-instance admission control. Only the transport peer is trusted, never forwarded headers. */
 @Singleton
 public class PublicWriteLimiter {
-    public enum Route { AUDIT, NEWSLETTER }
+    public enum Route { AUDIT, NEWSLETTER, PREMIUM_WAITLIST }
     private static final long WINDOW = Duration.ofMinutes(15).toNanos();
     private static final long BURST = Duration.ofSeconds(10).toNanos();
     private static final int MAX_PEERS = 4096;

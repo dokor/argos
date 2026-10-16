@@ -18,7 +18,7 @@ vi.mock("@/components/site/SiteFooter", () => ({ default: () => null }));
 
 const pages = [
   { Component: TermsPage, path: "/conditions-utilisation", enPath: "/en/terms-of-use", fr: termsFr, en: termsEn, titles: { fr: "Conditions d’utilisation d’Argos", en: "Argos terms of use" }, sections: 7 },
-  { Component: PrivacyPage, path: "/confidentialite", enPath: "/en/privacy", fr: privacyFr, en: privacyEn, titles: { fr: "Confidentialité et accès aux rapports Argos", en: "Privacy and access to Argos reports" }, sections: 15 },
+  { Component: PrivacyPage, path: "/confidentialite", enPath: "/en/privacy", fr: privacyFr, en: privacyEn, titles: { fr: "Confidentialité et accès aux rapports Argos", en: "Privacy and access to Argos reports" }, sections: 16 },
   { Component: LegalPage, path: "/informations-legales", enPath: "/en/legal-information", fr: legalFr, en: legalEn, titles: { fr: "Informations sur le service Argos", en: "Argos service information" }, sections: 3 },
 ];
 
