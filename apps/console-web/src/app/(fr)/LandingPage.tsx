@@ -6,6 +6,7 @@ import Link from "@/components/LocalizedLink";
 import { useLang } from "@/lib/i18n/LangContext";
 import SiteNav from "@/components/site/SiteNav";
 import SiteFooter from "@/components/site/SiteFooter";
+import PremiumWaitlist from "@/components/marketing/PremiumWaitlist";
 import PublicIcon from "@/components/marketing/PublicIcon";
 import HomeReportPreview from "@/components/marketing/HomeReportPreview";
 import s from "./page.module.scss";
@@ -158,6 +159,7 @@ export default function LandingPage() {
         <p>{lang === "fr" ? "Consultez le code du projet ou contactez son créateur pour une question sur Argos." : "Explore the project’s code or contact its creator with a question about Argos."}</p>
         <p><Link href="/a-propos">{lang === "fr" ? "À propos et contact" : "About and contact"}</Link> · <Link href="/methodologie-score#resume">{lang === "fr" ? "Méthode du score" : "Scoring method"}</Link> · <Link href="/exemple-rapport">{lang === "fr" ? "Exemple de rapport" : "Example report"}</Link></p>
       </div></section>
+      <PremiumWaitlist />
       {/* BOTTOM CTA */}
       <section className={s.sectionDark}>
         <div className={s.containerNarrow}>
