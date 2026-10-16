@@ -1054,7 +1054,7 @@
     "stepSelection": "2. Selection",
     "stepLaunch": "3. Confirmation",
     "hostname": "Domain name",
-    "hostHint": "Exact host, without a path or port. Subdomains are not included.",
+    "hostHint": "Domain with or without http:// or https://, without a path or port (trailing slash accepted). The protocol is ignored; only this exact host is analyzed, excluding its subdomains.",
     "maxUrls": "Maximum discovered URLs",
     "maxDepth": "Maximum depth",
     "exclusions": "Excluded paths",

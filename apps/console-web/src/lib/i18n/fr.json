@@ -1054,7 +1054,7 @@
     "stepSelection": "2. Sélection",
     "stepLaunch": "3. Confirmation",
     "hostname": "Nom de domaine",
-    "hostHint": "Hôte exact, sans chemin ni port. Les sous-domaines ne sont pas inclus.",
+    "hostHint": "Domaine avec ou sans http:// ou https://, sans chemin ni port (slash final accepté). Le protocole est ignoré ; seul cet hôte est analysé, sans ses sous-domaines.",
     "maxUrls": "Nombre maximal d’URL découvertes",
     "maxDepth": "Profondeur maximale",
     "exclusions": "Chemins à exclure",

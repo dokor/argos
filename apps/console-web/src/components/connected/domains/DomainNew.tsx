@@ -355,7 +355,10 @@ export default function DomainNew() {
                       key: crypto.randomUUID(),
                       kind: "discovery",
                       body: {
-                        hostname: String(form.get("hostname")).trim(),
+                        // Discovery uses an exact host; accept a pasted HTTP(S) root URL.
+                        hostname: String(form.get("hostname")).trim()
+                          .replace(/^https?:\/\/([A-Za-z0-9.-]+)\/?$/i, "$1")
+                          .toLowerCase(),
                         maxUrls: Number(form.get("maxUrls")),
                         maxDepth: Number(form.get("maxDepth")),
                         excludedPaths: String(form.get("excludedPaths"))
@@ -371,7 +374,7 @@ export default function DomainNew() {
                     <input
                       name="hostname"
                       required
-                      maxLength={253}
+                      maxLength={262}
                       autoCapitalize="none"
                       autoCorrect="off"
                       spellCheck={false}
