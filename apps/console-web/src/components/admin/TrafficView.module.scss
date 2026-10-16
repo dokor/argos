@@ -1,0 +1,5 @@
+.traffic table { min-width: 0; }
+.traffic thead th { white-space: normal; }
+.traffic td { font-variant-numeric: tabular-nums; }
+.traffic th:last-child,.traffic td:last-child { width: 112px; text-align: right; }
+.traffic [data-evolution] table { min-width: 420px; }

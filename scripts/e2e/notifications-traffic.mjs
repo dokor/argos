@@ -32,7 +32,7 @@ try {
  const context=await browser.newContext({viewport:{width:390,height:844}}),page=await context.newPage();
  await page.goto(base+'/');await page.getByRole('button',{name:'Personnaliser'}).click();
  assert.equal(await page.getByRole('checkbox',{name:'Mesure de fréquentation'}).isChecked(),false);assert.equal(await page.getByRole('checkbox',{name:'Mesure produit'}).isChecked(),false);
- await page.screenshot({path:`${output}/consent-custom-mobile.png`,fullPage:true});
+ await page.screenshot({path:`${output}/consent-custom-mobile.png`,fullPage:false});
  await page.getByRole('button',{name:'Tout refuser / retirer'}).click();await page.getByRole('button',{name:'Gérer mes cookies'}).waitFor();
  const cookies=await context.cookies();assert.equal(cookies.find(c=>c.name==='argos_traffic_consent_v1')?.value,'refused');assert.equal(cookies.some(c=>c.name==='argos_traffic_visit'),false);
  await context.close();
