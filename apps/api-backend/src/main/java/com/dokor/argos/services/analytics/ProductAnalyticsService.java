@@ -19,6 +19,7 @@ public class ProductAnalyticsService {
     @Inject public ProductAnalyticsService(Config config,ProductAnalyticsDao dao,AdminReadAccess access,AuditReportDao reports,TokenService tokens) {
         enabled=config.hasPath("product-analytics.enabled")&&config.getBoolean("product-analytics.enabled");this.dao=dao;this.access=access;this.reports=reports;this.tokens=tokens;
     }
+    public boolean enabled(String authorization) { access.require(authorization); return enabled && dao.collectionEnabled(); }
     public void count(ProductEvent event,String authorization) { access.require(authorization);if(enabled) safe(()->dao.count(event,Instant.now())); }
     public void attribute(long runId,AnalyticsDimensions dimensions,String authorization) {
         if(!enabled || dimensions==null)return;
@@ -31,7 +32,7 @@ public class ProductAnalyticsService {
     public ProductMetrics.Summary metrics(int days,AccountSessionService.Context context) {
         AdminService.requireAdmin(context);
         if(!Set.of(7,30,90).contains(days))throw new AccountError(400,"filter_invalid");
-        Instant now=Instant.now(),from=now.minus(Duration.ofDays(days));return ProductMetrics.summarize(dao.sample(from,now),from,now,days,enabled);
+        Instant now=Instant.now(),from=now.minus(Duration.ofDays(days));return ProductMetrics.summarize(dao.sample(from,now),from,now,days,enabled && dao.collectionEnabled());
     }
     public void purgeTelemetry() { safe(()->dao.purgeTelemetry(Instant.now())); }
     private void safe(Runnable operation){try{operation.run();}catch(RuntimeException unavailable){LOG.debug("Product telemetry omitted: {}",unavailable.getClass().getSimpleName());}}

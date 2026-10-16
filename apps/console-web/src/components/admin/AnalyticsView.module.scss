@@ -1,4 +1,5 @@
 @use '../../styles/tokens' as t;
+@use '../../styles/controls' as controls;
 .main { width: 100%; max-width: t.$container-width; margin: 0 auto; padding: 32px t.$page-gutter 64px; color: t.$text; overflow-wrap: anywhere; }
 .main h1 { font-size: clamp(28px,4vw,40px); font-weight: 650; line-height: 1.2; margin: 24px 0 16px; }
 .main h2 { font-size: 22px; font-weight: 650; line-height: 1.3; margin: 32px 0 16px; }
@@ -19,5 +20,14 @@
 @media(max-width:600px) { .main { padding: 24px t.$page-gutter-mobile 48px; } }
 
 .controls { display: flex; flex-wrap: wrap; align-items: center; gap: t.$space-3; }
-.controls button { min-height: 44px; padding: t.$space-2 t.$space-3; border: 1px solid t.$border; border-radius: t.$radius-sm; background: t.$surface; }
+.controls button { @include controls.cta-geometry; color: t.$text; border-color: t.$border; background: t.$surface; }
 .controls button:focus-visible { outline: 3px solid t.$brand; outline-offset: 3px; }
+.measurement { border-block: 1px solid t.$border; margin-block: 24px; padding-bottom: 24px; }
+.measurement h2 { margin-top: 24px; }
+.measurement > .controls { margin-block: 12px; }
+.measurement a { text-decoration: underline; }
+.confirm { display: flex; align-items: flex-start; gap: 12px; max-width: 72ch; margin-block: 16px; }
+.confirm input { margin-top: 5px; width: 18px; height: 18px; flex-shrink: 0; accent-color: t.$brand; }
+.measurement :is(button,input):focus-visible { outline: 3px solid t.$brand; outline-offset: 3px; }
+.measurement button { color: t.$text; cursor: pointer; }
+.measurement button:disabled { opacity: .6; cursor: default; }

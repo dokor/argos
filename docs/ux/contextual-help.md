@@ -41,7 +41,7 @@ présumer la cause d'une attente, d'un module ignoré ou d'un échec.
 ## Contrat de feedback
 
 Le stockage `ARG_FEEDBACK`, l'API `/api/feedback`, les protections CSRF/rate limit
-et le traitement admin sont conservés. V32 ajoute `urls` (texte facultatif, cinq
+et le traitement admin sont conservés. V33 ajoute `urls` (texte facultatif, cinq
 URL HTTP(S), 5 000 caractères cumulés, pas de credentials, aucune requête réseau).
 Le contexte de page reste un choix facultatif, avec sites, domaines, historique,
 offre/consommation et administration. Les URL sont affichées comme texte échappé,

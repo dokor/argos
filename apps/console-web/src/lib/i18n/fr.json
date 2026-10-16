@@ -1056,7 +1056,8 @@
     "stepSelection": "2. Sélection",
     "stepLaunch": "3. Confirmation",
     "hostname": "Nom de domaine",
-    "hostHint": "Domaine avec ou sans http:// ou https://, sans chemin ni port (slash final accepté). Le protocole est ignoré ; seul cet hôte est analysé, sans ses sous-domaines.",
+    "hostHint": "Domaine avec ou sans http:// ou https://, sans chemin ni port (slash final accepté). Le protocole est ignoré ; seul cet hôte est analysé, sans ses sous-domaines. Le préfixe www. est autorisé si vous le saisissez ; www et le domaine sans www restent deux hôtes distincts.",
+    "targetUnavailable": "La cible ne peut pas être validée : adresse non publique, résolution DNS indisponible ou délai réseau dépassé. Vérifiez cet hôte ou réessayez.",
     "maxUrls": "Nombre maximal d’URL découvertes",
     "maxDepth": "Profondeur maximale",
     "exclusions": "Chemins à exclure",
@@ -1168,7 +1169,7 @@
       "MAX_DEPTH": "Profondeur atteinte",
       "ROBOTS_DISALLOWED": "Exclue par robots.txt",
       "EXCLUDED_PATH": "Chemin exclu",
-      "EXTERNAL_HOST": "Hôte externe",
+      "EXTERNAL_HOST": "Hôte hors périmètre : les liens et redirections vers un autre hôte (y compris www ↔ sans www) sont exclus.",
       "NOT_HTML": "Contenu non HTML",
       "HTTP_ERROR": "Erreur HTTP",
       "CANCELED": "Annulée"

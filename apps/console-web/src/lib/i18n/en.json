@@ -1056,7 +1056,8 @@
     "stepSelection": "2. Selection",
     "stepLaunch": "3. Confirmation",
     "hostname": "Domain name",
-    "hostHint": "Domain with or without http:// or https://, without a path or port (trailing slash accepted). The protocol is ignored; only this exact host is analyzed, excluding its subdomains.",
+    "hostHint": "Domain with or without http:// or https://, without a path or port (trailing slash accepted). The protocol is ignored; only this exact host is analyzed, excluding its subdomains. The www. prefix is allowed when entered; www and the domain without www remain distinct hosts.",
+    "targetUnavailable": "The target could not be validated: non-public address, unavailable DNS resolution or network timeout. Check this host or try again.",
     "maxUrls": "Maximum discovered URLs",
     "maxDepth": "Maximum depth",
     "exclusions": "Excluded paths",
@@ -1168,7 +1169,7 @@
       "MAX_DEPTH": "Depth limit reached",
       "ROBOTS_DISALLOWED": "Excluded by robots.txt",
       "EXCLUDED_PATH": "Excluded path",
-      "EXTERNAL_HOST": "External host",
+      "EXTERNAL_HOST": "Host outside scope: links and redirects to another host (including www ↔ non-www) are excluded.",
       "NOT_HTML": "Non-HTML content",
       "HTTP_ERROR": "HTTP error",
       "CANCELED": "Canceled"

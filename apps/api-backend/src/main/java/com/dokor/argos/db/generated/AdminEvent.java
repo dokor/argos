@@ -45,6 +45,13 @@ public class AdminEvent extends CrudEntityQuerydsl {
     @Column("request_id")
     private String requestId;
 
+    @Column("event_type")
+    private String eventType = "ACCOUNT_CHANGE";
+    @Column("old_enabled")
+    private Boolean oldEnabled;
+    @Column("new_enabled")
+    private Boolean newEnabled;
+
     @Override
     public String toString() {
         return "AdminEvent#" + id;

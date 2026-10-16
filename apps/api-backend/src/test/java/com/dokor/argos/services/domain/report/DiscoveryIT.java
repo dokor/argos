@@ -21,6 +21,14 @@ import java.util.concurrent.*;
 
 @EnabledIfEnvironmentVariable(named = "ARGOS_TEST_CREDENTIALS_URL", matches = ".+")
 class DiscoveryIT extends MariaDbReportFixture {
+    @Test void preservesWwwIdentityAndExplainsNetworkValidationFailures() {
+        var created = service.create(a, CSRF, UUID.randomUUID().toString(), new CreateDiscovery("www.exemple.fr", 20L, 2L, List.of()));
+        assertEquals("www.exemple.fr", created.hostname());
+        verify(transport).validate(eq("https://www.exemple.fr"), any());
+        doThrow(new DiscoveryStop("TARGET_BLOCKED")).when(transport).validate(eq("https://www.redpoint.fr"), any());
+        var failure = assertThrows(AccountError.class, () -> service.create(a, CSRF, UUID.randomUUID().toString(), new CreateDiscovery("www.redpoint.fr", 20L, 2L, List.of())));
+        assertEquals("discovery_target_unavailable", ((Map<?,?>) failure.getResponse().getEntity()).get("error"));
+    }
     AccountDao accounts;
     AccountSessionService sessions;
     DiscoveryDao dao;

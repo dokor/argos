@@ -22,10 +22,15 @@ public class QAdminEvent extends RelationalPathBase<AdminEvent> {
     public final StringPath newState = createString("newState");
     public final StringPath reasonCode = createString("reasonCode");
     public final StringPath requestId = createString("requestId");
+    public final StringPath eventType = createString("eventType");
+    public final BooleanPath oldEnabled = createBoolean("oldEnabled"), newEnabled = createBoolean("newEnabled");
     public final PrimaryKey<AdminEvent> primary = createPrimaryKey(id);
 
     public QAdminEvent(String variable) {
         super(AdminEvent.class, forVariable(variable), null, "ARG_ADMIN_EVENT");
+        addMetadata(eventType, ColumnMetadata.named("event_type").ofType(Types.VARCHAR));
+        addMetadata(oldEnabled, ColumnMetadata.named("old_enabled").ofType(Types.BOOLEAN));
+        addMetadata(newEnabled, ColumnMetadata.named("new_enabled").ofType(Types.BOOLEAN));
         addMetadata(oldState, ColumnMetadata.named("old_state").ofType(Types.VARCHAR));
         addMetadata(newState, ColumnMetadata.named("new_state").ofType(Types.VARCHAR));
         addMetadata(reasonCode, ColumnMetadata.named("reason_code").ofType(Types.VARCHAR));
