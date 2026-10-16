@@ -17,7 +17,7 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 it.each(["full", "category:seo", "check:http.security.csp"])("creates an independent run with scope %s", async value => {
   const report = demoReport("fr");
-  report.issues = [{ id: "http.security.csp", categoryKey: "security", module: "http", title: "CSP", severity: "important", impact: "Protection" }];
+  report.issues = [{ id: "http.security.csp", categoryKey: "security", module: "http", title: "CSP", severity: "important", impact: "Protection", recommendation: "Définir une politique" }];
   render(<ScopedRelaunch report={report}/>);
   fireEvent.click(screen.getByText("Relancer une mesure"));
   await screen.findByRole("option", { name: "http.security.csp" });
