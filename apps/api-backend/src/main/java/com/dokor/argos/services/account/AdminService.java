@@ -549,18 +549,23 @@ public class AdminService {
         return read(
                 auth,
                 (ctx, c) -> {
-                    var sql =
-                            new StringBuilder(
-                                    "SELECT id,actor_id AS actorId,target_id AS targetId,old_offer"
-                                        + " AS oldOffer,new_offer AS newOffer,old_limit AS"
-                                        + " oldLimit,new_limit AS newLimit,old_state AS"
-                                        + " oldState,new_state AS newState,reason_code AS"
-                                        + " reasonCode,request_id AS requestId,created_at AS"
-                                        + " createdAt FROM ARG_ADMIN_EVENT WHERE created_at>=?");
+                    // Resolve current identities in one query, after requireAdmin. Audit IDs stay immutable.
+                    // Archived accounts stay unresolved, even before anonymization completes.
+                    var sql = new StringBuilder(
+                            "SELECT e.id,e.actor_id AS actorId,e.target_id AS targetId,"
+                            + "actor.display_name AS actorDisplayName,actor.email AS actorEmail,"
+                            + "target.display_name AS targetDisplayName,target.email AS targetEmail,"
+                            + "e.old_offer AS oldOffer,e.new_offer AS newOffer,e.old_limit AS oldLimit,"
+                            + "e.new_limit AS newLimit,e.old_state AS oldState,e.new_state AS newState,"
+                            + "e.reason_code AS reasonCode,e.request_id AS requestId,e.created_at AS createdAt"
+                            + " FROM ARG_ADMIN_EVENT e"
+                            + " LEFT JOIN ARG_ACCOUNT_USER actor ON actor.id=e.actor_id AND actor.state<>'ARCHIVED'"
+                            + " LEFT JOIN ARG_ACCOUNT_USER target ON target.id=e.target_id AND target.state<>'ARCHIVED'"
+                            + " WHERE e.created_at>=?");
                     var args = new ArrayList<Object>();
                     args.add(Timestamp.from(clock.instant().minus(Duration.ofDays(90))));
-                    if (target != null) equal(sql, args, "target_id", id(target));
-                    page(limit, cursor, args, sql, "id");
+                    if (target != null) equal(sql, args, "e.target_id", id(target));
+                    page(limit, cursor, args, sql, "e.id");
                     return result(query(c, sql.toString(), args), limit);
                 });
     }

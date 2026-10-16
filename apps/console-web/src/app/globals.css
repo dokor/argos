@@ -92,6 +92,11 @@ ul, ol {
   --argos-measure-warning: #925512;
   --argos-error: #b91c1c;
   --argos-error-soft: #fef2f2;
+  --argos-status-success: #18674c; --argos-status-success-bg: #eaf6ef;
+  --argos-status-info: #1d4ed8; --argos-status-info-bg: #eff6ff;
+  --argos-status-warning: #80520f; --argos-status-warning-bg: #fff4df;
+  --argos-status-danger: #ae293c; --argos-status-danger-bg: #fff0f2;
+  --argos-status-neutral: #475569; --argos-status-neutral-bg: #f1f5f9;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -113,6 +118,11 @@ ul, ol {
     --argos-measure-warning: #e9b96a;
     --argos-error: #fca5a5;
     --argos-error-soft: #29171e;
+  --argos-status-success: #8cdbb9; --argos-status-success-bg: #1b3a32;
+  --argos-status-info: #93c5fd; --argos-status-info-bg: #172e50;
+  --argos-status-warning: #efd096; --argos-status-warning-bg: #3e3423;
+  --argos-status-danger: #ffa8b5; --argos-status-danger-bg: #402535;
+  --argos-status-neutral: #a8b5cb; --argos-status-neutral-bg: #263044;
   }
 }
 
@@ -134,6 +144,11 @@ ul, ol {
     --argos-measure-warning: #e9b96a;
     --argos-error: #fca5a5;
   --argos-error-soft: #29171e;
+  --argos-status-success: #8cdbb9; --argos-status-success-bg: #1b3a32;
+  --argos-status-info: #93c5fd; --argos-status-info-bg: #172e50;
+  --argos-status-warning: #efd096; --argos-status-warning-bg: #3e3423;
+  --argos-status-danger: #ffa8b5; --argos-status-danger-bg: #402535;
+  --argos-status-neutral: #a8b5cb; --argos-status-neutral-bg: #263044;
 }
 
 body {

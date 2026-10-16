@@ -958,7 +958,11 @@ public final class ConnectedContracts {
         @JsonProperty(value = "oldState", required = true) AccountState oldState,
         @JsonProperty(value = "newState", required = true) AccountState newState,
         @JsonProperty(value = "reasonCode", required = true) AdminReason reasonCode,
-        @JsonProperty(value = "requestId", required = true) String requestId
+        @JsonProperty(value = "requestId", required = true) String requestId,
+        @JsonProperty(value = "actorDisplayName", required = true) String actorDisplayName,
+        @JsonProperty(value = "actorEmail", required = true) String actorEmail,
+        @JsonProperty(value = "targetDisplayName", required = true) String targetDisplayName,
+        @JsonProperty(value = "targetEmail", required = true) String targetEmail
     ) {
         public AdminEvent {
             required(id, "id");
@@ -985,6 +989,10 @@ public final class ConnectedContracts {
             if (oldLimit != null) { check(oldLimit >= 0L, "oldLimit"); check(oldLimit <= 9007199254740991L, "oldLimit"); }
             if (newLimit != null) { check(newLimit >= 0L, "newLimit"); check(newLimit <= 9007199254740991L, "newLimit"); }
             if (requestId != null) { check(requestId.codePointCount(0, requestId.length()) <= 64, "requestId"); }
+            if (actorDisplayName != null) { check(actorDisplayName.codePointCount(0, actorDisplayName.length()) <= 320, "actorDisplayName"); }
+            if (actorEmail != null) { check(actorEmail.codePointCount(0, actorEmail.length()) <= 320, "actorEmail"); }
+            if (targetDisplayName != null) { check(targetDisplayName.codePointCount(0, targetDisplayName.length()) <= 320, "targetDisplayName"); }
+            if (targetEmail != null) { check(targetEmail.codePointCount(0, targetEmail.length()) <= 320, "targetEmail"); }
         }
         @JsonAnySetter public void rejectUnknown(String name, Object value) {
             throw new IllegalArgumentException("Unknown connected field");

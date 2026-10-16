@@ -1384,7 +1384,7 @@ class AccountLifecycleIT extends MariaDbReportFixture {
         assertEquals(1,count("ARG_ADMIN_EVENT"));
         var event=admin.events(token,20,null).items().getFirst();
         assertEquals(a.context().user().getId().toString(),event.get("actorId"));assertEquals(Long.toString(target),event.get("targetId"));
-        assertFalse(mapper.writeValueAsString(event).contains("example.com"));
+        assertEquals("quota-admin@example.com", event.get("targetEmail"));
         admin.entitlement(token,CSRF,target,change(target,"FREE",null));
         assertTrue(personal.usage(bearer(u)).canLaunch());assertEquals(2,personal.usage(bearer(u)).limit());
         assertNotNull(created);
@@ -1401,6 +1401,31 @@ class AccountLifecycleIT extends MariaDbReportFixture {
         assertEquals(1,count("ARG_ADMIN_EVENT"));
         assertEquals(1,dao.transactions.selectQuery().select(QAdminEvent.table).from(QAdminEvent.table).fetch().size());
         assertNotNull(dao.transactions.selectQuery().select(QUsageAccount.table).from(QUsageAccount.table).where(QUsageAccount.table.id.eq(target)).fetchOne());
+    }
+    @Test void administrativeJournalResolvesCurrentIdentitiesWithoutChangingAuditReferences() throws Exception {
+        var a=administrator();var u=user("journal-target@example.com",true);var admin=administration();
+        long target=u.context().user().getId(),actor=a.context().user().getId();
+        admin.entitlement(bearer(a),CSRF,target,change(target,"PRO",5L));
+        sql("UPDATE ARG_ACCOUNT_USER SET display_name='Current name' WHERE id="+target);
+        var event=admin.events(bearer(a),1,null,Long.toString(target)).items().getFirst();
+        assertEquals("Current name",event.get("targetDisplayName"));
+        assertEquals("journal-target@example.com",event.get("targetEmail"));
+        assertEquals(Long.toString(actor),event.get("actorId"));assertEquals(Long.toString(target),event.get("targetId"));
+        assertNotNull(event.get("actorEmail"));
+        error(403,()->admin.events(bearer(u),20,null));error(401,()->admin.events(null,20,null));
+        sql("UPDATE ARG_ADMIN_EVENT SET target_id=actor_id");
+        event=admin.events(bearer(a),1,null).items().getFirst();
+        assertEquals(event.get("actorDisplayName"),event.get("targetDisplayName"));
+        assertEquals(event.get("actorEmail"),event.get("targetEmail"));
+        sql("UPDATE ARG_ADMIN_EVENT SET target_id="+target);
+        sql("UPDATE ARG_ACCOUNT_USER SET state='ARCHIVED' WHERE id="+target);
+        event=admin.events(bearer(a),1,null).items().getFirst();
+        assertNull(event.get("targetDisplayName"));assertNull(event.get("targetEmail"));
+        assertEquals(Long.toString(target),event.get("targetId"));
+        sql("UPDATE ARG_ADMIN_EVENT SET target_id=9223372036854775807");
+        event=admin.events(bearer(a),1,null).items().getFirst();
+        assertNull(event.get("targetDisplayName"));assertNull(event.get("targetEmail"));
+        assertEquals("9223372036854775807",event.get("targetId"));
     }
     @Test void administrationCannotChangeArchivedUsersOrOtherAdmins() throws Exception {
         var a=administrator();var b=user("other-admin@example.com",true);var admin=administration();

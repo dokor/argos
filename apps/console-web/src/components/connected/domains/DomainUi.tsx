@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, type ReactNode, type RefObject } from "react";
+import ExecutionStatusBadge from "../ExecutionStatusBadge";
 import CollectionGaps from "../CollectionGaps";
 import Link from "@/components/LocalizedLink";
 import { useLang } from "@/lib/i18n/LangContext";
@@ -249,7 +250,7 @@ export function PageTable({
                   {Object.entries(page.moduleStatuses).map(
                     ([module, status]) => (
                       <li key={module}>
-                        {module}: <State value={status} />
+                        {module}: <ExecutionStatusBadge state={status} />
                       </li>
                     ),
                   )}
