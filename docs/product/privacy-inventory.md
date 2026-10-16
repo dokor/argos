@@ -1,18 +1,28 @@
-# Inventaire factuel — #384, 10 octobre 2026
+# Inventaire factuel — #384, mis à jour le 16 octobre 2026
 
 | Affirmation | Source |
 |---|---|
-| Opérateur/hébergeur Antoine Le Louët, serveur France métropolitaine | Réponse de l’opérateur dans cette tâche |
+| Opérateur : Antoine Le Louët EI, microentreprise française ; outil d’appui à son activité professionnelle. Serveur principal hébergé par l’opérateur en France métropolitaine | Identité/statut et usage confirmés par l’opérateur le 16 octobre 2026 dans cette tâche ; localisation du serveur principal confirmée le 10 octobre, inchangée par la précision sur le stockage des sauvegardes |
 | URL, domaine, états, dates, résultats enregistrés | AuditService, AuditRunService, entités ARG_AUDIT/ARG_AUDIT_RUN/ARG_AUDIT_REPORT |
 | Accès par défaut : 3 années calendaires UTC ; purge horaire limitée des rapports expirés et résultats de runs terminés | Réponse opérateur du 11 octobre ; ReportRetentionPolicy ; ReportPublishService écrit expiresAt ; ReportReadService applique aussi le défaut aux historiques ; ReportRetentionService effectue la purge transactionnelle limitée |
 | SSL Labs/Observatory reçoivent le domaine | Clients correspondants et ConfigurationService URL par défaut ; configuration production non inspectée |
-| Journaux : cible de 90 jours ; application et sauvegardes non vérifiées | Réponse opérateur du 11 octobre ; logback.xml STDOUT ; rotations Docker/proxy et sauvegardes non inspectées |
+| Journaux techniques de production et sauvegardes : 3 ans, stockage uniquement local en Belgique, hébergement et administration manuels sans hébergement GAFAM pour ce stockage | Nouvelle confirmation de l’opérateur du 16 octobre 2026 dans cette tâche, remplaçant la cible technique de 90 jours ; déclaration opérateur, aucune inspection de production effectuée |
+| Journaux de sécurité de compte : purge après 90 jours à l’écriture suivante | AccountSessionService.event ; distincts des journaux d’infrastructure et des copies de sauvegarde |
+| E-mails de compte : SMTP OVH, adresse destinataire + contenu du message (lien/code inclus) | Confirmation opérateur du 16 octobre ; AccountAuthService, AccountEmail, SmtpAccountMail ; aucune durée de conservation OVH annoncée |
+| Connexion Google/GitHub/LinkedIn ; identifiant stable, e-mail/état de vérification si disponibles, nom ; jetons non conservés | Fournisseurs confirmés par l’opérateur le 16 octobre ; AccountOAuthClient, AccountOAuthService, ARG_ACCOUNT_IDENTITY ; permissions Google/LinkedIn openid email profile, GitHub read:user user:email |
+| Synthèse par possession du lien ; preuves/recommandations détaillées après authentification vérifiée ; partage révocable 7/30 jours ou sans échéance additionnelle, plafonné par la rétention du rapport | ReportsWs, SharedReportsWs, ReportDto.publicSummary, ReportAccessWs, ReportSharingService ; remplacer/révoquer un partage ne révoque pas le lien initial |
 | Email newsletter | route BFF newsletter et NewsletterSubscriber |
 | Retours Bug/Suggestion/Faux positif privés, textes saisis et référence facultative de rapport ; historique de statut avec ID admin ; 90 jours puis purge horaire | FeedbackService, ARG_FEEDBACK/ARG_FEEDBACK_EVENT, migration V16 ; aucun token, URL ou cookie collecté automatiquement |
 | Préférence thème/cookie admin | SiteDocument/ThemeContext existants et login BFF |
 | Mesure interne optionnelle, désactivée par défaut, accord explicite, cookie de session, tables propres 90 jours | ProductAnalyticsService, BFF /api/product-analytics, migration V10 ; pas de fournisseur tiers |
 
-## Compléments nécessaires avant clôture
+## Traçabilité et compléments avant clôture
+
+L’intégration de `main` conserve aussi la divulgation FR/EN de Cloudflare
+Turnstile, ajoutée par #686 : protection optionnelle des formulaires sensibles,
+preuve non conservée par Argos, échanges IP/signaux navigateur chez le tiers.
+Sources : `AntiBotService`, `useAntiBot`, BFF antirobot et configuration
+`antibot.enabled`. Cela ne confirme pas son activation en production.
 
 Complément du 16 octobre 2026 (#659 / #662), d'après le code livré :
 
@@ -33,10 +43,11 @@ personne, pas des scripts de mesure embarqués. Le consentement existant devient
 une gestion de préférences à deux finalités, avec refus équivalent, choix
 granulaire et retrait persistant via « Gérer mes cookies » lorsque configuré.
 La revue juridique et les limites de couverture sont précisées dans
-[traffic-analytics.md](traffic-analytics.md). La localisation effective des
-services, rotations et sauvegardes de production n'a pas été inspectée.
+[traffic-analytics.md](traffic-analytics.md). Les déclarations opérateur sur le stockage sont consignées ci-dessus ; la configuration des tiers et les mécanismes de rotation n’ont pas été inspectés.
 
-La page informations-legales publie les seuls faits confirmés, sans prétendre livrer des mentions légales exhaustives. Aucune adresse physique autorisée à publication. Statut de l’opérateur, coordonnées légalement requises, base du traitement, conservation effective et purge des données/journaux/sauvegardes, configuration réelle des prestataires et transferts restent à qualifier. #384 reste ouvert. Aucun placeholder public ni conformité générique.
+Les pages FR/EN publient les faits confirmés, y compris le statut EI, OVH et le stockage belge. Elles ne prétendent pas constituer des mentions légales exhaustives. L’opérateur maintient son refus antérieur de publier une adresse physique ; aucune adresse ni immatriculation n’est inventée. Le numéro d’immatriculation (non fourni), les coordonnées légalement requises et la qualification complète des bases juridiques/transferts/prestataires restent à valider. La confirmation du stockage local n’établit pas la localisation du SMTP ou des fournisseurs OAuth. Les durées de conservation des comptes archivés et métadonnées ne sont pas définies par une purge générale. #384 ne doit donc pas être clôturée automatiquement par cette PR.
+
+Les informations du 16 octobre sont des déclarations directes de l’opérateur dans cette conversation : usage professionnel ; autoentreprise française « Antoine Le Louët EI » ; journaux et sauvegardes locaux en Belgique trois ans ; SMTP OVH ; connexion LinkedIn/GitHub/Google. Elles remplacent les inconnues correspondantes de l’inventaire du 10/11 octobre. Les affirmations publiques n’inventent pas de coordonnées et ne présentent pas cette recette comme une certification juridique.
 
 Références officielles : [mentions d’un entrepreneur](https://entreprendre.service-public.gouv.fr/vosdroits/F31228), [information des personnes](https://www.cnil.fr/fr/informer-les-personnes), [durées de conservation](https://www.cnil.fr/fr/passer-laction/les-durees-de-conservation-des-donnees). Ces obligations ne sont pas déduites d’une simple localisation du serveur.
 

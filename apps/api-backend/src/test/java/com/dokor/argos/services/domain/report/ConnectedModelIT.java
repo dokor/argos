@@ -30,13 +30,13 @@ class ConnectedModelIT extends MariaDbReportFixture {
     }
 
     @Test void freshDatabaseHasTheNewModelAndNoSyntheticProductionRecords() throws Exception {
-        assertEquals("34", Flyway.configure().dataSource(source).load().info().current().getVersion().toString());
-        for (var table : List.of("ARG_FEEDBACK", "ARG_ACCOUNT_NOTIFICATION", "ARG_ACCOUNT_USER", "ARG_DOMAIN_DISCOVERY", "ARG_DOMAIN_DISCOVERY_PAGE", "ARG_DOMAIN_BATCH", "ARG_DOMAIN_BATCH_PAGE", "ARG_USAGE_RUN")) {
+        assertEquals("35", Flyway.configure().dataSource(source).load().info().current().getVersion().toString());
+        for (var table : List.of("ARG_PREMIUM_WAITLIST", "ARG_FEEDBACK", "ARG_ACCOUNT_NOTIFICATION", "ARG_ACCOUNT_USER", "ARG_DOMAIN_DISCOVERY", "ARG_DOMAIN_DISCOVERY_PAGE", "ARG_DOMAIN_BATCH", "ARG_DOMAIN_BATCH_PAGE", "ARG_USAGE_RUN")) {
             try (var c = source.getConnection(); var s = c.createStatement(); var r = s.executeQuery("SELECT COUNT(*) FROM " + table)) {
                 assertTrue(r.next()); assertEquals(0, r.getLong(1), table);
             }
         }
-        for (var q : List.of(QFeedback.table, QAccountNotification.table, QDomainDiscovery.table, QDomainDiscoveryPage.table, QDomainBatch.table, QDomainBatchPage.table, QAuditRun.auditRun)) {
+        for (var q : List.of(QPremiumWaitlistEntry.premiumWaitlistEntry, QFeedback.table, QAccountNotification.table, QDomainDiscovery.table, QDomainDiscoveryPage.table, QDomainBatch.table, QDomainBatchPage.table, QAuditRun.auditRun)) {
             Set<String> actual = new HashSet<>();
             try (var c = source.getConnection(); var r = c.getMetaData().getColumns(c.getCatalog(), null, q.getTableName(), null)) {
                 while (r.next()) actual.add(r.getString("COLUMN_NAME"));
@@ -134,7 +134,7 @@ class ConnectedModelIT extends MariaDbReportFixture {
         batch(321,10,101,100,"RUNNING","existing-batch");
         sql("INSERT INTO ARG_FEEDBACK(id,type,status,description,created_at,updated_at) VALUES(42,'BUG','OPEN','Historical feedback','2026-10-13','2026-10-13')");
         var current=Flyway.configure().dataSource(source).load();
-        assertEquals(5,current.migrate().migrationsExecuted);current.validate();
+        assertEquals(6,current.migrate().migrationsExecuted);current.validate();
         assertEquals(0,current.migrate().migrationsExecuted);
         try(var c=source.getConnection();var statement=c.createStatement();var row=statement.executeQuery("SELECT description,urls FROM ARG_FEEDBACK WHERE id=42")) {
             assertTrue(row.next());assertEquals("Historical feedback",row.getString("description"));assertNull(row.getString("urls"));

@@ -1,0 +1,16 @@
+Argos — Confirm your email address
+Confirm your email address
+
+Welcome to Argos. Confirm this address to access your analyses and follow your sites.
+
+Valid for 1 day. Single use. A new request invalidates the previous link or code.
+Opening the link does not confirm anything: complete the action on the Argos page.
+
+If you did not request this, ignore this email. The address will not be verified through this link without your confirmation.
+
+Confirm my email address
+https://argos.example/en/account/verify#token=synthetic_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+Account email sent by Argos. Never share a password, link or confirmation code.
+Privacy: https://argos.example/en/privacy
+Contact the operator: https://argos.example/en/legal-information

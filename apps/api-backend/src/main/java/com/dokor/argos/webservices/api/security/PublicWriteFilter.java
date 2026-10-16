@@ -23,6 +23,7 @@ public class PublicWriteFilter implements ContainerRequestFilter {
         PublicWriteLimiter.Route route = switch (path) {
             case "audits" -> PublicWriteLimiter.Route.AUDIT;
             case "newsletter/subscribe" -> PublicWriteLimiter.Route.NEWSLETTER;
+            case "premium-waitlist" -> PublicWriteLimiter.Route.PREMIUM_WAITLIST;
             default -> null;
         };
         if (route == null) return;

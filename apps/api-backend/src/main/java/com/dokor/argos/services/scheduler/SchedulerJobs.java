@@ -31,6 +31,8 @@ public class SchedulerJobs {
     public SchedulerJobs(Scheduler scheduler,ConfigurationService configuration,AuditQueueService queue,StuckAuditRunReaper reaper,com.dokor.argos.services.analytics.ProductAnalyticsService analytics,com.dokor.argos.services.domain.report.ReportRetentionService retention) {this(scheduler,configuration,queue,reaper,analytics,retention,null);}
     private com.dokor.argos.services.connected.batch.BatchReconciler batches;
     private com.dokor.argos.services.notifications.NotificationService notifications;
+    private com.dokor.argos.services.domain.premium.PremiumWaitlistService premiumWaitlist;
+    @Inject public void premiumWaitlist(com.dokor.argos.services.domain.premium.PremiumWaitlistService service){this.premiumWaitlist=service;}
     @Inject public void notifications(com.dokor.argos.services.notifications.NotificationService service){this.notifications=service;}
     @Inject public void batches(com.dokor.argos.services.connected.batch.BatchReconciler reconciler){this.batches=reconciler;}
     private com.dokor.argos.services.connected.discovery.DiscoveryWorker discoveries;
@@ -55,6 +57,7 @@ public class SchedulerJobs {
     }
 
     public void scheduleJobs() {
+        if(premiumWaitlist!=null) scheduler.schedule("Purge expired premium interest",premiumWaitlist::purge,Schedules.fixedDelaySchedule(Duration.ofHours(1)));
         if(notifications!=null) scheduler.schedule("Purge account notifications",notifications::purge,Schedules.fixedDelaySchedule(Duration.ofHours(1)));
         if(batches!=null) scheduler.schedule("Reconcile domain batches",batches::tick,Schedules.fixedDelaySchedule(Duration.ofSeconds(2)));
         if(discoveries!=null) scheduler.schedule("Discover domain pages", discoveries::tick, Schedules.fixedDelaySchedule(Duration.ofSeconds(2)));
