@@ -28,3 +28,11 @@ it("admin treatment forwards CSRF, expected status and no score change",async()=
   const response=await accountProxy(request("account/admin/feedback/42",body,true,"PATCH"),["admin","feedback","42"]);
   expect(response.status).toBe(200);expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual(body);
 });
+
+it("accepts all bounded optional fields together and rejects oversized streams",async()=>{
+  const url="https://example.com/"+"a".repeat(1600);
+  const body={type:"BUG",description:"d".repeat(4000),expected:"e".repeat(1000),observed:"o".repeat(1000),steps:"s".repeat(1000),urls:[url,url,url].join("\n")};
+  fetchMock.mockResolvedValue(new Response('{"accepted":true}'));
+  expect((await POST(request("feedback",body))).status).toBe(200);
+  fetchMock.mockClear();expect((await POST(request("feedback",{type:"BUG",description:"d".repeat(65537)}))).status).toBe(400);expect(fetchMock).not.toHaveBeenCalled();
+});

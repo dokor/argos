@@ -53,7 +53,7 @@ public final class DiscoveryService {
         if (key == null
                 || !key.matches("[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}"))
             throw new AccountError(400, "idempotency_key_invalid");
-        if (raw == null || !raw.hostname().matches("[A-Za-z0-9.-]{1,253}"))
+        if (raw == null || raw.hostname() == null || !raw.hostname().matches("[A-Za-z0-9.-]{1,253}"))
             throw new AccountError(400, "hostname_invalid");
         String host = raw.hostname().toLowerCase(Locale.ROOT);
         try {
@@ -99,7 +99,7 @@ public final class DiscoveryService {
                                 new DiscoveryBudget(
                                         Duration.ofSeconds(policy.connectSeconds), () -> false));
                     } catch (DiscoveryStop e) {
-                        throw new AccountError(400, "hostname_invalid");
+                        throw new AccountError(400, "discovery_target_unavailable");
                     }
                     // Existing domain cache is only an identity; no audit is created and no quota
                     // is reserved.

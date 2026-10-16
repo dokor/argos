@@ -13,7 +13,7 @@ class ReportSharingMigrationIT extends MariaDbReportFixture {
         sql("INSERT INTO ARG_AUDIT_RUN(id,audit_id,status) VALUES(1,1,'COMPLETED'),(2,1,'COMPLETED')");
         sql("INSERT INTO ARG_AUDIT_REPORT(id,audit_id,run_id,token_hash,domain,target_url,report_json) VALUES(1,1,1,UNHEX(SHA2('fixture-one',256)),'example.com','https://example.com','{\"domain\":\"example.com\"}'),(2,1,2,UNHEX(SHA2('fixture-two',256)),'example.com','https://example.com','{\"domain\":\"example.com\"}')");
         var latest=Flyway.configure().dataSource(source).load();
-        assertEquals(3,latest.migrate().migrationsExecuted);latest.validate();assertEquals(0,latest.migrate().migrationsExecuted);
+        assertEquals(5,latest.migrate().migrationsExecuted);latest.validate();assertEquals(0,latest.migrate().migrationsExecuted);
         try(var c=source.getConnection();var s=c.createStatement();var rows=s.executeQuery("SELECT report_json,share_token_hash,share_expires_at FROM ARG_AUDIT_REPORT WHERE id=1")) {
             assertTrue(rows.next());assertEquals("example.com",mapper.readTree(rows.getString(1)).get("domain").asText());assertNull(rows.getBytes(2));assertNull(rows.getTimestamp(3));
         }

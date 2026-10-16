@@ -2,9 +2,10 @@ import { overviewQuery } from "./overview-request";
 import { domainSummaryPath, domainSummaryQuery } from "./domain-summary-request";
 import { safeAccountReturn } from "./account-return";
 export { safeAccountReturn } from "./account-return";
+import { enabled as measurementDeploymentAllowed } from "./analytics/server";
 import { ssrfError } from "./audit-url-validation";
 import { boundedJson } from "./bounded-request";
-import { adminPath, adminQuery, adminEntitlement, adminSuspension } from "./admin-request";
+import { adminPath, adminQuery, adminEntitlement, adminSuspension, adminMeasurement } from "./admin-request";
 import { feedbackTreatment } from "./feedback-request";
 import { validIntroduction } from "./report-introduction";
 import { oauthCallbackError, type OAuthCallbackError } from "./oauth-callback-error";
@@ -57,6 +58,8 @@ export function accountHeaders(request: NextRequest, mutation: boolean): Headers
     headers.set("Origin", origin());
     headers.set("X-Argos-CSRF", request.headers.get("x-argos-csrf")!);
   }
+  const proof = request.headers.get("x-argos-captcha");
+  if (proof && proof.length <= 2048) headers.set("X-Argos-Captcha", proof);
   const csrf = request.cookies.get(CSRF_COOKIE)?.value;
   if (csrf) headers.set("Cookie", CSRF_COOKIE + "=" + csrf);
   return headers;
@@ -102,7 +105,8 @@ export async function accountProxy(request: NextRequest, parts: string[]): Promi
       const parsed = value as Record<string, unknown>;
       if(path.startsWith("notifications/") && Object.keys(parsed).length) return privateError("payload_invalid",400);
       if (request.method === "PUT" && path.startsWith("report-introduction/") && !validIntroduction(parsed)) return privateError("introduction_invalid",400);
-      if(path.startsWith("admin/") && !(path.startsWith("admin/feedback/") ? feedbackTreatment(parsed) : path.endsWith("/suspension") ? adminSuspension(parsed) : adminEntitlement(parsed))) return privateError("payload_invalid",400);
+      if(path.startsWith("admin/") && !(path === "admin/analytics/settings" ? adminMeasurement(parsed) : path.startsWith("admin/feedback/") ? feedbackTreatment(parsed) : path.endsWith("/suspension") ? adminSuspension(parsed) : adminEntitlement(parsed))) return privateError("payload_invalid",400);
+      if (path === "admin/analytics/settings" && parsed.enabled === true && !measurementDeploymentAllowed()) return privateError("measurement_bff_blocked",409);
       if (path.endsWith("/start") || path === "auth/register" || path === "auth/forgot" || path === "auth/confirm-email") {
         returnTo = safeAccountReturn(parsed.returnTo);
         linkIntent = parsed.intent === "link";
@@ -211,7 +215,8 @@ export async function accountProxy(request: NextRequest, parts: string[]): Promi
     const upstream = await fetch((process.env.API_BASE ?? "http://api-backend:8081") + "/api/account/" + path + (query.size ? "?" + query : ""), {
       method: request.method, headers, ...(body !== undefined ? { body } : {}), cache: "no-store", redirect: "error", signal: AbortSignal.timeout(15000),
     });
-    const data = await upstream.text();
+    let data = await upstream.text();
+    if (upstream.ok && path === "admin/analytics/settings") data = JSON.stringify({ ...JSON.parse(data), bffAllowed: measurementDeploymentAllowed() });
     let response: NextResponse;
     if (callback) {
       const returnCookie = request.cookies.get("argos_return_" + state)?.value;

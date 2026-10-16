@@ -9,5 +9,6 @@ import jakarta.ws.rs.core.*;
 public class ProductAnalyticsWs {
     private final ProductAnalyticsService analytics;
     @Inject public ProductAnalyticsWs(ProductAnalyticsService analytics){this.analytics=analytics;}
+    @GET public Response state(@HeaderParam("Authorization") String authorization) { return Response.ok(java.util.Map.of("enabled",analytics.enabled(authorization))).header("Cache-Control","private, no-store").build(); }
     @POST public Response count(ProductEvent event,@HeaderParam("Authorization")String authorization){if(event==null)throw new BadRequestException();analytics.count(event,authorization);return Response.noContent().build();}
 }

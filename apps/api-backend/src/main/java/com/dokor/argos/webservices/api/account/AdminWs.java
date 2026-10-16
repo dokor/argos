@@ -144,6 +144,14 @@ public class AdminWs {
     }
 
     @GET
+    @Path("/run-options")
+    public Response runOptions(@QueryParam("kind") String kind, @QueryParam("q") String search,
+            @QueryParam("limit") @DefaultValue("20") int limit, @QueryParam("cursor") String cursor) {
+        query("kind", "q", "limit", "cursor");
+        return AccountAuthWs.ok(admin.runOptions(auth(), kind, search, limit, cursor));
+    }
+
+    @GET
     @Path("/runs")
     public Response runs(
             @QueryParam("user") String user,
@@ -153,6 +161,7 @@ public class AdminWs {
             @QueryParam("until") String until,
             @QueryParam("limit") @DefaultValue("20") int limit,
             @QueryParam("cursor") String cursor) {
+        query("user", "site", "status", "from", "until", "limit", "cursor");
         return AccountAuthWs.ok(admin.runs(auth(), user, site, status, from, until, limit, cursor));
     }
 

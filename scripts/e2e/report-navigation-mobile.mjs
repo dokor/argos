@@ -38,10 +38,11 @@ try {
   await link.focus();await page.keyboard.press('Shift+Tab');await page.keyboard.press('Tab');
   assert.ok(await link.evaluate(el=>el===document.activeElement&&getComputedStyle(el).outlineStyle!=='none'),'Visible keyboard focus');
   const footer=page.locator('footer').filter({has:page.locator('nav')});
-  assert.equal(await footer.getByRole('link').count(),5);assert.equal(await footer.getByText('Argos',{exact:true}).count(),0);
-  const contact=footer.getByRole('link',{name:lang==='fr'?'Nous contacter':'Contact us'});
-  assert.equal(await contact.getAttribute('href'),prefix+'/feedback');
-  if(width===1120){const linksBox=await footer.locator('nav').boundingBox(),contactBox=await contact.boundingBox();assert.ok(contactBox.x>linksBox.x+linksBox.width);assert.ok(Math.abs(contactBox.y-linksBox.y)<2);}
+  assert.equal(await footer.getByRole('link').count(),4);assert.equal(await footer.getByText('Argos',{exact:true}).count(),0);
+  const contact=footer.getByRole('button',{name:lang==='fr'?'Signaler un bug':'Report a bug',exact:true});
+  assert.equal(await footer.getByRole('button',{name:lang==='fr'?'Proposer une fonctionnalité':'Suggest a feature',exact:true}).count(),1);
+  assert.equal(await contact.getAttribute('aria-haspopup'),'dialog');
+  if(width===1120){const linksBox=await footer.locator('nav').boundingBox(),contactBox=await contact.boundingBox();assert.ok(contactBox.x>linksBox.x+linksBox.width);assert.ok(Math.abs(contactBox.y+contactBox.height/2-linksBox.y-linksBox.height/2)<2);}
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Private report overflow '+width);
   if([320,390,1120].includes(width)){
    await breadcrumb.screenshot({path:`${output}/after-breadcrumb-${lang}-${width}-${theme}.png`});

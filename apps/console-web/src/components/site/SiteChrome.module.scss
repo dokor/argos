@@ -252,3 +252,6 @@
   .logoText { font-size: t.$text-md; }
   .accountLink { width: 116px; gap: t.$space-1; padding-inline: t.$space-2; }
 }
+
+.footerGroup > button { min-height: 44px; padding: 0; text-align: left; color: t.$color-slate-300; font: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.footerGroup > button:focus-visible { outline: 3px solid t.$color-indigo-muted; outline-offset: 3px; }

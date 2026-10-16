@@ -429,12 +429,48 @@ public class AdminService {
     }
 
     private static final String RUNS =
-            "SELECT r.id,r.owner_user_id AS userId,d.hostname AS site,r.status,r.created_at AS"
+            "SELECT r.id,r.owner_user_id AS userId,d.hostname AS site,a.normalized_url AS rawTarget,"
+                + " u.id AS resolvedUserId,u.display_name AS userDisplayName,u.email AS userEmail,"
+                + " bp.batch_id AS batchId,b.selected_count AS pageCount,r.status,r.created_at AS"
                 + " createdAt,r.started_at AS startedAt,r.finished_at AS finishedAt,r.attempt_count"
                 + " AS attempts,EXISTS(SELECT 1 FROM ARG_AUDIT_REPORT p WHERE p.run_id=r.id AND"
                 + " (p.expires_at IS NULL OR p.expires_at>UTC_TIMESTAMP(3))) AS reportAvailable"
                 + " FROM ARG_AUDIT_RUN r JOIN ARG_AUDIT a ON a.id=r.audit_id LEFT JOIN ARG_DOMAIN d"
-                + " ON d.id=a.domain_id WHERE 1=1";
+                + " ON d.id=a.domain_id LEFT JOIN ARG_ACCOUNT_USER u ON u.id=r.owner_user_id AND u.state<>'ARCHIVED'"
+                + " LEFT JOIN ARG_DOMAIN_BATCH_PAGE bp ON bp.run_id=r.id"
+                + " LEFT JOIN ARG_DOMAIN_BATCH b ON b.id=bp.batch_id WHERE 1=1";
+
+    private static void projectRuns(List<Map<String, Object>> rows) {
+        for (var row : rows) {
+            String site = AdminDisplayUrl.host((String) row.get("site"));
+            row.put("displayUrl", AdminDisplayUrl.project((String) row.remove("rawTarget"), site));
+            row.put("site", site);
+        }
+    }
+
+    /** Bounded lookup options, independently searchable and paginated. */
+    public Page runOptions(String auth, String kind, String search, int limit, String cursor) {
+        return read(auth, (ctx, c) -> {
+            choice(kind, Set.of("site", "user"));
+            if (kind == null || search != null && (search.length() > 100 || search.matches("(?s).*[\\x00-\\x1f\\x7f].*")))
+                throw new AccountError(400, "filter_invalid");
+            boolean users = kind.equals("user");
+            var sql = new StringBuilder(users
+                    ? "SELECT id,display_name AS displayName,email FROM ARG_ACCOUNT_USER WHERE state<>'ARCHIVED'"
+                    : "SELECT id,hostname AS site FROM ARG_DOMAIN WHERE 1=1");
+            var args = new ArrayList<Object>();
+            if (search != null && !search.isBlank()) {
+                sql.append(users ? " AND (LOCATE(LOWER(?),LOWER(display_name))>0 OR LOCATE(LOWER(?),LOWER(email))>0)"
+                        : " AND LOCATE(LOWER(?),LOWER(hostname))>0");
+                args.add(search.strip());
+                if (users) args.add(search.strip());
+            }
+            page(limit, cursor, args, sql, "id");
+            var result = result(query(c, sql.toString(), args), limit);
+            if (!users) result.items().forEach(row -> row.put("site", AdminDisplayUrl.host((String) row.get("site"))));
+            return result;
+        });
+    }
 
     public Page runs(
             String auth,
@@ -487,7 +523,9 @@ public class AdminService {
                         throw new AccountError(400, "filter_invalid");
                     }
                     page(limit, cursor, args, sql, "r.id");
-                    return result(query(c, sql.toString(), args), limit);
+                    var result = result(query(c, sql.toString(), args), limit);
+                    projectRuns(result.items());
+                    return result;
                 });
     }
 
@@ -498,6 +536,16 @@ public class AdminService {
                     var rows = query(c, RUNS + " AND r.id=?", List.of(id));
                     if (rows.isEmpty()) throw AccountError.missing();
                     var row = rows.getFirst();
+                    projectRuns(rows);
+                    if (row.get("batchId") != null) {
+                        var pages = query(c, RUNS + " AND bp.batch_id=? ORDER BY r.id LIMIT 1000", List.of(row.get("batchId")));
+                        projectRuns(pages);
+                        row.put("batchPages", pages.stream().map(p -> {
+                            var page = new LinkedHashMap<String, Object>();
+                            page.put("id", p.get("id")); page.put("displayUrl", p.get("displayUrl"));
+                            return page;
+                        }).toList());
+                    }
                     var extra =
                             query(
                                             c,
@@ -557,6 +605,7 @@ public class AdminService {
                             + "target.display_name AS targetDisplayName,target.email AS targetEmail,"
                             + "e.old_offer AS oldOffer,e.new_offer AS newOffer,e.old_limit AS oldLimit,"
                             + "e.new_limit AS newLimit,e.old_state AS oldState,e.new_state AS newState,"
+                            + "e.event_type AS eventType,e.old_enabled AS oldEnabled,e.new_enabled AS newEnabled,"
                             + "e.reason_code AS reasonCode,e.request_id AS requestId,e.created_at AS createdAt"
                             + " FROM ARG_ADMIN_EVENT e"
                             + " LEFT JOIN ARG_ACCOUNT_USER actor ON actor.id=e.actor_id AND actor.state<>'ARCHIVED'"

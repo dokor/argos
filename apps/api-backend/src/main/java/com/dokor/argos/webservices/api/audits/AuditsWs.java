@@ -84,6 +84,7 @@ public class AuditsWs {
     public Response createAudit(CreateAuditRequest request) { return createAudit(request,null); }
 
     @POST
+    @com.dokor.argos.webservices.api.security.AntiBot("audit")
     @Operation(description = "Crée un audit (idempotent sur normalizedUrl) et crée un run en status QUEUED.")
     public Response createAudit(
         @Parameter(required = true) @RequestBody(required = true) @Valid CreateAuditRequest request, @HeaderParam("Authorization") String authorization

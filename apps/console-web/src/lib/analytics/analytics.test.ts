@@ -1,7 +1,7 @@
 import { afterEach, describe, it, expect, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 import { POST } from '@/app/api/product-analytics/route';
-import { POST as consent } from '@/app/api/product-analytics/consent/route';
+import { GET as consentState, POST as consent } from '@/app/api/product-analytics/consent/route';
 import { dimensions, eventPayload, publicRoute } from './contract';
 afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
 const event = { event: 'public_page_view', dimensions: { route: '/', lang: 'fr', placement: 'page' } };
@@ -13,4 +13,14 @@ describe('consented telemetry boundary', () => {
         expect((await POST(request(event, cookie))).status).toBe(204); expect(fetch).not.toHaveBeenCalled(); });
     it('forwards only closed event fields with server credential', async () => { vi.stubEnv('PRODUCT_ANALYTICS_ENABLED', 'true'); vi.stubEnv('ADMIN_API_TOKEN', 'synthetic'); const fetch = vi.fn().mockResolvedValue(new Response(null, { status: 204 })); vi.stubGlobal('fetch', fetch); expect((await POST(request(event, 'argos_product_consent=granted'))).status).toBe(204); expect(fetch).toHaveBeenCalledOnce(); const init = fetch.mock.calls[0][1]; expect(init.headers.Authorization).toBe('Bearer synthetic'); expect(JSON.parse(init.body)).toEqual({ ...event, errorCategory: 'none' }); expect((await POST(request({ ...event, token: 'private' }, 'argos_product_consent=granted'))).status).toBe(400); expect(fetch).toHaveBeenCalledOnce(); });
     it('rejects cross-origin choice and uses a session HttpOnly cookie', async () => { vi.stubEnv('PRODUCT_ANALYTICS_ENABLED', 'true'); vi.stubEnv('ADMIN_API_TOKEN', 'synthetic'); expect((await consent(request({ choice: 'granted' }, '', 'https://other.test'))).status).toBe(403); const response = await consent(request({ choice: 'refused' })); expect(response.status).toBe(204); expect(response.headers.get('set-cookie')).toContain('HttpOnly'); expect(response.headers.get('set-cookie')).toContain('SameSite=strict'); expect(response.headers.get('set-cookie')).not.toMatch(/Max-Age|Expires/); });
+});
+
+it('offers consent only when the effective durable backend switch permits collection',async()=>{
+ vi.stubEnv('PRODUCT_ANALYTICS_ENABLED','true');vi.stubEnv('ADMIN_API_TOKEN','synthetic');
+ const fetch=vi.fn().mockResolvedValue(Response.json({enabled:false}));vi.stubGlobal('fetch',fetch);
+ expect((await (await consentState(request({}))).json()).enabled).toBe(false);
+ fetch.mockResolvedValue(Response.json({enabled:true}));
+ expect((await (await consentState(request({}))).json()).enabled).toBe(true);
+ fetch.mockRejectedValue(new Error('unavailable'));
+ expect((await (await consentState(request({}))).json()).enabled).toBe(false);
 });

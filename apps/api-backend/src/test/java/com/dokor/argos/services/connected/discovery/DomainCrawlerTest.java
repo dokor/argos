@@ -12,6 +12,28 @@ import java.time.Duration;
 import java.util.*;
 
 class DomainCrawlerTest {
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.CsvSource({"example.com,www.example.com", "www.example.com,example.com", "www.example.com,shop.example.com"})
+    void hostChangingRedirectsAreExcludedBeforeAnyExternalRequest(String host, String target) {
+        responses.put("https://" + host, new DiscoveryTransport.Response(302, "text/html", "https://" + target + "/page", ""));
+        var input = new CreateDiscovery(host, 20L, 2L, List.of());
+        var result = new DomainCrawler(policy, transport).crawl(input, policy.limits(input),
+                new DiscoveryBudget(Duration.ofSeconds(3), () -> false), pages::add);
+        assertEquals("EXTERNAL_HOST", result.reason());
+        assertTrue(pages.stream().noneMatch(DomainCrawler.Page::eligible));
+        assertTrue(fetched.stream().allMatch(url -> java.net.URI.create(url).getHost().equals(host)));
+    }
+
+    @Test void wwwIsAnExactHostAndOtherHostsNeverBecomeEligible() {
+        responses.put("https://www.exemple.fr", new DiscoveryTransport.Response(200, "text/html", null,
+                "<a href='/page'>Page</a><a href='https://exemple.fr/apex'>Apex</a><a href='https://blog.exemple.fr/blog'>Blog</a>"));
+        responses.put("https://www.exemple.fr/page", new DiscoveryTransport.Response(200, "text/html", null, ""));
+        var input = new CreateDiscovery("www.exemple.fr", 20L, 2L, List.of());
+        new DomainCrawler(policy, transport).crawl(input, policy.limits(input), new DiscoveryBudget(Duration.ofSeconds(3), () -> false), pages::add);
+        assertEquals(2, pages.stream().filter(DomainCrawler.Page::eligible).count());
+        assertTrue(pages.stream().filter(DomainCrawler.Page::eligible).allMatch(page -> page.url().startsWith("https://www.exemple.fr")));
+        assertTrue(fetched.stream().allMatch(url -> java.net.URI.create(url).getHost().equals("www.exemple.fr")));
+    }
     DiscoveryPolicy policy;
     DiscoveryTransport transport;
     List<String> fetched;

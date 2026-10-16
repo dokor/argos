@@ -174,3 +174,6 @@ a.kpi:hover { border-color: var(--argos-brand); }
 .sidebar { position:sticky;top:0;height:100dvh;overflow:visible; }
 @media(min-width:901px) and (max-height:760px) { .navigation { padding-inline:8px;scrollbar-width:thin; } }
 @media(max-width:900px) { .sidebar { position:relative;height:auto;overflow:visible; } }
+
+.footer button { min-height: 44px; padding: 8px 0; text-decoration: underline; text-underline-offset: 3px; text-align: left; }
+.footer button:focus-visible { outline: 3px solid var(--argos-brand); outline-offset: 3px; }

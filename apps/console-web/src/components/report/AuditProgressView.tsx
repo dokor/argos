@@ -1,4 +1,7 @@
 "use client";
+import Tooltip from "@/components/ui/Tooltip";
+import {helpCopy} from "@/components/ui/ContextHelp";
+import ContextHelp from "@/components/ui/ContextHelp";
 import ExecutionStatusBadge from "@/components/connected/ExecutionStatusBadge";
 import RunClaim from "@/components/account/RunClaim";
 
@@ -63,7 +66,7 @@ type Props = { token: string; initialStatus?: PublicReportStatusResponse | null 
 
 export default function AuditProgressView({ token, initialStatus = null }: Props) {
   const router = useRouter();
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const tp = t.report.progress;
 
   const [runStatus, setRunStatus] = useState<PublicReportStatusResponse | null>(initialStatus);
@@ -244,16 +247,17 @@ export default function AuditProgressView({ token, initialStatus = null }: Props
         )}
 
         {/* Liste des modules */}
-        {!isBlockingError && modules.length > 0 && (
+        {!isBlockingError && modules.length > 0 && (<>
+<ContextHelp topic="progress"/>
           <ul className={s.moduleList} aria-label={tp.modulesLabel}>
             {modules.map((m) => (
               <li key={m.id} className={`${s.moduleRow} ${s[`status_${m.status.toLowerCase()}`]}`}>
                 <StatusIcon status={m.status} labels={tp.icon} />
-                <span className={s.moduleLabel}>{m.label}</span>
+                <Tooltip className={s.moduleLabel} label={m.label} content={helpCopy[lang].modules[m.id as keyof typeof helpCopy.fr.modules] ?? m.label}><span className={s.moduleLabel}>{m.label}</span></Tooltip>
                 <ExecutionStatusBadge state={m.status}/>
               </li>
             ))}
-          </ul>
+          </ul></>
         )}
 
         {/* Placeholder si les statuts ne sont pas encore chargés */}

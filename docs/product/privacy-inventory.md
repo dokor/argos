@@ -18,6 +18,12 @@
 
 ## Traçabilité et compléments avant clôture
 
+L’intégration de `main` conserve aussi la divulgation FR/EN de Cloudflare
+Turnstile, ajoutée par #686 : protection optionnelle des formulaires sensibles,
+preuve non conservée par Argos, échanges IP/signaux navigateur chez le tiers.
+Sources : `AntiBotService`, `useAntiBot`, BFF antirobot et configuration
+`antibot.enabled`. Cela ne confirme pas son activation en production.
+
 Complément du 16 octobre 2026 (#659 / #662), d'après le code livré :
 
 | Traceur / stockage | Finalité, durée, destinataire et décision |

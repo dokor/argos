@@ -2,6 +2,14 @@ package com.dokor.argos.webservices.api.account;
 
 import com.dokor.argos.services.account.AccountSessionService;
 import com.dokor.argos.services.analytics.ProductAnalyticsService;
+import com.dokor.argos.services.analytics.ProductMeasurementControl;
+import com.dokor.argos.services.account.AccountCsrf;
+import com.dokor.argos.services.account.AccountError;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.container.ContainerRequestContext;
+import jakarta.ws.rs.core.Context;
+import java.util.Map;
+import java.util.Set;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.DefaultValue;
@@ -20,11 +28,17 @@ import jakarta.ws.rs.core.Response;
 public class AccountAnalyticsWs {
     private final AccountSessionService sessions;
     private final ProductAnalyticsService analytics;
+    private final ProductMeasurementControl control;
+    private final AccountCsrf csrf;
+    @Context private jakarta.inject.Provider<ContainerRequestContext> requests;
 
     @Inject
-    public AccountAnalyticsWs(AccountSessionService sessions, ProductAnalyticsService analytics) {
+    public AccountAnalyticsWs(AccountSessionService sessions, ProductAnalyticsService analytics,
+            ProductMeasurementControl control, AccountCsrf csrf) {
         this.sessions = sessions;
         this.analytics = analytics;
+        this.control = control;
+        this.csrf = csrf;
     }
 
     @GET
@@ -32,5 +46,21 @@ public class AccountAnalyticsWs {
                             @HeaderParam("Authorization") String authorization) {
         return AccountAuthWs.ok(sessions.with(authorization, null, true, false,
             (context, connection) -> analytics.metrics(days, context)));
+    }
+
+    @GET @Path("/settings")
+    public Response settings(@HeaderParam("Authorization") String auth) {
+        return AccountAuthWs.ok(control.read(auth));
+    }
+
+    @PATCH @Path("/settings") @Consumes(MediaType.APPLICATION_JSON)
+    public Response change(@HeaderParam("Authorization") String auth, Map<String, Object> body) {
+        String proof = csrf.require(requests.get());
+        if (body == null || !body.keySet().equals(Set.of("enabled", "expectedVersion", "confirmation"))
+                || !(body.get("enabled") instanceof Boolean) || !Boolean.TRUE.equals(body.get("confirmation"))
+                || !(body.get("expectedVersion") instanceof Integer || body.get("expectedVersion") instanceof Long))
+            throw new AccountError(400, "payload_invalid");
+        return AccountAuthWs.ok(control.change(auth, proof, new ProductMeasurementControl.Change(
+                (Boolean) body.get("enabled"), ((Number) body.get("expectedVersion")).longValue(), true)));
     }
 }

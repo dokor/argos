@@ -36,6 +36,7 @@ export async function POST(req: NextRequest) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        ...(req.headers.get("x-argos-captcha") && req.headers.get("x-argos-captcha")!.length <= 2048 ? {"X-Argos-Captcha":req.headers.get("x-argos-captcha")!} : {}),
       },
       body: JSON.stringify({ email: body.email }),
       cache: "no-store",

@@ -32,7 +32,7 @@ it("never requests private metrics for unverified or ordinary accounts", () => {
 });
 it("aborts stale periods, clears data while loading, and supports refresh after errors", async () => {
   render(<AnalyticsView />); await screen.findByText("24");
-  const signal = api.mock.calls[0][3];
+  const signal = api.mock.calls.find(call => call[0] === "admin/analytics?days=30")![3];
   api.mockRejectedValue(new AccountClientError("account_unavailable", 503));
   fireEvent.change(screen.getByLabelText("Période glissante UTC"), { target: { value: "7" } });
   expect(signal.aborted).toBe(true);
@@ -46,7 +46,7 @@ it("ignores late responses and hides metrics immediately after revocation", asyn
   let resolve!: (data: ProductMetrics) => void;
   api.mockImplementation(() => new Promise(done => { resolve = done; }));
   const view = render(<AnalyticsView />);
-  const signal = api.mock.calls[0][3];
+  const signal = api.mock.calls.find(call => call[0] === "admin/analytics?days=30")![3];
   session.denied = true; view.rerender(<AnalyticsView />);
   await act(async () => resolve(metrics));
   expect(signal.aborted).toBe(true); expect(screen.queryByText("24")).not.toBeInTheDocument();

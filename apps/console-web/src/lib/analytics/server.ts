@@ -2,6 +2,15 @@ import { NextRequest } from 'next/server';
 import { dimensions, type ProductEvent } from './contract';
 export const CONSENT_COOKIE = 'argos_product_consent';
 export function enabled() { return process.env.PRODUCT_ANALYTICS_ENABLED === 'true' && Boolean(process.env.ADMIN_API_TOKEN?.trim()); }
+export async function collectionEnabled() {
+    if (!enabled()) return false;
+    try {
+        const response = await fetch((process.env.API_BASE ?? 'http://api-backend:8081') + '/api/product-analytics', {
+            headers: { Authorization: 'Bearer ' + process.env.ADMIN_API_TOKEN }, cache: 'no-store', redirect: 'error', signal: AbortSignal.timeout(1000),
+        });
+        return response.ok && (await response.json()).enabled === true;
+    } catch { return false; }
+}
 export function sameOrigin(request: NextRequest) { return request.headers.get('origin') === request.nextUrl.origin && (!request.headers.get('sec-fetch-site') || request.headers.get('sec-fetch-site') === 'same-origin'); }
 export function attribution(request: NextRequest, value: unknown) { return enabled() && sameOrigin(request) && request.cookies.get(CONSENT_COOKIE)?.value === 'granted' ? dimensions(value) : undefined; }
 export async function count(event: ProductEvent) { if (!enabled())

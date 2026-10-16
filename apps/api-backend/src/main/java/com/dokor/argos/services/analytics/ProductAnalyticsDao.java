@@ -9,7 +9,25 @@ import java.util.*;
 public class ProductAnalyticsDao {
     private final TransactionManagerQuerydsl transactions;
     @Inject public ProductAnalyticsDao(TransactionManagerQuerydsl transactions) { this.transactions=transactions; }
+    public boolean collectionEnabled() {
+        return transactions.executeAndReturn(connection -> {
+            try(var query=connection.prepareStatement("SELECT enabled FROM ARG_PRODUCT_SETTING WHERE id=1");var row=query.executeQuery()) { return row.next() && row.getBoolean(1); }
+            catch(SQLException e){throw new IllegalStateException("Measurement state unavailable");}
+        });
+    }
     private static Calendar utc() { return Calendar.getInstance(TimeZone.getTimeZone("UTC")); }
+    // The row lock serializes collection with disable across all backend instances.
+    private static Instant collectionWindow(Connection connection) throws SQLException {
+        try (var query=connection.prepareStatement("SELECT enabled,enabled_since FROM ARG_PRODUCT_SETTING WHERE id=1 FOR UPDATE"); var row=query.executeQuery()) {
+            return row.next() && row.getBoolean(1) ? instant(row,2) : null;
+        }
+    }
+    private static void collected(Connection connection,Instant now,int changed) throws SQLException {
+        if(changed==0)return;
+        try(var query=connection.prepareStatement("UPDATE ARG_PRODUCT_SETTING SET last_collected_at=? WHERE id=1")) {
+            query.setTimestamp(1,Timestamp.from(now),utc());query.executeUpdate();
+        }
+    }
     public void countTraffic(TrafficEvent event,Instant now) {
         transactions.executeAndReturn(c->{
             try(var q=c.prepareStatement("INSERT INTO ARG_PRODUCT_EVENT_COUNT(event_day,event_name,source_route,locale,placement,error_category) VALUES(?,?,?,?,?,'none') ON DUPLICATE KEY UPDATE event_count=event_count+1")) {
@@ -32,9 +50,10 @@ public class ProductAnalyticsDao {
     }
     public void count(ProductEvent event, Instant now) {
         transactions.executeAndReturn(connection -> {
+            try { if(collectionWindow(connection)==null)return null; } catch(SQLException e){throw new IllegalStateException("Measurement state unavailable");}
             try(var query=connection.prepareStatement("INSERT INTO ARG_PRODUCT_EVENT_COUNT(event_day,event_name,source_route,locale,placement,error_category) VALUES(?,?,?,?,?,?) ON DUPLICATE KEY UPDATE event_count=event_count+1")) {
                 query.setDate(1,java.sql.Date.valueOf(now.atZone(ZoneOffset.UTC).toLocalDate())); query.setString(2,event.event());
-                dimensions(query,3,event.dimensions()); query.setString(6,event.errorCategory()); query.executeUpdate(); return null;
+                dimensions(query,3,event.dimensions()); query.setString(6,event.errorCategory()); collected(connection,now,query.executeUpdate()); return null;
             } catch(SQLException error) { throw new IllegalStateException("Product counter storage failed"); }
         });
     }
@@ -43,15 +62,17 @@ public class ProductAnalyticsDao {
     }
     public void attribute(long runId,AnalyticsDimensions d,Instant now) {
         transactions.executeAndReturn(connection -> {
-            try(var query=connection.prepareStatement("INSERT IGNORE INTO ARG_PRODUCT_AUDIT_ATTR(run_id,source_route,locale,placement,created_at) VALUES(?,?,?,?,?)")) {
-                query.setLong(1,runId);dimensions(query,2,d);query.setTimestamp(5,Timestamp.from(now),utc());query.executeUpdate();return null;
+            Instant since; try { since=collectionWindow(connection); if(since==null || now.isBefore(since))return null; } catch(SQLException e){throw new IllegalStateException("Measurement state unavailable");}
+            try(var query=connection.prepareStatement("INSERT IGNORE INTO ARG_PRODUCT_AUDIT_ATTR(run_id,source_route,locale,placement,created_at) SELECT ?,?,?,?,? FROM ARG_AUDIT_RUN WHERE id=? AND created_at>=?")) {
+                query.setLong(1,runId);dimensions(query,2,d);query.setTimestamp(5,Timestamp.from(now),utc());query.setLong(6,runId);query.setTimestamp(7,Timestamp.from(since),utc());collected(connection,now,query.executeUpdate());return null;
             }catch(SQLException error){throw new IllegalStateException("Product attribution storage failed");}
         });
     }
     public void viewed(long runId,Instant now) {
         transactions.executeAndReturn(connection -> {
-            try(var query=connection.prepareStatement("UPDATE ARG_PRODUCT_AUDIT_ATTR SET first_viewed_at=? WHERE run_id=? AND first_viewed_at IS NULL")) {
-                query.setTimestamp(1,Timestamp.from(now),utc());query.setLong(2,runId);query.executeUpdate();return null;
+            Instant since; try { since=collectionWindow(connection); if(since==null)return null; } catch(SQLException e){throw new IllegalStateException("Measurement state unavailable");}
+            try(var query=connection.prepareStatement("UPDATE ARG_PRODUCT_AUDIT_ATTR SET first_viewed_at=? WHERE run_id=? AND first_viewed_at IS NULL AND created_at>=?")) {
+                query.setTimestamp(1,Timestamp.from(now),utc());query.setLong(2,runId);query.setTimestamp(3,Timestamp.from(since),utc());collected(connection,now,query.executeUpdate());return null;
             }catch(SQLException error){throw new IllegalStateException("Product view storage failed");}
         });
     }

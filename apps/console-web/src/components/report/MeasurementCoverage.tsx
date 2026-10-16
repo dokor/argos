@@ -1,10 +1,11 @@
 "use client";
 import type { Coverage } from "./types";
+import CoverageDetails from "./CoverageDetails";
 import { useLang } from "@/lib/i18n/LangContext";
 import s from "./MeasurementCoverage.module.scss";
 
 export default function MeasurementCoverage({ coverage }: { coverage?: Coverage | null }) {
-  const { t } = useLang(); const tc = t.report.measurementCoverage;
+  const { t, lang } = useLang(); const tc = t.report.measurementCoverage;
   if (!coverage) return null;
   const percent = (ratio: number) => `${Math.round(ratio * 100)} %`;
   const states = ["MEASURED", "UNAVAILABLE", "BLOCKED_BY_ANTIBOT", "NOT_APPLICABLE"] as const;
@@ -18,6 +19,7 @@ export default function MeasurementCoverage({ coverage }: { coverage?: Coverage 
       <p>{tc.explanation}</p>
       <ul>{states.map(state => <li key={state}>{tc.states[state]}: {coverage.checks.filter(check => check.state === state).length}</li>)}</ul>
       <p>{tc.confidenceExplanation}</p>
+      <CoverageDetails coverage={coverage} lang={lang}/>
     </details>
   </aside>;
 }

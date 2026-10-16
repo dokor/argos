@@ -177,6 +177,11 @@ public class AccountBrowserFixture extends MariaDbReportFixture {
                         .register(
                                 new com.dokor.argos.webservices.api.report.ReportsWs(
                                         fixture.reader, fixture.runs));
+        // This explicit fixture mode never configures or disables production protection.
+        var antiBot = new com.dokor.argos.services.security.AntiBotService(
+            ConfigFactory.parseString("antibot.mode=disabled"), fixture.mapper, clock);
+        config.register(new com.dokor.argos.webservices.api.security.AntiBotWs(antiBot));
+        config.register(new com.dokor.argos.webservices.api.security.AntiBotFilter(antiBot, sessions));
         var connectedProfiles=new com.dokor.argos.services.connected.ConnectedProfiles(new com.dokor.argos.services.analysis.scoring.DefaultScorePolicy());
         config.register(new UsageHistoryWs(new UsageHistoryService(sessions,new UsagePolicy(ConfigFactory.empty()),clock)));
         config.register(new ConnectedProfilesWs(sessions,connectedProfiles));

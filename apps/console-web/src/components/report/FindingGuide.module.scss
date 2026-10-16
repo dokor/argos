@@ -1,0 +1,12 @@
+@use '../../styles/tokens' as t;
+.guide { display: grid; gap: 20px; font-size: 15px; line-height: 1.65; overflow-wrap: anywhere;
+  section { border-top: 1px solid t.$border; padding-top: 16px; }
+  h3, h5 { font-size: 16px; font-weight: 650; margin-bottom: 8px; }
+  p, li { max-width: 75ch; }
+  ol { list-style: decimal; padding-left: 24px; display: grid; gap: 8px; margin-block: 12px; }
+  pre { white-space: pre-wrap; overflow-wrap: anywhere; border-left: 2px solid t.$border; padding: 12px; font-size: 13px; background: t.$surface-2; }
+  figcaption, .context { color: t.$text-muted; font-size: 14px; margin-block: 8px; }
+  a { text-decoration: underline; text-underline-offset: 3px; }
+  a:focus-visible { outline: 2px solid t.$brand; outline-offset: 3px; }
+}
+@media print { .guide { gap: 12px; color: inherit; } }

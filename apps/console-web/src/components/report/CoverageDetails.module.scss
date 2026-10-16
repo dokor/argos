@@ -1,0 +1,11 @@
+@use '../../styles/tokens' as t;
+.details {
+  color: t.$text; font-size: t.$text-md; line-height: 1.65; overflow-wrap: anywhere;
+  h3 { font-size: t.$text-xl; font-weight: 650; margin-block: 20px 12px; }
+  p { margin-block: 8px; max-width: 75ch; }
+  ul { list-style: none; padding: 0; }
+  li { border-top: 1px solid t.$border; padding-block: 12px; break-inside: avoid; }
+  summary { cursor: pointer; padding-block: 12px; min-height: 44px; }
+  summary:focus-visible { outline: 2px solid t.$brand; outline-offset: 2px; }
+  code { font-size: .9em; overflow-wrap: anywhere; }
+}
