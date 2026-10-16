@@ -37,6 +37,7 @@ export function connectedFixture(path, params, baseReport, usage) {
   if(path === "/api/account/methods") return [{id:"1",provider:"password"}];
   if(path === "/api/account/sessions") return [{id:"1",createdAt:date,current:true}];
   if(path === "/api/account/domain-discoveries"||path === "/api/account/domain-batches") return [];
+  if(path === "/api/account/domain-discoveries/limits") return {maxUrls:50,maxDepth:3,defaultUrls:20,defaultDepth:2,durationSeconds:60};
   if(path === "/api/account/analysis-profiles") return {defaultProfileId:"server-default-v1",items:[{id:"server-default-v1",label:"Default collectors",description:"Collector defaults",contractVersion:1,settingsProvenance:"COLLECTOR_DEFAULTS"}]};
   if(path === "/api/account/domains") return {items:params.get("query")&&!"atelier.example".includes(params.get("query"))?[]:[{id:"101",hostname:"atelier.example",latestBatchId:"201",latestAttemptAt:date,batchStatus:"PARTIAL",counts},{id:"102",hostname:"nouveau.example",latestBatchId:null,latestAttemptAt:null,batchStatus:null,counts:Object.fromEntries(Object.keys(counts).map(k=>[k,0]))}],total:2,limit:20,offset:0,snapshotAt:date};
   if(path === "/api/account/usage/events") return {period:params.get("period")??"2026-10",snapshotAt:date,limit:20,offset:0,total:6,items:pages.map((p,i)=>({runId:p.runId,batchId:i<4?"201":null,state:i===4?"RELEASED":i===5?"RESERVED":"COUNTED",period:"2026-10",createdAt:date,countedAt:i<4?date:null,releasedAt:i===4?date:null,url:p.normalizedUrl}))};

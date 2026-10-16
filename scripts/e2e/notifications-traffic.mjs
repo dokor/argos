@@ -25,7 +25,7 @@ try {
   await page.screenshot({path:`${output}/notifications-${width}-${lang}-${theme}.png`,fullPage:true});
   await page.keyboard.press('Escape');await bell.waitFor();assert.equal(await bell.getAttribute('aria-expanded'),'false');assert.equal(await bell.evaluate(e=>e===document.activeElement),true);
   await page.goto(base+prefix+'/account/domains/new');
-  const host=page.getByPlaceholder(lang==='fr'?'www.exemple.fr':'www.example.com');await host.waitFor();assert.equal(await host.inputValue(),'');
+  const host=page.getByPlaceholder(lang==='fr'?'www.exemple.fr':'www.example.com');await host.waitFor();await host.waitFor({state:'visible'});await page.waitForFunction(()=>!document.querySelector('input[name="hostname"]').disabled);assert.equal(await host.inputValue(),'');assert.equal(await host.isEnabled(),true);
   assert.ok(await host.evaluate(e=>!!e.closest('label')));await page.screenshot({path:`${output}/domain-placeholder-${width}-${lang}-${theme}.png`,fullPage:true});
   assert.deepEqual(errors,[]);evidence.push({width,lang,theme,traffic:true,inbox:true,domainInput:true,errors});await context.close();
  }
