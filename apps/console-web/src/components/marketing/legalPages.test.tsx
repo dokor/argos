@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { LangProvider } from "@/lib/i18n/LangContext";
@@ -18,8 +19,8 @@ vi.mock("@/components/site/SiteFooter", () => ({ default: () => null }));
 
 const pages = [
   { Component: TermsPage, path: "/conditions-utilisation", enPath: "/en/terms-of-use", fr: termsFr, en: termsEn, titles: { fr: "Conditions d’utilisation d’Argos", en: "Argos terms of use" }, sections: 7 },
-  { Component: PrivacyPage, path: "/confidentialite", enPath: "/en/privacy", fr: privacyFr, en: privacyEn, titles: { fr: "Confidentialité et accès aux rapports Argos", en: "Privacy and access to Argos reports" }, sections: 16 },
-  { Component: LegalPage, path: "/informations-legales", enPath: "/en/legal-information", fr: legalFr, en: legalEn, titles: { fr: "Informations sur le service Argos", en: "Argos service information" }, sections: 3 },
+  { Component: PrivacyPage, path: "/confidentialite", enPath: "/en/privacy", fr: privacyFr, en: privacyEn, titles: { fr: "Confidentialité et accès aux rapports Argos", en: "Privacy and access to Argos reports" }, sections: 18 },
+  { Component: LegalPage, path: "/informations-legales", enPath: "/en/legal-information", fr: legalFr, en: legalEn, titles: { fr: "Informations sur le service Argos", en: "Argos service information" }, sections: 4 },
 ];
 
 describe("public legal pages in both languages", () => {
@@ -30,7 +31,15 @@ describe("public legal pages in both languages", () => {
       expect(html).toContain(`<h1>${page.titles[lang]}</h1>`);
       expect(html).toContain(`lang="${lang}"`);
       expect(html.match(/<h1>/g)).toHaveLength(1);
-      expect(html.match(/<h2>/g)).toHaveLength(page.sections);
+      expect(html.match(/<h2(?:>| )/g)).toHaveLength(page.sections);
+      if (page.Component !== TermsPage) {
+        const document = new DOMParser().parseFromString(html, "text/html");
+        for (const link of document.querySelectorAll('main nav a')) {
+          const target = document.querySelector(link.getAttribute('href')!);
+          expect(target?.tagName).toBe('SECTION');
+          expect(target?.getAttribute('aria-labelledby')).toBeTruthy();
+        }
+      }
       expect(html).toContain('href="' + page.path + '"');
       expect(html).toContain('href="' + page.enPath + '"');
       expect(html).toContain('href="mailto:');
@@ -49,7 +58,7 @@ describe("public legal pages in both languages", () => {
 
   it("keeps privacy commitments and related links available in English without signing in", () => {
     const html = renderToStaticMarkup(<LangProvider initialLang="en"><PrivacyPage /></LangProvider>);
-    for (const text of ["Argon2id", "HttpOnly", "15 minutes", "12 hours", "30-minute", "three years", "batches of 500", "90 days", "Backup retention has not been confirmed", "openid", "Gmail, Google Drive", "not retained", "Manage cookies", "separately from product measurement", "Account notifications"]) {
+    for (const text of ["Argon2id", "HttpOnly", "15 minutes", "12 hours", "30-minute", "three years", "batches of 500", "90 days", "Belgium", "OVH", "Cloudflare Turnstile", "read:user", "user:email", "openid", "Gmail, Google Drive", "not retained", "Manage cookies", "separately from product measurement", "Account notifications", "Detailed findings require a verified account", "Antoine Le Louët EI"]) {
       expect(html).toContain(text);
     }
     expect(html).toContain('href="/en/terms-of-use"');
@@ -59,6 +68,16 @@ describe("public legal pages in both languages", () => {
     const terms = renderToStaticMarkup(<LangProvider initialLang="en"><TermsPage /></LangProvider>);
     expect(terms).toContain('href="/en/privacy"');
     expect(terms).toContain('href="/en/scoring-method"');
+  });
+
+  it.each(["fr", "en"] as const)("publishes confirmed operator facts consistently in %s", lang => {
+    const privacy = renderToStaticMarkup(<LangProvider initialLang={lang}><PrivacyPage /></LangProvider>);
+    const legal = renderToStaticMarkup(<LangProvider initialLang={lang}><LegalPage /></LangProvider>);
+    for (const html of [privacy, legal]) {
+      for (const text of ["Antoine Le Louët EI", "OVH", "Google", "GitHub", "LinkedIn", lang === "fr" ? "Belgique" : "Belgium", lang === "fr" ? "trois ans" : "three years"]) expect(html).toContain(text);
+      expect(html).not.toContain("Backup retention has not been confirmed");
+      expect(html).not.toContain("durée des sauvegardes n’a pas été confirmée");
+    }
   });
 });
 

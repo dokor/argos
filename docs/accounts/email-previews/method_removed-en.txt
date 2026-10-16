@@ -1,0 +1,16 @@
+Argos — A sign-in method was removed
+A sign-in method was removed
+
+A sign-in method has been disabled on your Argos account.
+
+This is a security notification. No confirmation is required.
+
+
+If you do not recognise this change, sign in using a method you trust, revoke other sessions and contact the operator.
+
+Review my sign-in methods
+https://argos.example/en/account/settings
+
+Account email sent by Argos. Never share a password, link or confirmation code.
+Privacy: https://argos.example/en/privacy
+Contact the operator: https://argos.example/en/legal-information

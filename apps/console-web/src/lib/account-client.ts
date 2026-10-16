@@ -11,6 +11,7 @@ async function csrfToken(): Promise<string> {
 }
 export async function accountFetch<T>(path: string, method = "GET", body?: unknown, signal?: AbortSignal, idempotencyKey?: string, captcha?: string): Promise<T> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
+  headers["Accept-Language"] = typeof window !== "undefined" && window.location.pathname.startsWith("/en/") ? "en" : "fr";
   if (captcha) headers["X-Argos-Captcha"] = captcha;
   if (idempotencyKey) headers["Idempotency-Key"] = idempotencyKey;
   if (method !== "GET") headers["X-Argos-CSRF"] = await csrfToken();
