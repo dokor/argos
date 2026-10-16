@@ -1,4 +1,20 @@
 {
+  "easterEggs": {
+    "urls": {
+      "argos": "Qui audite l’auditeur ? Bien vu.",
+      "google": "Aujourd’hui, c’est nous qui regardons Google.",
+      "wikipedia": "On va vérifier. C’est ce qu’ils nous ont appris.",
+      "github": "Voyons ce qui se cache derrière tous ces commits.",
+      "amazon": "Livraison de recommandations en cours."
+    },
+    "eyes": {
+      "title": "Mode vigilance maximale activé.",
+      "message": "On vous laisse les deux vôtres.",
+      "dismiss": "Fermer le réveil des cent yeux"
+    },
+    "inspector": "Vous regardez sous le capot. Nous aussi.\nBienvenue chez Argos.",
+    "fortyTwo": "La réponse est 42. Les pistes d’amélioration sont juste en dessous."
+  },
   "connected": {
     "collapseMenu": "Réduire le menu",
     "expandMenu": "Déployer le menu",

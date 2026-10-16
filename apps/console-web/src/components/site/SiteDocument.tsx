@@ -5,6 +5,7 @@ import { LangProvider } from "@/lib/i18n/LangContext";
 import { ThemeProvider } from "@/lib/theme/ThemeContext";
 import ProductAnalytics from "@/components/analytics/ProductAnalytics";
 import ClientErrorLogger from "@/components/ClientErrorLogger";
+import EasterEggs from "@/components/easter-eggs/EasterEggs";
 import fr from "@/lib/i18n/fr.json";
 import en from "@/lib/i18n/en.json";
 import "@/app/globals.css";
@@ -130,7 +131,7 @@ export default function SiteDocument({
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <ClientErrorLogger />
         <ThemeProvider>
-          <LangProvider initialLang={lang}><ProductAnalytics />{children}</LangProvider>
+          <LangProvider initialLang={lang}><ProductAnalytics />{children}<EasterEggs /></LangProvider>
         </ThemeProvider>
       </body>
     </html>

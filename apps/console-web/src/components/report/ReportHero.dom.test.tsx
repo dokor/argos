@@ -8,6 +8,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 import ReportHero from "./ReportHero";
+import { LangProvider } from "@/lib/i18n/LangContext";
 import type { Report } from "./types";
 
 const report = {
@@ -25,6 +26,20 @@ const report = {
 } as unknown as Report;
 
 describe("ReportHero (rendu du rapport)", () => {
+  it.each(["fr", "en"] as const)("adds the 42 reference in %s without changing the score or counts", lang => {
+    render(<LangProvider initialLang={lang}><ReportHero report={{ ...report, scores: { ...report.scores, global: 42 } }} /></LangProvider>);
+    expect(screen.getByLabelText("Score 42/100")).toHaveTextContent("42/100");
+    expect(screen.getByText(lang === "fr" ? "La réponse est 42. Les pistes d’amélioration sont juste en dessous." : "The answer is 42. The improvements are right below.")).toBeInTheDocument();
+    expect(screen.getByText(lang === "fr" ? /Constats uniques : 3/ : /Unique findings: 3/)).toBeInTheDocument();
+  });
+  it.each([
+    { global: 41.99 }, { global: 43 }, { global: 42, globalAvailable: false },
+    { global: 42, coverage: { version: "test", threshold: 0.8, provisional: true,
+      global: { key: "global", measuredWeight: 0, expectedWeight: 100, ratio: 0, available: false, sufficient: false }, domains: [], checks: [] } },
+  ])("does not round or celebrate an unavailable score: %j", scores => {
+    render(<ReportHero report={{ ...report, scores: { ...report.scores, ...scores } } as Report} />);
+    expect(screen.queryByText(/La réponse est 42/)).not.toBeInTheDocument();
+  });
   it("identifies historical incomplete measurements as provisional beside the score", () => {
     render(<ReportHero report={{ ...report, scores: { ...report.scores, completeness: 50 } }} />);
     expect(screen.getByText("Score provisoire")).toBeInTheDocument();

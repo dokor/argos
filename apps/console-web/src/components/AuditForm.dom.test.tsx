@@ -19,6 +19,35 @@ describe("AuditForm (soumission d'audit)", () => {
     vi.spyOn(window, "open").mockReturnValue({} as Window);
   });
 
+  it("reacts to recognized URLs without submitting and preserves the normal submission", async () => {
+    vi.mocked(argosApi.createAudit).mockResolvedValue({ auditId: 1, runId: 2, reportToken: "mirror-token", status: "QUEUED" } as never);
+    render(<AuditForm />);
+    const input = screen.getByRole("textbox");
+    fireEvent.change(input, { target: { value: "argos.lelouet.fr" } });
+    expect(screen.getByRole("status")).toHaveTextContent("Qui audite l’auditeur ? Bien vu.");
+    expect(argosApi.createAudit).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button"));
+    await waitFor(() => expect(argosApi.createAudit).toHaveBeenCalledExactlyOnceWith({ url: "https://argos.lelouet.fr", sourceRoute: "/", lang: "fr" }));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/report/mirror-token"));
+  });
+
+  it("localizes domain surprises and clears them when the hostname no longer matches", () => {
+    render(<LangProvider initialLang="en"><AuditForm /></LangProvider>);
+    const input = screen.getByRole("textbox");
+    for (const [url, message] of [
+      ["google.fr", "Today, we’re the ones looking at Google."],
+      ["en.wikipedia.org", "We’ll check. They taught us that."],
+      ["github.com", "Let’s see what’s behind all those commits."],
+      ["amazon.com", "Your recommendations are out for delivery."],
+    ]) {
+      fireEvent.change(input, { target: { value: url } });
+      expect(screen.getByRole("status")).toHaveTextContent(message);
+    }
+    fireEvent.change(input, { target: { value: "https://google.com.evil.test" } });
+    expect(screen.getByRole("status")).toBeEmptyDOMElement();
+    expect(argosApi.createAudit).not.toHaveBeenCalled();
+  });
+
   it("crée par défaut un audit public puis ouvre le rapport dans le même onglet", async () => {
     vi.mocked(argosApi.createAudit).mockResolvedValue({
       auditId: 1,

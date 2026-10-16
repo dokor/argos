@@ -1,4 +1,20 @@
 {
+  "easterEggs": {
+    "urls": {
+      "argos": "Who audits the auditor? Good eye.",
+      "google": "Today, we’re the ones looking at Google.",
+      "wikipedia": "We’ll check. They taught us that.",
+      "github": "Let’s see what’s behind all those commits.",
+      "amazon": "Your recommendations are out for delivery."
+    },
+    "eyes": {
+      "title": "Maximum vigilance mode activated.",
+      "message": "You can keep your own two eyes.",
+      "dismiss": "Dismiss the hundred eyes"
+    },
+    "inspector": "You’re looking under the hood. So are we.\nWelcome to Argos.",
+    "fortyTwo": "The answer is 42. The improvements are right below."
+  },
   "connected": {
     "collapseMenu": "Collapse menu",
     "expandMenu": "Expand menu",
