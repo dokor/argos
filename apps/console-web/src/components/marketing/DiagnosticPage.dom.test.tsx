@@ -35,7 +35,7 @@ describe("diagnostic audit forms", () => {
     fireEvent.click(button);
     await waitFor(() => expect(argosApi.createAudit).toHaveBeenCalledWith({ url: "https://example.com", sourceRoute: diagnosticRoutes[topic], lang }));
     expect(button).toBeDisabled();
-    expect(screen.getByRole("status")).toBeInTheDocument();
+    expect(screen.getByText(lang === "fr" ? "Envoi de la demande…" : "Submitting request…", { selector: '[role="status"]' })).toBeInTheDocument();
     rejectRequest(new Error("private backend details"));
     expect(await screen.findByRole("alert")).toHaveTextContent(lang === "fr" ? "L'audit n'a pas pu démarrer" : "The audit could not start");
     expect(screen.getByRole("alert")).not.toHaveTextContent("private backend details");

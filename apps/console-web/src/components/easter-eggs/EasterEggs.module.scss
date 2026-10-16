@@ -1,0 +1,111 @@
+@use '../../styles/tokens' as t;
+
+.urlMessage {
+  &:empty {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  p {
+    display: flex;
+    align-items: center;
+    gap: t.$space-3;
+    padding: t.$space-3 0;
+    border-block: 1px solid t.$border;
+    color: t.$text-muted;
+    font-size: t.$text-base;
+    line-height: 1.5;
+  }
+
+  svg { flex: 0 0 24px; color: t.$brand; }
+}
+
+.mirrorEye circle {
+  animation: mirror-look 1.1s ease-in-out;
+}
+
+@keyframes mirror-look {
+  45%, 65% { transform: translateX(-3px); }
+}
+
+.announcement {
+  position: fixed;
+  z-index: 90;
+  bottom: t.$space-4;
+  right: t.$space-4;
+  width: min(420px, calc(100% - 32px));
+  pointer-events: none;
+
+  &:empty {
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: t.$space-3;
+  padding: t.$space-4;
+  border: 1px solid t.$brand;
+  border-radius: t.$radius-lg;
+  background: t.$surface;
+  color: t.$text;
+  font-size: t.$text-base;
+  line-height: 1.5;
+
+  strong { font-weight: 650; }
+  p { margin-top: t.$space-1; color: t.$text-muted; }
+  button {
+    flex: 0 0 44px;
+    min-height: 44px;
+    margin-left: auto;
+    border-radius: t.$radius-sm;
+    font-size: 24px;
+    pointer-events: auto;
+
+    &:hover { background: t.$brand-soft; }
+    &:focus-visible { outline: 3px solid t.$brand; outline-offset: 2px; }
+  }
+}
+
+.eyes {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.eye {
+  position: absolute;
+  width: 42px;
+  height: 28px;
+  transform: translate(-50%, -50%);
+  color: t.$brand;
+  fill: t.$surface;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  animation: wake 400ms both;
+  animation-delay: var(--delay);
+}
+
+.pupil {
+  transform: translate(var(--look-x, 0px), var(--look-y, 0px));
+  circle:last-child { fill: currentColor; stroke: none; }
+}
+
+@keyframes wake {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eye, .mirrorEye circle { animation: none; }
+  .pupil { transform: none; }
+}

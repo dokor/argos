@@ -1,5 +1,6 @@
 "use client";
 import { inputHints } from "@/lib/input-hints";
+import AuditUrlEasterEgg from "@/components/easter-eggs/AuditUrlEasterEgg";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useLang } from "@/lib/i18n/LangContext";
@@ -74,6 +75,7 @@ export default function AnalysisForm({ initialUrl="", launchBlocked=false }: {in
   const failure=error==="unsupported_profile" ? c.unsupported : error==="idempotency_conflict" ? c.conflict : t.account.errors[error as keyof typeof t.account.errors]??t.account.errors.account_unavailable;
   return <form className={s.form} onSubmit={submit} aria-busy={busy}>
     <label htmlFor="analysis-url">{c.url}<input id="analysis-url" placeholder={inputHints[lang].url} ref={input} inputMode="url" autoComplete="url" value={url} maxLength={2048} required readOnly={busy||uncertain} onChange={event=>setUrl(event.target.value)} aria-describedby="analysis-scope analysis-feedback" aria-invalid={error==="url_invalid"}/></label>
+    <AuditUrlEasterEgg url={url}/>
     <p id="analysis-scope">{c.scope}</p>
     <div><h3>{c.conditions}</h3>{profiles ? <><p>{c.defaults} · <code>{profiles.defaultProfileId}</code></p><p>{c.profileHint}</p></> : <p role="status">{t.account.working}</p>}</div>
     <div className={s.notice}><h3>{c.cost}</h3><p>{c.costHint}</p>{!session.usage && <p>{c.quotaUnknown}</p>}{session.usage?.canLaunch===false && !uncertain && <p>{t.account.usage.reached}</p>}</div>

@@ -32,6 +32,7 @@ export default function ReportHero({report,model=buildReportModel(report),onActi
    <div className={s.scoreBlock}><h2 className={s.scoreTitle}>{reading.score}</h2>
     {score!==undefined?<p className={s.scoreNumber} aria-label={`Score ${score}/100`}><strong>{score}</strong><span>/100</span></p>:<p>{copy.notEvaluated}</p>}
     {score!==undefined&&partialReport(report)&&<p className={s.provisional}>{copy.provisional}</p>}
+    {score===42&&<p className={s.easterEgg}>{t.easterEggs.fortyTwo}</p>}
     <p className={s.coverage}>{coverage?`${fr?"Couverture":"Coverage"} ${Math.round(coverage.global.ratio*100)} %`:copy.coverageUnknown}</p>
     {onMethod&&<a href="#report-method" className={s.actionLink} onClick={onMethod}>{fr?"Comprendre la couverture":"Understand coverage"}</a>}
    </div>

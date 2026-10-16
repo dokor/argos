@@ -6,6 +6,7 @@ import { useLang } from "@/lib/i18n/LangContext";
 import { createLogger } from "@/lib/logger";
 import { useAuditSubmit } from "@/lib/useAuditSubmit";
 import { normalizeInputUrl } from "@/lib/url";
+import AuditUrlEasterEgg from "@/components/easter-eggs/AuditUrlEasterEgg";
 import s from "./AuditForm.module.scss";
 
 type Props = {
@@ -93,6 +94,7 @@ export default function AuditForm({ sourceRoute, idPrefix, submitLabel, initialU
         />
       </div>
 
+      <AuditUrlEasterEgg url={url} />
       {antiBot.element}
       <button type="submit" disabled={submitting} className={s.submitBtn}>
         {submitting ? tf.submitting : submitLabel ?? tf.submit}
