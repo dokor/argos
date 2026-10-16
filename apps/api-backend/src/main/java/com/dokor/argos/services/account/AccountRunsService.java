@@ -20,6 +20,7 @@ public class AccountRunsService {
     private final AccountSessionService sessions;
     private final AuditService audits;
     private final AuditRunDao runs;
+    private final AccountRunReadDao reads;
     private final ReportReadService reports;
     private final TokenService tokens;
     private final Clock clock;
@@ -35,7 +36,7 @@ public class AccountRunsService {
             ReportReadService reports,
             TokenService tokens,
             Clock clock,
-            AccountSettings settings, AccountSitesService sites) {
+            AccountSettings settings, AccountSitesService sites, AccountRunReadDao reads) {
         this.dao = dao;
         this.sessions = sessions;
         this.audits = audits;
@@ -45,6 +46,7 @@ public class AccountRunsService {
         this.clock = clock;
         this.settings = settings;
         this.sites = sites;
+        this.reads = reads;
     }
 
     public Created create(String url, String authorization, String csrf) {
@@ -74,38 +76,12 @@ public class AccountRunsService {
     }
 
     private AuditRun owned(long id, long user, java.sql.Connection c) {
-        var q = QAuditRun.auditRun;
-        return Optional.ofNullable(
-                        dao.transactions
-                                .selectQuery(c)
-                                .select(q)
-                                .from(q)
-                                .where(q.id.eq(id), q.ownerUserId.eq(user))
-                                .fetchOne())
-                .orElseThrow(AccountError::missing);
+        return reads.owned(id, user, c).orElseThrow(AccountError::missing);
     }
 
     public List<Map<String, Object>> list(String authorization, int limit) {
-        return sessions.with(
-                authorization,
-                null,
-                true,
-                true,
-                (context, c) -> {
-                    var q = QAuditRun.auditRun;
-                    return dao
-                            .transactions
-                            .selectQuery(c)
-                            .select(q)
-                            .from(q)
-                            .where(q.ownerUserId.eq(context.user().getId()))
-                            .orderBy(q.createdAt.desc(), q.id.desc())
-                            .limit(Math.max(1, Math.min(limit, 100)))
-                            .fetch()
-                            .stream()
-                            .map(this::status)
-                            .toList();
-                });
+        return sessions.with(authorization, null, true, true, (context, c) ->
+            reads.list(context.user().getId(), limit, c).stream().map(this::status).toList());
     }
 
     public Map<String, Object> get(String authorization, long id) {

@@ -16,7 +16,7 @@ import java.util.List;
 import com.dokor.argos.services.analytics.ProductAnalyticsDao;
 import com.dokor.argos.services.analytics.ProductAnalyticsService;
 import com.dokor.argos.webservices.api.account.AccountAnalyticsWs;
-import com.dokor.argos.webservices.api.audits.AdminReadAccess;
+import com.dokor.argos.services.security.AdminReadAccess;
 import java.util.function.Function;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;

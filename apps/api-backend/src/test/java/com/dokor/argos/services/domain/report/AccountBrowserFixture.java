@@ -1,5 +1,7 @@
 package com.dokor.argos.services.domain.report;
 
+import com.dokor.argos.services.security.AdminReadAccess;
+
 import static org.mockito.Mockito.*;
 
 import com.coreoz.plume.jersey.security.permission.*;
@@ -128,7 +130,7 @@ public class AccountBrowserFixture extends MariaDbReportFixture {
                         fixture.reader,
                         fixture.tokens,
                         clock,
-                        settings, new AccountSitesService(dao,sessions,new UrlNormalizer(),new DomainService(new DomainDao(dao.transactions)),new AuditDao(dao.transactions),clock));
+                        settings, new AccountSitesService(dao,sessions,new UrlNormalizer(),new DomainService(new DomainDao(dao.transactions)),new AuditDao(dao.transactions),clock),new AccountRunReadDao(dao.transactions));
         var oauth =
                 new AccountOAuthService(
                         dao,
@@ -208,7 +210,7 @@ public class AccountBrowserFixture extends MariaDbReportFixture {
                 new com.dokor.argos.webservices.api.audits.AuditsWs(
                         audits,
                         new AuditQueryService(auditDao, fixture.runs, fixture.mapper),
-                        new com.dokor.argos.webservices.api.audits.AdminReadAccess(admin),
+                        new AdminReadAccess(admin),
                         fixture.reader,
                         null,
                         personal,

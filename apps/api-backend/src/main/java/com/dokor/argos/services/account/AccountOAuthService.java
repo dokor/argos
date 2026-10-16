@@ -191,7 +191,7 @@ public class AccountOAuthService {
                             String email =
                                     identity.email() == null
                                             ? null
-                                            : AccountAuthService.email(identity.email());
+                                            : AccountIdentityValues.email(identity.email());
                             if (email != null && dao.email(email, c) != null)
                                 throw new AccountError(409, "use_existing_account");
                             user = new AccountUser();

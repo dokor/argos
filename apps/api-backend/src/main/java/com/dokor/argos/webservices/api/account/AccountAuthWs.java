@@ -99,7 +99,7 @@ public class AccountAuthWs {
     @com.dokor.argos.webservices.api.security.AntiBot("register")
     public Response register(Registration b) {
         if (b == null) throw new AccountError(400, "payload_invalid");
-        mutation("email", AccountAuthService.email(b.email()));
+        mutation("email", AccountIdentityValues.email(b.email()));
         auth.register(b.email(), b.password(), b.displayName(), request().getHeaderString("Accept-Language"));
         return ok(Map.of("accepted", true));
     }
@@ -108,7 +108,7 @@ public class AccountAuthWs {
     @Path("/login")
     public Response login(Login b) {
         if (b == null) throw new AccountError(400, "payload_invalid");
-        String token = mutation("login", AccountAuthService.email(b.email()));
+        String token = mutation("login", AccountIdentityValues.email(b.email()));
         var result = auth.login(b.email(), b.password(), token);
         return Response.ok(profile(result.context().user()))
                 .header("X-Argos-Session", result.jwt())
@@ -130,7 +130,7 @@ public class AccountAuthWs {
     @com.dokor.argos.webservices.api.security.AntiBot("resend")
     public Response resend(Email b) {
         if (b == null) throw new AccountError(400, "payload_invalid");
-        mutation("email", AccountAuthService.email(b.email()));
+        mutation("email", AccountIdentityValues.email(b.email()));
         auth.send(b.email(), "VERIFY", request().getHeaderString("Accept-Language"));
         return ok(Map.of("accepted", true));
     }
@@ -140,7 +140,7 @@ public class AccountAuthWs {
     @com.dokor.argos.webservices.api.security.AntiBot("forgot")
     public Response forgot(Email b) {
         if (b == null) throw new AccountError(400, "payload_invalid");
-        mutation("email", AccountAuthService.email(b.email()));
+        mutation("email", AccountIdentityValues.email(b.email()));
         auth.send(b.email(), "RESET", request().getHeaderString("Accept-Language"));
         return ok(Map.of("accepted", true));
     }

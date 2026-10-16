@@ -1,5 +1,7 @@
 package com.dokor.argos.webservices.api;
 
+import com.dokor.argos.services.security.AdminReadAccess;
+
 import com.dokor.argos.webservices.api.audits.*;
 import com.dokor.argos.webservices.api.report.ReportsWs;
 import com.dokor.argos.webservices.api.newsletter.NewsletterWs;

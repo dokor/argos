@@ -23,3 +23,13 @@ Archivage : transition atomique ARCHIVED, invalidation des méthodes, sessions, 
 Limitation persistante par action et empreinte de compte/IP : fenêtres de 15 min, login 20/compte et 100/IP ; email 5/compte et 30/IP ; OAuth/claim 30/IP. IP directe Grizzly seulement, aucun X-Forwarded-For client ; déploiement proxy à configurer explicitement avant d'activer une provenance de proxy. Pas de verrouillage permanent de compte. Journal de sécurité : action/résultat/date/ids internes, sans secret, purge après 90 jours, accès DB opérateurs habilités uniquement.
 
 Validation : tests unitaires et HTTP Java/BFF, contraintes/migrations et courses MariaDB 11.4, lint/build FR/EN, clavier/mobile/thèmes. Essais SMTP/OAuth réels et mesure Argon2 sur production requis avant clôture. Aucun déploiement automatique.
+
+## Répartition des responsabilités backend
+
+Le [diagnostic #128, PR #689](https://github.com/dokor/argos/pull/689) fonde les extractions de #475. `AccountIdentityValues` porte les validations email/nom communes à l'authentification classique, OAuth et aux profils. `AccountAuthService` conserve les transitions d'identité, les tokens et les transactions. Les codes d'erreur et la normalisation des valeurs restent ceux du contrat ci-dessus.
+
+`services.security.AdminReadAccess` vérifie le credential serveur historique des lectures opérateur et analytics. Il ne dépend pas d'une route REST ; il reste distinct de la session de compte ACTIVE ADMIN et de ses vérifications transactionnelles.
+
+`AccountRunReadDao` sélectionne uniquement id, auditId, statut, dates, moduleStatuses et profileSnapshot, avec filtre propriétaire avant limite et ordre createdAt/id décroissant. Aucun result_json, last_error, claim worker ou hash de rapport n'est chargé par ces lectures. `AccountRunsService` conserve l'authentification, le rattachement, les transactions et la forme des réponses personnelles.
+
+`ReportSharingDao` reçoit la connexion de l'appelant pour verrouiller le run propriétaire, remplacer/révoquer l'empreinte et lire une capacité non expirée. `ReportSharingService` conserve la politique de durée, la session, le contrôle du résultat propriétaire et la rétention via `ReportReadService`. Le verrou run précède toujours l'écriture du partage dans la même transaction ; aucune migration ni modification des droits de détail par lien n'est introduite.

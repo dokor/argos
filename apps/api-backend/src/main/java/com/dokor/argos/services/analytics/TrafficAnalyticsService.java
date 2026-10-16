@@ -1,6 +1,6 @@
 package com.dokor.argos.services.analytics;
 import com.dokor.argos.services.account.*;
-import com.dokor.argos.webservices.api.audits.AdminReadAccess;
+import com.dokor.argos.services.security.AdminReadAccess;
 import com.typesafe.config.Config;
 import jakarta.inject.*;
 import java.time.*;
