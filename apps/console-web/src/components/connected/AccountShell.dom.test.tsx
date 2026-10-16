@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import AccountShell from "./AccountShell";
+import AccountShell, { AccountFooter } from "./AccountShell";
 import { LangProvider } from "@/lib/i18n/LangContext";
 const state = vi.hoisted(() => ({ path: "/account/integrations", session: {
   ready: true, denied: false, error: "", profile: { displayName: "Camille", verified: true, admin: false },
@@ -16,6 +16,17 @@ beforeEach(() => {
   Object.assign(state.session, { ready: true, denied: false, error: "", profile: { displayName: "Camille", verified: true, admin: false }, usage: { offer: "FREE", limit: 100, used: 32, reserved: 4, available:64 }, usageError: false });
 });
 const content = <main><h1>Private page</h1><p>Private result</p></main>;
+it.each(["fr", "en"] as const)("keeps all five localized footer destinations without the brand block in %s", lang => {
+  render(<LangProvider initialLang={lang}><AccountFooter/></LangProvider>);
+  const footer = screen.getByRole("contentinfo");
+  const links = within(footer).getAllByRole("link");
+  expect(links.map(link => link.getAttribute("href"))).toEqual(lang === "fr"
+    ? ["/faq", "/", "/informations-legales", "/confidentialite", "/feedback"]
+    : ["/en/faq", "/en", "/en/legal-information", "/en/privacy", "/en/feedback"]);
+  expect(within(footer).queryByText("Argos")).not.toBeInTheDocument();
+  expect(links[4]).toHaveAccessibleName(lang === "fr" ? "Nous contacter" : "Contact us");
+  expect(links[4].querySelector('[aria-hidden="true"]')).toHaveTextContent("↗");
+});
 it("collapses and restores navigation without losing accessible destinations or the current page", () => {
   const view = render(<AccountShell>{content}</AccountShell>);
   const shell = view.container.querySelector("[data-connected-shell]")!;

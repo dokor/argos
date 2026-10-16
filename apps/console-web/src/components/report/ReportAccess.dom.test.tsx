@@ -25,6 +25,11 @@ it("keeps public and shared details gated and only offers summary PDF",()=>{
  expect(screen.getByRole("link",{name:"Créer mon compte"})).toBeInTheDocument();
  expect(document.querySelectorAll("details[id^=finding-]")).toHaveLength(0);
 });
+it.each([false,true])("does not expose the private breadcrumb on a public or shared report (shared=%s)",shared=>{
+ render(<ReportPage params={{report:summary}} shared={shared}/>);
+ expect(screen.queryByRole("navigation",{name:"Fil d’Ariane"})).not.toBeInTheDocument();
+ expect(screen.queryByRole("link",{name:"Mes sites"})).not.toBeInTheDocument();
+});
 it("loads shared details only through the authenticated endpoint",async()=>{
  vi.stubGlobal("fetch",vi.fn().mockResolvedValue(Response.json({signedIn:true})));vi.mocked(accountFetch).mockResolvedValue(full);
  render(<LangProvider><ReportPage params={{report:summary}} shared/></LangProvider>);

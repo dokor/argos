@@ -97,7 +97,8 @@ describe("French and English presentation parity", () => {
     for (const [lang, Page] of [["fr", MethodFr], ["en", MethodEn]] as const) {
       const root = renderPage(Page, lang);
       expect(root.querySelector("main")?.getAttribute("lang")).toBe(lang);
-      expect(root.querySelectorAll("article")).toHaveLength(4);
+      expect(root.querySelectorAll('#domaines article')).toHaveLength(4);
+      expect(root.querySelectorAll('#exemple article')).toHaveLength(4);
       expect(root.querySelectorAll("table tbody tr")).toHaveLength(4);
       expect(root.querySelectorAll("em")).toHaveLength(1);
       expect(root.querySelector('a[href="' + localizedPath("/#audit", lang) + '"]')).not.toBeNull();
