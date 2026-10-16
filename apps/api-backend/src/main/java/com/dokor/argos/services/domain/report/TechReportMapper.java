@@ -52,13 +52,15 @@ public final class TechReportMapper {
         }
 
         // si tout est null => pas de tech utile
-        if (cms == null && ff == null && next == null) return null;
+        if (cms == null && ff == null && next == null && techData.get("hosting")==null) return null;
 
         Map<String, Object> cacheMap = asMap(techData.get("stackCache"));
         ReportDto.StackCache cache = cacheMap == null ? null : new ReportDto.StackCache(
             asBoolean(cacheMap.get("hit")), asString(cacheMap.get("scope")),
             asString(cacheMap.get("sourceFinalUrl")), asString(cacheMap.get("analyzedAt")),
             asString(cacheMap.get("expiresAt")), asStringList(cacheMap.get("checkKeys")));
-        return new ReportDto.Tech(cms, ff, next, cache);
+        var hosting = techData.get("hosting")==null ? null : new com.fasterxml.jackson.databind.ObjectMapper().convertValue(
+            techData.get("hosting"),com.dokor.argos.services.analysis.modules.tech.HostingDetector.Hosting.class);
+        return new ReportDto.Tech(cms, ff, next, cache, hosting);
     }
 }

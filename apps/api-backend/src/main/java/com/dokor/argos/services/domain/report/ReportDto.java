@@ -37,7 +37,7 @@ public record ReportDto(
         var publicIssues = issues == null ? List.<Issue>of() : issues.stream().map(i -> new Issue(
             i.id(),i.categoryKey(),i.categoryKeys(),i.module(),i.severity(),i.title(),i.impact(),null,null,i.effort(),i.confidence(),null)).toList();
         var publicScores = scores == null ? null : new Scores(scores.global(),scores.completeness(),scores.byCategory(),
-            scores.globalAvailable(),null,scores.coverage(),scores.moduleExecution());
+            scores.globalAvailable(),null,scores.coverage(),scores.moduleExecution(),scores.scope());
         return new ReportDto(generatedAt,domain,url,site,publicScores,
             summary == null ? null : new Summary(summary.oneLiner(),summary.priorities(),null),publicIssues,null,antiBot,
             null,null,null,pageIdentity,measurements,"summary");
@@ -89,8 +89,13 @@ public record ReportDto(
         FrontendFramework frontendFramework,
         NextJs nextJs,
         @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-        StackCache stackCache
+        StackCache stackCache,
+        @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+        com.dokor.argos.services.analysis.modules.tech.HostingDetector.Hosting hosting
     ) {
+        public Tech(Cms cms, FrontendFramework frontendFramework, NextJs nextJs, StackCache cache) {
+            this(cms,frontendFramework,nextJs,cache,null);
+        }
         public Tech(Cms cms, FrontendFramework frontendFramework, NextJs nextJs) {
             this(cms, frontendFramework, nextJs, null);
         }
@@ -139,8 +144,15 @@ public record ReportDto(
         Boolean globalAvailable, // null pour les rapports historiques
         ScoreCalculation calculation,
         com.dokor.argos.services.analysis.scoring.MeasurementCoverage coverage,
-        ModuleExecution moduleExecution
+        ModuleExecution moduleExecution,
+        @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+        ReportExecutionScope scope
     ) {
+        public Scores(int global, Integer completeness, List<CategoryScore> categories, Boolean available,
+                      ScoreCalculation calculation, com.dokor.argos.services.analysis.scoring.MeasurementCoverage coverage,
+                      ModuleExecution execution) {
+            this(global,completeness,categories,available,calculation,coverage,execution,null);
+        }
         public Scores(int global, Integer completeness, List<CategoryScore> categories, Boolean available,
                       ScoreCalculation calculation, com.dokor.argos.services.analysis.scoring.MeasurementCoverage coverage) {
             this(global, completeness, categories, available, calculation, coverage, null);

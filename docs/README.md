@@ -10,6 +10,7 @@ workflows restent les références pour les valeurs configurées.
 | Besoin | Documents |
 | --- | --- |
 | Intégrer la refonte Clarté | [Dossier connecté](connected-space/README.md), [décisions](connected-space/decisions.md), [référence visuelle](connected-space/reference/README.md), [plan et issues](connected-space/delivery-plan.md) |
+| Audit technique et refactoring | [Diagnostic backend et responsabilités](audits/backend-responsibilities.md), [archive de juillet](archive/backend-audit-2026-07.md) |
 | Comprendre le moteur | [Progression et concurrence](analysis/progress.md), [budget de traitement](analysis/deadline.md), [helpers](analysis/helpers.md), [diagnostic des collecteurs de sécurité](analysis/security-collector-diagnostics.md) |
 | Exploiter les collecteurs | [ZAP / SSL Labs](analysis/zap-ssl-operations.md), [agrégation SSL](analysis/ssl-endpoints.md) |
 | Expliquer le score | [Composition par domaine](scoring/domain-calibration.md), [seuils runtime](scoring/runtime-thresholds.md), [couverture](scoring/measurement-coverage.md), [priorités](scoring/priorities.md), [comparaison](scoring/audit-comparison.md), [méthode publique](scoring/public-methodology.md) |

@@ -8,6 +8,15 @@ import { argosApi } from "./ArgosApi";
 import { createLogger } from "./logger";
 import { useAuditSubmit } from "./useAuditSubmit";
 afterEach(() => { vi.useRealTimers(); vi.clearAllMocks(); });
+it("preserves the captcha proof and selected scope in the same submission", async () => {
+  const scope = { kind: "check", target: "html.title" } as const;
+  vi.mocked(argosApi.createAudit).mockResolvedValue({ runId: 1, auditId: 2, status: "QUEUED", reportToken: "synthetic-scoped-token" });
+  const { result, unmount } = renderHook(() => useAuditSubmit({ logger: createLogger("report") }));
+  await act(async () => { await result.current.submit("https://example.com", "synthetic-captcha-proof", scope); });
+  expect(argosApi.createAudit).toHaveBeenCalledWith({ url: "https://example.com", sourceRoute: "/", lang: "fr", scope }, "synthetic-captcha-proof");
+  expect(push).toHaveBeenCalledWith("/report/synthetic-scoped-token");
+  unmount();
+});
 it("polls with the creation token and redirects when sanitized status completes", async () => {
   vi.useFakeTimers();
   vi.mocked(argosApi.createAudit).mockResolvedValue({ runId: 1, auditId: 2, status: "QUEUED", reportToken: "synthetic-created-token" });

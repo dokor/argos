@@ -1,4 +1,5 @@
 > Archive récupérée le 5 octobre 2026 depuis [3c959ebe / PR #238 fermée sans fusion](https://github.com/dokor/argos/blob/3c959ebe963f1a68cfa5d325de0865e909c3d49a/docs/audits/2026-07-backend-audit.md).
+> Diagnostic actualisé : [backend et responsabilités — 16 octobre 2026](../audits/backend-responsibilities.md).
 > Les constats et comptes ci-dessous décrivent juillet 2026, pas le code actuel. La récupération du livrable #128 ne valide pas rétrospectivement ces constats. Consulter le [dossier #259](v1-readiness-2026-10-05.md) pour les preuves actuelles ; la revue du mainteneur reste attendue.
 
 # Audit technique backend `api-backend` — juillet 2026

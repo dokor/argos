@@ -17,6 +17,8 @@ import ReportPriorityList from "@/components/report/ReportPriorityList";
 import IssuesByCategory from "@/components/report/IssuesByCategory";
 import AccessibilitySection from "@/components/report/AccessibilitySection";
 import ObservedMeasurements from "@/components/report/ObservedMeasurements";
+import ScopedRelaunch from "@/components/report/ScopedRelaunch";
+import HostingSummary from "@/components/report/HostingSummary";
 import ReportExport from "@/components/report/ReportExport";
 import OwnerReportShare from "@/components/report/OwnerReportShare";
 import ReportAccountPrompt from "@/components/report/ReportAccountPrompt";
@@ -64,6 +66,8 @@ export default function ReportPage({params,feedbackReference,embedded=false,shar
       {locked&&reading.view==="overview"&&<ReportAccountPrompt shared={shared}/>}
       {!embedded&&!shared&&!demo&&!locked&&<><RunClaim/><PublicReportHistory/></>}
       {runId&&<div className={s.workspace}><span>{fr?"Rapport enregistré · Espace personnel":"Saved report · Personal workspace"}</span>{workspaceActions}</div>}
+      {!shared&&!demo&&<ScopedRelaunch report={report}/>}
+      {reading.view==="overview"&&!locked&&<HostingSummary report={report}/>}
       <ReportNavigation view={reading.view} onChange={view=>reading.navigate({view,anchor:""})} locked={locked}/>
       {reading.missing&&<p role="status">{copy.missing}</p>}
       {reading.view==="overview"?<section className={s.view} id="report-overview" aria-label={copy.overview}>

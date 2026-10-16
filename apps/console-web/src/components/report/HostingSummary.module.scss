@@ -1,0 +1,12 @@
+@use '../../styles/tokens' as t;
+.section {
+  padding-block: t.$space-6; color: t.$text;
+  h2 { font-size: t.$text-lg; font-weight: 600; margin-bottom: t.$space-4; }
+  dl { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: t.$space-4; }
+  dt, p { color: t.$text-muted; }
+  dd { margin-top: t.$space-2; overflow-wrap: anywhere; }
+  small, dd span { display: block; }
+  small { margin-top: t.$space-2; }
+  p { margin-top: t.$space-4; max-width: 70ch; }
+}
+@media (max-width: 768px) { .section dl { grid-template-columns: 1fr; } }

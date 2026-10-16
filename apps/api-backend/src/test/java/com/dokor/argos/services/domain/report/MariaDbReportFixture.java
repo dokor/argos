@@ -85,6 +85,16 @@ abstract class MariaDbReportFixture {
     }
     protected void sql(String text) throws Exception { try(var connection=source.getConnection();var statement=connection.createStatement()){statement.execute(text);} }
     // Historical migration assertions must not select columns introduced after their target version.
+    protected boolean historicalRunTokenPresent(String token) throws Exception {
+        try(var c=source.getConnection();var s=c.prepareStatement("SELECT id FROM ARG_AUDIT_RUN WHERE report_token_hash=?")) {
+            s.setBytes(1,tokens.sha256(token));try(var rows=s.executeQuery()){return rows.next();}
+        }
+    }
+    protected String historicalRunStatus(long id) throws Exception {
+        try(var c=source.getConnection();var s=c.prepareStatement("SELECT status FROM ARG_AUDIT_RUN WHERE id=?")) {
+            s.setLong(1,id);try(var rows=s.executeQuery()){return rows.next()?rows.getString(1):null;}
+        }
+    }
     protected java.util.Optional<ReportDto> historicalStoredReport(String token) throws Exception {
         try(var connection=source.getConnection();var statement=connection.prepareStatement("SELECT report_json FROM ARG_AUDIT_REPORT WHERE token_hash=? AND (expires_at IS NULL OR expires_at>NOW(3))")) {
             statement.setBytes(1,tokens.sha256(token));

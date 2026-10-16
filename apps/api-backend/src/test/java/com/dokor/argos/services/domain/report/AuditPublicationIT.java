@@ -118,8 +118,10 @@ class AuditPublicationIT extends MariaDbReportFixture {
         migrateHistoricalRowsTo("7");
         sql("INSERT INTO ARG_AUDIT_RUN(id,audit_id,status,report_token_hash) VALUES(6,1,'COMPLETED',UNHEX(SHA2('synthetic-orphan',256)))");
         org.flywaydb.core.Flyway.configure().dataSource(source).target("26").load().migrate();
-        assertEquals("FAILED",runs.getRun(6).orElseThrow().getStatus());
-        assertEquals("LEGACY_REPORT_PUBLICATION_MISSING",runs.getRun(6).orElseThrow().getLastError());
+        assertEquals("FAILED",historicalRunStatus(6));
+        try(var c=source.getConnection();var s=c.createStatement();var r=s.executeQuery("SELECT last_error FROM ARG_AUDIT_RUN WHERE id=6")) {
+            assertTrue(r.next());assertEquals("LEGACY_REPORT_PUBLICATION_MISSING",r.getString(1));
+        }
         assertTrue(historicalStoredReport("synthetic-existing").isPresent());
     }
     @Test void concurrentPublicPostsShareDomainAndAuditButCreateIndependentRuns() throws Exception {
