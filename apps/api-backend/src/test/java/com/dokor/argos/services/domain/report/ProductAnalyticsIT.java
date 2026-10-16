@@ -2,4 +2,12 @@ package com.dokor.argos.services.domain.report;
 import com.coreoz.plume.db.querydsl.transaction.TransactionManagerQuerydsl;import com.querydsl.sql.*;import com.dokor.argos.services.analytics.*;import org.junit.jupiter.api.Test;import java.time.*;import static org.junit.jupiter.api.Assertions.*;
 class ProductAnalyticsIT extends MariaDbReportFixture {
 @Test void atomicCountersUniqueRunsAndViewsAndTelemetryRetention()throws Exception{var dao=new ProductAnalyticsDao(new TransactionManagerQuerydsl(source,new Configuration(MySQLTemplates.DEFAULT)));var now=Instant.now();var d=new AnalyticsDimensions("/","fr","form");var event=new ProductEvent("audit_cta_click",d,"none");dao.count(event,now);dao.count(event,now);dao.attribute(1,d,now);dao.attribute(1,new AnalyticsDimensions("/faq","en","form"),now);dao.viewed(1,now);dao.viewed(1,now.plusSeconds(20));var sample=dao.sample(now.minus(Duration.ofDays(1)),now.plusSeconds(1));assertEquals(1,sample.cohort().size());assertEquals("/",sample.cohort().getFirst().route());assertTrue(sample.cohort().getFirst().viewed());assertEquals(2,sample.counters().getFirst().count());sql("UPDATE ARG_PRODUCT_AUDIT_ATTR SET created_at='2000-01-01'");dao.count(event,now.minus(Duration.ofDays(91)));assertEquals(2,dao.purgeTelemetry(now));try(var c=source.getConnection();var q=c.createStatement();var r=q.executeQuery("SELECT (SELECT COUNT(*) FROM ARG_AUDIT_RUN), (SELECT COUNT(*) FROM ARG_AUDIT_REPORT), (SELECT COUNT(*) FROM ARG_PRODUCT_EVENT_COUNT)")){assertTrue(r.next());assertEquals(5,r.getInt(1));assertEquals(3,r.getInt(2));assertEquals(1,r.getInt(3));}}
+@Test void trafficReusesStorageWithoutMixingProductMetrics()throws Exception{
+ var dao=new ProductAnalyticsDao(new TransactionManagerQuerydsl(source,new Configuration(MySQLTemplates.DEFAULT)));var now=Instant.now();
+ dao.countTraffic(new TrafficEvent("/","fr","campaign",true),now);dao.countTraffic(new TrafficEvent("/faq","en","internal",false),now);
+ assertEquals(0,dao.sample(now.minusSeconds(3600),now.plusSeconds(1)).counters().size());
+ var day=LocalDate.ofInstant(now,ZoneOffset.UTC);var rows=dao.traffic(day,day);assertEquals(3,rows.size());
+ var summary=TrafficAnalyticsService.summarize(rows,day,day,"day",true);assertEquals(2,summary.views());assertEquals(1,summary.visits());
+ dao.countTraffic(new TrafficEvent("/","fr","direct",false),now.minus(Duration.ofDays(91)));assertEquals(1,dao.purgeTelemetry(now));
+}
 }

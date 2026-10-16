@@ -12,7 +12,7 @@ export function adminPath(method: string, path: string): boolean {
   const ids = path.match(/\/([0-9]+)(?:\/|$)/g);
   if (ids?.some((v) => !id(v.replaceAll("/", "")))) return false;
   return method === "GET"
-    ? /^admin\/(?:feedback(?:\/[1-9]\d{0,18})?|users(?:\/[1-9]\d{0,18}(?:\/events)?)?|runs(?:\/[1-9]\d{0,18}(?:\/report)?)?|queue|events|analytics|entitlement-options)$/.test(
+    ? /^admin\/(?:feedback(?:\/[1-9]\d{0,18})?|users(?:\/[1-9]\d{0,18}(?:\/events)?)?|runs(?:\/[1-9]\d{0,18}(?:\/report)?)?|queue|events|analytics|traffic|entitlement-options)$/.test(
         path,
       )
     : method === "PATCH"
@@ -27,8 +27,8 @@ export function adminQuery(
   params: URLSearchParams,
 ): URLSearchParams | null {
   const keys =
-    path === "admin/analytics"
-      ? ["days"]
+    ["admin/analytics","admin/traffic"].includes(path)
+      ? path === "admin/traffic" ? ["days","group"] : ["days"]
       : path === "admin/feedback"
         ? ["type", "status", "limit", "cursor"]
         : path === "admin/users"
@@ -48,6 +48,7 @@ export function adminQuery(
       /[\x00-\x1f\x7f-\x9f]/.test(value)
     )
       return null;
+    if(key === "group" && !["day","week","month"].includes(value)) return null;
     if (key === "days" && !["7", "30", "90"].includes(value)) return null;
     if (
       key === "limit" &&

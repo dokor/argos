@@ -1,4 +1,5 @@
 "use client";
+import { inputHints } from "@/lib/input-hints";
 import DomainTasks from "./DomainTasks";
 import DomainCommonMetric from "./DomainCommonMetric";
 import { useEffect } from "react";
@@ -54,6 +55,7 @@ export default function DomainList() {
           {c.search}
           <input
             type="search"
+            placeholder={inputHints[lang].searchDomain}
             name="query"
             defaultValue={query?.get("query") ?? ""}
             maxLength={253}

@@ -5,6 +5,7 @@ import Link from '@/components/LocalizedLink';
 import { useLang } from '@/lib/i18n/LangContext';
 import { publicRoute, type ProductEvent } from '@/lib/analytics/contract';
 import s from './ProductAnalytics.module.scss';
+import TrafficAnalytics from './TrafficAnalytics';
 export default function ProductAnalytics() {
     const { lang } = useLang();
     const path = usePathname();
@@ -13,23 +14,38 @@ export default function ProductAnalytics() {
         choice: string;
     }>({ enabled: false, choice: 'unset' });
     const [settings, setSettings] = useState(false);
+    const [traffic, setTraffic] = useState({enabled:false,choice:'unset'});
+    const [custom, setCustom] = useState(false), [productChoice, setProductChoice] = useState(false), [trafficChoice, setTrafficChoice] = useState(false);
+    const [busy, setBusy] = useState(false), [error, setError] = useState(false);
     const seen = useRef('');
     const reportSeen = useRef('');
     const fr = lang === 'fr';
-    useEffect(() => { let active = true; fetch('/api/product-analytics/consent', { cache: 'no-store', referrerPolicy: 'no-referrer' }).then(r => r.json()).then(v => { if (active)
-        setState(v); }).catch(() => { }); return () => { active = false; }; }, []);
-    async function choose(choice: string) { try {
-        const r = await fetch('/api/product-analytics/consent', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ choice }), referrerPolicy: 'no-referrer' });
-        if (r.ok) {
-            setState(previous => ({ ...previous, choice }));
-            setSettings(false);
-            if (choice === 'refused') {
-                seen.current = '';
-                reportSeen.current = '';
+    useEffect(() => {
+        let active=true;
+        const load=()=>{for(const [url,setter] of [['/api/product-analytics/consent',setState],['/api/traffic/consent',setTraffic]] as const)void fetch(url,{cache:'no-store',referrerPolicy:'no-referrer'}).then(r=>r.json()).then(v=>{if(active)setter(v);}).catch(()=>{});};
+        load();
+        const channel=typeof BroadcastChannel!=='undefined'?new BroadcastChannel('argos-measurement'):null;
+        if(channel)channel.onmessage=load;
+        window.addEventListener('focus',load);
+        return()=>{active=false;channel?.close();window.removeEventListener('focus',load);};
+    }, []);
+    async function choose(product:boolean,audience:boolean) {
+        setBusy(true);setError(false);setSettings(true);
+        // Stop future client collection immediately on withdrawal, including a failed save.
+        if(!product)setState(v=>({...v,choice:'refused'}));
+        if(!audience)setTraffic(v=>({...v,choice:'refused'}));
+        try {
+            for(const [url,granted,setter] of [['/api/product-analytics/consent',product,setState],['/api/traffic/consent',audience,setTraffic]] as const){
+                const choice=granted?'granted':'refused';
+                const response=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({choice}),referrerPolicy:'no-referrer'});
+                if(!response.ok)throw new Error('Choice unavailable');
+                setter(v=>({...v,choice}));
             }
-        }
+            setSettings(false);setCustom(false);
+            if(!product){seen.current='';reportSeen.current='';}
+            if(typeof BroadcastChannel!=='undefined'){const channel=new BroadcastChannel('argos-measurement');channel.postMessage('changed');channel.close();}
+        }catch{setError(true);}finally{setBusy(false);}
     }
-    catch { } }
     useEffect(() => {
         if (!state.enabled || state.choice !== 'granted')
             return;
@@ -54,9 +70,17 @@ export default function ProductAnalytics() {
             report();
         return () => { document.removeEventListener('click', click); window.removeEventListener('argos-report-displayed', report); };
     }, [path, lang, state]);
-    if (!state.enabled)
+    if (!state.enabled && !traffic.enabled)
         return null;
-    if (state.choice !== 'unset' && !settings)
-        return <button className={s.settings} onClick={() => setSettings(true)}>{fr ? 'Préférences de mesure' : 'Measurement preferences'}</button>;
-    return <aside className={s.banner} aria-label={fr ? 'Mesure d’utilisation' : 'Usage measurement'}><p>{fr ? 'Autoriser une mesure interne de l’utilisation ? Elle compte les pages, clics et étapes d’audit, sans URL auditée ni contenu de rapport. Conservation : 90 jours. Vous pouvez refuser ou retirer votre accord ; l’audit reste disponible.' : 'Allow internal usage measurement? It counts pages, clicks and audit steps, without audited URLs or report content. Retention: 90 days. You may refuse or withdraw consent; the audit remains available.'}</p><Link href="/confidentialite">{fr ? 'Confidentialité' : 'Privacy information'}</Link><div><button onClick={() => choose('refused')}>{fr ? 'Refuser / retirer' : 'Refuse / withdraw'}</button><button onClick={() => choose('granted')}>{fr ? 'Autoriser' : 'Allow'}</button></div></aside>;
+    const needsChoice=state.enabled&&state.choice==='unset'||traffic.enabled&&traffic.choice==='unset';
+    return <><TrafficAnalytics granted={traffic.enabled&&traffic.choice==='granted'}/>
+      {!needsChoice&&!settings ? <button className={s.settings} onClick={()=>{setProductChoice(state.choice==='granted');setTrafficChoice(traffic.choice==='granted');setSettings(true);}}>{fr?'Gérer mes cookies':'Manage cookies'}</button> :
+      <aside className={s.banner} aria-label={fr?'Préférences de mesure':'Measurement preferences'}>
+        <p>{fr?'Argos propose deux mesures facultatives : la fréquentation des pages publiques et l’utilisation du produit (clics et étapes d’audit). Compteurs internes conservés 90 jours, cookies de session, aucun fournisseur tiers, identifiant personnel, URL auditée ni contenu de rapport. Refuser reste sans effet sur les analyses.':'Argos offers two optional measurements: public page traffic and product usage (clicks and audit steps). Internal counters retained for 90 days, session cookies, no third-party provider, personal identifier, audited URL or report content. Refusal does not affect analyses.'}</p>
+        <Link href="/confidentialite">{fr?'Confidentialité':'Privacy information'}</Link>
+        {custom&&<fieldset><legend>{fr?'Finalités facultatives':'Optional purposes'}</legend>{traffic.enabled&&<label><input type="checkbox" checked={trafficChoice} onChange={e=>setTrafficChoice(e.target.checked)}/>{fr?'Mesure de fréquentation':'Traffic measurement'}</label>}{state.enabled&&<label><input type="checkbox" checked={productChoice} onChange={e=>setProductChoice(e.target.checked)}/>{fr?'Mesure produit':'Product measurement'}</label>}</fieldset>}
+        {error&&<p role="alert">{fr?'Choix non enregistré. Réessayez.':'Choice could not be saved. Try again.'}</p>}
+        <div><button disabled={busy} onClick={()=>void choose(false,false)}>{fr?'Tout refuser / retirer':'Reject all / withdraw'}</button><button disabled={busy} onClick={()=>void choose(true,true)}>{fr?'Tout accepter':'Accept all'}</button><button disabled={busy} onClick={()=>setCustom(true)}>{fr?'Personnaliser':'Customise'}</button>{custom&&<button disabled={busy} onClick={()=>void choose(productChoice,trafficChoice)}>{fr?'Enregistrer mes choix':'Save choices'}</button>}</div>
+      </aside>}
+    </>;
 }
