@@ -19,7 +19,7 @@ public class SmtpAccountMail implements AccountMail {
     }
 
     @Override
-    public void send(String recipient, String subject, String text) {
+    public void send(String recipient, AccountEmail.Message message) {
         String host = settings.value("smtp.host", "");
         if (host.isBlank()) throw new AccountError(503, "mail_unavailable");
         try {
@@ -51,11 +51,22 @@ public class SmtpAccountMail implements AccountMail {
             MimeMessage m = new MimeMessage(session);
             m.setFrom(new InternetAddress(settings.value("smtp.from", "")));
             m.setRecipient(Message.RecipientType.TO, new InternetAddress(recipient));
-            m.setSubject(subject, "UTF-8");
-            m.setText(text, "UTF-8");
+            applyContent(m, message);
             Transport.send(m);
         } catch (Exception failure) {
             throw new AccountError(503, "mail_unavailable");
         }
+    }
+
+    static void applyContent(MimeMessage mime, AccountEmail.Message message) throws MessagingException {
+        mime.setSubject(message.subject(), "UTF-8");
+        var plain = new MimeBodyPart();
+        plain.setText(message.text(), "UTF-8");
+        var html = new MimeBodyPart();
+        html.setText(message.html(), "UTF-8", "html");
+        var alternatives = new MimeMultipart("alternative");
+        alternatives.addBodyPart(plain);
+        alternatives.addBodyPart(html);
+        mime.setContent(alternatives);
     }
 }

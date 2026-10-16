@@ -314,11 +314,11 @@
           },
           {
             "q": "Is my report public?",
-            "a": "The report is not publicly listed. Anyone holding its link can read it without an account; keep the link confidential."
+            "a": "The report is not publicly listed. Anyone holding its link can read its summary without an account. Detailed findings require a verified account; keep the link confidential."
           },
           {
             "q": "Can I share my report?",
-            "a": "Yes. Just send the report link: anyone with the link can view it. Only share it with people you trust."
+            "a": "Yes. From your account, you can create, replace or revoke a sharing link, with an expiry of 7 or 30 days or no additional expiry within the report retention period. Anyone with the link can read the summary; details require a verified account. Only share links with people you trust."
           },
           {
             "q": "How long does a report stay available?",
@@ -358,7 +358,7 @@
           },
           {
             "q": "Who can view my reports?",
-            "a": "Anyone holding the link can read the report. The operator also has administrator access."
+            "a": "Anyone holding the link can read the report summary. Detailed findings require a verified account. Your personal area and history require your session; a link does not grant access to its owner’s account. The operator also has administrator access."
           },
           {
             "q": "Do my reports show up in Google?",
