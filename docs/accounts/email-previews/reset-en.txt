@@ -1,0 +1,16 @@
+Argos — Reset your password
+Reset your password
+
+A password reset was requested for your Argos account. Open the secure page to choose a new password.
+
+Valid for 30 minutes. Single use. A new request invalidates the previous link or code.
+Opening the link does not confirm anything: complete the action on the Argos page.
+
+If you did not request this, ignore this email. Your current password stays unchanged. Never share this link.
+
+Choose a new password
+https://argos.example/en/account/reset#token=synthetic_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+Account email sent by Argos. Never share a password, link or confirmation code.
+Privacy: https://argos.example/en/privacy
+Contact the operator: https://argos.example/en/legal-information

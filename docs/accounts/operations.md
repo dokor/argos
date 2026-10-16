@@ -21,6 +21,12 @@ Pour diagnostiquer un refus `csrf_invalid` à l'inscription : vérifier l'origin
 
 ## Email local et SMTP
 
+Les six e-mails de compte FR/EN partagent désormais le modèle Clarté,
+en HTML et texte (`multipart/alternative`). Voir l’[inventaire, les aperçus et
+la recette](emails.md). Le SMTP OVH est confirmé par l’opérateur le 16 octobre
+2026 ; la délivrabilité et les clients mail doivent être vérifiés avec une
+boîte de recette après configuration.
+
 Les tests injectent une capture email : ni compte SMTP ni secret réel n'est nécessaire. Pour une recette manuelle, utiliser un SMTP de développement isolé, renseigner host/port/from et ne mettre `account.smtp.require-tls="false"` que sur ce serveur local. En production : SMTP STARTTLS obligatoire, certificat vérifié, identifiants dédiés, adresse d'expédition autorisée et SPF/DKIM/DMARC du domaine à préparer. Vérifier délivrabilité, lien, expiration, renvoi, reset et notifications avec une boîte de test. Ne jamais activer debug SMTP ou journaliser le contenu.
 
 Les liens utilisent un fragment `#token=` retiré après hydratation. Ouvrir le lien par GET ne consomme rien ; le bouton envoie le POST explicite. Un renvoi invalide le lien précédent. Un échec SMTP annule la transaction métier ; la livraison et le commit DB ne forment pas une transaction distribuée. Une livraison suivie d'un échec de commit peut produire un lien inutilisable : renvoyer depuis l'écran, sans réutiliser le jeton. Un mécanisme outbox pourra traiter ce cas ultérieurement.
@@ -35,7 +41,7 @@ Dans **Branding → App domain**, renseigner après fusion et déploiement :
 - Conditions d’utilisation : `https://argos.lelouet.fr/conditions-utilisation`
 - Règles de confidentialité : `https://argos.lelouet.fr/confidentialite`
 
-Ces pages françaises doivent répondre sans session ni restriction d’accès. Elles sont liées depuis le footer public et les écrans de connexion/inscription ; en anglais, les libellés indiquent la langue française. La page `/informations-legales` reste une présentation de l’opérateur, distincte des CGU. La confidentialité explicite les données d’identité utilisées par Google (`openid email profile`), leur usage, leur conservation et le retrait du moyen de connexion.
+Ces pages doivent répondre sans session ni restriction d’accès. Elles sont liées depuis le footer public et les écrans de connexion/inscription, avec leurs versions anglaises `/en/terms-of-use`, `/en/privacy` et `/en/legal-information`. La page `/informations-legales` présente les faits confirmés sur Antoine Le Louët EI, distincts des CGU ; les compléments juridiques restants sont consignés dans l’[inventaire factuel](../product/privacy-inventory.md). La confidentialité explicite les données d’identité utilisées par Google (`openid email profile`), leur usage, leur conservation et le retrait du moyen de connexion.
 
 Le domaine autorisé est `lelouet.fr`. Vérifier la propriété de ce domaine dans Google Search Console avec un compte associé au projet Google. Conserver le callback OAuth configuré exactement comme indiqué ci-dessous. Consulter les [exigences de marque et de liens publics de Google](https://developers.google.com/identity/protocols/oauth2/production-readiness/brand-verification). L’ajout de ces pages ne publie pas l’application OAuth et n’active pas les comptes.
 
