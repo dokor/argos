@@ -1,0 +1,778 @@
+{
+  "fictional": true,
+  "coverage": {
+    "version": "weighted-coverage-v3",
+    "threshold": 0.8,
+    "global": {
+      "key": "global",
+      "measuredWeight": 215,
+      "expectedWeight": 223,
+      "ratio": 0.9641255605381166,
+      "available": true,
+      "sufficient": true
+    },
+    "domains": [
+      {
+        "key": "performance",
+        "measuredWeight": 77,
+        "expectedWeight": 77,
+        "ratio": 1,
+        "available": true,
+        "sufficient": true
+      },
+      {
+        "key": "security",
+        "measuredWeight": 82,
+        "expectedWeight": 90,
+        "ratio": 0.9111111111111111,
+        "available": true,
+        "sufficient": true
+      },
+      {
+        "key": "seo",
+        "measuredWeight": 35,
+        "expectedWeight": 35,
+        "ratio": 1,
+        "available": true,
+        "sufficient": true
+      },
+      {
+        "key": "a11y",
+        "measuredWeight": 21,
+        "expectedWeight": 21,
+        "ratio": 1,
+        "available": true,
+        "sufficient": true
+      }
+    ],
+    "checks": [
+      {
+        "key": "http.security.hsts",
+        "domain": "security",
+        "module": "http",
+        "weight": 8,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "http",
+        "measurementSources": [
+          "http"
+        ]
+      },
+      {
+        "key": "http.security.csp",
+        "domain": "security",
+        "module": "http",
+        "weight": 10,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "http",
+        "measurementSources": [
+          "http"
+        ]
+      },
+      {
+        "key": "http.security.x_frame_options",
+        "domain": "security",
+        "module": "http",
+        "weight": 6,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "http",
+        "measurementSources": [
+          "http"
+        ]
+      },
+      {
+        "key": "http.security.x_content_type_options",
+        "domain": "security",
+        "module": "http",
+        "weight": 4,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "http",
+        "measurementSources": [
+          "http"
+        ]
+      },
+      {
+        "key": "http.security.referrer_policy",
+        "domain": "security",
+        "module": "http",
+        "weight": 3,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "http",
+        "measurementSources": [
+          "http"
+        ]
+      },
+      {
+        "key": "http.security.permissions_policy",
+        "domain": "security",
+        "module": "http",
+        "weight": 6,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "http",
+        "measurementSources": [
+          "http"
+        ]
+      },
+      {
+        "key": "http.security.cookie_flags",
+        "domain": "security",
+        "module": "http",
+        "weight": 6,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "http",
+        "measurementSources": [
+          "http"
+        ]
+      },
+      {
+        "key": "http.status_code",
+        "domain": "performance",
+        "module": "http",
+        "weight": 2,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "http",
+        "measurementSources": [
+          "http"
+        ]
+      },
+      {
+        "key": "http.redirect.count",
+        "domain": "performance",
+        "module": "http",
+        "weight": 2,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "http",
+        "measurementSources": [
+          "http"
+        ]
+      },
+      {
+        "key": "http.final_url.https",
+        "domain": "security",
+        "module": "http",
+        "weight": 2,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "http",
+        "measurementSources": [
+          "http"
+        ]
+      },
+      {
+        "key": "http.redirect.to_https",
+        "domain": "security",
+        "module": "http",
+        "weight": 2,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "http",
+        "measurementSources": [
+          "http"
+        ]
+      },
+      {
+        "key": "http.headers.content_type",
+        "domain": "seo",
+        "module": "http",
+        "weight": 2,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "http",
+        "measurementSources": [
+          "http"
+        ]
+      },
+      {
+        "key": "html.title",
+        "domain": "seo",
+        "module": "html",
+        "weight": 4,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "html",
+        "measurementSources": [
+          "html"
+        ]
+      },
+      {
+        "key": "html.meta.description.present",
+        "domain": "seo",
+        "module": "html",
+        "weight": 3,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "html",
+        "measurementSources": [
+          "html"
+        ]
+      },
+      {
+        "key": "html.link.canonical.present",
+        "domain": "seo",
+        "module": "html",
+        "weight": 2,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "html",
+        "measurementSources": [
+          "html"
+        ]
+      },
+      {
+        "key": "html.h1.count",
+        "domain": "seo",
+        "module": "html",
+        "weight": 3,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "html",
+        "measurementSources": [
+          "html"
+        ]
+      },
+      {
+        "key": "html.meta.viewport.present",
+        "domain": "a11y",
+        "module": "html",
+        "weight": 2,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "html",
+        "measurementSources": [
+          "html"
+        ]
+      },
+      {
+        "key": "html.doctype.html5",
+        "domain": "a11y",
+        "module": "html",
+        "weight": 1,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "html",
+        "measurementSources": [
+          "html"
+        ]
+      },
+      {
+        "key": "html.social.meta",
+        "domain": "seo",
+        "module": "html",
+        "weight": 1,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "html",
+        "measurementSources": [
+          "html"
+        ]
+      },
+      {
+        "key": "http.seo.robots_txt",
+        "domain": "seo",
+        "module": "http",
+        "weight": 2,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "http",
+        "measurementSources": [
+          "http"
+        ]
+      },
+      {
+        "key": "http.seo.sitemap",
+        "domain": "seo",
+        "module": "http",
+        "weight": 3,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "http",
+        "measurementSources": [
+          "http"
+        ]
+      },
+      {
+        "key": "html.images.alt_coverage",
+        "domain": "a11y",
+        "module": "html",
+        "weight": 4,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "html",
+        "measurementSources": [
+          "html"
+        ]
+      },
+      {
+        "key": "html.anchors.href_coverage",
+        "domain": "a11y",
+        "module": "html",
+        "weight": 2,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "html",
+        "measurementSources": [
+          "html"
+        ]
+      },
+      {
+        "key": "html.lang",
+        "domain": "a11y",
+        "module": "html",
+        "weight": 2,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "html",
+        "measurementSources": [
+          "html"
+        ]
+      },
+      {
+        "key": "lighthouse.score.performance",
+        "domain": "performance",
+        "module": "lighthouse",
+        "weight": 22,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "lighthouse",
+        "measurementSources": [
+          "lighthouse"
+        ]
+      },
+      {
+        "key": "lighthouse.score.accessibility",
+        "domain": "a11y",
+        "module": "lighthouse",
+        "weight": 10,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "lighthouse",
+        "measurementSources": [
+          "lighthouse"
+        ]
+      },
+      {
+        "key": "lighthouse.score.best-practices",
+        "domain": "security",
+        "module": "lighthouse",
+        "weight": 6,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "lighthouse",
+        "measurementSources": [
+          "lighthouse"
+        ]
+      },
+      {
+        "key": "lighthouse.score.seo",
+        "domain": "seo",
+        "module": "lighthouse",
+        "weight": 8,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "lighthouse",
+        "measurementSources": [
+          "lighthouse"
+        ]
+      },
+      {
+        "key": "runtime.console.errors",
+        "domain": "performance",
+        "module": "runtime",
+        "weight": 5,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "runtime",
+        "measurementSources": [
+          "runtime"
+        ]
+      },
+      {
+        "key": "runtime.js.errors",
+        "domain": "performance",
+        "module": "runtime",
+        "weight": 6,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "runtime",
+        "measurementSources": [
+          "runtime"
+        ]
+      },
+      {
+        "key": "runtime.network.5xx",
+        "domain": "performance",
+        "module": "runtime",
+        "weight": 8,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "runtime",
+        "measurementSources": [
+          "runtime"
+        ]
+      },
+      {
+        "key": "runtime.network.failed_requests",
+        "domain": "performance",
+        "module": "runtime",
+        "weight": 4,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "runtime",
+        "measurementSources": [
+          "runtime"
+        ]
+      },
+      {
+        "key": "ssl.grade",
+        "domain": "security",
+        "module": "ssl",
+        "weight": 10,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "ssl",
+        "measurementSources": [
+          "ssl"
+        ]
+      },
+      {
+        "key": "ssl.certificate.valid",
+        "domain": "security",
+        "module": "ssl",
+        "weight": 6,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "ssl",
+        "measurementSources": [
+          "ssl"
+        ]
+      },
+      {
+        "key": "ssl.certificate.expiry_days",
+        "domain": "security",
+        "module": "ssl",
+        "weight": 3,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "ssl",
+        "measurementSources": [
+          "ssl"
+        ]
+      },
+      {
+        "key": "ssl.protocols.tls13",
+        "domain": "security",
+        "module": "ssl",
+        "weight": 2,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "ssl",
+        "measurementSources": [
+          "ssl"
+        ]
+      },
+      {
+        "key": "ssl.protocols.tls12",
+        "domain": "security",
+        "module": "ssl",
+        "weight": 2,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "ssl",
+        "measurementSources": [
+          "ssl"
+        ]
+      },
+      {
+        "key": "ssl.protocols.legacy_disabled",
+        "domain": "security",
+        "module": "ssl",
+        "weight": 3,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "ssl",
+        "measurementSources": [
+          "ssl"
+        ]
+      },
+      {
+        "key": "observatory.score",
+        "domain": "security",
+        "module": "observatory",
+        "weight": 8,
+        "state": "UNAVAILABLE",
+        "reason": "MODULE_MISSING",
+        "confidence": "UNKNOWN",
+        "measurementModule": null,
+        "measurementSources": []
+      },
+      {
+        "key": "http.antibot.challenge",
+        "domain": "performance",
+        "module": "http",
+        "weight": 2,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "http",
+        "measurementSources": [
+          "http"
+        ]
+      },
+      {
+        "key": "http.protocol.version",
+        "domain": "performance",
+        "module": "http",
+        "weight": 2,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "http",
+        "measurementSources": [
+          "http"
+        ]
+      },
+      {
+        "key": "http.errors",
+        "domain": "performance",
+        "module": "http",
+        "weight": 2,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "http",
+        "measurementSources": [
+          "http"
+        ]
+      },
+      {
+        "key": "http.response_time_ms",
+        "domain": "performance",
+        "module": "http",
+        "weight": 2,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "http",
+        "measurementSources": [
+          "http"
+        ]
+      },
+      {
+        "key": "http.protocol.http2",
+        "domain": "performance",
+        "module": "http",
+        "weight": 2,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "http",
+        "measurementSources": [
+          "http"
+        ]
+      },
+      {
+        "key": "http.headers.compression",
+        "domain": "performance",
+        "module": "http",
+        "weight": 2,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "http",
+        "measurementSources": [
+          "http"
+        ]
+      },
+      {
+        "key": "http.headers.caching",
+        "domain": "performance",
+        "module": "http",
+        "weight": 2,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "http",
+        "measurementSources": [
+          "http"
+        ]
+      },
+      {
+        "key": "http.headers.server",
+        "domain": "performance",
+        "module": "http",
+        "weight": 2,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "http",
+        "measurementSources": [
+          "http"
+        ]
+      },
+      {
+        "key": "html.meta.robots.present",
+        "domain": "seo",
+        "module": "html",
+        "weight": 2,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "html",
+        "measurementSources": [
+          "html"
+        ]
+      },
+      {
+        "key": "html.scripts.count",
+        "domain": "seo",
+        "module": "html",
+        "weight": 1,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "html",
+        "measurementSources": [
+          "html"
+        ]
+      },
+      {
+        "key": "html.size.bytes",
+        "domain": "seo",
+        "module": "html",
+        "weight": 1,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "html",
+        "measurementSources": [
+          "html"
+        ]
+      },
+      {
+        "key": "html.analysis.duration_ms",
+        "domain": "seo",
+        "module": "html",
+        "weight": 1,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "html",
+        "measurementSources": [
+          "html"
+        ]
+      },
+      {
+        "key": "html.meta.charset.present",
+        "domain": "seo",
+        "module": "html",
+        "weight": 2,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "html",
+        "measurementSources": [
+          "html"
+        ]
+      },
+      {
+        "key": "runtime.network.request_count",
+        "domain": "performance",
+        "module": "runtime",
+        "weight": 4,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "runtime",
+        "measurementSources": [
+          "runtime"
+        ]
+      },
+      {
+        "key": "runtime.network.bytes_estimated",
+        "domain": "performance",
+        "module": "runtime",
+        "weight": 4,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "runtime",
+        "measurementSources": [
+          "runtime"
+        ]
+      },
+      {
+        "key": "runtime.analysis.duration_ms",
+        "domain": "performance",
+        "module": "runtime",
+        "weight": 4,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "runtime",
+        "measurementSources": [
+          "runtime"
+        ]
+      },
+      {
+        "key": "tech.security.version_disclosure",
+        "domain": "security",
+        "module": "tech",
+        "weight": 3,
+        "state": "MEASURED",
+        "reason": "CHECK_OBSERVED",
+        "confidence": "MEASURED",
+        "measurementModule": "tech",
+        "measurementSources": [
+          "tech"
+        ]
+      }
+    ],
+    "provisional": false
+  }
+}

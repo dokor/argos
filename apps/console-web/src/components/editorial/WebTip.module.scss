@@ -1,0 +1,9 @@
+@use '../../styles/tokens' as t;
+.slot { min-block-size: 150px; margin-block: 24px; padding-inline: 24px; }
+.tip { max-width: 75ch; border-left: 2px solid t.$border; padding-left: 16px; color: t.$text-muted; font-size: 14px; line-height: 1.6; }
+.heading { font-weight: 650; color: t.$text; margin-bottom: 4px; }
+.tip a { display: inline-flex; align-items: center; min-height: 44px; text-decoration: underline; text-underline-offset: 3px; }
+.tip a:focus-visible { outline: 2px solid t.$brand; outline-offset: 3px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (max-width: 640px) { .slot { padding-inline: 16px; min-block-size: 220px; } }
+@media print { .slot { display: none; } }
