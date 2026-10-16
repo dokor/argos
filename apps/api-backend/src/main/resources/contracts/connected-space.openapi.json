@@ -7682,7 +7682,8 @@
             "minLength": 1,
             "maxLength": 19,
             "pattern": "^[1-9][0-9]{0,18}$",
-            "format": "argos-id"
+            "format": "argos-id",
+            "nullable": true
           },
           "createdAt": {
             "type": "string",
@@ -7690,11 +7691,13 @@
           },
           "oldOffer": {
             "type": "string",
-            "maxLength": 16
+            "maxLength": 16,
+            "nullable": true
           },
           "newOffer": {
             "type": "string",
-            "maxLength": 16
+            "maxLength": 16,
+            "nullable": true
           },
           "oldLimit": {
             "type": "integer",
@@ -7783,6 +7786,22 @@
             "nullable": true,
             "maxLength": 320,
             "description": "Current identity, resolved only for authorized administrators. Null for missing or archived accounts."
+          },
+          "eventType": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "ACCOUNT_CHANGE",
+              "PRODUCT_MEASUREMENT"
+            ]
+          },
+          "oldEnabled": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "newEnabled": {
+            "type": "boolean",
+            "nullable": true
           }
         }
       },

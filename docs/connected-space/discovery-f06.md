@@ -203,3 +203,9 @@ La raison de troncature et les compteurs restent visibles ; REQUEST_LIMIT identi
 le nouveau budget HTTP. Une découverte ne crée jamais d'audit ni de réservation.
 La sélection charge toutes les pages par fenêtres de 100 ; le lot reste limité à
 50 pages et nécessite sélection + confirmation explicite du coût.
+
+## Hôtes www — #651
+
+Le formulaire accepte un hôte nu ou une URL HTTP(S) racine et transmet uniquement l’hôte canonique (prise en charge des URL racines déjà livrée par #681). www.exemple.fr est conservé comme hôte exact, distinct de exemple.fr. Aucun lien ni redirection apex ↔ www ou vers blog/shop ne change implicitement ce périmètre : EXTERNAL_HOST est déclaré avant la requête hors hôte. La validation DNS/SSRF et le proxy egress épinglé restent obligatoires à chaque requête autorisée.
+
+Un échec de validation réseau à l’admission est maintenant discovery_target_unavailable, avec aide FR/EN sur adresse non publique, DNS ou délai. hostname_invalid reste réservé au format. Tests contrôlés : validation BFF/formulaire pour www.exemple.fr et www.redpoint.fr, crawler www avec liens hors hôte, trois sens de redirection, et conservation de l’identité dans DiscoveryIT. Aucun test n’a besoin d’appeler ces sites réels.

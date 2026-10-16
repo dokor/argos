@@ -181,7 +181,7 @@ it("accepts operator limits above 50/3 while another domain is pending", () => {
   expect(screen.getByRole("link",{name:fr.domainPage.resumeDiscovery})).toBeInTheDocument();
 });
 
-it.each(["example.com", "http://example.com", "https://example.com", "https://example.com/", "http://example.com/", " HTTPS://EXAMPLE.COM/ ", "https://www.example.com/", "https://" + "a".repeat(63) + "." + "b".repeat(63) + "." + "c".repeat(63) + "." + "d".repeat(61) + "/"])("submits the canonical exact host from %s", async (input) => {
+it.each(["www.exemple.fr", "https://www.exemple.fr", "https://www.redpoint.fr", "example.com", "http://example.com", "https://example.com", "https://example.com/", "http://example.com/", " HTTPS://EXAMPLE.COM/ ", "https://www.example.com/", "https://" + "a".repeat(63) + "." + "b".repeat(63) + "." + "c".repeat(63) + "." + "d".repeat(61) + "/"])("submits the canonical exact host from %s", async (input) => {
   state.query = "";
   render(<DomainNew />);
   const field = screen.getByLabelText(fr.domainPage.hostname);

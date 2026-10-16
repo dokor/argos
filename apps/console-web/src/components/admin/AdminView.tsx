@@ -1,5 +1,6 @@
 "use client";
 import CollectorDiagnostics from "./CollectorDiagnostics";
+import RunFilterSelect from "./RunFilterSelect";
 import ExecutionStatusBadge from "@/components/connected/ExecutionStatusBadge";
 import AdminNavigation from "./AdminNavigation";
 import { adminQuery, safeAdminRunReturn } from "@/lib/admin-request";
@@ -18,6 +19,13 @@ type Run = {
   id: string;
   site: string | null;
   userId: string | null;
+  resolvedUserId?: string | null;
+  userDisplayName?: string | null;
+  userEmail?: string | null;
+  displayUrl?: string | null;
+  batchId?: string | null;
+  pageCount?: number;
+  batchPages?: { id: string; displayUrl: string | null }[];
   status: string;
   createdAt: string;
   reportAvailable: boolean;
@@ -151,6 +159,9 @@ export default function AdminView({ runId }: { runId?: string }) {
           {run.data && (
             <section className={s.card}>
               <h2>{run.data.site ?? run.data.id}</h2>
+              <p>{run.data.batchId ? `${c.domainAnalysis} · ${run.data.pageCount} ${c.pages}` : c.targetUrl}: {run.data.displayUrl ?? c.unavailableTarget}</p>
+              <p>{c.runId}: {run.data.id}</p>
+              {run.data.batchPages && <><h3>{c.batchPages}</h3><ul>{run.data.batchPages.map(page => <li key={page.id}><Link href={"/account/admin/runs/" + page.id + "?" + new URLSearchParams({ returnTo })}>{page.displayUrl ?? c.unavailableTarget}</Link></li>)}</ul></>}
               <p>
                 {stateLabel(run.data.status, c)} · {c.attempts}:{" "}
                 {run.data.attempts}
@@ -212,18 +223,12 @@ export default function AdminView({ runId }: { runId?: string }) {
             </button>
           </section>
           <form key={params.toString()} className={s.filters} onSubmit={filters}>
-            <label>
-              {c.user}
-              <input name="user" defaultValue={query?.get("user") ?? ""} />
-            </label>
-            <label>
-              {c.site}
-              <input name="site" maxLength={253} defaultValue={query?.get("site") ?? ""} />
-            </label>
+            <RunFilterSelect kind="user" initial={query?.get("user") ?? ""} onDenied={onDenied} />
+            <RunFilterSelect kind="site" initial={query?.get("site") ?? ""} onDenied={onDenied} />
             <label>
               {c.status}
               <select name="status" defaultValue={query?.get("status") ?? ""}>
-                <option value="">{c.all}</option>
+                <option value="">{c.allStatuses}</option>
                 {["QUEUED", "RUNNING", "COMPLETED", "FAILED", "CANCELED"].map(
                   (v) => (
                     <option key={v} value={v}>
@@ -242,6 +247,7 @@ export default function AdminView({ runId }: { runId?: string }) {
               <input name="until" type="date" defaultValue={query?.get("until") ?? ""} />
             </label>
             <button>{c.apply}</button>
+            <button type="button" onClick={() => navigate(new URLSearchParams())}>{c.resetFilters}</button>
           </form>
           {!query ? <p role="alert">{c.invalid}</p> : list.loading ? (
             <p role="status">{c.loading}</p>
@@ -258,7 +264,7 @@ export default function AdminView({ runId }: { runId?: string }) {
                 <caption>{c.runs}</caption>
                 <thead>
                   <tr>
-                    {[c.site, c.user, c.status, c.date, c.actions].map((v) => (
+                    {[c.site, c.targetUrl, c.user, c.status, c.date, c.actions].map((v) => (
                       <th scope="col" key={v}>
                         {v}
                       </th>
@@ -270,10 +276,11 @@ export default function AdminView({ runId }: { runId?: string }) {
                     <tr key={row.id}>
                       <td>
                         {row.site ?? "—"}
-                        <br />
-                        <small>{row.id}</small>
                       </td>
-                      <td>{row.userId ?? c.anonymous}</td>
+                      <td>{row.batchId ? <><strong>{c.domainAnalysis} · {row.pageCount} {c.pages}</strong><br /><small>{c.batchPage}</small></> : null}
+                        <span className={s.targetUrl} title={row.displayUrl ?? undefined}>{row.displayUrl ?? c.unavailableTarget}</span>
+                      </td>
+                      <td>{row.resolvedUserId ? <Link href={"/account/admin/users/" + row.resolvedUserId} title={"#" + row.userId}>{row.userDisplayName?.trim() || row.userEmail?.trim() || c.missingUser}</Link> : <span title={row.userId ? "#" + row.userId : undefined}>{row.userId ? c.missingUser : c.anonymous}</span>}</td>
                       <td>{stateLabel(row.status, c)}</td>
                       <td>{date(row.createdAt, lang)}</td>
                       <td>

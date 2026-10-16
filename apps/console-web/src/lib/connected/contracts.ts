@@ -313,10 +313,10 @@ export type AdminSnapshot = {
 export type AdminEvent = {
   readonly id: string;
   readonly actorId: string;
-  readonly targetId: string;
+  readonly targetId: string | null;
   readonly createdAt: string;
-  readonly oldOffer: string;
-  readonly newOffer: string;
+  readonly oldOffer: string | null;
+  readonly newOffer: string | null;
   readonly oldLimit: number | null;
   readonly newLimit: number | null;
   readonly oldState: AccountState | null;
@@ -327,6 +327,9 @@ export type AdminEvent = {
   readonly actorEmail: string | null;
   readonly targetDisplayName: string | null;
   readonly targetEmail: string | null;
+  readonly eventType?: "ACCOUNT_CHANGE" | "PRODUCT_MEASUREMENT" | null;
+  readonly oldEnabled?: boolean | null;
+  readonly newEnabled?: boolean | null;
 };
 
 export type EntitlementOptions = {

@@ -537,21 +537,21 @@ function AdminJournal({ id }: { id?: string }) {
                 {data.data.items.map((e) => (
                   <li className={a.event} key={e.id}>
                     <strong>
-                      {e.reasonCode ? c.reasons[e.reasonCode] : c.legacy}
+                      {e.eventType === "PRODUCT_MEASUREMENT" ? (lang === "fr" ? "Mesure produit" : "Product measurement") : e.reasonCode ? c.reasons[e.reasonCode] : c.legacy}
                     </strong>
                     <p className={a.meta}>
                       {new Date(e.createdAt).toLocaleString(lang)} · {c.actor} : {" "}
                       <span title={"#" + e.actorId}>{e.actorDisplayName?.trim() || e.actorEmail?.trim() || `${c.unavailableAccount} · #${e.actorId}`}</span>
                       {" · "}{c.target} : {" "}
-                      <span title={"#" + e.targetId}>{e.targetDisplayName?.trim() || e.targetEmail?.trim() || `${c.unavailableAccount} · #${e.targetId}`}</span>
+                      <span title={e.targetId ? "#" + e.targetId : undefined}>{e.eventType === "PRODUCT_MEASUREMENT" ? (lang === "fr" ? "Réglage global" : "Global setting") : e.targetDisplayName?.trim() || e.targetEmail?.trim() || `${c.unavailableAccount} · #${e.targetId}`}</span>
                     </p>
                     <p>
-                      {c.before}: {e.oldState ? c.states[e.oldState] : "—"} ·{" "}
-                      {e.oldOffer} · {e.oldLimit ?? c.inherited}
+                      {c.before}: {e.eventType === "PRODUCT_MEASUREMENT" ? (e.oldEnabled ? (lang === "fr" ? "Activée" : "Enabled") : (lang === "fr" ? "Désactivée" : "Disabled")) : <>{e.oldState ? c.states[e.oldState] : "—"} ·{" "}
+                      {e.oldOffer} · {e.oldLimit ?? c.inherited}</>}
                     </p>
                     <p>
-                      {c.after}: {e.newState ? c.states[e.newState] : "—"} ·{" "}
-                      {e.newOffer} · {e.newLimit ?? c.inherited}
+                      {c.after}: {e.eventType === "PRODUCT_MEASUREMENT" ? (e.newEnabled ? (lang === "fr" ? "Activée" : "Enabled") : (lang === "fr" ? "Désactivée" : "Disabled")) : <>{e.newState ? c.states[e.newState] : "—"} ·{" "}
+                      {e.newOffer} · {e.newLimit ?? c.inherited}</>}
                     </p>
                   </li>
                 ))}

@@ -962,8 +962,14 @@ public final class ConnectedContracts {
         @JsonProperty(value = "actorDisplayName", required = true) String actorDisplayName,
         @JsonProperty(value = "actorEmail", required = true) String actorEmail,
         @JsonProperty(value = "targetDisplayName", required = true) String targetDisplayName,
-        @JsonProperty(value = "targetEmail", required = true) String targetEmail
+        @JsonProperty(value = "targetEmail", required = true) String targetEmail,
+        @JsonProperty(value = "eventType", required = false) String eventType,
+        @JsonProperty(value = "oldEnabled", required = false) Boolean oldEnabled,
+        @JsonProperty(value = "newEnabled", required = false) Boolean newEnabled
     ) {
+        public AdminEvent(String id, String actorId, String targetId, String createdAt, String oldOffer, String newOffer, Long oldLimit, Long newLimit, AccountState oldState, AccountState newState, AdminReason reasonCode, String requestId, String actorDisplayName, String actorEmail, String targetDisplayName, String targetEmail) {
+            this(id, actorId, targetId, createdAt, oldOffer, newOffer, oldLimit, newLimit, oldState, newState, reasonCode, requestId, actorDisplayName, actorEmail, targetDisplayName, targetEmail, null, null, null);
+        }
         public AdminEvent {
             required(id, "id");
             check(id.codePointCount(0, id.length()) >= 1, "id");
@@ -975,17 +981,11 @@ public final class ConnectedContracts {
             check(actorId.codePointCount(0, actorId.length()) <= 19, "actorId");
             check(java.util.regex.Pattern.compile("^[1-9][0-9]{0,18}$").matcher(actorId).find(), "actorId");
             check(Long.parseLong(actorId) > 0, "actorId");
-            required(targetId, "targetId");
-            check(targetId.codePointCount(0, targetId.length()) >= 1, "targetId");
-            check(targetId.codePointCount(0, targetId.length()) <= 19, "targetId");
-            check(java.util.regex.Pattern.compile("^[1-9][0-9]{0,18}$").matcher(targetId).find(), "targetId");
-            check(Long.parseLong(targetId) > 0, "targetId");
+            if (targetId != null) { check(targetId.codePointCount(0, targetId.length()) >= 1, "targetId"); check(targetId.codePointCount(0, targetId.length()) <= 19, "targetId"); check(java.util.regex.Pattern.compile("^[1-9][0-9]{0,18}$").matcher(targetId).find(), "targetId"); check(Long.parseLong(targetId) > 0, "targetId"); }
             required(createdAt, "createdAt");
             java.time.Instant.parse(createdAt);
-            required(oldOffer, "oldOffer");
-            check(oldOffer.codePointCount(0, oldOffer.length()) <= 16, "oldOffer");
-            required(newOffer, "newOffer");
-            check(newOffer.codePointCount(0, newOffer.length()) <= 16, "newOffer");
+            if (oldOffer != null) { check(oldOffer.codePointCount(0, oldOffer.length()) <= 16, "oldOffer"); }
+            if (newOffer != null) { check(newOffer.codePointCount(0, newOffer.length()) <= 16, "newOffer"); }
             if (oldLimit != null) { check(oldLimit >= 0L, "oldLimit"); check(oldLimit <= 9007199254740991L, "oldLimit"); }
             if (newLimit != null) { check(newLimit >= 0L, "newLimit"); check(newLimit <= 9007199254740991L, "newLimit"); }
             if (requestId != null) { check(requestId.codePointCount(0, requestId.length()) <= 64, "requestId"); }
@@ -993,6 +993,7 @@ public final class ConnectedContracts {
             if (actorEmail != null) { check(actorEmail.codePointCount(0, actorEmail.length()) <= 320, "actorEmail"); }
             if (targetDisplayName != null) { check(targetDisplayName.codePointCount(0, targetDisplayName.length()) <= 320, "targetDisplayName"); }
             if (targetEmail != null) { check(targetEmail.codePointCount(0, targetEmail.length()) <= 320, "targetEmail"); }
+            if (eventType != null) { check(Set.of("ACCOUNT_CHANGE", "PRODUCT_MEASUREMENT").contains(eventType), "eventType"); }
         }
         @JsonAnySetter public void rejectUnknown(String name, Object value) {
             throw new IllegalArgumentException("Unknown connected field");
