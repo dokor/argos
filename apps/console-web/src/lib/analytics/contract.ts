@@ -1,5 +1,5 @@
 import { frenchPath } from '@/lib/i18n/routes';
-export const routes = ['/', '/faq', '/ressources', '/exemple-rapport', '/a-propos', '/methodologie-score', '/guides/checklist-audit-site-web', '/ressources/audit-technique-gratuit', '/ressources/accessibilite-numerique', '/ressources/audit-site-pme', '/ressources/audit-site-ecommerce', '/test-vitesse-site-web', '/analyse-seo-page', '/verifier-entetes-securite', '/test-accessibilite-site-web'] as const;
+export const routes = ['/', '/faq', '/ressources', '/exemple-rapport', '/a-propos', '/methodologie-score', '/guides/checklist-audit-site-web', '/ressources/audit-technique-gratuit', '/ressources/accessibilite-numerique', '/ressources/audit-site-pme', '/ressources/audit-site-ecommerce', '/ressources/audit-wordpress', '/ressources/audit-shopify', '/ressources/pourquoi-mon-site-ne-convertit-pas', '/test-vitesse-site-web', '/analyse-seo-page', '/verifier-entetes-securite', '/test-accessibilite-site-web'] as const;
 export type Dimensions = {
     route: string;
     lang: 'fr' | 'en';

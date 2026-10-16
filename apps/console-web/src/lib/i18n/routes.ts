@@ -45,6 +45,9 @@ export const languageRoutes: Record<string, string> = {
   "/ressources": "/en/resources",
   "/ressources/audit-site-pme": "/en/resources/small-business-website-audit",
   "/ressources/audit-site-ecommerce": "/en/resources/ecommerce-website-audit",
+  "/ressources/audit-wordpress": "/en/resources/wordpress-audit",
+  "/ressources/audit-shopify": "/en/resources/shopify-audit",
+  "/ressources/pourquoi-mon-site-ne-convertit-pas": "/en/resources/why-is-my-website-not-converting",
 };
 
 export function frenchPath(path: string): string {
