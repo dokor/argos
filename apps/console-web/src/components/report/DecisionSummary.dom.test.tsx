@@ -41,7 +41,7 @@ for (const lang of ["fr", "en"] as const) {
       expect(within(screen.getByRole("heading", { level: 1 }).closest("section")!).getByText(copy.antiBot)).toBeInTheDocument();
       expect(within(screen.getByRole("heading", { level: 1 }).closest("section")!).getByText(/40 % —/)).toBeInTheDocument();
       expect(screen.queryByRole("link", { name: copy.methodLink })).not.toBeInTheDocument();
-      expect(document.getElementById("report-method")).toBeNull();
+      expect(document.getElementById("report-method")).not.toHaveAttribute("open");
       expect(screen.getAllByText(lang === "fr" ? "Non mesuré" : "Not measured")).toHaveLength(13);
     });
     it("handles unavailable, historical, empty and absent AI states without invented certainty", async () => {
@@ -52,7 +52,7 @@ for (const lang of ["fr", "en"] as const) {
       expect(screen.getByText(copy.verdict.unavailable)).toBeInTheDocument();
       expect(screen.getByText(copy.empty)).toBeInTheDocument();
       expect(within(hero).getByText(copy.coverageUnknown)).toBeInTheDocument();
-      expect(document.getElementById("report-method")).toBeNull();
+      expect(document.getElementById("report-method")).not.toHaveAttribute("open");
       expect(screen.queryByText(/50 % —/)).not.toBeInTheDocument();
     });
     it("opens the action plan and domain selection through shared URL navigation", async () => {

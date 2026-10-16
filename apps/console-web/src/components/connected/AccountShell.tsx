@@ -16,6 +16,7 @@ import { EmptyState, PageHeading } from "./Primitives";
 import QuotaSummary from "./QuotaSummary";
 import NavigationIcon from "./NavigationIcon";
 import AccountMenu from "./AccountMenu";
+import WebTip from "@/components/editorial/WebTip";
 import NotificationCenter from "./NotificationCenter";
 import s from "./Connected.module.scss";
 
@@ -99,7 +100,7 @@ export default function AccountShell({ children }: { children: ReactNode }) {
 
 export function AccountFooter() {
   const { t, lang } = useLang(), c = t.connected, copy = clarteCopy[lang];
-  return <footer className={s.footer}><nav aria-label={c.footer}>
+  return <><WebTip/><footer className={s.footer}><nav aria-label={c.footer}>
     <Link href="/faq">{c.help}</Link><Link href="/">{copy.returnSite} <span aria-hidden="true">↗</span></Link><Link href="/informations-legales">{c.legal}</Link><Link href="/confidentialite">{c.privacy}</Link>
-  </nav><Link href="/feedback">{c.contact} <span aria-hidden="true">↗</span></Link></footer>;
+  </nav><Link href="/feedback">{c.contact} <span aria-hidden="true">↗</span></Link></footer></>;
 }

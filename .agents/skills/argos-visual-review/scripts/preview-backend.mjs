@@ -1,5 +1,7 @@
 import { createServer } from "node:http";
+import { readFileSync } from "node:fs";
 import { connectedFixture } from "./connected-fixtures.mjs";
+const coverage96 = JSON.parse(readFileSync(new URL("../../../../docs/report/fixtures/coverage-96.json", import.meta.url), "utf8")).coverage;
 
 // Fictional fixtures for visual QA only. No production data and no mutation.
 const categories = [
@@ -19,10 +21,16 @@ function aggregate(key, ratio = 1) {
   return { key, measuredWeight: ratio * 100, expectedWeight: 100, ratio, available: ratio > 0, sufficient: ratio >= .8 };
 }
 function fixture(token) {
+  const coverageReview = token === "review-coverage";
   const partial = token === "review-partial", unavailable = token === "review-unavailable";
   const empty = token === "review-empty";
-  const ratio = unavailable ? 0 : partial ? .55 : 1;
-  const findings = empty ? [] : issues;
+  const ratio = unavailable ? 0 : coverageReview ? 215 / 223 : partial ? .55 : 1;
+  const findings = empty ? [] : !coverageReview ? issues : issues.map((issue, index) => ({
+    ...issue,
+    id: index === 0 ? "lighthouse.audit.largest-contentful-paint" : index === 3 ? "html.meta.description.present" : index === 4 ? "runtime.network.bytes_estimated" : issue.id,
+    structuredEvidence: index === 0 ? { source: "lighthouse", measurement: { value: 4200, unit: "ms" } }
+      : index === 2 ? { source: "html", details: [{ key: "imgCount", text: "4" }, { key: "imgAltMissingCount", text: "2" }] } : undefined,
+  }));
   return {
     pageIdentity: { requested: "https://atelier.example/collection/sac-en-coton", destination: partial ? "https://atelier.example/collection/sac-recycle" : "https://atelier.example/collection/sac-en-coton", redacted: partial, redirected: partial },
     generatedAt: "2026-10-11T10:00:00Z", domain: "atelier.example", url: "https://atelier.example/collection/sac-en-coton",
@@ -30,9 +38,9 @@ function fixture(token) {
       method: "HTTP_HEADERS_V1", observedAt: "2026-10-11T10:00:00Z", applicationHost: { name: "Vercel", confidence: "MEDIUM", evidence: ["x-vercel-id present"] },
       cdnProxies: [{ name: "Cloudflare", confidence: "MEDIUM", evidence: ["cf-ray present"] }], networkProvider: null, originStatus: "PROBABLE_PLATFORM",
     } },
-    scores: { global: empty ? 96 : 64, globalAvailable: !unavailable, completeness: ratio * 100,
+    scores: { global: empty ? 96 : 64, globalAvailable: !unavailable, completeness: coverageReview ? 87.5 : ratio * 100,
       byCategory: categories.map(c => ({ ...c, score: empty ? 96 : c.score, issues: empty ? 0 : c.issues })),
-      coverage: { version: "visual-fixture", threshold: .8, provisional: partial || unavailable,
+      coverage: coverageReview ? coverage96 : { version: "visual-fixture", threshold: .8, provisional: partial || unavailable,
         global: aggregate("global", ratio),
         domains: categories.map(c => aggregate(c.key, partial && c.key === "security" ? 0 : ratio)),
         checks: findings.map(i => ({ key: i.id, domain: i.categoryKey, module: "demo", weight: 1, state: unavailable ? "UNAVAILABLE" : "MEASURED", reason: "VISUAL_FIXTURE", confidence: "HIGH" })),
@@ -71,7 +79,7 @@ function fixture(token) {
     },
   };
 }
-const tokens = new Set(["review-complete", "review-partial", "review-unavailable", "review-empty", "review-details"]);
+const tokens = new Set(["review-complete", "review-partial", "review-unavailable", "review-empty", "review-details", "review-coverage"]);
 const port = Number(process.env.ARGOS_PREVIEW_PORT ?? 3018);
 createServer((req, res) => {
   if (req.method === "GET" && req.url === "/api/audits/scope-catalogue") {
@@ -88,14 +96,17 @@ createServer((req, res) => {
   // Account roles below are fictional fixture responses, never production access.
   if (path === "/api/account/me") return send({ displayName: "Administration démo", email: "admin@atelier.example", verified: true, admin: true });
   if (path === "/api/account/usage") return send({ ...usage, available: 36 });
+  if (path === "/api/account/domain-discoveries/limits") return send({ maxUrls: 50, maxDepth: 3, defaultUrls: 20, defaultDepth: 2, durationSeconds: 60 });
   const connected = connectedFixture(path, params, fixture, { ...usage, available: 36 });
   if (connected !== undefined) return send(connected);
   if (path === "/api/account/admin/queue") return send({ queued: 3, running: 2 });
   const users = [{ id: "101", displayName: "Camille · Atelier de démonstration au nom volontairement long", email: "contact-avec-une-adresse-volontairement-longue@atelier.example", state: "ACTIVE", role: "USER", offer: "DEMO", createdAt: "2026-10-11T10:00:00Z" }, { id: "102", displayName: "Morgan", email: "morgan@atelier.example", state: "ARCHIVED", role: "USER", offer: "DEMO", createdAt: "2026-10-10T09:00:00Z" }];
+  if (path === "/api/account/admin/analytics/settings") return send({ enabled: false, requestedEnabled: false, deploymentAllowed: false, version: 0, lastCollectedAt: "2026-10-11T10:00:00Z" });
+  if (path === "/api/account/admin/run-options") return send({ items: params.get("kind") === "site" ? [{ id: "1", site: "atelier.example" }] : users.filter(u => u.state !== "ARCHIVED" && (!params.get("q") || (u.displayName+u.email).toLowerCase().includes(params.get("q").toLowerCase()))), nextCursor: null });
   if (path === "/api/account/admin/users") return send({ items: users.filter(u => (!params.get("q") || (u.displayName+u.email).toLowerCase().includes(params.get("q").toLowerCase())) && (!params.get("state") || u.state === params.get("state"))), nextCursor: null });
   const userMatch = path.match(/^\/api\/account\/admin\/users\/(101|102)$/);
   if (userMatch) return send({ ...users.find(u => u.id === userMatch[1]), usage, monthlyLimit: null, offers: ["DEMO", "STANDARD"] });
-  const runs = ["COMPLETED", "FAILED", "RUNNING", "QUEUED"].map((status,i) => ({ id: String(401-i), userId: i%2 ? null : "101", site: "atelier.example", status, createdAt: "2026-10-11T10:00:00Z", reportAvailable: status === "COMPLETED", modules: { http: "COMPLETED", html: "COMPLETED", runtime: status === "FAILED" ? "FAILED" : status === "COMPLETED" ? "COMPLETED" : "RUNNING", lighthouse: status === "COMPLETED" ? "COMPLETED" : "PENDING" }, failureCode: status === "FAILED" ? "VISUAL_FIXTURE" : null, attempts: 1 }));
+  const runs = ["COMPLETED", "FAILED", "RUNNING", "QUEUED"].map((status,i) => ({ id: String(401-i), userId: i%2 ? null : "101", site: "atelier.example", displayUrl: "https://atelier.example/" + (i ? "page-" + i : "collection/sac-en-coton"), resolvedUserId: i%2 ? null : "101", userDisplayName: i%2 ? null : users[0].displayName, userEmail: i%2 ? null : users[0].email, status, createdAt: "2026-10-11T10:00:00Z", reportAvailable: status === "COMPLETED", modules: { http: "COMPLETED", html: "COMPLETED", runtime: status === "FAILED" ? "FAILED" : status === "COMPLETED" ? "COMPLETED" : "RUNNING", lighthouse: status === "COMPLETED" ? "COMPLETED" : "PENDING" }, failureCode: status === "FAILED" ? "VISUAL_FIXTURE" : null, attempts: 1 }));
   if (path === "/api/account/admin/runs") return send({ items: runs.filter(r => (!params.get("status") || r.status === params.get("status")) && (!params.get("site") || r.site === params.get("site"))), nextCursor: null });
   const runMatch = path.match(/^\/api\/account\/admin\/runs\/(\d+)(\/report)?$/);
   if (runMatch) return send(runMatch[2] ? fixture("review-details") : runs.find(r => r.id === runMatch[1]) ?? runs[0]);

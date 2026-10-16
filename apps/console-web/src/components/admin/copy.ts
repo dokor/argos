@@ -1,5 +1,6 @@
 export const copy = {
  fr: {
+ siteSearch:"Rechercher un domaine", userSearch:"Rechercher un utilisateur", sitePlaceholder:"ex. exemple.fr", userPlaceholder:"Nom ou e-mail", allStatuses:"Tous les statuts", resetFilters:"Réinitialiser les filtres", moreOptions:"Autres choix", targetUrl:"URL / périmètre analysé", domainAnalysis:"Analyse de domaine", pages:"pages", batchPage:"URL de cette page du domaine", batchPages:"Pages de cette analyse de domaine", runId:"Identifiant du run", missingUser:"Compte archivé ou introuvable", unavailableTarget:"URL indisponible ou masquée",
  title:"Administration", intro:"Comptes, consommation et suivi des analyses.", users:"Utilisateurs", runs:"Analyses", events:"Journal des modifications",
  queued:"En attente", running:"En cours", queueHelp:"Volumes globaux, toutes dates et tous utilisateurs. Actualisation manuelle.",
  refresh:"Actualiser", loading:"Chargement…", denied:"Un compte Argos administrateur vérifié est nécessaire.", error:"Le service est indisponible. Réessayez.", empty:"Aucun résultat pour ces filtres.",
@@ -9,6 +10,7 @@ export const copy = {
  statuses:{ACTIVE:"Actif",PENDING:"À vérifier",ARCHIVED:"Archivé",USER:"Utilisateur",ADMIN:"Administrateur",QUEUED:"En attente",RUNNING:"En cours",COMPLETED:"Terminé",FAILED:"Échec",CANCELED:"Annulée",SKIPPED:"Ignoré",TIMEOUT:"Délai dépassé"}
  },
  en: {
+ siteSearch:"Search domains", userSearch:"Search users", sitePlaceholder:"e.g. example.com", userPlaceholder:"Name or email", allStatuses:"All statuses", resetFilters:"Reset filters", moreOptions:"More choices", targetUrl:"Analyzed URL / scope", domainAnalysis:"Domain analysis", pages:"pages", batchPage:"This page within the domain", batchPages:"Pages in this domain analysis", runId:"Run identifier", missingUser:"Archived or missing account", unavailableTarget:"URL unavailable or hidden",
  title:"Administration", intro:"Accounts, usage and analysis monitoring.", users:"Users", runs:"Analyses", events:"Change log",
  queued:"Queued", running:"Running", queueHelp:"Global volumes across all dates and users. Refresh manually.",
  refresh:"Refresh", loading:"Loading…", denied:"A verified Argos administrator account is required.", error:"The service is unavailable. Try again.", empty:"No results match these filters.",

@@ -33,12 +33,13 @@ export function describeObservation(issue: Issue, title: string, lang: Lang) {
     return fr ? `${count("h1Count")} titre(s) h1 ont été trouvés dans le document.` : `${count("h1Count")} h1 heading(s) were found in the document.`;
   const states: Record<string, [string, string]> = {
     ABSENT: ["élément absent", "element absent"], ATTRIBUTE_MISSING: ["attribut attendu absent", "expected attribute absent"],
-    EMPTY: ["valeur vide", "empty value"], INVALID: ["valeur invalide", "invalid value"], PRESENT: ["valeur présente", "value present"],
+    EMPTY: ["valeur vide", "empty value"], INVALID: ["valeur invalide", "invalid value"], PRESENT: ["valeur présente", "value present"], USABLE: ["valeur exploitable", "usable value"],
   };
   if (issue.id?.startsWith("html.") && states[detail("state") ?? ""])
     return `${subjects[issue.id]?.[fr ? 0 : 1] ?? title} : ${states[detail("state")!][fr ? 0 : 1]}.`;
-  if (issue.id === "html.images.alt_coverage" && count("missingAltCount") !== undefined && count("imgCount") !== undefined)
-    return fr ? `${count("missingAltCount")} image(s) sans attribut alt parmi ${count("imgCount")} images observées.` : `${count("missingAltCount")} image(s) without an alt attribute among ${count("imgCount")} observed images.`;
+  const missingAlt = count("imgAltMissingCount") ?? count("missingAltCount");
+  if (issue.id === "html.images.alt_coverage" && missingAlt !== undefined && count("imgCount") !== undefined)
+    return fr ? `${missingAlt} image(s) sans attribut alt parmi ${count("imgCount")} images observées.` : `${missingAlt} image(s) without an alt attribute among ${count("imgCount")} observed images.`;
   const subject = subjects[issue.id ?? ""]?.[fr ? 0 : 1] ?? title;
   const measure = issue.structuredEvidence?.measurement;
   const units = { ms: "ms", bytes: fr ? "octets" : "bytes", count: fr ? "élément(s)" : "item(s)", days: fr ? "jours" : "days", "score/100": "/100", ratio: "ratio", unitless: fr ? "sans unité" : "unitless" };

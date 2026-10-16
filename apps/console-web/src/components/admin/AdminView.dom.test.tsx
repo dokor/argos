@@ -45,11 +45,12 @@ it("clears private monitoring after the server revokes the role",async()=>{
 
 it("restores filters and cursor from the URL, resets the cursor on edits, and carries the exact list return", async()=>{
  nav.query="site=atelier.example&status=FAILED&cursor=42";
- api.mockImplementation(async(path:string)=>path==="admin/queue"?{queued:1,running:0}:{items:[{id:"41",site:"atelier.example",status:"FAILED",createdAt:"2026-10-11T10:00:00Z"}],nextCursor:"40"});
+ api.mockImplementation(async(path:string)=>path==="admin/queue"?{queued:1,running:0}:path.startsWith("admin/run-options")?{items:[{id:"1",site:"other.example"}],nextCursor:null}:{items:[{id:"41",site:"atelier.example",status:"FAILED",createdAt:"2026-10-11T10:00:00Z"}],nextCursor:"40"});
  const view=render(<LangProvider><AdminView/></LangProvider>);
  const detail=await screen.findByRole("link",{name:"Détail"});
  expect(decodeURIComponent(detail.getAttribute("href")!)).toContain("returnTo=/account/admin/runs?site=atelier.example&status=FAILED&cursor=42");
  expect(screen.getByLabelText("Site (nom d’hôte exact)")).toHaveValue("atelier.example");
+ await screen.findByRole("option",{name:"other.example"});
  fireEvent.change(screen.getByLabelText("Site (nom d’hôte exact)"),{target:{value:"other.example"}});
  fireEvent.click(screen.getByRole("button",{name:"Appliquer les filtres"}));
  expect(nav.push.mock.lastCall?.[0]).toContain("site=other.example");
@@ -77,4 +78,18 @@ it("loads recorded collector causes without opening the full report", async () =
  expect(screen.queryByRole("heading",{name:"Report fixture"})).not.toBeInTheDocument();
  fireEvent.click(screen.getByRole("button",{name:"Ouvrir le rapport"}));
  await screen.findByRole("heading",{name:"Report fixture"});
+});
+
+it("shows safe page scope and human identities, keeping archived and anonymous accounts explicit",async()=>{
+ api.mockImplementation(async(path:string)=>path==="admin/queue"?{queued:0,running:0}:{items:[
+ {id:"1",site:"www.exemple.fr",displayUrl:"https://www.exemple.fr/catalogue",userId:"42",resolvedUserId:"42",userDisplayName:"Alice",status:"COMPLETED",createdAt:"2026-10-16"},
+ {id:"2",site:"www.exemple.fr",displayUrl:null,userId:"43",resolvedUserId:null,status:"FAILED",createdAt:"2026-10-16",batchId:"7",pageCount:3},
+ {id:"3",site:"www.exemple.fr",userId:null,status:"QUEUED",createdAt:"2026-10-16"}],nextCursor:null});
+ render(<AdminView/>);
+ expect(await screen.findByRole("link",{name:"Alice"})).toHaveAttribute("href","/account/admin/users/42");
+ expect(screen.getByText("https://www.exemple.fr/catalogue")).toBeInTheDocument();
+ expect(screen.getByText(/Analyse de domaine · 3 pages/)).toBeInTheDocument();
+ expect(screen.getByText("Compte archivé ou introuvable")).toHaveAttribute("title","#43");
+ expect(screen.getAllByText("Anonyme").length).toBeGreaterThan(0);
+ fireEvent.click(screen.getByRole("button",{name:"Réinitialiser les filtres"}));expect(nav.push).toHaveBeenCalledWith("/account/admin/runs");
 });

@@ -11,7 +11,7 @@ import ReportIntroductionView from "./ReportIntroductionView";
 import ReportPageScope from "./ReportPageScope";
 import s from "./ReportHero.module.scss";
 
-export default function ReportHero({report,model=buildReportModel(report),onActions,introduction=report.introduction,onSelectFinding,demo=false,actions,context}: {
+export default function ReportHero({report,model=buildReportModel(report),onActions,onMethod,introduction=report.introduction,onSelectFinding,demo=false,actions,context}: {
  report:Report;model?:ReportModel;onActions?:()=>void;onMethod?:()=>void;introduction?:ReportIntroduction|null;onSelectFinding?:(key:string)=>void;personal?:boolean;demo?:boolean;actions?:ReactNode;context?:ReactNode;
 }) {
  const {t,lang}=useLang(),fr=lang==="fr",copy=decisionCopy[lang],reading=reportReadingCopy[lang];
@@ -33,6 +33,7 @@ export default function ReportHero({report,model=buildReportModel(report),onActi
     {score!==undefined?<p className={s.scoreNumber} aria-label={`Score ${score}/100`}><strong>{score}</strong><span>/100</span></p>:<p>{copy.notEvaluated}</p>}
     {score!==undefined&&partialReport(report)&&<p className={s.provisional}>{copy.provisional}</p>}
     <p className={s.coverage}>{coverage?`${fr?"Couverture":"Coverage"} ${Math.round(coverage.global.ratio*100)} %`:copy.coverageUnknown}</p>
+    {onMethod&&<a href="#report-method" className={s.actionLink} onClick={onMethod}>{fr?"Comprendre la couverture":"Understand coverage"}</a>}
    </div>
    <div className={s.decision}><h2>{copy.verdict[verdict]}</h2>
     {score!==undefined&&score>=70&&counts.critical>0&&<p>{copy.favourable}</p>}

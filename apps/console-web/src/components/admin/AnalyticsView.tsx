@@ -1,7 +1,8 @@
 "use client";
 
 import AdminNavigation from "./AdminNavigation";
-import { useEffect, useState } from "react";
+import MeasurementControl from "./MeasurementControl";
+import { useCallback, useEffect, useState } from "react";
 import Link from "@/components/LocalizedLink";
 import { useAccountSession } from "@/components/account/AccountSession";
 import { accountFetch, AccountClientError } from "@/lib/account-client";
@@ -22,6 +23,8 @@ export default function AnalyticsView() {
   const { lang } = useLang(), c = analyticsCopy[lang], session = useAccountSession();
   const [days, setDays] = useState(30), [revision, setRevision] = useState(0);
   const [denied, setDenied] = useState(false);
+  const onDenied = useCallback(() => setDenied(true), []);
+  const onChanged = useCallback(() => setRevision(value => value + 1), []);
   const [result, setResult] = useState<{ request: string; data: ProductMetrics | null; error: boolean } | null>(null);
   const allowed = session.ready && !session.denied && session.profile?.verified && session.profile.admin && !denied;
   const request = days + ":" + revision;
@@ -46,6 +49,7 @@ export default function AnalyticsView() {
     {!session.ready ? <p role="status">{c.loading}</p> : !allowed ? <><p role="alert">{c.denied}</p><Link href="/account/sign-in">{c.signIn}</Link></> : <>
       <AdminNavigation active="analytics" />
       <nav className={s.controls} aria-label={lang === 'fr' ? 'Statistiques' : 'Statistics'}><Link href="/account/admin/analytics" aria-current="page">{lang === 'fr' ? 'Mesure produit' : 'Product measurement'}</Link><Link href="/account/admin/analytics/traffic">{lang === 'fr' ? 'Trafic' : 'Traffic'}</Link></nav>
+      <MeasurementControl onDenied={onDenied} onChanged={onChanged} />
       <div className={s.controls}><label htmlFor="analytics-period">{c.period}</label>
         <select id="analytics-period" value={days} onChange={event => setDays(Number(event.target.value))}>
           {[7, 30, 90].map(value => <option key={value} value={value}>{value} {c.days}</option>)}

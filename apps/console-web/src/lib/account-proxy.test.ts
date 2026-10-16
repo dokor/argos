@@ -546,3 +546,24 @@ it("forwards higher absolute discovery bounds for authoritative server validatio
  expect(response.status).toBe(400);expect((await response.json()).error).toBe("discovery_limits_invalid");
  expect(fetchMock).toHaveBeenCalledOnce();
 });
+
+it("validates measurement mutations and keeps deployment guards authoritative",async()=>{
+ const path=["admin","analytics","settings"], body={enabled:true,expectedVersion:0,confirmation:true};
+ expect((await accountProxy(request(path.join("/"),"PATCH",body,false),path)).status).toBe(403);
+ expect((await accountProxy(request(path.join("/"),"PATCH",{...body,confirmation:false}),path)).status).toBe(400);
+ expect((await accountProxy(request(path.join("/"),"PATCH",body),path)).status).toBe(409);
+ expect(fetchMock).not.toHaveBeenCalled();
+ vi.stubEnv("PRODUCT_ANALYTICS_ENABLED","true");vi.stubEnv("ADMIN_API_TOKEN","synthetic");
+ fetchMock.mockResolvedValue(Response.json({enabled:true,version:1,deploymentAllowed:true}));
+ const response=await accountProxy(request(path.join("/"),"PATCH",body),path);
+ expect(response.status).toBe(200);expect((await response.json()).bffAllowed).toBe(true);
+ expect(fetchMock.mock.calls[0][1].headers.get("authorization")).toBe("Bearer "+jwt);
+ expect(fetchMock.mock.calls[0][1].headers.get("x-argos-csrf")).toBe(csrf);
+});
+it.each(["www.exemple.fr","www.redpoint.fr"])("preserves exact www discovery host %s in the BFF",async hostname=>{
+ const path=["domain-discoveries"];
+ fetchMock.mockResolvedValue(Response.json({hostname}));
+ const req=request(path.join("/"),"POST",{hostname,maxUrls:20,maxDepth:2,excludedPaths:[]});req.headers.set("Idempotency-Key","12345678-1234-1234-1234-123456789abc");
+ expect((await accountProxy(req,path)).status).toBe(200);
+ expect(JSON.parse(fetchMock.mock.calls[0][1].body).hostname).toBe(hostname);
+});

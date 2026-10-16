@@ -77,7 +77,7 @@ try {
       const collapse=page.getByRole('button',{name:c.collapseMenu,exact:true});
       await collapse.focus();await page.keyboard.press('Enter');
       await page.locator('[data-connected-shell][data-collapsed="true"]').waitFor();
-      const triggerBox=await accountMenu.boundingBox(),sidebarBox=await page.locator('aside').boundingBox();
+      const triggerBox=await accountMenu.boundingBox(),sidebarBox=await page.locator('[data-connected-shell] > aside').boundingBox();
       assert.ok(triggerBox&&sidebarBox&&triggerBox.x>=sidebarBox.x&&triggerBox.x+triggerBox.width<=sidebarBox.x+sidebarBox.width+1,'Account control fits the compact sidebar');
       await accountMenu.focus();await page.keyboard.press('Enter');
       await accountPanel.waitFor();

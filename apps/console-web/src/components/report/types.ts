@@ -76,7 +76,7 @@ export type AccessibilityEvidence = {
 export type Coverage = {
   version: string; threshold: number; provisional: boolean;
   global: CoverageAggregate; domains: CoverageAggregate[];
-  checks: Array<{ key: string; domain: string; module: string; weight: number; state: "MEASURED" | "UNAVAILABLE" | "BLOCKED_BY_ANTIBOT" | "NOT_APPLICABLE"; reason: string; confidence: string }>;
+  checks: Array<{ key: string; domain: string; module: string; weight: number; state: "MEASURED" | "UNAVAILABLE" | "BLOCKED_BY_ANTIBOT" | "NOT_APPLICABLE"; reason: string; confidence: string; measurementModule?: string | null; measurementSources?: string[] | null }>;
 };
 export type CoverageAggregate = { key: string; measuredWeight: number; expectedWeight: number; ratio: number; available: boolean; sufficient: boolean };
 

@@ -1,6 +1,16 @@
 # Mesure produit interne — #42
 
-Désactivée par défaut : backend product-analytics.enabled=false ; BFF PRODUCT_ANALYTICS_ENABLED absent. Activation exige les deux drapeaux et ADMIN_API_TOKEN côté serveur, après revue des informations publiques. Aucun fournisseur tiers ni intervention en production dans cette PR.
+Désactivée par défaut. Trois conditions sont nécessaires : autorisation de déploiement Java `product-analytics.enabled=true`, autorisation BFF `PRODUCT_ANALYTICS_ENABLED=true` avec `ADMIN_API_TOKEN`, et réglage administrateur enregistré en base. Les drapeaux de déploiement restent des garde-fous : les autoriser une fois demande une modification de configuration et un redémarrage, puis les bascules courantes se font dans Administration → Statistiques. Aucun fournisseur tiers.
+
+## Pilotage administrateur — #656
+
+La migration V32 crée ARG_PRODUCT_SETTING (ligne singleton, désactivée initialement). GET /api/account/admin/analytics/settings expose enabled, requestedEnabled, deploymentAllowed, version et lastCollectedAt ; le BFF ajoute bffAllowed. PATCH exige enabled (booléen), expectedVersion (entier sûr) et confirmation=true, une session ACTIVE ADMIN relue côté serveur et le double contrôle CSRF origine/cookie/en-tête, lié à la session. Aucun ancien token d’administration ne donne accès à ce réglage.
+
+L’interface demande de vérifier l’information de confidentialité avant activation. Une configuration bloquée ou une erreur de stockage ne devient jamais un succès. La désactivation du réglage mémorisé reste possible même si le déploiement bloque déjà la collecte. La version optimiste et le verrou de la ligne sérialisent les modifications concurrentes ; une version obsolète donne 409, à actualiser avant une nouvelle décision.
+
+Chaque événement prend le même verrou dans sa transaction, sans cache local : après validation de la désactivation, les écritures suivantes sont omises sur toutes les instances. L’activation ouvre une nouvelle fenêtre : les runs antérieurs ne reçoivent aucune attribution et les anciennes attributions ne reçoivent pas de nouvelle vue de rapport. Les compteurs historiques restent consultables pendant leur rétention, avec date de dernière écriture effective. La purge horaire de 90 jours reste indépendante du réglage. Les changements réels sont journalisés atomiquement dans ARG_ADMIN_EVENT avec auteur, date, état avant/après et identifiant de requête, sans utilisateur cible artificiel ni données privées.
+
+Les informations publiques de confidentialité FR/EN et le bandeau de consentement ont été revus : consentement facultatif explicite, acceptation/refus, retrait, minimisation, absence de tiers et rétention sont déjà décrits. Le point de lecture de consentement interroge désormais l’état effectif backend avec le credential serveur et se ferme en cas d’erreur ; les refus individuels restent respectés indépendamment de l’activation globale.
 
 Accord explicite facultatif, choix accepter/refuser équivalents, retrait depuis le bouton Mesure produit. Cookie HttpOnly SameSite Strict de session, aucun identifiant de personne. Pas de localStorage, URL soumise, token, IP, email, contenu privé ou paramètre libre dans les tables de mesure. Les requêtes de lecture existantes du rapport restent nécessairement protégées par leur token ; celui-ci ne devient pas un événement.
 
