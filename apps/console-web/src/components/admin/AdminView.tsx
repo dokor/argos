@@ -159,7 +159,8 @@ export default function AdminView({ runId }: { runId?: string }) {
           {run.data && (
             <section className={s.card}>
               <h2>{run.data.site ?? run.data.id}</h2>
-              <p>{run.data.batchId ? `${c.domainAnalysis} · ${run.data.pageCount} ${c.pages}` : c.targetUrl}: {run.data.displayUrl ?? c.unavailableTarget}</p>
+              {run.data.batchId && <p>{c.domainAnalysis} · {run.data.pageCount} {c.pages}</p>}
+              <p>{run.data.batchId ? c.batchPage : c.targetUrl}: {run.data.displayUrl ?? c.unavailableTarget}</p>
               <p>{c.runId}: {run.data.id}</p>
               {run.data.batchPages && <><h3>{c.batchPages}</h3><ul>{run.data.batchPages.map(page => <li key={page.id}><Link href={"/account/admin/runs/" + page.id + "?" + new URLSearchParams({ returnTo })}>{page.displayUrl ?? c.unavailableTarget}</Link></li>)}</ul></>}
               <p>
