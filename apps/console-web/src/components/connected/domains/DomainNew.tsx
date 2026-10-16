@@ -1,4 +1,5 @@
 "use client";
+import { inputHints } from "@/lib/input-hints";
 import { allDiscoveryPages } from "@/lib/connected/discovery-pages";
 import DomainScopeGuide from "./DomainScopeGuide";
 import { useEffect, useRef, useState } from "react";
@@ -373,6 +374,7 @@ export default function DomainNew() {
                     {c.hostname}
                     <input
                       name="hostname"
+                      placeholder={inputHints[lang].hostname}
                       required
                       maxLength={262}
                       autoCapitalize="none"

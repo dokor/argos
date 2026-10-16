@@ -12,7 +12,7 @@ export function adminPath(method: string, path: string): boolean {
   const ids = path.match(/\/([0-9]+)(?:\/|$)/g);
   if (ids?.some((v) => !id(v.replaceAll("/", "")))) return false;
   return method === "GET"
-    ? /^admin\/(?:feedback(?:\/[1-9]\d{0,18})?|users(?:\/[1-9]\d{0,18}(?:\/events)?)?|runs(?:\/[1-9]\d{0,18}(?:\/report)?)?|queue|run-options|events|analytics(?:\/settings)?|entitlement-options)$/.test(
+    ? /^admin\/(?:feedback(?:\/[1-9]\d{0,18})?|users(?:\/[1-9]\d{0,18}(?:\/events)?)?|runs(?:\/[1-9]\d{0,18}(?:\/report)?)?|queue|run-options|events|analytics(?:\/settings)?|traffic|entitlement-options)$/.test(
         path,
       )
     : method === "PATCH"
@@ -29,8 +29,8 @@ export function adminQuery(
   const keys =
     path === "admin/run-options"
       ? ["kind", "q", "limit", "cursor"]
-      : path === "admin/analytics"
-      ? ["days"]
+      : ["admin/analytics","admin/traffic"].includes(path)
+      ? path === "admin/traffic" ? ["days","group"] : ["days"]
       : path === "admin/feedback"
         ? ["type", "status", "limit", "cursor"]
         : path === "admin/users"
@@ -51,6 +51,7 @@ export function adminQuery(
     )
       return null;
     if (path === "admin/run-options" && ((key === "kind" && !["site", "user"].includes(value)) || (key === "q" && value.length > 100))) return null;
+    if(key === "group" && !["day","week","month"].includes(value)) return null;
     if (key === "days" && !["7", "30", "90"].includes(value)) return null;
     if (
       key === "limit" &&

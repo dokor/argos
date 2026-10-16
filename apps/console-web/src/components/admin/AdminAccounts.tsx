@@ -1,4 +1,5 @@
 "use client";
+import { inputHints } from "@/lib/input-hints";
 import AdminNavigation from "./AdminNavigation";
 import { quotaResetDate } from "@/lib/quota-date";
 import { useEffect, useRef, useState } from "react";
@@ -250,6 +251,7 @@ export default function AdminAccounts({
                   {c.search}
                   <input
                     name="q"
+                    placeholder={inputHints[lang].searchAccount}
                     maxLength={100}
                     defaultValue={params.get("q") ?? ""}
                   />

@@ -4,7 +4,7 @@ Désactivée par défaut. Trois conditions sont nécessaires : autorisation de d
 
 ## Pilotage administrateur — #656
 
-La migration V31 crée ARG_PRODUCT_SETTING (ligne singleton, désactivée initialement). GET /api/account/admin/analytics/settings expose enabled, requestedEnabled, deploymentAllowed, version et lastCollectedAt ; le BFF ajoute bffAllowed. PATCH exige enabled (booléen), expectedVersion (entier sûr) et confirmation=true, une session ACTIVE ADMIN relue côté serveur et le double contrôle CSRF origine/cookie/en-tête, lié à la session. Aucun ancien token d’administration ne donne accès à ce réglage.
+La migration V32 crée ARG_PRODUCT_SETTING (ligne singleton, désactivée initialement). GET /api/account/admin/analytics/settings expose enabled, requestedEnabled, deploymentAllowed, version et lastCollectedAt ; le BFF ajoute bffAllowed. PATCH exige enabled (booléen), expectedVersion (entier sûr) et confirmation=true, une session ACTIVE ADMIN relue côté serveur et le double contrôle CSRF origine/cookie/en-tête, lié à la session. Aucun ancien token d’administration ne donne accès à ce réglage.
 
 L’interface demande de vérifier l’information de confidentialité avant activation. Une configuration bloquée ou une erreur de stockage ne devient jamais un succès. La désactivation du réglage mémorisé reste possible même si le déploiement bloque déjà la collecte. La version optimiste et le verrou de la ligne sérialisent les modifications concurrentes ; une version obsolète donne 409, à actualiser avant une nouvelle décision.
 

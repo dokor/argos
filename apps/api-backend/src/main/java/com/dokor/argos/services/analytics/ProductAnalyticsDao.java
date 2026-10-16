@@ -28,6 +28,26 @@ public class ProductAnalyticsDao {
             query.setTimestamp(1,Timestamp.from(now),utc());query.executeUpdate();
         }
     }
+    public void countTraffic(TrafficEvent event,Instant now) {
+        transactions.executeAndReturn(c->{
+            try(var q=c.prepareStatement("INSERT INTO ARG_PRODUCT_EVENT_COUNT(event_day,event_name,source_route,locale,placement,error_category) VALUES(?,?,?,?,?,'none') ON DUPLICATE KEY UPDATE event_count=event_count+1")) {
+                for(String name:event.visit()?List.of("traffic_page_view","traffic_visit"):List.of("traffic_page_view")) {
+                    q.setDate(1,java.sql.Date.valueOf(now.atZone(ZoneOffset.UTC).toLocalDate()));q.setString(2,name);q.setString(3,event.route());q.setString(4,event.lang());q.setString(5,event.source());q.executeUpdate();
+                }
+                return null;
+            }catch(SQLException e){throw new IllegalStateException("Traffic counter unavailable");}
+        });
+    }
+    public record TrafficRow(String day,String event,String route,String lang,String source,long count) {}
+    public List<TrafficRow> traffic(LocalDate from,LocalDate until) {
+        return transactions.executeAndReturn(c->{var rows=new ArrayList<TrafficRow>();
+            try(var q=c.prepareStatement("SELECT event_day,event_name,source_route,locale,placement,event_count FROM ARG_PRODUCT_EVENT_COUNT WHERE event_name IN ('traffic_page_view','traffic_visit') AND event_day>=? AND event_day<=? ORDER BY event_day,source_route,locale,placement")) {
+                q.setDate(1,java.sql.Date.valueOf(from));q.setDate(2,java.sql.Date.valueOf(until));
+                try(var r=q.executeQuery()){while(r.next())rows.add(new TrafficRow(r.getDate(1).toString(),r.getString(2),r.getString(3),r.getString(4),r.getString(5),r.getLong(6)));}
+                return List.copyOf(rows);
+            }catch(SQLException e){throw new IllegalStateException("Traffic statistics unavailable");}
+        });
+    }
     public void count(ProductEvent event, Instant now) {
         transactions.executeAndReturn(connection -> {
             try { if(collectionWindow(connection)==null)return null; } catch(SQLException e){throw new IllegalStateException("Measurement state unavailable");}
@@ -76,7 +96,7 @@ public class ProductAnalyticsDao {
                 query.setTimestamp(1,Timestamp.from(from),utc());query.setTimestamp(2,Timestamp.from(until),utc());
                 try(var result=query.executeQuery()){while(result.next()) rows.add(new CohortRow(result.getString(1),result.getString(2),result.getString(3),result.getString(4),instant(result,5),instant(result,6),instant(result,7),result.getTimestamp(8,utc())!=null));}
             }catch(SQLException error){throw new IllegalStateException("Product cohort read failed");}
-            try(var query=connection.prepareStatement("SELECT MIN(event_day),event_name,source_route,locale,placement,error_category,SUM(event_count) FROM ARG_PRODUCT_EVENT_COUNT WHERE event_day >= ? AND event_day <= ? GROUP BY event_name,source_route,locale,placement,error_category ORDER BY event_name,source_route,locale,placement,error_category")) {
+            try(var query=connection.prepareStatement("SELECT MIN(event_day),event_name,source_route,locale,placement,error_category,SUM(event_count) FROM ARG_PRODUCT_EVENT_COUNT WHERE event_day >= ? AND event_day <= ? AND event_name NOT IN ('traffic_page_view','traffic_visit') GROUP BY event_name,source_route,locale,placement,error_category ORDER BY event_name,source_route,locale,placement,error_category")) {
                 query.setDate(1,java.sql.Date.valueOf(from.atZone(ZoneOffset.UTC).toLocalDate()));query.setDate(2,java.sql.Date.valueOf(until.atZone(ZoneOffset.UTC).toLocalDate()));
                 try(var result=query.executeQuery()){while(result.next()) counters.add(new CounterRow(result.getDate(1).toString(),result.getString(2),result.getString(3),result.getString(4),result.getString(5),result.getString(6),result.getLong(7)));}
             }catch(SQLException error){throw new IllegalStateException("Product counters read failed");}

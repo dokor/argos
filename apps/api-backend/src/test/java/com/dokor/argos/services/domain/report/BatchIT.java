@@ -443,6 +443,13 @@ class BatchIT extends MariaDbReportFixture {
         assertEquals(1, result.counts().failed());
         assertEquals(1, result.credits().counted());
         assertEquals(1, result.credits().released());
+        var notifications = new com.dokor.argos.services.notifications.NotificationService(accounts.transactions,clock);
+        var inbox = accounts.transaction(c -> notifications.list(10,c));
+        assertEquals(2,inbox.items().size());
+        assertEquals(1,inbox.items().stream().filter(n -> n.type().equals("BATCH_PARTIAL")).count());
+        assertEquals(1,inbox.items().stream().filter(n -> n.type().equals("DISCOVERY_READY")).count());
+        assertFalse(inbox.items().stream().anyMatch(n -> n.type().startsWith("ANALYSIS_")));
+        assertEquals(0,accounts.transaction(c -> notifications.list(20,c)).unread());
         var filtered = batches.pages(a, site(batch), id(batch), 1, 0, "FAILED");
         assertEquals(1, filtered.total());
         assertEquals(Long.toString(two), filtered.items().getFirst().runId());

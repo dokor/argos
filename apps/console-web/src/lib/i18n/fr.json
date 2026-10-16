@@ -816,7 +816,7 @@
     },
     "form": {
       "urlLabel": "Adresse de la page publique à auditer",
-      "urlPlaceholder": "https://exemple.fr",
+      "urlPlaceholder": "https://www.exemple.fr/page",
       "submit": "Lancer un audit gratuit",
       "submitting": "Envoi de la demande…",
       "analysing": "Ouverture du rapport et de sa progression…",
@@ -938,7 +938,7 @@
   },
   "auditForm": {
     "urlLabel": "URL à analyser",
-    "urlPlaceholder": "https://example.com",
+    "urlPlaceholder": "https://www.exemple.fr/page",
     "submit": "Lancer l'audit",
     "submitting": "Envoi…",
     "successPrefix": "Audit créé",

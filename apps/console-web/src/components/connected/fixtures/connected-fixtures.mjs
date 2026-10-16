@@ -8,6 +8,14 @@ const counts = { selectedPages: 6, completePages: 5, partialPages: 1, failedPage
 const commonFindings = ["Script de navigation introuvable", "Image principale trop lourde", "Champ de formulaire sans nom accessible"].map((title, i) => ({ ruleKey: ["runtime.network.failed_requests", "lighthouse.audit.largest-contentful-paint", "lighthouse.audit.label"][i], definitionVersion: "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", category: i === 2 ? "a11y" : "performance", provenance: [i ? "lighthouse" : "runtime"], severity: i ? "IMPORTANT" : "CRITICAL", titleKey: "fixture", title, impact: "Une ressource ou un élément limite le parcours observé.", recommendation: "Vérifier la ressource commune, corriger son intégration et relancer les pages concernées avec le même profil.", affectedPages: 6-i, evaluatedPages: 6, selectedPages: 6, examplePageIds: ["1","2","3","4","5"], evidenceAvailable: true, notEvaluatedPages: 0, exclusions: [] }));
 const batch = { id: "201", domainId: "101", discoveryId: "301", hostname: "atelier.example", profileSnapshot: profile, createdAt: date, finishedAt: date, status: "PARTIAL", cancelRequested: false, counts, commonFindings, problematicPages: pages.slice(0,3), incompletePages: pages.slice(4,5), usage: { reserved: 0, counted: 6, released: 0 }, snapshotAt: date, version: 1, discovery: { eligiblePages: 6, excludedPages: 2, truncated: true, stopReason: "URL_LIMIT", effectiveLimits: { maxUrls: 6, maxDepth: 2, durationSeconds: 60, requestsPerHost: 2 } } };
 export function connectedFixture(path, params, baseReport, usage) {
+  if(path === "/api/account/notifications") return {items:[
+    {id:"3",type:"BATCH_PARTIAL",hostname:"atelier.example",count:6,createdAt:date,readAt:null,href:"/account/domains/101/batches/201"},
+    {id:"2",type:"DISCOVERY_READY",hostname:"atelier.example",count:8,createdAt:date,readAt:null,href:"/account/domains/new?discovery=301"},
+    {id:"1",type:"ANALYSIS_FAILED",hostname:"atelier.example",count:null,createdAt:date,readAt:date,href:"/account/runs/650"}
+  ],unread:2,cursor:"3",serverTime:date};
+  if(path === "/api/account/admin/traffic") return {enabled:true,from:"2026-10-01",until:"2026-10-16",views:480,visits:120,
+    evolution:[{date:"2026-10-01",views:220,visits:60},{date:"2026-10-02",views:260,visits:60}],
+    pages:[{value:"/",views:300},{value:"/faq",views:180}],sources:[{value:"direct",views:280},{value:"search",views:150},{value:"campaign",views:50}],languages:[{value:"fr",views:420},{value:"en",views:60}]};
   if(path === "/api/account/auth/providers") return {providers:["github","google","linkedin"],enabled:true};
   if(path === "/api/account/methods") return [{id:"1",provider:"password"},{id:"2",provider:"github"}];
   if(path === "/api/account/sessions") return [{id:"1",createdAt:date,current:true}];
@@ -29,6 +37,7 @@ export function connectedFixture(path, params, baseReport, usage) {
   if(path === "/api/account/methods") return [{id:"1",provider:"password"}];
   if(path === "/api/account/sessions") return [{id:"1",createdAt:date,current:true}];
   if(path === "/api/account/domain-discoveries"||path === "/api/account/domain-batches") return [];
+  if(path === "/api/account/domain-discoveries/limits") return {maxUrls:50,maxDepth:3,defaultUrls:20,defaultDepth:2,durationSeconds:60};
   if(path === "/api/account/analysis-profiles") return {defaultProfileId:"server-default-v1",items:[{id:"server-default-v1",label:"Default collectors",description:"Collector defaults",contractVersion:1,settingsProvenance:"COLLECTOR_DEFAULTS"}]};
   if(path === "/api/account/domains") return {items:params.get("query")&&!"atelier.example".includes(params.get("query"))?[]:[{id:"101",hostname:"atelier.example",latestBatchId:"201",latestAttemptAt:date,batchStatus:"PARTIAL",counts},{id:"102",hostname:"nouveau.example",latestBatchId:null,latestAttemptAt:null,batchStatus:null,counts:Object.fromEntries(Object.keys(counts).map(k=>[k,0]))}],total:2,limit:20,offset:0,snapshotAt:date};
   if(path === "/api/account/usage/events") return {period:params.get("period")??"2026-10",snapshotAt:date,limit:20,offset:0,total:6,items:pages.map((p,i)=>({runId:p.runId,batchId:i<4?"201":null,state:i===4?"RELEASED":i===5?"RESERVED":"COUNTED",period:"2026-10",createdAt:date,countedAt:i<4?date:null,releasedAt:i===4?date:null,url:p.normalizedUrl}))};

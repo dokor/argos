@@ -82,8 +82,8 @@ export function claimContext(request: NextRequest, reportToken: unknown): string
   return claims(request).find(item => item.hash === hash && request.cookies.has("argos_run_" + item.id))?.id ?? null;
 }
 const allowed: Record<string, RegExp> = {
-  GET: /^(?:(?:reports|shared-reports)\/[A-Za-z0-9_-]{20,512}|overview|pages|analyses\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}|domain-batches|domains\/\d{1,19}\/batches\/\d{1,19}\/progress(?:\/pages)?|domain-discoveries(?:\/(?:limits|\d{1,19}(?:\/pages)?))?|auth\/providers|me|usage(?:\/events)?|analysis-profiles|sessions|methods|urls\/\d{1,19}\/history|report-context\/[A-Za-z0-9_-]{20,512}|sites(?:\/\d{1,19}(?:\/urls)?)?|runs|runs\/\d{1,19}(?:\/report)?|auth\/oauth\/(?:google|github|linkedin)\/callback)$/,
-  POST: /^(?:runs\/\d{1,19}\/share|domain-batches|domains\/\d{1,19}\/batches\/\d{1,19}\/cancel|domain-discoveries(?:\/\d{1,19}\/cancel)?|analyses|auth\/(?:register|login|verify|resend|forgot|reset|renew|logout|reauth|confirm-email)|auth\/oauth\/(?:google|github|linkedin)\/start|sessions\/revoke-others|methods\/password|methods\/\d{1,19}\/remove|me\/archive|sites(?:\/\d{1,19}\/urls)?|runs\/\d{1,19}\/claim)$/,
+  GET: /^(?:notifications|(?:reports|shared-reports)\/[A-Za-z0-9_-]{20,512}|overview|pages|analyses\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}|domain-batches|domains\/\d{1,19}\/batches\/\d{1,19}\/progress(?:\/pages)?|domain-discoveries(?:\/(?:limits|\d{1,19}(?:\/pages)?))?|auth\/providers|me|usage(?:\/events)?|analysis-profiles|sessions|methods|urls\/\d{1,19}\/history|report-context\/[A-Za-z0-9_-]{20,512}|sites(?:\/\d{1,19}(?:\/urls)?)?|runs|runs\/\d{1,19}(?:\/report)?|auth\/oauth\/(?:google|github|linkedin)\/callback)$/,
+  POST: /^(?:notifications\/(?:through\/)?[1-9]\d{0,18}\/read|runs\/\d{1,19}\/share|domain-batches|domains\/\d{1,19}\/batches\/\d{1,19}\/cancel|domain-discoveries(?:\/\d{1,19}\/cancel)?|analyses|auth\/(?:register|login|verify|resend|forgot|reset|renew|logout|reauth|confirm-email)|auth\/oauth\/(?:google|github|linkedin)\/start|sessions\/revoke-others|methods\/password|methods\/\d{1,19}\/remove|me\/archive|sites(?:\/\d{1,19}\/urls)?|runs\/\d{1,19}\/claim)$/,
   PUT: /^report-introduction\/[A-Za-z0-9_-]{20,512}$/,
   PATCH: /^me$/,
   DELETE: /^(?:runs\/\d{1,19}\/share|sessions\/\d{1,19}|report-introduction\/[A-Za-z0-9_-]{20,512})$/,
@@ -100,6 +100,7 @@ export async function accountProxy(request: NextRequest, parts: string[]): Promi
       const value = request.method === "DELETE" ? {} : request.body ? await boundedJson(request) : {};
       if (value === null || typeof value !== "object" || Array.isArray(value)) return privateError("payload_invalid", 400);
       const parsed = value as Record<string, unknown>;
+      if(path.startsWith("notifications/") && Object.keys(parsed).length) return privateError("payload_invalid",400);
       if (request.method === "PUT" && path.startsWith("report-introduction/") && !validIntroduction(parsed)) return privateError("introduction_invalid",400);
       if(path.startsWith("admin/") && !(path === "admin/analytics/settings" ? adminMeasurement(parsed) : path.startsWith("admin/feedback/") ? feedbackTreatment(parsed) : path.endsWith("/suspension") ? adminSuspension(parsed) : adminEntitlement(parsed))) return privateError("payload_invalid",400);
       if (path === "admin/analytics/settings" && parsed.enabled === true && !measurementDeploymentAllowed()) return privateError("measurement_bff_blocked",409);
@@ -190,7 +191,7 @@ export async function accountProxy(request: NextRequest, parts: string[]): Promi
     if(!/^[1-9][0-9]{0,2}$/.test(limit)||Number(limit)>100||!/^(0|[1-9][0-9]{0,15})$/.test(offset)||!Number.isSafeInteger(Number(offset)))return privateError("payload_invalid",400);
     if(period)query.set("period",period);query.set("limit",limit);query.set("offset",offset);
   }
-  if ((["usage", "analysis-profiles"].includes(path) || path.startsWith("analyses/")) && request.nextUrl.searchParams.size) return privateError("payload_invalid",400);
+  if ((["notifications", "usage", "analysis-profiles"].includes(path) || path.startsWith("analyses/")) && request.nextUrl.searchParams.size) return privateError("payload_invalid",400);
   if (callback) {
     query.set("state", state!);
     const code = request.nextUrl.searchParams.get("code"); if (code) query.set("code", code);
