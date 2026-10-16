@@ -246,8 +246,10 @@ export default function AdminView({ runId }: { runId?: string }) {
               {c.until}
               <input name="until" type="date" defaultValue={query?.get("until") ?? ""} />
             </label>
-            <button>{c.apply}</button>
-            <button type="button" onClick={() => navigate(new URLSearchParams())}>{c.resetFilters}</button>
+            <div className={s.filterActions}>
+              <button>{c.apply}</button>
+              <button type="button" onClick={() => navigate(new URLSearchParams())}>{c.resetFilters}</button>
+            </div>
           </form>
           {!query ? <p role="alert">{c.invalid}</p> : list.loading ? (
             <p role="status">{c.loading}</p>

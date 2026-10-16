@@ -81,6 +81,7 @@ createServer((req, res) => {
   // Account roles below are fictional fixture responses, never production access.
   if (path === "/api/account/me") return send({ displayName: "Administration démo", email: "admin@atelier.example", verified: true, admin: true });
   if (path === "/api/account/usage") return send({ ...usage, available: 36 });
+  if (path === "/api/account/domain-discoveries/limits") return send({ maxUrls: 50, maxDepth: 3, defaultUrls: 20, defaultDepth: 2, durationSeconds: 60 });
   const connected = connectedFixture(path, params, fixture, { ...usage, available: 36 });
   if (connected !== undefined) return send(connected);
   if (path === "/api/account/admin/queue") return send({ queued: 3, running: 2 });
