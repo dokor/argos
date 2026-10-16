@@ -22,6 +22,7 @@ try {
       let data;
       if (path === "/api/account/me") data = { displayName: "Compte fictif", email: "fixture@atelier.example", verified: true, admin: false };
       else if (path === "/api/account/usage") data = usage;
+      else if (path === "/api/account/domain-discoveries" || path === "/api/account/domain-batches") data = [];
       else if (path === "/api/account/domains") data = { items: [{ id: "101", hostname: "atelier.example", latestBatchId: "201", latestAttemptAt: "2026-10-13T10:42:00Z", batchStatus: "PARTIAL", counts: { selectedPages: 6, completePages: 5, partialPages: 1, failedPages: 0, canceledPages: 0, unknownPages: 0, priorityPages: 6, activePages: 0 } }, { id: "102", hostname: "nouveau.example", latestBatchId: null, latestAttemptAt: null, batchStatus: null, counts: { selectedPages: 0, completePages: 0, partialPages: 0, failedPages: 0, canceledPages: 0, unknownPages: 0, priorityPages: 0, activePages: 0 } }], total: 2, limit: 20, offset: 0 };
       else if (path === "/api/account/domains/101/batches/201") data = { status: "PARTIAL", commonFindings: [{ruleKey:"a"},{ruleKey:"b"},{ruleKey:"c"}], counts: { selectedPages: 6, completePages: 5, partialPages: 1, failedPages: 0, canceledPages: 0, unknownPages: 0, priorityPages: 6, activePages: 0 }, profileSnapshot: profile };
       else return route.fulfill({ status: 404, json: {} });

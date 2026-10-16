@@ -154,6 +154,7 @@ export function response(path, params = new URLSearchParams()) {
     path === "/api/account/domain-batches"
   )
     return [];
+  if (path === "/api/account/domain-discoveries/limits") return {maxUrls:50,maxDepth:3,defaultUrls:20,defaultDepth:2,durationSeconds:60};
   if (path === "/api/account/domain-discoveries/600") return discovery;
   if (path === "/api/account/domain-discoveries/600/pages")
     return {
