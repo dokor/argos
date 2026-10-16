@@ -18,7 +18,7 @@ vi.mock("@/components/site/SiteFooter", () => ({ default: () => null }));
 
 const pages = [
   { Component: TermsPage, path: "/conditions-utilisation", enPath: "/en/terms-of-use", fr: termsFr, en: termsEn, titles: { fr: "Conditions d’utilisation d’Argos", en: "Argos terms of use" }, sections: 7 },
-  { Component: PrivacyPage, path: "/confidentialite", enPath: "/en/privacy", fr: privacyFr, en: privacyEn, titles: { fr: "Confidentialité et accès aux rapports Argos", en: "Privacy and access to Argos reports" }, sections: 12 },
+  { Component: PrivacyPage, path: "/confidentialite", enPath: "/en/privacy", fr: privacyFr, en: privacyEn, titles: { fr: "Confidentialité et accès aux rapports Argos", en: "Privacy and access to Argos reports" }, sections: 14 },
   { Component: LegalPage, path: "/informations-legales", enPath: "/en/legal-information", fr: legalFr, en: legalEn, titles: { fr: "Informations sur le service Argos", en: "Argos service information" }, sections: 3 },
 ];
 
@@ -49,7 +49,7 @@ describe("public legal pages in both languages", () => {
 
   it("keeps privacy commitments and related links available in English without signing in", () => {
     const html = renderToStaticMarkup(<LangProvider initialLang="en"><PrivacyPage /></LangProvider>);
-    for (const text of ["Argon2id", "HttpOnly", "15 minutes", "12 hours", "30-minute", "three years", "batches of 500", "90 days", "Backup retention has not been confirmed", "openid", "Gmail, Google Drive", "not retained"]) {
+    for (const text of ["Argon2id", "HttpOnly", "15 minutes", "12 hours", "30-minute", "three years", "batches of 500", "90 days", "Backup retention has not been confirmed", "openid", "Gmail, Google Drive", "not retained", "Manage cookies", "separately from product measurement", "Account notifications"]) {
       expect(html).toContain(text);
     }
     expect(html).toContain('href="/en/terms-of-use"');

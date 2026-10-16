@@ -10,6 +10,11 @@ vi.mock("next/navigation",()=>({useRouter:()=>router}));
 vi.mock("@/components/account/AccountSession",()=>({useAccountSession:()=>session}));
 vi.mock("@/lib/account-client",()=>({accountFetch:vi.fn(),AccountClientError:class extends Error {constructor(public code:string,public status:number){super(code);}}}));
 const profiles={defaultProfileId:"server-default-v1",items:[{id:"server-default-v1"}]};
+it("shows an empty, labelled URL input with an example and never launches from the placeholder",async()=>{
+  vi.mocked(accountFetch).mockResolvedValue(profiles);render(<AnalysisForm/>);
+  const input=screen.getByPlaceholderText('https://www.exemple.fr/page');expect(input).toHaveValue('');expect(input).toHaveAccessibleName();
+  await waitFor(()=>expect(accountFetch).toHaveBeenCalled());expect(vi.mocked(accountFetch).mock.calls.some(call=>call[0]==='analyses')).toBe(false);
+});
 it("recovers the exact admitted run after remount, including at exhausted quota, without posting again",async()=>{
   let accepted=false;
   vi.mocked(accountFetch).mockImplementation(async path=>{

@@ -1,4 +1,5 @@
 "use client";
+import { inputHints } from "@/lib/input-hints";
 import CollectionGaps from "./CollectionGaps";
 import { quotaResetDate } from "@/lib/quota-date";
 import { useEffect } from "react";
@@ -293,6 +294,7 @@ export default function OverviewView() {
                       <label htmlFor="overview-query">{c.search}</label>
                       <input
                         id="overview-query"
+                        placeholder={inputHints[lang].searchUrl}
                         name="query"
                         type="search"
                         maxLength={2048}

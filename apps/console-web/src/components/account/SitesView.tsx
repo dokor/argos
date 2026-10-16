@@ -1,4 +1,5 @@
 "use client";
+import { inputHints } from "@/lib/input-hints";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { accountFetch, AccountClientError } from "@/lib/account-client";
@@ -66,7 +67,7 @@ export default function SitesView({siteId}:{siteId?:string}) {
     {session.ready && !session.profile && !session.denied && <p role="alert">{t.account.errors.account_unavailable}</p>}
     {session.profile && !session.profile.verified && <><p>{t.account.pending}</p><Link href="/account">{t.account.verify}</Link></>}
     {allowed && <>
-      <form className={s.search} onSubmit={event=>{event.preventDefault();navigate(search);}}><label htmlFor="site-search">{siteId ? c.searchUrls : c.searchSites}<input id="site-search" value={search} maxLength={200} onChange={event=>setSearch(event.target.value)}/></label><button className={ui.secondary}>{c.search}</button>{query && <button className={ui.secondary} type="button" onClick={()=>navigate("")}>{c.reset}</button>}<button className={ui.secondary} type="button" disabled={reading} onClick={()=>setRevision(v=>v+1)}>{copy.refresh}</button></form>
+      <form className={s.search} onSubmit={event=>{event.preventDefault();navigate(search);}}><label htmlFor="site-search">{siteId ? c.searchUrls : c.searchSites}<input id="site-search" placeholder={siteId ? inputHints[lang].searchUrl : inputHints[lang].searchSite} value={search} maxLength={200} onChange={event=>setSearch(event.target.value)}/></label><button className={ui.secondary}>{c.search}</button>{query && <button className={ui.secondary} type="button" onClick={()=>navigate("")}>{c.reset}</button>}<button className={ui.secondary} type="button" disabled={reading} onClick={()=>setRevision(v=>v+1)}>{copy.refresh}</button></form>
       {error && <EmptyState kind="error" title={failure}><button className={ui.secondary} onClick={()=>setRevision(v=>v+1)}>{copy.retry}</button></EmptyState>}
       {reading ? <p role="status">{t.account.working}</p> : !error && !siteId ? <>
         {sites.length===0 ? <EmptyState title={query ? c.noResults : copy.empty} description={copy.intro}/> : <DataTable caption={c.sites} columns={[c.sites,copy.urls,copy.latest]}>{sites.map(item=><tr key={item.siteId}><td><Link href={"/account/sites/"+item.siteId}>{item.hostname}</Link></td><td>{item.urlCount}</td><td><StatusBadge tone={item.latestRunStatus==="FAILED" ? "danger" : "neutral"}>{status(item.latestRunStatus)}</StatusBadge><p>{date(item.latestActivityAt)}</p></td></tr>)}</DataTable>}
@@ -81,7 +82,7 @@ export default function SitesView({siteId}:{siteId?:string}) {
       </>}
       <div className={ui.actions}>{cursor && <button className={ui.secondary} onClick={()=>navigate(query)}>{c.sites}</button>}{next && !reading && <button className={ui.secondary} onClick={()=>navigate(query,next)}>{copy.next}</button>}</div>
       <details className={s.follow}><summary>{siteId ? copy.addUrl : copy.add}</summary><p id="follow-hint">{copy.hint} {copy.noAudit}</p>
-        <form className={s.form} onSubmit={add}><label htmlFor="follow-url">{copy.url}<input ref={input} id="follow-url" inputMode="url" value={url} onChange={e=>setUrl(e.target.value)} maxLength={2048} required disabled={busy} aria-describedby="follow-hint follow-feedback" aria-invalid={Boolean(formError)}/></label><button className={ui.secondary} disabled={busy}>{busy ? t.account.working : siteId ? copy.addUrl : copy.add}</button></form>
+        <form className={s.form} onSubmit={add}><label htmlFor="follow-url">{copy.url}<input ref={input} id="follow-url" placeholder={inputHints[lang].url} inputMode="url" value={url} onChange={e=>setUrl(e.target.value)} maxLength={2048} required disabled={busy} aria-describedby="follow-hint follow-feedback" aria-invalid={Boolean(formError)}/></label><button className={ui.secondary} disabled={busy}>{busy ? t.account.working : siteId ? copy.addUrl : copy.add}</button></form>
         <p id="follow-feedback" role={formError ? "alert" : "status"}>{formError ? formFailure : message}</p>
         {formError==="hostname_mismatch" && <Link href="/account/sites">{copy.add}</Link>}
       </details>

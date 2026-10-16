@@ -2,3 +2,6 @@
 
 .banner { max-height: calc(100dvh - 16px); overflow-y: auto; }
 .settings { max-width: calc(100vw - 16px); overflow-wrap: anywhere; }
+.banner fieldset { margin-block: 12px; padding: 12px; border: 1px solid var(--argos-border); }
+.banner label { display: inline-flex; gap: 10px; align-items: center; min-height: 44px; margin-inline-end: 20px; }
+.banner input { width: 20px; height: 20px; }

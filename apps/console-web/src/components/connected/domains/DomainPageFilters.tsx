@@ -1,4 +1,5 @@
 "use client";
+import { inputHints } from "@/lib/input-hints";
 import type { FormEventHandler } from "react";
 import Link from "@/components/LocalizedLink";
 import { useDomainText } from "./DomainUi";
@@ -12,7 +13,7 @@ export default function DomainPageFilters({ query, base, onSubmit }: { query: UR
   const advanced = ["severity","status","completeness"].filter(key => query.has(key));
   return <form className={d.pageFilters} onSubmit={onSubmit}>
     <div className={d.filters}>
-      <label>{c.query}<input name="query" type="search" maxLength={2048} defaultValue={query.get("query") ?? ""}/></label>
+      <label>{c.query}<input name="query" type="search" placeholder={inputHints[lang].searchUrl} maxLength={2048} defaultValue={query.get("query") ?? ""}/></label>
       {select("scope",c.scopeFilter,{ all:c.all,problematic:c.priority,incomplete:c.incomplete },"all",false)}
       {select("sort",c.sort,{priority:c.prioritySort,url:c.urlSort},"priority",false)}
     </div>
