@@ -57,7 +57,7 @@ Une relance d'une clé canonique HTTP utilise HTTP ; elle ne déclenche pas ZAP 
 la même clé. Tech contourne son cache de signatures lors d'une relance ciblée.
 Une analyse complète conserve le cache existant des seules signatures de stack.
 
-La migration V32 ajoute `ARG_AUDIT_RUN.execution_scope` ; NULL signifie analyse
+La migration V33 ajoute `ARG_AUDIT_RUN.execution_scope` ; NULL signifie analyse
 complète pour les runs historiques. Les modules hors périmètre sont `SKIPPED`,
 y compris au redémarrage d'un worker. La version et l'empreinte du score restent
 persistées. Le rapport interne conserve `executionScope`, `executedModules`,
@@ -110,7 +110,7 @@ Sources publiques des signatures et limites :
 `AuditScopeTest` couvre le catalogue multi-source, le contexte HTTP frais d'un
 contrôle HTML, l'exclusion du score hors périmètre, une panne et la comparabilité.
 La suite existante `AuditProcessorServiceTest` couvre la relance complète.
-`AuditScopeIT` vérifie migration V31→V32, lecture QueryDSL, jeton et progression
+`AuditScopeIT` vérifie migration V32→V33, lecture QueryDSL, jeton et progression
 après reprise ; `UsageIT` vérifie le quota des relances ciblées sur MariaDB 11.4.
 `HostingDetectorTest` couvre CDN, plateformes, serveur partagé, conflit et absence
 de données. Les tests frontend couvrent le sélecteur, les erreurs, les preuves

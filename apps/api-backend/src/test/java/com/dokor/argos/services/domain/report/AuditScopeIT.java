@@ -25,7 +25,7 @@ class AuditScopeIT extends MariaDbReportFixture {
         assertTrue(runs.findByReportToken(created.reportToken()).isPresent());
     }
     @Test void upgradesExistingQueuedRowsWithoutChangingTheirScopeOrToken() throws Exception {
-        var old=Flyway.configure().dataSource(source).cleanDisabled(false).target("31").load();old.clean();old.migrate();
+        var old=Flyway.configure().dataSource(source).cleanDisabled(false).target("32").load();old.clean();old.migrate();
         sql("INSERT INTO ARG_DOMAIN(id,hostname) VALUES(1,'example.com')");
         sql("INSERT INTO ARG_AUDIT(id,domain_id,input_url,normalized_url) VALUES(1,1,'https://example.com','https://example.com')");
         sql("INSERT INTO ARG_AUDIT_RUN(id,audit_id,status,report_token_hash) VALUES(1,1,'QUEUED',UNHEX(SHA2('existing-fixture',256)))");
