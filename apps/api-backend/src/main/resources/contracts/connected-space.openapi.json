@@ -7477,7 +7477,11 @@
           "oldState",
           "newState",
           "reasonCode",
-          "requestId"
+          "requestId",
+          "actorDisplayName",
+          "actorEmail",
+          "targetDisplayName",
+          "targetEmail"
         ],
         "properties": {
           "id": {
@@ -7576,6 +7580,30 @@
             "type": "string",
             "maxLength": 64,
             "nullable": true
+          },
+          "actorDisplayName": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 320,
+            "description": "Current identity, resolved only for authorized administrators. Null for missing or archived accounts."
+          },
+          "actorEmail": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 320,
+            "description": "Current identity, resolved only for authorized administrators. Null for missing or archived accounts."
+          },
+          "targetDisplayName": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 320,
+            "description": "Current identity, resolved only for authorized administrators. Null for missing or archived accounts."
+          },
+          "targetEmail": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 320,
+            "description": "Current identity, resolved only for authorized administrators. Null for missing or archived accounts."
           }
         }
       },

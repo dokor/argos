@@ -138,6 +138,39 @@ class AccountAdminAccessTest {
         denied(401, authorization);
     }
 
+    private AdminService journal() {
+        return new AdminService(dao,sessions,null,null,null,new ObjectMapper(),clock);
+    }
+
+    @Test void journalReadsRequireAnActiveAdministratorBeforeQueryingIdentities() throws Exception {
+        assertThrows(AccountError.class,()->journal().events(null,10,null));
+        user.setRole("USER");
+        assertThrows(AccountError.class,()->journal().events(authorization,10,null));
+        user.setRole("ADMIN");user.setState("ARCHIVED");
+        assertThrows(AccountError.class,()->journal().events(authorization,10,null));
+        verify(connection,never()).prepareStatement(anyString());
+    }
+
+    @Test void journalProjectsCurrentIdentitiesAndExactIdsWithOneStatementPerPage() throws Exception {
+        var statement=mock(java.sql.PreparedStatement.class);
+        var rows=mock(java.sql.ResultSet.class);
+        var meta=mock(java.sql.ResultSetMetaData.class);
+        when(connection.prepareStatement(anyString())).thenReturn(statement);
+        when(statement.executeQuery()).thenReturn(rows);when(rows.getMetaData()).thenReturn(meta);
+        var names=List.of("id","actorId","targetId","actorDisplayName","actorEmail","targetDisplayName","targetEmail");
+        when(meta.getColumnCount()).thenReturn(names.size());
+        Object[] values={9L,9007199254740993L,9007199254740993L,"Admin","admin@example.com",null,null};
+        for(int n=1;n<=names.size();n++){when(meta.getColumnLabel(n)).thenReturn(names.get(n-1));when(rows.getObject(n)).thenReturn(values[n-1]);}
+        when(rows.next()).thenReturn(true,false);
+        var page=journal().events(authorization,10,null);
+        assertEquals("9007199254740993",page.items().getFirst().get("actorId"));
+        assertEquals("Admin",page.items().getFirst().get("actorDisplayName"));
+        assertEquals("admin@example.com",page.items().getFirst().get("actorEmail"));
+        assertNull(page.items().getFirst().get("targetDisplayName"));assertNull(page.items().getFirst().get("targetEmail"));
+        assertNull(page.nextCursor());
+        verify(connection,times(1)).prepareStatement(argThat(sql->sql.contains("LEFT JOIN ARG_ACCOUNT_USER actor")&&sql.contains("LEFT JOIN ARG_ACCOUNT_USER target")&&sql.contains("actor.state<>'ARCHIVED'")&&sql.contains("target.state<>'ARCHIVED'")));
+    }
+
     @Test void disabledAccountsCannotInitializeAnAdministrativeSession() {
         var disabled = new AccountSettings(ConfigFactory.parseMap(Map.of("account.enabled", false)));
         var disabledSigner = new AccountSessionSigner(disabled, new ObjectMapper(), clock);

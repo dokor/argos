@@ -323,6 +323,10 @@ export type AdminEvent = {
   readonly newState: AccountState | null;
   readonly reasonCode: AdminReason | null;
   readonly requestId: string | null;
+  readonly actorDisplayName: string | null;
+  readonly actorEmail: string | null;
+  readonly targetDisplayName: string | null;
+  readonly targetEmail: string | null;
 };
 
 export type EntitlementOptions = {

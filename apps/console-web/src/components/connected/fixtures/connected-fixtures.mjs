@@ -8,6 +8,17 @@ const counts = { selectedPages: 6, completePages: 5, partialPages: 1, failedPage
 const commonFindings = ["Script de navigation introuvable", "Image principale trop lourde", "Champ de formulaire sans nom accessible"].map((title, i) => ({ ruleKey: ["runtime.network.failed_requests", "lighthouse.audit.largest-contentful-paint", "lighthouse.audit.label"][i], definitionVersion: "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", category: i === 2 ? "a11y" : "performance", provenance: [i ? "lighthouse" : "runtime"], severity: i ? "IMPORTANT" : "CRITICAL", titleKey: "fixture", title, impact: "Une ressource ou un élément limite le parcours observé.", recommendation: "Vérifier la ressource commune, corriger son intégration et relancer les pages concernées avec le même profil.", affectedPages: 6-i, evaluatedPages: 6, selectedPages: 6, examplePageIds: ["1","2","3","4","5"], evidenceAvailable: true, notEvaluatedPages: 0, exclusions: [] }));
 const batch = { id: "201", domainId: "101", discoveryId: "301", hostname: "atelier.example", profileSnapshot: profile, createdAt: date, finishedAt: date, status: "PARTIAL", cancelRequested: false, counts, commonFindings, problematicPages: pages.slice(0,3), incompletePages: pages.slice(4,5), usage: { reserved: 0, counted: 6, released: 0 }, snapshotAt: date, version: 1, discovery: { eligiblePages: 6, excludedPages: 2, truncated: true, stopReason: "URL_LIMIT", effectiveLimits: { maxUrls: 6, maxDepth: 2, durationSeconds: 60, requestsPerHost: 2 } } };
 export function connectedFixture(path, params, baseReport, usage) {
+  if(path === "/api/account/auth/providers") return {providers:["github","google","linkedin"],enabled:true};
+  if(path === "/api/account/methods") return [{id:"1",provider:"password"},{id:"2",provider:"github"}];
+  if(path === "/api/account/sessions") return [{id:"1",createdAt:date,current:true}];
+  if(path === "/api/account/admin/events") return {items:[
+    {id:"2",actorId:"900",targetId:"101",actorDisplayName:"Administration démo",actorEmail:"admin@atelier.example",targetDisplayName:null,targetEmail:"client@atelier.example",oldOffer:"FREE",newOffer:"PRO",oldLimit:null,newLimit:100,reasonCode:"PLAN_ADJUSTMENT",createdAt:date},
+    {id:"1",actorId:"900",targetId:"102",actorDisplayName:"Administration démo",actorEmail:"admin@atelier.example",targetDisplayName:null,targetEmail:null,oldOffer:"FREE",newOffer:"FREE",oldLimit:100,newLimit:0,reasonCode:"ABUSE_REVIEW",createdAt:date}
+  ],nextCursor:null};
+  if(path === "/api/account/runs/650") return {status:"RUNNING",siteId:"101",createdAt:date,startedAt:date,reportAvailability:"PENDING",moduleStatuses:JSON.stringify([
+    {id:"http",status:"COMPLETED"},{id:"html",status:"RUNNING"},{id:"runtime",status:"PENDING"},{id:"lighthouse",status:"FAILED"},{id:"ssl",status:"PARTIAL"},{id:"observatory",status:"TIMEOUT"},{id:"zap",status:"SKIPPED"},{id:"tech",status:"UNRECOGNIZED"}
+  ])};
+
   if(path === "/api/account/admin/runs/401") return {id:"401",userId:"101",site:"atelier.example",status:"COMPLETED",createdAt:date,reportAvailable:true,modules:{http:"COMPLETED",ssl:"FAILED",observatory:"FAILED",zap:"FAILED"},failureCode:null,attempts:1};
   if(path === "/api/account/admin/runs/401/report") {
     const report=baseReport("review-partial");

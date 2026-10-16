@@ -1,4 +1,5 @@
 "use client";
+import ExecutionStatusBadge from "@/components/connected/ExecutionStatusBadge";
 import RunClaim from "@/components/account/RunClaim";
 
 import React, { useEffect, useRef, useState } from "react";
@@ -249,7 +250,7 @@ export default function AuditProgressView({ token, initialStatus = null }: Props
               <li key={m.id} className={`${s.moduleRow} ${s[`status_${m.status.toLowerCase()}`]}`}>
                 <StatusIcon status={m.status} labels={tp.icon} />
                 <span className={s.moduleLabel}>{m.label}</span>
-                <span className={s.moduleStatus}>{tp.status[m.status]}</span>
+                <ExecutionStatusBadge state={m.status}/>
               </li>
             ))}
           </ul>

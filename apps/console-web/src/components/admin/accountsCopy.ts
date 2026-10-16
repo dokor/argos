@@ -66,7 +66,9 @@ export const accountsCopy = {
     retention:
       "Conservation : 90 jours. Auteur, cible, motif et valeurs avant/après sont enregistrés dans la même transaction.",
     actor: "Auteur",
-    target: "Compte",
+    target: "Compte concerné",
+    unavailableAccount: "Compte indisponible",
+    currentIdentity: "Les identités affichées sont celles actuellement associées aux ID du journal.",
     legacy: "Événement antérieur : motif et état non enregistrés.",
     reauth: "Confirmez votre identité pour poursuivre.",
     password: "Mot de passe actuel",
@@ -175,7 +177,9 @@ export const accountsCopy = {
     retention:
       "Retention: 90 days. Actor, target, reason and before/after values are recorded in the same transaction.",
     actor: "Actor",
-    target: "Account",
+    target: "Affected account",
+    unavailableAccount: "Account unavailable",
+    currentIdentity: "Displayed identities are those currently associated with the log IDs.",
     legacy: "Older event: reason and state were not recorded.",
     reauth: "Confirm your identity to continue.",
     password: "Current password",

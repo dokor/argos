@@ -519,6 +519,7 @@ function AdminJournal({ id }: { id?: string }) {
   return (
     <Surface title={c.journal}>
       <p className={a.meta}>{c.retention}</p>
+      <p className={a.meta}>{c.currentIdentity}</p>
       {data.error && (
         <ErrorNotice
           code={data.error}
@@ -539,8 +540,10 @@ function AdminJournal({ id }: { id?: string }) {
                       {e.reasonCode ? c.reasons[e.reasonCode] : c.legacy}
                     </strong>
                     <p className={a.meta}>
-                      {new Date(e.createdAt).toLocaleString(lang)} · {c.actor} #
-                      {e.actorId} · {c.target} #{e.targetId}
+                      {new Date(e.createdAt).toLocaleString(lang)} · {c.actor} : {" "}
+                      <span title={"#" + e.actorId}>{e.actorDisplayName?.trim() || e.actorEmail?.trim() || `${c.unavailableAccount} · #${e.actorId}`}</span>
+                      {" · "}{c.target} : {" "}
+                      <span title={"#" + e.targetId}>{e.targetDisplayName?.trim() || e.targetEmail?.trim() || `${c.unavailableAccount} · #${e.targetId}`}</span>
                     </p>
                     <p>
                       {c.before}: {e.oldState ? c.states[e.oldState] : "—"} ·{" "}

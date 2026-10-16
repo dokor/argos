@@ -1,5 +1,6 @@
 "use client";
 import CollectorDiagnostics from "./CollectorDiagnostics";
+import ExecutionStatusBadge from "@/components/connected/ExecutionStatusBadge";
 import AdminNavigation from "./AdminNavigation";
 import { adminQuery, safeAdminRunReturn } from "@/lib/admin-request";
 import { localizedPath } from "@/lib/i18n/routes";
@@ -85,7 +86,7 @@ function stateLabel(value: string | undefined, c: AdminCopy) {
   return value ? (c.statuses[value as keyof typeof c.statuses] ?? value) : "—";
 }
 export default function AdminView({ runId }: { runId?: string }) {
-  const { lang, t } = useLang(),
+  const { lang } = useLang(),
     c = copy[lang],
     session = useAccountSession(), params = useSearchParams(), router = useRouter();
   const [denied, setDenied] = useState(false),
@@ -161,9 +162,7 @@ export default function AdminView({ runId }: { runId?: string }) {
                   <div key={key}>
                     <dt>{key}</dt>
                     <dd>
-                      {t.report.progress.status[
-                        value as keyof typeof t.report.progress.status
-                      ] ?? stateLabel(value, c)}
+                      <ExecutionStatusBadge state={value}/>
                     </dd>
                   </div>
                 ))}

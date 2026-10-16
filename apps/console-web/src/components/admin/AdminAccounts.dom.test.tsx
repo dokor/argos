@@ -30,3 +30,16 @@ it("requires reauthentication and retries the same reviewed version",async()=>{m
 it("does not silently retry or overwrite after a stale version",async()=>{mode="conflict";const dialog=await review();fireEvent.click(within(dialog).getByRole("button",{name:"Confirmer la modification"}));expect(await within(dialog).findByRole("alert")).toHaveTextContent("modifié depuis");expect(within(dialog).getByRole("button",{name:"Confirmer la modification"})).toBeDisabled();expect(calls).toHaveLength(1);fireEvent.click(within(dialog).getByRole("button",{name:"Annuler"}));expect(screen.getByLabelText("Plafond individuel par mois")).toHaveValue(30);});
 it("prevents duplicate writes while a request is pending",async()=>{const dialog=await review();state.api.mockImplementation(async(_path:string,method:string)=>method==="PATCH"?new Promise(()=>{}):{});const form=within(dialog).getByRole("button",{name:"Confirmer la modification"}).closest("form")!;state.api.mockClear();fireEvent.submit(form);fireEvent.submit(form);await waitFor(()=>expect(state.api).toHaveBeenCalledTimes(1));});
 it("uses the separate suspension endpoint with the same concurrency controls",async()=>{render(<LangProvider><AdminAccounts id={user.id}/></LangProvider>);await screen.findByLabelText("Plafond individuel par mois");fireEvent.click(screen.getByRole("button",{name:"Suspendre le compte"}));const dialog=screen.getByRole("dialog");fireEvent.change(within(dialog).getByLabelText("Motif de la modification"),{target:{value:"ABUSE_REVIEW"}});fireEvent.click(within(dialog).getByRole("checkbox"));fireEvent.click(within(dialog).getByRole("button",{name:"Confirmer la modification"}));await screen.findByText("Modification enregistrée et journalisée.");expect(state.api).toHaveBeenCalledWith("admin/users/"+user.id+"/suspension","POST",{suspended:true,expectedVersion:7,reasonCode:"ABUSE_REVIEW",confirmation:true});});
+
+it.each(["fr", "en"] as const)("resolves current journal identities, falls back safely and keeps exact IDs (%s)", async lang => {
+ state.api.mockResolvedValue({items:[{id:"1",actorId:user.id,targetId:"9223372036854775807",actorDisplayName:" Admin ",actorEmail:"private@example.com",targetDisplayName:"  ",targetEmail:"client@example.com",oldOffer:"FREE",newOffer:"PRO",oldLimit:null,newLimit:null,createdAt:user.createdAt},{id:"2",actorId:"42",targetId:"42",actorDisplayName:null,actorEmail:null,targetDisplayName:null,targetEmail:null,oldOffer:"FREE",newOffer:"FREE",oldLimit:null,newLimit:null,createdAt:user.createdAt}],nextCursor:null});
+ render(<LangProvider initialLang={lang}><AdminAccounts journal/></LangProvider>);
+ expect(await screen.findByText("Admin")).toHaveAttribute("title", "#"+user.id);
+ expect(screen.getByText("client@example.com")).toHaveAttribute("title", "#9223372036854775807");
+ expect(screen.queryByText("private@example.com")).not.toBeInTheDocument();
+ expect(screen.getAllByText((lang==="fr" ? "Compte indisponible" : "Account unavailable")+" · #42")).toHaveLength(2);
+ expect(screen.getByText(lang==="fr" ? /actuellement associées/ : /currently associated/)).toBeInTheDocument();
+});
+it("does not request the journal for a non-admin", () => {
+ state.admin=false;render(<LangProvider><AdminAccounts journal/></LangProvider>);expect(state.api).not.toHaveBeenCalled();
+});

@@ -118,18 +118,18 @@
   transition: border-color 0.2s;
 
   &.status_running {
-    border-color: t.$brand;
-    background: rgba(99, 102, 241, 0.08);
+    border-color: var(--argos-status-info);
+    background: var(--argos-status-info-bg);
   }
 
   &.status_completed {
-    border-color: #10b981;
-    background: rgba(16, 185, 129, 0.06);
+    border-color: var(--argos-status-success);
+    background: var(--argos-status-success-bg);
   }
 
   &.status_failed {
-    border-color: #ef4444;
-    background: rgba(239, 68, 68, 0.06);
+    border-color: var(--argos-status-danger);
+    background: var(--argos-status-danger-bg);
   }
 }
 
@@ -148,14 +148,14 @@
 // ── Status icons ──────────────────────────────────────────────────────────────
 
 .iconOk {
-  color: #10b981;
+  color: var(--argos-status-success);
   font-size: 0.875rem;
   width: 18px;
   text-align: center;
 }
 
 .iconFail {
-  color: #ef4444;
+  color: var(--argos-status-danger);
   font-size: 0.875rem;
   width: 18px;
   text-align: center;
@@ -169,7 +169,7 @@
 }
 
 .iconRunning {
-  color: t.$brand;
+  color: var(--argos-status-info);
   display: flex;
   align-items: center;
   width: 18px;
