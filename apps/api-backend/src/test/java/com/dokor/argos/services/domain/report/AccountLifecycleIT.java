@@ -1,5 +1,7 @@
 package com.dokor.argos.services.domain.report;
 
+import com.dokor.argos.services.security.AdminReadAccess;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -121,7 +123,7 @@ class AccountLifecycleIT extends MariaDbReportFixture {
                         reader,
                         tokens,
                         clock,
-                        settings, new AccountSitesService(dao,sessions,new UrlNormalizer(),new DomainService(new DomainDao(dao.transactions)),new AuditDao(dao.transactions),clock));
+                        settings, new AccountSitesService(dao,sessions,new UrlNormalizer(),new DomainService(new DomainDao(dao.transactions)),new AuditDao(dao.transactions),clock),new AccountRunReadDao(dao.transactions));
         oauthClient = mock(AccountOAuthClient.class);
         when(oauthClient.configured(anyString())).thenReturn(true);
         when(oauthClient.authorize(anyString(), anyString(), anyString(), anyString()))
@@ -149,6 +151,27 @@ class AccountLifecycleIT extends MariaDbReportFixture {
         void run() throws Exception;
     }
 
+    @Test
+    void personalStatusReadsExcludeInternalPayloadsOnMariaDb() throws Exception {
+        var owner = user("read-owner@example.com", true);
+        var other = user("read-other@example.com", true);
+        var created = personal.create("https://example.com", bearer(owner), CSRF).audit();
+        sql("UPDATE ARG_AUDIT_RUN SET result_json=REPEAT('x',1048576),last_error='internal-only',claim_token='private-worker' WHERE id=" + created.runId());
+        var projection = dao.transaction(c -> new AccountRunReadDao(dao.transactions)
+            .owned(created.runId(), owner.context().user().getId(), c).orElseThrow());
+        assertEquals(created.auditId(), projection.getAuditId());
+        assertNull(projection.getResultJson());
+        assertNull(projection.getLastError());
+        assertNull(projection.getReportTokenHash());
+        assertNull(projection.getClaimToken());
+        var status = personal.list(bearer(owner), 1).getFirst();
+        assertEquals(Set.of("runId", "status", "createdAt", "moduleStatuses", "startedAt", "finishedAt", "profileSnapshot"), status.keySet());
+        assertEquals(Long.toString(created.runId()), status.get("runId"));
+        assertEquals("QUEUED", status.get("status"));
+        assertEquals("PENDING", personal.get(bearer(owner), created.runId()).get("reportAvailability"));
+        assertTrue(personal.list(bearer(other), 100).isEmpty());
+        error(404, () -> personal.get(bearer(other), created.runId()));
+    }
     @Test
     void localizedEmailsCompleteVerificationAndResetWithoutReusingTokens() {
         String email = "localized@example.com";
@@ -1042,7 +1065,7 @@ class AccountLifecycleIT extends MariaDbReportFixture {
             config.register(new com.dokor.argos.webservices.api.feedback.FeedbackWs(feedback(),new AccountCsrf(settings),new AccountRateLimiter(dao,tokens,clock,settings)));
             config.register(new com.dokor.argos.webservices.api.feedback.FeedbackAdminWs(feedback(),new AccountCsrf(settings)));
             config.register(new com.dokor.argos.webservices.api.account.AccountReportIntroductionWs(new AccountReportIntroductionService(sessions,mapper,clock,tokens),new AccountCsrf(settings)));
-            var sharing = new ReportSharingService(dao,sessions,reader,tokens,clock);
+            var sharing = new ReportSharingService(dao,sessions,reader,tokens,clock,new com.dokor.argos.db.dao.ReportSharingDao());
             config.register(new com.dokor.argos.webservices.api.account.ReportAccessWs(sharing,new AccountCsrf(settings)));
             config.register(new com.dokor.argos.webservices.api.report.SharedReportsWs(sharing));
             var admin = mock(com.dokor.argos.services.configuration.ConfigurationService.class);
@@ -1051,7 +1074,7 @@ class AccountLifecycleIT extends MariaDbReportFixture {
                     new com.dokor.argos.webservices.api.audits.AuditsWs(
                             auditService,
                             mock(AuditQueryService.class),
-                            new com.dokor.argos.webservices.api.audits.AdminReadAccess(admin),
+                            new AdminReadAccess(admin),
                             reader,
                             null,
                             personal,
@@ -1636,7 +1659,7 @@ class AccountLifecycleIT extends MariaDbReportFixture {
         var usage=new UsageService(dao.transactions,new UsagePolicy(ConfigFactory.parseString(config)),clock);
         var runDao=new AuditRunDao(dao.transactions,usage);
         auditService=new AuditService(new AuditDao(dao.transactions),new AuditRunService(runDao,tokens,mapper),new UrlNormalizer(),new DomainService(new DomainDao(dao.transactions)));
-        personal=new AccountRunsService(dao,sessions,auditService,runDao,reader,tokens,clock,settings,sites());
+        personal=new AccountRunsService(dao,sessions,auditService,runDao,reader,tokens,clock,settings,sites(),new AccountRunReadDao(dao.transactions));
     }
     private long count(String table) throws Exception {
         try(var c=source.getConnection();var s=c.createStatement();var r=s.executeQuery("SELECT COUNT(*) FROM "+table)) {r.next();return r.getLong(1);}
