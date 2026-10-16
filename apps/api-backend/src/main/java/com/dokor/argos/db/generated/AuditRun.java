@@ -10,6 +10,11 @@ import com.querydsl.sql.Column;
 @Generated("com.coreoz.plume.db.querydsl.generation.IdBeanSerializer")
 public class AuditRun extends com.coreoz.plume.db.querydsl.crud.CrudEntityQuerydsl {
 
+    @Column("execution_scope")
+    private String executionScope;
+    public String getExecutionScope() { return executionScope; }
+    public void setExecutionScope(String value) { executionScope = value; }
+
     @Column("cancel_requested")
     private Boolean cancelRequested = false;
     public Boolean getCancelRequested() { return cancelRequested; }

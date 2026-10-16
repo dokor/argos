@@ -35,6 +35,11 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
     }
     public com.dokor.argos.services.account.UsageService usage() { return usage; }
 
+    /** Reset needs the scope alone, without loading a potentially large private result. */
+    public String executionScope(long runId) {
+        return transactionManager.selectQuery().select(RUN.executionScope).from(RUN).where(RUN.id.eq(runId)).fetchOne();
+    }
+
     /** Admission and terminal publication both acquire queue before usage. */
     public void lockAdmission(Connection c) {
         try(var s=c.prepareStatement("SELECT id FROM ARG_AUDIT_ADMISSION WHERE id=1 FOR UPDATE");var r=s.executeQuery()) {

@@ -323,6 +323,8 @@ public class TechModuleAnalyzer {
         data.put("cloudflare", cloudflare);
         data.put("serverHeader", serverHeader);
         data.put("xPoweredBy", poweredBy);
+        // Fresh for every final response, independently of the stack cache.
+        data.put("hosting", HostingDetector.detect(headers));
         data.put("durationMs", durationMs);
         data.put("partial", html == null || html.isBlank());
 

@@ -53,6 +53,7 @@ public class AuditsWs {
     private com.dokor.argos.services.account.AccountRunsService accountRuns;
     private com.dokor.argos.services.account.AccountSettings accountSettings;
     private com.dokor.argos.services.account.AccountCsrf accountCsrf;
+    private com.dokor.argos.services.analysis.AuditScopeCatalogue scopes = new com.dokor.argos.services.analysis.AuditScopeCatalogue(new com.dokor.argos.services.analysis.scoring.DefaultScorePolicy());
     @jakarta.ws.rs.core.Context private jakarta.inject.Provider<jakarta.ws.rs.container.ContainerRequestContext> requestContext;
 
     public AuditsWs(AuditService audits, AuditQueryService query, AdminReadAccess access, ReportReadService reports) { this(audits,query,access,reports,null); }
@@ -68,8 +69,16 @@ public class AuditsWs {
     public AuditsWs(AuditService auditService,AuditQueryService query,AdminReadAccess access,ReportReadService reports,
         com.dokor.argos.services.analytics.ProductAnalyticsService analytics,
         com.dokor.argos.services.account.AccountRunsService accountRuns,
+        com.dokor.argos.services.account.AccountSettings settings,com.dokor.argos.services.account.AccountCsrf csrf,
+        com.dokor.argos.services.analysis.AuditScopeCatalogue scopes) {
+        this(auditService,query,access,reports,analytics);this.accountRuns=accountRuns;this.accountSettings=settings;this.accountCsrf=csrf;this.scopes=scopes;
+    }
+    public AuditsWs(AuditService auditService,AuditQueryService query,AdminReadAccess access,ReportReadService reports,
+        com.dokor.argos.services.analytics.ProductAnalyticsService analytics,
+        com.dokor.argos.services.account.AccountRunsService accountRuns,
         com.dokor.argos.services.account.AccountSettings settings,com.dokor.argos.services.account.AccountCsrf csrf) {
-        this(auditService,query,access,reports,analytics);this.accountRuns=accountRuns;this.accountSettings=settings;this.accountCsrf=csrf;
+        this(auditService,query,access,reports,analytics,accountRuns,settings,csrf,
+            new com.dokor.argos.services.analysis.AuditScopeCatalogue(new com.dokor.argos.services.analysis.scoring.DefaultScorePolicy()));
     }
 
     /**
@@ -101,8 +110,9 @@ public class AuditsWs {
         try {
             String credential=requestContext==null?null:requestContext.get().getHeaderString("X-Argos-Account-Session");
             com.dokor.argos.services.account.AccountRunsService.Created personal = accountRuns!=null && (accountSettings.enabled()||credential!=null)
-                ? accountRuns.create(request.url(),credential,credential==null?null:accountCsrf.require(requestContext.get())) : null;
-            var created=personal==null?auditService.createAudit(request.url()):personal.audit();
+                ? (request.scope() == null ? accountRuns.create(request.url(),credential,credential==null?null:accountCsrf.require(requestContext.get()))
+                    : accountRuns.create(request.url(),credential,credential==null?null:accountCsrf.require(requestContext.get()),request.scope())) : null;
+            var created=personal==null ? (request.scope()==null ? auditService.createAudit(request.url()) : auditService.createAudit(request.url(),null,null,request.scope())) : personal.audit();
             if(analytics!=null) analytics.attribute(created.runId(),request.analytics(),authorization);
             var response=Response.ok(AuditResponseMapper.created(created)).header("Cache-Control","private, no-store");
             if(personal!=null&&personal.proof()!=null)response.header("X-Argos-Run-Proof",personal.proof());
@@ -118,6 +128,12 @@ public class AuditsWs {
     /** Délègue à {@link UrlNormalizer#sanitizeForLog} pour éviter la duplication. */
     private static String sanitizeForLog(String url) {
         return UrlNormalizer.sanitizeForLog(url);
+    }
+
+    @GET @Path("/scope-catalogue")
+    public Response scopeCatalogue() {
+        return Response.ok(Map.of("version","audit-scope-v1","checkKeys",scopes.executableCheckKeys()))
+            .header("Cache-Control","public, max-age=300").build();
     }
 
     /**

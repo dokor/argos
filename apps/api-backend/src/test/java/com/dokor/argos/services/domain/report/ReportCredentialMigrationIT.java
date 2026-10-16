@@ -26,10 +26,10 @@ class ReportCredentialMigrationIT extends MariaDbReportFixture {
             assertTrue(rows.next()); assertEquals(0,rows.getInt(1));
         }
         assertEquals("example.com",historicalStoredReport("synthetic-existing").orElseThrow().domain());
-        assertTrue(runs.findByReportToken("synthetic-existing").isPresent());
-        assertTrue(runs.findByReportToken("synthetic-pending").isPresent());
-        assertTrue(runs.findByReportToken("synthetic-before-v5").isPresent());
-        assertEquals("FAILED",runs.getRun(5).orElseThrow().getStatus());
+        assertTrue(historicalRunTokenPresent("synthetic-existing"));
+        assertTrue(historicalRunTokenPresent("synthetic-pending"));
+        assertTrue(historicalRunTokenPresent("synthetic-before-v5"));
+        assertEquals("FAILED",historicalRunStatus(5));
     }
     @Test void creationPersistsOnlyHashAndWorkerCanPublishAndRetryWithoutClearToken() throws Exception {
         var created=runs.createQueuedRun(1,Instant.now());

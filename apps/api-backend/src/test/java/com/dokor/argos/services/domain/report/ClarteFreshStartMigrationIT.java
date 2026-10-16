@@ -32,12 +32,14 @@ class ClarteFreshStartMigrationIT extends MariaDbReportFixture {
         assertEquals(schema, schema(), "Columns, indexes and constraints remain in place");
         assertEquals(1, number("SELECT COUNT(*) FROM flyway_schema_history WHERE version='27' AND success=1 AND checksum IS NOT NULL"));
         assertTrue(historicalStoredReport("synthetic-existing").isEmpty());
-        assertTrue(runs.findByReportToken("synthetic-pending").isEmpty());
+        assertFalse(historicalRunTokenPresent("synthetic-pending"));
         assertThrows(SQLException.class, () -> sql("INSERT INTO ARG_ACCOUNT_SITE(id,owner_user_id,domain_id,created_at) VALUES(1,10,1,NOW(3))"));
     }
 
     @Test void restartKeepsNewAccountsAuditsAndQueueState() throws Exception {
         resetVersion().migrate();
+        // Current DAOs read the current schema; V27-only assertions use SQL projections.
+        Flyway.configure().dataSource(source).load().migrate();
         sql("INSERT INTO ARG_ACCOUNT_USER(id,email,display_name,state,created_at) VALUES(20,'new@example.com','New','ACTIVE',NOW(3))");
         sql("INSERT INTO ARG_DOMAIN(id,hostname) VALUES(20,'new.example.com')");
         sql("INSERT INTO ARG_AUDIT(id,input_url,normalized_url,domain_id) VALUES(20,'https://new.example.com','https://new.example.com',20)");

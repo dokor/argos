@@ -32,6 +32,14 @@ class UsageIT extends MariaDbReportFixture {
         runDao=new AuditRunDao(tx,usage);runs=new AuditRunService(runDao,tokens,mapper);
     }
     private AuditRun reserve(long user) { return runs.createQueuedRun(1,clock.instant(),user,null).run(); }
+    @Test void targetedRerunsReserveTheSameQuotaAndCannotBypassExhaustion() {
+        var scope=new com.dokor.argos.services.analysis.AuditScope("category","seo");
+        runs.createQueuedRun(1,clock.instant(),10L,null,scope);
+        runs.createQueuedRun(1,clock.instant(),10L,null,scope);
+        assertEquals(2,view(10).reserved());
+        var rejected=assertThrows(WebApplicationException.class,()->runs.createQueuedRun(1,clock.instant(),10L,null,scope));
+        assertEquals(429,rejected.getResponse().getStatus());assertEquals(2,view(10).reserved());
+    }
     private UsageService.Snapshot view(long user) { return usage.transaction(c->usage.snapshot(user,"FREE",c)); }
     private long count(String where) throws Exception {
         try(var c=source.getConnection();var s=c.createStatement();var r=s.executeQuery("SELECT COUNT(*) FROM "+where)){r.next();return r.getLong(1);}

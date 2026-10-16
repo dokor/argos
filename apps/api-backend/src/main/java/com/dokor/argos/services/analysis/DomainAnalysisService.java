@@ -88,6 +88,11 @@ public class DomainAnalysisService {
         return techModuleAnalyzer.analyzeCurrentResponse(context, outcome.result(), logger);
     }
 
+    /** Targeted reruns promise fresh observations, including stack signatures. */
+    public AuditModuleResult runFreshTechAnalysis(AuditContext context, Logger logger) {
+        return techModuleAnalyzer.analyze(context,logger);
+    }
+
     // -------------------------
     // Helpers privés
     // -------------------------
