@@ -2,6 +2,21 @@
 // Evidence and revision rules: docs/product/editorial-provenance.md.
 export type EditorialRecord = { firstVersion: string; revised: string; translatedAt?: string; minutes: number; sourcesAnchor: string; sourceUrls: string[] };
 export const editorialPages: Record<string, EditorialRecord> = {
+  "/ressources/audit-wordpress": {
+    firstVersion: "2026-10-16", revised: "2026-10-16", translatedAt: "2026-10-16", minutes: 4,
+    sourcesAnchor: "#references",
+    sourceUrls: ["https://developer.wordpress.org/advanced-administration/performance/optimization/"],
+  },
+  "/ressources/audit-shopify": {
+    firstVersion: "2026-10-16", revised: "2026-10-16", translatedAt: "2026-10-16", minutes: 4,
+    sourcesAnchor: "#references",
+    sourceUrls: ["https://shopify.dev/docs/storefronts/themes/best-practices/performance"],
+  },
+  "/ressources/pourquoi-mon-site-ne-convertit-pas": {
+    firstVersion: "2026-10-16", revised: "2026-10-16", translatedAt: "2026-10-16", minutes: 4,
+    sourcesAnchor: "#references",
+    sourceUrls: ["https://support.google.com/analytics/answer/9267568?hl=fr", "https://www.w3.org/WAI/test-evaluate/tools/"],
+  },
   "/guides/checklist-audit-site-web": {
     "translatedAt": "2026-10-11",
     "firstVersion": "2026-10-07",
