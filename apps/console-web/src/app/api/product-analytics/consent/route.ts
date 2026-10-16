@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { CONSENT_COOKIE, enabled, sameOrigin, smallJson } from '@/lib/analytics/server';
+import { CONSENT_COOKIE, enabled, collectionEnabled, sameOrigin, smallJson } from '@/lib/analytics/server';
 export const dynamic = 'force-dynamic';
-export async function GET(request: NextRequest) { const value = request.cookies.get(CONSENT_COOKIE)?.value; return NextResponse.json({ enabled: enabled(), choice: value === 'granted' || value === 'refused' ? value : 'unset' }, { headers: { 'Cache-Control': 'private, no-store' } }); }
+export async function GET(request: NextRequest) { const value = request.cookies.get(CONSENT_COOKIE)?.value; return NextResponse.json({ enabled: await collectionEnabled(), choice: value === 'granted' || value === 'refused' ? value : 'unset' }, { headers: { 'Cache-Control': 'private, no-store' } }); }
 export async function POST(request: NextRequest) { if (!sameOrigin(request))
     return NextResponse.json({ error: 'Invalid origin' }, { status: 403 }); if (!enabled())
     return new NextResponse(null, { status: 204 }); let body: unknown; try {

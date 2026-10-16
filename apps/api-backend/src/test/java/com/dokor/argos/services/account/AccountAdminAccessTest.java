@@ -24,6 +24,32 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 /** Real JWT/session/role policy with a mocked registry; SQL/HTTP are covered by AccountLifecycleIT. */
 class AccountAdminAccessTest {
+    @Test void measurementSettingsAndRunLookupsRejectNonAdminsAndForgedCsrfBeforeStorage() throws Exception {
+        var control = new com.dokor.argos.services.analytics.ProductMeasurementControl(dao,sessions,clock,ConfigFactory.parseString("product-analytics.enabled=true"));
+        session.setCsrfHash(new TokenService().sha256("c".repeat(43)));
+        assertEquals(401,assertThrows(AccountError.class,()->control.read(null)).getResponse().getStatus());
+        assertEquals(403,assertThrows(AccountError.class,()->control.change(authorization,"d".repeat(43),new com.dokor.argos.services.analytics.ProductMeasurementControl.Change(true,0L,true))).getResponse().getStatus());
+        user.setRole("USER");
+        assertEquals(403,assertThrows(AccountError.class,()->control.read(authorization)).getResponse().getStatus());
+        assertEquals(403,assertThrows(AccountError.class,()->control.change(authorization,"c".repeat(43),new com.dokor.argos.services.analytics.ProductMeasurementControl.Change(true,0L,true))).getResponse().getStatus());
+        assertThrows(AccountError.class,()->journal().runOptions(authorization,"user","Alice",20,null));
+        verify(connection,never()).prepareStatement(anyString());
+    }
+
+    @Test void analysisListUsesOneIdentityJoinAndDropsRawUrls() throws Exception {
+        var statement=mock(java.sql.PreparedStatement.class);var rows=mock(java.sql.ResultSet.class);var meta=mock(java.sql.ResultSetMetaData.class);
+        when(connection.prepareStatement(anyString())).thenReturn(statement);when(statement.executeQuery()).thenReturn(rows);when(rows.getMetaData()).thenReturn(meta);
+        var names=List.of("id","userId","site","rawTarget","resolvedUserId","userDisplayName","userEmail","batchId","pageCount");
+        var values=java.util.Arrays.asList(42L,10L,"www.example.com","https://www.example.com/catalogue?token=secret#private",10L,"Alice","alice@example.com",null,null);
+        when(meta.getColumnCount()).thenReturn(names.size());for(int i=0;i<names.size();i++){when(meta.getColumnLabel(i+1)).thenReturn(names.get(i));when(rows.getObject(i+1)).thenReturn(values.get(i));}
+        when(rows.next()).thenReturn(true,false);
+        var result=journal().runs(authorization,"anonymous","www.example.com","FAILED","2026-10-01","2026-10-16",20,null);
+        assertEquals("https://www.example.com/catalogue",result.items().getFirst().get("displayUrl"));
+        assertEquals("Alice",result.items().getFirst().get("userDisplayName"));assertFalse(result.items().getFirst().containsKey("rawTarget"));
+        var sql=org.mockito.ArgumentCaptor.forClass(String.class);verify(connection,times(1)).prepareStatement(sql.capture());
+        assertTrue(sql.getValue().contains("LEFT JOIN ARG_ACCOUNT_USER"));assertTrue(sql.getValue().contains("u.state<>'ARCHIVED'"));
+        assertTrue(sql.getValue().contains("r.owner_user_id IS NULL"));assertTrue(sql.getValue().contains("d.hostname=?"));
+    }
     @Test void connectedProfilesUseTheRealPolicyAndRequireAnActiveVerifiedSession() {
         var policy = new com.dokor.argos.services.analysis.scoring.DefaultScorePolicy();
         var profiles = new com.dokor.argos.services.connected.ConnectedProfiles(policy);
@@ -97,7 +123,7 @@ class AccountAdminAccessTest {
         when(metricsDao.sample(any(), any())).thenReturn(new ProductAnalyticsDao.Sample(List.of(), List.of(), false));
         var analytics = new ProductAnalyticsService(ConfigFactory.parseString("product-analytics.enabled=false"),
             metricsDao, mock(AdminReadAccess.class), mock(com.dokor.argos.db.dao.AuditReportDao.class), new TokenService());
-        var endpoint = new AccountAnalyticsWs(sessions, analytics);
+        var endpoint = new AccountAnalyticsWs(sessions, analytics, mock(com.dokor.argos.services.analytics.ProductMeasurementControl.class), new AccountCsrf(settings));
         assertEquals(200, endpoint.metrics(30, authorization).getStatus());
         for (String state : List.of("USER", "PENDING", "ARCHIVED", "REVOKED", "EXPIRED")) {
             user.setState("ACTIVE"); user.setRole("ADMIN"); session.setRevokedAt(null); session.setExpiresAt(now.plusSeconds(3600));

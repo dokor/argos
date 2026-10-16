@@ -63,6 +63,8 @@ export function DomainError({
           code === "forbidden" ||
           code === "resource_unavailable"
         ? c.missing
+        : code === "discovery_target_unavailable"
+          ? c.targetUnavailable
         : code === "hostname_invalid"
           ? c.hostHint
           : code === "exclusions_invalid"
