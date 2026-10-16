@@ -22,6 +22,7 @@ try {
       let data;
       if (path === "/api/account/me") data = { displayName: "Compte fictif", email: "fixture@atelier.example", verified: true, admin: false };
       else if (path === "/api/account/usage") data = usage;
+      else if (path === "/api/account/domain-discoveries/limits") data = {maxUrls:50,maxDepth:3,defaultUrls:20,defaultDepth:2,durationSeconds:60};
       else if (path === "/api/account/domain-discoveries" || path === "/api/account/domain-batches") data = [];
       else return route.fulfill({ status: 404, json: {} });
       return route.fulfill({ json: data });

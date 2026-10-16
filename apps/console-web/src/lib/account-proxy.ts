@@ -81,7 +81,7 @@ export function claimContext(request: NextRequest, reportToken: unknown): string
   return claims(request).find(item => item.hash === hash && request.cookies.has("argos_run_" + item.id))?.id ?? null;
 }
 const allowed: Record<string, RegExp> = {
-  GET: /^(?:(?:reports|shared-reports)\/[A-Za-z0-9_-]{20,512}|overview|pages|analyses\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}|domain-batches|domains\/\d{1,19}\/batches\/\d{1,19}\/progress(?:\/pages)?|domain-discoveries(?:\/\d{1,19}(?:\/pages)?)?|auth\/providers|me|usage(?:\/events)?|analysis-profiles|sessions|methods|urls\/\d{1,19}\/history|report-context\/[A-Za-z0-9_-]{20,512}|sites(?:\/\d{1,19}(?:\/urls)?)?|runs|runs\/\d{1,19}(?:\/report)?|auth\/oauth\/(?:google|github|linkedin)\/callback)$/,
+  GET: /^(?:(?:reports|shared-reports)\/[A-Za-z0-9_-]{20,512}|overview|pages|analyses\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}|domain-batches|domains\/\d{1,19}\/batches\/\d{1,19}\/progress(?:\/pages)?|domain-discoveries(?:\/(?:limits|\d{1,19}(?:\/pages)?))?|auth\/providers|me|usage(?:\/events)?|analysis-profiles|sessions|methods|urls\/\d{1,19}\/history|report-context\/[A-Za-z0-9_-]{20,512}|sites(?:\/\d{1,19}(?:\/urls)?)?|runs|runs\/\d{1,19}(?:\/report)?|auth\/oauth\/(?:google|github|linkedin)\/callback)$/,
   POST: /^(?:runs\/\d{1,19}\/share|domain-batches|domains\/\d{1,19}\/batches\/\d{1,19}\/cancel|domain-discoveries(?:\/\d{1,19}\/cancel)?|analyses|auth\/(?:register|login|verify|resend|forgot|reset|renew|logout|reauth|confirm-email)|auth\/oauth\/(?:google|github|linkedin)\/start|sessions\/revoke-others|methods\/password|methods\/\d{1,19}\/remove|me\/archive|sites(?:\/\d{1,19}\/urls)?|runs\/\d{1,19}\/claim)$/,
   PUT: /^report-introduction\/[A-Za-z0-9_-]{20,512}$/,
   PATCH: /^me$/,
@@ -125,7 +125,7 @@ export async function accountProxy(request: NextRequest, parts: string[]): Promi
       if (/^domains\/\d{1,19}\/batches\/\d{1,19}\/cancel$/.test(path) && Object.keys(parsed).length) return privateError("payload_invalid",400);
       if (path === "domain-discoveries") {
         if (Object.keys(parsed).some(key=>!["hostname","maxUrls","maxDepth","excludedPaths"].includes(key)) || typeof parsed.hostname!=="string" || !/^[A-Za-z0-9.-]{1,253}$/.test(parsed.hostname) || ssrfError("https://"+parsed.hostname)) return privateError("hostname_invalid",400);
-        if (!Number.isInteger(parsed.maxUrls) || Number(parsed.maxUrls)<1 || Number(parsed.maxUrls)>50 || !Number.isInteger(parsed.maxDepth) || Number(parsed.maxDepth)<0 || Number(parsed.maxDepth)>3) return privateError("payload_invalid",400);
+        if (!Number.isInteger(parsed.maxUrls) || Number(parsed.maxUrls)<1 || Number(parsed.maxUrls)>1000 || !Number.isInteger(parsed.maxDepth) || Number(parsed.maxDepth)<0 || Number(parsed.maxDepth)>10) return privateError("payload_invalid",400);
         if (!Array.isArray(parsed.excludedPaths) || parsed.excludedPaths.length>50 || parsed.excludedPaths.some(p=>typeof p!=="string" || p.length>2048 || !p.startsWith("/") || /[?%#\\\x00-\x20\x7f]/.test(p) || p.includes("/../") || p.endsWith("/.."))) return privateError("exclusions_invalid",400);
         const key=request.headers.get("idempotency-key");
         if(!key || !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(key))return privateError("idempotency_key_invalid",400);

@@ -1,4 +1,5 @@
 "use client";
+import DomainTasks from "./DomainTasks";
 import DomainCommonMetric from "./DomainCommonMetric";
 import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
@@ -44,6 +45,7 @@ export default function DomainList() {
           </Link>
         }
       />
+      <DomainTasks />
       <form
         className={d.filters}
         action={lang === "en" ? "/en/account/domains" : "/account/domains"}

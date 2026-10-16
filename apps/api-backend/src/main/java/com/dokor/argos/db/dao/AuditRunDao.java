@@ -89,7 +89,9 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
                     RUN.status.eq(AuditRunStatus.QUEUED.name()),
                     RUN.claimToken.isNull()
                 )
-                .orderBy(RUN.createdAt.asc())
+                .orderBy(Expressions.dateTimeTemplate(Instant.class,
+                    "COALESCE((SELECT MAX(h.started_at) FROM ARG_AUDIT_RUN h WHERE h.owner_user_id <=> {0}), {1})",
+                    RUN.ownerUserId, Instant.EPOCH).asc(), RUN.createdAt.asc(), RUN.id.asc())
                 .limit(1)
                 .fetchOne()
         );

@@ -136,8 +136,7 @@ class DiscoveryIT extends MariaDbReportFixture {
                                                         "example.com", 1L, 0L, List.of())))
                         .getResponse()
                         .getStatus());
-        assertEquals(
-                409, assertThrows(AccountError.class, () -> create(a)).getResponse().getStatus());
+        assertNotEquals(first.id(), create(a).id());
         assertEquals(
                 404,
                 assertThrows(AccountError.class, () -> service.get(b, Long.parseLong(first.id())))
@@ -152,7 +151,7 @@ class DiscoveryIT extends MariaDbReportFixture {
                         .getStatus());
         assertEquals(0, count("ARG_USAGE_RUN"));
         assertEquals(runs, count("ARG_AUDIT_RUN"));
-        assertEquals(1, service.active(a).size());
+        assertEquals(2, service.active(a).size());
         service.cancel(a, CSRF, Long.parseLong(first.id()));
         clock.now = clock.now.plus(Duration.ofHours(25));
         // Renew fixture session so expiry is the discovery's, not the login's.
@@ -188,7 +187,7 @@ class DiscoveryIT extends MariaDbReportFixture {
     }
 
     @Test
-    void concurrentSameOwnerSubmissionsHaveOneWinner() throws Exception {
+    void concurrentSameOwnerSubmissionsAreBothDurable() throws Exception {
         var barrier = new CyclicBarrier(2);
         try (var pool = Executors.newFixedThreadPool(2)) {
             Callable<Boolean> task =
@@ -204,9 +203,10 @@ class DiscoveryIT extends MariaDbReportFixture {
                     };
             var one = pool.submit(task);
             var two = pool.submit(task);
-            assertNotEquals(one.get(10, TimeUnit.SECONDS), two.get(10, TimeUnit.SECONDS));
+            assertTrue(one.get(10, TimeUnit.SECONDS));
+            assertTrue(two.get(10, TimeUnit.SECONDS));
         }
-        assertEquals(1, count("ARG_DOMAIN_DISCOVERY"));
+        assertEquals(2, count("ARG_DOMAIN_DISCOVERY"));
         assertEquals(0, count("ARG_USAGE_RUN"));
     }
 
@@ -335,7 +335,7 @@ class DiscoveryIT extends MariaDbReportFixture {
         create(a);
         configure("discovery.duration-seconds=10");
         var job = dao.claim(policy, clock.instant());
-        assertEquals(clock.instant().plusSeconds(125), job.getLeaseUntil());
+        assertEquals(clock.instant().plusSeconds(15), job.getLeaseUntil());
     }
 
     @Test
@@ -350,5 +350,41 @@ class DiscoveryIT extends MariaDbReportFixture {
         assertTrue(dao.canceled(job, clock.instant()));
         dao.finish(job, new DomainCrawler.Result("CANCELED", false), clock.instant());
         assertNotNull(dao.claim(policy, clock.instant()));
+    }
+
+    @Test void apiRejectsConfiguredOverflowBeforeAdmission() throws Exception {
+        for (var input : List.of(new CreateDiscovery("example.com",51L,3L,List.of()),
+                new CreateDiscovery("example.com",50L,4L,List.of()))) {
+            assertEquals(400,assertThrows(AccountError.class,()->service.create(a,CSRF,UUID.randomUUID().toString(),input)).getResponse().getStatus());
+        }
+        assertEquals(0,count("ARG_DOMAIN_DISCOVERY"));
+        configure("discovery.max-urls=200\ndiscovery.max-depth=5");
+        var accepted=service.create(a,CSRF,UUID.randomUUID().toString(),new CreateDiscovery("example.com",200L,5L,List.of()));
+        assertEquals(200,accepted.effectiveLimits().maxUrls());
+        assertEquals(5,accepted.effectiveLimits().maxDepth());
+    }
+    @Test void accountQueueIsBoundedAndClaimsOneDomainAtATimeThenRotatesOwners() throws Exception {
+        configure("discovery.account-queue-limit=2");
+        var first=create(a);
+        var second=service.create(a,CSRF,UUID.randomUUID().toString(),new CreateDiscovery("other.example",50L,3L,List.of()));
+        var full=assertThrows(AccountError.class,()->create(a));
+        assertEquals(429,full.getResponse().getStatus());
+        assertEquals(2,count("ARG_DOMAIN_DISCOVERY"));
+        var job=dao.claim(policy,clock.instant());
+        assertEquals(first.id(),job.getId().toString());
+        assertNull(dao.claim(policy,clock.instant()));
+        var other=create(b);
+        dao.finish(job,new DomainCrawler.Result("EXHAUSTED",false),clock.instant());
+        var next=dao.claim(policy,clock.instant());
+        assertEquals(other.id(),next.getId().toString());
+        var last=dao.claim(policy,clock.instant());
+        assertEquals(second.id(),last.getId().toString());
+        assertEquals(0,count("ARG_USAGE_RUN"));
+    }
+    @Test void completedSelectionIsResumableWithoutCreatingAnAudit() {
+        var first=create(a);
+        new DiscoveryWorker(dao,policy,new DomainCrawler(policy,transport),service,clock).processNext();
+        assertEquals(first.id(),service.active(a).getFirst().id());
+        assertTrue(service.active(b).isEmpty());
     }
 }

@@ -5,6 +5,7 @@ import DomainNew from "./DomainNew";
 import fr from "@/lib/i18n/fr.json";
 const state = vi.hoisted(() => ({
   query: "discovery=600",
+  maxUrls: 50, maxDepth: 3, active: false,
   replace: vi.fn(),
   push: vi.fn(),
 }));
@@ -24,6 +25,7 @@ vi.mock("@/components/account/AccountSession", () => ({
   }),
 }));
 vi.mock("./useDomainResource", () => ({
+  followPages: () => true,
   activeStatus: (value: { status: string }) => value.status === "RUNNING",
   useDomainResource: (path: string | null) => ({
     allowed: true,
@@ -32,7 +34,8 @@ vi.mock("./useDomainResource", () => ({
     data: !path
       ? null
       : (path === "domain-batches" || path === "domain-discoveries")
-        ? []
+        ? (state.active ? [{id:"700",domainId:"8",hostname:"other.example",status:"QUEUED"}] : [])
+        : path === "domain-discoveries/limits" ? { maxUrls: state.maxUrls, maxDepth: state.maxDepth, defaultUrls: 20, defaultDepth: 2, durationSeconds: 60 }
         : path === "analysis-profiles"
           ? {
               defaultProfileId: "server-default-v1",
@@ -81,6 +84,7 @@ vi.mock("./useDomainResource", () => ({
 }));
 beforeEach(() => {
   state.query = "discovery=600";
+  state.maxUrls = 50; state.maxDepth = 3; state.active = false;
   state.replace.mockReset();
   state.push.mockReset();
 });
@@ -103,6 +107,7 @@ it("updates a checkbox before delayed router state, then restores selection from
   await act(async () => {});
   expect(first).not.toBeChecked();
   state.query = "discovery=600";
+  state.maxUrls = 50; state.maxDepth = 3; state.active = false;
   view.rerender(<DomainNew />);
   await act(async () => {});
   expect(first).toBeChecked();
@@ -158,4 +163,13 @@ it("keeps scope inputs and their discovery validations beside the quota guide", 
   expect(screen.getByLabelText(fr.domainPage.maxUrls)).toHaveAttribute("max", "50");
   expect(screen.getByLabelText(fr.domainPage.maxDepth)).toHaveAttribute("min", "0");
   expect(screen.getByLabelText(fr.domainPage.maxDepth)).toHaveAttribute("max", "3");
+});
+
+it("accepts operator limits above 50/3 while another domain is pending", () => {
+  state.query="";state.maxUrls=200;state.maxDepth=5;state.active=true;
+  render(<DomainNew/>);
+  expect(screen.getByLabelText(fr.domainPage.maxUrls)).toHaveAttribute("max","200");
+  expect(screen.getByLabelText(fr.domainPage.maxDepth)).toHaveAttribute("max","5");
+  expect(screen.getByRole("button",{name:fr.domainPage.discover})).toBeEnabled();
+  expect(screen.getByRole("link",{name:fr.domainPage.resumeDiscovery})).toBeInTheDocument();
 });

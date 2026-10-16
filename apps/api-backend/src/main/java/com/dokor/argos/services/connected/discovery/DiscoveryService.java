@@ -90,8 +90,9 @@ public final class DiscoveryService {
                         fresh(previous);
                         return view(previous, c);
                     }
-                    if (!dao.active(ctx.user().getId(), c).isEmpty())
-                        throw new AccountError(409, "discovery_active");
+                    policy.validate(input);
+                    if (dao.active(ctx.user().getId(), c).size() >= policy.accountQueueLimit)
+                        throw new AccountError(429, "discovery_queue_full", 2);
                     try {
                         transport.validate(
                                 "https://" + host,
@@ -140,6 +141,10 @@ public final class DiscoveryService {
                 });
     }
 
+    public DiscoveryCapabilities capabilities(String auth) {
+        return sessions.with(auth, null, true, false, (ctx, c) -> policy.capabilities());
+    }
+
     public Discovery get(String auth, long id) {
         return sessions.with(
                 auth,
@@ -160,7 +165,7 @@ public final class DiscoveryService {
                 true,
                 false,
                 (ctx, c) ->
-                        dao.active(ctx.user().getId(), c).stream().map(r -> view(r, c)).toList());
+                        dao.resumable(ctx.user().getId(), clock.instant(), c).stream().map(r -> view(r, c)).toList());
     }
 
     public Discovery cancel(String auth, String csrf, long id) {

@@ -1,4 +1,5 @@
 "use client";
+import ReportActionIcon from "./ReportActionIcon";
 import {useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import {flushSync} from 'react-dom';
@@ -41,6 +42,6 @@ export default function ReportExport({report:current,runId,shared=false,compact=
  }
  if(!token&&!current)return null;
  const form=<section className={s.export} aria-label={e.export}><label>{e.format}<select value={current?.access==='summary'?'summary':format} onChange={event=>setFormat(event.target.value as ExportFormat)}><option value="summary">{e.summary}</option>{current?.access!=='summary'&&<option value="full">{e.full}</option>}</select></label>
- <button type="button" onClick={prepare} disabled={state==='busy'}>{state==='busy'?e.busy:e.export}</button><p role="status" aria-live="polite">{state==='ready'?e.ready:state==='failed'?e.failed:''}</p></section>;
- return compact?<details className={s.compact}><summary>{e.export}</summary>{form}</details>:form;
+ <button type="button" onClick={prepare} disabled={state==='busy'}><ReportActionIcon name="download"/>{state==='busy'?e.busy:e.export}</button><p role="status" aria-live="polite">{state==='ready'?e.ready:state==='failed'?e.failed:''}</p></section>;
+ return compact?<details className={s.compact}><summary><ReportActionIcon name="download"/>{e.export}</summary>{form}</details>:form;
 }

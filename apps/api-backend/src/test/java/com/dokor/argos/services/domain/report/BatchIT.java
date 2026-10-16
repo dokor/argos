@@ -167,7 +167,8 @@ class BatchIT extends MariaDbReportFixture {
                         new ConnectedProfiles(new DefaultScorePolicy()),
                         mapper,
                         tokens,
-                        clock);
+                        clock,
+                        new com.dokor.argos.services.connected.batch.BatchQueuePolicy(ConfigFactory.empty()));
     }
 
     CreateBatch selection(String auth) {
@@ -265,11 +266,13 @@ class BatchIT extends MariaDbReportFixture {
                                         input.discoveryId(),
                                         List.of(reverse.getFirst()),
                                         input.profileId())));
-        error(409, () -> launch(input));
+        var other = launch(input);
+        assertEquals(2, batches.active(a).size());
+        batches.cancel(a, CSRF, site(other), id(other));
         error(404, () -> batches.get(b, site(first), id(first)));
         error(404, () -> batches.cancel(b, CSRF, site(first), id(first)));
         error(404, () -> batches.pages(b, site(first), id(first), 20, 0, "all"));
-        assertEquals(2, count("ARG_USAGE_RUN"));
+        assertEquals(4, count("ARG_USAGE_RUN"));
         assertEquals(2, count("ARG_ACCOUNT_SITE_URL"));
         assertEquals(2, progress(first).credits().reserved());
         long version = progress(first).version();
@@ -401,10 +404,11 @@ class BatchIT extends MariaDbReportFixture {
                     };
             var one = pool.submit(task);
             var two = pool.submit(task);
-            assertNotEquals(one.get(15, TimeUnit.SECONDS), two.get(15, TimeUnit.SECONDS));
+            assertTrue(one.get(15, TimeUnit.SECONDS));
+            assertTrue(two.get(15, TimeUnit.SECONDS));
         }
-        assertEquals(2, count("ARG_DOMAIN_BATCH"));
-        assertEquals(4, count("ARG_USAGE_RUN"));
+        assertEquals(3, count("ARG_DOMAIN_BATCH"));
+        assertEquals(6, count("ARG_USAGE_RUN"));
     }
 
     @Test
@@ -908,5 +912,49 @@ class BatchIT extends MariaDbReportFixture {
                 batchDao,
                 mapper,
                 clock);
+    }
+
+    @Test void multipleBatchesReserveCreditsAndCancelIndependently() throws Exception {
+        engine("usage.offers.FREE.monthly-limit=4");
+        var selection=selection(a);
+        var one=launch(selection);var two=launch(selection);
+        assertEquals(2,batches.active(a).size());
+        assertEquals(4,count("ARG_USAGE_RUN WHERE state='RESERVED'"));
+        error(429,()->launch(selection));
+        assertEquals(2,count("ARG_DOMAIN_BATCH"));
+        batches.cancel(a,CSRF,site(two),id(two));
+        assertEquals(2,progress(two).credits().released());
+        assertEquals(2,progress(one).credits().reserved());
+        assertEquals(1,batches.active(a).size());
+        assertNotNull(launch(selection));
+    }
+    @Test void pendingBatchCapDoesNotLeakReservationsOnRejection() throws Exception {
+        engine("");var selection=selection(a);
+        for(int n=0;n<5;n++)launch(selection);
+        error(429,()->launch(selection));
+        assertEquals(5,count("ARG_DOMAIN_BATCH"));assertEquals(10,count("ARG_USAGE_RUN"));
+    }
+    @Test void concurrentBatchesCannotOverReserveRemainingQuota() throws Exception {
+        engine("usage.offers.FREE.monthly-limit=3");var selection=selection(a);
+        var barrier=new CyclicBarrier(2);
+        try(var pool=Executors.newFixedThreadPool(2)) {
+            Callable<Boolean> submit=()->{barrier.await();try{launch(selection);return true;}
+                catch(WebApplicationException e){assertEquals(429,e.getResponse().getStatus());return false;}};
+            var one=pool.submit(submit);var two=pool.submit(submit);
+            assertNotEquals(one.get(15,TimeUnit.SECONDS),two.get(15,TimeUnit.SECONDS));
+        }
+        assertEquals(1,count("ARG_DOMAIN_BATCH"));assertEquals(2,count("ARG_USAGE_RUN"));
+    }
+
+    @Test void sequentialWorkerRotatesAccountsRatherThanDrainingOneOwnersBatches() throws Exception {
+        engine("");
+        var first=launch(selection(a));launch(selection(a));
+        var second=batches.create(b,CSRF,UUID.randomUUID().toString(),selection(b));
+        var next=runDao.findNextQueuedRun().orElseThrow();
+        assertEquals(10,next.getOwnerUserId());
+        assertTrue(runDao.claimRun(next.getId(),"fair-worker",clock.instant()));
+        assertEquals(20,runDao.findNextQueuedRun().orElseThrow().getOwnerUserId());
+        assertEquals(BatchStatus.QUEUED,batches.get(b,site(second),id(second)).status());
+        assertEquals(BatchStatus.RUNNING,progress(first).status());
     }
 }

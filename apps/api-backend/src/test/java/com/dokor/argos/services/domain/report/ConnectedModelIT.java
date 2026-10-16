@@ -30,7 +30,7 @@ class ConnectedModelIT extends MariaDbReportFixture {
     }
 
     @Test void freshDatabaseHasTheNewModelAndNoSyntheticProductionRecords() throws Exception {
-        assertEquals("29", Flyway.configure().dataSource(source).load().info().current().getVersion().toString());
+        assertEquals("30", Flyway.configure().dataSource(source).load().info().current().getVersion().toString());
         for (var table : List.of("ARG_ACCOUNT_USER", "ARG_DOMAIN_DISCOVERY", "ARG_DOMAIN_DISCOVERY_PAGE", "ARG_DOMAIN_BATCH", "ARG_DOMAIN_BATCH_PAGE", "ARG_USAGE_RUN")) {
             try (var c = source.getConnection(); var s = c.createStatement(); var r = s.executeQuery("SELECT COUNT(*) FROM " + table)) {
                 assertTrue(r.next()); assertEquals(0, r.getLong(1), table);
@@ -102,7 +102,7 @@ class ConnectedModelIT extends MariaDbReportFixture {
         }
     }
 
-    @Test void activeOperationSlotsAreAtomicAndReleasedOnlyByTerminalState() throws Exception {
+    @Test void multipleActiveOperationsPreserveIndependentRowsAndOwnership() throws Exception {
         seed();
         var ready = new CountDownLatch(2);
         var start = new CountDownLatch(1);
@@ -116,15 +116,32 @@ class ConnectedModelIT extends MariaDbReportFixture {
             assertTrue(ready.await(5, TimeUnit.SECONDS)); start.countDown();
             int accepted=0;
             for (var result : results) if (result.get(10, TimeUnit.SECONDS)) accepted++;
-            assertEquals(1, accepted);
+            assertEquals(2, accepted);
         }
         sql("UPDATE ARG_DOMAIN_DISCOVERY SET status='CANCELED',finished_at='2026-10-13 08:01:00' WHERE active_owner_id=10");
         discovery(303, 10, 101, "QUEUED", "after-cancel");
         batch(321, 10, 101, 100, "RUNNING", "active-batch");
-        assertThrows(SQLException.class, () -> batch(322, 10, 101, 100, "QUEUED", "second-active-batch"));
+        batch(322, 10, 101, 100, "QUEUED", "second-active-batch");
         batch(323, 20, 201, 200, "QUEUED", "other-owner-active-batch");
         sql("UPDATE ARG_DOMAIN_BATCH SET status='PARTIAL',finished_at='2026-10-13 08:01:00' WHERE id=321");
         batch(324, 10, 101, 100, "QUEUED", "after-partial");
+    }
+
+    @Test void upgradesV29WithoutLosingActiveJobsAndRestartIsIdempotent() throws Exception {
+        var previous=Flyway.configure().dataSource(source).cleanDisabled(false).target("29").load();
+        previous.clean();previous.migrate();seed();
+        discovery(301,10,101,"QUEUED","existing-discovery");
+        batch(321,10,101,100,"RUNNING","existing-batch");
+        var current=Flyway.configure().dataSource(source).load();
+        assertEquals(1,current.migrate().migrationsExecuted);current.validate();
+        assertEquals(0,current.migrate().migrationsExecuted);
+        discovery(302,10,101,"QUEUED","new-discovery");
+        batch(322,10,101,100,"QUEUED","new-batch");
+        try(var c=source.getConnection()) {
+            assertEquals("QUEUED",connected.discovery(owner(10),301,c).getStatus());
+            assertEquals("RUNNING",connected.batch(owner(10),101,321,c).getStatus());
+            assertEquals("QUEUED",connected.batch(owner(10),101,322,c).getStatus());
+        }
     }
 
     private void seed() throws Exception {

@@ -53,7 +53,11 @@ export function DomainError({
 }) {
   const { c } = useDomainText();
   const text =
-    code === "invalid_filters" || code === "filter_invalid"
+    code === "discovery_queue_full" || code === "batch_queue_full"
+      ? c.queueFull
+      : code === "discovery_limits_invalid"
+      ? c.limitsInvalid
+      : code === "invalid_filters" || code === "filter_invalid"
       ? c.filterInvalid
       : code.includes("not_found") ||
           code === "forbidden" ||

@@ -10,7 +10,7 @@ arrive en F07. Aucun audit ni mouvement de crédit n'est créé par une découve
 - `POST /api/account/domain-discoveries` : compte ACTIVE, CSRF et UUID
   `Idempotency-Key` ; corps `hostname`, `maxUrls`, `maxDepth`, `excludedPaths`.
   Réponse 202 avec ID privé, état, limites effectives et expiration.
-- `GET /api/account/domain-discoveries` : zéro ou une découverte active du compte,
+- `GET /api/account/domain-discoveries` : découvertes actives et terminées non encore soumises en lot, non expirées (100 maximum),
   pour retrouver une opération après rechargement.
 - `GET /api/account/domain-discoveries/{id}` : état, compteurs, version, motif,
   troncature et demande d'annulation. Expiration à 24 h : 410.
@@ -29,7 +29,8 @@ compte existante `{ "error": "code" }` (adaptateur de contrats F01).
 
 Un même UUID et un même corps canonique (hôte minuscule, exclusions triées et
 dédupliquées) rendent la même opération. Un corps différent donne 409
-`idempotency_conflict`. Une autre découverte active donne 409 `discovery_active`.
+`idempotency_conflict`. Plusieurs découvertes sont acceptées : la limite par compte donne
+429 `discovery_queue_full` avec `Retry-After: 2`.
 La file globale pleine donne 429 `discovery_busy`, `Retry-After: 2` ; aucun site
 privé n'est conservé par cette transaction refusée. Une clé expirée donne 410.
 
@@ -54,12 +55,14 @@ Configuration serveur `discovery.*` (valeurs par défaut ; limites dures entre p
 
 | Clé | Valeur | Effet |
 |---|---:|---|
-| `max-urls` | 50 (1–50) | Lignes de snapshot, paramètres utilisateur uniquement plus restrictifs |
-| `max-depth` | 3 (0–3) | Profondeur des liens ; initiale et sitemap à 0 |
+| `max-urls` | 50 (1–1000) | Lignes de snapshot, paramètres utilisateur uniquement plus restrictifs |
+| `max-depth` | 3 (0–10) | Profondeur des liens ; initiale et sitemap à 0 |
 | `duration-seconds` | 60 (1–300) | Budget monotone de parcours hors attente en file |
 | `requests-per-host` | 2 (1–2) | Découvertes simultanées du même hôte, tous comptes/processus |
 | `workers` | 4 (1–16) | Découvertes RUNNING globales et threads locaux |
 | `queue-limit` | 100 (1–1000) | Total QUEUED + RUNNING admis |
+| `account-queue-limit` | 5 (1–50) | Total QUEUED + RUNNING par compte ; une seule exécution par compte |
+| `max-requests` | 1000 (1–10000) | Requêtes totales, robots, redirections et sitemaps inclus |
 | `max-redirects` | 5 (0–5) | Redirections manuelles par ressource |
 | `body-bytes` | 2097152 (1024–2097152) | Corps compressé et décompressé HTML/sitemap |
 | `robots-bytes` | 1048576 (1024–1048576) | Corps robots compressé et décompressé |
@@ -71,7 +74,7 @@ Configuration serveur `discovery.*` (valeurs par défaut ; limites dures entre p
 Le snapshot expose les quatre limites de parcours dans `effectiveLimits`.
 Le transport utilise la configuration serveur ; modifier ses limites nécessite
 un redémarrage. Conserver une configuration identique entre réplicas. Le lease
-reprend la durée enregistrée à l'admission, plus 5 secondes de clôture.
+reprend la durée effective à la prise en charge, plus 5 secondes de clôture.
 
 ## Transport, robots et XML
 
@@ -124,7 +127,7 @@ variantes canoniques et excès de sitemaps sans perte de la page d'accueil.
 V22 ajoute le verrou global, début, lease, jeton de claim et index aux tables
 F01. Les colonnes SQL générées restent en lecture seule. L'admission verrouille
 le compte avant le verrou global ; les workers ne verrouillent pas ensuite un
-compte. Le plafond d'une opération active par compte est aussi garanti en SQL.
+compte. Le claim sous gate garantit une seule découverte RUNNING par compte.
 Le parcours est séquentiel par découverte ; le plafond d'opérations par hôte
 borne donc également les requêtes simultanées de ce crawler.
 
@@ -159,3 +162,44 @@ Commandes : `mvn test`, CI `MariaDB integration (11.4)` avec `DiscoveryIT`,
 `python scripts/contracts/generate-connected.py --check`,
 `python docs/connected-space/validate.py`. Pas de test sur un site tiers,
 ni recette visuelle revendiquée pour les écrans F09 encore à réaliser.
+
+## Configuration et files (#672, #661)
+
+`GET /api/account/domain-discoveries/limits` publie uniquement les maxima URL,
+profondeur et durée, avec les valeurs proposées au formulaire (20 URL et profondeur
+2, réduites si nécessaire). Les valeurs sûres historiques restent 50/3/60 s.
+Exemple de recette : `discovery.max-urls=200`, `discovery.max-depth=5` ; la durée
+peut être augmentée séparément jusqu'à 300 s. Des entiers hors bornes ou
+fractionnaires font échouer l'initialisation, avec le nom de la configuration.
+Redémarrer toutes les instances après une modification ; aucun rechargement à chaud.
+
+Le BFF contrôle les bornes absolues 1000/10 et les types ; Java refuse tout dépassement
+des maxima opérateur avec 400 `discovery_limits_invalid`. Les champs absents,
+entiers débordants, fractions, chaînes, booléens et champs forgés sont refusés par
+le contrat JSON existant (400). La profondeur 0 reste autorisée (page initiale et
+sitemap uniquement). Les paramètres demandés et les limites résolues sont persistés.
+À la prise en charge, les anciennes limites sont intersectées avec celles du worker :
+elles peuvent diminuer, jamais augmenter. Le snapshot effectif et le lease sont
+actualisés atomiquement. Le moteur applique encore ces plafonds, y compris en appel
+direct ; son budget de durée est indépendant du budget fourni par son appelant.
+
+La migration V30 remplace les index d'unicité par compte par des index ordinaires.
+Les colonnes générées existantes et les mappings QueryDSL restent identiques.
+Le gate SQL maintient les plafonds globaux et par hôte ; une seule découverte
+RUNNING par compte. La file choisit le compte le moins récemment servi, puis le
+plus ancien job. Les workers et navigateurs ne gagnent aucune concurrence.
+Les jobs QUEUED sont durables ; le scheduler les prend sans navigateur ouvert.
+Les jobs RUNNING dont le lease a expiré deviennent FAILED/WORKER_LOST avec fencing
+comme auparavant ; les autres jobs du compte peuvent ensuite démarrer.
+
+Les budgets indépendants de liens, sitemaps, requêtes, réponse, DNS, durée et annulation
+restent actifs. Au plus 1000 lignes distinctes par découverte, 2 Mio par corps et
+16 workers (4 par défaut) : augmenter URL/profondeur ne supprime aucune autre borne.
+La file bornée et l'expiration à 24 h limitent les tâches en attente. La borne de
+stockage par découverte est de 1000 lignes ; les snapshots terminés restent
+conservés pour l'historique des lots. L'expiration ne purge pas ces données.
+Dimensionner la base et surveiller la rétention avant d'augmenter les plafonds.
+La raison de troncature et les compteurs restent visibles ; REQUEST_LIMIT identifie
+le nouveau budget HTTP. Une découverte ne crée jamais d'audit ni de réservation.
+La sélection charge toutes les pages par fenêtres de 100 ; le lot reste limité à
+50 pages et nécessite sélection + confirmation explicite du coût.

@@ -249,8 +249,8 @@ public final class ConnectedContracts {
     @JsonInclude(JsonInclude.Include.ALWAYS)
     public record CreateDiscovery(
         @JsonProperty(value = "hostname", required = true) String hostname,
-        @JsonProperty(value = "maxUrls", required = true) Long maxUrls,
-        @JsonProperty(value = "maxDepth", required = true) Long maxDepth,
+        @JsonProperty(value = "maxUrls", required = true) @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = StrictLongDeserializer.class) Long maxUrls,
+        @JsonProperty(value = "maxDepth", required = true) @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = StrictLongDeserializer.class) Long maxDepth,
         @JsonProperty(value = "excludedPaths", required = true) List<String> excludedPaths
     ) {
         public CreateDiscovery {
@@ -259,10 +259,10 @@ public final class ConnectedContracts {
             check(hostname.codePointCount(0, hostname.length()) <= 253, "hostname");
             required(maxUrls, "maxUrls");
             check(maxUrls >= 1L, "maxUrls");
-            check(maxUrls <= 50L, "maxUrls");
+            check(maxUrls <= 1000L, "maxUrls");
             required(maxDepth, "maxDepth");
             check(maxDepth >= 0L, "maxDepth");
-            check(maxDepth <= 3L, "maxDepth");
+            check(maxDepth <= 10L, "maxDepth");
             required(excludedPaths, "excludedPaths");
             excludedPaths = List.copyOf(excludedPaths);
             check(excludedPaths.size() >= 0 && excludedPaths.size() <= 50, "excludedPaths");
@@ -1651,6 +1651,36 @@ public final class ConnectedContracts {
             check(reason.codePointCount(0, reason.length()) >= 1, "reason");
             check(reason.codePointCount(0, reason.length()) <= 64, "reason");
             check(java.util.regex.Pattern.compile("^[A-Z][A-Z0-9_]*$").matcher(reason).find(), "reason");
+        }
+        @JsonAnySetter public void rejectUnknown(String name, Object value) {
+            throw new IllegalArgumentException("Unknown connected field");
+        }
+    }
+
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    public record DiscoveryCapabilities(
+        @JsonProperty(value = "maxUrls", required = true) Long maxUrls,
+        @JsonProperty(value = "maxDepth", required = true) Long maxDepth,
+        @JsonProperty(value = "defaultUrls", required = true) Long defaultUrls,
+        @JsonProperty(value = "defaultDepth", required = true) Long defaultDepth,
+        @JsonProperty(value = "durationSeconds", required = true) Long durationSeconds
+    ) {
+        public DiscoveryCapabilities {
+            required(maxUrls, "maxUrls");
+            check(maxUrls >= 1L, "maxUrls");
+            check(maxUrls <= 1000L, "maxUrls");
+            required(maxDepth, "maxDepth");
+            check(maxDepth >= 0L, "maxDepth");
+            check(maxDepth <= 10L, "maxDepth");
+            required(defaultUrls, "defaultUrls");
+            check(defaultUrls >= 1L, "defaultUrls");
+            check(defaultUrls <= 1000L, "defaultUrls");
+            required(defaultDepth, "defaultDepth");
+            check(defaultDepth >= 0L, "defaultDepth");
+            check(defaultDepth <= 10L, "defaultDepth");
+            required(durationSeconds, "durationSeconds");
+            check(durationSeconds >= 1L, "durationSeconds");
+            check(durationSeconds <= 300L, "durationSeconds");
         }
         @JsonAnySetter public void rejectUnknown(String name, Object value) {
             throw new IllegalArgumentException("Unknown connected field");

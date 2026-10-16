@@ -46,6 +46,12 @@ public final class DomainDiscoveriesWs {
     }
 
     @GET
+    @Path("limits")
+    public Response limits(@HeaderParam("Authorization") String auth) {
+        return response(service.capabilities(auth), 200);
+    }
+
+    @GET
     @Path("{id}")
     public Response get(@HeaderParam("Authorization") String auth, @PathParam("id") long id) {
         return response(service.get(auth, id), 200);

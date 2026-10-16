@@ -12,6 +12,10 @@ public final class DiscoveryBudget {
         this.canceled = canceled;
     }
 
+    public DiscoveryBudget restrict(Duration maximum) {
+        return new DiscoveryBudget(maximum, () -> { check(); return false; });
+    }
+
     public void check() {
         if (Thread.currentThread().isInterrupted() || canceled.getAsBoolean())
             throw new DiscoveryStop("CANCELED");

@@ -1,4 +1,5 @@
 "use client";
+import { allDiscoveryPages } from "@/lib/connected/discovery-pages";
 import DomainScopeGuide from "./DomainScopeGuide";
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -8,6 +9,7 @@ import { accountFetch, AccountClientError } from "@/lib/account-client";
 import { useAccountSession } from "@/components/account/AccountSession";
 import type {
   Discovery,
+  DiscoveryCapabilities,
   DiscoveredPages,
   AnalysisProfiles,
   AdmittedBatch,
@@ -20,7 +22,7 @@ import {
   type DomainRequest,
 } from "@/lib/connected/domain-request";
 import { PageHeading, Surface } from "../Primitives";
-import { useDomainResource, activeStatus } from "./useDomainResource";
+import { useDomainResource, activeStatus, followPages } from "./useDomainResource";
 import {
   useDomainText,
   State,
@@ -49,14 +51,16 @@ export default function DomainNew() {
     ),
     discovery = discoveryResource.data,
     running = !!discovery && activeStatus(discovery);
+  const capabilities = useDomainResource<DiscoveryCapabilities>("domain-discoveries/limits");
   const activeDiscoveries = useDomainResource<Discovery[]>(
-      !discoveryId ? "domain-discoveries" : null,
+      !discoveryId ? "domain-discoveries" : null, followPages,
     ),
-    activeBatches = useDomainResource<BatchProgress[]>("domain-batches");
+    activeBatches = useDomainResource<BatchProgress[]>("domain-batches", followPages);
   const discovered = useDomainResource<DiscoveredPages>(
     discovery && !running
       ? `domain-discoveries/${discovery.id}/pages?inclusion=all&limit=100`
       : null,
+    undefined, allDiscoveryPages,
   );
   const profiles = useDomainResource<AnalysisProfiles>(
     discovery && !running ? "analysis-profiles" : null,
@@ -86,7 +90,7 @@ export default function DomainNew() {
         ? selectionDraft.ids
         : params.has("selected")
           ? (params.get("selected") ?? "").split(",").filter(Boolean)
-          : eligible.map((page) => page.pageId);
+          : eligible.slice(0, 50).map((page) => page.pageId);
   const profile =
     request?.kind === "batch"
       ? request.body.profileId
@@ -178,6 +182,7 @@ export default function DomainNew() {
         session.refreshUsage();
         activeBatches.reload();
         activeDiscoveries.reload();
+        capabilities.reload();
       }
     } finally {
       lock.current = false;
@@ -271,7 +276,8 @@ export default function DomainNew() {
       <Link className={d.link} href="/account/domains">
         ← {c.back}
       </Link>
-      <PageHeading title={c.newTitle} description={c.newIntro} />
+      <PageHeading title={c.newTitle} description={c.newIntro} action={discoveryId ?
+        <Link className={s.secondary} href="/account/domains/new">{c.new}</Link> : undefined} />
       <ol className={d.steps}>
         <li aria-current={!discoveryId ? "step" : undefined}>{c.stepScope}</li>
         <li aria-current={discoveryId ? "step" : undefined}>
@@ -307,7 +313,7 @@ export default function DomainNew() {
           {activeBatches.data?.map((batch) => (
             <div className={d.notice} key={batch.id}>
               <p>
-                {c.activeBatch}: {batch.hostname}
+                {c.activeBatch}: {batch.hostname} <State value={batch.status} />
               </p>
               <Link
                 className={d.link}
@@ -322,7 +328,7 @@ export default function DomainNew() {
               {activeDiscoveries.data?.map((item) => (
                 <div className={d.notice} key={item.id}>
                   <p>
-                    {c.activeDiscovery}: {item.hostname}
+                    {c.activeDiscovery}: {item.hostname} {item.status === "COMPLETED" ? c.readySelection : <State value={item.status} />}
                   </p>
                   <Link
                     className={d.link}
@@ -333,8 +339,15 @@ export default function DomainNew() {
                 </div>
               ))}
               <div className={d.scopeLayout}><Surface title={c.stepScope}>
+                {capabilities.error && <DomainError code={capabilities.error} retry={capabilities.reload} />}
+                {capabilities.data && <p className={d.scopeLimits}>{phrase(c.configuredLimits, {
+                  urls: capabilities.data.maxUrls, depth: capabilities.data.maxDepth,
+                  seconds: capabilities.data.durationSeconds,
+                  defaultUrls: capabilities.data.defaultUrls, defaultDepth: capabilities.data.defaultDepth,
+                })}</p>}
                 <form
                   className={d.form}
+                  key={capabilities.data ? `${capabilities.data.maxUrls}/${capabilities.data.maxDepth}` : "loading"}
                   onSubmit={(event) => {
                     event.preventDefault();
                     const form = new FormData(event.currentTarget);
@@ -367,7 +380,7 @@ export default function DomainNew() {
                           ? request.body.hostname
                           : (params.get("hostname") ?? "")
                       }
-                      disabled={busy || !!request}
+                      disabled={busy || !!request || !capabilities.data}
                       aria-describedby="domain-host-hint"
                     />
                   </label>
@@ -379,14 +392,14 @@ export default function DomainNew() {
                         name="maxUrls"
                         type="number"
                         min={1}
-                        max={50}
+                        max={capabilities.data?.maxUrls ?? 50}
                         required
                         defaultValue={
                           request?.kind === "discovery"
                             ? request.body.maxUrls
-                            : 20
+                            : capabilities.data?.defaultUrls ?? 20
                         }
-                        disabled={busy || !!request}
+                        disabled={busy || !!request || !capabilities.data}
                       />
                     </label>
                     <label>
@@ -395,14 +408,14 @@ export default function DomainNew() {
                         name="maxDepth"
                         type="number"
                         min={0}
-                        max={3}
+                        max={capabilities.data?.maxDepth ?? 3}
                         required
                         defaultValue={
                           request?.kind === "discovery"
                             ? request.body.maxDepth
-                            : 2
+                            : capabilities.data?.defaultDepth ?? 2
                         }
-                        disabled={busy || !!request}
+                        disabled={busy || !!request || !capabilities.data}
                       />
                     </label>
                   </div>
@@ -416,7 +429,7 @@ export default function DomainNew() {
                           ? request.body.excludedPaths.join("\n")
                           : ""
                       }
-                      disabled={busy || !!request}
+                      disabled={busy || !!request || !capabilities.data}
                       aria-describedby="domain-exclusions-hint"
                     />
                   </label>
@@ -427,10 +440,7 @@ export default function DomainNew() {
                     disabled={
                       busy ||
                       !!request ||
-                      !activeDiscoveries.data ||
-                      !!activeDiscoveries.data.length ||
-                      !activeBatches.data ||
-                      !!activeBatches.data.length
+                      !capabilities.data
                     }
                   >
                     {busy ? c.discovering : c.discover}
@@ -536,12 +546,13 @@ export default function DomainNew() {
                                 {c.discoveryEmpty} {c.discoveryEmptyHint}
                               </p>
                             )}
+                            <p>{c.selectionLimit}</p>
                             <div className={s.actions}>
                               <button
                                 className={s.secondary}
                                 disabled={busy || !!request || expired}
                                 onClick={() =>
-                                  selectPages(eligible.map((p) => p.pageId))
+                                  selectPages(eligible.slice(0, 50).map((p) => p.pageId))
                                 }
                               >
                                 {c.selectAll}
@@ -566,6 +577,7 @@ export default function DomainNew() {
                                       }
                                       disabled={
                                         !page.eligible ||
+                                        (!selected.includes(page.pageId) && selected.length >= 50) ||
                                         busy ||
                                         !!request ||
                                         expired
@@ -674,8 +686,7 @@ export default function DomainNew() {
                                 !!request ||
                                 expired ||
                                 !selectionValid ||
-                                !sufficient ||
-                                !!activeBatches.data?.length
+                                !sufficient
                               }
                               onClick={() => void confirmLaunch()}
                             >

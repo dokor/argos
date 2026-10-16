@@ -11,7 +11,7 @@ Le BFF et Java exposent, sous `/api/account`, les opérations suivantes :
 | Opération | Effet |
 |---|---|
 | POST `/domain-batches` | 202 `AdmittedBatch`, sélection de 1 à 50 pages éligibles |
-| GET `/domain-batches` | Zéro ou un `BatchProgress` actif du propriétaire |
+| GET `/domain-batches` | Tous les `BatchProgress` actifs du propriétaire |
 | GET `/domains/{domainId}/batches/{id}/progress` | État, compteurs, crédits et profil figé |
 | GET `/domains/{domainId}/batches/{id}/progress/pages` | Pages, runId et disponibilité du rapport ; filtre `status`, limit/offset |
 | POST `/domains/{domainId}/batches/{id}/cancel` | Corps vide ; 202 si encore actif, sinon 200 |
@@ -42,7 +42,7 @@ d'expiration/quota : même contenu renvoie le lot initial, contenu différent do
 nouveaux runs. Aucun retry ne crée automatiquement un nouveau lot.
 
 Le refus de quota garde le contrat F05 : 429 `quota_exceeded` et `Retry-After`,
-au lieu du 409 de la cible initiale. Un autre lot actif donne 409 `batch_active` ;
+au lieu du 409 de la cible initiale. La file du compte pleine donne 429 `batch_queue_full` ;
 une découverte en cours 409 `discovery_not_ready`, expirée 410 `discovery_expired`,
 une sélection exclue 400 `selection_ineligible`, une cible devenue interdite
 400 `selection_url_invalid`, une ressource étrangère 404.
@@ -52,8 +52,8 @@ une sélection exclue 400 `selection_ineligible`, une cible devenue interdite
 Une transaction crée le lot, les relations privées aux URL, les N runs, enfants
 et réservations. Admission globale et quota insuffisants font tout annuler.
 L'identité partagée d'une URL peut être précréée par le DAO existant ; elle ne
-constitue ni un suivi privé, ni un run, ni un débit. Un index SQL interdit deux
-lots actifs pour le même compte, y compris avec deux processus applicatifs.
+constitue ni un suivi privé, ni un run, ni un débit. Le verrou du compte sérialise les admissions et applique le plafond configurable
+de lots actifs, y compris avec deux processus applicatifs.
 
 Ordre d'admission : compte/session, éventuel ancien lot et ses runs pour le
 réconcilier, sémaphore global de la file, usage, nouveaux enfants. La création
@@ -123,3 +123,23 @@ sur les enfants privés et le registre d'usage, jamais sur les valeurs de la maq
 
 Les preuves d'exécution et le résultat CI sont joints à la PR. Pas de fusion,
 déploiement, capture visuelle ni recette des écrans F09 dans ce lot serveur.
+
+## Plusieurs domaines en attente (#661)
+
+La limite d'un lot actif par compte est remplacée par `batch.account-queue-limit`
+(5 lots QUEUED/RUNNING par défaut, bornes 1–50, entier obligatoire). Dépassement :
+429 `batch_queue_full`, `Retry-After: 2`, sans création partielle ni réservation.
+Les admissions du compte restent sérialisées ; chaque lot réserve ses crédits
+pour l'ensemble de sa sélection, dans la transaction de création de ses runs.
+Les réservations des autres lots sont incluses dans le quota disponible ; un
+replay conserve le même lot et ne réserve rien de plus. Annuler un lot libère
+uniquement ses runs en attente ; les runs déjà actifs suivent l'annulation existante.
+
+Les runs rejoignent la file durable globale existante (100 runs maximum). Le worker
+reste séquentiel : il choisit le compte le moins récemment servi, puis le run le
+plus ancien de ce compte. Les lots peuvent coexister, sans augmenter le nombre de
+navigateurs. Le réconciliateur progresse sans onglet ouvert. Liste et détail des
+domaines affichent les découvertes à reprendre et les lots actifs, chacun avec
+son état et son lien ; les sélections restent attachées à leur découverte dans
+l'URL. Aucun audit payant n'est déclenché par une découverte ou par une navigation.
+Appliquer V30 puis redémarrer toutes les instances avec la même configuration.

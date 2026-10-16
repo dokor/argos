@@ -1,7 +1,7 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "Argos connected space — Clarté",
+    "title": "Argos connected space â€” ClartÃ©",
     "version": "1.0.0",
     "description": "Target contract. Only operations marked available are implemented by F01/F03/F05/F06. Existing auth/sites/usage routes keep their current contracts until their own implementation lots. The BFF uses HttpOnly cookies and forwards a server-side Bearer session to Java; no public API keys."
   },
@@ -1887,7 +1887,7 @@
       "post": {
         "operationId": "postDomain-Batches",
         "x-implementation": "available",
-        "description": "Atomic private admission of 1–50 eligible pages from a terminal unexpired discovery; replay ignores selection order. No additional reservation on replay.",
+        "description": "Atomic private admission of 1â€“50 eligible pages from a terminal unexpired discovery; replay ignores selection order. No additional reservation on replay.",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -5843,6 +5843,183 @@
           }
         ]
       }
+    },
+    "/account/domain-discoveries/limits": {
+      "get": {
+        "operationId": "getDiscoveryLimits",
+        "x-implementation": "available",
+        "description": "Active discovery for the verified owner (zero or one item). Does not renew session activity.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Private result; explicit null values are significant.",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "private, no-store"
+                  ]
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiscoveryCapabilities"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "See ErrorCode. Retry-After on 429. Existing permission gates may return the legacy envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LegacyErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "accountCookie": []
+          }
+        ],
+        "x-java-security": [
+          {
+            "bearerSession": []
+          }
+        ],
+        "summary": "Effective server discovery limits and form defaults"
+      }
     }
   },
   "components": {
@@ -6329,13 +6506,15 @@
             "type": "integer",
             "format": "int64",
             "minimum": 1,
-            "maximum": 50
+            "maximum": 1000,
+            "x-strict-integer": true
           },
           "maxDepth": {
             "type": "integer",
             "format": "int64",
             "minimum": 0,
-            "maximum": 3
+            "maximum": 10,
+            "x-strict-integer": true
           },
           "excludedPaths": {
             "type": "array",
@@ -8520,6 +8699,44 @@
             "minLength": 1,
             "maxLength": 64,
             "pattern": "^[A-Z][A-Z0-9_]*$"
+          }
+        }
+      },
+      "DiscoveryCapabilities": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "maxUrls",
+          "maxDepth",
+          "defaultUrls",
+          "defaultDepth",
+          "durationSeconds"
+        ],
+        "properties": {
+          "maxUrls": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000
+          },
+          "maxDepth": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "defaultUrls": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000
+          },
+          "defaultDepth": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "durationSeconds": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 300
           }
         }
       }

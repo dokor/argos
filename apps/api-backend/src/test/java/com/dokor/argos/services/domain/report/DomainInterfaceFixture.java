@@ -215,7 +215,8 @@ final class DomainInterfaceFixture {
                         profiles,
                         fixture.mapper,
                         fixture.tokens,
-                        clock);
+                        clock,
+                        new com.dokor.argos.services.connected.batch.BatchQueuePolicy(ConfigFactory.empty()));
         var summaries =
                 new DomainSummaryService(
                         accounts,

@@ -454,7 +454,7 @@ it("forwards bounded discovery with session, CSRF and idempotency key",async()=>
   expect(fetchMock.mock.calls[0][1].headers.get("idempotency-key")).toBe("12345678-1234-1234-1234-123456789012");
   expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual(discoveryInput);
 });
-it.each([{hostname:"127.0.0.1"},{hostname:"[::1]"},{hostname:"user@example.com"},{hostname:"example.com:81"},{hostname:"example.com/path"},{maxUrls:51},{maxDepth:4},{excludedPaths:["/a?token=secret"]},{ownerId:"2"}])("rejects invalid discovery input %j",async changes=>{
+it.each([{hostname:"127.0.0.1"},{hostname:"[::1]"},{hostname:"user@example.com"},{hostname:"example.com:81"},{hostname:"example.com/path"},{maxUrls:1001},{maxDepth:11},{maxUrls:0},{maxUrls:-1},{maxUrls:1.5},{maxUrls:"200"},{maxUrls:null},{maxDepth:0.5},{maxDepth:true},{excludedPaths:["/a?token=secret"]},{ownerId:"2"}])("rejects invalid discovery input %j",async changes=>{
   const req=request("domain-discoveries","POST",{...discoveryInput,...changes});req.headers.set("idempotency-key","12345678-1234-1234-1234-123456789012");
   expect((await accountProxy(req,["domain-discoveries"])).status).toBe(400);expect(fetchMock).not.toHaveBeenCalled();
 });
@@ -512,4 +512,18 @@ it("recovers an admission only by validated key and session, with private cachin
   expect((await accountProxy(request("analyses/"+key+"?ownerId=forged"),["analyses",key])).status).toBe(400);
   expect((await accountProxy(request("analyses/bad-key"),["analyses","bad-key"])).status).toBe(404);
   expect(fetchMock).not.toHaveBeenCalled();
+});
+
+it("reads the effective discovery capabilities from Java without exposing transport configuration",async()=>{
+ fetchMock.mockResolvedValue(Response.json({maxUrls:200,maxDepth:5,defaultUrls:20,defaultDepth:2,durationSeconds:60}));
+ const response=await accountProxy(request("domain-discoveries/limits"),["domain-discoveries","limits"]);
+ expect(response.status).toBe(200);expect((await response.json()).maxUrls).toBe(200);
+ expect(fetchMock.mock.calls[0][0]).toBe("http://fixture-backend/api/account/domain-discoveries/limits");
+});
+it("forwards higher absolute discovery bounds for authoritative server validation",async()=>{
+ fetchMock.mockResolvedValue(Response.json({error:"discovery_limits_invalid"},{status:400}));
+ const req=request("domain-discoveries","POST",{...discoveryInput,maxUrls:200,maxDepth:5});req.headers.set("idempotency-key","12345678-1234-1234-1234-123456789012");
+ const response=await accountProxy(req,["domain-discoveries"]);
+ expect(response.status).toBe(400);expect((await response.json()).error).toBe("discovery_limits_invalid");
+ expect(fetchMock).toHaveBeenCalledOnce();
 });

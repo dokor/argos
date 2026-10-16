@@ -40,7 +40,9 @@ public final class DomainCrawler {
             DiscoveryLimits limits,
             DiscoveryBudget budget,
             Consumer<Page> save) {
-        return new Crawl(input, limits, budget, save).run();
+        var effective = policy.restrict(limits);
+        return new Crawl(input, effective,
+                budget.restrict(java.time.Duration.ofSeconds(effective.durationSeconds())), save).run();
     }
 
     private final class Crawl {
@@ -55,7 +57,7 @@ public final class DomainCrawler {
         final Deque<String> sitemapQueue = new ArrayDeque<>();
         final Map<String, DiscoveryRobots> robots = new HashMap<>();
         String stop;
-        int links, eligible;
+        int links, eligible, requests;
 
         Crawl(
                 CreateDiscovery input,
@@ -171,7 +173,7 @@ public final class DomainCrawler {
                 }
             } catch (DiscoveryStop e) {
                 if (!saved) save.accept(new Page(item.url, item.source, item.depth, false, e.code));
-                if (Set.of("CANCELED", "TIME_LIMIT").contains(e.code)) throw e;
+                if (Set.of("CANCELED", "TIME_LIMIT", "REQUEST_LIMIT").contains(e.code)) throw e;
                 stop = e.code;
             }
         }
@@ -186,6 +188,7 @@ public final class DomainCrawler {
                 if (!redirects.add(url)) throw new DiscoveryStop("REDIRECT_LOOP");
                 if (!isRobots && !robot(url).allows(url))
                     throw new DiscoveryStop("ROBOTS_DISALLOWED");
+                if (++requests > policy.maxRequests) throw new DiscoveryStop("REQUEST_LIMIT");
                 var response = transport.get(url, bytes, budget);
                 if (!Set.of(301, 302, 303, 307, 308).contains(response.status()))
                     return new Fetched(response, url);
@@ -306,7 +309,7 @@ public final class DomainCrawler {
                     reader.close();
                 }
             } catch (DiscoveryStop e) {
-                if (Set.of("CANCELED", "TIME_LIMIT").contains(e.code)) throw e;
+                if (Set.of("CANCELED", "TIME_LIMIT", "REQUEST_LIMIT").contains(e.code)) throw e;
                 stop = e.code;
             } catch (XMLStreamException e) {
                 stop = "INVALID_SITEMAP";

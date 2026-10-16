@@ -478,3 +478,7 @@
   .commonMetric dd:not(.metricHint) { order: 2; }
   .commonMetric .metricHint { grid-column: 1 / -1; }
 }
+
+.scopeLimits { margin-bottom: 16px; color: var(--argos-text-muted); }
+
+.taskTitle { font-size: 18px; font-weight: 650; line-height: 1.4; margin-top: 16px; }
