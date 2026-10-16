@@ -100,3 +100,9 @@ describe("AuditForm (soumission d'audit)", () => {
 });
 
 vi.mock("@/components/security/useAntiBot",()=>({useAntiBot:()=>({verify:async()=>undefined,element:null})}));
+
+it("explains backend verification outages and preserves the audit URL",async()=>{
+ vi.mocked(argosApi.createAudit).mockRejectedValue(Object.assign(new Error("antibot_unavailable"),{code:"antibot_unavailable"}));
+ render(<AuditForm/>);fireEvent.change(screen.getByRole("textbox"),{target:{value:"https://example.com/"}});fireEvent.click(screen.getByRole("button"));
+ expect(await screen.findByRole("alert")).toHaveTextContent("La vérification anti-robot est indisponible");expect(screen.getByRole("textbox")).toHaveValue("https://example.com/");
+});

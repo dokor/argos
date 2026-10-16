@@ -49,7 +49,7 @@ export default function AuditForm({ sourceRoute, idPrefix, submitLabel, initialU
 
   const submitting = verifying || phase === "submitting" || phase === "polling" || phase === "redirecting";
   const errorMsg = inputError ?? (phase === "error"
-    ? error && "code" in error && error.code === "quota_exceeded" ? t.account.usage.reached : t.marketing.form.errorRequest
+    ? error && "code" in error && error.code === "antibot_invalid" ? t.account.errors.antibot_invalid : error && "code" in error && error.code === "antibot_unavailable" ? t.account.errors.antibot_unavailable : error && "code" in error && error.code === "quota_exceeded" ? t.account.usage.reached : t.marketing.form.errorRequest
     : null);
   const inputId = idPrefix ? `${idPrefix}-audit-url` : "public-audit-url";
 

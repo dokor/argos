@@ -9,7 +9,7 @@ import { feedbackCopy } from "./copy";
 import s from "./FeedbackForm.module.scss";
 
 export default function FeedbackForm({ reference, findingKey, initialType, onDirty, onSent, onBusy }: { reference?: FeedbackReference; findingKey?: string; initialType?:string; onDirty?:()=>void; onSent?:()=>void; onBusy?:(busy:boolean)=>void }) {
-  const { lang } = useLang(), c = feedbackCopy[lang], id = useId();
+  const { lang, t } = useLang(), c = feedbackCopy[lang], id = useId();
   const [type, setType] = useState(initialType ?? (findingKey ? "FALSE_POSITIVE" : "SUGGESTION")), [busy, setBusy] = useState(false), [sent, setSent] = useState(false), [error, setError] = useState("");
   const receipt=useRef<HTMLParagraphElement>(null);
   useEffect(()=>{if(sent)receipt.current?.focus();},[sent]);
@@ -29,7 +29,7 @@ export default function FeedbackForm({ reference, findingKey, initialType, onDir
       const response = await fetch("/api/feedback", { method: "POST", headers: { "Content-Type": "application/json", ...await accountAuditHeaders(), ...(captcha ? {"X-Argos-Captcha":captcha} : {}) }, body: JSON.stringify(body), signal:AbortSignal.timeout(15000), cache: "no-store" });
       const result = await response.json().catch(() => ({}));
       if (response.ok && result.accepted === true) {setSent(true);onSent?.();}
-      else setError(response.status === 429 ? c.limited + (response.headers.get("retry-after") ?? "900") : response.status === 404 ? c.unavailable : response.status === 400 ? c.invalid : c.error);
+      else setError(result.error === "antibot_invalid" ? t.account.errors.antibot_invalid : result.error === "antibot_unavailable" ? t.account.errors.antibot_unavailable : response.status === 429 ? c.limited + (response.headers.get("retry-after") ?? "900") : response.status === 404 ? c.unavailable : response.status === 400 ? c.invalid : c.error);
     } catch { setError(c.error); }
     finally { lock.current=false;setBusy(false);onBusy?.(false); }
   }

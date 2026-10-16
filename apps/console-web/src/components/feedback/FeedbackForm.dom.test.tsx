@@ -47,3 +47,9 @@ it("requires a real report context for false positives and communicates rate-lim
   expect(await screen.findByRole("alert")).toHaveTextContent("30");
   await waitFor(()=>expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({type:"FALSE_POSITIVE",findingKey:"http.hsts",reportToken:"t".repeat(43)}));
 });
+
+it("explains a server-side anti-bot refusal and preserves the message for a fresh attempt",async()=>{
+ fetchMock.mockResolvedValue(new Response('{"error":"antibot_invalid"}',{status:400}));
+ render(<LangProvider><FeedbackForm/></LangProvider>);fireEvent.change(screen.getByLabelText("Description"),{target:{value:"Preserved draft"}});fireEvent.click(screen.getByRole("button",{name:"Envoyer le retour"}));
+ expect(await screen.findByRole("alert")).toHaveTextContent("La vérification anti-robot a expiré ou a été refusée");expect(screen.getByLabelText("Description")).toHaveValue("Preserved draft");
+});
