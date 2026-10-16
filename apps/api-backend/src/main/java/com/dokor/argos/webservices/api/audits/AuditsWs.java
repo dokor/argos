@@ -1,5 +1,7 @@
 package com.dokor.argos.webservices.api.audits;
 
+import com.dokor.argos.services.security.AdminReadAccess;
+
 import com.coreoz.plume.jersey.security.permission.PublicApi;
 import com.dokor.argos.services.domain.audit.AuditService;
 import com.dokor.argos.services.domain.audit.AuditQueryService;

@@ -28,7 +28,7 @@ class ReportSharingServiceTest {
             return ((BiFunction<AccountSessionService.Context,Connection,?>)call.getArgument(4)).apply(new AccountSessionService.Context(user,null),connection);
         }).when(sessions).with(nullable(String.class),nullable(String.class),eq(true),eq(true),any());
         when(reports.getByRunId(1)).thenReturn(Optional.of(report));when(reports.getByToken("original")).thenReturn(Optional.of(report));
-        service=new ReportSharingService(dao,sessions,reports,tokens,Clock.fixed(now,ZoneOffset.UTC));
+        service=new ReportSharingService(dao,sessions,reports,tokens,Clock.fixed(now,ZoneOffset.UTC),new com.dokor.argos.db.dao.ReportSharingDao());
     }
     @AfterEach void close() throws Exception {connection.close();}
     @Test void storesOnlyHashAndRotatesAndRevokesCapability() throws Exception {

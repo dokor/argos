@@ -102,7 +102,7 @@ public class AccountWs {
     public Response update(Profile body) {
         if (body == null) throw new AccountError(400, "payload_invalid");
         String token = csrf.require(request()),
-                name = AccountAuthService.displayName(body.displayName());
+                name = AccountIdentityValues.displayName(body.displayName());
         return AccountAuthWs.ok(
                 sessions.with(
                         auth(),

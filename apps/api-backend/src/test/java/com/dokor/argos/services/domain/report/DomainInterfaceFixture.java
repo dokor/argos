@@ -115,7 +115,7 @@ final class DomainInterfaceFixture {
                         fixture.tokens,
                         clock,
                         settings,
-                        sites);
+                        sites, new AccountRunReadDao(accounts.transactions));
         var csrf = new AccountCsrf(settings);
         var auth =
                 new AccountAuthService(
@@ -233,7 +233,7 @@ final class DomainInterfaceFixture {
                                 AccountAccess::value))
                 .register(AccountContextFactory.binding(sessions))
                 .register(new com.dokor.argos.webservices.api.account.ReportAccessWs(
-                        new ReportSharingService(accounts, sessions, fixture.reader, fixture.tokens, clock), csrf))
+                        new ReportSharingService(accounts, sessions, fixture.reader, fixture.tokens, clock,new com.dokor.argos.db.dao.ReportSharingDao()), csrf))
                 .register(
                         new AccountWs(
                                 accounts,
