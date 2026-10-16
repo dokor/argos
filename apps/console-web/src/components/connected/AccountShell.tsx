@@ -17,6 +17,7 @@ import QuotaSummary from "./QuotaSummary";
 import NavigationIcon from "./NavigationIcon";
 import AccountMenu from "./AccountMenu";
 import WebTip from "@/components/editorial/WebTip";
+import NotificationCenter from "./NotificationCenter";
 import s from "./Connected.module.scss";
 
 /** One chrome for private pages; authorization still belongs to each Java resource. */
@@ -83,7 +84,7 @@ export default function AccountShell({ children }: { children: ReactNode }) {
       {valid && <AccountMenu key={currentPath} profile={session.profile!} onOpen={close} compact={collapsed}/>}
     </aside>
     <div className={s.workspace}>
-      <header className={s.topbar}><p>{c.workspace}<span aria-hidden="true"> / </span><strong>{context}</strong></p><QuotaSummary/><div className={s.preferences}><ThemeToggle/><LangToggle/></div></header>
+      <header className={s.topbar}><p>{c.workspace}<span aria-hidden="true"> / </span><strong>{context}</strong></p><QuotaSummary/><div className={s.preferences}>{valid && <NotificationCenter/>}<ThemeToggle/><LangToggle/></div></header>
       <div id="account-content" className={s.content} tabIndex={-1}>
         {valid ? children : <main className={s.page}>
           <PageHeading title={c.workspace}/>

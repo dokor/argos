@@ -45,6 +45,7 @@ export default function AnalyticsView() {
     <Link href="/account/admin">{c.back}</Link><h1>{c.title}</h1><p>{c.intro}</p>
     {!session.ready ? <p role="status">{c.loading}</p> : !allowed ? <><p role="alert">{c.denied}</p><Link href="/account/sign-in">{c.signIn}</Link></> : <>
       <AdminNavigation active="analytics" />
+      <nav className={s.controls} aria-label={lang === 'fr' ? 'Statistiques' : 'Statistics'}><Link href="/account/admin/analytics" aria-current="page">{lang === 'fr' ? 'Mesure produit' : 'Product measurement'}</Link><Link href="/account/admin/analytics/traffic">{lang === 'fr' ? 'Trafic' : 'Traffic'}</Link></nav>
       <div className={s.controls}><label htmlFor="analytics-period">{c.period}</label>
         <select id="analytics-period" value={days} onChange={event => setDays(Number(event.target.value))}>
           {[7, 30, 90].map(value => <option key={value} value={value}>{value} {c.days}</option>)}
