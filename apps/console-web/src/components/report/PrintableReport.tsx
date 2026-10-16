@@ -1,4 +1,6 @@
 import ModuleExecutionFacts from "./ModuleExecutionFacts";
+import CoverageDetails from "./CoverageDetails";
+import FindingGuide from "./FindingGuide";
 import ObservedMeasurements from "./ObservedMeasurements";
 import ReportPageScope from "./ReportPageScope";
 import ObservedEvidence from "./ObservedEvidence";
@@ -62,11 +64,12 @@ export default function PrintableReport({report,lang,format:requestedFormat}:{re
  <h5>{r.evidence}</h5>{valid?<p>{i.id==='runtime.network.bytes_estimated'?r.estimated+': ':''}{m.value.toLocaleString(lang,{maximumSignificantDigits:6})} {r.units[m.unit]}</p>:<p>{r.missingMeasure}</p>}
  <ObservedEvidence evidence={i.structuredEvidence?.observed} lang={lang} />
  {i.structuredEvidence?.details?.length?<dl>{i.structuredEvidence.details.slice(0,20).map((detail,n)=><div key={n}><dt>{detail.key==='score'&&i.id?.startsWith('lighthouse.audit.')?r.lighthouseRatio:cleanEvidence(detail.key)}</dt><dd>{cleanEvidence(detail.text)}</dd></div>)}</dl>:i.evidence&&<p className="evidence">{cleanEvidence(i.evidence)}</p>}
- <p><strong>{r.recommendation}:</strong> {c.recommendation}</p><p><strong>{r.verification}:</strong> {c.verification}</p></article>;})}</section>)}</section>}
+ <FindingGuide issue={i} lang={lang} heading={5}/></article>;})}</section>)}</section>}
  <section><h2>{d.method}</h2><p>{d.confidenceExplain}</p><p>{d.lighthouse}</p><p>{d.automaticLimit}</p><p>{r.limits}</p>
  <p>{d.scoring}: {report.scores.calculation?.scoringVersion??d.versionsUnknown}</p><p>{d.coverageVersion}: {coverage?.version??e.unknown}</p><p>{d.editorial}: {CATALOGUE_VERSION}</p>
  {coverage&&<ul>{(['MEASURED','UNAVAILABLE','BLOCKED_BY_ANTIBOT','NOT_APPLICABLE'] as const).map(state=><li key={state}>{t.measurementCoverage.states[state]}: {coverage.checks.filter(c=>c.state===state).length}</li>)}</ul>}
  <p>{d.missingModules}: {[...new Set(coverage?.checks.filter(c=>c.state==='UNAVAILABLE'||c.state==='BLOCKED_BY_ANTIBOT').map(c=>c.module)??[])].join(', ')||e.unknown}</p>
  <p>{d.source}: {[...new Set(model.findings.flatMap(f=>[...f.sources,f.issue.structuredEvidence?.source]).filter(Boolean))].map(v=>cleanEvidence(v!)).join(', ')||d.sourcesUnknown}</p>
+ {format==='full'&&<CoverageDetails coverage={coverage} lang={lang}/>}
  <p>{r.next}</p><a href={method}>{d.generalMethod}</a></section></main>;
 }

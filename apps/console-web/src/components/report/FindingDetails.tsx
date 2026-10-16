@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import ObservedEvidence from "./ObservedEvidence";
+import FindingGuide from "./FindingGuide";
 import { correctionGuide } from "@/lib/correctionGuides";
 import { useLang } from "@/lib/i18n/LangContext";
 import { CATALOGUE_VERSION, cleanEvidence, findingContent } from "./findingCatalogue";
@@ -35,7 +36,7 @@ export default function FindingDetails({ finding }: { finding: Finding }) {
         <div key={index}><dt><code>{detail.key === "score" && issue.id?.startsWith("lighthouse.audit.") ? copy.lighthouseRatio : cleanEvidence(detail.key)}</code></dt><dd>{cleanEvidence(detail.text)}</dd></div>)}</dl>
         : issue.evidence && <p>{cleanEvidence(issue.evidence)}</p>}
     </div>
-    <div className={s.detailBlock}><h3 className={s.detailBlockLabel}>{copy.recommendation}</h3><p>{content.recommendation}</p>{guide && <p><Link href={guide.href}>{lang === "fr" ? "En savoir plus" : "Learn more"} : {guide.label}</Link></p>}</div>
-    <div className={s.detailBlock}><h3 className={s.detailBlockLabel}>{copy.verification}</h3><p>{content.verification}</p></div>
+    <FindingGuide issue={issue} lang={lang}/>
+    {guide && <p><Link href={guide.href}>{lang === "fr" ? "En savoir plus" : "Learn more"} : {guide.label}</Link></p>}
   </div>;
 }

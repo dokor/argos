@@ -1,6 +1,7 @@
 "use client";
 
 import ModuleExecutionFacts from "./ModuleExecutionFacts";
+import CoverageDetails from "./CoverageDetails";
 import ReportPageScope from "./ReportPageScope";
 
 import Link from "@/components/LocalizedLink";
@@ -54,6 +55,7 @@ export default function ReportMethod({ report, model, open, onToggle }: {
       {coverage && <><h3>{copy.checks}</h3><ul>{(["MEASURED", "UNAVAILABLE", "BLOCKED_BY_ANTIBOT", "NOT_APPLICABLE"] as const).map(state =>
         <li key={state}>{t.report.measurementCoverage.states[state]}: {coverage.checks.filter(check => check.state === state).length}</li>)}</ul></>}
       {!!unmeasured.length && <p><strong>{copy.missingModules}:</strong> {unmeasured.join(", ")}</p>}
+      <CoverageDetails coverage={coverage} lang={lang}/>
       {report.antiBot?.detected && <p>{copy.antiBot}</p>}
       <h3>{copy.source}</h3><p>{sources.join(", ") || copy.sourcesUnknown}</p>
       <h3>{copy.versions}</h3><ul>{versions.map((version, index) => <li key={index}>{version}</li>)}</ul>

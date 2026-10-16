@@ -791,8 +791,8 @@ public class HttpModuleAnalyzer {
             false,          // scorable filled later
             0.0,            // weight filled later
             List.of(),      // tags filled later
-            enc,
-            enabled ? Map.of("content-encoding", enc) : Map.of(),
+            enabled ? enc : "identity",
+            enabled ? Map.of("content-encoding", enc, "present", true) : Map.of("present", false),
             enabled ? "Compression activée (" + enc + ")." : "Aucun Content-Encoding détecté.",
             null
         );
@@ -834,8 +834,8 @@ public class HttpModuleAnalyzer {
             false,          // scorable filled later
             0.0,            // weight filled later
             List.of(),      // tags filled later
-            server,
-            server != null ? Map.of("server", server) : Map.of(),
+            server != null ? server : "",
+            server != null ? Map.of("server", server, "present", true) : Map.of("present", false),
             server != null ? "L'en-tête Server est présent." : "L'en-tête Server est absent.",
             null
         );
