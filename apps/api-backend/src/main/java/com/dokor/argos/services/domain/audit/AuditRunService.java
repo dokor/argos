@@ -30,6 +30,8 @@ public class AuditRunService {
     private final AuditRunDao auditRunDao;
     private final TokenService tokenService;
     private final ObjectMapper objectMapper;
+    private com.dokor.argos.services.analysis.AuditScopeCatalogue scopes = new com.dokor.argos.services.analysis.AuditScopeCatalogue(new com.dokor.argos.services.analysis.scoring.DefaultScorePolicy());
+    @Inject void configureScopes(com.dokor.argos.services.analysis.AuditScopeCatalogue scopes) { this.scopes=scopes; }
 
     @Inject
     public AuditRunService(AuditRunDao auditRunDao, TokenService tokenService, ObjectMapper objectMapper) {
@@ -67,8 +69,14 @@ public class AuditRunService {
         return createQueuedRun(auditId,now,null,null);
     }
     public QueuedRun createQueuedRun(long auditId, Instant now, Long ownerUserId, java.sql.Connection connection) {
+        return createQueuedRun(auditId, now, ownerUserId, connection, com.dokor.argos.services.analysis.AuditScope.full());
+    }
+    public QueuedRun createQueuedRun(long auditId, Instant now, Long ownerUserId, java.sql.Connection connection,
+                                     com.dokor.argos.services.analysis.AuditScope scope) {
+        scope = scopes.validate(scope);
+        final var admittedScope = scope;
         if(ownerUserId!=null) {
-            if(connection==null) return auditRunDao.usage().transaction(c -> createQueuedRun(auditId,now,ownerUserId,c));
+            if(connection==null) return auditRunDao.usage().transaction(c -> createQueuedRun(auditId,now,ownerUserId,c,admittedScope));
             auditRunDao.usage().lockOwner(ownerUserId,connection);
             auditRunDao.lockAdmission(connection);
             auditRunDao.usage().admit(ownerUserId,connection);
@@ -76,7 +84,7 @@ public class AuditRunService {
         logger.info("Creating QUEUED run for auditId={}", auditId);
 
         String reportToken = tokenService.generateToken();
-        String moduleStatusesJson = serializeModuleStatuses(INITIAL_MODULE_STATUSES);
+        String moduleStatusesJson = initialModuleStatusesJson(scope);
 
         AuditRun run = new AuditRun();
         run.setAuditId(auditId);
@@ -85,6 +93,10 @@ public class AuditRunService {
         run.setCreatedAt(now);
         run.setReportTokenHash(tokenService.sha256(reportToken));
         run.setModuleStatuses(moduleStatusesJson);
+        if(scope.partial()) {
+            try { run.setExecutionScope(objectMapper.writeValueAsString(scope)); }
+            catch (com.fasterxml.jackson.core.JsonProcessingException e) { throw new IllegalStateException("Cannot serialize analysis scope",e); }
+        }
 
         AuditRun saved = auditRunDao.saveQueued(run, connection);
         if(ownerUserId!=null) auditRunDao.usage().reserve(saved,connection);
@@ -145,7 +157,7 @@ public class AuditRunService {
      * traitement complet.
      */
     public void resetModuleStatuses(long runId) {
-        auditRunDao.updateModuleStatuses(runId, serializeModuleStatuses(INITIAL_MODULE_STATUSES));
+        auditRunDao.updateModuleStatuses(runId, getRun(runId).map(this::initialModuleStatusesJson).orElseGet(this::initialModuleStatusesJson));
         logger.debug("Module statuses reset to PENDING runId={}", runId);
     }
 
@@ -173,6 +185,17 @@ public class AuditRunService {
     // ─── Helpers ─────────────────────────────────────────────────────────────────
 
     public String initialModuleStatusesJson() { return serializeModuleStatuses(INITIAL_MODULE_STATUSES); }
+
+    public String initialModuleStatusesJson(AuditRun run) {
+        try { return initialModuleStatusesJson(run.getExecutionScope()==null ? com.dokor.argos.services.analysis.AuditScope.full()
+            : objectMapper.readValue(run.getExecutionScope(),com.dokor.argos.services.analysis.AuditScope.class)); }
+        catch (java.io.IOException e) { throw new IllegalStateException("Invalid stored analysis scope",e); }
+    }
+    private String initialModuleStatusesJson(com.dokor.argos.services.analysis.AuditScope scope) {
+        var modules = scopes.modules(scope);
+        return serializeModuleStatuses(AuditModule.ordered().stream().map(module -> new ModuleStatus(module.id(),module.progressLabel(),
+            modules.contains(module) ? ModuleStatus.PENDING : ModuleStatus.SKIPPED)).toList());
+    }
 
     private String serializeModuleStatuses(List<ModuleStatus> statuses) {
         try {

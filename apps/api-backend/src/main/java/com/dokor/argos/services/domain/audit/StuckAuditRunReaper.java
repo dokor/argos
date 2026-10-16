@@ -84,7 +84,7 @@ public class StuckAuditRunReaper {
     }
 
     private boolean handleStuckRun(AuditRun run, int maxAttempts) {
-        var result=auditRunDao.recoverStuck(run,maxAttempts,Instant.now(),auditRunService.initialModuleStatusesJson());
+        var result=auditRunDao.recoverStuck(run,maxAttempts,Instant.now(),run.getExecutionScope()==null ? auditRunService.initialModuleStatusesJson() : auditRunService.initialModuleStatusesJson(run));
         if(result==AuditRunDao.Recovery.FAILED) auditRunService.failRunningModules(run.getId());
         if(result!=AuditRunDao.Recovery.STALE) logger.warn("Stuck audit recovery runId={} outcome={}",run.getId(),result);
         return result!=AuditRunDao.Recovery.STALE;

@@ -133,7 +133,7 @@ class ConnectedModelIT extends MariaDbReportFixture {
         discovery(301,10,101,"QUEUED","existing-discovery");
         batch(321,10,101,100,"RUNNING","existing-batch");
         var current=Flyway.configure().dataSource(source).load();
-        assertEquals(2,current.migrate().migrationsExecuted);current.validate();
+        assertEquals(3,current.migrate().migrationsExecuted);current.validate();
         assertEquals(0,current.migrate().migrationsExecuted);
         discovery(302,10,101,"QUEUED","new-discovery");
         batch(322,10,101,100,"QUEUED","new-batch");

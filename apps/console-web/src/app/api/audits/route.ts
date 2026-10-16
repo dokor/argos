@@ -52,7 +52,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Request body must be a JSON object" }, { status: 400 });
   }
 
-  const { url, sourceRoute, lang } = body as Record<string, unknown>;
+  const { url, sourceRoute, lang, scope } = body as Record<string, unknown>;
+  if (scope !== undefined) {
+    if (!scope || typeof scope !== "object" || Array.isArray(scope)) return NextResponse.json({ error: "Invalid analysis scope" }, { status: 400 });
+    const { kind, target } = scope as Record<string, unknown>;
+    const valid = kind === "full" ? target == null : kind === "category"
+      ? ["performance", "security", "seo", "a11y"].includes(String(target))
+      : kind === "check" && typeof target === "string" && /^[a-z][a-z0-9_.-]{1,159}$/i.test(target);
+    if (!valid || Object.keys(scope).some(key => !["kind", "target"].includes(key))) return NextResponse.json({ error: "Invalid analysis scope" }, { status: 400 });
+  }
   if ((body as Record<string,unknown>).personal === true && !request.cookies.has(SESSION_COOKIE)) return NextResponse.json({error:"session_invalid"},{status:401,headers:{"Cache-Control":"private, no-store"}});
   const analytics = attribution(request,{route:sourceRoute,lang,placement:"form"});
   const rejected=async(errorCategory:"validation"|"service"|"rate_limit")=>{if(analytics)await count({event:"audit_submission_rejected",dimensions:analytics,errorCategory});};
@@ -110,7 +118,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       headers: { "Content-Type": "application/json", ...(analytics ? {Authorization:"Bearer "+process.env.ADMIN_API_TOKEN} : {}),
         ...(personal ? { "X-Argos-Account-Session": personal.get("Authorization") ?? "", Origin: personal.get("Origin") ?? "",
           "X-Argos-CSRF": personal.get("X-Argos-CSRF") ?? "", Cookie: personal.get("Cookie") ?? "" } : {}) },
-      body: JSON.stringify({ url: trimmed, ...(analytics ? {analytics} : {}) }),
+      body: JSON.stringify({ url: trimmed, ...(analytics ? {analytics} : {}), ...(scope ? {scope} : {}) }),
     });
   } catch (error) {
     logger.error("audit_bff_backend_unreachable", {

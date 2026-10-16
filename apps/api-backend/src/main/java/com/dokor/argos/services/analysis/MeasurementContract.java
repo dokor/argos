@@ -15,6 +15,10 @@ public final class MeasurementContract {
     public static String scope(String requested, String destination) {
         return destination == null ? null : digest(requested + "\n" + destination);
     }
+    public static String scope(String requested, String destination, AuditScope scope) {
+        if (!scope.partial()) return scope(requested,destination);
+        return destination == null ? null : digest(requested + "\n" + destination + "\n" + scope.kind() + "\n" + scope.target());
+    }
     private static String digest(String value) {
         try { return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.getBytes(StandardCharsets.UTF_8))); }
         catch (NoSuchAlgorithmException impossible) { throw new IllegalStateException(impossible); }

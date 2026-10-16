@@ -26,7 +26,10 @@ function fixture(token) {
   return {
     pageIdentity: { requested: "https://atelier.example/collection/sac-en-coton", destination: partial ? "https://atelier.example/collection/sac-recycle" : "https://atelier.example/collection/sac-en-coton", redacted: partial, redirected: partial },
     generatedAt: "2026-10-11T10:00:00Z", domain: "atelier.example", url: "https://atelier.example/collection/sac-en-coton",
-    site: { title: "Atelier · Rapport de démonstration" }, tech: { cms: { name: "Commerce démo" } },
+    site: { title: "Atelier · Rapport de démonstration" }, tech: { cms: { name: "Commerce démo" }, hosting: {
+      method: "HTTP_HEADERS_V1", observedAt: "2026-10-11T10:00:00Z", applicationHost: { name: "Vercel", confidence: "MEDIUM", evidence: ["x-vercel-id present"] },
+      cdnProxies: [{ name: "Cloudflare", confidence: "MEDIUM", evidence: ["cf-ray present"] }], networkProvider: null, originStatus: "PROBABLE_PLATFORM",
+    } },
     scores: { global: empty ? 96 : 64, globalAvailable: !unavailable, completeness: ratio * 100,
       byCategory: categories.map(c => ({ ...c, score: empty ? 96 : c.score, issues: empty ? 0 : c.issues })),
       coverage: { version: "visual-fixture", threshold: .8, provisional: partial || unavailable,
@@ -71,6 +74,10 @@ function fixture(token) {
 const tokens = new Set(["review-complete", "review-partial", "review-unavailable", "review-empty", "review-details"]);
 const port = Number(process.env.ARGOS_PREVIEW_PORT ?? 3018);
 createServer((req, res) => {
+  if (req.method === "GET" && req.url === "/api/audits/scope-catalogue") {
+    res.writeHead(200, { "Content-Type": "application/json" });
+    return res.end(JSON.stringify({ version: "visual-fixture", checkKeys: ["http.security.csp", "html.images.alt_coverage"] }));
+  }
   res.setHeader("Content-Type", "application/json; charset=utf-8");
   res.setHeader("Cache-Control", "no-store");
   if (req.method !== "GET") { res.writeHead(405); res.end(JSON.stringify({ error: "Read-only visual fixtures" })); return; }

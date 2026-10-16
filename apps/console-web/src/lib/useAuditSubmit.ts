@@ -5,7 +5,7 @@ import { useLang } from "@/lib/i18n/LangContext";
 import { publicRoute } from "@/lib/analytics/contract";
 import { localizedPath } from "@/lib/i18n/routes";
 import { useRouter } from "next/navigation";
-import { argosApi, CreateAuditResponse } from "@/lib/ArgosApi";
+import { argosApi, CreateAuditResponse, type AuditScope } from "@/lib/ArgosApi";
 import { createLogger, safeError, sanitizeUrl } from "@/lib/logger";
 import { normalizeInputUrl } from "@/lib/url";
 
@@ -46,7 +46,7 @@ export type UseAuditSubmitResult = {
   errorKind: AuditErrorKind | null;
   /** Erreur brute de crÃ©ation, pour afficher un message prÃ©cis si besoin. */
   error: Error | null;
-  submit: (rawUrl: string) => Promise<void>;
+  submit: (rawUrl: string, scope?: AuditScope) => Promise<void>;
   reset: () => void;
 };
 
@@ -188,7 +188,7 @@ export function useAuditSubmit(options: UseAuditSubmitOptions): UseAuditSubmitRe
   }, [phase, maxWaitMs, pollIntervalMs, maxPolls, logger, redirectToReport]);
 
   const submit = useCallback(
-    async (rawUrl: string) => {
+    async (rawUrl: string, scope?: AuditScope) => {
       const trimmed = rawUrl.trim();
       if (!trimmed || submittingRef.current || (phase !== "idle" && phase !== "error")) return;
       submittingRef.current = true;
@@ -210,6 +210,7 @@ export function useAuditSubmit(options: UseAuditSubmitOptions): UseAuditSubmitRe
           url: normalized,
           sourceRoute: publicRoute(sourceRoute ?? window.location.pathname),
           lang,
+          ...(scope ? { scope } : {}),
         });
         runIdRef.current = res.runId;
         reportTokenRef.current = res.reportToken ?? null;
