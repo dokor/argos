@@ -190,6 +190,25 @@
   font-size: 1.08rem;
 }
 
+.exampleCards { display: none; }
+
+@media (max-width: 800px) {
+  .tableWrap { display: none; }
+  .exampleCards {
+    display: grid;
+    gap: 16px;
+    margin: 26px 0 20px;
+    overflow-wrap: anywhere;
+    h3 { font-size: 1.1rem; font-weight: 700; line-height: 1.5; }
+    article { min-width: 0; padding: 16px; border: 1px solid t.$border; border-radius: t.$radius-lg; background: t.$surface; }
+    h4 { margin-bottom: 12px; font-weight: 700; font-size: 1rem; }
+    dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; }
+    dl > div:first-child { grid-column: 1 / -1; }
+    dt { color: t.$text-muted; line-height: 1.5; }
+    dd { margin: 4px 0 0; line-height: 1.6; font-variant-numeric: tabular-nums; }
+  }
+}
+
 .next {
   margin: 72px 0 80px;
   padding: 30px;

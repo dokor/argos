@@ -98,7 +98,7 @@ export default function AccountShell({ children }: { children: ReactNode }) {
 
 export function AccountFooter() {
   const { t, lang } = useLang(), c = t.connected, copy = clarteCopy[lang];
-  return <footer className={s.footer}><div className={s.footerIntro}><div><strong>Argos</strong><span>{copy.footer}</span></div><Link href="/feedback">{c.contact} <span aria-hidden="true">↗</span></Link></div><nav aria-label={c.footer}>
+  return <footer className={s.footer}><nav aria-label={c.footer}>
     <Link href="/faq">{c.help}</Link><Link href="/">{copy.returnSite} <span aria-hidden="true">↗</span></Link><Link href="/informations-legales">{c.legal}</Link><Link href="/confidentialite">{c.privacy}</Link>
-  </nav></footer>;
+  </nav><Link href="/feedback">{c.contact} <span aria-hidden="true">↗</span></Link></footer>;
 }
