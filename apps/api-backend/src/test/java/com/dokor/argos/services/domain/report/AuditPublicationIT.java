@@ -1,5 +1,7 @@
 package com.dokor.argos.services.domain.report;
 
+import com.dokor.argos.services.security.AdminReadAccess;
+
 import com.coreoz.plume.db.querydsl.transaction.TransactionManagerQuerydsl;
 import com.coreoz.plume.jersey.errors.WsJacksonJsonProvider;
 import com.dokor.argos.db.dao.*;

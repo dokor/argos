@@ -1,5 +1,7 @@
 package com.dokor.argos.services.domain.report;
 
+import com.dokor.argos.services.security.AdminReadAccess;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 

@@ -5,7 +5,7 @@ import com.dokor.argos.db.generated.*;
 import com.dokor.argos.services.token.TokenService;
 
 import jakarta.inject.*;
-import jakarta.mail.internet.InternetAddress;
+
 
 import java.sql.Connection;
 import java.time.Clock;
@@ -39,24 +39,6 @@ public class AccountAuthService {
         this.clock = clock;
     }
 
-    public static String email(String input) {
-        if (input == null
-                || input.length() > 254
-                || !input.equals(input.strip())
-                || input.chars().anyMatch(c -> c < 33 || c > 126))
-            throw new AccountError(400, "email_invalid");
-        String normalized = input.toLowerCase(Locale.ROOT);
-        try {
-            var address = new InternetAddress(normalized, true);
-            address.validate();
-            if (!address.getAddress().equals(normalized) || !normalized.contains("@"))
-                throw new Exception();
-        } catch (Exception invalid) {
-            throw new AccountError(400, "email_invalid");
-        }
-        return normalized;
-    }
-
     public void available() {
         if (!settings.enabled()) throw new AccountError(503, "account_unavailable");
     }
@@ -67,9 +49,9 @@ public class AccountAuthService {
 
     public void register(String raw, String password, String name, String language) {
         available();
-        String email = email(raw);
+        String email = AccountIdentityValues.email(raw);
         String hash = passwords.hash(password);
-        String display = displayName(name);
+        String display = AccountIdentityValues.displayName(name);
         try {
             dao.transaction(
                     c -> {
@@ -95,7 +77,7 @@ public class AccountAuthService {
 
     public AccountSessionService.Issued login(String raw, String password, String csrf) {
         available();
-        String email = email(raw);
+        String email = AccountIdentityValues.email(raw);
         return dao.transaction(
                 c -> {
                     var found = dao.email(email, c);
@@ -127,7 +109,7 @@ public class AccountAuthService {
 
     public void send(String raw, String purpose, String language) {
         available();
-        String email = email(raw);
+        String email = AccountIdentityValues.email(raw);
         dao.transaction(
                 c -> {
                     var found = dao.email(email, c);
@@ -325,7 +307,7 @@ public class AccountAuthService {
     }
 
     public void confirmEmail(String auth, String csrf, String raw) {
-        String email = email(raw);
+        String email = AccountIdentityValues.email(raw);
         try {
             sessions.with(
                     auth,
@@ -478,15 +460,6 @@ public class AccountAuthService {
     public void notice(AccountUser user, String text) {
         if (user.getEmail() != null && "ACTIVE".equals(user.getState()))
             mail.send(user.getEmail(), "Argos — sécurité / security", text);
-    }
-
-    public static String displayName(String name) {
-        if (name == null
-                || name.isBlank()
-                || name.length() > 100
-                || name.chars().anyMatch(Character::isISOControl))
-            throw new AccountError(400, "name_invalid");
-        return name.strip();
     }
 
     public static boolean duplicate(Throwable failure) {

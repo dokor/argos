@@ -1,4 +1,4 @@
-package com.dokor.argos.webservices.api.audits;
+package com.dokor.argos.services.security;
 
 import com.dokor.argos.services.configuration.ConfigurationService;
 import jakarta.inject.Inject;

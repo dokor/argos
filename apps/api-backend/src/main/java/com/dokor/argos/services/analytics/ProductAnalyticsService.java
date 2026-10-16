@@ -1,7 +1,7 @@
 package com.dokor.argos.services.analytics;
 import com.dokor.argos.db.dao.AuditReportDao;
 import com.dokor.argos.services.token.TokenService;
-import com.dokor.argos.webservices.api.audits.AdminReadAccess;
+import com.dokor.argos.services.security.AdminReadAccess;
 import com.dokor.argos.services.account.AccountSessionService;
 import com.dokor.argos.services.account.AdminService;
 import com.dokor.argos.services.account.AccountError;

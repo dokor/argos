@@ -1,4 +1,6 @@
 package com.dokor.argos.services.analytics;
+
+import com.dokor.argos.services.security.AdminReadAccess;
 import org.junit.jupiter.api.Test;
 import java.time.*;
 import java.util.*;
@@ -6,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 class TrafficAnalyticsServiceTest {
  @Test void requiresAdminAndDisabledCollectionDoesNotWrite(){
-  var dao=mock(ProductAnalyticsDao.class);var access=mock(com.dokor.argos.webservices.api.audits.AdminReadAccess.class);
+  var dao=mock(ProductAnalyticsDao.class);var access=mock(AdminReadAccess.class);
   var service=new TrafficAnalyticsService(com.typesafe.config.ConfigFactory.empty(),dao,access,Clock.systemUTC());
   assertFalse(service.count(new TrafficEvent("/","fr","direct",true),"Bearer synthetic"));verify(access).require("Bearer synthetic");verifyNoInteractions(dao);
   var user=new com.dokor.argos.db.generated.AccountUser();user.setState("ACTIVE");user.setRole("USER");
