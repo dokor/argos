@@ -247,4 +247,33 @@ class DomainCrawlerTest {
                 "https://example.com", new DiscoveryTransport.Response(301, "text/html", "/", ""));
         assertEquals("REDIRECT_LOOP", run(50, 3, List.of()).reason());
     }
+
+    @Test void configuredDiscoveryTraversesBeyondFiftyAndDepthThree() {
+        policy = new DiscoveryPolicy(ConfigFactory.parseString("discovery.max-urls=200\ndiscovery.max-depth=5"));
+        StringBuilder root = new StringBuilder();
+        for (int n=0;n<60;n++) {root.append("<a href='/p"+n+"'>p</a>");html("/p"+n, "");}
+        root.append("<a href='/d1'>deep</a>"); html("",root.toString());
+        for(int n=1;n<=5;n++) html("/d"+n,n<5?"<a href='/d"+(n+1)+"'>next</a>":"");
+        var result=run(200,5,List.of());
+        assertEquals(66,pages.stream().filter(DomainCrawler.Page::eligible).count());
+        assertTrue(fetched.contains("https://example.com/d5"));
+        assertEquals("EXHAUSTED",result.reason());
+    }
+    @Test void engineRestrictsForgedOrOldSnapshotWithoutTrustingCaller() {
+        StringBuilder root = new StringBuilder();
+        for(int n=0;n<80;n++){root.append("<a href='/p"+n+"'>p</a>");html("/p"+n,"");}
+        html("",root.toString());
+        var input=new CreateDiscovery("example.com",200L,5L,List.of());
+        var result=new DomainCrawler(policy,transport).crawl(input,new DiscoveryLimits(200L,5L,300L,2L),
+            new DiscoveryBudget(Duration.ofSeconds(10),()->false),pages::add);
+        assertEquals(50,pages.size());assertEquals("URL_LIMIT",result.reason());
+        assertTrue(fetched.size()<=52);
+    }
+    @Test void requestsHaveIndependentBudgetIncludingRobotsAndRedirects() {
+        policy=new DiscoveryPolicy(ConfigFactory.parseString("discovery.max-requests=2"));
+        html("","<a href='/child'>child</a>");html("/child","");
+        var result=run(50,3,List.of());
+        assertEquals("REQUEST_LIMIT",result.reason());assertTrue(result.truncated());
+        assertEquals(2,fetched.size());
+    }
 }

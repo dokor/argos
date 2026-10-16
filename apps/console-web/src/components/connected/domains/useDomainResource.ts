@@ -9,6 +9,7 @@ export const followPages = () => true;
 export function useDomainResource<T>(
   path: string | null,
   poll?: (data: T) => boolean,
+  loader = accountFetch<T>,
 ) {
   const { profile, denied, invalidate } = useAccountSession(),
     allowed = !!profile?.verified && !denied;
@@ -37,7 +38,7 @@ export function useDomainResource<T>(
       inflight = true;
       setLoading(key);
       try {
-        const data = await accountFetch<T>(
+        const data = await loader(
           key,
           "GET",
           undefined,
@@ -97,7 +98,7 @@ export function useDomainResource<T>(
       clearTimeout(timer);
       document.removeEventListener("visibilitychange", visibility);
     };
-  }, [path, allowed, invalidate, revision, poll]);
+  }, [path, allowed, invalidate, revision, poll, loader]);
   return {
     data: allowed && result?.path === path ? result.data : null,
     error: allowed && failure?.path === path ? failure.code : "",

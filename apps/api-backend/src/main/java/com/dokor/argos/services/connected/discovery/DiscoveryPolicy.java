@@ -14,6 +14,8 @@ public final class DiscoveryPolicy {
             perHost,
             workers,
             queueLimit,
+            accountQueueLimit,
+            maxRequests,
             redirects,
             bodyBytes,
             robotsBytes,
@@ -24,12 +26,14 @@ public final class DiscoveryPolicy {
 
     @Inject
     public DiscoveryPolicy(Config c) {
-        maxUrls = value(c, "max-urls", 50, 1, 50);
-        maxDepth = value(c, "max-depth", 3, 0, 3);
+        maxUrls = value(c, "max-urls", 50, 1, 1000);
+        maxDepth = value(c, "max-depth", 3, 0, 10);
         seconds = value(c, "duration-seconds", 60, 1, 300);
         perHost = value(c, "requests-per-host", 2, 1, 2);
         workers = value(c, "workers", 4, 1, 16);
         queueLimit = value(c, "queue-limit", 100, 1, 1000);
+        accountQueueLimit = value(c, "account-queue-limit", 5, 1, 50);
+        maxRequests = value(c, "max-requests", 1000, 1, 10000);
         redirects = value(c, "max-redirects", 5, 0, 5);
         bodyBytes = value(c, "body-bytes", 2097152, 1024, 2097152);
         robotsBytes = value(c, "robots-bytes", 1048576, 1024, 1048576);
@@ -42,9 +46,25 @@ public final class DiscoveryPolicy {
     private static int value(Config c, String name, int fallback, int min, int max) {
         String key = "discovery." + name;
         int v = c.hasPath(key) ? c.getInt(key) : fallback;
-        if (v < min || v > max)
+        if (v < min || v > max || (c.hasPath(key) && c.getDouble(key) != v))
             throw new IllegalArgumentException("Invalid discovery configuration: " + name);
         return v;
+    }
+
+    public void validate(CreateDiscovery input) {
+        if (input.maxUrls() > maxUrls || input.maxDepth() > maxDepth)
+            throw new com.dokor.argos.services.account.AccountError(400, "discovery_limits_invalid");
+    }
+
+    // A queued snapshot never grows; reduced operator limits apply when execution starts.
+    public DiscoveryLimits restrict(DiscoveryLimits saved) {
+        return new DiscoveryLimits(Math.min(saved.maxUrls(), maxUrls),
+                Math.min(saved.maxDepth(), maxDepth), Math.min(saved.durationSeconds(), seconds),
+                Math.min(saved.requestsPerHost(), perHost));
+    }
+
+    public DiscoveryCapabilities capabilities() {
+        return new DiscoveryCapabilities((long) maxUrls, (long) maxDepth, (long) Math.min(20, maxUrls), (long) Math.min(2, maxDepth), (long) seconds);
     }
 
     public DiscoveryLimits limits(CreateDiscovery input) {

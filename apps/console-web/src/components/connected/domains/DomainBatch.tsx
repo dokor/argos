@@ -1,5 +1,6 @@
 "use client";
 import { RepeatedCollectionGaps } from "../CollectionGaps";
+import DomainTasks from "./DomainTasks";
 import DomainPageFilters from "./DomainPageFilters";
 import { findingTitle } from "@/components/report/findingCatalogue";
 import CommonFindingContent from "./CommonFindingContent";
@@ -149,6 +150,7 @@ export default function DomainBatch({
           </>
         }
       />
+      <DomainTasks domainId={domainId} />
       {!valid ? (
         <DomainError code="invalid_filters" />
       ) : summary.error ? (

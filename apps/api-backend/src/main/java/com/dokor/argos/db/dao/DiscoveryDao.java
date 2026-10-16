@@ -68,6 +68,16 @@ public final class DiscoveryDao extends CrudDaoQuerydsl<DomainDiscovery> {
                 .fetch();
     }
 
+    public List<DomainDiscovery> resumable(long owner, Instant now, Connection c) {
+        var b = QDomainBatch.table;
+        return transactionManager.selectQuery(c).select(D).from(D)
+                .where(D.ownerUserId.eq(owner), D.expiresAt.gt(now),
+                    D.status.in("QUEUED", "RUNNING").or(D.status.eq("COMPLETED").and(
+                        com.querydsl.sql.SQLExpressions.selectOne().from(b)
+                            .where(b.discoveryId.eq(D.id), b.ownerUserId.eq(owner)).notExists())))
+                .orderBy(D.status.eq("COMPLETED").asc(), D.createdAt.desc(), D.id.desc()).limit(100).fetch();
+    }
+
     public void insert(DomainDiscovery row, Connection c) {
         execute(
                 c,
@@ -115,9 +125,13 @@ public final class DiscoveryDao extends CrudDaoQuerydsl<DomainDiscovery> {
                             "SELECT d.id FROM ARG_DOMAIN_DISCOVERY d JOIN ARG_ACCOUNT_SITE s ON"
                                 + " s.id=d.site_id JOIN ARG_ACCOUNT_USER u ON u.id=d.owner_user_id"
                                 + " WHERE d.status='QUEUED' AND u.state='ACTIVE' AND d.expires_at>?"
+                                + " AND NOT EXISTS (SELECT 1 FROM ARG_DOMAIN_DISCOVERY own WHERE"
+                                + " own.owner_user_id=d.owner_user_id AND own.status='RUNNING')"
                                 + " AND (SELECT COUNT(*) FROM ARG_DOMAIN_DISCOVERY x JOIN"
                                 + " ARG_ACCOUNT_SITE xs ON xs.id=x.site_id WHERE x.status='RUNNING'"
-                                + " AND xs.domain_id=s.domain_id)<? ORDER BY d.created_at,d.id"
+                                + " AND xs.domain_id=s.domain_id)<? ORDER BY COALESCE((SELECT MAX(h.started_at)"
+                                + " FROM ARG_DOMAIN_DISCOVERY h WHERE h.owner_user_id=d.owner_user_id),"
+                                + " '1970-01-01'),d.created_at,d.id"
                                 + " LIMIT 1";
                     try (var statement = c.prepareStatement(sql)) {
                         statement.setTimestamp(1, Timestamp.from(now));
@@ -128,9 +142,23 @@ public final class DiscoveryDao extends CrudDaoQuerydsl<DomainDiscovery> {
                             String token = UUID.randomUUID().toString();
                             if (execute(
                                             c,
-                                            "UPDATE ARG_DOMAIN_DISCOVERY SET"
-                                                + " status='RUNNING',started_at=?,lease_until=TIMESTAMPADD(SECOND,JSON_VALUE(effective_limits_json,'$.durationSeconds')+5,?),claim_token=?,version=version+1"
-                                                + " WHERE id=? AND status='QUEUED'",
+                                            """
+                                            UPDATE ARG_DOMAIN_DISCOVERY SET
+                                              status='RUNNING',
+                                              effective_limits_json=JSON_SET(effective_limits_json,
+                                                '$.maxUrls',LEAST(JSON_VALUE(effective_limits_json,'$.maxUrls'),?),
+                                                '$.maxDepth',LEAST(JSON_VALUE(effective_limits_json,'$.maxDepth'),?),
+                                                '$.durationSeconds',LEAST(JSON_VALUE(effective_limits_json,'$.durationSeconds'),?),
+                                                '$.requestsPerHost',LEAST(JSON_VALUE(effective_limits_json,'$.requestsPerHost'),?)),
+                                              started_at=?,
+                                              lease_until=TIMESTAMPADD(SECOND,JSON_VALUE(effective_limits_json,'$.durationSeconds')+5,?),
+                                              claim_token=?,version=version+1
+                                            WHERE id=? AND status='QUEUED'
+                                            """,
+                                            policy.maxUrls,
+                                            policy.maxDepth,
+                                            policy.seconds,
+                                            policy.perHost,
                                             Timestamp.from(now),
                                             Timestamp.from(now),
                                             token,

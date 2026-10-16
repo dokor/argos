@@ -69,7 +69,7 @@ public final class DiscoveryWorker {
         DomainCrawler.Result result;
         try {
             var input = service.read(job.getParametersJson(), CreateDiscovery.class);
-            var limits = service.read(job.getEffectiveLimitsJson(), DiscoveryLimits.class);
+            var limits = policy.restrict(service.read(job.getEffectiveLimitsJson(), DiscoveryLimits.class));
             long[] checked = {0};
             boolean[] canceled = {false};
             var budget =

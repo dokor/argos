@@ -509,3 +509,11 @@ export type CollectionGap = {
   readonly module: string;
   readonly reason: string;
 };
+
+export type DiscoveryCapabilities = {
+  readonly maxUrls: number;
+  readonly maxDepth: number;
+  readonly defaultUrls: number;
+  readonly defaultDepth: number;
+  readonly durationSeconds: number;
+};

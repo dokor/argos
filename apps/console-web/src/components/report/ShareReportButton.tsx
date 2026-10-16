@@ -1,4 +1,5 @@
 "use client";
+import ReportActionIcon from "./ReportActionIcon";
 
 import { useState } from "react";
 import { reportShareUrl } from "./reportSharing";
@@ -23,6 +24,7 @@ export default function ShareReportButton({ compact = false }: { compact?: boole
   return (
     <div className={compact ? `${s.share} ${s.compact}` : s.share}>
       <button type="button" className={s.button} onClick={copyLink} disabled={status === "busy"}>
+        <ReportActionIcon name="share" />
         {status === "busy" ? labels.copying : compact ? labels.copyLink : labels.shareReport}
       </button>
       <p className={s.status} role="status">

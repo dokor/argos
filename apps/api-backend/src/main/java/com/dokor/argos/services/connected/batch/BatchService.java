@@ -33,6 +33,7 @@ public final class BatchService {
     private final ObjectMapper mapper;
     private final TokenService tokens;
     private final Clock clock;
+    private final BatchQueuePolicy queue;
 
     @Inject
     public BatchService(
@@ -48,7 +49,8 @@ public final class BatchService {
             ConnectedProfiles profiles,
             ObjectMapper mapper,
             TokenService tokens,
-            Clock clock) {
+            Clock clock,
+            BatchQueuePolicy queue) {
         this.accounts = accounts;
         this.sessions = sessions;
         this.batches = batches;
@@ -62,6 +64,7 @@ public final class BatchService {
         this.mapper = mapper;
         this.tokens = tokens;
         this.clock = clock;
+        this.queue = queue;
     }
 
     private <T> T with(
@@ -99,12 +102,14 @@ public final class BatchService {
                         reconcile(row, c);
                         return admitted(row);
                     }
-                    var current = batches.active(owner, c);
-                    if (current != null) {
+                    int pending = 0;
+                    for (var current : batches.active(owner, c)) {
                         current = batches.owned(owner, current.getSiteId(), current.getId(), c);
                         reconcile(current, c);
-                        if (active(current)) throw new AccountError(409, "batch_active");
+                        if (active(current)) pending++;
                     }
+                    if (pending >= queue.accountLimit)
+                        throw new AccountError(429, "batch_queue_full", 2);
                     var discovery =
                             discoveries.owned(owner, Long.parseLong(input.discoveryId()), c, false);
                     if (!discovery.getExpiresAt().isAfter(clock.instant()))
@@ -218,11 +223,13 @@ public final class BatchService {
                 null,
                 false,
                 (ctx, c) -> {
-                    var row = batches.active(ctx.user().getId(), c);
-                    if (row == null) return List.of();
-                    row = batches.owned(ctx.user().getId(), row.getSiteId(), row.getId(), c);
-                    var progress = view(row, c);
-                    return active(row) ? List.of(progress) : List.of();
+                    var result = new ArrayList<BatchProgress>();
+                    for (var row : batches.active(ctx.user().getId(), c)) {
+                        row = batches.owned(ctx.user().getId(), row.getSiteId(), row.getId(), c);
+                        var progress = view(row, c);
+                        if (active(row)) result.add(progress);
+                    }
+                    return List.copyOf(result);
                 });
     }
 

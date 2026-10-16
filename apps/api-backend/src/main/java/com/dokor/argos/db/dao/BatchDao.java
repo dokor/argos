@@ -75,13 +75,14 @@ public final class BatchDao extends CrudDaoQuerydsl<DomainBatch> {
                 .fetchOne();
     }
 
-    public DomainBatch active(long owner, Connection c) {
+    public List<DomainBatch> active(long owner, Connection c) {
         return transactionManager
                 .selectQuery(c)
                 .select(B)
                 .from(B)
                 .where(B.activeOwnerId.eq(owner))
-                .fetchOne();
+                .orderBy(B.createdAt.asc(), B.id.asc())
+                .fetch();
     }
 
     public List<Long> activeIds() {

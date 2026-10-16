@@ -107,7 +107,7 @@ for name,schema in SCHEMAS.items():
     if any(not value.get('nullable') for field,value in props.items() if field not in required_fields):
         raise ValueError('Optional record fields must explicitly support null for older payloads: '+name)
     java.extend(['', '    @JsonInclude(JsonInclude.Include.ALWAYS)', '    public record '+name+'(',
-        ',\n'.join('        @JsonProperty(value = "'+field+'", required = '+str(field in required_fields).lower()+') '+java_type(s)+' '+field for field,s in props.items()), '    ) {'])
+        ',\n'.join('        @JsonProperty(value = "'+field+'", required = '+str(field in required_fields).lower()+') '+ ('@com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = StrictLongDeserializer.class) ' if s.get('x-strict-integer') else '') +java_type(s)+' '+field for field,s in props.items()), '    ) {'])
     if required_fields != set(props):
         parameters = ', '.join(java_type(s)+' '+field for field,s in props.items() if field in required_fields)
         arguments = ', '.join(field if field in required_fields else 'null' for field in props)

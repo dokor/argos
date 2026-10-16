@@ -24,10 +24,10 @@ export function readDomainRequest(raw: string | null): DomainRequest | null {
       b.hostname.length <= 253 &&
       Number.isInteger(b.maxUrls) &&
       b.maxUrls >= 1 &&
-      b.maxUrls <= 50 &&
+      b.maxUrls <= 1000 &&
       Number.isInteger(b.maxDepth) &&
       b.maxDepth >= 0 &&
-      b.maxDepth <= 3 &&
+      b.maxDepth <= 10 &&
       Array.isArray(b.excludedPaths) &&
       b.excludedPaths.length <= 50 &&
       b.excludedPaths.every(
