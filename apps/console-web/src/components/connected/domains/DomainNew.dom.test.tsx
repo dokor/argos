@@ -3,6 +3,11 @@ import { beforeEach, it, expect, vi } from "vitest";
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import DomainNew from "./DomainNew";
 import fr from "@/lib/i18n/fr.json";
+import { accountFetch } from "@/lib/account-client";
+vi.mock("@/lib/account-client", async (importOriginal) => ({
+  ...await importOriginal<typeof import("@/lib/account-client")>(),
+  accountFetch: vi.fn(),
+}));
 const state = vi.hoisted(() => ({
   query: "discovery=600",
   maxUrls: 50, maxDepth: 3, active: false,
@@ -87,6 +92,8 @@ beforeEach(() => {
   state.maxUrls = 50; state.maxDepth = 3; state.active = false;
   state.replace.mockReset();
   state.push.mockReset();
+  vi.mocked(accountFetch).mockReset();
+  vi.mocked(accountFetch).mockResolvedValue({ id: "601", domainId: "7" });
 });
 it("updates a checkbox before delayed router state, then restores selection from URL/back", async () => {
   const view = render(<DomainNew />);
@@ -172,4 +179,31 @@ it("accepts operator limits above 50/3 while another domain is pending", () => {
   expect(screen.getByLabelText(fr.domainPage.maxDepth)).toHaveAttribute("max","5");
   expect(screen.getByRole("button",{name:fr.domainPage.discover})).toBeEnabled();
   expect(screen.getByRole("link",{name:fr.domainPage.resumeDiscovery})).toBeInTheDocument();
+});
+
+it.each(["example.com", "http://example.com", "https://example.com", "https://example.com/", "http://example.com/", " HTTPS://EXAMPLE.COM/ ", "https://www.example.com/", "https://" + "a".repeat(63) + "." + "b".repeat(63) + "." + "c".repeat(63) + "." + "d".repeat(61) + "/"])("submits the canonical exact host from %s", async (input) => {
+  state.query = "";
+  render(<DomainNew />);
+  const field = screen.getByLabelText(fr.domainPage.hostname);
+  expect(field).toHaveAttribute("maxlength", "262");
+  fireEvent.change(field, { target: { value: input } });
+  fireEvent.submit(field.closest("form")!);
+  await act(async () => {});
+  const expected = input.trim().replace(/^https?:\/\//i, "").replace(/\/$/, "").toLowerCase();
+  expect(accountFetch).toHaveBeenCalledWith("domain-discoveries", "POST", {
+    hostname: expected, maxUrls: 20, maxDepth: 2, excludedPaths: [],
+  }, undefined, expect.any(String));
+  const pending = new URL(state.replace.mock.calls[0][0], "http://localhost").searchParams.get("request")!;
+  expect(JSON.parse(pending).body.hostname).toBe(expected);
+  expect(state.push).toHaveBeenCalledWith("/account/domains/new?discovery=601");
+});
+
+it.each(["ftp://example.com", "https://user@example.com", "https://example.com:443", "https://example.com/path", "https://example.com?query=1", "https://example.com/#fragment", "https://example.com\\path"])("preserves invalid scope %s for server rejection", async (input) => {
+  state.query = "";
+  render(<DomainNew />);
+  const field = screen.getByLabelText(fr.domainPage.hostname);
+  fireEvent.change(field, { target: { value: input } });
+  fireEvent.submit(field.closest("form")!);
+  await act(async () => {});
+  expect(accountFetch).toHaveBeenCalledWith("domain-discoveries", "POST", expect.objectContaining({ hostname: input }), undefined, expect.any(String));
 });
