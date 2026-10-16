@@ -161,6 +161,10 @@ public class AccountAuthService {
     }
 
     public void reset(String token, String password) {
+        reset(token, password, "fr");
+    }
+
+    public void reset(String token, String password, String language) {
         String hash = passwords.hash(password);
         consume(
                 token,
@@ -175,7 +179,7 @@ public class AccountAuthService {
                     invalidateTokens(u.getId(), c);
                     sessions.revokeAll(u.getId(), null, c);
                     sessions.event("password_reset", "accepted", u.getId(), null, c);
-                    notice(u, "Mot de passe modifié / Password changed");
+                    notice(u, AccountEmail.Kind.PASSWORD_CHANGED, language);
                     return null;
                 });
     }
@@ -225,7 +229,7 @@ public class AccountAuthService {
         issue(user, purpose, session, c, "fr");
     }
 
-    private void issue(AccountUser user, String purpose, Long session, Connection c, String language) {
+    public void issue(AccountUser user, String purpose, Long session, Connection c, String language) {
         if (user.getEmail() == null) throw new AccountError(400, "email_required");
         var q = QAccountToken.table;
         dao.transactions
@@ -243,27 +247,18 @@ public class AccountAuthService {
         t.setSessionId(session);
         t.setPurpose(purpose);
         t.setTokenHash(tokens.sha256(raw));
-        t.setExpiresAt(clock.instant().plus(settings.tokenTtl(purpose)));
+        var ttl = settings.tokenTtl(purpose);
+        t.setExpiresAt(clock.instant().plus(ttl));
         dao.save(t, c);
-        String path = emailPath(purpose, language);
-        String message =
-                purpose.equals("REAUTH")
-                        ? "Code de confirmation / Confirmation code: " + raw
-                        : "Confirmez explicitement sur / Confirm explicitly at: "
-                                + settings.origin()
-                                + path
-                                + "#token="
-                                + raw;
-        mail.send(user.getEmail(), "Argos — " + purpose, message);
-    }
-
-    static String emailPath(String purpose, String language) {
-        String prefix = "en".equals(language) ? "/en" : "";
-        return prefix + ("VERIFY".equals(purpose) ? "/account/verify"
-                : "RESET".equals(purpose) ? "/account/reset" : "/account");
+        mail.send(user.getEmail(), AccountEmail.render(
+                AccountEmail.Kind.valueOf(purpose), language, settings.origin(), raw, ttl));
     }
 
     public void reauth(String auth, String csrf, String password, String code) {
+        reauth(auth, csrf, password, code, "fr");
+    }
+
+    public void reauth(String auth, String csrf, String password, String code, String language) {
         if (code != null && !code.isBlank()) {
             sessions.with(
                     auth,
@@ -305,7 +300,7 @@ public class AccountAuthService {
                     var local =
                             dao.identity("password", context.user().getId().toString(), c, true);
                     if (password == null || password.isBlank()) {
-                        issue(context.user(), "REAUTH", context.session().getId(), c);
+                        issue(context.user(), "REAUTH", context.session().getId(), c, language);
                         return null;
                     }
                     if (!passwords.verify(
@@ -325,6 +320,10 @@ public class AccountAuthService {
     }
 
     public void confirmEmail(String auth, String csrf, String raw) {
+        confirmEmail(auth, csrf, raw, "fr");
+    }
+
+    public void confirmEmail(String auth, String csrf, String raw, String language) {
         String email = email(raw);
         try {
             sessions.with(
@@ -343,7 +342,7 @@ public class AccountAuthService {
                             throw AccountError.forbidden("email_readonly");
                         context.user().setEmail(email);
                         dao.save(context.user(), c);
-                        issue(context.user(), "VERIFY", null, c);
+                        issue(context.user(), "VERIFY", null, c, language);
                         return null;
                     });
         } catch (RuntimeException failure) {
@@ -353,6 +352,10 @@ public class AccountAuthService {
     }
 
     public void addPassword(String auth, String csrf, String password) {
+        addPassword(auth, csrf, password, "fr");
+    }
+
+    public void addPassword(String auth, String csrf, String password, String language) {
         String hash = passwords.hash(password);
         sessions.with(
                 auth,
@@ -369,9 +372,7 @@ public class AccountAuthService {
                             context.user().getId(),
                             context.session().getId(),
                             c);
-                    notice(
-                            context.user(),
-                            "Méthode de connexion modifiée / Sign-in method changed");
+                    notice(context.user(), AccountEmail.Kind.PASSWORD_CHANGED, language);
                     return null;
                 });
     }
@@ -391,6 +392,10 @@ public class AccountAuthService {
     }
 
     public void removeMethod(String auth, String csrf, long id) {
+        removeMethod(auth, csrf, id, "fr");
+    }
+
+    public void removeMethod(String auth, String csrf, long id, String language) {
         sessions.with(
                 auth,
                 csrf,
@@ -417,7 +422,7 @@ public class AccountAuthService {
                             context.user().getId(),
                             context.session().getId(),
                             c);
-                    notice(context.user(), "Méthode retirée / Sign-in method removed");
+                    notice(context.user(), AccountEmail.Kind.METHOD_REMOVED, language);
                     return null;
                 });
     }
@@ -475,9 +480,9 @@ public class AccountAuthService {
                 .execute();
     }
 
-    public void notice(AccountUser user, String text) {
+    public void notice(AccountUser user, AccountEmail.Kind kind, String language) {
         if (user.getEmail() != null && "ACTIVE".equals(user.getState()))
-            mail.send(user.getEmail(), "Argos — sécurité / security", text);
+            mail.send(user.getEmail(), AccountEmail.render(kind, language, settings.origin(), null, null));
     }
 
     public static String displayName(String name) {

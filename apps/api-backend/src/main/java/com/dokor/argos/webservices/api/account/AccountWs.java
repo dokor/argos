@@ -223,7 +223,7 @@ public class AccountWs {
         if (body == null) throw new AccountError(400, "payload_invalid");
         String token = csrf.require(request());
         rate.check("login", null, AccountAuthWs.remote(nativeRequests.get()));
-        auth.addPassword(auth(), token, body.password());
+        auth.addPassword(auth(), token, body.password(), request().getHeaderString("Accept-Language"));
         return AccountAuthWs.ok(Map.of("accepted", true));
     }
 
@@ -232,7 +232,7 @@ public class AccountWs {
     @AccountAccess("verified")
     public Response remove(@PathParam("id") long id, Confirmation body) {
         if (body == null || !body.confirmed()) throw new AccountError(400, "confirmation_required");
-        auth.removeMethod(auth(), csrf.require(request()), id);
+        auth.removeMethod(auth(), csrf.require(request()), id, request().getHeaderString("Accept-Language"));
         return AccountAuthWs.ok(Map.of("accepted", true));
     }
 

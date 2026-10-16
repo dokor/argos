@@ -1,0 +1,15 @@
+Argos — Confirm your identity
+Confirm your identity
+
+Enter this code in the Argos account window where you requested it to confirm a sensitive action.
+
+Confirmation code: synthetic_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+Valid for 30 minutes. Single use. A new request invalidates the previous link or code.
+
+
+If you did not request this code, do not use or share it. Check your sessions from your account and contact the operator if needed.
+
+Account email sent by Argos. Never share a password, link or confirmation code.
+Privacy: https://argos.example/en/privacy
+Contact the operator: https://argos.example/en/legal-information

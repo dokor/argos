@@ -11,6 +11,7 @@ async function csrfToken(): Promise<string> {
 }
 export async function accountFetch<T>(path: string, method = "GET", body?: unknown, signal?: AbortSignal, idempotencyKey?: string): Promise<T> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
+  headers["Accept-Language"] = typeof window !== "undefined" && window.location.pathname.startsWith("/en/") ? "en" : "fr";
   if (idempotencyKey) headers["Idempotency-Key"] = idempotencyKey;
   if (method !== "GET") headers["X-Argos-CSRF"] = await csrfToken();
   const response = await fetch("/api/account/" + path, { method, headers, signal, ...(body !== undefined ? { body: JSON.stringify(body) } : {}), cache: "no-store" });

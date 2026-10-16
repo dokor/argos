@@ -103,6 +103,11 @@ public class AccountOAuthService {
             String code,
             String authorization,
             String csrf) {
+        return finish(provider, raw, browser, code, authorization, csrf, "fr");
+    }
+
+    public Finish finish(String provider, String raw, String browser, String code,
+                         String authorization, String csrf, String language) {
         if (!AccountCsrf.valid(raw) || !AccountCsrf.valid(browser)) {
             AccountOAuthDiagnostics.rejected(provider, AccountOAuthDiagnostics.Stage.CALLBACK_CONTEXT,
                     AccountOAuthDiagnostics.Reason.INVALID_CONTEXT, 0);
@@ -168,7 +173,7 @@ public class AccountOAuthService {
                                     context.user().getId(),
                                     context.session().getId(),
                                     c);
-                            auth.notice(context.user(), "Méthode ajoutée / Sign-in method added");
+                            auth.notice(context.user(), AccountEmail.Kind.METHOD_ADDED, language);
                             return new Finish(null, tx.getReturnPath());
                         }
                         var existing = dao.identity(provider, identity.subject(), c);
@@ -209,7 +214,7 @@ public class AccountOAuthService {
                             existing.setCreatedAt(clock.instant());
                             dao.save(existing, c);
                             if (email != null && !"ACTIVE".equals(user.getState()))
-                                auth.issue(user, "VERIFY", null, c);
+                                auth.issue(user, "VERIFY", null, c, language);
                         }
                         if (!AccountCsrf.valid(csrf)) throw AccountError.forbidden("csrf_invalid");
                         var issued = sessions.create(user, csrf, c);

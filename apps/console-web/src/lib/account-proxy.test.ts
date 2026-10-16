@@ -239,6 +239,17 @@ it.each(["fr","en"] as const)("keeps the selected language and nested context th
   const completed=await accountProxy(callback,["auth","oauth","github","callback"]);
   expect(completed.headers.get("location")).toBe("https://argos.example"+target);
   expect(completed.cookies.get("argos_account_return")?.value).toBe(target);
+  expect(fetchMock.mock.calls.at(-1)![1].headers.get("Accept-Language")).toBe(lang);
+});
+
+it.each(["auth/resend", "auth/reset", "auth/reauth", "methods/password", "methods/42/remove"])("forwards the supported email language for %s", async path => {
+  for (const language of ["en", "fr", "de", "en,fr;q=0.9"]) {
+    fetchMock.mockReset().mockResolvedValue(Response.json({ accepted: true }));
+    const input = request(path, "POST", {});
+    input.headers.set("Accept-Language", language);
+    expect((await accountProxy(input, path.split("/"))).status).toBe(200);
+    expect(fetchMock.mock.calls[0][1].headers.get("Accept-Language")).toBe(language === "en" ? "en" : "fr");
+  }
 });
 
 it.each(["auth/register", "auth/forgot"])("preserves the private return context and sends only its language for %s", async path => {

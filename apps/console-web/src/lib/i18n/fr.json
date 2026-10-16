@@ -312,11 +312,11 @@
           },
           {
             "q": "Mon rapport est-il public ?",
-            "a": "Le rapport n’est pas listé publiquement. Toute personne disposant de son lien peut le consulter sans compte ; gardez ce lien confidentiel."
+            "a": "Le rapport n’est pas listé publiquement. Toute personne disposant de son lien peut consulter sa synthèse sans compte. Les constats détaillés nécessitent un compte vérifié ; gardez le lien confidentiel."
           },
           {
             "q": "Puis-je partager mon rapport ?",
-            "a": "Oui. Il suffit de transmettre le lien du rapport : toute personne disposant du lien peut le consulter. Ne le partagez donc qu'avec des personnes de confiance."
+            "a": "Oui. Depuis votre compte, vous pouvez créer un lien de partage, le remplacer ou le révoquer, avec une expiration de 7 ou 30 jours ou sans échéance supplémentaire dans la limite de conservation du rapport. La synthèse est lisible par possession du lien ; les détails nécessitent un compte vérifié. Ne partagez vos liens qu’avec des personnes de confiance."
           },
           {
             "q": "Pendant combien de temps un rapport reste-t-il accessible ?",
@@ -356,7 +356,7 @@
           },
           {
             "q": "Qui peut consulter mes rapports ?",
-            "a": "Toute personne possédant le lien peut consulter le rapport. L’opérateur dispose également d’un accès administrateur."
+            "a": "Toute personne possédant le lien peut consulter la synthèse du rapport. Les constats détaillés nécessitent un compte vérifié. Votre espace personnel et son historique demandent votre session ; un lien ne donne pas accès au compte de son propriétaire. L’opérateur dispose également d’un accès administrateur."
           },
           {
             "q": "Mes rapports apparaissent-ils dans Google ?",

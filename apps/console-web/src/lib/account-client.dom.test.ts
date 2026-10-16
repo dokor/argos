@@ -2,6 +2,15 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { accountFetch } from "./account-client";
 afterEach(() => vi.unstubAllGlobals());
+it.each(["/en/account/settings", "/account/settings"])("uses the current account page language for emails on %s", async path => {
+  window.history.replaceState({}, "", path);
+  const fetchMock = vi.fn<typeof fetch>(async url => String(url).endsWith("/csrf") ? Response.json({csrf:"synthetic"}) : Response.json({accepted:true}));
+  vi.stubGlobal("fetch", fetchMock);
+  await accountFetch("auth/reauth", "POST", {});
+  const init = fetchMock.mock.calls.at(-1)![1] as RequestInit;
+  expect((init.headers as Record<string, string>)["Accept-Language"]).toBe(path.startsWith("/en/") ? "en" : "fr");
+  window.history.replaceState({}, "", "/");
+});
 it("invalidates the client session only after a successful password reset", async () => {
   const invalid = vi.fn(); window.addEventListener("argos-account-invalid", invalid);
   let accepted = false;

@@ -47,9 +47,9 @@ class AccountLifecycleIT extends MariaDbReportFixture {
         final List<Message> messages = new CopyOnWriteArrayList<>();
         boolean fail;
 
-        public void send(String recipient, String subject, String text) {
+        public void send(String recipient, AccountEmail.Message message) {
             if (fail) throw new AccountError(503, "mail_unavailable");
-            messages.add(new Message(recipient, text));
+            messages.add(new Message(recipient, message.text()));
         }
 
         String token(String email) {
@@ -59,9 +59,9 @@ class AccountLifecycleIT extends MariaDbReportFixture {
                             .reduce((a, b) -> b)
                             .orElseThrow()
                             .text();
-            return text.contains("#token=")
-                    ? text.substring(text.indexOf("#token=") + 7)
-                    : text.substring(text.lastIndexOf(": ") + 2);
+            var match = java.util.regex.Pattern.compile("(?:#token=|[Cc]ode de confirmation : |Confirmation code: )([A-Za-z0-9_-]{43})").matcher(text);
+            if (!match.find()) throw new AssertionError("No account token in captured email");
+            return match.group(1);
         }
     }
 

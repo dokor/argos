@@ -1,0 +1,16 @@
+Argos — Réinitialisez votre mot de passe
+Réinitialisez votre mot de passe
+
+Une réinitialisation a été demandée pour votre compte Argos. Ouvrez la page sécurisée pour choisir un nouveau mot de passe.
+
+Valable pendant 30 minutes. À usage unique. Une nouvelle demande invalide le lien ou code précédent.
+Ouvrir le lien ne confirme rien : terminez l’action sur la page Argos.
+
+Si vous n’êtes pas à l’origine de cette demande, ignorez cet e-mail. Votre mot de passe actuel reste inchangé. Ne partagez jamais ce lien.
+
+Choisir un nouveau mot de passe
+https://argos.example/account/reset#token=synthetic_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+E-mail de compte envoyé par Argos. Ne partagez jamais de mot de passe, lien ou code de confirmation.
+Confidentialité : https://argos.example/confidentialite
+Contacter l’opérateur : https://argos.example/informations-legales

@@ -129,7 +129,7 @@ public class AccountAuthWs {
     public Response resend(Email b) {
         if (b == null) throw new AccountError(400, "payload_invalid");
         mutation("email", AccountAuthService.email(b.email()));
-        auth.send(b.email(), "VERIFY");
+        auth.send(b.email(), "VERIFY", request().getHeaderString("Accept-Language"));
         return ok(Map.of("accepted", true));
     }
 
@@ -147,7 +147,7 @@ public class AccountAuthWs {
     public Response reset(Token b) {
         mutation("email", null);
         if (b == null) throw new AccountError(400, "payload_invalid");
-        auth.reset(b.token(), b.password());
+        auth.reset(b.token(), b.password(), request().getHeaderString("Accept-Language"));
         return ok(Map.of("accepted", true));
     }
 
@@ -157,7 +157,7 @@ public class AccountAuthWs {
     public Response confirm(Email b) {
         String token = mutation("email", null);
         if (b == null) throw new AccountError(400, "payload_invalid");
-        auth.confirmEmail(authorization(), token, b.email());
+        auth.confirmEmail(authorization(), token, b.email(), request().getHeaderString("Accept-Language"));
         return ok(Map.of("accepted", true));
     }
 
@@ -167,7 +167,7 @@ public class AccountAuthWs {
     public Response reauth(Reauth b) {
         String token = mutation("login", null);
         if (b == null) throw new AccountError(400, "payload_invalid");
-        auth.reauth(authorization(), token, b.password(), b.code());
+        auth.reauth(authorization(), token, b.password(), b.code(), request().getHeaderString("Accept-Language"));
         return ok(Map.of("accepted", true));
     }
 
@@ -233,7 +233,7 @@ public class AccountAuthWs {
                         request().getHeaderString("X-Argos-OAuth-Browser"),
                         code,
                         authorization(),
-                        cookie == null ? null : cookie.getValue());
+                        cookie == null ? null : cookie.getValue(), request().getHeaderString("Accept-Language"));
         var response =
                 Response.ok(Map.of("returnTo", result.returnPath()))
                         .header("Cache-Control", "private, no-store");

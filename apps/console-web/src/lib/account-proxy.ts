@@ -48,6 +48,7 @@ export function accountHeaders(request: NextRequest, mutation: boolean): Headers
   const session = request.cookies.get(SESSION_COOKIE)?.value;
   if (mutation && !validCsrf(request)) return privateError("csrf_invalid", 403);
   const headers = new Headers({ Accept: "application/json", "Content-Type": "application/json" });
+  headers.set("Accept-Language", request.headers.get("accept-language") === "en" ? "en" : "fr");
   if (session !== undefined) {
     if (!session || session.length > 4096) return privateError("session_invalid", 401);
     headers.set("Authorization", "Bearer " + session);
@@ -150,6 +151,7 @@ export async function accountProxy(request: NextRequest, parts: string[]): Promi
     const browser = request.cookies.get("argos_oauth_" + state)?.value;
     if (!browser) return oauthFailure(request, state, "oauth_invalid", "missing_browser_cookie");
     headers.set("X-Argos-OAuth-Browser", browser);
+    headers.set("Accept-Language", safeAccountReturn(request.cookies.get("argos_return_" + state)?.value).startsWith("/en/") ? "en" : "fr");
   }
   const claim = /^runs\/(\d{1,19})\/claim$/.exec(path);
   if (claim) {

@@ -1,0 +1,16 @@
+Argos — Un moyen de connexion a été retiré
+Un moyen de connexion a été retiré
+
+Un moyen de connexion a été désactivé sur votre compte Argos.
+
+Ceci est une notification de sécurité. Aucune confirmation n’est nécessaire.
+
+
+Si vous ne reconnaissez pas ce changement, connectez-vous avec un moyen de confiance, révoquez les autres sessions et contactez l’opérateur.
+
+Vérifier mes moyens de connexion
+https://argos.example/account/settings
+
+E-mail de compte envoyé par Argos. Ne partagez jamais de mot de passe, lien ou code de confirmation.
+Confidentialité : https://argos.example/confidentialite
+Contacter l’opérateur : https://argos.example/informations-legales
