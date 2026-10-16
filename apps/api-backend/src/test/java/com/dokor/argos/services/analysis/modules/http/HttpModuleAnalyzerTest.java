@@ -41,6 +41,25 @@ import static org.mockito.Mockito.when;
  */
 class HttpModuleAnalyzerTest {
 
+    @Test void inspectedAbsentHeadersAreMeasuredWithoutQualityPoints() throws Exception {
+        var module = fixtureAnalysis(200, "<html><title>Example</title></html>", Map.of("content-type", List.of("text/html")));
+        var policy = new DefaultScorePolicy();
+        var coverage = MeasurementCoverageService.compute(policy, List.of(module));
+        var enriched = new ScoreEnricherService(policy).enrich(List.of(module));
+        for (String key : List.of("http.headers.compression", "http.headers.server")) {
+            var check = checkByKey(module, key);
+            assertEquals(false, check.details().get("present"));
+            assertNotNull(check.value());
+            assertEquals(AuditStatus.INFO, check.status());
+            assertEquals(MeasurementCoverage.State.MEASURED, coverage.checks().stream().filter(c -> c.key().equals(key)).findFirst().orElseThrow().state());
+            assertFalse(checkByKey(enriched.getFirst(), key).scorable());
+        }
+        var blocked = fixtureAnalysis(403, "Checking your browser before accessing the site", Map.of());
+        assertTrue(MeasurementCoverageService.compute(policy, List.of(blocked)).checks().stream()
+            .filter(c -> List.of("http.headers.compression", "http.headers.server").contains(c.key()))
+            .allMatch(c -> c.state() == MeasurementCoverage.State.BLOCKED_BY_ANTIBOT));
+    }
+
     private final HttpModuleAnalyzer analyzer = new HttpModuleAnalyzer();
 
     // -------------------------

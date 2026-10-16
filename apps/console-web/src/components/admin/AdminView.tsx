@@ -11,6 +11,7 @@ import { useAccountSession } from "@/components/account/AccountSession";
 import { useLang } from "@/lib/i18n/LangContext";
 import Link from "@/components/LocalizedLink";
 import ReportPage from "@/app/(fr)/report/[token]/ReportPage";
+import CoverageDetails from "@/components/report/CoverageDetails";
 import type { Report } from "@/components/report/types";
 import { copy, type AdminCopy } from "./copy";
 import s from "./AdminView.module.scss";
@@ -168,6 +169,7 @@ export default function AdminView({ runId }: { runId?: string }) {
                 ))}
               </dl>
               <CollectorDiagnostics modules={run.data.modules} coverage={report.data?.scores.coverage} loading={report.loading} unavailable={report.error != null} />
+              {report.data?.scores.coverage && <details><summary>{lang === 'fr' ? 'Détail de la couverture' : 'Coverage breakdown'}</summary><CoverageDetails coverage={report.data.scores.coverage} lang={lang}/></details>}
               {!!run.data.reportAvailable && (
                 <button
                   onClick={() => {

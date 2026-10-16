@@ -7,6 +7,18 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class MeasurementCoverageTest {
+    @Test void rounded96HasAnExactExplainableMissingContribution() {
+        // Controlled catalogue fixture, not evidence of the production incident.
+        var modules = complete().stream().filter(m -> !"observatory".equals(m.id())).toList();
+        var result = coverage(modules);
+        assertEquals(223, result.global().expectedWeight());
+        assertEquals(215, result.global().measuredWeight());
+        assertEquals(96, Math.round(result.global().ratio() * 100));
+        var missing = result.checks().stream().filter(c -> c.state() == MeasurementCoverage.State.UNAVAILABLE).toList();
+        assertEquals(List.of("observatory.score"), missing.stream().map(MeasurementCoverage.Check::key).toList());
+        assertEquals("MODULE_MISSING", missing.getFirst().reason());
+        assertEquals((1 - result.global().ratio()) * 100, missing.stream().mapToDouble(c -> c.weight() / result.global().expectedWeight() * 100).sum(), 1e-10);
+    }
     @Test void challengeFindingsFromZapCannotEnterTheScoreButTlsRemainsMeasured() {
         var http = new AuditModuleResult("http", "HTTP", null, Map.of("antiBotDetected", true), List.of());
         var zap = new AuditModuleResult("zap", "ZAP", null, Map.of(), List.of(check("http.security.csp")));
