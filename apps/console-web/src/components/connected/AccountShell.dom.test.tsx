@@ -21,11 +21,11 @@ it.each(["fr", "en"] as const)("keeps all five localized footer destinations wit
   const footer = screen.getByRole("contentinfo");
   const links = within(footer).getAllByRole("link");
   expect(links.map(link => link.getAttribute("href"))).toEqual(lang === "fr"
-    ? ["/faq", "/", "/informations-legales", "/confidentialite", "/feedback"]
-    : ["/en/faq", "/en", "/en/legal-information", "/en/privacy", "/en/feedback"]);
+    ? ["/faq", "/", "/informations-legales", "/confidentialite"]
+    : ["/en/faq", "/en", "/en/legal-information", "/en/privacy"]);
   expect(within(footer).queryByText("Argos")).not.toBeInTheDocument();
-  expect(links[4]).toHaveAccessibleName(lang === "fr" ? "Nous contacter" : "Contact us");
-  expect(links[4].querySelector('[aria-hidden="true"]')).toHaveTextContent("↗");
+  expect(within(footer).getByRole("button",{name:lang === "fr" ? "Signaler un bug" : "Report a bug"})).toBeInTheDocument();
+  expect(within(footer).getByRole("button",{name:lang === "fr" ? "Proposer une fonctionnalité" : "Suggest a feature"})).toBeInTheDocument();
 });
 it("collapses and restores navigation without losing accessible destinations or the current page", () => {
   const view = render(<AccountShell>{content}</AccountShell>);

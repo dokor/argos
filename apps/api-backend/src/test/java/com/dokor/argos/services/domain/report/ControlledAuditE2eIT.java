@@ -248,6 +248,11 @@ class ControlledAuditE2eIT extends MariaDbReportFixture {
                                         new AdminReadAccess(settings),
                                         reader))
                         .register(new ReportsWs(reader, runs));
+        // This isolated browser harness declares its anti-bot mode explicitly.
+        config.register(new com.dokor.argos.webservices.api.security.AntiBotWs(
+            new com.dokor.argos.services.security.AntiBotService(
+                com.typesafe.config.ConfigFactory.parseString("antibot.mode=disabled"),
+                mapper, java.time.Clock.systemUTC())));
         domainInterface.register(config, auditDao, runDao, audits);
         var api =
                 GrizzlyHttpServerFactory.createHttpServer(

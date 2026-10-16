@@ -1,3 +1,4 @@
+import { boundedJson } from "@/lib/bounded-request";
 import { NextRequest, NextResponse } from "next/server";
 import { accountHeaders, privateError } from "@/lib/account-proxy";
 import { feedbackPayload } from "@/lib/feedback-request";
@@ -7,9 +8,7 @@ export async function POST(request: NextRequest) {
   if (headers instanceof NextResponse) return headers;
   let body: Record<string, unknown>;
   try {
-    const text = await request.text();
-    if (text.length > 12000) return privateError("payload_invalid", 400);
-    body = JSON.parse(text);
+    body = await boundedJson(request, 65536) as Record<string, unknown>;
     if (!body || typeof body !== "object" || Array.isArray(body) || !feedbackPayload(body)) return privateError("payload_invalid", 400);
   } catch { return privateError("payload_invalid", 400); }
   try {

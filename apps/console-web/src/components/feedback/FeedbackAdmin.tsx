@@ -10,7 +10,7 @@ import { feedbackCopy } from "./copy";
 import s from "./FeedbackForm.module.scss";
 
 type Row = { id: string; type: typeof feedbackTypes[number]; status: typeof feedbackStatuses[number]; createdAt: string; updatedAt: string };
-type Detail = Row & { description: string; page: string | null; expected: string | null; observed: string | null; steps: string | null; runId: string | null; findingKey: string | null; events: { actorId: string; oldStatus: Row["status"]; newStatus: Row["status"]; createdAt: string }[] };
+type Detail = Row & { description: string; urls?: string | null; page: string | null; expected: string | null; observed: string | null; steps: string | null; runId: string | null; findingKey: string | null; events: { actorId: string; oldStatus: Row["status"]; newStatus: Row["status"]; createdAt: string }[] };
 type Page = { items: Row[]; nextCursor: string | null };
 type Copy = typeof feedbackCopy.fr;
 function errorMessage(error: unknown, c: Copy) {
@@ -82,7 +82,7 @@ function FeedbackDetail({ id, c, denied, saved, close }: { id: string; c: Copy; 
     {detail.loading && <p role="status">{c.loading}</p>}{detail.error != null && <p role="alert">{errorMessage(detail.error, c)}</p>}{notice && <p role="status">{notice}</p>}
     {detail.data && <>
       <p>{c.types[detail.data.type]} · {c.statuses[detail.data.status]}</p>
-      <dl>{(["description", "page", "expected", "observed", "steps"] as const).map(key => detail.data![key] && <div key={key}><dt>{c[key]}</dt><dd className={s.text}>{key === "page" ? c.pages[detail.data!.page as keyof typeof c.pages] : detail.data![key]}</dd></div>)}</dl>
+      <dl>{(["description", "page", "urls", "expected", "observed", "steps"] as const).map(key => detail.data![key] && <div key={key}><dt>{c[key]}</dt><dd className={s.text}>{key === "page" ? c.pages[detail.data!.page as keyof typeof c.pages] : detail.data![key]}</dd></div>)}</dl>
       {detail.data.findingKey && <p>{c.finding}: <code>{detail.data.findingKey}</code></p>}
       {detail.data.runId && <Link href={"/account/admin/runs/" + detail.data.runId}>{c.report}</Link>}
       <form key={detail.data.updatedAt} onSubmit={treat} className={s.filters}><label>{c.status}<select name="status" defaultValue={detail.data.status}>{feedbackStatuses.map(key => <option key={key} value={key}>{c.statuses[key]}</option>)}</select></label><button disabled={busy}>{busy ? c.loading : c.save}</button></form>

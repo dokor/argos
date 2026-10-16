@@ -31,7 +31,7 @@ export default function ScopedRelaunch({ report }: { report: Report }) {
   const scope: AuditScope = value === "full" ? { kind: "full" } : { kind: value.startsWith("category:") ? "category" : "check", target: value.slice(value.indexOf(":") + 1) };
   return <details className={s.panel}><summary>{fr ? "Relancer une mesure" : "Run a new measurement"}</summary>
     <p id={`${id}-hint`}>{fr ? "Un nouveau rapport est créé. Une relance ciblée produit un score partiel, sans réutiliser les mesures précédentes. Elle compte comme une analyse dans votre quota." : "A new report is created. A targeted rerun produces a partial score with no previous measurements reused. It counts as one analysis against your quota."}</p>
-    <form onSubmit={event => { event.preventDefault(); void submit(report.pageIdentity?.requested ?? report.url, scope); }}>
+    <form onSubmit={event => { event.preventDefault(); void submit(report.pageIdentity?.requested ?? report.url, undefined, scope); }}>
       <div className={s.field}><label htmlFor={id}>{fr ? "Périmètre de la relance" : "Rerun scope"}</label>
         <select id={id} value={value} onChange={event => setValue(event.target.value)} disabled={busy} aria-describedby={`${id}-hint`}>
           <option value="full">{fr ? "Analyse complète" : "Full analysis"}</option>

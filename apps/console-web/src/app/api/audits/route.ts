@@ -115,7 +115,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       method: "POST",
       redirect: "error",
       signal: AbortSignal.timeout(15000),
-      headers: { "Content-Type": "application/json", ...(analytics ? {Authorization:"Bearer "+process.env.ADMIN_API_TOKEN} : {}),
+      headers: { "Content-Type": "application/json", ...(request.headers.get("x-argos-captcha") && request.headers.get("x-argos-captcha")!.length <= 2048 ? {"X-Argos-Captcha": request.headers.get("x-argos-captcha")!} : {}), ...(analytics ? {Authorization:"Bearer "+process.env.ADMIN_API_TOKEN} : {}),
         ...(personal ? { "X-Argos-Account-Session": personal.get("Authorization") ?? "", Origin: personal.get("Origin") ?? "",
           "X-Argos-CSRF": personal.get("X-Argos-CSRF") ?? "", Cookie: personal.get("Cookie") ?? "" } : {}) },
       body: JSON.stringify({ url: trimmed, ...(analytics ? {analytics} : {}), ...(scope ? {scope} : {}) }),

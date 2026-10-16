@@ -222,3 +222,6 @@
 .retryLink:focus-visible { outline: 3px solid t.$brand; outline-offset: 3px; }
 .moduleLabel { min-width: 0; overflow-wrap: anywhere; }
 .moduleStatus { flex-shrink: 0; }
+
+.moduleRow > .moduleLabel { padding-inline: 0; text-align: left; justify-content: flex-start; }
+@media(max-width:420px) { .moduleRow { gap: 8px; } }

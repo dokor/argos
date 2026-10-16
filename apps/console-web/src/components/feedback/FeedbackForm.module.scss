@@ -48,3 +48,8 @@
 .table th { background: t.$surface-2; font-weight: 600; }
 .page :is(a,button,input,select):focus-visible,.table:focus-visible,.panel:focus { outline: 3px solid t.$brand; outline-offset: 3px; }
 @media(max-width:600px) { .page { padding-inline: t.$page-gutter-mobile; margin-block: 24px 48px; } .panel { padding: 16px; } }@media(max-width:540px) { .actions > button { flex: 1 1 140px; } }
+
+.form { margin-block: 20px; }
+.form > p { color: t.$text-muted; font-size: 14px; line-height: 1.6; }
+.form .check input { flex: 0 0 20px; width: 20px; height: 20px; }
+.form > button { background: var(--argos-action-bg); color: var(--argos-action-text); }

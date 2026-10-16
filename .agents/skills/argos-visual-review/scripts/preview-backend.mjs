@@ -92,6 +92,7 @@ createServer((req, res) => {
   const path = new URL(req.url, "http://127.0.0.1:3018").pathname;
   const params = new URL(req.url, "http://127.0.0.1:3018").searchParams;
   const send = data => res.end(JSON.stringify(data));
+  if (path === "/api/antibot") return send({enabled:false});
   const usage = { offer: "DEMO", period: "2026-10", timezone: "UTC", startsAt: "2026-10-01T00:00:00Z", resetsAt: "2026-11-01T00:00:00Z", used: 12, reserved: 2, limit: 50, canLaunch: true };
   // Account roles below are fictional fixture responses, never production access.
   if (path === "/api/account/me") return send({ displayName: "Administration démo", email: "admin@atelier.example", verified: true, admin: true });

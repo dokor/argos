@@ -6,6 +6,7 @@ import fr from "@/lib/i18n/fr.json";
 import ContactLinks from "./ContactLinks";
 import AuthorCredit from "@/components/AuthorCredit";
 import s from "./SiteChrome.module.scss";
+import FeedbackButton from "@/components/feedback/FeedbackButton";
 import { feedbackCopy } from "@/components/feedback/copy";
 
 /** Liens éditoriaux communs à toutes les pages, sauf les rapports privés. */
@@ -38,7 +39,7 @@ export default function SiteFooter({ fixedFrench = false }: { fixedFrench?: bool
           <Link href="/a-propos">{fixedFrench || lang === "fr" ? "À propos" : "About Argos"}</Link>
           <Link href="/methodologie-score#resume">{fixedFrench || lang === "fr" ? "Méthode du score" : "Scoring method"}</Link>
           <ContactLinks fixedFrench={fixedFrench} />
-          <Link href="/feedback">{feedbackCopy[fixedFrench ? "fr" : lang].title}</Link>
+          <FeedbackButton type="BUG">{feedbackCopy[fixedFrench ? "fr" : lang].bugAction}</FeedbackButton><FeedbackButton type="SUGGESTION">{feedbackCopy[fixedFrench ? "fr" : lang].suggestionAction}</FeedbackButton>
           <Link href="/conditions-utilisation">{fixedFrench || lang === "fr" ? "Conditions d’utilisation" : "Terms of use"}</Link>
           <Link href="/confidentialite">{fixedFrench || lang === "fr" ? f.privacy : "Privacy"}</Link>
           <Link href="/informations-legales">{fixedFrench || lang === "fr" ? "Informations sur le service" : "Service information"}</Link>

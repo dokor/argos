@@ -328,3 +328,5 @@ it("maps server field errors to an accessible field without losing the entered n
   expect(screen.getByLabelText("Nom d’affichage")).toHaveValue("Fixture");
   expect(screen.getByLabelText("Nom d’affichage")).toHaveAttribute("aria-describedby","name-hint name-error");
 });
+
+vi.mock("@/components/security/useAntiBot",()=>({useAntiBot:()=>({verify:async()=>undefined,element:null})}));

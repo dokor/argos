@@ -42,6 +42,7 @@ public class NewsletterWs {
     @POST
     @Path("/subscribe")
     @Operation(description = "Inscrit un email à la newsletter Argos.")
+    @com.dokor.argos.webservices.api.security.AntiBot("newsletter")
     public Response subscribe(SubscribeRequest request, @Context ContainerRequestContext context) {
         if (request == null || request.email() == null) {
             return Response.status(Response.Status.BAD_REQUEST)
