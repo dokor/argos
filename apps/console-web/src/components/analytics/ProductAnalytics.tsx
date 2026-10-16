@@ -35,12 +35,16 @@ export default function ProductAnalytics() {
         if(!product)setState(v=>({...v,choice:'refused'}));
         if(!audience)setTraffic(v=>({...v,choice:'refused'}));
         try {
+            let failed=false;
             for(const [url,granted,setter] of [['/api/product-analytics/consent',product,setState],['/api/traffic/consent',audience,setTraffic]] as const){
                 const choice=granted?'granted':'refused';
-                const response=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({choice}),referrerPolicy:'no-referrer'});
-                if(!response.ok)throw new Error('Choice unavailable');
-                setter(v=>({...v,choice}));
+                try {
+                    const response=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({choice}),referrerPolicy:'no-referrer'});
+                    if(!response.ok)throw new Error('Choice unavailable');
+                    setter(v=>({...v,choice}));
+                }catch{failed=true;}
             }
+            if(failed)throw new Error('Choice unavailable');
             setSettings(false);setCustom(false);
             if(!product){seen.current='';reportSeen.current='';}
             if(typeof BroadcastChannel!=='undefined'){const channel=new BroadcastChannel('argos-measurement');channel.postMessage('changed');channel.close();}

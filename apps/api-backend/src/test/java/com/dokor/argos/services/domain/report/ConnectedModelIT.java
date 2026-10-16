@@ -30,13 +30,13 @@ class ConnectedModelIT extends MariaDbReportFixture {
     }
 
     @Test void freshDatabaseHasTheNewModelAndNoSyntheticProductionRecords() throws Exception {
-        assertEquals("30", Flyway.configure().dataSource(source).load().info().current().getVersion().toString());
-        for (var table : List.of("ARG_ACCOUNT_USER", "ARG_DOMAIN_DISCOVERY", "ARG_DOMAIN_DISCOVERY_PAGE", "ARG_DOMAIN_BATCH", "ARG_DOMAIN_BATCH_PAGE", "ARG_USAGE_RUN")) {
+        assertEquals("31", Flyway.configure().dataSource(source).load().info().current().getVersion().toString());
+        for (var table : List.of("ARG_ACCOUNT_NOTIFICATION", "ARG_ACCOUNT_USER", "ARG_DOMAIN_DISCOVERY", "ARG_DOMAIN_DISCOVERY_PAGE", "ARG_DOMAIN_BATCH", "ARG_DOMAIN_BATCH_PAGE", "ARG_USAGE_RUN")) {
             try (var c = source.getConnection(); var s = c.createStatement(); var r = s.executeQuery("SELECT COUNT(*) FROM " + table)) {
                 assertTrue(r.next()); assertEquals(0, r.getLong(1), table);
             }
         }
-        for (var q : List.of(QDomainDiscovery.table, QDomainDiscoveryPage.table, QDomainBatch.table, QDomainBatchPage.table, QAuditRun.auditRun)) {
+        for (var q : List.of(QAccountNotification.table, QDomainDiscovery.table, QDomainDiscoveryPage.table, QDomainBatch.table, QDomainBatchPage.table, QAuditRun.auditRun)) {
             Set<String> actual = new HashSet<>();
             try (var c = source.getConnection(); var r = c.getMetaData().getColumns(c.getCatalog(), null, q.getTableName(), null)) {
                 while (r.next()) actual.add(r.getString("COLUMN_NAME"));
@@ -133,7 +133,7 @@ class ConnectedModelIT extends MariaDbReportFixture {
         discovery(301,10,101,"QUEUED","existing-discovery");
         batch(321,10,101,100,"RUNNING","existing-batch");
         var current=Flyway.configure().dataSource(source).load();
-        assertEquals(1,current.migrate().migrationsExecuted);current.validate();
+        assertEquals(2,current.migrate().migrationsExecuted);current.validate();
         assertEquals(0,current.migrate().migrationsExecuted);
         discovery(302,10,101,"QUEUED","new-discovery");
         batch(322,10,101,100,"QUEUED","new-batch");

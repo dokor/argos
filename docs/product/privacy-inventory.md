@@ -19,7 +19,7 @@ Complément du 16 octobre 2026 (#659 / #662), d'après le code livré :
 | Traceur / stockage | Finalité, durée, destinataire et décision |
 |---|---|
 | `argos_account`, `argos_account_csrf`, session et registre serveur | Authentification et protection CSRF nécessaires ; cookie JWT 15 min renouvelable, session 12 h / inactivité 30 min ; serveur Argos |
-| Cookies OAuth `argos_oauth_*`, `argos_return_*`, `argos_intent_*` et retour de compte | Connexion ou liaison demandée, cookies bornés dans account-proxy ; fournisseur choisi contacté seulement lors de la connexion |
+| Cookies OAuth `argos_oauth_*`, `argos_return_*`, `argos_intent_*` et `argos_account_return` | Connexion ou liaison demandée : 10 minutes pour les trois cookies OAuth, 24 h pour le retour de compte ; fournisseur choisi contacté seulement lors de la connexion |
 | Preuve `argos_run_*` / `argos_account_claims` | Revendication d'une analyse, 24 h, HttpOnly ; nécessaire au parcours demandé |
 | Cookie admin historique, préférence thème | Session admin et préférence d'affichage ; aucune audience dérivée |
 | `argos_product_consent` | Choix de mesure produit, session, HttpOnly Strict ; accord explicite, désactivé par défaut |
