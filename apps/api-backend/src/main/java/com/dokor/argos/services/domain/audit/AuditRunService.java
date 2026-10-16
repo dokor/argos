@@ -157,7 +157,7 @@ public class AuditRunService {
      * traitement complet.
      */
     public void resetModuleStatuses(long runId) {
-        auditRunDao.updateModuleStatuses(runId, getRun(runId).map(this::initialModuleStatusesJson).orElseGet(this::initialModuleStatusesJson));
+        auditRunDao.updateModuleStatuses(runId, initialModuleStatusesFromScopeJson(auditRunDao.executionScope(runId)));
         logger.debug("Module statuses reset to PENDING runId={}", runId);
     }
 
@@ -187,8 +187,11 @@ public class AuditRunService {
     public String initialModuleStatusesJson() { return serializeModuleStatuses(INITIAL_MODULE_STATUSES); }
 
     public String initialModuleStatusesJson(AuditRun run) {
-        try { return initialModuleStatusesJson(run.getExecutionScope()==null ? com.dokor.argos.services.analysis.AuditScope.full()
-            : objectMapper.readValue(run.getExecutionScope(),com.dokor.argos.services.analysis.AuditScope.class)); }
+        return initialModuleStatusesFromScopeJson(run.getExecutionScope());
+    }
+    private String initialModuleStatusesFromScopeJson(String json) {
+        try { return initialModuleStatusesJson(json==null ? com.dokor.argos.services.analysis.AuditScope.full()
+            : objectMapper.readValue(json,com.dokor.argos.services.analysis.AuditScope.class)); }
         catch (java.io.IOException e) { throw new IllegalStateException("Invalid stored analysis scope",e); }
     }
     private String initialModuleStatusesJson(com.dokor.argos.services.analysis.AuditScope scope) {
