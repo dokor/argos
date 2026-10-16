@@ -128,10 +128,10 @@ export async function http<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const argosApi = {
-  createAudit: async (body: CreateAuditRequest): Promise<CreateAuditResponse> =>
+  createAudit: async (body: CreateAuditRequest, captcha?: string): Promise<CreateAuditResponse> =>
     http<CreateAuditResponse>("/api/audits", {
       method: "POST",
-      headers: typeof window === "undefined" ? {} : await accountAuditHeaders(),
+      headers: { ...(typeof window === "undefined" ? {} : await accountAuditHeaders()), ...(captcha ? {"X-Argos-Captcha":captcha} : {}) },
       body: JSON.stringify(body),
     }),
 

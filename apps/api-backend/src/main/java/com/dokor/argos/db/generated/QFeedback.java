@@ -10,7 +10,7 @@ public class QFeedback extends RelationalPathBase<Feedback> {
  public static final QFeedback table=new QFeedback("ARG_FEEDBACK");
  public final NumberPath<Long> id=createNumber("id",Long.class),runId=createNumber("runId",Long.class);
  public final StringPath type=createString("type"),status=createString("status"),description=createString("description"),
- page=createString("page"),expected=createString("expected"),observed=createString("observed"),steps=createString("steps"),findingKey=createString("findingKey");
+ urls=createString("urls"),page=createString("page"),expected=createString("expected"),observed=createString("observed"),steps=createString("steps"),findingKey=createString("findingKey");
  public final DateTimePath<Instant> createdAt=createDateTime("createdAt",Instant.class),updatedAt=createDateTime("updatedAt",Instant.class);
  public final PrimaryKey<Feedback> primary=createPrimaryKey(id);
  public QFeedback(String variable) {
@@ -20,6 +20,7 @@ public class QFeedback extends RelationalPathBase<Feedback> {
   addMetadata(type,ColumnMetadata.named("type").ofType(Types.VARCHAR));
   addMetadata(status,ColumnMetadata.named("status").ofType(Types.VARCHAR));
   addMetadata(description,ColumnMetadata.named("description").ofType(Types.VARCHAR));
+  addMetadata(urls,ColumnMetadata.named("urls").ofType(Types.VARCHAR));
   addMetadata(page,ColumnMetadata.named("page").ofType(Types.VARCHAR));
   addMetadata(expected,ColumnMetadata.named("expected").ofType(Types.VARCHAR));
   addMetadata(observed,ColumnMetadata.named("observed").ofType(Types.VARCHAR));

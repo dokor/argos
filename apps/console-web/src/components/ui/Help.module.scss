@@ -1,0 +1,12 @@
+.dialog { width: min(680px,calc(100% - 24px)); max-height: calc(100dvh - 32px); margin: auto; padding: 24px; border: 1px solid var(--argos-border); border-radius: 12px; background: var(--argos-surface); color: var(--argos-text); overflow: auto; overflow-wrap: anywhere; }
+.dialog::backdrop { background: rgb(0 0 0 / .55); }
+.dialogHead { display: flex; align-items: start; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.dialogHead h2 { font-size: 24px; font-weight: 650; }
+.dialogHead button { min-width: 44px; min-height: 44px; border: 1px solid var(--argos-border); border-radius: 8px; font-size: 24px; }
+.dialog :focus-visible,.trigger:focus-visible { outline: 3px solid var(--argos-brand); outline-offset: 3px; }
+.trigger { padding: 0; display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; color: var(--argos-text-muted); border-radius: 6px; vertical-align: middle; font: inherit; cursor: help; }
+.tooltip { position: fixed; z-index: 10000; width: max-content; max-width: min(320px,calc(100vw - 16px)); padding: 12px 16px; border: 1px solid var(--argos-border); border-radius: 8px; background: var(--argos-surface); color: var(--argos-text); box-shadow: 0 4px 20px rgb(0 0 0 / .15); font-size: 14px; font-weight: 400; line-height: 1.5; overflow-wrap: anywhere; }
+.details { margin-block: 16px; color: var(--argos-text-muted); font-size: 15px; line-height: 1.6; }
+.details summary { min-height: 44px; padding-block: 10px; cursor: pointer; color: var(--argos-brand); font-weight: 600; }
+.details p { max-width: 72ch; margin-block: 8px; }
+@media(max-width:540px) {.dialog{padding:16px;} .dialogHead h2{font-size:21px;} }

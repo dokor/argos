@@ -12,6 +12,7 @@ public class Feedback extends CrudEntityQuerydsl {
  @Column("type") private String type;
  @Column("status") private String status;
  @Column("description") private String description;
+ @Column("urls") private String urls;
  @Column("page") private String page;
  @Column("expected") private String expected;
  @Column("observed") private String observed;

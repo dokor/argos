@@ -1,5 +1,6 @@
 "use client";
 
+import { useAntiBot } from "@/components/security/useAntiBot";
 import React, { useMemo, useState, useRef } from "react";
 import { useLang } from "@/lib/i18n/LangContext";
 import { createLogger } from "@/lib/logger";
@@ -34,6 +35,9 @@ export default function AuditForm({ sourceRoute, idPrefix, submitLabel, initialU
     [sourceRoute]
   );
 
+  const antiBot=useAntiBot("audit");
+  const [verifying,setVerifying]=useState(false);
+  const verifyLock=useRef(false);
   const inputRef=useRef<HTMLInputElement>(null);
   const [url, setUrl] = useState(initialUrl);
   const [inputError, setInputError] = useState<string | null>(null);
@@ -43,14 +47,15 @@ export default function AuditForm({ sourceRoute, idPrefix, submitLabel, initialU
     sourceRoute,
   });
 
-  const submitting = phase === "submitting" || phase === "polling" || phase === "redirecting";
+  const submitting = verifying || phase === "submitting" || phase === "polling" || phase === "redirecting";
   const errorMsg = inputError ?? (phase === "error"
-    ? error && "code" in error && error.code === "quota_exceeded" ? t.account.usage.reached : t.marketing.form.errorRequest
+    ? error && "code" in error && error.code === "antibot_invalid" ? t.account.errors.antibot_invalid : error && "code" in error && error.code === "antibot_unavailable" ? t.account.errors.antibot_unavailable : error && "code" in error && error.code === "quota_exceeded" ? t.account.usage.reached : t.marketing.form.errorRequest
     : null);
   const inputId = idPrefix ? `${idPrefix}-audit-url` : "public-audit-url";
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if(verifyLock.current || submitting) return;
     setInputError(null);
     if (!url.trim()) {
       setInputError(tf.errorUrlMissing);inputRef.current?.focus();
@@ -60,11 +65,13 @@ export default function AuditForm({ sourceRoute, idPrefix, submitLabel, initialU
       setInputError(t.marketing.form.errorInvalidUrl);inputRef.current?.focus();
       return;
     }
-    submit(url);
+    verifyLock.current=true;setVerifying(true);
+    try { await submit(url,await antiBot.verify()); } catch { /* The verification component explains retry and support. */ }
+    finally {verifyLock.current=false;setVerifying(false);}
   }
 
   return (
-    <form onSubmit={handleSubmit} className={`${s.form} ${s.publicForm}`} noValidate>
+    <form method="post" onSubmit={handleSubmit} className={`${s.form} ${s.publicForm}`} noValidate>
       <div className={s.fieldGroup}>
         <label htmlFor={inputId} className={s.label}>{tf.urlLabel}</label>
         <input
@@ -86,6 +93,7 @@ export default function AuditForm({ sourceRoute, idPrefix, submitLabel, initialU
         />
       </div>
 
+      {antiBot.element}
       <button type="submit" disabled={submitting} className={s.submitBtn}>
         {submitting ? tf.submitting : submitLabel ?? tf.submit}
       </button>

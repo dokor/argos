@@ -72,3 +72,5 @@ it("keeps a scrubbed verification token and localizes context in language links 
   expect(link.getAttribute("href")).not.toContain("#token");
   expect(screen.getByRole("link",{name:fr.account.backToSignIn})).toHaveAttribute("href","/account/sign-in?returnTo="+encodeURIComponent("/account/settings?section=profile"));
 });
+
+vi.mock("@/components/security/useAntiBot",()=>({useAntiBot:()=>({verify:async()=>undefined,element:null})}));

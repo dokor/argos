@@ -1,4 +1,5 @@
 "use client";
+import { useAntiBot } from "@/components/security/useAntiBot";
 import SocialProviderLogo, { socialProviderNames } from "./SocialProviderLogo";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
@@ -24,6 +25,7 @@ export default function AccountView({mode="sign-in"}:{mode?:Mode}) {
   const [returnReady, setReturnReady] = useState(false);
   const [name, setName] = useState(""), [email, setEmail] = useState(""), [password, setPassword] = useState("");
   const session = useAccountSession();
+  const antiBot = useAntiBot(mode === "register" ? "register" : "forgot");
   const [switchAccount, setSwitchAccount] = useState(false), [initialized, setInitialized] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<AccountFieldErrors>({});
   const formRef = useRef<HTMLFormElement>(null), noticeRef = useRef<HTMLParagraphElement>(null);
@@ -81,9 +83,11 @@ export default function AccountView({mode="sign-in"}:{mode?:Mode}) {
     const first = Object.keys(validation)[0] as AccountField | undefined;
     if (first) { setError(""); focusTarget.current = first; return; }
     await act(async () => {
-      if (mode === "register") { await accountFetch("auth/register", "POST", { email, password, displayName: name, returnTo }); setMessage(copy.registrationSent); setPassword(""); focusTarget.current = "notice"; }
+      const captcha = mode === "register" || mode === "forgot" ? await antiBot.verify() : undefined;
+      const send = (path:string,body:unknown) => captcha ? accountFetch(path,"POST",body,undefined,undefined,captcha) : accountFetch(path,"POST",body);
+      if (mode === "register") { await send("auth/register", { email, password, displayName: name, returnTo }); setMessage(copy.registrationSent); setPassword(""); focusTarget.current = "notice"; }
       if (mode === "sign-in") { await accountFetch("auth/login", "POST", { email, password }); router.push(returnTo); router.refresh(); }
-      if (mode === "forgot") { await accountFetch("auth/forgot", "POST", { email, returnTo }); setMessage(copy.forgotSent); focusTarget.current = "notice"; }
+      if (mode === "forgot") { await send("auth/forgot", { email, returnTo }); setMessage(copy.forgotSent); focusTarget.current = "notice"; }
       if (mode === "verify") { await accountFetch("auth/verify", "POST", { token }); setMessage(copy.verifiedDone); setToken(""); focusTarget.current = "notice"; }
       if (mode === "reset") { await accountFetch("auth/reset", "POST", { token, password }); setMessage(copy.resetDone); setPassword(""); setToken(""); focusTarget.current = "notice"; }
     });
@@ -118,10 +122,11 @@ export default function AccountView({mode="sign-in"}:{mode?:Mode}) {
     {showForm && ["register", "sign-in"].includes(mode) && <p className={s.policies}>
       {mode === "register" ? copy.registrationPolicyIntro : copy.policyIntro} <Link href="/conditions-utilisation">{copy.policyTerms}</Link> {copy.policyAnd} <Link href="/confidentialite">{copy.policyPrivacy}</Link>.
     </p>}
-    {showForm && <form ref={formRef} className={s.form} onSubmit={submit}>
+    {showForm && <form method="post" ref={formRef} className={s.form} onSubmit={submit}>
       {mode === "register" && field("name", copy.name, name, setName, "text", "name")}
       {["register", "sign-in", "forgot"].includes(mode) && field("email", copy.email, email, setEmail, "email", "email")}
       {["register", "sign-in", "reset"].includes(mode) && field("password", copy.password, password, setPassword, "password", mode === "sign-in" ? "current-password" : "new-password")}
+      {["register","forgot"].includes(mode) && antiBot.element}
       <button className={`${s.button} ${a.primary}`} aria-busy={busy} disabled={busy || !enabled || ["verify", "reset"].includes(mode) && !token}>{busy ? copy.working : mode === "forgot" ? copy.sendResetLink : title}</button>
     </form>}
     {mode === "forgot" && <p className={a.providerHint}>{copy.forgotProviderHint}</p>}

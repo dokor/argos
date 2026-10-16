@@ -46,7 +46,7 @@ export type UseAuditSubmitResult = {
   errorKind: AuditErrorKind | null;
   /** Erreur brute de crÃ©ation, pour afficher un message prÃ©cis si besoin. */
   error: Error | null;
-  submit: (rawUrl: string) => Promise<void>;
+  submit: (rawUrl: string, captcha?: string) => Promise<void>;
   reset: () => void;
 };
 
@@ -188,7 +188,7 @@ export function useAuditSubmit(options: UseAuditSubmitOptions): UseAuditSubmitRe
   }, [phase, maxWaitMs, pollIntervalMs, maxPolls, logger, redirectToReport]);
 
   const submit = useCallback(
-    async (rawUrl: string) => {
+    async (rawUrl: string, captcha?: string) => {
       const trimmed = rawUrl.trim();
       if (!trimmed || submittingRef.current || (phase !== "idle" && phase !== "error")) return;
       submittingRef.current = true;
@@ -206,11 +206,12 @@ export function useAuditSubmit(options: UseAuditSubmitOptions): UseAuditSubmitRe
       });
 
       try {
-        const res = await argosApi.createAudit({
+        const request = {
           url: normalized,
           sourceRoute: publicRoute(sourceRoute ?? window.location.pathname),
           lang,
-        });
+        };
+        const res = captcha ? await argosApi.createAudit(request,captcha) : await argosApi.createAudit(request);
         runIdRef.current = res.runId;
         reportTokenRef.current = res.reportToken ?? null;
         pollCountRef.current = 0;

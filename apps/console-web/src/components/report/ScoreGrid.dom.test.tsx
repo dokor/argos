@@ -13,7 +13,7 @@ describe("four stable Argos domains", () => {
     render(<ScoreGrid categories={[{ key: "security", label: "SSL", score: 0, issues: 8 }, { key: "performance", label: "Performance", score: 0, issues: 0 }]} coverage={coverage} />);
     expect(screen.getAllByRole("heading", { level: 3 }).map(heading => heading.textContent))
       .toEqual(["Performance", "Sécurité", "Référencement", "Accessibilité"]);
-    expect(screen.getAllByRole("link")).toHaveLength(4);
+    expect(screen.getAllByRole("link").filter(link=>link.getAttribute("href")?.startsWith("#cat-"))).toHaveLength(4);
     expect(screen.getAllByText("0/100")).toHaveLength(1);
     expect(screen.getByRole("link", { name: /^Sécurité/ })).toHaveTextContent("Non évalué");
   });

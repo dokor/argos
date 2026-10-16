@@ -1,4 +1,5 @@
 "use client";
+import ContextHelp from "@/components/ui/ContextHelp";
 import { clarteCopy } from "./clarteCopy";
 import { compactUrl } from "./compactCopy";
 import { quotaResetDate } from "@/lib/quota-date";
@@ -47,6 +48,7 @@ export default function UsageView() {
   const historyPeriod=data?.period??period??"";
   return <main className={c.page}>
     <PageHeading title={t.connected.usage} description={copy.intro} action={allowed&&<button className={c.secondary} onClick={refresh}>{copy.refresh}</button>}/>
+<ContextHelp topic="credits"/>
     {!allowed ? <EmptyState title={session.profile ? copy.verification:t.connected.sessionTitle} description={session.profile ? t.account.pending:t.account.errors.session_invalid} kind="error"><Link className={c.secondary} href="/account/settings">{t.connected.account}</Link></EmptyState> : <>
       <div className={s.grid}><Surface title={copy.monthly} action={usage&&<StatusBadge>{usage.offer}</StatusBadge>}>
         {usage ? <>
