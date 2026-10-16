@@ -23,6 +23,7 @@ import PublicReportHistory from "@/components/account/PublicReportHistory";
 import ReportIntroductionEditor from "@/components/report/ReportIntroductionEditor";
 import type {Report} from "@/components/report/types";
 import {useLang} from "@/lib/i18n/LangContext";
+import Link from "@/components/LocalizedLink";
 import s from "./report.module.scss";
 
 type Params={params:{report:Report};feedbackReference?:FeedbackReference;embedded?:boolean;shared?:boolean;runId?:string;demo?:boolean;workspaceActions?:ReactNode};
@@ -55,7 +56,7 @@ export default function ReportPage({params,feedbackReference,embedded=false,shar
     {!embedded&&!demo&&<ReportHeader signedIn={!locked}/>}
     <Content className={s.main}>
       <ReportHero demo={demo} report={report} model={model} introduction={locked?null:note} onSelectFinding={selectFinding} onActions={()=>reading.navigate({view:"actions",anchor:""})}
-        context={<span>{shared?(fr?"Rapport partagé · Lecture seule · Historique du propriétaire non partagé":"Shared report · Read only · Owner history not shared"):runId?(fr?"Mes sites / Rapport enregistré":"My sites / Saved report"):demo?(fr?"Exemple · Données fictives":"Example · Fictional data"):(fr?"Votre analyse est prête":"Your analysis is ready")}</span>}
+        context={runId&&!shared&&!locked&&!demo?<nav className={s.breadcrumb} aria-label={fr?"Fil d’Ariane":"Breadcrumb"}><ol><li><Link href="/account/sites">{fr?"Mes sites":"My sites"}</Link></li><li><span aria-hidden="true">/</span><span aria-current="page">{fr?"Rapport enregistré":"Saved report"}</span></li></ol></nav>:<span>{shared?(fr?"Rapport partagé · Lecture seule · Historique du propriétaire non partagé":"Shared report · Read only · Owner history not shared"):demo?(fr?"Exemple · Données fictives":"Example · Fictional data"):(fr?"Votre analyse est prête":"Your analysis is ready")}</span>}
         actions={!demo&&<>{runId&&<OwnerReportShare runId={runId}/>}<ReportExport compact report={report} runId={runId} shared={shared}/></>}/>
       {locked&&reading.view==="overview"&&<ReportAccountPrompt shared={shared}/>}
       {!embedded&&!shared&&!demo&&!locked&&<><RunClaim/><PublicReportHistory/></>}

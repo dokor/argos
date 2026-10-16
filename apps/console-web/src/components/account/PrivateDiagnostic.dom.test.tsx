@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, expect, it, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, within } from "@testing-library/react";
 import { LangProvider } from "@/lib/i18n/LangContext";
 import PrivateDiagnostic from "./PrivateDiagnostic";
 import type { Report } from "@/components/report/types";
@@ -14,6 +14,10 @@ beforeEach(() => window.history.replaceState(null, "", "/account/runs/42?returnT
 it.each(["fr", "en"] as const)("keeps scope, missing score, canonical findings and deep links in %s", lang => {
   const { container } = render(<LangProvider initialLang={lang}><PrivateDiagnostic report={report} run={{ status: "COMPLETED", siteId: "1", historyContext: { siteId: "1", siteUrlId: "2", normalizedUrl: "https://example.test/collections" } }} runId="42" actions={<a href="/account?attention=priority">Back</a>}/></LangProvider>);
   expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("example.test");
+  const breadcrumb = screen.getByRole("navigation", {name: lang === "fr" ? "Fil d’Ariane" : "Breadcrumb"});
+  expect(within(breadcrumb).getByRole("link", {name: lang === "fr" ? "Mes sites" : "My sites"})).toHaveAttribute("href", lang === "fr" ? "/account/sites" : "/en/account/sites");
+  expect(breadcrumb.querySelector('[aria-current="page"]')).toHaveTextContent(lang === "fr" ? "Rapport enregistré" : "Saved report");
+  expect(within(breadcrumb).getAllByRole("link")).toHaveLength(1);
   expect(screen.getAllByText(/https:\/\/example.test\/collections/).length).toBeGreaterThan(0);
   expect(screen.getByText(lang === "fr" ? /4,9/ : /4.9/)).toBeInTheDocument();
   expect(screen.queryByText("80")).not.toBeInTheDocument();

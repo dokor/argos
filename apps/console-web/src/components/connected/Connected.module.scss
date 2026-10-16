@@ -79,7 +79,8 @@
 .content h2 { font-size: 17px; line-height: 1.4; font-weight: 650; }
 .footer { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px 20px; margin: 0 28px; padding: 14px 0; border-top: 1px solid var(--argos-border); color: var(--argos-text-muted); font-size: 12px; }
 .footer nav { display: flex; flex-wrap: wrap; gap: 0 16px; }
-.footer a { display: inline-flex; align-items: center; min-height: 44px; text-decoration: underline; text-underline-offset: 3px; }
+.footer a { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; text-decoration: underline; text-underline-offset: 3px; }
+.footer a:hover { color: var(--argos-brand); }
 .menu { display: none; }
 .skip { position: fixed; top: 8px; left: 8px; padding: 12px; background: var(--argos-surface); transform: translateY(-200%); z-index: 100; }
 .skip:focus { transform: none; }
@@ -165,11 +166,7 @@ a.kpi:hover { border-color: var(--argos-brand); }
 .integrationNav .soon { margin-left:0; }
 .navigation .helpLink { margin-top:auto;padding-top:24px;color:var(--argos-brand); }
 .identity:hover { background:var(--argos-brand-soft); }
-.footer { display:block;padding-block:20px;font-size:13px; }
-.footerIntro { display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--argos-border);padding-bottom:16px;margin-bottom:12px; }
-.footerIntro > div { display:flex;gap:12px;align-items:center;flex-wrap:wrap; }
-.footerIntro strong { font-size:20px;color:var(--argos-text); }
-.footerIntro a { gap:8px; }
+.footer { font-size:13px; }
 .iconTitle { display:flex;align-items:center;gap:12px; }
 .iconSquare { display:grid;place-items:center;width:40px;height:40px;border-radius:8px;background:var(--argos-brand-soft);color:var(--argos-brand); }
 @media(max-width:900px) { .navigation .helpLink { padding-top:10px; } }

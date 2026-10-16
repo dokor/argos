@@ -64,6 +64,13 @@ export default function ScoreMethodologyPage({ lang }: { lang: Lang }) {
                 <tbody>{c.example.map(row => <tr key={row.domain}><th scope="row">{row.domain}</th><td>{row.checks}</td><td>{row.points}</td><td>{row.score}</td></tr>)}</tbody>
               </table>
             </div>
+            <section className={s.exampleCards} aria-label={c.caption}>
+              <h3>{c.caption}</h3>
+              {c.example.map(row => <article key={row.domain}>
+                <h4>{row.domain}</h4>
+                <dl>{[row.checks, row.points, row.score].map((value, index) => <div key={c.columns[index + 1]}><dt>{c.columns[index + 1]}</dt><dd>{value}</dd></div>)}</dl>
+              </article>)}
+            </section>
             <p className={s.result}><strong>{c.result}</strong>{c.resultFormula}</p>
             <p>{c.exampleCoverage}</p>
           </section>
