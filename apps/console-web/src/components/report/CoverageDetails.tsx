@@ -18,6 +18,7 @@ export default function CoverageDetails({ coverage, lang }: { coverage?: Coverag
     <h3>{c.title}</h3>
     {Number.isFinite(ratio) && <p><strong>{Math.round(ratio * 100)} % {c.measured} — {Math.round((1 - ratio) * 100)} % {c.missing}</strong></p>}
     <p>{format(coverage.global.measuredWeight)} / {format(coverage.global.expectedWeight)} · {safeCode(coverage.version)}</p>
+    {Number.isFinite(coverage.threshold) && <p>{c.threshold}: {Math.round(coverage.threshold * 100)} %</p>}
     <p>{c.historical}</p>
     {!reconciled && <p>{c.mismatch}</p>}
     {!coverage.checks.length ? <p>{c.unavailable}</p> : !missing.length && !partial.length && reconciled && <p>{c.empty}</p>}

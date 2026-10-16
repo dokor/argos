@@ -4,6 +4,10 @@ import { expect, it } from 'vitest';
 import CoverageDetails from './CoverageDetails';
 import { coverageBreakdown } from './coverageExplanation';
 import type { Coverage } from './types';
+import type { Report } from './types';
+import ReportMethod from './ReportMethod';
+import {buildReportModel} from './reportModel';
+import historical from './fixtures/historical-report.json';
 
 const fixture: Coverage = { version:'weighted-coverage-v3', threshold:.8, provisional:false,
   global:{key:'global',measuredWeight:215,expectedWeight:223,ratio:215/223,available:true,sufficient:true}, domains:[],
@@ -35,4 +39,10 @@ it('keeps unknown reasons private and explains incomplete historic breakdowns',(
 });
 it('does not invent missing historical coverage',()=>{
   render(<CoverageDetails lang="fr"/>);expect(screen.getByText('Détail indisponible pour cette analyse.')).toBeInTheDocument();
+});
+it('does not list catalogue owners with absent measurements as actual report sources',()=>{
+  const report:Report={...historical as Report,issues:[],accessibilityEvidence:null,scores:{...historical.scores,coverage:fixture,calculation:null}};
+  render(<ReportMethod report={report} model={buildReportModel(report)} open onToggle={()=>{}}/>);
+  const sources=screen.getByRole('heading',{name:'Sources présentes dans le rapport'}).nextElementSibling;
+  expect(sources).toHaveTextContent('lighthouse');expect(sources).not.toHaveTextContent('observatory');
 });

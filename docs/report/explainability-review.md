@@ -62,3 +62,16 @@ La sélection s’initialise après montage dans un emplacement réservé, commu
 Recette humaine encore à réaliser : un propriétaire de site non technique et un développeur/prestataire doivent lire au moins quatre fiches de domaines différents. Pour chaque fiche, demander de reformuler le problème, la preuve, l’action et le résultat attendu. Consigner profil/date, incompréhensions, corrections et nouvelle lecture. Aucun test DOM ni une relecture par l’agent ne vaut cette validation. Ne pas fermer #673 sur la seule base des tests automatiques.
 
 L’étude de plusieurs runs réels à 96 %, la mesure de récurrence et leur comparaison aux runs à 100 % restent à réaliser avant de conclure sur la cause de production de #671. Le nouvel outil et l’affichage rendent cette étude reproductible ; aucune panne d’intégration particulière n’est présumée.
+
+## Vérifications effectuées le 16 octobre 2026
+
+- Backend : 902 tests Maven, 0 échec/erreur, 1 test d’intégration ignoré (901 réussis).
+- Frontend : suite complète 103 fichiers / 942 tests réussis, puis tests ciblés après les ajustements de provenance et confidentialité (28 puis 19 réussis, dont le nouveau contrôle des sources absentes).
+- Build de production local réussi avec webpack ; lint sans erreur, avec un avertissement préexistant dans ReportPriorityList. Aucun avertissement dans les fichiers modifiés lors du contrôle ciblé.
+- Revue sur fixtures fictives du build de production : couverture, fiche image sans alt et conseils en FR/EN ; thèmes clair et sombre ; largeurs 320, 390, 768 et 1440 px selon les parcours. Aucun débordement horizontal constaté. Un seul h1 sur le rapport inspecté.
+- Accordéons et lien de conseil parcourus au clavier, focus visible ; conseil stable pendant les interactions et renouvelé au rechargement ; aucune erreur d’hydratation dans la nouvelle session de production locale.
+- Pied connecté inspecté à 390 px avec profil fictif. Détail administrateur ouvert avec Entrée ; le jeu de données historique incomplet affiche l’avertissement de réconciliation attendu.
+- Captures conservées localement dans outputs/ui-review/ (rapport, fiche, conseil et pied connecté). Les captures de cette revue ne contiennent que des données fictives. Les artefacts de la CI visuelle complètent cette revue.
+- La première CI fonctionnelle, sécurité, dépendances, E2E d’audit/authentification et intégration MariaDB est passée. La matrice visuelle a révélé un sélecteur de test aside devenu ambigu après l’ajout de l’encart ; le sélecteur cible maintenant explicitement la barre latérale. Vérifier le statut de la révision finale dans la PR.
+
+La cohérence du contenu web/PDF est couverte par les tests de composants partagés ; cette revue ne revendique pas une vérification visuelle exhaustive de la pagination PDF. La recette humaine et l’étude des runs réels décrites plus haut restent nécessaires.

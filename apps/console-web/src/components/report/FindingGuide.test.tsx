@@ -34,5 +34,7 @@ it('provides bilingual detection, concrete steps, expected result and limits or 
 it('redacts report credentials and secret assignments without converting an audit ratio into a duration',()=>{
   expect(cleanEvidence('https://example.com/report/abcdefghijklmnopqrstuvwxyz?x=secret token=abc')).not.toContain('abcdefghijklmnopqrstuvwxyz');
   expect(cleanEvidence('password=abc')).not.toContain('abc');
+  expect(cleanEvidence('Authorization: Bearer private-credential')).not.toContain('private-credential');
+  expect(cleanEvidence('{"token": "private-credential"}')).not.toContain('private-credential');
   expect(findingContent({...issue,id:'lighthouse.audit.largest-contentful-paint',structuredEvidence:{source:'lighthouse',details:[{key:'score',text:'0.02'}]}},'en').observation).not.toContain('0.02 ms');
 });

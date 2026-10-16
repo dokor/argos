@@ -22,7 +22,7 @@ export default function ReportMethod({ report, model, open, onToggle }: {
   const coverage = report.scores.coverage;
   const evidence = report.accessibilityEvidence;
   const sources = [...new Set([
-    ...(coverage?.checks.map(check => check.module) ?? []),
+    ...(coverage?.checks.flatMap(check => [check.measurementModule, ...(check.measurementSources ?? [])]) ?? []),
     ...(report.scores.calculation?.checks?.map(check => check.module) ?? []),
     ...model.findings.flatMap(finding => [...finding.sources, finding.issue.structuredEvidence?.source]),
     ...(evidence ? ["Lighthouse"] : []),

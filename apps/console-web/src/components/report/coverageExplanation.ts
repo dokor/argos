@@ -3,7 +3,7 @@ import type { Coverage } from './types';
 export const coverageCopy = {
   fr: {
     title: 'Détail de la couverture', measured: 'mesurés', missing: 'non couverts', weight: 'Poids', points: 'points de couverture',
-    owner: 'Module propriétaire', source: 'Source réelle', unknown: 'Non conservée', partial: 'Mesure partielle', excluded: 'Exclu du dénominateur',
+    owner: 'Module propriétaire', source: 'Source réelle', unknown: 'Non conservée', partial: 'Mesure partielle', excluded: 'Exclu du dénominateur', threshold: 'Seuil de couverture suffisante',
     empty: 'Tous les contrôles attendus sont mesurés. La couverture ne garantit pas la qualité du site.',
     unavailable: 'Détail indisponible pour cette analyse.',
     historical: 'Valeurs figées dans ce rapport ; aucun recalcul avec le barème actuel. Les contributions sont arrondies séparément.',
@@ -24,7 +24,7 @@ export const coverageCopy = {
   },
   en: {
     title: 'Coverage breakdown', measured: 'measured', missing: 'not covered', weight: 'Weight', points: 'coverage points',
-    owner: 'Owning module', source: 'Actual source', unknown: 'Not retained', partial: 'Partial measurement', excluded: 'Excluded from denominator',
+    owner: 'Owning module', source: 'Actual source', unknown: 'Not retained', partial: 'Partial measurement', excluded: 'Excluded from denominator', threshold: 'Sufficient coverage threshold',
     empty: 'All expected checks are measured. Coverage does not guarantee site quality.',
     unavailable: 'Detail unavailable for this analysis.',
     historical: 'Values frozen in this report; no recalculation using the current policy. Contributions are rounded individually.',

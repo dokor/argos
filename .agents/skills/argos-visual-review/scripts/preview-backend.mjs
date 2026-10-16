@@ -25,12 +25,17 @@ function fixture(token) {
   const partial = token === "review-partial", unavailable = token === "review-unavailable";
   const empty = token === "review-empty";
   const ratio = unavailable ? 0 : coverageReview ? 215 / 223 : partial ? .55 : 1;
-  const findings = empty ? [] : issues;
+  const findings = empty ? [] : !coverageReview ? issues : issues.map((issue, index) => ({
+    ...issue,
+    id: index === 0 ? "lighthouse.audit.largest-contentful-paint" : index === 3 ? "html.meta.description.present" : index === 4 ? "runtime.network.bytes_estimated" : issue.id,
+    structuredEvidence: index === 0 ? { source: "lighthouse", measurement: { value: 4200, unit: "ms" } }
+      : index === 2 ? { source: "html", details: [{ key: "imgCount", text: "4" }, { key: "imgAltMissingCount", text: "2" }] } : undefined,
+  }));
   return {
     pageIdentity: { requested: "https://atelier.example/collection/sac-en-coton", destination: partial ? "https://atelier.example/collection/sac-recycle" : "https://atelier.example/collection/sac-en-coton", redacted: partial, redirected: partial },
     generatedAt: "2026-10-11T10:00:00Z", domain: "atelier.example", url: "https://atelier.example/collection/sac-en-coton",
     site: { title: "Atelier · Rapport de démonstration" }, tech: { cms: { name: "Commerce démo" } },
-    scores: { global: empty ? 96 : 64, globalAvailable: !unavailable, completeness: ratio * 100,
+    scores: { global: empty ? 96 : 64, globalAvailable: !unavailable, completeness: coverageReview ? 87.5 : ratio * 100,
       byCategory: categories.map(c => ({ ...c, score: empty ? 96 : c.score, issues: empty ? 0 : c.issues })),
       coverage: coverageReview ? coverage96 : { version: "visual-fixture", threshold: .8, provisional: partial || unavailable,
         global: aggregate("global", ratio),

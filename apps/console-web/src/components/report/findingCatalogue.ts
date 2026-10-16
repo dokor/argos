@@ -215,7 +215,8 @@ export function cleanEvidence(text?: string | null): string {
       try { const url = new URL(value); url.username = ""; url.password = ""; url.search = ""; url.hash = ""; return url.toString(); }
       catch { return "[URL]"; }
     }).replace(/\/(report|share)\/[A-Za-z0-9_-]{20,512}/g, '/$1/[redacted]')
-    .replace(/\b(authorization|password|secret|token|api[_-]?key)\s*[:=]\s*[^\s,;<>]+/gi, '$1=[redacted]').slice(0, 4000);
+    .replace(/\b(authorization|proxy-authorization|cookie|set-cookie)\s*[:=][^\r\n]*/gi, '$1=[redacted]')
+    .replace(/\b(password|secret|token|api[_-]?key)["']?\s*[:=]\s*(?:"[^"]*"|'[^']*'|[^\s,;<>]+)/gi, '$1=[redacted]').slice(0, 4000);
 }
 export function findingEditorial(key: string | null | undefined, lang: Lang) {
   const copy = key ? catalogue[key]?.[lang] : undefined;
