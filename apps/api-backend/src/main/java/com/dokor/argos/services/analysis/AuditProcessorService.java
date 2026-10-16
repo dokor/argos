@@ -68,6 +68,8 @@ public class AuditProcessorService {
     private final AccessibilityComplianceRiskService accessibilityRiskService;
     private RemoteModuleExecutor remoteModuleExecutor;
     private AuditModuleExecutor auditModuleExecutor;
+    private AuditScopeCatalogue scopes = new AuditScopeCatalogue(new com.dokor.argos.services.analysis.scoring.DefaultScorePolicy());
+    @Inject void configureScopes(AuditScopeCatalogue scopes) { this.scopes = scopes; }
     private CollectorDiagnostics collectorDiagnostics;
     @Inject void configureCollectorDiagnostics(CollectorDiagnostics diagnostics) { collectorDiagnostics = diagnostics; }
 
@@ -197,6 +199,8 @@ public class AuditProcessorService {
         }
 
         try {
+            AuditScope executionScope = scopes.validate(run.getExecutionScope() == null ? null : objectMapper.readValue(run.getExecutionScope(), AuditScope.class));
+            Set<AuditModule> selectedModules = scopes.modules(executionScope);
             long domainId = audit.getDomainId();
             AuditContext context = new AuditContext(inputUrl, normalizedUrl, domainId);
 
@@ -205,6 +209,10 @@ public class AuditProcessorService {
             // n'interrompt plus tout l'audit - on poursuit en mode dégradé avec un
             // rapport partiel. Le détail est exposé dans meta.moduleStatuses / meta.degraded.
             Map<String, String> moduleStatuses = new LinkedHashMap<>();
+            for (var module : AuditModule.ordered()) if (!selectedModules.contains(module)) {
+                moduleStatuses.put(module.id(), "SKIPPED");
+                auditRunService.updateModuleStatus(runId,module.id(),"SKIPPED",run.getClaimToken());
+            }
 
             // HTTP must run first: it supplies finalUrl, headers and body to every
             // remaining module. The catalogue controls the execution/report order.
@@ -229,19 +237,20 @@ public class AuditProcessorService {
             httpModule = stripRawBody(httpModule);
 
             // HTTP has supplied the immutable context. Only these two distant APIs overlap local work.
-            logger.info("module_start module={} runId={}", AuditModule.OBSERVATORY.id(), runId);
-            logger.info("module_start module={} runId={}", AuditModule.SSL.id(), runId);
+            if(selectedModules.contains(AuditModule.OBSERVATORY)) logger.info("module_start module={} runId={}", AuditModule.OBSERVATORY.id(), runId);
+            if(selectedModules.contains(AuditModule.SSL)) logger.info("module_start module={} runId={}", AuditModule.SSL.id(), runId);
             AuditDeadline collectionDeadline=AuditDeadline.current();
-            try (var observatory = remote.submit(AuditModule.OBSERVATORY.id(), () -> collectionDeadline.call(() -> withHttpSnapshot(snapshotUnavailable, () -> observatoryModuleAnalyzer.analyze(ctx, logger))));
+            try (var observatory = selectedModules.contains(AuditModule.OBSERVATORY) ? remote.submit(AuditModule.OBSERVATORY.id(), () -> collectionDeadline.call(() -> withHttpSnapshot(snapshotUnavailable, () -> observatoryModuleAnalyzer.analyze(ctx, logger)))) : null;
                  // TLS assessment does not require an HTML response. In particular, a failed
                  // certificate handshake must not suppress the independent TLS diagnosis.
-                 var ssl = remote.submit(AuditModule.SSL.id(), () -> collectionDeadline.call(() -> sslLabsModuleAnalyzer.analyze(ctx, logger)))) {
-                auditRunService.updateModuleStatus(runId, AuditModule.OBSERVATORY.id(), "RUNNING", run.getClaimToken());
-                auditRunService.updateModuleStatus(runId, AuditModule.SSL.id(), "RUNNING", run.getClaimToken());
+                 var ssl = selectedModules.contains(AuditModule.SSL) ? remote.submit(AuditModule.SSL.id(), () -> collectionDeadline.call(() -> sslLabsModuleAnalyzer.analyze(ctx, logger))) : null) {
+                if(observatory!=null) auditRunService.updateModuleStatus(runId, AuditModule.OBSERVATORY.id(), "RUNNING", run.getClaimToken());
+                if(ssl!=null) auditRunService.updateModuleStatus(runId, AuditModule.SSL.id(), "RUNNING", run.getClaimToken());
 
                 List<AuditModuleResult> allModules = new ArrayList<>(AuditModule.ordered().size());
                 allModules.add(httpModule);
                 for (AuditModule module : AuditModule.ordered().subList(1, AuditModule.ordered().size())) {
+                    if (!selectedModules.contains(module)) continue;
                     AuditModuleResult result = switch (module) {
                         case HTTP -> throw new IllegalStateException("HTTP already executed");
                         case HTML -> runModule(runId, run.getClaimToken(), module, moduleStatuses,
@@ -258,7 +267,8 @@ public class AuditProcessorService {
                             () -> withHttpSnapshot(snapshotUnavailable, () -> zapModuleAnalyzer.analyze(ctx, logger)));
                         // Only Tech has a 24h domain cache. Observatory and SSL still run for each audit.
                         case TECH -> runModule(runId, run.getClaimToken(), module, moduleStatuses,
-                            () -> withHttpSnapshot(snapshotUnavailable, () -> domainAnalysisService.getOrRunTechAnalysis(ctx, logger)));
+                            () -> withHttpSnapshot(snapshotUnavailable, () -> executionScope.partial()
+                                ? domainAnalysisService.runFreshTechAnalysis(ctx, logger) : domainAnalysisService.getOrRunTechAnalysis(ctx, logger)));
                     };
                     allModules.add(result);
                 }
@@ -276,7 +286,7 @@ public class AuditProcessorService {
                 }
 
                 // Merge cross-module duplicate checks
-                List<AuditModuleResult> mergedModules = checkMergerService.merge(allModules);
+                List<AuditModuleResult> mergedModules = checkMergerService.merge(scopes.select(executionScope, allModules));
 
                 // Enrich checks (tags/scorable/weight) + compute score
                 List<AuditModuleResult> enrichedModules = scoreEnricherService.enrich(mergedModules);
@@ -285,9 +295,19 @@ public class AuditProcessorService {
                 AuditScoreReport score = scoreService.compute(scoringVersion, scoringFingerprint, enrichedModules);
 
                 Map<String, String> meta = new LinkedHashMap<>();
+                List<String> reusedKeys = enrichedModules.stream().filter(m -> "tech".equals(m.id()) && m.data()!=null)
+                    .map(m -> m.data().get("stackCache")).filter(Map.class::isInstance).map(Map.class::cast)
+                    .filter(cache -> Boolean.TRUE.equals(cache.get("hit"))).map(cache -> cache.get("checkKeys"))
+                    .filter(List.class::isInstance).flatMap(keys -> ((List<?>)keys).stream())
+                    .filter(String.class::isInstance).map(String.class::cast).distinct().sorted().toList();
+                meta.put("executionScope",objectMapper.writeValueAsString(executionScope));
+                meta.put("executedModules",objectMapper.writeValueAsString(AuditModule.ordered().stream().filter(selectedModules::contains).map(AuditModule::id).toList()));
+                meta.put("newCheckKeys",objectMapper.writeValueAsString(enrichedModules.stream().flatMap(m -> m.checks().stream()).map(AuditCheckResult::key).filter(key -> !key.endsWith(".collect") && !reusedKeys.contains(key)).distinct().sorted().toList()));
+                meta.put("reusedCheckKeys",objectMapper.writeValueAsString(reusedKeys));
+                meta.put("partialScope",String.valueOf(executionScope.partial()));
                 meta.put("generator", "argos-api-backend");
                 meta.put("measurementFingerprint", MeasurementContract.fingerprint(run.getProfileSnapshot()));
-                String scopeFingerprint = MeasurementContract.scope(context.normalizedUrl(), context.finalUrl());
+                String scopeFingerprint = MeasurementContract.scope(context.normalizedUrl(), context.finalUrl(), executionScope);
                 if (scopeFingerprint != null) meta.put("scopeFingerprint", scopeFingerprint);
                 meta.put("schemaVersion", String.valueOf(REPORT_SCHEMA_VERSION));
                 meta.put("scoringVersion", String.valueOf(scoringVersion));

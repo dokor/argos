@@ -24,6 +24,6 @@ export function reportScope(value: string): string | undefined {
 }
 
 export function partialReport(report: Report): boolean {
-  return report.scores.coverage?.provisional === true || report.antiBot?.detected === true
+  return (report.scores.scope != null && report.scores.scope.kind !== "full") || report.scores.coverage?.provisional === true || report.antiBot?.detected === true
     || (typeof report.scores.completeness === "number" && report.scores.completeness < 100);
 }

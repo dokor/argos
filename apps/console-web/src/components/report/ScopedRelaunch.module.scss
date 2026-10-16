@@ -1,0 +1,18 @@
+@use '../../styles/tokens' as t;
+@use '../../styles/controls' as controls;
+
+.panel {
+  border-block: 1px solid t.$border;
+  padding: t.$space-4 0;
+  color: t.$text;
+  summary { cursor: pointer; font-weight: 600; min-height: 44px; padding-block: t.$space-2; }
+  p { max-width: 70ch; margin-block: t.$space-2 t.$space-4; color: t.$text-muted; }
+  form { display: flex; flex-wrap: wrap; gap: t.$space-3; align-items: end; }
+  select, button { @include controls.cta-geometry; background: t.$surface; color: t.$text; border-color: t.$border; }
+  select { width: 100%; min-width: 0; font-weight: 400; }
+  button { cursor: pointer; }
+  :is(summary, select, button):focus-visible { outline: 2px solid t.$brand; outline-offset: 3px; }
+  :disabled { opacity: .6; cursor: wait; }
+}
+.field { display: grid; gap: t.$space-2; flex: 1 1 22rem; min-width: 0; max-width: 38rem; }
+@media (max-width: 480px) { .panel button { width: 100%; } }

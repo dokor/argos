@@ -25,6 +25,7 @@ public class QAuditRun extends com.querydsl.sql.RelationalPathBase<AuditRun> {
     public static final QAuditRun auditRun = new QAuditRun("ARG_AUDIT_RUN");
 
     public final BooleanPath cancelRequested = createBoolean("cancelRequested");
+    public final StringPath executionScope = createString("executionScope");
 
     public final StringPath idempotencyKey = createString("idempotencyKey");
 
@@ -89,6 +90,7 @@ public class QAuditRun extends com.querydsl.sql.RelationalPathBase<AuditRun> {
     }
 
     public void addMetadata() {
+        addMetadata(executionScope, ColumnMetadata.named("execution_scope").ofType(Types.LONGVARCHAR));
         addMetadata(cancelRequested, ColumnMetadata.named("cancel_requested").ofType(Types.BOOLEAN).notNull());
         addMetadata(profileSnapshot, ColumnMetadata.named("profile_snapshot").ofType(Types.LONGVARCHAR));
         addMetadata(requestFingerprint, ColumnMetadata.named("request_fingerprint").ofType(Types.LONGVARCHAR));
