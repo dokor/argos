@@ -6,18 +6,22 @@ Aucun domaine client, rapport privé ou adresse réelle utilisé. L’adresse
 
 ## Vérifications exécutées
 
-- Backend : `mvn test`, 930 tests, 0 échec/erreur, 1 test ignoré faute de service
-  ZAP ; `mvn -DskipTests package` réussi. Tests ajoutés pour validation, consentement,
+- Backend après intégration de main : `mvn package`, 940 tests, 0 échec/erreur,
+  1 test ignoré faute de service ZAP. Tests ajoutés pour validation, consentement,
   normalisation, dates de rétention, job de purge, réponses HTTP et limite réelle
   Grizzly/Jersey avec en-têtes IP forgés.
-- Frontend : suite complète, 997 tests réussis ; tests ciblés des deux composants
+- Frontend après intégration de main : suite complète, 1010 tests réussis ; tests ciblés des deux composants
   rejoués après l’ajout de l’exemple LCP et la stabilisation du bouton, 10 réussis.
   `npm run build` réussi. `npm run lint` sans erreur ; avertissement préexistant
   dans `ReportPriorityList.tsx:20` hors de ce lot.
 - `PremiumWaitlistIT` ajouté au workflow MariaDB 11.4 : migration réelle,
   huit inscriptions concurrentes, unicité, séparation newsletter, absence de
-  renouvellement des doublons et suppression à l’échéance. Pas de MariaDB locale
-  disponible ; résultat à lire dans les checks de la PR.
+  renouvellement des doublons et suppression à l’échéance. Ce test passe dans
+  [la première exécution CI MariaDB](https://github.com/dokor/argos/actions/runs/38934165880).
+  Cette exécution a aussi révélé quatre attentes de version/nombre de migrations
+  à actualiser pour V35 ; les assertions de conservation des données restent
+  intactes et le mapping de la nouvelle table est ajouté à `ConnectedModelIT`.
+  Résultat de la suite corrigée à lire dans les checks de la PR.
 
 ## Revue visuelle réellement effectuée
 
