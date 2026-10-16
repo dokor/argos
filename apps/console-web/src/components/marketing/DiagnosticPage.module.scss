@@ -1,0 +1,92 @@
+@use '../../styles/tokens' as t;
+@use '../../styles/editorial' as editorial;
+@use '../../styles/controls' as controls;
+
+@include editorial.intro;
+
+.page {
+  @include t.public-type;
+  min-height: 100vh;
+  color: t.$text;
+  background: t.$bg;
+
+  h1 { max-width: 21ch; }
+  h2 { max-width: 32ch; margin-bottom: t.$space-6; }
+  p { max-width: 72ch; }
+  a:focus-visible { outline: 3px solid t.$brand; outline-offset: 4px; }
+}
+
+.container {
+  width: min(100% - 2 * t.$page-gutter, t.$container-width - 2 * t.$page-gutter);
+  margin-inline: auto;
+}
+
+.eyebrow { margin-bottom: t.$space-4; }
+.lead { margin-top: t.$space-6; font-size: 1.2rem; color: t.$text-muted; }
+.scope { margin-top: t.$space-4; color: t.$text-muted; }
+.cta {
+  @include controls.cta-geometry;
+  display: inline-flex;
+  margin-top: t.$space-8;
+  background: var(--argos-action-bg);
+  color: var(--argos-action-text);
+  &:hover { background: var(--argos-action-hover); }
+}
+
+.section {
+  padding-block: t.$section-space;
+  border-bottom: 1px solid t.$border;
+  > p { margin-bottom: t.$space-5; }
+  > a { color: t.$brand; text-decoration: underline; text-underline-offset: 3px; }
+}
+
+.checks { display: grid; gap: t.$space-7; }
+.check {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  gap: t.$space-8;
+  padding-top: t.$space-6;
+  border-top: 1px solid t.$border;
+  p + p { margin-top: t.$space-3; }
+  p { color: t.$text-muted; }
+  strong { color: t.$text; }
+}
+
+.evidence {
+  margin-block: t.$space-6;
+  padding: t.$panel-space;
+  border-left: 3px solid t.$brand;
+  background: t.$canvas;
+  font-size: t.$text-md;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.steps, .limits { max-width: 76ch; padding-left: t.$space-6; }
+.steps {
+  list-style: decimal;
+  li { padding-left: t.$space-2; }
+  li + li { margin-top: t.$space-6; }
+  p { margin-top: t.$space-2; color: t.$text-muted; }
+  li::marker { font-weight: 600; color: t.$brand; }
+}
+.limits {
+  list-style: disc;
+  margin-bottom: t.$space-6;
+  li { line-height: 1.7; }
+  li + li { margin-top: t.$space-3; }
+}
+.links {
+  display: grid;
+  gap: t.$space-4;
+  a { color: t.$brand; text-decoration: underline; text-underline-offset: 3px; }
+}
+.related { padding-block: t.$section-space; }
+
+@media (max-width: 700px) {
+  .container { width: calc(100% - 2 * t.$page-gutter-mobile); }
+  .section, .related { padding-block: t.$section-space-mobile; }
+  .check { grid-template-columns: 1fr; gap: t.$space-3; }
+  .evidence { padding: t.$panel-space-mobile; }
+}

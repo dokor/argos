@@ -109,9 +109,16 @@ describe("French and English presentation parity", () => {
 
   it("keeps all resource cards and their English destinations", () => {
     const root = renderPage(ResourcesEn, "en");
-    expect(root.querySelectorAll("article")).toHaveLength(14);
-    for (const href of ["/guides/lcp-lent", "/guides/content-security-policy", "/guides/hsts", "/test-accessibilite-site-web", "/verifier-entetes-securite", "/analyse-seo-page", "/test-vitesse-site-web"]) {
-      const link = root.querySelector(`a[href="${localizedPath(href, "en")}"]`);
+    expect(root.querySelectorAll("article")).toHaveLength(17);
+    for (const href of [
+      "/guides/lcp-lent", "/guides/content-security-policy", "/guides/hsts",
+      "/test-accessibilite-site-web", "/verifier-entetes-securite", "/analyse-seo-page", "/test-vitesse-site-web",
+      "/exemple-rapport", "/guides/checklist-audit-site-web", "/methodologie-score",
+      "/ressources/audit-technique-gratuit", "/ressources/accessibilite-numerique",
+      "/ressources/audit-site-pme", "/ressources/audit-site-ecommerce",
+      "/ressources/audit-wordpress", "/ressources/audit-shopify", "/ressources/pourquoi-mon-site-ne-convertit-pas",
+    ]) {
+      const link = root.querySelector(`article a[href="${localizedPath(href, "en")}"]`);
       expect(link).not.toBeNull();
       expect(link?.closest("article")?.textContent).not.toContain(" · French");
     }
