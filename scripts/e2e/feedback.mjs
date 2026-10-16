@@ -14,7 +14,7 @@ const browser=await chromium.launch({headless:true,...(process.env.ARGOS_BROWSER
 const evidence=[];
 async function accessibility(page) {
   await page.addScriptTag({path:'apps/console-web/node_modules/axe-core/axe.min.js'});
-  const issues=await page.evaluate(async()=> (await window.axe.run(document.querySelector('main'),{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}})).violations);
+  const issues=await page.evaluate(async()=> (await window.axe.run(document.querySelector('dialog[open]') ?? document.querySelector('main'),{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}})).violations);
   assert.deepEqual(issues.map(issue=>({id:issue.id,nodes:issue.nodes.length})),[]);
 }
 try {
@@ -23,18 +23,21 @@ try {
     const page=await context.newPage(),errors=[],prefix=lang==='en'?'/en':'';
     page.setDefaultTimeout(15000);page.setDefaultNavigationTimeout(20000);
     page.on('pageerror',error=>errors.push(error.message));
-    const text={description:lang==='fr'?'Description / explication':'Description / explanation',send:lang==='fr'?'Envoyer le retour':'Send feedback',type:lang==='fr'?'Type de retour':'Feedback type',detail:lang==='fr'?'Détail':'Details',status:lang==='fr'?'Statut':'Status'};
+    const text={description:'Description',send:lang==='fr'?'Envoyer le retour':'Send feedback',type:lang==='fr'?'Type de retour':'Feedback type',detail:lang==='fr'?'Détail':'Details',status:lang==='fr'?'Statut':'Status'};
     const received=lang==='fr'?'Votre retour a été reçu. Merci !':'Your feedback has been received. Thank you!';
     const response=await page.goto(base+prefix+'/feedback');assert.equal(response.status(),200);
     assert.match(await page.locator('meta[name="robots"]').getAttribute('content'),/noindex/);
     assert.equal(await page.locator('h1').count(),1);
+    await page.locator('main').getByRole('button',{name:lang==='fr'?'Proposer une fonctionnalité':'Suggest a feature',exact:true}).click();
+    await page.getByRole('dialog').waitFor();
     await page.getByLabel(text.description).focus();assert.equal(await page.locator(':focus').getAttribute('name'),'description');
     assert.notEqual(await page.locator(':focus').evaluate(el=>getComputedStyle(el).outlineStyle),'none');
     await page.getByLabel(text.description).fill('Controlled suggestion: improve the finding explanation.');
     const suggestion=page.waitForResponse(r=>r.url().endsWith('/api/feedback')&&r.request().method()==='POST');
     await page.getByRole('button',{name:text.send,exact:true}).click();assert.equal((await suggestion).status(),200);await page.getByText(received,{exact:true}).waitFor();
 
-    await page.goto(base+prefix+'/feedback');await page.getByLabel(text.type).selectOption('BUG');
+    await page.goto(base+prefix+'/feedback');await page.locator('main').getByRole('button',{name:lang==='fr'?'Signaler un bug':'Report a bug',exact:true}).click();
+    assert.equal(await page.getByLabel(text.type).inputValue(),'BUG');
     await page.getByLabel(text.description).fill('<script>controlled bug fixture</script>');
     await page.getByLabel(lang==='fr'?'Étapes pour reproduire (facultatif)':'Steps to reproduce (optional)').fill('Click the synthetic button.');
     await accessibility(page);await page.evaluate(()=>window.scrollTo(0,0));
@@ -57,7 +60,9 @@ try {
     // Open the only controlled finding; its translated title comes from the real catalogue.
     await page.locator('[id^="finding-"] > summary').first().click();
     const falsePositive=page.getByRole('button',{name:lang==='fr'?'Signaler un faux positif':'Report a false positive',exact:true});
-    await falsePositive.click();await page.getByLabel(text.description).fill('Controlled false positive: confirm this fixture manually.');
+    await falsePositive.click();
+    const attachment=page.getByRole('dialog').getByRole('checkbox');assert.equal(await attachment.isChecked(),false);await attachment.check();
+    await page.getByLabel(text.description).fill('Controlled false positive: confirm this fixture manually.');
     const sent=page.waitForResponse(r=>r.url().endsWith('/api/feedback')&&r.request().method()==='POST');await page.getByRole('button',{name:text.send,exact:true}).click();
     console.log(lang+': false positive submitted');
     const receipt=(await (await sent).json()).receipt;assert.ok(receipt);await page.getByText(received,{exact:true}).waitFor();
@@ -73,7 +78,7 @@ try {
     assert.ok(await page.getByRole('link',{name:lang==='fr'?'Ouvrir le rapport (administration)':'Open report (administration)',exact:true}).getAttribute('href'));
     await page.getByLabel(text.status).nth(1).selectOption('CONFIRMED');
     await page.getByRole('button',{name:lang==='fr'?'Enregistrer le statut':'Save status',exact:true}).click();await page.getByText(lang==='fr'?'Statut enregistré.':'Status saved.',{exact:true}).waitFor();
-    await page.locator('h3').filter({hasText:lang==='fr'?'Historique du traitement':'Treatment history'}).locator('..').getByText(/→/).waitFor();
+    await page.locator('h3').filter({hasText:lang==='fr'?'Historique du traitement':'Review history'}).locator('..').getByText(/→/).waitFor();
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),'No horizontal overflow');
     await accessibility(page);await page.evaluate(()=>window.scrollTo(0,0));
     await page.screenshot({path:`${output}/${lang}-admin-${theme}.png`,fullPage:true});
