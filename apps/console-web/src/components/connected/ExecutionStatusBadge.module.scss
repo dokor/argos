@@ -1,0 +1,15 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-size: .75rem;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--argos-status-neutral);
+  background: var(--argos-status-neutral-bg);
+}
+.badge[data-tone='success'] { color: var(--argos-status-success); background: var(--argos-status-success-bg); }
+.badge[data-tone='info'] { color: var(--argos-status-info); background: var(--argos-status-info-bg); }
+.badge[data-tone='danger'] { color: var(--argos-status-danger); background: var(--argos-status-danger-bg); }
+.badge[data-tone='warning'] { color: var(--argos-status-warning); background: var(--argos-status-warning-bg); }

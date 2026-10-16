@@ -43,9 +43,6 @@
 .socialButton:hover:not(:disabled) { background: var(--argos-surface-2); }
 .socialIcon { position: relative; display: grid; place-items: center; width: 20px; height: 20px; }
 .socialIcon img { object-fit: contain; }
-// The official Google icon includes 10px clear space around its 20px mark.
-.googleIcon { overflow: hidden; background: #fff; }
-.googleIcon img { position: absolute; width: 40px; height: 40px; max-width: none; left: -10px; top: -10px; }
 .githubDark { display: none; }
 :global(html[data-theme="dark"]) .githubLight { display: none; }
 :global(html[data-theme="dark"]) .githubDark { display: block; }
@@ -53,7 +50,6 @@
   :global(html:not([data-theme="light"])) .githubLight { display: none; }
   :global(html:not([data-theme="light"])) .githubDark { display: block; }
 }
-.linkedinIcon { background: #fff; border-radius: 2px; }
 @media (max-width: 360px) { .socialButton { padding-inline: .75rem; column-gap: .25rem; } }
 
 .policies { max-width: 34rem; margin-bottom: 1.5rem; color: var(--argos-text-muted); }
