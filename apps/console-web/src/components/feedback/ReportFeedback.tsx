@@ -7,5 +7,5 @@ export const FeedbackReportContext = createContext<FeedbackReference | undefined
 export default function ReportFeedback({findingKey}:{findingKey?:string}) {
   const reference=useContext(FeedbackReportContext);
   if(findingKey && !reference)return null;
-  return <div className={s.panel}><FeedbackButton className={s.trigger} reference={reference} findingKey={findingKey}/></div>;
+  return <FeedbackButton className={s.findingTrigger} reference={reference} findingKey={findingKey}/>;
 }

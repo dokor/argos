@@ -178,6 +178,11 @@ a.kpi:hover { border-color: var(--argos-brand); }
 }
 .kpiAction { color: var(--argos-brand); font-size: 13px; margin-top: auto; padding-top: 12px; }
 
+@media (max-width: 360px) {
+  .topbar > p { display: none; }
+  .preferences { grid-column: 1 / -1; justify-content: space-between; }
+}
+
 .textLink { display:inline-flex;align-items:center;min-height:44px;color:var(--argos-brand);text-decoration:underline;text-underline-offset:3px; }
 
 .navigation svg { flex-shrink:0; }
