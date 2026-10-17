@@ -46,6 +46,7 @@ export default function AccountShell({ children }: { children: ReactNode }) {
   const newDomain = pathname === "/account/domains/new";
   const groupCopy = c.navGroups;
   const valid = session.ready && !!session.profile && !session.denied;
+  const feedbackRunId = valid ? /^\/account\/runs\/([1-9]\d{0,18})$/.exec(pathname)?.[1] : undefined;
   const admin = valid && session.profile?.verified && session.profile.admin;
   const context = pathname === "/account" ? c.overview : pathname.startsWith("/account/admin") ? c.admin : isSites ? groupCopy.analyses
     : isDomains ? c.domains : pathname === "/account/usage" ? c.usage : pathname === "/account/integrations" ? c.integrations : c.account;
@@ -103,7 +104,7 @@ export default function AccountShell({ children }: { children: ReactNode }) {
       {valid && <AccountMenu key={currentPath} profile={session.profile!} onOpen={close} compact={collapsed}/>}
     </aside>
     <div className={s.workspace}>
-      <header className={s.topbar}><p>{c.workspace}<span aria-hidden="true"> / </span><strong>{context}</strong></p><QuotaSummary/><div className={s.preferences}>{valid && <NotificationCenter/>}<ThemeToggle/><LangToggle/></div></header>
+      <header className={s.topbar}><p>{c.workspace}<span aria-hidden="true"> / </span><strong>{context}</strong></p><QuotaSummary/><div className={s.preferences}><FeedbackButton key={currentPath} variant="icon" reference={feedbackRunId ? {runId:feedbackRunId} : undefined}/>{valid && <NotificationCenter/>}<ThemeToggle/><LangToggle/></div></header>
       <div id="account-content" className={s.content} tabIndex={-1}>
         {valid ? children : <main className={s.page}>
           <PageHeading title={c.workspace}/>

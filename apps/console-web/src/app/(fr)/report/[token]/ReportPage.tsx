@@ -1,7 +1,7 @@
 "use client";
 import {useEffect,useMemo,useState,type ReactNode} from "react";
 import {usePathname} from "next/navigation";
-import ReportFeedback,{FeedbackReportContext} from "@/components/feedback/ReportFeedback";
+import {FeedbackReportContext} from "@/components/feedback/ReportFeedback";
 import type {FeedbackReference} from "@/lib/feedback-request";
 import {accountFetch} from "@/lib/account-client";
 import {buildReportModel, type FindingSelection} from "@/components/report/reportModel";
@@ -57,7 +57,7 @@ export default function ReportPage({params,feedbackReference,embedded=false,shar
   const reference=feedbackReference??(!shared&&token?{reportToken:token}:undefined);
   const Content=demo?"div":"main";
   return <FeedbackReportContext.Provider value={reference}><div className={s.page+" "+(embedded?s.embedded:"")} id={demo?undefined:"top"}>
-    {!embedded&&!demo&&<ReportHeader signedIn={!locked}/>}
+    {!embedded&&!demo&&<ReportHeader signedIn={!locked} feedbackReference={reference}/>}
     <Content className={s.main}>
       <ReportHero demo={demo} report={report} model={model} introduction={locked?null:note} onSelectFinding={selectFinding} onActions={()=>reading.navigate({view:"actions",anchor:""})} onMethod={locked?undefined:()=>setMethodOpen(true)}
         context={runId&&!shared&&!locked&&!demo?<nav className={s.breadcrumb} aria-label={fr?"Fil d’Ariane":"Breadcrumb"}><ol><li><Link href="/account/sites">{fr?"Mes sites":"My sites"}</Link></li><li><span aria-hidden="true">/</span><span aria-current="page">{fr?"Rapport enregistré":"Saved report"}</span></li></ol></nav>:<span>{shared?(fr?"Rapport partagé · Lecture seule · Historique du propriétaire non partagé":"Shared report · Read only · Owner history not shared"):demo?(fr?"Exemple · Données fictives":"Example · Fictional data"):(fr?"Votre analyse est prête":"Your analysis is ready")}</span>}
@@ -77,7 +77,6 @@ export default function ReportPage({params,feedbackReference,embedded=false,shar
       {!locked&&!shared&&!demo&&<ReportIntroductionEditor key={token} token={token} model={model} onPublished={note=>setNoteState({report,note})}/>}
       {!locked&&<ReportMethod report={report} model={model} open={methodOpen} onToggle={setMethodOpen}/>}
       {!embedded&&!demo&&<WebTip/>}
-      {!demo&&!shared&&<ReportFeedback/>}
     </Content>
   </div></FeedbackReportContext.Provider>;
 }
