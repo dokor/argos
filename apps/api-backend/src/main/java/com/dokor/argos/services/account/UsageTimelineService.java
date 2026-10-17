@@ -133,7 +133,9 @@ public final class UsageTimelineService {
                     totals.merge(key, count, Long::sum);
                 }
             }
-            var series = new ArrayList<>(top);
+            var series = new ArrayList<Series>();
+            // Use the bucket aggregation for every returned total, including under concurrent publication.
+            top.forEach(item -> series.add(new Series(item.key(), item.label(), totals.getOrDefault(item.key(), 0L))));
             if (totals.containsKey("other")) series.add(new Series("other", "other", totals.get("other")));
             var buckets = new ArrayList<Bucket>();
             for (int i = 0; i < values.size(); i++) {

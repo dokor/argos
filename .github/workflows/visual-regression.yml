@@ -12,6 +12,7 @@ on:
       - 'apps/console-web/**/layout.tsx'
       - 'apps/console-web/public/**'
       - 'scripts/e2e/connected-*.mjs'
+      - 'scripts/e2e/usage-timeline.mjs'
       - 'scripts/e2e/account-history.mjs'
       - 'scripts/e2e/public-header.mjs'
       - 'scripts/e2e/acceptance-evidence*'

@@ -37,7 +37,8 @@ function timeline(params, mode) {
 
 try {
   for (const width of [320,390,768,1440]) for (const lang of ['fr','en']) for (const theme of ['light','dark']) {
-    const context = await browser.newContext({viewport:{width,height:1000},colorScheme:theme});
+    // Webpack's development eval scripts conflict with the production CSP. Opt in only for a local dev preview.
+    const context = await browser.newContext({viewport:{width,height:1000},colorScheme:theme,bypassCSP:process.env.CLARTE_DEV_PREVIEW==='true'});
     const page = await context.newPage(), copy=(lang==='fr'?fr:en).usageTimeline, errors=[];
     page.setDefaultNavigationTimeout(120000);
     let mode='normal';
@@ -66,9 +67,9 @@ try {
       await section.screenshot({path:output+'/'+screenshot});evidence.push({name,lang,theme,width,screenshot});
     };
     await check('daily');
-    await section.getByLabel(copy.granularity,{exact:true}).selectOption('MONTH');
+    await section.getByRole('combobox',{name:copy.granularity,exact:true}).selectOption('MONTH');
     await section.getByRole('button',{name:new RegExp(copy.selectPeriod)}).first().waitFor();
-    await section.getByLabel(copy.dimension,{exact:true}).selectOption('DOMAIN');
+    await section.getByRole('combobox',{name:copy.dimension,exact:true}).selectOption('DOMAIN');
     await section.getByText(copy.filters,{exact:true}).click();
     await section.getByRole('checkbox',{name:'atelier.example 42',exact:true}).check();
     await section.getByRole('button',{name:new RegExp(copy.selectPeriod)}).first().waitFor();
@@ -80,7 +81,7 @@ try {
     await section.getByText(copy.table,{exact:true}).click();
     assert.ok(await section.getByRole('table').isVisible());await check('monthly-filtered');
     await section.getByRole('button',{name:copy.clear,exact:true}).click();
-    await section.getByLabel(copy.granularity,{exact:true}).selectOption('YEAR');
+    await section.getByRole('combobox',{name:copy.granularity,exact:true}).selectOption('YEAR');
     await section.getByRole('button',{name:new RegExp(copy.selectPeriod)}).first().waitFor();await check('annual');
     if(width===390) {
       mode='empty';await page.getByRole('button',{name:(lang==='fr'?fr:en).usagePage.refresh,exact:true}).click();
