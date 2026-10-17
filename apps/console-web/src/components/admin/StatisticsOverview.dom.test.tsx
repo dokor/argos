@@ -78,4 +78,3 @@ it("ignores late responses after the session is revoked", async () => {
   await act(async()=>resolve(metrics));
   expect(signal.aborted).toBe(true); expect(screen.queryByText("1 250")).not.toBeInTheDocument();
 });
-

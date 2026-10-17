@@ -63,4 +63,3 @@ class AdminStatisticsIT extends MariaDbReportFixture {
         }
     }
 }
-

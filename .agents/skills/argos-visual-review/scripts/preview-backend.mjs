@@ -86,7 +86,7 @@ createServer((req, res) => {
     const period = new URL(req.url, "http://localhost").searchParams.get("period") ?? "all";
     res.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store" });
     return res.end(JSON.stringify({ generatedAt: "2026-10-17T10:00:00Z", period,
-      from: period === "all" ? null : "2026-10-10T10:00:00Z",
+      from: period === "all" ? null : new Date(Date.parse("2026-10-17T10:00:00Z") - Number(period) * 86400000).toISOString(),
       accounts: { created: 1250, validated: 900, suspended: 12, archived: 48, validationUnknown: 48, google: 610, github: 300, linkedin: 120 },
       analyses: { total: 2430, completed: 2100, failed: 130, running: 20, queued: 80, canceled: 70, unknown: 30 },
       domains: { total: 810, averageUrls: 3 } }));

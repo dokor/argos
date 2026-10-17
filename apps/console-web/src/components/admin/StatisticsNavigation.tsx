@@ -14,4 +14,3 @@ export default function StatisticsNavigation({ active }: { active: "overview" | 
     {links.map(([key, href, label]) => <Link key={key} href={href} aria-current={active === key ? "page" : undefined}>{label}</Link>)}
   </nav>;
 }
-
