@@ -44,3 +44,5 @@
 .settings { margin-block: 20px; }
 .settings > summary { color: t.$brand; cursor: pointer; min-height: 44px; padding-block: 10px; font-weight: 600; }
 .settings > summary:focus-visible { outline: 3px solid t.$brand; outline-offset: 3px; }
+
+.main time { display: inline-block; font-variant-numeric: tabular-nums; }

@@ -45,6 +45,12 @@ export default function AnalyticsView() {
     return () => controller.abort();
   }, [allowed, days, request]);
   const seconds = (value: number | null) => value === null ? c.unavailable : new Intl.NumberFormat(lang, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value / 1000) + " s";
+  const periodDate = (value: string) => {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? c.unavailable : new Intl.DateTimeFormat(lang === "fr" ? "fr-FR" : "en-GB", {
+      dateStyle: "medium", timeStyle: "short", timeZone: "UTC", hourCycle: "h23",
+    }).format(date);
+  };
   const data = current?.data;
 
   return <><main className={s.main}>
@@ -61,7 +67,7 @@ export default function AnalyticsView() {
         </select><button type="button" onClick={() => setRevision(value => value + 1)}>{c.refresh}</button>
       </div>
       {current?.error ? <p role="alert">{c.error}</p> : !data ? <p role="status">{c.loading}</p> : <>
-        <p>{c.collection} {data.enabled ? c.enabled : c.disabled} · {data.from} → {data.until}</p>
+        <p>{c.collection} {data.enabled ? c.enabled : c.disabled} · <time dateTime={data.from}>{periodDate(data.from)}</time> → <time dateTime={data.until}>{periodDate(data.until)}</time> UTC</p>
         {data.capped && <p role="status">{c.cap}</p>}
         {data.accounts ? <AccountJourneyPanel data={data.accounts} /> : <p role="status">{c.accountUnavailable}</p>}
         <h2>{c.cohort}</h2><dl>{Object.entries(c.counts).map(([key, label]) => <div key={key}><dt>{label}</dt><dd>{data.cohort[key as keyof Counts]}</dd></div>)}</dl>

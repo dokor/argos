@@ -52,6 +52,7 @@ try {
     await page.getByRole('combobox').selectOption('30'); await restored;
     await page.locator('main dl dd').filter({ hasText: /^24$/ }).waitFor();
     await page.screenshot({ path: output + '/analytics-' + width + '-' + lang + '-' + theme + '.png', fullPage: true });
+    if (width === 1280 && lang === "fr" && theme === "light") await page.screenshot({ path: output + "/analytics-desktop-preview.png" });
     await page.route('**/api/account/admin/analytics?*', request => request.fulfill({ status: 403, contentType: 'application/json', body: '{"error":"admin_required"}' }));
     await page.getByRole('button', { name: lang === 'fr' ? 'Actualiser' : 'Refresh', exact: true }).click();
     await page.locator('main').getByRole('alert').waitFor();
@@ -69,7 +70,8 @@ try {
     const page = await context.newPage(), requests = [];
     page.on('request', request => requests.push(request.url()));
     await page.goto(base + '/account/admin/analytics');
-    await page.locator('main').getByRole('alert').waitFor();
+    if (name === 'anonymous') await page.getByRole('heading', { name: 'Connectez-vous à votre espace', exact: true }).waitFor();
+    else await page.locator('main').getByRole('alert').waitFor();
     assert.equal(requests.some(url => url.includes('/api/account/admin/analytics')), false, name);
     assert.equal(await page.locator('main dl').count(), 0);
     await context.close();
