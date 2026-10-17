@@ -11,6 +11,15 @@ export const reportReadingCopy = {
     partial: "Analyse partielle : les constats disponibles ne couvrent pas tous les contrôles.", historicalCoverage: "Couverture détaillée non disponible dans ce rapport.",
     moduleCompleteness: "Modules entièrement réussis", coverage: "Couverture pondérée du barème", score: "Score Argos", clear: "Afficher tous les constats", estimated: "Transfert estimé",
     lighthouseRatio: "Score Lighthouse normalisé (ratio)",
+    findingQuestions: {
+      observation: "Qu’a-t-on observé\u00a0?", impact: "Quel effet sur les visiteurs\u00a0?",
+      action: "Par quoi commencer\u00a0?", verification: "Comment vérifier ensuite\u00a0?",
+      verificationPreview: "Le résultat attendu et les contrôles à effectuer.",
+      evidence: "Preuves et méthode", technical: "Données techniques et traçabilité", commonOrigin: "Origine commune",
+      resourcesOne: "1 référence de ressource observée.", resourcesMany: "{n} références de ressources observées.",
+      elementsOne: "1 élément conservé dans l’échantillon.", elementsMany: "{n} éléments conservés dans l’échantillon.",
+      measurement: "Mesure", severityProvenance: "Gravité transmise par le rapport",
+    },
     units: { ms: "ms", bytes: "octets", count: "éléments", days: "jours", "score/100": "/100", ratio: "ratio sans unité", unitless: "sans unité" },
   },
   en: {
@@ -25,6 +34,15 @@ export const reportReadingCopy = {
     partial: "Partial analysis: available findings do not cover every check.", historicalCoverage: "Detailed coverage is not available in this report.",
     moduleCompleteness: "Fully successful modules", coverage: "Weighted scoring coverage", score: "Argos score", clear: "Show all findings", estimated: "Estimated transfer",
     lighthouseRatio: "Normalised Lighthouse score (ratio)",
+    findingQuestions: {
+      observation: "What was observed?", impact: "How might visitors be affected?",
+      action: "Where should I start?", verification: "How can I verify the result?",
+      verificationPreview: "The expected result and the checks to perform.",
+      evidence: "Evidence and method", technical: "Technical data and provenance", commonOrigin: "Shared origin",
+      resourcesOne: "1 observed resource reference.", resourcesMany: "{n} observed resource references.",
+      elementsOne: "1 element retained in the sample.", elementsMany: "{n} elements retained in the sample.",
+      measurement: "Measurement", severityProvenance: "Severity reported by the analysis",
+    },
     units: { ms: "ms", bytes: "bytes", count: "items", days: "days", "score/100": "/100", ratio: "unitless ratio", unitless: "unitless" },
   },
 } as const;

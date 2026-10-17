@@ -4,11 +4,15 @@ import { describeObservation, findingQualification, missingLocation } from "./fi
 import { findingPlaybook } from "./findingPlaybooks";
 import { findingExplanation } from "./findingExplanation";
 
-export const CATALOGUE_VERSION = "report-content-v6";
+export const CATALOGUE_VERSION = "report-content-v7";
 export type FindingContent = { title: string; observation: string; impact: string; recommendation: string; verification: string; qualification: string; missingInformation: string };
 type Copy = [title: string, impact: string];
 const catalogue: Record<string, Record<Lang, Copy>> = {};
 function add(keys: string[], fr: Copy, en: Copy) { for (const key of keys) catalogue[key] = { fr: [...fr], en: [...en] }; }
+
+add(["lighthouse.audit.font-display-insight"],
+  ["Affichage des polices à vérifier", "L’effet sur les utilisateurs n’est pas documenté pour ce contrôle ; le vérifier sur le parcours concerné."],
+  ["Review font display", "The effect on users is not documented for this check; verify it in the affected journey."]);
 
 add(["lighthouse.audit.largest-contentful-paint"],
   ["L’affichage du contenu principal est à examiner", "Une attente prolongée peut retarder la lecture de la page."],

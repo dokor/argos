@@ -46,7 +46,7 @@ for (const lang of ["fr", "en"] as const) describe("technical findings " + lang,
     const {container} = render(<LangProvider initialLang={lang}><IssuesByCategory report={historical as Report} /></LangProvider>);
     expect(screen.getByRole('status')).toHaveTextContent(lang === 'fr' ? '6 constats sur 6' : '6 findings of 6');
     await user.click(screen.getByRole('button', {name:lang === 'fr' ? 'Critiques' : 'Critical'}));
-    expect(container.querySelectorAll('details')).toHaveLength(2);
+    expect(container.querySelectorAll('details[id^="finding-"]')).toHaveLength(2);
     expect(screen.getByRole('status')).toHaveTextContent(lang === 'fr' ? '2 constats sur 6' : '2 findings of 6');
     expect(JSON.stringify(historical)).toBe(before);
   });
