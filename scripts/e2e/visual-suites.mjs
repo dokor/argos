@@ -5,7 +5,7 @@ import { pathToFileURL } from 'node:url';
 export const groups = {
   public: ['connected-cleanup', 'public-header', 'account-history', 'connected-shell', 'connected-evidence', 'navigation-submenus'],
   analysis: ['connected-analysis', 'connected-analysis-recovery', 'connected-overview'],
-  account: ['connected-account', 'connected-usage', 'usage-timeline', 'connected-admin', 'admin-statistics'],
+  account: ['connected-account', 'connected-usage', 'usage-timeline', 'connected-admin', 'admin-analytics', 'admin-statistics'],
   domains: ['connected-domains'],
 };
 

@@ -12,13 +12,19 @@ import jakarta.ws.rs.core.*;
 public final class ConnectedAnalysesWs {
     private final ConnectedAnalysesService analyses;
     private final AccountCsrf csrf;
+    private final com.dokor.argos.services.analytics.ProductAnalyticsService analytics;
     @Context private Provider<ContainerRequestContext> requests;
-    @Inject public ConnectedAnalysesWs(ConnectedAnalysesService analyses, AccountCsrf csrf) {
-        this.analyses=analyses; this.csrf=csrf;
+    @Inject public ConnectedAnalysesWs(ConnectedAnalysesService analyses, AccountCsrf csrf, com.dokor.argos.services.analytics.ProductAnalyticsService analytics) {
+        this.analyses=analyses; this.csrf=csrf; this.analytics=analytics;
     }
     @POST public Response create(@HeaderParam("Authorization") String auth,
             @HeaderParam("Idempotency-Key") String key, com.dokor.argos.services.connected.contract.ConnectedContracts.SiteAnalysisInput input) {
-        return AccountAuthWs.ok(analyses.create(auth,csrf.require(requests.get()),key,input));
+        var result = analyses.createObserved(auth,csrf.require(requests.get()),key,input);
+        if (result.created()) analytics.attribute(Long.parseLong(result.accepted().runId()),
+            new com.dokor.argos.services.analytics.AnalyticsDimensions("/account/analyses/new",
+                "en".equals(requests.get().getHeaderString("Accept-Language")) ? "en" : "fr", "form"),
+            requests.get().getHeaderString("X-Argos-Measurement"));
+        return AccountAuthWs.ok(result.accepted());
     }
     @GET @Path("{key}") public Response get(@HeaderParam("Authorization") String auth, @PathParam("key") String key) {
         return AccountAuthWs.ok(analyses.get(auth,key));

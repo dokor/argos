@@ -3,6 +3,7 @@
 import AdminNavigation from "./AdminNavigation";
 import StatisticsNavigation from "./StatisticsNavigation";
 import MeasurementControl from "./MeasurementControl";
+import AccountJourneyPanel, { type AccountJourney } from "./AccountJourneyPanel";
 import { useCallback, useEffect, useState } from "react";
 import Link from "@/components/LocalizedLink";
 import { useAccountSession } from "@/components/account/AccountSession";
@@ -14,8 +15,10 @@ import s from "./AnalyticsView.module.scss";
 type Counts = Record<"accepted" | "started" | "completed" | "failed" | "pending" | "viewed" | "completedViewed", number>;
 type Delay = { sample: number; excluded: number; medianMs: number | null; p90Ms: number | null; p95Ms: number | null };
 export type ProductMetrics = {
+  accounts?: AccountJourney;
   enabled: boolean; capped: boolean; from: string; until: string; cohort: Counts;
   bySource: { route: string; lang: string; placement: string; counts: Counts }[];
+  byAudience?: { audience: string; counts: Counts }[];
   queue: Delay; processing: Delay; endToEnd: Delay;
   events: { event: string; route: string; lang: string; placement: string; error: string; count: number }[];
 };
@@ -43,6 +46,12 @@ export default function AnalyticsView() {
     return () => controller.abort();
   }, [allowed, days, request]);
   const seconds = (value: number | null) => value === null ? c.unavailable : new Intl.NumberFormat(lang, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value / 1000) + " s";
+  const periodDate = (value: string) => {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? c.unavailable : new Intl.DateTimeFormat(lang === "fr" ? "fr-FR" : "en-GB", {
+      dateStyle: "medium", timeStyle: "short", timeZone: "UTC", hourCycle: "h23",
+    }).format(date);
+  };
   const data = current?.data;
 
   return <><main className={s.main}>
@@ -50,17 +59,21 @@ export default function AnalyticsView() {
     {!session.ready ? <p role="status">{c.loading}</p> : !allowed ? <><p role="alert">{c.denied}</p><Link href="/account/sign-in">{c.signIn}</Link></> : <>
       <AdminNavigation active="analytics" />
       <StatisticsNavigation active="product" />
-      <MeasurementControl onDenied={onDenied} onChanged={onChanged} />
+      <details className={s.settings}><summary>{c.settings}</summary>
+        <MeasurementControl onDenied={onDenied} onChanged={onChanged} />
+      </details>
       <div className={s.controls}><label htmlFor="analytics-period">{c.period}</label>
         <select id="analytics-period" value={days} onChange={event => setDays(Number(event.target.value))}>
           {[7, 30, 90].map(value => <option key={value} value={value}>{value} {c.days}</option>)}
         </select><button type="button" onClick={() => setRevision(value => value + 1)}>{c.refresh}</button>
       </div>
       {current?.error ? <p role="alert">{c.error}</p> : !data ? <p role="status">{c.loading}</p> : <>
-        <p>{c.collection} {data.enabled ? c.enabled : c.disabled} · {data.from} → {data.until}</p>
+        <p>{c.collection} {data.enabled ? c.enabled : c.disabled} · <time dateTime={data.from}>{periodDate(data.from)}</time> → <time dateTime={data.until}>{periodDate(data.until)}</time> UTC</p>
         {data.capped && <p role="status">{c.cap}</p>}
+        {data.accounts ? <AccountJourneyPanel data={data.accounts} /> : <p role="status">{c.accountUnavailable}</p>}
         <h2>{c.cohort}</h2><dl>{Object.entries(c.counts).map(([key, label]) => <div key={key}><dt>{label}</dt><dd>{data.cohort[key as keyof Counts]}</dd></div>)}</dl>
-        <p>{c.dedup}</p><h2>{c.delays}</h2>
+        <p>{c.dedup}</p>
+        <div className={s.scroll} tabIndex={0} role="region" aria-label={lang === "fr" ? "Audience à la création" : "Audience at creation"}><table><thead><tr><th scope="col">{lang === "fr" ? "Audience à la création" : "Audience at creation"}</th><th scope="col">{c.counts.accepted}</th><th scope="col">{c.counts.completed}</th></tr></thead><tbody>{data.byAudience?.map(row => <tr key={row.audience}><th scope="row">{row.audience === "visitor" ? (lang === "fr" ? "Sans compte" : "Without account") : row.audience === "account" ? (lang === "fr" ? "Avec compte" : "With account") : (lang === "fr" ? "Historique non qualifié" : "Unclassified history")}</th><td>{row.counts.accepted}</td><td>{row.counts.completed}</td></tr>)}</tbody></table></div><h2>{c.delays}</h2>
         <div className={s.scroll} tabIndex={0} role="region" aria-label={c.table}><table><thead><tr>
           {[c.measure, c.sample, c.excluded, c.median, "p90", "p95"].map(label => <th key={label} scope="col">{label}</th>)}
         </tr></thead><tbody>{([[c.queue, data.queue], [c.processing, data.processing], [c.total, data.endToEnd]] as const).map(([label, delay]) => <tr key={label}>

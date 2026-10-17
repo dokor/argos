@@ -54,13 +54,19 @@ export default function ProductAnalytics() {
         if (!state.enabled || state.choice !== 'granted')
             return;
         const route = publicRoute(path);
+        const registration = /^\/(?:en\/)?account\/register$/.test(path);
         const send = (event: ProductEvent) => { void fetch('/api/product-analytics', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(event), keepalive: true, referrerPolicy: 'no-referrer' }).catch(() => { }); };
+        if (registration && seen.current !== path) {
+            seen.current = path;
+            send({ event: 'account_registration_view', dimensions: { route: '/account/register', lang, placement: 'page' } });
+        }
         if (route && seen.current !== path) {
             seen.current = path;
             send({ event: 'public_page_view', dimensions: { route, lang, placement: 'page' } });
             if (route === '/exemple-rapport')
                 send({ event: 'example_open', dimensions: { route, lang, placement: 'page' } });
         }
+        if (!route && !registration) seen.current = path;
         const click = (event: MouseEvent) => { if (!route || !(event.target instanceof Element))
             return; const a = event.target.closest('a'); if (!a)
             return; const href = new URL(a.href, location.origin); if (href.origin !== location.origin)
@@ -80,7 +86,7 @@ export default function ProductAnalytics() {
     return <><TrafficAnalytics granted={traffic.enabled&&traffic.choice==='granted'}/>
       {!needsChoice&&!settings ? <button className={s.settings} onClick={()=>{setProductChoice(state.choice==='granted');setTrafficChoice(traffic.choice==='granted');setSettings(true);}}>{fr?'Gérer mes cookies':'Manage cookies'}</button> :
       <aside className={s.banner} aria-label={fr?'Préférences de mesure':'Measurement preferences'}>
-        <p>{fr?'Argos propose deux mesures facultatives : la fréquentation des pages publiques et l’utilisation du produit (clics et étapes d’audit). Compteurs internes conservés 90 jours, cookies de session, aucun fournisseur tiers, identifiant personnel, URL auditée ni contenu de rapport. Refuser reste sans effet sur les analyses.':'Argos offers two optional measurements: public page traffic and product usage (clicks and audit steps). Internal counters retained for 90 days, session cookies, no third-party provider, personal identifier, audited URL or report content. Refusal does not affect analyses.'}</p>
+        <p>{fr?'Argos propose deux mesures facultatives : la fréquentation des pages publiques et l’utilisation du produit (clics et étapes d’audit). Compteurs internes conservés 90 jours, cookies de session, aucun fournisseur tiers, nom, email, URL auditée ni contenu de rapport. Après accord, des références de compte restent internes pour dédupliquer inscriptions, rattachements et retours. Refuser reste sans effet sur les analyses.':'Argos offers two optional measurements: public page traffic and product usage (clicks and audit steps). Internal counters retained for 90 days, session cookies, no third-party provider, name, email, audited URL or report content. With consent, account references remain internal to deduplicate registrations, report claims and returns. Refusal does not affect analyses.'}</p>
         <Link href="/confidentialite">{fr?'Confidentialité':'Privacy information'}</Link>
         {custom&&<fieldset><legend>{fr?'Finalités facultatives':'Optional purposes'}</legend>{traffic.enabled&&<label><input type="checkbox" checked={trafficChoice} onChange={e=>setTrafficChoice(e.target.checked)}/>{fr?'Mesure de fréquentation':'Traffic measurement'}</label>}{state.enabled&&<label><input type="checkbox" checked={productChoice} onChange={e=>setProductChoice(e.target.checked)}/>{fr?'Mesure produit':'Product measurement'}</label>}</fieldset>}
         {error&&<p role="alert">{fr?'Choix non enregistré. Réessayez.':'Choice could not be saved. Try again.'}</p>}

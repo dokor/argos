@@ -14,6 +14,8 @@ on:
       - 'scripts/e2e/connected-*.mjs'
       - 'scripts/e2e/usage-timeline.mjs'
       - 'scripts/e2e/account-history.mjs'
+      - 'scripts/e2e/admin-analytics.mjs'
+      - '.agents/skills/argos-visual-review/scripts/preview-backend.mjs'
       - 'scripts/e2e/admin-statistics.mjs'
       - 'scripts/e2e/public-header.mjs'
       - 'scripts/e2e/navigation-submenus.mjs'
@@ -104,6 +106,9 @@ jobs:
           }
           if (!ready) throw new Error('Visual frontend failed readiness');
           JS
+      - name: Start read-only analytics fixtures
+        if: matrix.group == 'account'
+        run: ARGOS_PREVIEW_PORT=8081 node .agents/skills/argos-visual-review/scripts/preview-backend.mjs > outputs/analytics-fixtures.log 2>&1 &
       - name: Run independent visual suites
         run: node scripts/e2e/visual-suites.mjs "${{ matrix.group }}"
       - name: Preserve captures and diagnostics from this group

@@ -1,6 +1,8 @@
 package com.dokor.argos.webservices.api.account;
 
 import com.dokor.argos.services.account.*;
+import com.dokor.argos.services.analytics.AccountJourneyService;
+import com.dokor.argos.services.analytics.AccountJourneyEvent;
 import com.dokor.argos.services.connected.batch.BatchService;
 import com.dokor.argos.services.connected.contract.ConnectedContracts.*;
 
@@ -17,12 +19,14 @@ import jakarta.ws.rs.core.*;
 public final class DomainBatchesWs {
     private final BatchService service;
     private final AccountCsrf csrf;
+    private final AccountJourneyService journey;
     @Context private Provider<ContainerRequestContext> requests;
 
     @Inject
-    public DomainBatchesWs(BatchService service, AccountCsrf csrf) {
+    public DomainBatchesWs(BatchService service, AccountCsrf csrf, AccountJourneyService journey) {
         this.service = service;
         this.csrf = csrf;
+        this.journey = journey;
     }
 
     static Response response(Object body, int status) {
@@ -37,7 +41,10 @@ public final class DomainBatchesWs {
             @HeaderParam("Authorization") String auth,
             @HeaderParam("Idempotency-Key") String key,
             CreateBatch input) {
-        return response(service.create(auth, csrf.require(requests.get()), key, input), 202);
+        var result = service.createObserved(auth, csrf.require(requests.get()), key, input);
+        if (result.created()) journey.record(AccountJourneyEvent.ACTIVATED, result.ownerId(), result.ownerId(),
+                "none", requests.get().getHeaderString("Accept-Language"), requests.get().getHeaderString("X-Argos-Measurement"));
+        return response(result.admitted(), 202);
     }
 
     @GET

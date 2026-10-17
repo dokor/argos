@@ -2,6 +2,8 @@ package com.dokor.argos.webservices.api.account;
 
 import com.dokor.argos.db.dao.AccountDao;
 import com.dokor.argos.services.account.*;
+import com.dokor.argos.services.analytics.AccountJourneyService;
+import com.dokor.argos.services.analytics.AccountJourneyEvent;
 
 import jakarta.inject.*;
 import jakarta.ws.rs.*;
@@ -33,6 +35,11 @@ public class AccountWs {
     @Context private Provider<ContainerRequestContext> requests;
     @Context private Provider<org.glassfish.grizzly.http.server.Request> nativeRequests;
 
+    private final AccountJourneyService journey;
+
+    private String measurement() { return request().getHeaderString("X-Argos-Measurement"); }
+    private String language() { return request().getHeaderString("Accept-Language"); }
+
     private ContainerRequestContext request() {
         return requests.get();
     }
@@ -44,8 +51,9 @@ public class AccountWs {
             AccountAuthService auth,
             AccountRunsService runs,
             AccountCsrf csrf,
-            AccountRateLimiter rate, AccountSitesService sites, AccountHistoryService history) {
+            AccountRateLimiter rate, AccountSitesService sites, AccountHistoryService history, AccountJourneyService journey) {
         this.dao = dao;
+        this.journey = journey;
         this.sessions = sessions;
         this.auth = auth;
         this.runs = runs;
@@ -93,6 +101,8 @@ public class AccountWs {
     @GET
     @Path("/me")
     public Response me(@Context AccountSessionService.Context context) {
+        if ("ACTIVE".equals(context.user().getState()))
+            journey.record(AccountJourneyEvent.ACTIVITY, context.user().getId(), context.user().getId(), "none", language(), measurement());
         return AccountAuthWs.ok(AccountAuthWs.profile(context.user()));
     }
 
@@ -248,7 +258,11 @@ public class AccountWs {
     public Response claim(@PathParam("id") long id) {
         String token = csrf.require(request());
         rate.check("claim", null, AccountAuthWs.remote(nativeRequests.get()));
-        runs.claim(auth(), token, id, request().getHeaderString("X-Argos-Run-Proof"));
+        Long user = runs.claim(auth(), token, id, request().getHeaderString("X-Argos-Run-Proof"));
+        if (user != null) {
+            journey.record(AccountJourneyEvent.CLAIMED, id, user, "none", language(), measurement());
+            journey.record(AccountJourneyEvent.ACTIVATED, user, user, "none", language(), measurement());
+        }
         return AccountAuthWs.ok(Map.of("accepted", true));
     }
 }

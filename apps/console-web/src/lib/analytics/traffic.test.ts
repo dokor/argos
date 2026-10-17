@@ -15,7 +15,7 @@ it('never forwards without both configuration and consent, or for bots/cross-ori
  const fetch=vi.fn();vi.stubGlobal('fetch',fetch);
  await POST(req(event,'argos_traffic_consent_v1=granted'));
  vi.stubEnv('TRAFFIC_ANALYTICS_ENABLED','true');vi.stubEnv('ADMIN_API_TOKEN','synthetic');
- for(const cookie of ['', 'argos_traffic_consent_v1=refused','argos_product_consent=granted'])await POST(req(event,cookie));
+ for(const cookie of ['', 'argos_traffic_consent_v1=refused','argos_product_consent_v2=granted'])await POST(req(event,cookie));
  await POST(req(event,'argos_traffic_consent_v1=granted','https://other.test'));await POST(req(event,'argos_traffic_consent_v1=granted','https://argos.test','Googlebot'));
  expect(fetch).not.toHaveBeenCalled();
 });

@@ -1329,7 +1329,7 @@ class AccountLifecycleIT extends MariaDbReportFixture {
                                             new AccountCsrf(settings),
                                             new AccountRateLimiter(dao, tokens, clock, settings),
                                             tokens,
-                                            settings))
+                                            settings, org.mockito.Mockito.mock(com.dokor.argos.services.analytics.AccountJourneyService.class)))
                             .register(
                                     new com.dokor.argos.webservices.api.account.AccountWs(
                                             dao,
@@ -1337,11 +1337,11 @@ class AccountLifecycleIT extends MariaDbReportFixture {
                                             auth,
                                             personal,
                                             new AccountCsrf(settings),
-                                            new AccountRateLimiter(dao, tokens, clock, settings), new AccountSitesService(dao,sessions,new UrlNormalizer(),new DomainService(new DomainDao(dao.transactions)),new AuditDao(dao.transactions),clock),new AccountHistoryService(dao,sessions,mapper,clock)));
+                                            new AccountRateLimiter(dao, tokens, clock, settings), new AccountSitesService(dao,sessions,new UrlNormalizer(),new DomainService(new DomainDao(dao.transactions)),new AuditDao(dao.transactions),clock),new AccountHistoryService(dao,sessions,mapper,clock), org.mockito.Mockito.mock(com.dokor.argos.services.analytics.AccountJourneyService.class)));
             config.register(new com.dokor.argos.webservices.api.account.DomainDiscoveriesWs(discoveries(),new AccountCsrf(settings)));
             config.register(new com.dokor.argos.webservices.api.account.UsageHistoryWs(new UsageHistoryService(sessions,new UsagePolicy(ConfigFactory.empty()),clock)));
             config.register(new com.dokor.argos.webservices.api.account.UsageTimelineWs(new UsageTimelineService(sessions,new UsagePolicy(ConfigFactory.empty()),clock)));
-            config.register(new com.dokor.argos.webservices.api.account.ConnectedAnalysesWs(connectedAnalyses(),new AccountCsrf(settings)));
+            config.register(new com.dokor.argos.webservices.api.account.ConnectedAnalysesWs(connectedAnalyses(),new AccountCsrf(settings), org.mockito.Mockito.mock(com.dokor.argos.services.analytics.ProductAnalyticsService.class)));
             config.register(new com.dokor.argos.webservices.api.account.AdminWs(administration(),new AccountCsrf(settings)));
             config.register(new com.dokor.argos.webservices.api.account.AdminStatisticsWs(new AdminStatisticsService(sessions,new AdminStatisticsDao(),clock)));
             config.register(new com.dokor.argos.webservices.api.feedback.FeedbackWs(feedback(),new AccountCsrf(settings),new AccountRateLimiter(dao,tokens,clock,settings)));

@@ -8,7 +8,7 @@ const browser=await chromium.launch();const evidence=[];
 try {
  for(const width of [320,390,768,1280])for(const lang of ['fr','en'])for(const theme of ['light','dark']){
   const context=await browser.newContext({viewport:{width,height:900},colorScheme:theme});
-  await context.addCookies(['argos_account','argos_product_consent','argos_traffic_consent_v1'].map(name=>({name,value:name==='argos_account'?'synthetic-review-session':'refused',url:base,httpOnly:true,secure:false})));
+  await context.addCookies(['argos_account','argos_product_consent_v2','argos_traffic_consent_v1'].map(name=>({name,value:name==='argos_account'?'synthetic-review-session':'refused',url:base,httpOnly:true,secure:false})));
   const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
   const prefix=lang==='en'?'/en':'';
   await page.goto(base+prefix+'/account/admin/analytics/traffic');

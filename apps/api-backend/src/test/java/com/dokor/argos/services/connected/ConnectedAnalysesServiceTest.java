@@ -54,7 +54,9 @@ class ConnectedAnalysesServiceTest {
         stored(run(status));
         when(normalizer.normalize(anyString())).thenThrow(new IllegalArgumentException("DNS unavailable"));
         var input=new SiteAnalysisInput("HTTPS://EXAMPLE.COM:443/section/../page#fragment","server-default-v1");
-        assertEquals("42",service.create("auth","csrf",KEY,input).runId());
+        var replay = service.createObserved("auth","csrf",KEY,input);
+        assertFalse(replay.created());
+        assertEquals("42",replay.accepted().runId());
         assertEquals(status,service.get("auth",KEY).status().name());
         verifyNoInteractions(normalizer,audits,sites);
     }

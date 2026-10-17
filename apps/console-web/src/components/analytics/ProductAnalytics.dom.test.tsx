@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import {afterEach,beforeEach,expect,it,vi} from 'vitest';
+import {StrictMode} from 'react';
 import {fireEvent,render,screen,waitFor} from '@testing-library/react';
 import ProductAnalytics from './ProductAnalytics';
 const route=vi.hoisted(()=>({path:'/'}));
@@ -27,4 +28,19 @@ it('requires granular consent, counts rendered SPA navigations once and stops on
 it('keeps the preference error visible and never collects after a failed choice',async()=>{
  const fetch=collector(true);render(<ProductAnalytics/>);fireEvent.click(await screen.findByRole('button',{name:'Tout accepter'}));
  expect(await screen.findByRole('alert')).toHaveTextContent('Choix non enregistré');expect(screen.getByRole('button',{name:'Tout refuser / retirer'})).toBeInTheDocument();expect(fetch.mock.calls.filter(([u])=>u==='/api/traffic')).toHaveLength(0);
+});
+
+it('deduplicates registration displays through rerenders and counts a new navigation',async()=>{
+ const fetch=collector();route.path='/account/register';const view=render(<ProductAnalytics/>);fireEvent.click(await screen.findByRole('button',{name:'Tout accepter'}));
+ await screen.findByRole('button',{name:'Gérer mes cookies'});const events=()=>fetch.mock.calls.filter(([u,init])=>u==='/api/product-analytics'&&JSON.parse(String(init?.body)).event==='account_registration_view');
+ await waitFor(()=>expect(events()).toHaveLength(1));view.rerender(<ProductAnalytics/>);expect(events()).toHaveLength(1);
+ route.path='/account/sign-in';view.rerender(<ProductAnalytics/>);route.path='/en/account/register';view.rerender(<ProductAnalytics/>);await waitFor(()=>expect(events()).toHaveLength(2));
+ fireEvent.click(screen.getByRole('button',{name:'Gérer mes cookies'}));fireEvent.click(screen.getByRole('button',{name:'Tout refuser / retirer'}));await screen.findByRole('button',{name:'Gérer mes cookies'});
+ route.path='/account/register';view.rerender(<ProductAnalytics/>);expect(events()).toHaveLength(2);
+});
+
+it('does not duplicate a registration display under StrictMode',async()=>{
+ const fetch=collector();route.path='/account/register';render(<StrictMode><ProductAnalytics/></StrictMode>);
+ fireEvent.click(await screen.findByRole('button',{name:'Tout accepter'}));await screen.findByRole('button',{name:'Gérer mes cookies'});
+ await waitFor(()=>expect(fetch.mock.calls.filter(([u,init])=>u==='/api/product-analytics'&&JSON.parse(String(init?.body)).event==='account_registration_view')).toHaveLength(1));
 });

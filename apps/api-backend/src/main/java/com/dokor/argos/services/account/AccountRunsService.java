@@ -123,9 +123,9 @@ public class AccountRunsService {
         return result;
     }
 
-    public void claim(String authorization, String csrf, long id, String proof) {
+    public Long claim(String authorization, String csrf, long id, String proof) {
         if (!AccountCsrf.valid(proof)) throw AccountError.missing();
-        sessions.with(
+        return sessions.with(
                 authorization,
                 csrf,
                 true,
@@ -180,7 +180,7 @@ public class AccountRunsService {
                             context.user().getId(),
                             context.session().getId(),
                             c);
-                    return null;
+                    return context.user().getId();
                 });
     }
 

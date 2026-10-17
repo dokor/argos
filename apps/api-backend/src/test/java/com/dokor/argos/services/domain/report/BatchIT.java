@@ -644,7 +644,7 @@ class BatchIT extends MariaDbReportFixture {
                                         AccountAccess.class,
                                         AccountAccess::value))
                         .register(new DomainSummariesWs(summaries()))
-                        .register(new DomainBatchesWs(batches, new AccountCsrf(settings)))
+                        .register(new DomainBatchesWs(batches, new AccountCsrf(settings), org.mockito.Mockito.mock(com.dokor.argos.services.analytics.AccountJourneyService.class)))
                         .register(
                                 new DomainBatchProgressWs(
                                         batches, new AccountCsrf(settings), summaries()));

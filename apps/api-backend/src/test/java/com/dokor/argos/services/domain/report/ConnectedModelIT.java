@@ -31,12 +31,12 @@ class ConnectedModelIT extends MariaDbReportFixture {
 
     @Test void freshDatabaseHasTheNewModelAndNoSyntheticProductionRecords() throws Exception {
         assertEquals(0, Flyway.configure().dataSource(source).load().info().pending().length);
-        for (var table : List.of("ARG_PREMIUM_WAITLIST", "ARG_FEEDBACK", "ARG_ACCOUNT_NOTIFICATION", "ARG_ACCOUNT_USER", "ARG_DOMAIN_DISCOVERY", "ARG_DOMAIN_DISCOVERY_PAGE", "ARG_DOMAIN_BATCH", "ARG_DOMAIN_BATCH_PAGE", "ARG_USAGE_RUN")) {
+        for (var table : List.of("ARG_PRODUCT_ACCOUNT_EVENT", "ARG_PREMIUM_WAITLIST", "ARG_FEEDBACK", "ARG_ACCOUNT_NOTIFICATION", "ARG_ACCOUNT_USER", "ARG_DOMAIN_DISCOVERY", "ARG_DOMAIN_DISCOVERY_PAGE", "ARG_DOMAIN_BATCH", "ARG_DOMAIN_BATCH_PAGE", "ARG_USAGE_RUN")) {
             try (var c = source.getConnection(); var s = c.createStatement(); var r = s.executeQuery("SELECT COUNT(*) FROM " + table)) {
                 assertTrue(r.next()); assertEquals(0, r.getLong(1), table);
             }
         }
-        for (var q : List.of(QPremiumWaitlistEntry.premiumWaitlistEntry, QFeedback.table, QAccountNotification.table, QDomainDiscovery.table, QDomainDiscoveryPage.table, QDomainBatch.table, QDomainBatchPage.table, QAuditRun.auditRun)) {
+        for (var q : List.of(QProductAccountEvent.table, QProductAuditAttribution.productAuditAttribution, QPremiumWaitlistEntry.premiumWaitlistEntry, QFeedback.table, QAccountNotification.table, QDomainDiscovery.table, QDomainDiscoveryPage.table, QDomainBatch.table, QDomainBatchPage.table, QAuditRun.auditRun)) {
             Set<String> actual = new HashSet<>();
             try (var c = source.getConnection(); var r = c.getMetaData().getColumns(c.getCatalog(), null, q.getTableName(), null)) {
                 while (r.next()) actual.add(r.getString("COLUMN_NAME"));

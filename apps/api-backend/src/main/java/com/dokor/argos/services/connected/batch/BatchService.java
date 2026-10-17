@@ -76,7 +76,13 @@ public final class BatchService {
                 c -> work.apply(sessions.require(auth, csrf, true, mutation, c), c));
     }
 
+    public record Creation(AdmittedBatch admitted, long ownerId, boolean created) {}
+
     public AdmittedBatch create(String auth, String csrf, String key, CreateBatch input) {
+        return createObserved(auth, csrf, key, input).admitted();
+    }
+
+    public Creation createObserved(String auth, String csrf, String key, CreateBatch input) {
         if (key == null
                 || !key.matches("[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}"))
             throw new AccountError(400, "idempotency_key_invalid");
@@ -100,7 +106,7 @@ public final class BatchService {
                             throw new AccountError(409, "idempotency_conflict");
                         var row = batches.owned(owner, previous.getSiteId(), previous.getId(), c);
                         reconcile(row, c);
-                        return admitted(row);
+                        return new Creation(admitted(row), owner, false);
                     }
                     int pending = 0;
                     for (var current : batches.active(owner, c)) {
@@ -205,7 +211,7 @@ public final class BatchService {
                     }
                     var stored = batches.owned(owner, site.getId(), row.getId(), c);
                     reconcile(stored, c);
-                    return admitted(stored);
+                    return new Creation(admitted(stored), owner, true);
                 });
     }
 
