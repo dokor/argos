@@ -27,15 +27,15 @@ export function createLighthouseCollector({ launch, lighthouse, chromeFlags, chr
       puppeteerBrowser = await connectPuppeteer({ browserURL: `http://127.0.0.1:${chrome.port}` });
       const protectedPage = (await puppeteerBrowser.pages()).find(candidate => candidate.url() === 'about:blank#argos-lighthouse');
       if (!protectedPage) throw new Error('Protected Lighthouse page unavailable');
+      // chrome-launcher leaves its default blank tab active. Lighthouse's supplied
+      // incognito page must be visible for Chromium to emit first-paint events.
+      await protectedPage.bringToFront();
       protectedPage.on('response', response => {
         if (response.headers()['x-argos-egress-blocked'] === '1'
             && response.request().isNavigationRequest() && response.frame() === protectedPage.mainFrame()) cancel();
       });
       if (signal?.aborted) throw new Error('Analysis timeout');
       return await lighthouse(url, { port: chrome.port, output: 'json', logLevel: 'error',
-        // This browser/profile and incognito context are new for every audit.
-        // A redundant browser-wide cache reset can stall with the protected CDP page.
-        disableStorageReset: true,
         locale: 'fr', maxWaitForLoad: Math.min(45000, timeoutMs) }, undefined, protectedPage);
     } finally {
       signal?.removeEventListener('abort', cancel);

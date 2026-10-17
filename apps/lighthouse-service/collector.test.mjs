@@ -12,7 +12,7 @@ test('abort kills Chrome, releases the collector and cannot double-kill during c
     chromium: { connectOverCDP: async () => ({ newContext: async () => ({
       route: async () => {}, routeWebSocket: async () => {}, on: () => {}, newPage: async () => ({ goto: async () => {} })
     }) }) },
-    connectPuppeteer: async () => ({ pages: async () => [{ url: () => 'about:blank#argos-lighthouse', on: () => {} }], disconnect: async () => {} }) });
+    connectPuppeteer: async () => ({ pages: async () => [{ url: () => 'about:blank#argos-lighthouse', on: () => {}, bringToFront: async () => {} }], disconnect: async () => {} }) });
   const controller = new AbortController();
   const result = collect('https://example.com', { signal: controller.signal, timeoutMs: 100 });
   await entered; controller.abort();
@@ -20,9 +20,9 @@ test('abort kills Chrome, releases the collector and cannot double-kill during c
   assert.equal(killed, 1);
 });
 
-test('each audit starts with a fresh protected context without a redundant global storage reset', async () => {
-  let launches = 0, contexts = 0, killed = 0;
-  const protectedPage = { url: () => 'about:blank#argos-lighthouse', on: () => {} };
+test('each audit starts with a fresh protected context and activates its page before collection', async () => {
+  let launches = 0, contexts = 0, killed = 0, activated = 0;
+  const protectedPage = { url: () => 'about:blank#argos-lighthouse', on: () => {}, bringToFront: async () => { activated++; } };
   const collect = createLighthouseCollector({
     launch: async () => { launches++; return { port: 9222, kill: async () => { killed++; } }; },
     chromium: { connectOverCDP: async () => ({ newContext: async options => {
@@ -34,7 +34,7 @@ test('each audit starts with a fresh protected context without a redundant globa
     connectPuppeteer: async () => ({ pages: async () => [protectedPage], disconnect: async () => {} }),
     lighthouse: async (url, flags, _config, page) => {
       assert.equal(url, 'https://example.com');
-      assert.equal(flags.disableStorageReset, true);
+      assert.equal(activated, contexts);
       assert.equal(page, protectedPage);
       return { lhr: { categories: {} } };
     },

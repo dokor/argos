@@ -28,6 +28,7 @@ cleanup() {
     docker logs --tail 80 argos-security-gateway 2>&1 || true
     docker logs --tail 80 argos-security-runtime 2>&1 || true
     docker logs --tail 80 argos-security-lighthouse 2>&1 || true
+    docker exec argos-security-public node -e "fetch('http://127.0.0.1/stats').then(r=>r.text()).then(console.log)" 2>&1 || true
   fi
   docker rm -f argos-security-runtime argos-security-lighthouse argos-security-gateway argos-security-public argos-security-private >/dev/null 2>&1 || true
   docker network rm argos-security-public argos-security-private >/dev/null 2>&1 || true
@@ -89,6 +90,7 @@ docker exec argos-security-lighthouse node --input-type=module -e "
   import assert from 'node:assert/strict';
   const response=await fetch('http://127.0.0.1:3017/analyze',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({url:'http://8.8.8.8/',timeoutMs:40000})});
   assert.equal(response.status,200);const lhr=await response.json();
+  console.log(JSON.stringify({runtimeError:lhr.runtimeError?.code,finalUrl:lhr.finalDisplayedUrl,accessibility:lhr.categories?.accessibility?.score}));
   assert.equal(lhr.runtimeError,undefined);
   assert.equal(typeof lhr.categories?.accessibility?.score,'number');
   assert.ok(lhr.categories.accessibility.score>=0 && lhr.categories.accessibility.score<=1);

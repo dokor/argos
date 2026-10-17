@@ -1,7 +1,7 @@
 import http from 'node:http';
-let hits=0, slowHits=0, mutations=0;
+let hits=0, slowHits=0, mutations=0, pageHits=0;
 http.createServer((req,res)=>{
-  if(req.url==='/stats')return res.end(JSON.stringify({hits,slowHits,mutations}));
+  if(req.url==='/stats')return res.end(JSON.stringify({hits,slowHits,mutations,pageHits}));
   if(process.env.PRIVATE_FIXTURE==='true'){hits++;return res.end('private synthetic data');}
   if(req.method!=='GET' && req.method!=='HEAD'){mutations++;return res.writeHead(405).end();}
   if(req.url==='/slow'){
@@ -11,6 +11,7 @@ http.createServer((req,res)=>{
     return;
   }
   if(req.url==='/redirect')return res.writeHead(302,{location:'http://private.fixture.net/secret'}).end();
+  pageHits++;
   res.setHeader('Content-Type','text/html');
   res.end(`<!doctype html><html lang="en"><head><title>Security fixture</title></head><body><h1>Controlled fixture</h1>
     <iframe src="http://private.fixture.net/frame"></iframe>

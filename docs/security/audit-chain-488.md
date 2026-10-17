@@ -48,8 +48,9 @@ action remains ERRNO, and neither SYS_ADMIN nor an unconfined profile is granted
 Each audit launches a fresh browser and closes it on completion/failure/deadline
 or client disconnect. Linux/ARM64 sandbox compatibility must be verified on the
 deployment host; there is no production `--no-sandbox` fallback.
-Lighthouse receives a new incognito context and browser profile for each run, so
-its redundant browser-wide storage reset is disabled. No context/profile is reused.
+Lighthouse receives a new incognito context and browser profile for each run. Its
+protected page is explicitly activated before collection, since chrome-launcher
+also creates a default blank tab. No context/profile is reused.
 
 ## Limits and passive scope
 
