@@ -27,6 +27,12 @@ export function safeAccountReturn(raw: unknown): string {
       if(q.size===1&&back)return path+"?returnTo="+encodeURIComponent(back);
       if(q.size===0)return path;
     }
+    const queueTask=/^\/(?:en\/)?account\/admin\/queue\/(DISCOVERY|BATCH|RUN)\/([1-9][0-9]{0,18})$/.exec(path);
+    if(queueTask&&validDomainId(queueTask[2])&&raw.split("?").length<=2){
+      const q=new URLSearchParams(query),back=safeAdminRunReturn(q.get("returnTo"));
+      if(q.size===1&&back)return path+"?returnTo="+encodeURIComponent(back);
+      if(q.size===0)return path;
+    }
     const run = /^\/(?:en\/)?account\/runs\/([1-9][0-9]{0,18})$/.exec(path);
     const returnTo = new URLSearchParams(query).get("returnTo");
     if (run && validDomainId(run[1]) && (safeDomainReturn(returnTo)||safeOverviewReturn(returnTo)))

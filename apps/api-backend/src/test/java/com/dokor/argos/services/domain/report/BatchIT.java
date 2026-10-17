@@ -30,6 +30,40 @@ import java.util.concurrent.*;
 
 @EnabledIfEnvironmentVariable(named = "ARGOS_TEST_CREDENTIALS_URL", matches = ".+")
 class BatchIT extends MariaDbReportFixture {
+    @Test void adminQueueGroupsRealChildrenAndKeepsTerminalDetailsWithoutPrivateTokens() throws Exception {
+        engine("");
+        var admitted = launch(selection(a));
+        sql("UPDATE ARG_ACCOUNT_USER SET role='ADMIN' WHERE id=10");
+        var configuration = mock(com.dokor.argos.services.configuration.ConfigurationService.class);
+        when(configuration.auditStuckRunTimeout()).thenReturn(Duration.ofMinutes(20));
+        var queue = new AdminQueueService(sessions, clock, configuration);
+        var all = new AdminQueueService.Filters(null,null,null,null,null,null,null,1,20);
+        error(403, () -> queue.list(b, all));
+        var snapshot = queue.list(a, all);
+        assertEquals(1, snapshot.items().stream().filter(r -> r.get("type").equals("BATCH")).count());
+        assertTrue(snapshot.items().stream().noneMatch(r -> admitted.id().equals(r.get("batchId"))));
+        assertTrue(snapshot.items().stream().noneMatch(r -> r.get("type").equals("DISCOVERY"))); // Completed, awaiting selection is not work.
+        var detail = queue.detail(a, "BATCH", id(admitted));
+        assertEquals(2, ((Number)detail.get("pageCount")).intValue());
+        assertEquals("A", detail.get("userDisplayName"));
+        assertEquals(2, ((List<?>)detail.get("children")).size());
+        var urls = new AdminQueueService.Filters("RUN",null,null,"10",null,null,"oldest",1,1);
+        var first = queue.list(a, urls);
+        assertTrue(first.hasMore()); assertEquals(1, first.items().size());
+        assertEquals(admitted.id(), first.items().getFirst().get("batchId"));
+        var second = queue.list(a, new AdminQueueService.Filters("RUN",null,null,"10",null,null,"oldest",2,1));
+        assertFalse(second.hasMore());
+        assertNotEquals(first.items().getFirst().get("id"), second.items().getFirst().get("id"));
+        sql("UPDATE ARG_AUDIT SET normalized_url=CONCAT(normalized_url,'?token=private-value#fragment') WHERE id IN (SELECT audit_id FROM ARG_DOMAIN_BATCH_PAGE WHERE batch_id="+id(admitted)+")");
+        var json = mapper.writeValueAsString(queue.detail(a, "BATCH", id(admitted)));
+        assertFalse(json.contains("private-value")); assertFalse(json.contains("reportToken")); assertFalse(json.contains("claimToken")); assertFalse(json.contains("rawTarget"));
+        sql("UPDATE ARG_DOMAIN_BATCH SET status='CANCELED',finished_at=created_at WHERE id="+id(admitted));
+        // An inconsistent terminal parent must not hide still-queued URL work.
+        assertEquals(2, queue.list(a, all).items().stream().filter(r -> admitted.id().equals(r.get("batchId"))).count());
+        sql("UPDATE ARG_AUDIT_RUN SET status='CANCELED',finished_at=created_at WHERE id IN (SELECT run_id FROM ARG_DOMAIN_BATCH_PAGE WHERE batch_id="+id(admitted)+")");
+        assertEquals("TERMINAL", queue.detail(a, "BATCH", id(admitted)).get("diagnostic"));
+        assertTrue(queue.list(a, all).items().stream().noneMatch(r -> admitted.id().equals(r.get("batchId"))));
+    }
     AccountDao accounts;
     AccountSessionService sessions;
     DiscoveryDao dao;
