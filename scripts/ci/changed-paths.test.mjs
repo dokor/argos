@@ -33,6 +33,8 @@ const cases = [
   ['deployment routing', ['scripts/ci/deploy-paths.mjs'], ['frontend']],
   ['deployment workflow', ['.github/workflows/deploy.yml'], ['frontend']],
   ['post-deployment workflow', ['.github/workflows/post-deploy-audit.yml'], ['frontend']],
+  ['coverage investigation helper', ['scripts/explain-coverage.mjs'], ['frontend']],
+  ['frozen coverage fixture', ['docs/report/fixtures/coverage-production-a.json'], ['frontend']],
   ['contracts', ['scripts/contracts/generate-connected.py'], ['api','frontend','integration','e2e','auth']],
 ];
 for (const [name,paths,expected] of cases) test(name + ' selects only affected checks', () => {

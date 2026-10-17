@@ -126,7 +126,7 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - name: Test CI and release helpers
-        run: node --test ../../scripts/ci/*.test.mjs ../../scripts/e2e/*.test.mjs ../../scripts/check-release-evidence.test.mjs ../../scripts/release/inspect-runtime.test.mjs
+        run: node --test ../../scripts/ci/*.test.mjs ../../scripts/e2e/*.test.mjs ../../scripts/check-release-evidence.test.mjs ../../scripts/release/inspect-runtime.test.mjs ../../scripts/explain-coverage.test.mjs
       - run: npm run test
       - name: Build the standalone console-web Docker context
         run: |

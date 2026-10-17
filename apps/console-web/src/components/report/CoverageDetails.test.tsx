@@ -31,6 +31,14 @@ it('retains partial sources without calling a partial measurement complete',()=>
   expect(screen.getByText(/Partial measurement/)).toBeInTheDocument();
   expect(screen.getByText(/Actual source: zap \(http, zap\)/)).toBeInTheDocument();
 });
+it('keeps the rounded measured and uncovered percentages complementary at a half point',()=>{
+  const rounded=structuredClone(fixture);
+  rounded.global={...rounded.global,measuredWeight:193,expectedWeight:200,ratio:193/200};
+  rounded.checks[0].weight=193;rounded.checks[1].weight=7;
+  render(<CoverageDetails coverage={rounded} lang="en"/>);
+  expect(screen.getByText('97 % measured — 3 % not covered')).toBeInTheDocument();
+  expect(screen.getByText(/3.5 coverage points/)).toBeInTheDocument();
+});
 it('keeps unknown reasons private and explains incomplete historic breakdowns',()=>{
   const old=structuredClone(fixture);old.checks=old.checks.slice(1);old.checks[0].reason='https://private.example/?token=secret';
   const {container}=render(<CoverageDetails coverage={old} lang="en"/>);

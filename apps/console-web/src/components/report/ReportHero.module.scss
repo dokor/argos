@@ -25,8 +25,8 @@
 .critical {color:var(--argos-error);}.important {color:var(--argos-measure-warning);}
 .actionLink {color:t.$brand;display:inline-flex;align-items:center;min-height:44px;font-size:13px;font-weight:600;}
 .metadata {font-size:12px;color:t.$text-muted;margin-top:4px;margin-bottom:14px;}
-.metadata summary {cursor:pointer;min-height:32px;display:flex;align-items:center;gap:8px;}
-.metadata summary::before {content:'+';}.metadata[open] summary::before {content:'−';}
+.metadata>summary {cursor:pointer;min-height:44px;display:flex;align-items:center;gap:8px;}
+.metadata>summary::before {content:'+';}.metadata[open]>summary::before {content:'−';}
 .metadata p {max-width:75ch;margin:6px 0;overflow-wrap:anywhere;}
 .actionLink:focus-visible,.metadata summary:focus-visible {outline:3px solid t.$brand;outline-offset:3px;}
 @media(max-width:700px){.actions{width:100%;}.result{grid-template-columns:120px minmax(0,1fr);gap:18px;}.siteName{font-size:28px;}.identity{flex-basis:100%;}}

@@ -45,6 +45,7 @@ export function classify(paths) {
     api: common || contracts || component('api-backend'),
     frontend: common || contracts || npmConfig || component('console-web')
       || matches(path => path.startsWith('scripts/release/') || path.startsWith('scripts/check-release-evidence')
+        || path.startsWith('scripts/explain-coverage') || /^docs\/report\/fixtures\/coverage-.*\.json$/.test(path)
         || path.startsWith('scripts/e2e/acceptance-evidence') || path.startsWith('scripts/e2e/visual-suites')
         || path.startsWith('scripts/ci/deploy-paths') || path === '.github/workflows/deploy.yml'
         || path === '.github/workflows/post-deploy-audit.yml'),

@@ -9,6 +9,8 @@ import {globalScore, partialReport, reportScope} from "./reportSummaryModel";
 import {scoreLimit, interpretationCopy} from "./reportInterpretation";
 import ReportIntroductionView from "./ReportIntroductionView";
 import ReportPageScope from "./ReportPageScope";
+import CoverageDetails from "./CoverageDetails";
+import {coverageCopy} from "./coverageExplanation";
 import s from "./ReportHero.module.scss";
 
 export default function ReportHero({report,model=buildReportModel(report),onActions,onMethod,introduction=report.introduction,onSelectFinding,demo=false,actions,context,tip}: {
@@ -52,6 +54,10 @@ export default function ReportHero({report,model=buildReportModel(report),onActi
    {report.site?.domainRating&&Number.isFinite(report.site.domainRating.score)&&report.site.domainRating.score>=0&&report.site.domainRating.score<=100&&<p><strong>DR {Math.round(report.site.domainRating.score)}/100</strong> · {t.report.hero.domainRatingFetchedAt} {new Date(report.site.domainRating.fetchedAt).toLocaleDateString(t.report.hero.locale,{timeZone:"UTC"})} · <a href="https://ahrefs.com/" target="_blank" rel="noopener noreferrer">Domain Rating by Ahrefs</a></p>}
    <ReportPageScope report={report} lang={lang}/><p>{scoreLimit(report,lang)}</p><p>{interpretationCopy[lang].severity}</p><p>{copy.privacy}</p>
   </details>
+  {report.access==="summary"&&coverage&&<details className={s.metadata}>
+   <summary>{coverageCopy[lang].title}</summary>
+   <CoverageDetails coverage={coverage} lang={lang}/>
+  </details>}
   {introduction&&<ReportIntroductionView note={introduction} model={model} lang={lang} onSelectFinding={onSelectFinding}/>}
  </section>;
 }
