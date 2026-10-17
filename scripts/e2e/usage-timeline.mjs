@@ -80,6 +80,11 @@ try {
     assert.ok(await section.getByRole('status').innerText());
     await section.getByText(copy.table,{exact:true}).click();
     assert.ok(await section.getByRole('table').isVisible());await check('monthly-filtered');
+    if([390,1440].includes(width)) {
+      await section.getByRole('combobox',{name:copy.dimension,exact:true}).selectOption('URL');
+      await section.getByRole('checkbox',{name:'https://atelier.example/collection/une-url-longue?tri=date&categorie=toutes 42',exact:true}).waitFor();
+      await check('urls');
+    }
     await section.getByRole('button',{name:copy.clear,exact:true}).click();
     await section.getByRole('combobox',{name:copy.granularity,exact:true}).selectOption('YEAR');
     await section.getByRole('button',{name:new RegExp(copy.selectPeriod)}).first().waitFor();await check('annual');

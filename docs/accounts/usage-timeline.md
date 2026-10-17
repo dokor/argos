@@ -96,3 +96,12 @@ focus des barres, tableau, vide, erreur/retry, abandon des réponses obsolètes.
 `scripts/e2e/usage-timeline.mjs` utilise exclusivement des réponses fictives en
 loopback pour la recette 320/390/768/1440 px, FR/EN, clair/sombre. Les captures
 sont enregistrées dans `outputs/ui-review/usage-timeline/`.
+
+Recette locale du 17 octobre 2026 : 64 scénarios réussis, dont les URL longues
+à 390/1440 px, sans débordement horizontal de page ni erreur JavaScript.
+Les captures ont été inspectées en FR clair (390/1440 px) et EN sombre (320 px).
+Le serveur Next.js de développement a été utilisé sur localhost avec Webpack ;
+`CLARTE_DEV_PREVIEW=true` autorise ses scripts dans le navigateur de test seulement.
+La CSP applicative reste inchangée. La matrice CI utilise le build de production
+sans cette option. Les tests des dates personnalisées et de l’actualisation de
+page complètent les tests de filtre, d’erreur et de concurrence des réponses.

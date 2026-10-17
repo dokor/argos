@@ -39,8 +39,8 @@ class UsageTimelineIT extends MariaDbReportFixture {
         return service.timeline("owner", "DAY", dimension, "2026-10-24", "2026-10-27", filters, null);
     }
     @Test void preservesEveryDebitAcrossDimensionsAndTopFiveWithoutLeakingForeignTargets() throws Exception {
-        for (int i = 10; i < 18; i++) debit(100 + i, i, 10, "2026-10-25 01:30:00", "COUNTED");
-        debit(200, 10, 10, "2026-10-25 02:30:00", "COUNTED"); // DST repeated local hour, distinct debit.
+        for (int i = 10; i < 18; i++) debit(100 + i, i, 10, "2026-10-25 00:30:00", "COUNTED");
+        debit(200, 10, 10, "2026-10-25 01:30:00", "COUNTED"); // DST repeated local hour, distinct debit.
         debit(201, 10, 10, null, "RESERVED"); debit(202, 10, 10, null, "RELEASED");
         debit(203, 17, 20, "2026-10-25 01:30:00", "COUNTED");
         for (String dimension : List.of("GLOBAL", "DOMAIN", "URL")) {

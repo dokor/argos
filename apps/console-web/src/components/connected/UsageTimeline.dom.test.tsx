@@ -63,3 +63,15 @@ it("ignores stale results when a filter changes and aborts requests on unmount",
   expect(screen.queryByText("999")).not.toBeInTheDocument();
   const lastSignal = vi.mocked(accountFetch).mock.calls.at(-1)![3]!; view.unmount(); expect(lastSignal.aborted).toBe(true);
 });
+it("refreshes with the page and rejects reversed custom dates without sending a new request", async () => {
+  const view = render(<UsageTimeline timezone="UTC" refreshVersion={0}/>);
+  await screen.findByText("crédits consommés", { exact: false });
+  const previous = vi.mocked(accountFetch).mock.calls.length;
+  view.rerender(<UsageTimeline timezone="UTC" refreshVersion={1}/>);
+  await waitFor(() => expect(accountFetch).toHaveBeenCalledTimes(previous + 1));
+  const start = screen.getByLabelText("Début inclus"), end = screen.getByLabelText("Fin exclue");
+  fireEvent.change(start, { target: { value: "2026-10-10" } }); fireEvent.change(end, { target: { value: "2026-10-01" } });
+  fireEvent.submit(start.closest("form")!);
+  expect(await screen.findByRole("alert")).toHaveTextContent("Vérifiez les dates");
+  expect(accountFetch).toHaveBeenCalledTimes(previous + 1);
+});
