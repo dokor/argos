@@ -29,6 +29,10 @@ public class QAuditReport extends com.querydsl.sql.RelationalPathBase<AuditRepor
     public final DateTimePath<java.time.Instant> createdAt = createDateTime("createdAt", java.time.Instant.class);
 
     public final StringPath domain = createString("domain");
+    public final NumberPath<Integer> problemProjectionVersion=createNumber("problemProjectionVersion",Integer.class);
+    public final StringPath problemFingerprint=createString("problemFingerprint");
+    public final StringPath problemCoverageVersion=createString("problemCoverageVersion");
+    public final BooleanPath problemPartial=createBoolean("problemPartial");
 
     public final DateTimePath<java.time.Instant> expiresAt = createDateTime("expiresAt", java.time.Instant.class);
 
@@ -91,6 +95,10 @@ public class QAuditReport extends com.querydsl.sql.RelationalPathBase<AuditRepor
     }
 
     public void addMetadata() {
+        addMetadata(problemProjectionVersion,ColumnMetadata.named("problem_projection_version").ofType(Types.SMALLINT));
+        addMetadata(problemFingerprint,ColumnMetadata.named("problem_fingerprint").ofType(Types.VARCHAR).withSize(64));
+        addMetadata(problemCoverageVersion,ColumnMetadata.named("problem_coverage_version").ofType(Types.VARCHAR).withSize(64));
+        addMetadata(problemPartial,ColumnMetadata.named("problem_partial").ofType(Types.BOOLEAN));
         addMetadata(shareTokenHash, ColumnMetadata.named("share_token_hash").ofType(Types.BINARY).withSize(32));
         addMetadata(shareExpiresAt, ColumnMetadata.named("share_expires_at").ofType(Types.TIMESTAMP));
         addMetadata(measurementCompleteness, ColumnMetadata.named("measurement_completeness").ofType(Types.VARCHAR).withSize(16));

@@ -32,6 +32,8 @@ public class SchedulerJobs {
     private com.dokor.argos.services.connected.batch.BatchReconciler batches;
     private com.dokor.argos.services.notifications.NotificationService notifications;
     private com.dokor.argos.services.domain.premium.PremiumWaitlistService premiumWaitlist;
+    private com.dokor.argos.services.statistics.ProblemStatisticsService problemStatistics;
+    @Inject public void problemStatistics(com.dokor.argos.services.statistics.ProblemStatisticsService service){this.problemStatistics=service;}
     @Inject public void premiumWaitlist(com.dokor.argos.services.domain.premium.PremiumWaitlistService service){this.premiumWaitlist=service;}
     @Inject public void notifications(com.dokor.argos.services.notifications.NotificationService service){this.notifications=service;}
     @Inject public void batches(com.dokor.argos.services.connected.batch.BatchReconciler reconciler){this.batches=reconciler;}
@@ -57,6 +59,7 @@ public class SchedulerJobs {
     }
 
     public void scheduleJobs() {
+        if(problemStatistics!=null) scheduler.schedule("Project problem statistics",problemStatistics::backfill,Schedules.fixedDelaySchedule(Duration.ofMinutes(1)));
         if(premiumWaitlist!=null) scheduler.schedule("Purge expired premium interest",premiumWaitlist::purge,Schedules.fixedDelaySchedule(Duration.ofHours(1)));
         if(notifications!=null) scheduler.schedule("Purge account notifications",notifications::purge,Schedules.fixedDelaySchedule(Duration.ofHours(1)));
         if(batches!=null) scheduler.schedule("Reconcile domain batches",batches::tick,Schedules.fixedDelaySchedule(Duration.ofSeconds(2)));

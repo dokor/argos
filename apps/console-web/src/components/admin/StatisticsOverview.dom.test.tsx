@@ -27,6 +27,7 @@ it.each(["fr", "en"] as const)("shows aggregates with definitions and separate p
   await screen.findByText(lang === "fr" ? "1 250" : "1,250");
   expect(screen.getByRole("link", { name: lang === "fr" ? "Mesure produit" : "Product measurement" })).toHaveAttribute("href", lang === "fr" ? "/account/admin/analytics" : "/en/account/admin/analytics");
   expect(screen.getByRole("link", { name: lang === "fr" ? "Vue d’ensemble" : "Overview" })).toHaveAttribute("aria-current", "page");
+  expect(screen.getByRole("link", { name: lang === "fr" ? "Problèmes détectés" : "Detected problems" })).toHaveAttribute("href", lang === "fr" ? "/account/admin/analytics/problems" : "/en/account/admin/analytics/problems");
   expect(screen.getByText(lang === "fr" ? /Les indicateurs de validation/ : /Validation and suspension counts/)).toBeInTheDocument();
   expect(screen.getByText(lang === "fr" ? /le rapport peut rester partiel/ : /the report may still be partial/)).toBeInTheDocument();
   expect(screen.getByText(/17/,{selector:"time"})).toBeInTheDocument();
