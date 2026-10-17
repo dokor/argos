@@ -11,8 +11,8 @@ it.each(["problems", "traffic"])("offers reciprocal language links on statistics
   const french = "/account/admin/analytics/" + section, english = "/en" + french;
   route.pathname = english;
   render(<LangProvider initialLang="en"><LangToggle /></LangProvider>);
-  expect(screen.getByRole("link", { name: "English", exact: true })).toHaveAttribute("href", english);
-  expect(screen.getByRole("link", { name: "English", exact: true })).toHaveAttribute("aria-current", "page");
-  expect(screen.getByRole("link", { name: "Français", exact: true })).toHaveAttribute("href", french);
+  expect(screen.getByRole("link", { name: "English" })).toHaveAttribute("href", english);
+  expect(screen.getByRole("link", { name: "English" })).toHaveAttribute("aria-current", "page");
+  expect(screen.getByRole("link", { name: "Français" })).toHaveAttribute("href", french);
   expect(screen.queryByText("guides")).not.toBeInTheDocument();
 });
