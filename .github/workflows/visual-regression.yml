@@ -40,10 +40,10 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: '24.21.0'
           cache: npm
@@ -52,7 +52,7 @@ jobs:
       - run: npm run build --prefix apps/console-web
       - name: Package this revision's build without the compiler cache
         run: tar --exclude=.next/cache -C apps/console-web -czf "$RUNNER_TEMP/visual-frontend.tgz" .next
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: visual-build-${{ github.sha }}
           path: ${{ runner.temp }}/visual-frontend.tgz
@@ -73,10 +73,10 @@ jobs:
       CONNECTED_BASE_URL: http://127.0.0.1:3000
       HISTORY_BASE_URL: http://127.0.0.1:3000
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: '24.21.0'
           cache: npm
@@ -88,7 +88,7 @@ jobs:
       - name: Install controlled Chromium
         working-directory: apps/playwright-service
         run: npx playwright install --with-deps chromium
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with:
           name: visual-build-${{ github.sha }}
           path: ${{ runner.temp }}
@@ -113,7 +113,7 @@ jobs:
         run: node scripts/e2e/visual-suites.mjs "${{ matrix.group }}"
       - name: Preserve captures and diagnostics from this group
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: visual-captures-${{ matrix.group }}-${{ github.sha }}
           path: outputs/
@@ -132,13 +132,13 @@ jobs:
           BUILD_RESULT: ${{ needs.build.result }}
           VISUAL_RESULT: ${{ needs.visual.result }}
         run: test "$BUILD_RESULT" = success && test "$VISUAL_RESULT" = success
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: '24.21.0'
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with:
           pattern: visual-captures-*-${{ github.sha }}
           path: outputs/
@@ -151,7 +151,7 @@ jobs:
           node --test scripts/e2e/acceptance-evidence.test.mjs scripts/e2e/visual-suites.test.mjs
           node scripts/e2e/acceptance-evidence.mjs --visual-only
       - name: Upload visual manifest and comparisons
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: visual-acceptance-${{ github.sha }}
           path: outputs/ui-review/clarte-acceptance/
