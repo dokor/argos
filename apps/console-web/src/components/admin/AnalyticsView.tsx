@@ -47,12 +47,14 @@ export default function AnalyticsView() {
   const seconds = (value: number | null) => value === null ? c.unavailable : new Intl.NumberFormat(lang, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value / 1000) + " s";
   const data = current?.data;
 
-  return <><div className={s.main}>
+  return <><main className={s.main}>
     <Link href="/account/admin">{c.back}</Link><h1>{c.title}</h1><p>{c.intro}</p>
     {!session.ready ? <p role="status">{c.loading}</p> : !allowed ? <><p role="alert">{c.denied}</p><Link href="/account/sign-in">{c.signIn}</Link></> : <>
       <AdminNavigation active="analytics" />
       <nav className={s.controls} aria-label={lang === 'fr' ? 'Statistiques' : 'Statistics'}><Link href="/account/admin/analytics" aria-current="page">{lang === 'fr' ? 'Mesure produit' : 'Product measurement'}</Link><Link href="/account/admin/analytics/traffic">{lang === 'fr' ? 'Trafic' : 'Traffic'}</Link></nav>
-      <MeasurementControl onDenied={onDenied} onChanged={onChanged} />
+      <details className={s.settings}><summary>{c.settings}</summary>
+        <MeasurementControl onDenied={onDenied} onChanged={onChanged} />
+      </details>
       <div className={s.controls}><label htmlFor="analytics-period">{c.period}</label>
         <select id="analytics-period" value={days} onChange={event => setDays(Number(event.target.value))}>
           {[7, 30, 90].map(value => <option key={value} value={value}>{value} {c.days}</option>)}
@@ -78,5 +80,5 @@ export default function AnalyticsView() {
         <h2>{c.events}</h2><p>{c.eventHelp}</p>{!data.events.length ? <p>{c.emptyEvents}</p> : <ul>{data.events.map((row, index) => <li key={index}>{row.event} · {row.route} · {row.lang} · {row.placement} · {row.error} : {row.count}</li>)}</ul>}
       </>}
     </>}
-  </div></>;
+  </main></>;
 }

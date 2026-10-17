@@ -7,7 +7,9 @@ assert.ok(['127.0.0.1', 'localhost'].includes(new URL(base).hostname), 'Local fr
 const output = 'outputs/ui-review/account-journey';
 await mkdir(output, { recursive: true });
 // Run the read-only preview backend on 3018 and build/start Next with that API_BASE.
-const browser = await chromium.launch();
+const channel = process.env.PLAYWRIGHT_CHANNEL;
+assert.ok(!channel || ["chrome", "msedge"].includes(channel), "Supported local browser channel only");
+const browser = await chromium.launch(channel ? { channel } : {});
 const evidence = [];
 try {
   for (const width of [320, 390, 768, 1280]) for (const lang of ['fr', 'en']) for (const theme of ['light', 'dark']) {
@@ -29,6 +31,10 @@ try {
     assert.ok((await page.locator('main').getByRole('link').first().getAttribute('href')).endsWith('/account/admin'));
     const languageLink = page.getByRole('group', { name: 'Language', exact: true }).getByRole('link', { name: lang === 'fr' ? 'English' : 'Français', exact: true });
     assert.equal(await languageLink.getAttribute('href'), (lang === 'fr' ? '/en' : '') + '/account/admin/analytics');
+    const settings = page.locator('summary').filter({ hasText: lang === 'fr' ? 'Réglages de collecte' : 'Collection settings' });
+    await settings.press('Enter');
+    await page.getByRole('button', { name: lang === 'fr' ? 'Actualiser l’état de collecte' : 'Refresh collection state', exact: true }).waitFor();
+    await settings.press('Enter');
     const periodResponse = page.waitForResponse(response => response.url().includes('/api/account/admin/analytics?days=7'));
     await page.getByRole('combobox').selectOption('7');
     await periodResponse;
@@ -40,6 +46,11 @@ try {
     await page.locator('main dl dd').filter({ hasText: /^24$/ }).waitFor();
     assert.ok(requests.filter(url => url.includes('/api/account/admin/analytics')).length > before);
     assert.equal(requests.some(url => url.includes('/api/auth/')), false);
+    const retention = page.getByRole('region', { name: lang === 'fr' ? 'Retours après inscription' : 'Returns after registration', exact: true });
+    assert.equal(await retention.getByText(lang === 'fr' ? 'Indisponible' : 'Unavailable', { exact: true }).count(), 2, 'Seven-day cohorts must stay immature');
+    const restored = page.waitForResponse(response => response.url().includes('/api/account/admin/analytics?days=30'));
+    await page.getByRole('combobox').selectOption('30'); await restored;
+    await page.locator('main dl dd').filter({ hasText: /^24$/ }).waitFor();
     await page.screenshot({ path: output + '/analytics-' + width + '-' + lang + '-' + theme + '.png', fullPage: true });
     await page.route('**/api/account/admin/analytics?*', request => request.fulfill({ status: 403, contentType: 'application/json', body: '{"error":"admin_required"}' }));
     await page.getByRole('button', { name: lang === 'fr' ? 'Actualiser' : 'Refresh', exact: true }).click();
@@ -47,7 +58,7 @@ try {
     assert.equal(await page.getByRole('combobox').count(), 0);
     assert.equal(await page.locator('main dl').count(), 0, 'Private data remained after denial');
     assert.deepEqual(errors, []);
-    evidence.push({ width, lang, theme, route, period: 7, refreshed: true, roleRefusal: true });
+    evidence.push({ width, lang, theme, route, browser: browser.version(), channel: channel ?? "chromium", period: 7, capturePeriod: 30, keyboardSettings: true, refreshed: true, roleRefusal: true });
     console.log('PASS ' + width + '-' + lang + '-' + theme);
     await context.close();
   }

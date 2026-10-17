@@ -40,3 +40,7 @@
 .activity li { display: flex; justify-content: space-between; gap: 24px; padding-block: 16px; border-bottom: 1px solid t.$border; }
 .activity strong,.main td { font-variant-numeric: tabular-nums; }
 @media(max-width:600px) { .main .funnel { grid-template-columns: 1fr; } }
+
+.settings { margin-block: 20px; }
+.settings > summary { color: t.$brand; cursor: pointer; min-height: 44px; padding-block: 10px; font-weight: 600; }
+.settings > summary:focus-visible { outline: 3px solid t.$brand; outline-offset: 3px; }
