@@ -2,8 +2,9 @@ import type { Issue } from "./types";
 import type { Lang } from "@/lib/i18n/routes";
 import { describeObservation, findingQualification, missingLocation } from "./findingPresentation";
 import { findingPlaybook } from "./findingPlaybooks";
+import { findingExplanation } from "./findingExplanation";
 
-export const CATALOGUE_VERSION = "report-content-v5";
+export const CATALOGUE_VERSION = "report-content-v6";
 export type FindingContent = { title: string; observation: string; impact: string; recommendation: string; verification: string; qualification: string; missingInformation: string };
 type Copy = [title: string, impact: string];
 const catalogue: Record<string, Record<Lang, Copy>> = {};
@@ -208,6 +209,12 @@ add(["lighthouse.audit.is-crawlable"],
 add(["tech.security.version_disclosure"],
   ["Des versions logicielles sont exposées", "Des bannières peuvent faciliter l’identification des logiciels ; elles ne prouvent pas une vulnérabilité."],
   ["Software versions are exposed", "Banners may help identify software; they do not prove a vulnerability."]);
+add(["lighthouse.audit.lcp-discovery-insight"],
+  ["La découverte de la ressource LCP est à examiner", "Une ressource découverte tardivement peut retarder l’affichage du contenu principal."],
+  ["Review LCP resource discovery", "A late-discovered resource may delay the main content appearing."]);
+add(["lighthouse.audit.lcp-breakdown-insight"],
+  ["Les phases d’affichage du contenu principal sont à examiner", "La décomposition du LCP aide à chercher quelle phase retarde l’affichage."],
+  ["Review the phases leading to main content display", "The LCP breakdown helps investigate which phase delays display."]);
 export const supportedFindingKeys = Object.keys(catalogue);
 export function cleanEvidence(text?: string | null): string {
   return (text ?? "").replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f\u202a-\u202e\u2066-\u2069]/g, "")
@@ -225,21 +232,22 @@ export function findingEditorial(key: string | null | undefined, lang: Lang) {
     : ["Technical check to review", "The effect on users is not documented for this check; verify it in the affected journey."];
   const resolved = copy ?? fallback;
   const playbook = findingPlaybook(key, lang);
-  return { title: resolved[0], impact: resolved[1], recommendation: playbook.steps.join(" "), verification: playbook.expected };
+  return { title: resolved[0], impact: resolved[1], recommendation: playbook.summary ?? playbook.steps.join(" "), verification: playbook.expected };
 }
 export function findingContent(issue: Issue, lang: Lang): FindingContent {
   const copy = findingEditorial(issue.id, lang);
+  const explanation = findingExplanation(issue, lang);
   const uncertain = issue.confidence !== "HIGH" && issue.confidence !== "MEDIUM";
   const confirm = lang === "fr" ? "Confirmer le signal et son périmètre avant toute correction. " : "Confirm the signal and its scope before making changes. ";
-  const recommendation = copy.recommendation;
-  const title = copy.title;
+  const recommendation = explanation.summary ?? explanation.steps.join(" ");
+  const title = explanation.title ?? copy.title;
   return {
     title,
-    observation: describeObservation(issue, title, lang),
+    observation: explanation.observation ?? describeObservation(issue, title, lang),
     impact: copy.impact,
     recommendation: recommendation ? (uncertain ? confirm : "") + recommendation : confirm.trim(),
-    verification: copy.verification,
-    qualification: findingQualification(issue, lang), missingInformation: missingLocation(issue, lang),
+    verification: explanation.expected,
+    qualification: findingQualification(issue, lang), missingInformation: explanation.missingInformation ?? missingLocation(issue, lang),
   };
 }
 

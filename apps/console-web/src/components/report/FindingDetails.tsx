@@ -5,6 +5,7 @@ import FindingGuide from "./FindingGuide";
 import { correctionGuide } from "@/lib/correctionGuides";
 import { useLang } from "@/lib/i18n/LangContext";
 import { CATALOGUE_VERSION, cleanEvidence, findingContent } from "./findingCatalogue";
+import { expectsScalarMeasurement } from "./findingExplanation";
 import { reportReadingCopy } from "./reportReadingCopy";
 import type { Finding } from "./reportModel";
 import s from "./IssuesByCategory.module.scss";
@@ -30,7 +31,7 @@ export default function FindingDetails({ finding }: { finding: Finding }) {
     <div className={s.detailBlock}><h3 className={s.detailBlockLabel}>{copy.evidence}</h3>
       {content.missingInformation && <p>{content.missingInformation}</p>}
       {validMeasure ? <p>{issue.id === "runtime.network.bytes_estimated" ? `${copy.estimated}: ` : ""}
-        {measure.value.toLocaleString(lang, { maximumSignificantDigits: 6 })} {copy.units[measure.unit]}</p> : <p>{copy.missingMeasure}</p>}
+        {measure.value.toLocaleString(lang, { maximumSignificantDigits: 6 })} {copy.units[measure.unit]}</p> : expectsScalarMeasurement(issue) && <p>{copy.missingMeasure}</p>}
       <ObservedEvidence evidence={evidence?.observed} lang={lang} />
       {evidence?.details?.length ? <dl>{evidence.details.slice(0, 20).map((detail, index) =>
         <div key={index}><dt><code>{detail.key === "score" && issue.id?.startsWith("lighthouse.audit.") ? copy.lighthouseRatio : cleanEvidence(detail.key)}</code></dt><dd>{cleanEvidence(detail.text)}</dd></div>)}</dl>

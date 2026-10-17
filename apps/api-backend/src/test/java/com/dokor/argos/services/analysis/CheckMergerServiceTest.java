@@ -12,6 +12,17 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class CheckMergerServiceTest {
+    @Test void selectedZapObservationCannotInheritAnHttpDetectionSnapshot() {
+        String key = "http.security.csp";
+        var http = check(key,AuditStatus.PASS,AuditSeverity.LOW,"http").withDetection(FindingDetection.create(
+            key,"http-csp-v1","http",null,"FINAL_HTTP_RESPONSE","POLICY_RECOGNIZED",Map.of()));
+        var zap = check(key,AuditStatus.FAIL,AuditSeverity.MEDIUM,"zap");
+        for (var modules : permutations(List.of(module("http",List.of(http)),module("zap",List.of(zap))))) {
+            var selected = merger.merge(modules).stream().flatMap(m -> m.checks().stream()).findFirst().orElseThrow();
+            assertEquals("zap",selected.measurementProvenance().module());
+            assertFalse(selected.details().containsKey("detection"));
+        }
+    }
     private static final String HSTS = "http.security.hsts";
     private static final List<String> OWNED_KEYS = List.of(HSTS, "http.security.csp",
         "http.security.x_content_type_options", "http.security.x_frame_options",

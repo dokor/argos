@@ -16,6 +16,7 @@ import { exportCopy } from './exportCopy';
 import { scoreLimit, interpretationCopy } from './reportInterpretation';
 import { introductionCopy } from './introductionCopy';
 import { isAggregateFinding } from './findingPresentation';
+import { expectsScalarMeasurement } from './findingExplanation';
 import fr from '@/lib/i18n/fr.json';
 import en from '@/lib/i18n/en.json';
 export type ExportFormat = 'summary'|'full';
@@ -61,7 +62,7 @@ export default function PrintableReport({report,lang,format:requestedFormat}:{re
  <p>{c.qualification}</p>{c.missingInformation&&<p>{c.missingInformation}</p>}
  <p>{r.technicalTitle}: {cleanEvidence(i.title)}</p><p>{r.originalObservation}: {cleanEvidence(i.impact)}</p><p>{r.technicalId}: {cleanEvidence(i.id??f.key)}</p>
  <p>{r.source}: {cleanEvidence(i.structuredEvidence?.source||f.sources.join(', '))||d.sourcesUnknown}</p><p>{t.priorityCards.confidenceLabel} {i.confidence&&Object.hasOwn(t.priorityCards.confidence,i.confidence)?t.priorityCards.confidence[i.confidence]:r.unknownConfidence}</p>
- <h5>{r.evidence}</h5>{valid?<p>{i.id==='runtime.network.bytes_estimated'?r.estimated+': ':''}{m.value.toLocaleString(lang,{maximumSignificantDigits:6})} {r.units[m.unit]}</p>:<p>{r.missingMeasure}</p>}
+ <h5>{r.evidence}</h5>{valid?<p>{i.id==='runtime.network.bytes_estimated'?r.estimated+': ':''}{m.value.toLocaleString(lang,{maximumSignificantDigits:6})} {r.units[m.unit]}</p>:expectsScalarMeasurement(i)&&<p>{r.missingMeasure}</p>}
  <ObservedEvidence evidence={i.structuredEvidence?.observed} lang={lang} />
  {i.structuredEvidence?.details?.length?<dl>{i.structuredEvidence.details.slice(0,20).map((detail,n)=><div key={n}><dt>{detail.key==='score'&&i.id?.startsWith('lighthouse.audit.')?r.lighthouseRatio:cleanEvidence(detail.key)}</dt><dd>{cleanEvidence(detail.text)}</dd></div>)}</dl>:i.evidence&&<p className="evidence">{cleanEvidence(i.evidence)}</p>}
  <FindingGuide issue={i} lang={lang} heading={5}/></article>;})}</section>)}</section>}

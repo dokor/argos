@@ -24,7 +24,7 @@ class LighthouseModuleAnalyzerTest {
     void retainsRawNumericMeasurementsSeparatelyFromTheScoreRatio() throws Exception {
         LighthouseClient client = mock(LighthouseClient.class);
         when(client.analyze(anyString())).thenReturn(new ObjectMapper().readTree("""
-            {"categories":{"performance":{"score":0.5,"auditRefs":[
+            {"lighthouseVersion":"13.5.0","categories":{"performance":{"score":0.5,"auditRefs":[
                 {"id":"largest-contentful-paint","weight":10}]}},
              "audits":{"largest-contentful-paint":{"score":0.02,"scoreDisplayMode":"numeric",
                  "title":"LCP","numericValue":4800,"numericUnit":"millisecond",
@@ -39,6 +39,13 @@ class LighthouseModuleAnalyzerTest {
         assertEquals("millisecond", audit.details().get("numericUnit"));
         var observed = (com.dokor.argos.services.analysis.model.ObservedEvidence) audit.details().get("observed");
         assertEquals("1,HTML,1,BODY,1,IMG", observed.items().getFirst().nodePath());
+        var detection = com.dokor.argos.services.analysis.model.FindingDetection.from(audit.details().get("detection"),audit.key(),"lighthouse");
+        assertNotNull(detection);
+        assertEquals("13.5.0", detection.toolVersion());
+        assertEquals(.02, detection.values().get("score"));
+        assertEquals(.9, detection.values().get("scoreThreshold"));
+        assertEquals(12, detection.values().get("maxFindings"));
+        assertEquals("lighthouse-audit-selection-v1", detection.ruleVersion());
     }
 
     @Test

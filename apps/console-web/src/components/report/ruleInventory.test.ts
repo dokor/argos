@@ -18,3 +18,18 @@ it('keeps all static producer/policy keys in the inventory and has an honest bil
     expect(content.recommendation).toBeTruthy();expect(content.verification).toBeTruthy();
   }
 });
+
+it('tracks configured Lighthouse candidates separately from emitted findings and matches their guide coverage',()=>{
+  const root=new URL('../../../../../',import.meta.url);
+  const inventory=JSON.parse(readFileSync(new URL('docs/report/lighthouse-rule-inventory.json',root),'utf8')) as {
+    rows:{key:string;toolVersion:string;content:string;selection:string}[];
+  };
+  const service=JSON.parse(readFileSync(new URL('apps/lighthouse-service/package.json',root),'utf8'));
+  expect(new Set(inventory.rows.map(row=>row.key)).size).toBe(inventory.rows.length);
+  for(const row of inventory.rows){
+    expect(row.toolVersion).toBe(service.dependencies.lighthouse);
+    expect(row.selection).toBe('conditional-at-runtime');
+    for(const lang of ['fr','en'] as const)
+      expect(row.content).toBe(findingPlaybook(row.key,lang).specific?'specific-fr-en':'explicit-fallback-fr-en');
+  }
+});

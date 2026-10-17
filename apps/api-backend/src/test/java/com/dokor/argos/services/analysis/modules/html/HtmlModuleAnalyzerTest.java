@@ -16,6 +16,37 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 class HtmlModuleAnalyzerTest {
+    @Test void freezesTitleHeuristicsAndImageCountsAtTheProducerWithoutChangingScores() {
+        for (String title : List.of("", "ABC", "x".repeat(81))) {
+            var module = html("<html><head><title>" + title + "</title></head><body>"
+                + "<img src='private?token=secret'><img alt=''><img alt='Description'></body></html>");
+            var titleCheck = check(module, "html.title");
+            var detection = com.dokor.argos.services.analysis.model.FindingDetection.from(
+                titleCheck.details().get("detection"), titleCheck.key(), "html");
+            assertNotNull(detection);
+            assertEquals(title.length(), detection.values().get("length"));
+            assertEquals(10, detection.values().get("minimum"));
+            assertEquals(80, detection.values().get("maximum"));
+            assertEquals(title.isEmpty() ? "MISSING_OR_EMPTY" : title.length() < 10 ? "SHORT" : "LONG", detection.result());
+            var image = check(module, "html.images.alt_coverage");
+            var images = com.dokor.argos.services.analysis.model.FindingDetection.from(image.details().get("detection"), image.key(), "html");
+            assertEquals(3, images.values().get("images"));
+            assertEquals(1, images.values().get("missingAlt"));
+            assertEquals(33, images.values().get("missingPercent"));
+            assertEquals(AuditStatus.WARN, image.status());
+            assertFalse(images.toString().contains("private"));
+            var policy = new DefaultScorePolicy();
+            var stripped = module.checks().stream().map(c -> {
+                var details = new java.util.LinkedHashMap<>(c.details()); details.remove("detection");
+                return new AuditCheckResult(c.key(),c.title(),c.status(),c.severity(),c.scorable(),c.weight(),c.tags(),
+                    c.value(),details,c.message(),c.recommendation(),c.sources(),c.scoreRatio(),c.measurementProvenance());
+            }).toList();
+            var before = new AuditModuleResult(module.id(),module.title(),module.summary(),module.data(),stripped);
+            var scorer = new ScoreService(policy); var enricher = new ScoreEnricherService(policy);
+            assertEquals(scorer.compute(policy.version(),policy.fingerprint(),enricher.enrich(List.of(before))),
+                scorer.compute(policy.version(),policy.fingerprint(),enricher.enrich(List.of(module))));
+        }
+    }
     @Test void addingSocialMetadataNeverReducesTheScoreOrChangesItsDenominator() {
         var policy = new DefaultScorePolicy();
         String[] tags = {"<meta property='og:title' content='title'>", "<meta property='og:description' content='desc'>",

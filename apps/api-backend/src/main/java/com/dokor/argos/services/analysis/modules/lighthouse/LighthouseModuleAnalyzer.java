@@ -118,6 +118,7 @@ public class LighthouseModuleAnalyzer {
 
     /** Nombre maximal d'audits individuels remontés — évite de noyer le rapport. */
     static final int MAX_AUDITS = 12;
+    static final double AUDIT_SCORE_THRESHOLD = 0.9;
     /** Seuls les audits réellement notés sont actionnables (on ignore informative/manual/n.a.). */
     private static final Set<String> SCORED_MODES = Set.of("binary", "numeric", "metricSavings");
     private static final String[] CATEGORIES = {"performance", "accessibility", "best-practices", "seo"};
@@ -180,7 +181,7 @@ public class LighthouseModuleAnalyzer {
                 JsonNode scoreNode = audit.path("score");
                 if (scoreNode.isMissingNode() || scoreNode.isNull()) continue;
                 double score = scoreNode.asDouble();
-                if (score >= 0.9) continue; // audit réussi : rien à corriger
+                if (score >= AUDIT_SCORE_THRESHOLD) continue; // audit réussi : rien à corriger
 
                 seen.add(id);
                 candidates.add(new AuditCandidate(
@@ -212,6 +213,12 @@ public class LighthouseModuleAnalyzer {
                 details.put("numericValue", raw.path("numericValue").asDouble());
                 String unit = JsonNodes.nonBlankText(raw.path("numericUnit"));
                 if (unit != null) details.put("numericUnit", unit);
+            }
+            if (Set.of("largest-contentful-paint", "lcp-discovery-insight", "lcp-breakdown-insight").contains(c.id())) {
+                details.put(FindingDetection.DETAIL_KEY, FindingDetection.create("lighthouse.audit." + c.id(),
+                    "lighthouse-audit-selection-v1", "lighthouse", JsonNodes.nonBlankText(lhr.path("lighthouseVersion")),
+                    "LIGHTHOUSE_NAVIGATION", "SCORE_BELOW_THRESHOLD", Map.of("score", c.score(),
+                        "scoreThreshold", AUDIT_SCORE_THRESHOLD, "maxFindings", (double) MAX_AUDITS)));
             }
 
             String label = c.title() != null ? c.title() : c.id();

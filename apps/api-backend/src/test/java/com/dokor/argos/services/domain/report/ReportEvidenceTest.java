@@ -10,6 +10,26 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ReportEvidenceTest {
+    @Test void detectionSnapshotSurvivesSanitisedPersistenceAndRemainsSeparateFromLegacyText() throws Exception {
+        var mapper = new ObjectMapper();
+        var detection = com.dokor.argos.services.analysis.model.FindingDetection.create("html.title","html-title-v1",
+            "html",null,"RECEIVED_HTML","SHORT",Map.of("length",3.0,"minimum",10.0,"maximum",80.0));
+        var c = check("html.title","ABC",Map.of("length",3)).withDetection(detection);
+        var restored = mapper.treeToValue(com.dokor.argos.services.analysis.AuditOutputSanitizer.tree(c,mapper),AuditCheckResult.class);
+        var evidence = ReportEvidence.from("html",restored);
+        assertEquals(detection,evidence.detection());
+        assertEquals(List.of(new ReportDto.EvidenceDetail("length","3")),evidence.details());
+        assertEquals(detection,mapper.readValue(mapper.writeValueAsString(evidence),ReportDto.StructuredEvidence.class).detection());
+        assertNull(ReportEvidence.from("html",check("html.title","ABC",Map.of("length",3))).detection());
+        assertNull(ReportEvidence.from("html",c.withMeasurementProvenance("zap",List.of("zap"))).detection());
+        assertNull(ReportEvidence.from("html",check("html.h1.count",0,Map.of()).withDetection(detection)).detection());
+        var untrusted = mapper.valueToTree(detection);
+        ((com.fasterxml.jackson.databind.node.ObjectNode)untrusted.path("values")).put("secret",42);
+        assertNull(ReportEvidence.from("html",check("html.title",0,Map.of("detection",untrusted))).detection());
+        var unknownTool = com.dokor.argos.services.analysis.model.FindingDetection.create("html.title","html-title-v1",
+            "html","https://private.example/token","RECEIVED_HTML","SHORT",Map.of());
+        assertNull(unknownTool.toolVersion());
+    }
     private AuditCheckResult check(String key, Object value, Map<String,Object> details) {
         return AuditCheckResult.of(key, "Technical title", AuditStatus.FAIL, AuditSeverity.HIGH,
             true, 1, List.of("performance"), value, details, "Observed", "Review");

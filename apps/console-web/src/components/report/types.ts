@@ -159,10 +159,22 @@ export type ObservedEvidence = {
     status?:number;reason?:string;resourceType?:string;ownership?:"FIRST_PARTY"|"THIRD_PARTY"}>;
 };
 
+export type FindingDetection = {
+  version: "finding-detection-v1";
+  ruleKey: string;
+  ruleVersion: string;
+  source: string;
+  toolVersion?: string | null;
+  scope: "RECEIVED_HTML" | "FINAL_HTTP_RESPONSE" | "LIGHTHOUSE_NAVIGATION";
+  result: string;
+  values: Record<string, number>;
+};
+
 export type Issue = {
   structuredEvidence?: {
     source: string;
     observed?: ObservedEvidence | null;
+    detection?: FindingDetection | null;
     measurement?: { value: number; unit: "ms" | "bytes" | "count" | "days" | "score/100" | "ratio" | "unitless" } | null;
     details?: Array<{ key: string; text: string }>;
   } | null;
