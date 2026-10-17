@@ -10,32 +10,53 @@ import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/** Shared budgeted pool exclusively for SSL Labs and Observatory; no browser runs here. */
+/** Opt-in, shared budgeted pool exclusively for SSL Labs and Observatory; no browser runs here. */
 @Singleton
 public class RemoteModuleExecutor implements AutoCloseable {
     private final ThreadPoolExecutor executor;
     private final long budgetNanos;
+    private final int maxConcurrentModules;
 
     @Inject
     public RemoteModuleExecutor(Config config) {
         this(config.hasPath("audit.remote-modules.timeout")
-            ? config.getDuration("audit.remote-modules.timeout") : Duration.ofMinutes(2));
+            ? config.getDuration("audit.remote-modules.timeout") : Duration.ofMinutes(2),
+            config.hasPath("audit.execution.max-concurrent-modules")
+                ? config.getInt("audit.execution.max-concurrent-modules") : 1);
     }
 
     public RemoteModuleExecutor(Duration timeout) {
+        this(timeout, 1);
+    }
+
+    /** One local worker plus, when enabled, one or two remote workers. */
+    public RemoteModuleExecutor(Duration timeout, int maxConcurrentModules) {
         if (timeout.isZero() || timeout.isNegative()) throw new IllegalArgumentException("Remote module timeout must be positive");
+        if (maxConcurrentModules < 1 || maxConcurrentModules > 3)
+            throw new IllegalArgumentException("audit.execution.max-concurrent-modules must be between 1 and 3");
         budgetNanos = timeout.toNanos();
+        this.maxConcurrentModules = maxConcurrentModules;
+        if (maxConcurrentModules == 1) {
+            executor = null;
+            return;
+        }
+        int workers = maxConcurrentModules - 1;
         AtomicInteger threads = new AtomicInteger();
-        executor = new ThreadPoolExecutor(2, 2, 0, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(2), runnable -> {
+        executor = new ThreadPoolExecutor(workers, workers, 0, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(2), runnable -> {
             Thread thread = new Thread(runnable, "audit-remote-" + threads.incrementAndGet());
             thread.setDaemon(true);
             return thread;
         }, new ThreadPoolExecutor.AbortPolicy());
     }
 
+    public int maxConcurrentModules() { return maxConcurrentModules; }
+    public boolean parallelEnabled() { return maxConcurrentModules > 1; }
+    public Duration timeoutBudget() { return Duration.ofNanos(budgetNanos); }
+
     public <T> Task<T> submit(String module, Callable<T> call) {
         if (!AuditModule.SSL.id().equals(module) && !AuditModule.OBSERVATORY.id().equals(module))
             throw new IllegalArgumentException("Not a remote module");
+        if (!parallelEnabled()) throw new IllegalStateException("Remote parallelism is disabled");
         long submitted = System.nanoTime();
         long effectiveBudget = AuditDeadline.current()==null ? budgetNanos : Math.min(budgetNanos,AuditDeadline.current().remainingNanos());
         long startedAtMillis = System.currentTimeMillis();
@@ -92,6 +113,7 @@ public class RemoteModuleExecutor implements AutoCloseable {
     }
 
     @Override public void close() {
+        if (executor == null) return;
         for (Runnable pending : executor.shutdownNow())
             if (pending instanceof Future<?> future) future.cancel(true);
         try { executor.awaitTermination(5, TimeUnit.SECONDS); }

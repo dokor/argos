@@ -236,16 +236,20 @@ public class AuditProcessorService {
             // result_json (poids mémoire à la sérialisation + grossissement de la table).
             httpModule = stripRawBody(httpModule);
 
-            // HTTP has supplied the immutable context. Only these two distant APIs overlap local work.
-            if(selectedModules.contains(AuditModule.OBSERVATORY)) logger.info("module_start module={} runId={}", AuditModule.OBSERVATORY.id(), runId);
-            if(selectedModules.contains(AuditModule.SSL)) logger.info("module_start module={} runId={}", AuditModule.SSL.id(), runId);
-            AuditDeadline collectionDeadline=AuditDeadline.current();
-            try (var observatory = selectedModules.contains(AuditModule.OBSERVATORY) ? remote.submit(AuditModule.OBSERVATORY.id(), () -> collectionDeadline.call(() -> withHttpSnapshot(snapshotUnavailable, () -> observatoryModuleAnalyzer.analyze(ctx, logger)))) : null;
+            // HTTP is the dependency barrier. Only remote I/O may overlap the single local worker.
+            logger.info("audit_execution maxConcurrentModules={}", remote.maxConcurrentModules());
+            AuditDeadline collectionDeadline = AuditDeadline.current();
+            try (var observatory = remote.parallelEnabled() && selectedModules.contains(AuditModule.OBSERVATORY)
+                    ? remote.submit(AuditModule.OBSERVATORY.id(), () -> collectionDeadline.call(
+                        () -> withHttpSnapshot(snapshotUnavailable, () -> observatoryModuleAnalyzer.analyze(ctx, logger))))
+                    : null;
                  // TLS assessment does not require an HTML response. In particular, a failed
                  // certificate handshake must not suppress the independent TLS diagnosis.
-                 var ssl = selectedModules.contains(AuditModule.SSL) ? remote.submit(AuditModule.SSL.id(), () -> collectionDeadline.call(() -> sslLabsModuleAnalyzer.analyze(ctx, logger))) : null) {
-                if(observatory!=null) auditRunService.updateModuleStatus(runId, AuditModule.OBSERVATORY.id(), "RUNNING", run.getClaimToken());
-                if(ssl!=null) auditRunService.updateModuleStatus(runId, AuditModule.SSL.id(), "RUNNING", run.getClaimToken());
+                 var ssl = remote.parallelEnabled() && selectedModules.contains(AuditModule.SSL)
+                    ? remote.submit(AuditModule.SSL.id(), () -> collectionDeadline.call(() -> sslLabsModuleAnalyzer.analyze(ctx, logger)))
+                    : null) {
+                if (observatory != null) remoteStarted(runId, run.getClaimToken(), AuditModule.OBSERVATORY);
+                if (ssl != null) remoteStarted(runId, run.getClaimToken(), AuditModule.SSL);
 
                 List<AuditModuleResult> allModules = new ArrayList<>(AuditModule.ordered().size());
                 allModules.add(httpModule);
@@ -259,10 +263,10 @@ public class AuditProcessorService {
                             () -> withHttpSnapshot(snapshotUnavailable, () -> runtimeModuleAnalyzer.analyze(ctx, logger)));
                         case LIGHTHOUSE -> enrichLighthouse(runModule(runId, run.getClaimToken(), module, moduleStatuses,
                             () -> withHttpSnapshot(snapshotUnavailable, () -> lighthouseModuleAnalyzer.analyze(ctx, logger))), httpModule, ctx);
-                        case OBSERVATORY -> runModule(runId, run.getClaimToken(), module, moduleStatuses,
-                            observatory::await, observatory.startedAtMillis(), true);
-                        case SSL -> runModule(runId, run.getClaimToken(), module, moduleStatuses,
-                            ssl::await, ssl.startedAtMillis(), true);
+                        case OBSERVATORY -> runRemoteModule(runId, run.getClaimToken(), module, moduleStatuses,
+                            remote, observatory, () -> withHttpSnapshot(snapshotUnavailable, () -> observatoryModuleAnalyzer.analyze(ctx, logger)));
+                        case SSL -> runRemoteModule(runId, run.getClaimToken(), module, moduleStatuses,
+                            remote, ssl, () -> sslLabsModuleAnalyzer.analyze(ctx, logger));
                         case ZAP -> runModule(runId, run.getClaimToken(), module, moduleStatuses,
                             () -> withHttpSnapshot(snapshotUnavailable, () -> zapModuleAnalyzer.analyze(ctx, logger)));
                         // Only Tech has a 24h domain cache. Observatory and SSL still run for each audit.
@@ -315,6 +319,7 @@ public class AuditProcessorService {
                 meta.put("runId", String.valueOf(runId));
                 meta.put("httpStatusCode", String.valueOf(context.httpStatusCode()));
                 meta.put("auditDurationMs", String.valueOf(Instant.now().toEpochMilli() - context.startedAt().toEpochMilli()));
+                meta.put("maxConcurrentModules", String.valueOf(remote.maxConcurrentModules()));
                 meta.put("degraded", String.valueOf(degraded));
                 // Complétude : part des modules réellement évalués (issue #101). Permet de
                 // situer un score partiel sans altérer le ratio ni pénaliser le site pour
@@ -371,6 +376,22 @@ public class AuditProcessorService {
     private static AuditModuleResult withHttpSnapshot(boolean unavailable, java.util.function.Supplier<AuditModuleResult> analysis) {
         if (unavailable) throw new ModuleUnavailableException("HTTP final response snapshot unavailable");
         return analysis.get();
+    }
+
+    private void remoteStarted(long runId, String claim, AuditModule module) {
+        logger.info("module_start module={} runId={}", module.id(), runId);
+        auditRunService.updateModuleStatus(runId, module.id(), "RUNNING", claim);
+    }
+
+    private AuditModuleResult runRemoteModule(long runId, String claim, AuditModule module,
+                                              Map<String, String> statuses, RemoteModuleExecutor remote,
+                                              RemoteModuleExecutor.Task<AuditModuleResult> task, ModuleCall call) {
+        if (task != null)
+            return runModule(runId, claim, module, statuses, task::await, task.startedAtMillis(), true);
+        // Sequential mode retains the per-remote-call budget as well as the shared deadline.
+        try (var budget = AuditDeadline.current().child(remote.timeoutBudget()).enter()) {
+            return runModule(runId, claim, module, statuses, call);
+        }
     }
 
     private AuditModuleResult enrichLighthouse(AuditModuleResult lighthouseModule,

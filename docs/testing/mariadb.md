@@ -17,7 +17,7 @@ named `argos_credentials_test`, export ARGOS_TEST_CREDENTIALS_URL,
 ARGOS_TEST_CREDENTIALS_USER and ARGOS_TEST_CREDENTIALS_PASSWORD, then execute:
 
 ```sh
-mvn -P mariadb-integration -Dit.test=AccountLifecycleIT,ReportCredentialMigrationIT,AuditPublicationIT,AuditClaimIT verify
+mvn -P mariadb-integration -Dit.test=AccountLifecycleIT,AccountSessionSecurityIT,AccountSecurityMigrationIT,ReportCredentialMigrationIT,AuditPublicationIT,AuditClaimIT verify
 ```
 
 CI retains Failsafe reports as an artifact. Earlier compatibility runs on

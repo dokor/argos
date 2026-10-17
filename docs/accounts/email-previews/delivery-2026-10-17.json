@@ -1,0 +1,33 @@
+{
+  "date": "2026-10-17",
+  "scope": "Deployed Argos, external disposable mailbox; not a Gmail/Outlook/Apple Mail test",
+  "messages": [
+    {
+      "label": "verification-fr",
+      "subject": "Argos — Confirmez votre adresse e-mail",
+      "fromDomain": "lelouet.fr",
+      "hasText": true,
+      "hasHtml": true,
+      "authentication": [],
+      "dkimSigningDomain": "lelouet.fr",
+      "receivedViaOvh": true,
+      "tlsMentionedInReceived": true,
+      "templateHasArgosHtml": true
+    },
+    {
+      "label": "reset-en",
+      "subject": "Argos — Reset your password",
+      "fromDomain": "lelouet.fr",
+      "hasText": true,
+      "hasHtml": true,
+      "authentication": [],
+      "dkimSigningDomain": "lelouet.fr",
+      "receivedViaOvh": true,
+      "tlsMentionedInReceived": true,
+      "templateHasArgosHtml": true
+    }
+  ],
+  "completed": true,
+  "syntheticArgosAccountArchived": false,
+  "disposableMailboxDeleted": true
+}
