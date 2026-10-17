@@ -132,7 +132,7 @@ http.createServer((req, res) => {
   if (req.url === '/stats') return res.end(JSON.stringify({ slowHits }));
   if (req.url === '/slow') {
     slowHits++;
-    const timer = setTimeout(() => res.end('<h1>Late fixture</h1>'), 30000);
+    const timer = setTimeout(() => res.end('<h1>Late fixture</h1>'), 60000);
     res.on('close', () => clearTimeout(timer));
     return;
   }
@@ -205,10 +205,11 @@ const proxyHits = () => new Promise((resolve, reject) => {
 await idle();
 const beforeTimeout = await proxyHits();
 const started = performance.now();
-const expired = await post('/slow', 8000);
+const timeoutMs = runtime ? 8000 : 20000;
+const expired = await post('/slow', timeoutMs);
 assert.equal(expired.status, 504);
 await expired.text();
-assert.ok(performance.now() - started < 18000, 'Deadline exceeded with cleanup margin');
+assert.ok(performance.now() - started < timeoutMs + 10000, 'Deadline exceeded with cleanup margin');
 assert.ok(await proxyHits() > beforeTimeout, 'Timeout must reach slow fixture');
 await idle();
 console.log('PASS timeout, slow fixture reached, no live Chrome');
@@ -219,7 +220,7 @@ const pending = fetch(endpoint, { method: 'POST', headers: { 'content-type': 'ap
   .then(r => ({ response: r.status }), () => ({ disconnected: true }));
 let reached = false;
 try {
-  for (let i = 0; i < 100; i++) { if (await proxyHits() > beforeDisconnect) { reached = true; break; } await pause(100); }
+  for (let i = 0; i < 250; i++) { if (await proxyHits() > beforeDisconnect) { reached = true; break; } await pause(100); }
 } finally { abort.abort(); }
 assert.ok(reached, 'Disconnect test must reach slow fixture');
 assert.equal((await pending).disconnected, true);
@@ -248,7 +249,10 @@ requête lente arrivée avant la déconnexion, aucun processus Chrome vivant apr
 nettoyage, nouvelle analyse 200 sans redémarrage ni OOM. Un lancement trop lent
 pour atteindre la fixture n’est pas une preuve de timeout de navigation : mesurer
 et diagnostiquer, puis ajuster explicitement le budget de recette sans dépasser les
-plafonds applicatifs ni considérer le test initial comme réussi. Après chaque bloc,
+plafonds applicatifs ni considérer le test initial comme réussi. La première CI
+native a montré que le budget initial de 8 s expirait avant la navigation Lighthouse
+sur les deux architectures ; la recette retient 20 s pour Lighthouse et 8 s pour
+runtime, face à une réponse retardée de 60 s. Après chaque bloc,
 vérifier que les conteneurs/réseaux `argos-security-*` ont disparu ; ne pas lancer
 un `docker system prune` ou supprimer des volumes pour nettoyer cette recette.
 
