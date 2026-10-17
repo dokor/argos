@@ -20,9 +20,10 @@
 .sectionHeading a { display: inline-flex; align-items: center; min-height: 44px; text-decoration: underline; text-underline-offset: 4px; }
 .section > h2 { margin-bottom: 20px; }
 .metrics { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,190px),1fr)); gap: 16px; }
-.metrics > div { background: t.$surface; padding: 20px; border: 1px solid t.$border; border-radius: t.$radius-lg; }
+.metrics > div { display: flex; flex-direction: column; background: t.$surface; padding: 20px; border: 1px solid t.$border; border-radius: t.$radius-lg; }
 .main dt { color: t.$text-muted; }
 .main dd { font-variant-numeric: tabular-nums; font-weight: 650; font-size: 32px; margin: 8px 0 0; line-height: 1.2; overflow-wrap: anywhere; }
+.metrics dd { margin-top: auto; padding-top: 8px; }
 .providers { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; max-width: 600px; }
 .providers > div { border-left: 2px solid t.$border; padding-left: 16px; }
 .providers dd { font-size: 24px; }
