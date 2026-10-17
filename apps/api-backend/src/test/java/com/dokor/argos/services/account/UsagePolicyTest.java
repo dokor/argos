@@ -20,6 +20,14 @@ class UsagePolicyTest {
         var p=new UsagePolicy(ConfigFactory.parseString("usage.offers { FREE.monthly-limit=0, PREMIUM.monthly-limit=12, OTHER.monthly-limit=null }"));
         assertEquals(0L,p.limit("FREE"));assertEquals(12L,p.limit("PREMIUM"));assertNull(p.limit("OTHER"));
     }
+    @Test void externalProductionConfigurationKeepsCiUnlimitedAndNormalOfferLimits() {
+        // config.file replaces application.conf; reference defaults must still supply CI.
+        var config=ConfigFactory.load(ConfigFactory.parseString("usage.offers { FREE.monthly-limit=10, PREMIUM.monthly-limit=1000 }"));
+        var p=new UsagePolicy(config);
+        assertTrue(p.offers().contains("CI"));
+        assertNull(p.limit("CI"));
+        assertEquals(10L,p.limit("FREE"));assertEquals(1000L,p.limit("PREMIUM"));
+    }
     @Test void invalidConfigurationFailsWithoutSilentlyDisablingQuota() {
         assertThrows(Exception.class,()->new UsagePolicy(ConfigFactory.parseString("usage.timezone=invalid")));
         assertThrows(Exception.class,()->new UsagePolicy(ConfigFactory.parseString("usage.offers.FREE.monthly-limit=-1")));
