@@ -1,7 +1,7 @@
 import { proxyEndpoint, browserFlags, protectContext } from './browser-policy.mjs';
 
 // The abort signal kills the actual Chrome process; expiry alone is not cancellation.
-export function createLighthouseCollector({ launch, lighthouse, chromeFlags, chromePath, chromium, connectPuppeteer, proxy = process.env.AUDIT_EGRESS_PROXY }) {
+export function createLighthouseCollector({ launch, lighthouse, chromeFlags, chromePath, chromium, connectPuppeteer, log = () => {}, proxy = process.env.AUDIT_EGRESS_PROXY }) {
   return async (url, { signal, timeoutMs = 60000 } = {}) => {
     let chrome, cleanup, puppeteerBrowser;
     const close = () => {
@@ -30,6 +30,11 @@ export function createLighthouseCollector({ launch, lighthouse, chromeFlags, chr
       // chrome-launcher leaves its default blank tab active. Lighthouse's supplied
       // incognito page must be visible for Chromium to emit first-paint events.
       await protectedPage.bringToFront();
+      protectedPage.on('requestfailed', request => {
+        if (!request.isNavigationRequest()) return;
+        const reason = request.failure()?.errorText;
+        log('analyze.navigation_failed', { reason: typeof reason === 'string' && /^net::ERR_[A-Z_0-9]{1,60}$/.test(reason) ? reason : 'NETWORK_ERROR' });
+      });
       protectedPage.on('response', response => {
         if (response.headers()['x-argos-egress-blocked'] === '1'
             && response.request().isNavigationRequest() && response.frame() === protectedPage.mainFrame()) cancel();

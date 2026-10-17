@@ -26,7 +26,7 @@ function parsePositiveInteger(value, fallback) {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
 }
 
-const runLighthouse = createLighthouseCollector({ launch, lighthouse,
+const runLighthouse = createLighthouseCollector({ launch, lighthouse, log,
   chromium,
   connectPuppeteer: options => puppeteer.connect(options),
   chromeFlags: CHROME_FLAGS, chromePath: process.env.CHROME_PATH });
