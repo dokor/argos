@@ -92,7 +92,9 @@ Les huit modules doivent avoir terminé sans état partiel, sauté ou échoué.
 La couverture globale et les quatre domaines doivent atteindre 80 %, sans
 statut provisoire. Les empreintes de scoring, de mesure et de périmètre doivent
 être présentes et identiques dans les deux rapports. La page demandée et la
-destination doivent être exactement la homepage HTTPS, sans masquage.
+destination doivent être exactement la homepage HTTPS, sans masquage. La racine
+avec ou sans slash final représente la même page, conformément à la
+normalisation Java ; chemin différent, port explicite, query et fragment restent refusés.
 
 Les constats proviennent de **`report.issues`**, pas du top six des priorités.
 Seules les clés explicitement revues dans
