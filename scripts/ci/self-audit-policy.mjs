@@ -5,6 +5,8 @@ export const POLICY = 'self-audit-v1';
 export const SERVICES = ['api-backend', 'console-web', 'playwright-service', 'lighthouse-service'];
 export const SHA = /^[a-f0-9]{40}$/;
 const DOMAINS = ['performance', 'security', 'seo', 'a11y'];
+// Java canonicalizes the root without a slash; HTTP clients may serialize it with one.
+const isHomepage = value => value === SITE || value === SITE + '/';
 // Reviewed, actionable catalogue keys only. Aggregated scores, timings, third-party
 // errors, collection failures and arbitrary report text must never become tickets.
 export const CHECKS = Object.freeze(Object.fromEntries(Object.entries({
@@ -38,8 +40,8 @@ export function analysisKey(deployment, sample, invocation) {
 function measuredFindings(report) {
   const coverage = report?.scores?.coverage;
   const execution = report?.scores?.moduleExecution;
-  requireControl(report?.pageIdentity?.requested === SITE + '/'
-    && report.pageIdentity.destination === SITE + '/' && report.pageIdentity.redacted === false,
+  requireControl(isHomepage(report?.pageIdentity?.requested)
+    && isHomepage(report?.pageIdentity?.destination) && report.pageIdentity.redacted === false,
   'target-unverified');
   requireControl(execution?.total > 0 && execution.completed === execution.total
     && ['failed', 'partial', 'skipped', 'pending', 'running'].every(key => execution[key] === 0), 'collection-incomplete');

@@ -17,7 +17,8 @@ const issue = { id: finding.key, categoryKey: finding.domain, severity: finding.
 const deployment = SERVICES.map(service => ({ service, revision: sha, containerId: 'b'.repeat(64),
   imageId: 'sha256:' + 'c'.repeat(64), startedAt: '2026-10-17T12:00:00Z', restartCount: 0 }));
 function report(issues = [issue]) {
-  return { pageIdentity: { requested: SITE + '/', destination: SITE + '/', redacted: false },
+  // The Java admission normalizer removes the root slash before composing the report.
+  return { pageIdentity: { requested: SITE, destination: SITE + '/', redacted: false },
     scores: { globalAvailable: true,
       moduleExecution: { total: 8, completed: 8, failed: 0, partial: 0, skipped: 0, pending: 0, running: 0 },
       calculation: { scoringFingerprint: 'scoring-v13',
@@ -34,6 +35,24 @@ test('two measured occurrences confirm a finding without copying report prose or
   const result = evaluateReports(report(), report());
   assert.deepEqual(result, { outcome: 'GO', findings: [finding] });
   assert.ok(!JSON.stringify(result).includes(secret));
+});
+
+test('canonical root URLs with and without a slash identify the same audited homepage', () => {
+  for (const requested of [SITE, SITE + '/']) for (const destination of [SITE, SITE + '/']) {
+    const r = report(); r.pageIdentity = { requested, destination, redacted: false };
+    assert.deepEqual(evaluateReports(r, report()), { outcome: 'GO', findings: [finding] });
+  }
+});
+
+test('homepage equivalence rejects other paths, origins, ports, credentials, queries and fragments', () => {
+  for (const value of [undefined, null, SITE + '/login', SITE + '/?query=x', SITE + '?query=x',
+    SITE + '/#fragment', SITE + '#fragment', SITE + ':443/', SITE + '.example/',
+    'http://argos.lelouet.fr/', 'https://user:pass@argos.lelouet.fr/']) {
+    for (const key of ['requested', 'destination']) {
+      const r = report(); r.pageIdentity[key] = value;
+      assert.throws(() => evaluateReports(report(), r), error => error instanceof ControlError && error.code === 'target-unverified');
+    }
+  }
 });
 
 test('a critical finding blocks only when critical in both samples; scores alone never open tickets', () => {
