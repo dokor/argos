@@ -1,0 +1,2043 @@
+{
+  "note": "Configured candidates, not observed production frequency. Actual emission also requires binary/numeric/metricSavings mode, score < 0.9 and selection within the first 12 diagnoses. Manual, informative, unavailable and passing results are not emitted.",
+  "rows": [
+    {
+      "key": "lighthouse.audit.accesskeys",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 7,
+          "group": "a11y-navigation"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.aria-allowed-attr",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 10,
+          "group": "a11y-aria"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.aria-allowed-role",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 0,
+          "group": "a11y-best-practices"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.aria-command-name",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 7,
+          "group": "a11y-aria"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.aria-conditional-attr",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 7,
+          "group": "a11y-aria"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.aria-deprecated-role",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 1,
+          "group": "a11y-aria"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.aria-dialog-name",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 7,
+          "group": "a11y-aria"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.aria-hidden-body",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 10,
+          "group": "a11y-aria"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.aria-hidden-focus",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 7,
+          "group": "a11y-aria"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.aria-input-field-name",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 7,
+          "group": "a11y-aria"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.aria-meter-name",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 7,
+          "group": "a11y-aria"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.aria-progressbar-name",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 7,
+          "group": "a11y-aria"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.aria-prohibited-attr",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 7,
+          "group": "a11y-aria"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.aria-required-attr",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 10,
+          "group": "a11y-aria"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.aria-required-children",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 10,
+          "group": "a11y-aria"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.aria-required-parent",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 10,
+          "group": "a11y-aria"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.aria-roles",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 10,
+          "group": "a11y-aria"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.aria-text",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 7,
+          "group": "a11y-aria"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.aria-toggle-field-name",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 7,
+          "group": "a11y-aria"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.aria-tooltip-name",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 7,
+          "group": "a11y-aria"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.aria-treeitem-name",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 7,
+          "group": "a11y-aria"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.aria-valid-attr",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 10,
+          "group": "a11y-aria"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.aria-valid-attr-value",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 10,
+          "group": "a11y-aria"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.autocomplete-valid",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 1,
+          "group": "a11y-best-practices"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.baseline",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "best-practices",
+          "weight": 0,
+          "group": "best-practices-browser-compat"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.bf-cache",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "diagnostics"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.bootup-time",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "diagnostics"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.button-name",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 10,
+          "group": "a11y-names-labels"
+        }
+      ],
+      "content": "specific-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.bypass",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 7,
+          "group": "a11y-navigation"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.cache-insight",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "insights"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.canonical",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "seo",
+          "weight": 1,
+          "group": "seo-content"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.charset",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "best-practices",
+          "weight": 1,
+          "group": "best-practices-browser-compat"
+        }
+      ],
+      "content": "specific-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.clickjacking-mitigation",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "best-practices",
+          "weight": 0,
+          "group": "best-practices-trust-safety"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.cls-culprits-insight",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "insights"
+        }
+      ],
+      "content": "specific-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.color-contrast",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 7,
+          "group": "a11y-color-contrast"
+        }
+      ],
+      "content": "specific-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.crawlable-anchors",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "seo",
+          "weight": 1,
+          "group": "seo-crawl"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.csp-xss",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "best-practices",
+          "weight": 0,
+          "group": "best-practices-trust-safety"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.cumulative-layout-shift",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 25,
+          "group": "metrics"
+        }
+      ],
+      "content": "specific-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.custom-controls-labels",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 0,
+          "group": null
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.custom-controls-roles",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 0,
+          "group": null
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.definition-list",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 7,
+          "group": "a11y-tables-lists"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.deprecations",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "best-practices",
+          "weight": 5,
+          "group": "best-practices-general"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.diagnostics",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "hidden"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.dlitem",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 7,
+          "group": "a11y-tables-lists"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.doctype",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "best-practices",
+          "weight": 1,
+          "group": "best-practices-browser-compat"
+        }
+      ],
+      "content": "specific-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.document-latency-insight",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "insights"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.document-title",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 7,
+          "group": "a11y-names-labels"
+        },
+        {
+          "key": "seo",
+          "weight": 1,
+          "group": "seo-content"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.dom-size-insight",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "insights"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.duplicate-id-aria",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 10,
+          "group": "a11y-aria"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.duplicated-javascript-insight",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "insights"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.empty-heading",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 0,
+          "group": "a11y-best-practices"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.errors-in-console",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "best-practices",
+          "weight": 1,
+          "group": "best-practices-general"
+        }
+      ],
+      "content": "specific-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.final-screenshot",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "hidden"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.first-contentful-paint",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 10,
+          "group": "metrics"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.focus-traps",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 0,
+          "group": null
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.focusable-controls",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 0,
+          "group": null
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.font-display-insight",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "insights"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.forced-reflow-insight",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "insights"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.form-field-multiple-labels",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 3,
+          "group": "a11y-names-labels"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.frame-title",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 7,
+          "group": "a11y-names-labels"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.geolocation-on-start",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "best-practices",
+          "weight": 1,
+          "group": "best-practices-trust-safety"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.has-hsts",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "best-practices",
+          "weight": 0,
+          "group": "best-practices-trust-safety"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.heading-order",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 3,
+          "group": "a11y-navigation"
+        }
+      ],
+      "content": "specific-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.hreflang",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "seo",
+          "weight": 1,
+          "group": "seo-content"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.html-has-lang",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 7,
+          "group": "a11y-language"
+        }
+      ],
+      "content": "specific-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.html-lang-valid",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 7,
+          "group": "a11y-language"
+        }
+      ],
+      "content": "specific-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.html-xml-lang-mismatch",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 3,
+          "group": "a11y-language"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.http-status-code",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "seo",
+          "weight": 1,
+          "group": "seo-crawl"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.identical-links-same-purpose",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 0,
+          "group": "a11y-best-practices"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.image-alt",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 10,
+          "group": "a11y-names-labels"
+        },
+        {
+          "key": "seo",
+          "weight": 1,
+          "group": "seo-content"
+        }
+      ],
+      "content": "specific-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.image-aspect-ratio",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "best-practices",
+          "weight": 1,
+          "group": "best-practices-ux"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.image-delivery-insight",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "insights"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.image-redundant-alt",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 0,
+          "group": "a11y-names-labels"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.image-size-responsive",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "best-practices",
+          "weight": 1,
+          "group": "best-practices-ux"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.inp-breakdown-insight",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "insights"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.input-button-name",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 10,
+          "group": "a11y-names-labels"
+        }
+      ],
+      "content": "specific-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.input-image-alt",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 10,
+          "group": "a11y-names-labels"
+        }
+      ],
+      "content": "specific-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.inspector-issues",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "best-practices",
+          "weight": 1,
+          "group": "best-practices-general"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.interaction-to-next-paint",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "metrics"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.interactive",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "hidden"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.interactive-element-affordance",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 0,
+          "group": null
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.is-crawlable",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "seo",
+          "weight": 4.043478260869565,
+          "group": "seo-crawl"
+        }
+      ],
+      "content": "specific-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.is-on-https",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "best-practices",
+          "weight": 5,
+          "group": "best-practices-trust-safety"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.js-libraries",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "best-practices",
+          "weight": 0,
+          "group": "best-practices-general"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.label",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 10,
+          "group": "a11y-names-labels"
+        }
+      ],
+      "content": "specific-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.label-content-name-mismatch",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 0,
+          "group": "hidden"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.landmark-one-main",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 3,
+          "group": "a11y-best-practices"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.largest-contentful-paint",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 25,
+          "group": "metrics"
+        }
+      ],
+      "content": "specific-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.layout-shifts",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "hidden"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.lcp-breakdown-insight",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "insights"
+        }
+      ],
+      "content": "specific-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.lcp-discovery-insight",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "insights"
+        }
+      ],
+      "content": "specific-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.legacy-javascript-insight",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "insights"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.link-in-text-block",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 7,
+          "group": "a11y-color-contrast"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.link-name",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 7,
+          "group": "a11y-names-labels"
+        }
+      ],
+      "content": "specific-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.link-text",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "seo",
+          "weight": 1,
+          "group": "seo-content"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.list",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 7,
+          "group": "a11y-tables-lists"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.listitem",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 7,
+          "group": "a11y-tables-lists"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.logical-tab-order",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 0,
+          "group": null
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.long-tasks",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "diagnostics"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.main-thread-tasks",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "hidden"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.mainthread-work-breakdown",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "diagnostics"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.managed-focus",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 0,
+          "group": null
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.max-potential-fid",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "hidden"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.meta-description",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "seo",
+          "weight": 1,
+          "group": "seo-content"
+        }
+      ],
+      "content": "specific-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.meta-refresh",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 10,
+          "group": "a11y-best-practices"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.meta-viewport",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 10,
+          "group": "a11y-best-practices"
+        }
+      ],
+      "content": "specific-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.metrics",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "hidden"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.modern-http-insight",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "insights"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.network-dependency-tree-insight",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "insights"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.network-requests",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "hidden"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.network-rtt",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "hidden"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.network-server-latency",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "hidden"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.non-composited-animations",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "diagnostics"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.notification-on-start",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "best-practices",
+          "weight": 1,
+          "group": "best-practices-trust-safety"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.object-alt",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 7,
+          "group": "a11y-names-labels"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.offscreen-content-hidden",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 0,
+          "group": null
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.origin-isolation",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "best-practices",
+          "weight": 0,
+          "group": "best-practices-trust-safety"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.paste-preventing-inputs",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "best-practices",
+          "weight": 3,
+          "group": "best-practices-ux"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.presentation-role-conflict",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 1,
+          "group": "a11y-best-practices"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.redirects",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "hidden"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.redirects-http",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "best-practices",
+          "weight": 1,
+          "group": "best-practices-trust-safety"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.render-blocking-insight",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "insights"
+        }
+      ],
+      "content": "specific-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.resource-summary",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "hidden"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.robots-txt",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "seo",
+          "weight": 1,
+          "group": "seo-crawl"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.screenshot-thumbnails",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "hidden"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.script-treemap-data",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "hidden"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.select-name",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 10,
+          "group": "a11y-names-labels"
+        }
+      ],
+      "content": "specific-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.server-response-time",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "hidden"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.skip-link",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 3,
+          "group": "a11y-names-labels"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.speed-index",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 10,
+          "group": "metrics"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.structured-data",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "seo",
+          "weight": 0,
+          "group": null
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.svg-img-alt",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 1,
+          "group": "a11y-best-practices"
+        }
+      ],
+      "content": "specific-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.tabindex",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 7,
+          "group": "a11y-navigation"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.table-duplicate-name",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 0,
+          "group": "a11y-best-practices"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.table-fake-caption",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 0,
+          "group": "hidden"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.target-size",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 7,
+          "group": "a11y-best-practices"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.td-has-header",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 0,
+          "group": "hidden"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.td-headers-attr",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 7,
+          "group": "a11y-tables-lists"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.th-has-data-cells",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 7,
+          "group": "a11y-tables-lists"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.third-parties-insight",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "insights"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.third-party-cookies",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "best-practices",
+          "weight": 5,
+          "group": "best-practices-general"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.total-blocking-time",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 30,
+          "group": "metrics"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.total-byte-weight",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "diagnostics"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.trusted-types-xss",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "best-practices",
+          "weight": 0,
+          "group": "best-practices-trust-safety"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.unminified-css",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "diagnostics"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.unminified-javascript",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "diagnostics"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.unsized-images",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "diagnostics"
+        }
+      ],
+      "content": "specific-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.unused-css-rules",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "diagnostics"
+        }
+      ],
+      "content": "specific-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.unused-javascript",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "diagnostics"
+        }
+      ],
+      "content": "specific-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.use-landmarks",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 0,
+          "group": null
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.user-timings",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "diagnostics"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.valid-lang",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 7,
+          "group": "a11y-language"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.valid-source-maps",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "best-practices",
+          "weight": 0,
+          "group": "best-practices-general"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.video-caption",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 10,
+          "group": "a11y-audio-video"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.viewport-insight",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "performance",
+          "weight": 0,
+          "group": "insights"
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    },
+    {
+      "key": "lighthouse.audit.visual-order-follows-dom",
+      "toolVersion": "13.5.0",
+      "categories": [
+        {
+          "key": "accessibility",
+          "weight": 0,
+          "group": null
+        }
+      ],
+      "content": "explicit-fallback-fr-en",
+      "selection": "conditional-at-runtime"
+    }
+  ]
+}

@@ -3,6 +3,7 @@ package com.dokor.argos.services.analysis.modules.html;
 import com.dokor.argos.services.analysis.AuditModule;
 import com.dokor.argos.services.analysis.ModuleUnavailableException;
 import com.dokor.argos.services.analysis.model.AuditCheckResult;
+import com.dokor.argos.services.analysis.model.FindingDetection;
 import com.dokor.argos.services.analysis.model.AuditContext;
 import com.dokor.argos.services.analysis.model.AuditModuleResult;
 import com.dokor.argos.services.analysis.model.enums.AuditSeverity;
@@ -31,6 +32,9 @@ import java.util.function.Predicate;
  */
 @Singleton
 public class HtmlModuleAnalyzer {
+    private static final int TITLE_MIN_LENGTH = 10;
+    private static final int TITLE_MAX_LENGTH = 80;
+    private static final int ALT_LOW_SEVERITY_MAX_PERCENT = 20;
 
     public String moduleId() {
         return AuditModule.HTML.id();
@@ -256,12 +260,12 @@ public class HtmlModuleAnalyzer {
             severity = AuditSeverity.HIGH;
             message = "Balise <title> absente.";
             recommendation = "Ajoutez une balise <title> descriptive pour le SEO et l'utilisabilité.";
-        } else if (len < 10) {
+        } else if (len < TITLE_MIN_LENGTH) {
             status = AuditStatus.WARN;
             severity = AuditSeverity.MEDIUM;
             message = "Le titre est présent mais très court (" + len + " chars).";
             recommendation = "Utilisez un titre plus descriptif (idéalement 30 à 60 caractères).";
-        } else if (len > 80) {
+        } else if (len > TITLE_MAX_LENGTH) {
             status = AuditStatus.WARN;
             severity = AuditSeverity.LOW;
             message = "Le titre est long (" + len + " chars).";
@@ -284,7 +288,10 @@ public class HtmlModuleAnalyzer {
             Map.of("length", len),
             message,
             recommendation
-        );
+        ).withDetection(FindingDetection.create("html.title", "html-title-v1", "html", null,
+            "RECEIVED_HTML", len == 0 ? "MISSING_OR_EMPTY" : len < TITLE_MIN_LENGTH ? "SHORT"
+                : len > TITLE_MAX_LENGTH ? "LONG" : "IN_RANGE",
+            Map.of("length", (double) len, "minimum", (double) TITLE_MIN_LENGTH, "maximum", (double) TITLE_MAX_LENGTH)));
     }
 
     private static AuditCheckResult checkMetaDescription(AttributeObservation observation) {
@@ -511,7 +518,7 @@ public class HtmlModuleAnalyzer {
             status = AuditStatus.PASS;
             severity = AuditSeverity.LOW;
             message = "Toutes les images ont un attribut alt.";
-        } else if (missingPct <= 20) {
+        } else if (missingPct <= ALT_LOW_SEVERITY_MAX_PERCENT) {
             status = AuditStatus.WARN;
             severity = AuditSeverity.LOW;
             message = "Certaines images n'ont pas d'attribut alt (" + missingPct + "%).";
@@ -535,7 +542,10 @@ public class HtmlModuleAnalyzer {
             Map.of("imgCount", imgCount, "imgAltMissingCount", imgAltMissingCount),
             message,
             recommendation
-        );
+        ).withDetection(FindingDetection.create("html.images.alt_coverage", "html-image-alt-v1", "html", null,
+            "RECEIVED_HTML", imgAltMissingCount > 0 ? "MISSING_ALT" : "ALL_HAVE_ALT",
+            Map.of("images", (double) imgCount, "missingAlt", (double) imgAltMissingCount,
+                "missingPercent", (double) missingPct, "lowSeverityMaxPercent", (double) ALT_LOW_SEVERITY_MAX_PERCENT)));
     }
 
     private static AuditCheckResult checkAnchorsHref(int anchorCount, int noHrefCount) {

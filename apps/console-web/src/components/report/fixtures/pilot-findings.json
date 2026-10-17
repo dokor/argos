@@ -1,0 +1,367 @@
+{
+  "titleMissing": {
+    "id": "html.title",
+    "categoryKey": "seo",
+    "severity": "important",
+    "title": "Controlled pilot finding",
+    "impact": "Controlled observation for review",
+    "recommendation": "",
+    "confidence": "HIGH",
+    "module": "html",
+    "structuredEvidence": {
+      "source": "html",
+      "details": [
+        {
+          "key": "length",
+          "text": "0"
+        }
+      ],
+      "detection": {
+        "version": "finding-detection-v1",
+        "ruleKey": "html.title",
+        "ruleVersion": "html-title-v1",
+        "source": "html",
+        "scope": "RECEIVED_HTML",
+        "result": "MISSING_OR_EMPTY",
+        "values": {
+          "length": 0,
+          "minimum": 10,
+          "maximum": 80
+        }
+      }
+    }
+  },
+  "titleShort": {
+    "id": "html.title",
+    "categoryKey": "seo",
+    "severity": "important",
+    "title": "Controlled pilot finding",
+    "impact": "Controlled observation for review",
+    "recommendation": "",
+    "confidence": "HIGH",
+    "module": "html",
+    "structuredEvidence": {
+      "source": "html",
+      "details": [
+        {
+          "key": "length",
+          "text": "3"
+        }
+      ],
+      "detection": {
+        "version": "finding-detection-v1",
+        "ruleKey": "html.title",
+        "ruleVersion": "html-title-v1",
+        "source": "html",
+        "scope": "RECEIVED_HTML",
+        "result": "SHORT",
+        "values": {
+          "length": 3,
+          "minimum": 10,
+          "maximum": 80
+        }
+      }
+    }
+  },
+  "titleLong": {
+    "id": "html.title",
+    "categoryKey": "seo",
+    "severity": "important",
+    "title": "Controlled pilot finding",
+    "impact": "Controlled observation for review",
+    "recommendation": "",
+    "confidence": "HIGH",
+    "module": "html",
+    "structuredEvidence": {
+      "source": "html",
+      "details": [
+        {
+          "key": "length",
+          "text": "81"
+        }
+      ],
+      "detection": {
+        "version": "finding-detection-v1",
+        "ruleKey": "html.title",
+        "ruleVersion": "html-title-v1",
+        "source": "html",
+        "scope": "RECEIVED_HTML",
+        "result": "LONG",
+        "values": {
+          "length": 81,
+          "minimum": 10,
+          "maximum": 80
+        }
+      }
+    }
+  },
+  "images": {
+    "id": "html.images.alt_coverage",
+    "categoryKey": "a11y",
+    "severity": "important",
+    "title": "Controlled pilot finding",
+    "impact": "Controlled observation for review",
+    "recommendation": "",
+    "confidence": "HIGH",
+    "module": "html",
+    "structuredEvidence": {
+      "source": "html",
+      "details": [
+        {
+          "key": "imgCount",
+          "text": "18"
+        },
+        {
+          "key": "imgAltMissingCount",
+          "text": "3"
+        }
+      ],
+      "detection": {
+        "version": "finding-detection-v1",
+        "ruleKey": "html.images.alt_coverage",
+        "ruleVersion": "html-image-alt-v1",
+        "source": "html",
+        "scope": "RECEIVED_HTML",
+        "result": "MISSING_ALT",
+        "values": {
+          "images": 18,
+          "missingAlt": 3,
+          "missingPercent": 17,
+          "lowSeverityMaxPercent": 20
+        }
+      }
+    }
+  },
+  "cspAbsent": {
+    "id": "http.security.csp",
+    "categoryKey": "security",
+    "severity": "important",
+    "title": "Controlled pilot finding",
+    "impact": "Controlled observation for review",
+    "recommendation": "",
+    "confidence": "HIGH",
+    "module": "http",
+    "structuredEvidence": {
+      "source": "http",
+      "details": [],
+      "detection": {
+        "version": "finding-detection-v1",
+        "ruleKey": "http.security.csp",
+        "ruleVersion": "http-csp-v1",
+        "source": "http",
+        "scope": "FINAL_HTTP_RESPONSE",
+        "result": "HEADER_ABSENT",
+        "values": {}
+      }
+    }
+  },
+  "cspEmpty": {
+    "id": "http.security.csp",
+    "categoryKey": "security",
+    "severity": "important",
+    "title": "Controlled pilot finding",
+    "impact": "Controlled observation for review",
+    "recommendation": "",
+    "confidence": "HIGH",
+    "module": "http",
+    "structuredEvidence": {
+      "source": "http",
+      "details": [],
+      "detection": {
+        "version": "finding-detection-v1",
+        "ruleKey": "http.security.csp",
+        "ruleVersion": "http-csp-v1",
+        "source": "http",
+        "scope": "FINAL_HTTP_RESPONSE",
+        "result": "HEADER_EMPTY",
+        "values": {}
+      }
+    }
+  },
+  "cspUnrecognised": {
+    "id": "http.security.csp",
+    "categoryKey": "security",
+    "severity": "important",
+    "title": "Controlled pilot finding",
+    "impact": "Controlled observation for review",
+    "recommendation": "",
+    "confidence": "HIGH",
+    "module": "http",
+    "structuredEvidence": {
+      "source": "http",
+      "details": [],
+      "detection": {
+        "version": "finding-detection-v1",
+        "ruleKey": "http.security.csp",
+        "ruleVersion": "http-csp-v1",
+        "source": "http",
+        "scope": "FINAL_HTTP_RESPONSE",
+        "result": "POLICY_UNRECOGNIZED",
+        "values": {}
+      }
+    }
+  },
+  "zapCsp": {
+    "id": "http.security.csp",
+    "categoryKey": "security",
+    "severity": "important",
+    "title": "Controlled pilot finding",
+    "impact": "Controlled observation for review",
+    "recommendation": "",
+    "confidence": "HIGH",
+    "module": "zap",
+    "structuredEvidence": {
+      "source": "zap",
+      "details": [
+        {
+          "key": "pluginId",
+          "text": "10038"
+        }
+      ]
+    }
+  },
+  "lcp": {
+    "id": "lighthouse.audit.largest-contentful-paint",
+    "categoryKey": "performance",
+    "severity": "important",
+    "title": "Controlled pilot finding",
+    "impact": "Controlled observation for review",
+    "recommendation": "",
+    "confidence": "HIGH",
+    "module": "lighthouse",
+    "structuredEvidence": {
+      "source": "lighthouse",
+      "details": [
+        {
+          "key": "score",
+          "text": "0.2"
+        }
+      ],
+      "detection": {
+        "version": "finding-detection-v1",
+        "ruleKey": "lighthouse.audit.largest-contentful-paint",
+        "ruleVersion": "lighthouse-audit-selection-v1",
+        "source": "lighthouse",
+        "scope": "LIGHTHOUSE_NAVIGATION",
+        "result": "SCORE_BELOW_THRESHOLD",
+        "values": {
+          "score": 0.2,
+          "scoreThreshold": 0.9,
+          "maxFindings": 12
+        },
+        "toolVersion": "13.5.0"
+      },
+      "measurement": {
+        "value": 3800,
+        "unit": "ms"
+      }
+    }
+  },
+  "lcpRatioOnly": {
+    "id": "lighthouse.audit.largest-contentful-paint",
+    "categoryKey": "performance",
+    "severity": "important",
+    "title": "Controlled pilot finding",
+    "impact": "Controlled observation for review",
+    "recommendation": "",
+    "confidence": "HIGH",
+    "module": "lighthouse",
+    "structuredEvidence": {
+      "source": "lighthouse",
+      "details": [
+        {
+          "key": "score",
+          "text": "0.2"
+        }
+      ],
+      "detection": {
+        "version": "finding-detection-v1",
+        "ruleKey": "lighthouse.audit.largest-contentful-paint",
+        "ruleVersion": "lighthouse-audit-selection-v1",
+        "source": "lighthouse",
+        "scope": "LIGHTHOUSE_NAVIGATION",
+        "result": "SCORE_BELOW_THRESHOLD",
+        "values": {
+          "score": 0.2,
+          "scoreThreshold": 0.9,
+          "maxFindings": 12
+        },
+        "toolVersion": "13.5.0"
+      }
+    }
+  },
+  "lcpDiscovery": {
+    "id": "lighthouse.audit.lcp-discovery-insight",
+    "categoryKey": "performance",
+    "severity": "important",
+    "title": "Controlled pilot finding",
+    "impact": "Controlled observation for review",
+    "recommendation": "",
+    "confidence": "HIGH",
+    "module": "lighthouse",
+    "structuredEvidence": {
+      "source": "lighthouse",
+      "details": [
+        {
+          "key": "score",
+          "text": "0.2"
+        }
+      ],
+      "detection": {
+        "version": "finding-detection-v1",
+        "ruleKey": "lighthouse.audit.lcp-discovery-insight",
+        "ruleVersion": "lighthouse-audit-selection-v1",
+        "source": "lighthouse",
+        "scope": "LIGHTHOUSE_NAVIGATION",
+        "result": "SCORE_BELOW_THRESHOLD",
+        "values": {
+          "score": 0.2,
+          "scoreThreshold": 0.9,
+          "maxFindings": 12
+        },
+        "toolVersion": "13.5.0"
+      },
+      "measurement": {
+        "value": 450,
+        "unit": "ms"
+      }
+    }
+  },
+  "lcpBreakdown": {
+    "id": "lighthouse.audit.lcp-breakdown-insight",
+    "categoryKey": "performance",
+    "severity": "important",
+    "title": "Controlled pilot finding",
+    "impact": "Controlled observation for review",
+    "recommendation": "",
+    "confidence": "HIGH",
+    "module": "lighthouse",
+    "structuredEvidence": {
+      "source": "lighthouse",
+      "details": [
+        {
+          "key": "score",
+          "text": "0.2"
+        }
+      ],
+      "detection": {
+        "version": "finding-detection-v1",
+        "ruleKey": "lighthouse.audit.lcp-breakdown-insight",
+        "ruleVersion": "lighthouse-audit-selection-v1",
+        "source": "lighthouse",
+        "scope": "LIGHTHOUSE_NAVIGATION",
+        "result": "SCORE_BELOW_THRESHOLD",
+        "values": {
+          "score": 0.2,
+          "scoreThreshold": 0.9,
+          "maxFindings": 12
+        },
+        "toolVersion": "13.5.0"
+      },
+      "measurement": {
+        "value": 450,
+        "unit": "ms"
+      }
+    }
+  }
+}

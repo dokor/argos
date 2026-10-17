@@ -271,9 +271,15 @@ public record ReportDto(
 
     public record StructuredEvidence(String source, Measurement measurement, List<EvidenceDetail> details,
         @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-        com.dokor.argos.services.analysis.model.ObservedEvidence observed) {
+        com.dokor.argos.services.analysis.model.ObservedEvidence observed,
+        @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+        com.dokor.argos.services.analysis.model.FindingDetection detection) {
+        public StructuredEvidence(String source, Measurement measurement, List<EvidenceDetail> details,
+                                  com.dokor.argos.services.analysis.model.ObservedEvidence observed) {
+            this(source, measurement, details, observed, null);
+        }
         public StructuredEvidence(String source, Measurement measurement, List<EvidenceDetail> details) {
-            this(source,measurement,details,null);
+            this(source,measurement,details,null,null);
         }
     }
     public record Measurement(double value, String unit) {}

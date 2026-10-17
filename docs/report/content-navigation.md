@@ -41,7 +41,7 @@ metric name and shows milliseconds only if the producer actually supplied them.
 | Other check details (headers, TLS endpoints, samples, scores, weights) | `structuredEvidence.details` | Up to 20 named text entries, 4,000 characters per entry. Nested provenance remains text; no inferred units. |
 | Carrier module and `measurementProvenance.module` | `structuredEvidence.source` | Actual observation source takes precedence over carrier. |
 | Explicit measurement confidence and effort (#48/#250) | Existing `Issue`/`Priority` fields | No inferred confidence, owner, cost or effort. Unknown/low confidence requests confirmation first. |
-| Editorial content | `findingCatalogue.ts`, `report-content-v2` | Exact bilingual check keys; guidance may be reused but does not group causes. |
+| Editorial content | `findingCatalogue.ts`, `report-content-v6` | Exact bilingual check keys; guidance may be reused but does not group causes. |
 | Free-form `summary.ai` | Retained in stored DTO | No verifiable grounding metadata exists; the page uses the deterministic factual summary. |
 
 The catalogue covers every statically emitted site check from current module
@@ -83,3 +83,19 @@ Finding confidence, module completeness and scoring coverage have separate meani
 The displayed editorial catalogue version is explicitly separate from the persisted
 scoring version. Automated accessibility is never a RGAA/WCAG certification, and
 Lighthouse tool scores never replace Argos domain scores.
+
+## Four explanation pilots (#673, lot 1)
+
+The title, missing-alt, CSP and LCP pilot families additionally publish an optional
+`structuredEvidence.detection` snapshot produced by their analyzer. It freezes rule
+revision, actual source, scope, outcome and allowlisted numeric observations/bounds;
+the Lighthouse version is included only when supplied. The selected observation
+owns this snapshot during merging. Reading a historical report never generates one.
+
+`findingExplanation` validates supported revisions and builds the same source-aware
+guidance for `findingContent`, interactive details and the full PDF. Missing,
+unsupported or inconsistent snapshots use explicit uncertainty, without attributing
+current thresholds to an old analysis. Discovery and breakdown insights retain
+separate guidance and are not presented as the total LCP duration. See the
+[diagnostic, rule matrix and reader protocol](issue-673-pilots.md) for scope and
+remaining work. Human comprehension review is still required.

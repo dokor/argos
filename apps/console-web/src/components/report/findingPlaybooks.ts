@@ -1,34 +1,199 @@
 import type { Lang } from '@/lib/i18n/routes';
-export type PlaybookCopy = { detection: string; steps: string[]; expected: string; example: string; limits: string };
+export type PlaybookCopy = { detection: string; summary?: string; steps: string[]; expected: string; example: string; limits: string };
 export type Playbook = { reference?: string; verifiedAt?: string; specific: boolean } & PlaybookCopy;
 export const playbookGroups: Array<{keys: string[]; reference: string; verifiedAt: string; fr: PlaybookCopy; en: PlaybookCopy}> = [
   {
     "keys": [
       "html.title"
     ],
-    "reference": "https://developers.google.com/search/docs/appearance/snippet",
-    "verifiedAt": "2026-10-16",
+    "reference": "https://developers.google.com/search/docs/appearance/title-link",
+    "verifiedAt": "2026-10-17",
     "fr": {
-      "detection": "Le module HTML lit le titre du document reçu. Il signale un titre absent, de moins de 10 ou de plus de 80 caractères ; ces bornes Argos sont des heuristiques.",
+      "detection": "Le module HTML examine le titre du document reçu, sans exécuter JavaScript. Les bornes de longueur sont des heuristiques Argos ; la méthode enregistrée avec le constat précise celles réellement appliquées.",
       "steps": [
-        "Ouvrir le HTML reçu pour cette page et repérer <head> puis <title>.",
-        "Modifier le titre dans le gabarit ou le champ éditorial qui produit cette page ; résumer son sujet et la distinguer des autres pages.",
-        "Recharger sans cache puis comparer le HTML reçu et le titre de l’onglet."
+        "Dans les outils du navigateur, ouvrir Réseau, sélectionner le document principal puis Réponse et rechercher <title>. Comparer avec le titre de l’onglet si JavaScript le modifie.",
+        "Repérer le champ éditorial ou le gabarit qui produit ce titre pour cette URL. S’il est absent ou vide, le renseigner ; s’il est court ou long, vérifier d’abord si son contenu décrit bien la page.",
+        "Écrire un titre concis qui nomme le sujet propre à la page. Éviter de remplacer tous les titres par le seul nom du site ou de viser une longueur sans améliorer le sens.",
+        "Recharger la même URL sans cache et contrôler à nouveau le HTML reçu puis l’onglet. Vérifier aussi une autre page utilisant le même gabarit."
       ],
-      "expected": "Un titre non vide décrit correctement cette page ; la longueur seule ne prouve pas sa qualité.",
-      "example": "<title>Sacs en coton — Atelier exemple</title>",
-      "limits": "Le titre reçu peut différer du titre modifié ensuite par JavaScript. Ces bornes ne sont pas des exigences de Google."
+      "expected": "Le document reçu contient un titre non vide et propre à la page. Vérifier son sens à la lecture, puis relancer Argos : une longueur dans les bornes supprime ce signal de longueur, mais ne prouve ni qualité éditoriale ni classement dans un moteur.",
+      "example": "<title>Sac en coton bleu — Atelier exemple</title>",
+      "limits": "Un titre absent et un titre vide produisent tous deux une longueur nulle. La longueur est calculée sur le texte extrait par le parseur Java, pas sur sa largeur visuelle. Google peut afficher un autre titre ; ses recommandations ne fixent pas ces bornes Argos.",
+      "summary": "Renseigner ou réviser le titre dans le champ ou le gabarit de cette page, puis vérifier son sens, le HTML reçu et le titre de l’onglet."
     },
     "en": {
-      "detection": "The HTML module reads the received document title. It flags an absent title or one shorter than 10 or longer than 80 characters; these Argos bounds are heuristics.",
+      "detection": "The HTML module examines the received document title without executing JavaScript. Length bounds are Argos heuristics; the method stored with the finding identifies those actually applied.",
       "steps": [
-        "Open this page’s received HTML and locate <head>, then <title>.",
-        "Edit the template or editorial field producing this page; summarise its subject and distinguish it from other pages.",
-        "Reload without cache and compare the received HTML and browser tab title."
+        "In browser tools, open Network, select the main document, then Response and search for <title>. Compare it with the tab title if JavaScript changes it.",
+        "Locate the editorial field or template producing this URL’s title. Fill it in if absent or empty; if short or long, first check whether it accurately describes the page.",
+        "Write a concise title naming this page’s specific subject. Avoid using only the site name for every page or targeting a length without improving meaning.",
+        "Reload the same URL without cache and check the received HTML and tab again. Also check another page using the same template."
       ],
-      "expected": "A non-empty title accurately describes this page; length alone does not prove quality.",
-      "example": "<title>Cotton bags — Example studio</title>",
-      "limits": "The received title may differ from a title later changed by JavaScript. These bounds are not Google requirements."
+      "expected": "The received document contains a non-empty, page-specific title. Review its meaning, then rerun Argos: a length within the bounds clears this length signal but proves neither editorial quality nor search ranking.",
+      "example": "<title>Blue cotton bag — Example studio</title>",
+      "limits": "An absent title and an empty title both produce a zero length. Length uses text extracted by the Java parser, rather than visual width. Google may display another title; its guidance does not prescribe these Argos bounds.",
+      "summary": "Fill in or revise the title in this page’s field or template, then check its meaning, received HTML and browser tab title."
+    }
+  },
+  {
+    "keys": [
+      "html.images.alt_coverage"
+    ],
+    "reference": "https://www.w3.org/WAI/tutorials/images/decision-tree/",
+    "verifiedAt": "2026-10-17",
+    "fr": {
+      "detection": "Le module HTML compte les éléments img sans attribut alt dans le document reçu, sans exécuter JavaScript. Un attribut alt vide est présent et ne déclenche pas ce contrôle.",
+      "steps": [
+        "Dans Réseau → document principal → Réponse, retrouver les img sans attribut alt. Si Argos ne conserve pas leur emplacement, ce repérage est nécessaire ; le sélecteur img:not([alt]) aide à examiner le DOM rendu, qui peut différer du HTML reçu.",
+        "Décider de la fonction de chaque image : transmettre une information, décorer ou servir de lien/bouton. Lire le texte voisin avant de rédiger une alternative.",
+        "Dans le contenu ou le gabarit qui produit l’image, décrire l’information utile dans alt ; utiliser alt=\"\" pour une décoration. Pour une image lien ou bouton, exprimer sa destination ou son action.",
+        "Recharger sans cache. Vérifier le HTML reçu, puis le DOM rendu et le nom accessible ; relire le parcours avec un lecteur d’écran lorsque possible."
+      ],
+      "expected": "Dans le même HTML reçu, aucune image ne manque d’attribut alt ; relancer Argos pour vérifier ce compteur. Une personne doit encore confirmer que les alternatives restituent l’information ou l’action et que les images décoratives restent silencieuses.",
+      "example": "<!-- Image informative : décrire l’information utile -->\n<img src=\"/sac-exemple.jpg\" alt=\"Sac bleu à anses courtes\">\n<!-- Décoration : alternative vide -->\n<img src=\"/decoration-exemple.svg\" alt=\"\">",
+      "limits": "L’absence d’attribut est observable ; le caractère informatif et la pertinence de l’alternative demandent une revue humaine. Les images ajoutées par JavaScript, les images CSS et les autres pages ne sont pas couvertes par ce compteur HTML. Aucun élément n’est reconstitué depuis un nombre.",
+      "summary": "Retrouver les images sans alt et choisir une alternative selon leur fonction : information, décoration ou action. Vérifier ensuite le HTML et le nom accessible."
+    },
+    "en": {
+      "detection": "The HTML module counts img elements without an alt attribute in the received document, without executing JavaScript. An empty alt attribute is present and does not trigger this check.",
+      "steps": [
+        "In Network → main document → Response, locate img elements without alt. If Argos retains no location, this investigation is necessary; img:not([alt]) helps inspect the rendered DOM, which may differ from received HTML.",
+        "Determine each image’s function: conveying information, decorating, or acting as a link/button. Read surrounding text before writing an alternative.",
+        "In the content or template producing the image, put the useful information in alt; use alt=\"\" for decoration. For a linked image or button, express the destination or action.",
+        "Reload without cache. Check received HTML, then the rendered DOM and accessible name; read the journey with a screen reader when possible."
+      ],
+      "expected": "In the same received HTML, no image lacks an alt attribute; rerun Argos to verify this count. A person must still confirm that alternatives convey information or actions and that decorative images remain silent.",
+      "example": "<!-- Informative image: convey the useful information -->\n<img src=\"/example-bag.jpg\" alt=\"Blue bag with short handles\">\n<!-- Decoration: empty alternative -->\n<img src=\"/example-decoration.svg\" alt=\"\">",
+      "limits": "A missing attribute is observable; whether the image is informative and its alternative appropriate requires human review. Images added by JavaScript, CSS images and other pages are outside this HTML count. No element is reconstructed from a number.",
+      "summary": "Locate images without alt and choose an alternative according to their function: information, decoration or action. Then check HTML and accessible names."
+    }
+  },
+  {
+    "keys": [
+      "http.security.csp"
+    ],
+    "reference": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP",
+    "verifiedAt": "2026-10-17",
+    "fr": {
+      "detection": "La méthode dépend de la source conservée : le collecteur HTTP examine l’en-tête Content-Security-Policy de la réponse finale ; une alerte ZAP suit sa propre règle. Le détail ci-dessous distingue une absence d’une politique non reconnue lorsque cette information a été enregistrée.",
+      "steps": [
+        "Ouvrir Réseau dans les outils du navigateur, recharger cette URL et sélectionner le document final après redirection. Dans En-têtes de réponse, lire Content-Security-Policy et distinguer Content-Security-Policy-Report-Only.",
+        "Si une politique existe, examiner ses directives et la règle source avant de la remplacer : le validateur Argos ne reconnaît qu’un sous-ensemble des politiques possibles.",
+        "Si une politique doit être ajoutée ou ajustée, inventorier scripts, styles, images, connexions et contenus intégrés nécessaires. La tester d’abord en Report-Only dans un environnement maîtrisé et examiner les violations dans la console.",
+        "Adapter la politique au point qui produit la réponse (application, proxy ou CDN). Après validation, appliquer l’en-tête Content-Security-Policy et tester formulaires, connexion, paiement et intégrations réellement présents."
+      ],
+      "expected": "Vérifier l’en-tête reçu sur la même réponse finale et tester les fonctions légitimes avec la politique appliquée. Report-Only seul n’applique pas les restrictions. Relancer la même source d’audit ; une réussite de ce contrôle ne démontre pas l’absence de XSS.",
+      "example": "Content-Security-Policy-Report-Only: default-src 'self'; object-src 'none'; base-uri 'self'",
+      "limits": "Une politique non reconnue n’est pas forcément inefficace. Les politiques multiples ou complexes exigent une revue ; une CSP dans une balise meta n’est pas cette observation d’en-tête. L’exemple Report-Only sert à l’essai et doit être adapté avant toute application.",
+      "summary": "Vérifier la politique reçue et la règle source. Si elle doit évoluer, inventorier les ressources, tester en Report-Only puis contrôler les parcours avant application."
+    },
+    "en": {
+      "detection": "The method depends on the retained source: the HTTP collector examines the final response Content-Security-Policy header; a ZAP alert follows its own rule. The details distinguish absence from an unrecognised policy when that information was recorded.",
+      "steps": [
+        "Open Network in browser tools, reload this URL and select the final document after redirects. In Response Headers, read Content-Security-Policy and distinguish Content-Security-Policy-Report-Only.",
+        "If a policy exists, inspect its directives and the source rule before replacing it: the Argos validator recognises only a subset of possible policies.",
+        "If a policy needs adding or adjusting, inventory required scripts, styles, images, connections and embeds. Test it first in Report-Only in a controlled environment and inspect console violations.",
+        "Adapt the policy where the response is produced (application, proxy or CDN). Once validated, apply the Content-Security-Policy header and test forms, sign-in, payments and integrations actually present."
+      ],
+      "expected": "Check the received header on the same final response and test legitimate functions with enforcement enabled. Report-Only alone does not enforce restrictions. Rerun the same audit source; passing this check does not demonstrate the absence of XSS.",
+      "example": "Content-Security-Policy-Report-Only: default-src 'self'; object-src 'none'; base-uri 'self'",
+      "limits": "An unrecognised policy is not necessarily ineffective. Multiple or complex policies need review; a CSP meta tag is outside this header observation. The Report-Only example is for testing and must be adapted before enforcement.",
+      "summary": "Check the received policy and source rule. If it needs changing, inventory resources, test in Report-Only, then check journeys before enforcement."
+    }
+  },
+  {
+    "keys": [
+      "lighthouse.audit.largest-contentful-paint"
+    ],
+    "reference": "https://web.dev/articles/optimize-lcp",
+    "verifiedAt": "2026-10-17",
+    "fr": {
+      "detection": "Lighthouse mesure l’affichage du plus grand élément admissible dans la zone visible pendant un chargement de laboratoire. Argos sélectionne cet audit selon son score normalisé ; seule une valeur numericValue accompagnée de numericUnit fournit une durée.",
+      "steps": [
+        "Reproduire la même URL avec le même profil mobile/desktop et les mêmes conditions réseau. Dans une trace Performance, retrouver l’élément LCP ; son absence dans Argos ne permet pas de deviner une image ou un fichier.",
+        "Examiner les phases : réponse du document, attente avant découverte de la ressource, transfert, puis attente avant affichage. Identifier celle qui occupe réellement le temps.",
+        "Si l’élément est une image découverte tardivement, examiner sa présence dans le HTML initial et son chargement différé ; si le transfert est coûteux, examiner format et dimensions. Si c’est du texte ou si le rendu attend, examiner polices et tâches bloquantes selon la trace.",
+        "Changer un facteur à la fois, vérifier l’affichage et les interactions, puis refaire plusieurs chargements comparables et relancer Argos."
+      ],
+      "expected": "La phase ciblée et la durée LCP diminuent sur plusieurs mesures au même profil sans casser le parcours. Conserver les conditions et les résultats avant/après ; un résultat isolé ou une hausse du score seul ne suffit pas.",
+      "example": "",
+      "limits": "Cette mesure de laboratoire ne représente pas toutes les visites. Le LCP peut être du texte, une image ou un autre élément admissible ; une durée élevée ne démontre pas une image trop lourde ni un serveur lent. Sans élément ou détail de phase conservé, consulter la trace source.",
+      "summary": "Identifier l’élément LCP et la phase coûteuse dans une trace de cette URL. Intervenir sur la cause observée, puis répéter les mesures au même profil."
+    },
+    "en": {
+      "detection": "Lighthouse measures when the largest eligible element in the viewport appears during a laboratory page load. Argos selects this audit by its normalised score; only numericValue with numericUnit supplies a duration.",
+      "steps": [
+        "Reproduce the same URL with the same mobile/desktop profile and network conditions. In a Performance trace, locate the LCP element; its absence from Argos cannot identify an image or file.",
+        "Examine the phases: document response, delay before resource discovery, transfer, then delay before rendering. Identify which actually consumes the time.",
+        "If the element is a late-discovered image, inspect its presence in initial HTML and lazy loading; if transfer is costly, inspect format and dimensions. For text or delayed rendering, investigate fonts and blocking tasks according to the trace.",
+        "Change one factor at a time, check display and interactions, then repeat several comparable loads and rerun Argos."
+      ],
+      "expected": "The targeted phase and LCP duration decrease over several measurements with the same profile without breaking the journey. Keep before/after conditions and results; one isolated result or a higher score alone is insufficient.",
+      "example": "",
+      "limits": "This laboratory measurement does not represent all visits. LCP may be text, an image or another eligible element; a high duration does not demonstrate an oversized image or a slow server. Without a retained element or phase detail, consult the source trace.",
+      "summary": "Identify the LCP element and costly phase in this URL’s trace. Address the observed cause, then repeat measurements with the same profile."
+    }
+  },
+  {
+    "keys": [
+      "lighthouse.audit.lcp-discovery-insight"
+    ],
+    "reference": "https://web.dev/articles/optimize-lcp",
+    "verifiedAt": "2026-10-17",
+    "fr": {
+      "detection": "Ce diagnostic Lighthouse concerne la découverte de la ressource LCP. Son score de sélection et un éventuel gain estimé ne sont pas la durée totale LCP.",
+      "steps": [
+        "Dans la trace Lighthouse de cette URL, retrouver la ressource LCP signalée. Si elle n’est pas conservée, ouvrir le diagnostic source avant de modifier une ressource.",
+        "Examiner quand le navigateur peut découvrir cette ressource, sa présence dans le HTML initial et sa priorité. Adapter uniquement le mécanisme qui la retarde ; ne pas précharger toutes les images.",
+        "Comparer le début de requête, le LCP et le parcours sur plusieurs chargements au même profil, puis relancer l’audit."
+      ],
+      "expected": "La ressource effectivement signalée est découverte plus tôt et le LCP est comparé dans les mêmes conditions ; vérifier que les autres ressources essentielles ne sont pas retardées.",
+      "example": "",
+      "limits": "Un gain estimé ne garantit pas une amélioration de même ampleur. Ce diagnostic ne prouve ni un transfert lourd ni la durée totale LCP.",
+      "summary": "Retrouver la ressource LCP signalée et ce qui retarde sa découverte. Comparer ensuite le début de requête et le LCP au même profil."
+    },
+    "en": {
+      "detection": "This Lighthouse diagnosis concerns LCP resource discovery. Its selection score and any estimated savings are not the total LCP duration.",
+      "steps": [
+        "In this URL’s Lighthouse trace, locate the reported LCP resource. If it was not retained, open the source diagnosis before changing a resource.",
+        "Inspect when the browser can discover the resource, its presence in initial HTML and its priority. Adjust only the mechanism delaying it; do not preload every image.",
+        "Compare request start, LCP and the journey over several loads with the same profile, then rerun the audit."
+      ],
+      "expected": "The actual reported resource is discovered earlier and LCP is compared under the same conditions; check that other essential resources are not delayed.",
+      "example": "",
+      "limits": "Estimated savings do not guarantee an improvement of the same size. This diagnosis proves neither a heavy transfer nor total LCP duration.",
+      "summary": "Locate the reported LCP resource and what delays its discovery. Then compare request start and LCP with the same profile."
+    }
+  },
+  {
+    "keys": [
+      "lighthouse.audit.lcp-breakdown-insight"
+    ],
+    "reference": "https://web.dev/articles/optimize-lcp",
+    "verifiedAt": "2026-10-17",
+    "fr": {
+      "detection": "Ce diagnostic Lighthouse décompose les phases menant au LCP. Une valeur numérique éventuelle appartient au diagnostic et ne doit pas être présentée automatiquement comme la durée totale LCP.",
+      "steps": [
+        "Ouvrir la décomposition LCP de cette URL dans Lighthouse ou une trace Performance. Relever les phases et leur périmètre ; si elles ne sont pas conservées par Argos, les consulter dans la source.",
+        "Identifier la phase la plus coûteuse avant d’agir : réponse du document, découverte, transfert ou rendu. Choisir une intervention correspondant à cette phase et à l’élément réellement observé.",
+        "Comparer les mêmes phases et le LCP sur plusieurs chargements au même profil, puis tester le parcours et relancer l’audit."
+      ],
+      "expected": "La phase visée diminue dans des traces comparables ; confirmer séparément l’évolution de la durée totale LCP et le fonctionnement du parcours.",
+      "example": "",
+      "limits": "Le diagnostic peut manquer pour une mesure historique ou une autre version de Lighthouse. Son score seul ne fournit ni durée de phase ni cause démontrée.",
+      "summary": "Comparer les phases de la trace LCP et cibler celle qui coûte réellement du temps. Vérifier séparément la phase corrigée et le LCP total."
+    },
+    "en": {
+      "detection": "This Lighthouse diagnosis breaks down phases leading to LCP. Any numeric value belongs to the diagnosis and must not automatically be presented as total LCP duration.",
+      "steps": [
+        "Open this URL’s LCP breakdown in Lighthouse or a Performance trace. Record phases and their scope; if Argos did not retain them, consult the source.",
+        "Identify the most costly phase before acting: document response, discovery, transfer or rendering. Choose an intervention matching that phase and the element actually observed.",
+        "Compare the same phases and LCP over several loads with the same profile, then test the journey and rerun the audit."
+      ],
+      "expected": "The targeted phase decreases in comparable traces; separately confirm the change in total LCP duration and that the journey still works.",
+      "example": "",
+      "limits": "The diagnosis may be absent from historical measurements or another Lighthouse version. Its score alone supplies neither phase durations nor a demonstrated cause.",
+      "summary": "Compare phases in the LCP trace and target the one actually consuming time. Separately verify the corrected phase and total LCP."
     }
   },
   {
@@ -122,7 +287,6 @@ export const playbookGroups: Array<{keys: string[]; reference: string; verifiedA
   },
   {
     "keys": [
-      "html.images.alt_coverage",
       "lighthouse.audit.image-alt",
       "lighthouse.audit.input-image-alt",
       "lighthouse.audit.svg-img-alt"
@@ -514,37 +678,6 @@ export const playbookGroups: Array<{keys: string[]; reference: string; verifiedA
   },
   {
     "keys": [
-      "lighthouse.audit.largest-contentful-paint",
-      "lighthouse.audit.lcp-discovery-insight",
-      "lighthouse.audit.lcp-breakdown-insight"
-    ],
-    "reference": "https://web.dev/articles/optimize-lcp",
-    "verifiedAt": "2026-10-16",
-    "fr": {
-      "detection": "Argos remonte cet audit Lighthouse si son score normalisé est inférieur à 0,9, parmi au plus 12 audits priorisés. Seule numericValue avec son unité fournit une durée.",
-      "steps": [
-        "Identifier l’élément LCP dans une trace de performance de cette URL.",
-        "Distinguer réponse serveur, délai de découverte, transfert et délai de rendu ; intervenir sur la phase réellement coûteuse.",
-        "Si le LCP est une image, vérifier sa découverte et sa priorité ; si c’est du texte, examiner les polices et le rendu, puis refaire une trace."
-      ],
-      "expected": "La phase ciblée et le LCP s’améliorent sur plusieurs mesures comparables sans dégrader le parcours.",
-      "example": "",
-      "limits": "Un audit de laboratoire ne représente pas toutes les visites et n’établit pas à lui seul la cause."
-    },
-    "en": {
-      "detection": "Argos surfaces this Lighthouse audit if its normalised score is below 0.9, among at most 12 prioritised audits. Only numericValue with its unit supplies a duration.",
-      "steps": [
-        "Identify the LCP element in a performance trace of this URL.",
-        "Distinguish server response, discovery delay, transfer and rendering delay; address the phase actually taking time.",
-        "For an image LCP, check discovery and priority; for text, inspect fonts and rendering, then record another trace."
-      ],
-      "expected": "The targeted phase and LCP improve over several comparable runs without harming the journey.",
-      "example": "",
-      "limits": "A lab audit does not represent every visit and alone does not establish the cause."
-    }
-  },
-  {
-    "keys": [
       "lighthouse.audit.cumulative-layout-shift",
       "lighthouse.audit.cls-culprits-insight",
       "lighthouse.audit.unsized-images"
@@ -633,35 +766,6 @@ export const playbookGroups: Array<{keys: string[]; reference: string; verifiedA
       ],
       "expected": "The received header matches the chosen policy and legitimate journeys continue to work.",
       "example": "Strict-Transport-Security: max-age=300",
-      "limits": "The validator recognises a subset of configurations; an unrecognised value is not proof of exploitation. The example needs adaptation."
-    }
-  },
-  {
-    "keys": [
-      "http.security.csp"
-    ],
-    "reference": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP",
-    "verifiedAt": "2026-10-16",
-    "fr": {
-      "detection": "Le collecteur HTTP actuel recherche Content-Security-Policy sur la réponse finale et vérifie des sources script-src ou default-src reconnues comme restrictives. Une mesure issue de ZAP peut appliquer une autre règle.",
-      "steps": [
-        "Lire la valeur réellement reçue dans le panneau Réseau, sans se limiter à la configuration du serveur.",
-        "Inventorier les scripts et intégrations puis observer les violations en Report-Only avant l’application.",
-        "Configurer Content-Security-Policy au point qui produit la réponse (application, proxy ou CDN), puis tester les fonctions et les réponses concernées."
-      ],
-      "expected": "L’en-tête reçu correspond à la politique choisie et les parcours légitimes continuent de fonctionner.",
-      "example": "Content-Security-Policy-Report-Only: default-src 'self'",
-      "limits": "Le validateur reconnaît un sous-ensemble de configurations ; une valeur non reconnue n’est pas une preuve d’exploitation. L’exemple demande adaptation."
-    },
-    "en": {
-      "detection": "The current HTTP collector looks for Content-Security-Policy on the final response and checks for script-src or default-src sources recognised as restrictive. A ZAP-sourced measurement may use another rule.",
-      "steps": [
-        "Read the value actually received in the Network panel, rather than relying only on server configuration.",
-        "Inventory scripts and integrations, then inspect Report-Only violations before enforcement.",
-        "Configure Content-Security-Policy where the response is produced (application, proxy or CDN), then test affected features and responses."
-      ],
-      "expected": "The received header matches the chosen policy and legitimate journeys continue to work.",
-      "example": "Content-Security-Policy-Report-Only: default-src 'self'",
       "limits": "The validator recognises a subset of configurations; an unrecognised value is not proof of exploitation. The example needs adaptation."
     }
   },

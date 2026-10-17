@@ -8,7 +8,9 @@ import { LangProvider } from '@/lib/i18n/LangContext';
 import { findingContent, cleanEvidence } from './findingCatalogue';
 import { findingPlaybook, rulePlaybooks } from './findingPlaybooks';
 import historical from './fixtures/historical-report.json';
+import pilotCases from './fixtures/pilot-findings.json';
 import type { Issue,Report } from './types';
+import { reportReadingCopy } from './reportReadingCopy';
 const issue:Issue={id:'html.images.alt_coverage',categoryKey:'a11y',severity:'important',title:'Images',impact:'',recommendation:'',structuredEvidence:{source:'html',details:[{key:'imgCount',text:'4'},{key:'imgAltMissingCount',text:'2'}]}};
 it('uses actual producer field names and keeps fictional code separate from observations',()=>{
   expect(findingContent(issue,'fr').observation).toBe('2 image(s) sans attribut alt parmi 4 images observées.');
@@ -22,6 +24,24 @@ it('shares exact guide text and references between web and full PDF in both lang
     const web=render(<LangProvider initialLang={lang}><FindingDetails finding={finding}/></LangProvider>);
     const pdf=render(<PrintableReport report={{...historical,issues:[issue]} as Report} lang={lang} format="full"/>);
     expect(web.container.querySelector('[data-finding-guide]')?.textContent).toBe(pdf.container.querySelector('[data-finding-guide]')?.textContent);
+    web.unmount();pdf.unmount();
+  }
+});
+it('keeps all pilot methods, source variants and missing-data guidance identical in web and full PDF',()=>{
+  for(const lang of ['fr','en'] as const)for(const issue of Object.values(pilotCases) as Issue[]){
+    const finding={key:issue.id!,anchor:'pilot',domain:issue.categoryKey as 'a11y',issue,sources:[issue.module!]};
+    const web=render(<LangProvider initialLang={lang}><FindingDetails finding={finding}/></LangProvider>);
+    const pdf=render(<PrintableReport report={{...historical,issues:[issue]} as Report} lang={lang} format="full"/>);
+    const webGuide=web.container.querySelector('[data-finding-guide]')!;
+    expect(webGuide.textContent).toBe(pdf.container.querySelector('[data-finding-guide]')?.textContent);
+    expect([...webGuide.querySelectorAll('a')].map(a=>a.href)).toEqual([...pdf.container.querySelectorAll('[data-finding-guide] a')].map(a=>a.getAttribute('href')));
+    expect(webGuide.querySelector('img,script,iframe')).toBeNull();
+    expect(webGuide.querySelector('figure figcaption')?.textContent??'').not.toContain('Controlled observation');
+    if(issue.id!=='lighthouse.audit.largest-contentful-paint'){
+      expect(web.container.textContent).not.toContain(reportReadingCopy[lang].missingMeasure);
+      // This fixture has only one finding; no unrelated numeric measurement is missing.
+      expect(pdf.container.textContent).not.toContain(reportReadingCopy[lang].missingMeasure);
+    }
     web.unmount();pdf.unmount();
   }
 });

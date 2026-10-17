@@ -16,6 +16,18 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 class PublicReportComposerTest {
+    @Test void publishesTheFrozenMethodOnceWithoutChangingTheCanonicalFinding() {
+        var detection=com.dokor.argos.services.analysis.model.FindingDetection.create("html.title","html-title-v1",
+            "html",null,"RECEIVED_HTML","SHORT",Map.of("length",3.0,"minimum",10.0,"maximum",80.0));
+        var original=check("html.title",AuditStatus.WARN);
+        var result=composer.compose(report(List.of(module("html",Map.of(),original.withDetection(detection))),scoreOf(.5)));
+        var unchanged=composer.compose(report(List.of(module("html",Map.of(),original)),scoreOf(.5)));
+        assertEquals(detection,result.issues().getFirst().structuredEvidence().detection());
+        assertNull(result.issues().getFirst().evidence());
+        assertEquals(unchanged.summary().priorities(),result.summary().priorities());
+        assertEquals(unchanged.scores(),result.scores());
+        assertEquals(unchanged.issues().getFirst().severity(),result.issues().getFirst().severity());
+    }
 
     private final PublicReportComposer composer = new PublicReportComposer();
 

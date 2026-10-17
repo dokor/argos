@@ -195,6 +195,7 @@ public class PublicReportComposer {
         // Typed observations have their own renderer; never duplicate them as a map string.
         var textDetails = new LinkedHashMap<>(check.details());
         textDetails.remove("observed");
+        textDetails.remove(com.dokor.argos.services.analysis.model.FindingDetection.DETAIL_KEY);
         return textDetails.isEmpty() ? null : ReportEvidence.clean(textDetails);
     }
 

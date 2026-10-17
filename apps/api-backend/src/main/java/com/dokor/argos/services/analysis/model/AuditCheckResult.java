@@ -88,6 +88,13 @@ public record AuditCheckResult(
             value, details, message, recommendation, newSources, scoreRatio, measurementProvenance);
     }
 
+    public AuditCheckResult withDetection(FindingDetection detection) {
+        var enriched = new LinkedHashMap<>(details);
+        enriched.put(FindingDetection.DETAIL_KEY, detection);
+        return new AuditCheckResult(key, title, status, severity, scorable, weight, tags,
+            value, enriched, message, recommendation, sources, scoreRatio, measurementProvenance);
+    }
+
     public AuditCheckResult withMeasurementProvenance(String module, List<String> measuredSources) {
         return new AuditCheckResult(key, title, status, severity, scorable, weight, tags,
             value, details, message, recommendation, sources, scoreRatio,
@@ -108,7 +115,11 @@ public record AuditCheckResult(
         AuditStatus mergedStatus = statusRank(other.status) > statusRank(this.status) ? other.status : this.status;
         AuditSeverity mergedSeverity = severityRank(other.severity) > severityRank(this.severity) ? other.severity : this.severity;
         Map<String, Object> mergedDetails = new LinkedHashMap<>(this.details);
-        other.details.forEach(mergedDetails::putIfAbsent);
+        // The selected observation owns its method. A secondary HTTP check must not
+        // lend its detection snapshot to a selected ZAP observation (or vice versa).
+        other.details.forEach((key, value) -> {
+            if (!FindingDetection.DETAIL_KEY.equals(key)) mergedDetails.putIfAbsent(key, value);
+        });
         List<String> mergedSources = new ArrayList<>(this.sources);
         other.sources.forEach(s -> { if (!mergedSources.contains(s)) mergedSources.add(s); });
         String mergedMessage = statusRank(other.status) > statusRank(this.status) ? other.message : this.message;

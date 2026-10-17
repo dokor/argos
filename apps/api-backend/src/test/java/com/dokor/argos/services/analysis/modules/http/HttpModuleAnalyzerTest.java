@@ -40,6 +40,25 @@ import static org.mockito.Mockito.when;
  * du résultat HTTP vers l'{@link AuditContext}.
  */
 class HttpModuleAnalyzerTest {
+    @Test void distinguishesAbsentEmptyAndUnrecognisedCspWithoutPublishingItsRawPolicy() {
+        for (String policy : List.of("ABSENT", "", "default-src *", "script-src 'self'")) {
+            var headers = policy.equals("ABSENT") ? Map.<String,String>of()
+                : Map.of("content-security-policy", policy);
+            var check = HttpModuleAnalyzer.checkSecurityHeaders(headers, "https://example.com/private?token=secret")
+                .stream().filter(c -> c.key().equals("http.security.csp")).findFirst().orElseThrow();
+            var detection = com.dokor.argos.services.analysis.model.FindingDetection.from(check.details().get("detection"),check.key(),"http");
+            assertNotNull(detection);
+            assertEquals(policy.equals("ABSENT") ? "HEADER_ABSENT" : policy.isEmpty() ? "HEADER_EMPTY"
+                : policy.contains("*") ? "POLICY_UNRECOGNIZED" : "POLICY_RECOGNIZED", detection.result());
+            assertEquals(policy.equals("script-src 'self'") ? AuditStatus.PASS : AuditStatus.WARN, check.status());
+            assertTrue(detection.values().isEmpty());
+            assertFalse(detection.toString().contains("private"));
+            assertFalse(detection.toString().contains("default-src"));
+        }
+        var reportOnly = HttpModuleAnalyzer.checkSecurityHeaders(Map.of("content-security-policy-report-only", "default-src 'self'"), "https://example.com")
+            .stream().filter(c -> c.key().equals("http.security.csp")).findFirst().orElseThrow();
+        assertEquals("HEADER_ABSENT", ((com.dokor.argos.services.analysis.model.FindingDetection)reportOnly.details().get("detection")).result());
+    }
 
     @Test void inspectedAbsentHeadersAreMeasuredWithoutQualityPoints() throws Exception {
         var module = fixtureAnalysis(200, "<html><title>Example</title></html>", Map.of("content-type", List.of("text/html")));

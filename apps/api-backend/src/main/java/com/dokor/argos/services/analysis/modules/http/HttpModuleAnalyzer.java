@@ -3,6 +3,7 @@ package com.dokor.argos.services.analysis.modules.http;
 import com.dokor.argos.services.analysis.AuditModule;
 import com.dokor.argos.services.analysis.BoundedBodyHandlers;
 import com.dokor.argos.services.analysis.model.AuditCheckResult;
+import com.dokor.argos.services.analysis.model.FindingDetection;
 import com.dokor.argos.services.analysis.model.AuditContext;
 import com.dokor.argos.services.analysis.model.AuditModuleResult;
 import com.dokor.argos.services.analysis.model.enums.AuditSeverity;
@@ -855,7 +856,7 @@ public class HttpModuleAnalyzer {
         boolean effective = SecurityHeaderValidation.effective(headerKeyLowerCase, value, headers);
         AuditStatus status = effective ? AuditStatus.PASS : AuditStatus.WARN;
 
-        return AuditCheckResult.of(
+        var check = AuditCheckResult.of(
             checkKey,
             label,
             status,
@@ -869,6 +870,10 @@ public class HttpModuleAnalyzer {
                 : present ? (label + " : configuration restrictive non établie ; à vérifier.") : (label + " est absent."),
             effective ? null : recommendationIfMissing
         );
+        return "http.security.csp".equals(checkKey) ? check.withDetection(FindingDetection.create(
+            checkKey, "http-csp-v1", "http", null, "FINAL_HTTP_RESPONSE",
+            value == null ? "HEADER_ABSENT" : value.isBlank() ? "HEADER_EMPTY"
+                : effective ? "POLICY_RECOGNIZED" : "POLICY_UNRECOGNIZED", Map.of())) : check;
     }
 
     // -------------------------
