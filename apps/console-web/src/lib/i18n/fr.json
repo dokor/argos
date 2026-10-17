@@ -16,6 +16,17 @@
     "fortyTwo": "La réponse est 42. Les pistes d’amélioration sont juste en dessous."
   },
   "connected": {
+    "navGroups": {
+      "analyses": "Analyses",
+      "newAnalysis": "Nouvelle analyse",
+      "history": "Historique des analyses",
+      "myDomains": "Mes domaines",
+      "newDomain": "Analyser un domaine",
+      "expandAnalyses": "Déplier le sous-menu Analyses",
+      "collapseAnalyses": "Replier le sous-menu Analyses",
+      "expandDomains": "Déplier le sous-menu Domaines",
+      "collapseDomains": "Replier le sous-menu Domaines"
+    },
     "collapseMenu": "Réduire le menu",
     "expandMenu": "Déployer le menu",
     "accountMenu": "Menu du compte",

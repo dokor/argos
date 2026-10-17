@@ -16,6 +16,17 @@
     "fortyTwo": "The answer is 42. The improvements are right below."
   },
   "connected": {
+    "navGroups": {
+      "analyses": "Analyses",
+      "newAnalysis": "New analysis",
+      "history": "Analysis history",
+      "myDomains": "My domains",
+      "newDomain": "Analyse a domain",
+      "expandAnalyses": "Expand Analyses submenu",
+      "collapseAnalyses": "Collapse Analyses submenu",
+      "expandDomains": "Expand Domains submenu",
+      "collapseDomains": "Collapse Domains submenu"
+    },
     "collapseMenu": "Collapse menu",
     "expandMenu": "Expand menu",
     "accountMenu": "Account menu",
