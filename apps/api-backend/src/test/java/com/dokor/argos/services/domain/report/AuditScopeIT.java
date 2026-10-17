@@ -29,7 +29,7 @@ class AuditScopeIT extends MariaDbReportFixture {
         sql("INSERT INTO ARG_DOMAIN(id,hostname) VALUES(1,'example.com')");
         sql("INSERT INTO ARG_AUDIT(id,domain_id,input_url,normalized_url) VALUES(1,1,'https://example.com','https://example.com')");
         sql("INSERT INTO ARG_AUDIT_RUN(id,audit_id,status,report_token_hash) VALUES(1,1,'QUEUED',UNHEX(SHA2('existing-fixture',256)))");
-        var latest=Flyway.configure().dataSource(source).load();assertEquals(2,latest.migrate().migrationsExecuted);latest.validate();
+        var latest=Flyway.configure().dataSource(source).load();assertEquals(3,latest.migrate().migrationsExecuted);latest.validate();
         var row=runs.getRun(1).orElseThrow();assertNull(row.getExecutionScope());assertEquals("QUEUED",row.getStatus());
         assertTrue(runs.findByReportToken("existing-fixture").isPresent());assertEquals(0,latest.migrate().migrationsExecuted);
     }

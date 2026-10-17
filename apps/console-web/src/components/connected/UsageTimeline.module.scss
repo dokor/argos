@@ -1,0 +1,37 @@
+.section { min-width:0;padding:28px 0;border-bottom:1px solid var(--argos-border); }
+.heading { margin-bottom:22px; }
+.heading h2 { font-size:20px;font-weight:650;margin-bottom:8px; }
+.heading p,.hint,.coverage { color:var(--argos-text-muted);max-width:75ch; }
+.controls { display:flex;flex-wrap:wrap;align-items:end;gap:12px;margin:16px 0; }
+.controls label { display:grid;gap:6px;min-width:0;font-weight:550; }
+.controls input,.controls select { width:100%;min-width:0;min-height:44px;padding:9px 12px;border:1px solid var(--argos-border);border-radius:6px;background:var(--argos-surface);color:var(--argos-text); }
+.dates summary,.filters summary,.table summary { cursor:pointer;min-height:44px;align-content:center;font-weight:600; }
+.dates .hint { font-size:13px; }
+.filters { margin-top:8px;border-top:1px solid var(--argos-border);padding-top:8px; }
+.search { flex:1; }
+.options { border:0;padding:0;margin:16px 0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 24px;min-width:0; }
+.options legend { color:var(--argos-text-muted);padding:0;margin-bottom:10px; }
+.options label { display:flex;align-items:center;gap:10px;min-height:44px;padding:8px 0;border-bottom:1px solid var(--argos-border);cursor:pointer; }
+.options input { width:18px;height:18px;flex-shrink:0;accent-color:var(--argos-brand); }
+.options span { overflow-wrap:anywhere;flex:1;min-width:0; }.options strong { font-variant-numeric:tabular-nums; }
+.summary { display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 24px;margin:24px 0 12px; }
+.summary strong { font-size:36px;font-weight:700;font-variant-numeric:tabular-nums; }.summary span { color:var(--argos-text-muted); }
+.coverage { font-size:13px;margin-bottom:22px; }.coverage time { font-weight:600; }
+.legend { display:flex;flex-wrap:wrap;gap:12px 24px;margin-bottom:18px; }
+.legend li { display:flex;align-items:center;gap:8px;min-width:0;max-width:100%; }
+.legend li>span:not(.swatch) { overflow-wrap:anywhere; }.legend strong { font-variant-numeric:tabular-nums; }
+.swatch,.segment { background:var(--argos-brand);background-image:repeating-linear-gradient(calc(45deg + var(--series-index) * 30deg),transparent,transparent 3px,var(--argos-surface) 3px,var(--argos-surface) calc(3px + var(--series-index) * 1px)); }
+.swatch { display:inline-block;width:14px;height:14px;flex-shrink:0;border:1px solid var(--argos-brand); }
+.chartScroll { max-width:100%;overflow-x:auto;margin:8px 0; }
+.chart { display:grid;grid-template-columns:repeat(var(--bucket-count),minmax(44px,1fr));min-width:calc(var(--bucket-count) * 44px);height:230px;gap:2px; }
+.column { display:flex;flex-direction:column;align-items:stretch;justify-content:end;gap:8px;padding:4px 2px 0;min-width:0; }
+.column:hover,.column[aria-pressed=true] { background:var(--argos-brand-soft); }
+.column:focus-visible { outline:2px solid var(--argos-brand);outline-offset:-2px; }
+.stack { display:flex;flex-direction:column-reverse;justify-content:flex-start;height:180px;border-bottom:1px solid var(--argos-border); }
+.segment { display:block;flex-shrink:0;min-height:0; }
+.tick { height:36px;font-size:11px;line-height:1.3;text-align:center;color:var(--argos-text-muted);white-space:normal; }
+.detail { border-top:1px solid var(--argos-border);padding:16px 0;margin-top:16px;min-height:125px; }
+.detail>strong { font-weight:650; }.detail ul { display:flex;flex-wrap:wrap;gap:8px 24px;margin-top:8px; }.detail li { display:flex;gap:12px;overflow-wrap:anywhere;max-width:100%; }.detail strong { font-variant-numeric:tabular-nums; }
+.table { margin-top:8px; }.table th { overflow-wrap:anywhere;max-width:240px; }.partial { display:block;font-size:12px;font-weight:400;color:var(--argos-text-muted); }
+.message,.empty { padding:28px 0; }.message button { margin-top:12px; }.empty h3 { font-size:18px;font-weight:650;margin-bottom:6px; }.empty p { color:var(--argos-text-muted); }
+@media(max-width:600px) { .controls>label { flex:1 1 100%; }.controls>button { width:100%; }.options { grid-template-columns:minmax(0,1fr); }.summary strong { font-size:30px; }.detail ul { display:grid;gap:6px; }.detail li { justify-content:space-between; }.section { padding:24px 0; } }

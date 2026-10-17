@@ -1,5 +1,8 @@
 # Consommation mensuelle — milestone 8
 
+L’[historique graphique](usage-timeline.md) décrit les agrégats personnels,
+les dimensions et les limites de couverture du registre (#664).
+
 Epic #14, issues #449–#452. Le lancement conserve le comptage sans plafond.
 Aucun tarif, paiement ou avantage commercial premium n'est attribué par ce lot.
 L'offre `ARG_ACCOUNT_USER.offer` est indépendante du rôle d'autorisation.
