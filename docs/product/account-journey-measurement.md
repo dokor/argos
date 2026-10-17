@@ -19,16 +19,18 @@ Les faits sont purgés après 90 jours par la tâche horaire existante, sans eff
 | account_registration_view | Formulaire d’inscription affiché après accord | Une fois par navigation dans la mémoire du composant, y compris StrictMode | Route statique /account/register, FR/EN, page |
 | account_registered | Création réellement validée en base, classique ou sociale | Une fois par compte | password/google/github/linkedin, FR/EN |
 | account_authenticated | Connexion classique ou callback social réussis | Une fois par session créée | Méthode et FR/EN |
-| account_auth_rejected | Réponse de refus réelle de l’authentification via BFF | Une tentative, retry = nouvelle tentative | Route statique inscription/connexion, FR/EN, form, validation/service/rate_limit |
+| account_auth_rejected | Réponse d’échec du service sur inscription/connexion, via BFF, hors association | Une tentative, retry = nouvelle tentative | Route statique inscription/connexion, FR/EN, form, validation/service/rate_limit |
 | report_claimed | Rattachement après validation du propriétaire et de la preuve | Une fois par run | FR/EN |
-| account_activated | Première analyse acceptée depuis le compte ou premier rattachement | Une fois par compte | FR/EN |
+| account_activated | Première analyse unitaire ou premier lot de domaine accepté depuis le compte, ou premier rattachement | Une fois par compte | FR/EN |
 | account_activity | Connexion réussie ou lecture réussie d’un profil vérifié | Une fois par compte et jour UTC | FR/EN |
 
 L’inscription classique produit un compte PENDING : la vérification de l’adresse reste distincte du premier usage. Une réponse neutre pour un email déjà inscrit ne produit pas account_registered. Une association de méthode sociale ne crée ni inscription ni connexion mesurée. Un callback consommé ou échoué ne produit pas de succès. Les actualisations du profil ne multiplient pas les jours actifs ; les statuts de progression et renouvellements de session ne sont pas des activités. Une lecture du profil depuis la navigation publique compte : cette définition ne prouve ni une visite de l’espace personnel ni une interaction volontaire.
 
 Les événements publics gardent leur allowlist fermée. Les erreurs détaillées, chemins privés, paramètres OAuth et identifiants ne deviennent jamais des dimensions. Toute panne de mesure est omise après l’opération métier ; aucune reprise historique n’est tentée. Une réponse perdue avant la mesure peut donc manquer, sans rejouer l’inscription ou l’analyse.
 
-Les audits conservent la collecte existante (création, états, premier rapport affiché). L’audience visitor/account est figée à l’attribution initiale, d’après le propriétaire réel du run. Un rattachement ultérieur ne transforme pas un audit initialement sans compte en audit connecté. Les attributions historiques sont unknown et ne sont pas rétroqualifiées.
+Les refus précoces du BFF (origine, CSRF, corps invalide), les refus d’initiation OAuth et les transports perdus ne constituent pas un compteur exhaustif des tentatives d’authentification. Aucun taux global d’échec n’est calculé.
+
+Les audits conservent la collecte existante (création, états, premier rapport affiché). L’audience visitor/account est figée à l’attribution initiale, d’après le propriétaire réel du run. Un rattachement ultérieur ne transforme pas un audit initialement sans compte en audit connecté. Les attributions historiques sont unknown et ne sont pas rétroqualifiées. La cohorte d’audits couvre les soumissions unitaires publiques et depuis le compte. Les lots de domaine comptent pour le premier usage ; leurs runs enfants ne sont pas attribués dans cette cohorte ni dans ses délais. Les annulations restent des créations (et des démarrages si datés), sans être assimilées à FAILED ou COMPLETED. Les comptes administrateurs consentants sont inclus, sans filtre de rôle a posteriori.
 
 ## Métriques et dénominateurs
 

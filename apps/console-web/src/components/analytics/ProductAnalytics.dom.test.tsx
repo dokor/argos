@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import {afterEach,beforeEach,expect,it,vi} from 'vitest';
+import {StrictMode} from 'react';
 import {fireEvent,render,screen,waitFor} from '@testing-library/react';
 import ProductAnalytics from './ProductAnalytics';
 const route=vi.hoisted(()=>({path:'/'}));
@@ -36,4 +37,10 @@ it('deduplicates registration displays through rerenders and counts a new naviga
  route.path='/account/sign-in';view.rerender(<ProductAnalytics/>);route.path='/en/account/register';view.rerender(<ProductAnalytics/>);await waitFor(()=>expect(events()).toHaveLength(2));
  fireEvent.click(screen.getByRole('button',{name:'Gérer mes cookies'}));fireEvent.click(screen.getByRole('button',{name:'Tout refuser / retirer'}));await screen.findByRole('button',{name:'Gérer mes cookies'});
  route.path='/account/register';view.rerender(<ProductAnalytics/>);expect(events()).toHaveLength(2);
+});
+
+it('does not duplicate a registration display under StrictMode',async()=>{
+ const fetch=collector();route.path='/account/register';render(<StrictMode><ProductAnalytics/></StrictMode>);
+ fireEvent.click(await screen.findByRole('button',{name:'Tout accepter'}));await screen.findByRole('button',{name:'Gérer mes cookies'});
+ await waitFor(()=>expect(fetch.mock.calls.filter(([u,init])=>u==='/api/product-analytics'&&JSON.parse(String(init?.body)).event==='account_registration_view')).toHaveLength(1));
 });

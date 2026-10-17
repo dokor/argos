@@ -61,3 +61,11 @@ it("rejects reserved premium events and identifying properties", () => {
     expect(eventPayload({ event: "account_registration_view", dimensions, [key]: "private" })).toBeUndefined();
   }
 });
+
+it("does not label a failed social method association as a sign-in failure", async () => {
+  configure(); const state = "s".repeat(43);
+  const fetch = vi.fn().mockResolvedValue(Response.json({ error: "oauth_failed" }, { status: 503 })); vi.stubGlobal("fetch", fetch);
+  const response = await accountProxy(request("argos_product_consent_v2=granted; argos_oauth_" + state + "=browser; argos_return_" + state + "=/en/account/settings; argos_intent_" + state + "=link", "auth/oauth/google/callback?state=" + state + "&code=synthetic", "GET"), ["auth", "oauth", "google", "callback"]);
+  expect(response.status).toBe(303); expect(fetch).toHaveBeenCalledOnce();
+  expect(response.headers.get("location")).toContain("/en/account/settings");
+});

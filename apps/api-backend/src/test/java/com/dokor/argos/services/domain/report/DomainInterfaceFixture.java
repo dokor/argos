@@ -247,7 +247,7 @@ final class DomainInterfaceFixture {
                                         accounts, sessions, fixture.mapper, clock), org.mockito.Mockito.mock(com.dokor.argos.services.analytics.AccountJourneyService.class)))
                 .register(new ConnectedProfilesWs(sessions, profiles))
                 .register(new DomainDiscoveriesWs(discovery, csrf))
-                .register(new DomainBatchesWs(batches, csrf))
+                .register(new DomainBatchesWs(batches, csrf, org.mockito.Mockito.mock(com.dokor.argos.services.analytics.AccountJourneyService.class)))
                 .register(new DomainSummariesWs(summaries))
                 .register(
                         new AccountOverviewWs(

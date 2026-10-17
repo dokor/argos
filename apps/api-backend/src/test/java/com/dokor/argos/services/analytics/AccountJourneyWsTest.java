@@ -75,4 +75,24 @@ class AccountJourneyWsTest {
         ws.callback("google", "state", "code");
         verifyNoInteractions(journey);
     }
+    @Test void domainBatchCountsFirstUseOnlyForNewAdmissionsWithoutExposingTheOwner() throws Exception {
+        var batches = mock(com.dokor.argos.services.connected.batch.BatchService.class);
+        var csrf = mock(AccountCsrf.class); when(csrf.require(request)).thenReturn("csrf");
+        var endpoint = new com.dokor.argos.webservices.api.account.DomainBatchesWs(batches, csrf, journey);
+        var requests = endpoint.getClass().getDeclaredField("requests"); requests.setAccessible(true);
+        requests.set(endpoint, (Provider<ContainerRequestContext>) () -> request);
+        var admitted = new com.dokor.argos.services.connected.contract.ConnectedContracts.AdmittedBatch(
+                "1", "2", com.dokor.argos.services.connected.contract.ConnectedContracts.BatchStatus.QUEUED, 2L,
+                "/account/domains/2/batches/1");
+        when(batches.createObserved("auth", "csrf", "key", null)).thenReturn(
+                new com.dokor.argos.services.connected.batch.BatchService.Creation(admitted, 101, true));
+        assertEquals(admitted, endpoint.create("auth", "key", null).getEntity());
+        verify(journey).record(AccountJourneyEvent.ACTIVATED, 101L, 101L, "none", "en", "Bearer server");
+        clearInvocations(journey);
+        when(batches.createObserved("auth", "csrf", "key", null)).thenReturn(
+                new com.dokor.argos.services.connected.batch.BatchService.Creation(admitted, 101, false));
+        assertEquals(admitted, endpoint.create("auth", "key", null).getEntity());
+        verifyNoInteractions(journey);
+    }
+
 }

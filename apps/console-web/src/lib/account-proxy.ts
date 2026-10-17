@@ -228,7 +228,7 @@ export async function accountProxy(request: NextRequest, parts: string[]): Promi
     const upstream = await fetch((process.env.API_BASE ?? "http://api-backend:8081") + "/api/account/" + path + (query.size ? "?" + query : ""), {
       method: request.method, headers, ...(body !== undefined ? { body } : {}), cache: "no-store", redirect: "error", signal: AbortSignal.timeout(15000),
     });
-    if (!upstream.ok && headers.has("X-Argos-Measurement") && (path === "auth/register" || path === "auth/login" || callback)) {
+    if (!upstream.ok && headers.has("X-Argos-Measurement") && (path === "auth/register" || path === "auth/login" || (callback && request.cookies.get("argos_intent_" + state)?.value !== "link"))) {
       await count({ event: "account_auth_rejected", dimensions: { route: path === "auth/register" ? "/account/register" : "/account/sign-in", lang: headers.get("Accept-Language") === "en" ? "en" : "fr", placement: "form" }, errorCategory: upstream.status === 429 ? "rate_limit" : upstream.status >= 500 ? "service" : "validation" });
     }
     let data = await upstream.text();
