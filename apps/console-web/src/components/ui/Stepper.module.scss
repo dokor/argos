@@ -1,0 +1,87 @@
+@use "../../styles/tokens" as t;
+
+.steps {
+  display: flex;
+  list-style: none;
+  padding: t.$space-2 0;
+  margin: 0 0 t.$space-6;
+}
+
+.step {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: t.$space-3;
+  text-align: center;
+  color: t.$text-muted;
+
+  &:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    top: 19px;
+    left: calc(50% + 28px);
+    width: calc(100% - 56px);
+    height: 2px;
+    background: t.$border;
+  }
+
+  &[data-state="completed"] {
+    &::after { background: t.$brand; }
+    .marker {
+      background: t.$brand-soft;
+      border-color: t.$brand;
+      color: t.$brand;
+    }
+    .label { color: t.$text; }
+  }
+
+  &[data-state="current"] {
+    .marker {
+      background: t.$brand;
+      border-color: t.$brand;
+      color: t.$on-brand;
+      box-shadow: 0 0 0 4px t.$brand-soft;
+    }
+    .label, .status { color: t.$brand; }
+    .label { font-weight: 700; }
+  }
+}
+
+.marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border: 1px solid t.$text-muted;
+  border-radius: t.$radius-pill;
+  background: t.$surface;
+  font-size: t.$text-lg;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.text { display: grid; gap: t.$space-1; padding-inline: t.$space-2; min-width: 0; }
+.label { color: t.$text-muted; font-size: t.$text-md; font-weight: 550; overflow-wrap: anywhere; }
+.status { font-size: t.$text-xs; }
+
+@media (max-width: 540px) {
+  .steps { flex-direction: column; gap: t.$space-6; }
+  .step {
+    flex-direction: row;
+    text-align: start;
+    gap: t.$space-4;
+
+    &:not(:last-child)::after {
+      top: 48px;
+      left: 19px;
+      width: 2px;
+      height: calc(100% - 32px);
+    }
+  }
+  .text { padding: 0; }
+}

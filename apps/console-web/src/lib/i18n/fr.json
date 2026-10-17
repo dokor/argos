@@ -1071,6 +1071,12 @@
     "stepScope": "1. Périmètre",
     "stepSelection": "2. Sélection",
     "stepLaunch": "3. Confirmation",
+    "steps": {
+      "scope": "Périmètre",
+      "selection": "Sélection",
+      "confirmation": "Confirmation",
+      "status": { "completed": "Terminée", "current": "En cours", "upcoming": "À venir" }
+    },
     "hostname": "Nom de domaine",
     "hostHint": "Domaine avec ou sans http:// ou https://, sans chemin ni port (slash final accepté). Le protocole est ignoré ; seul cet hôte est analysé, sans ses sous-domaines. Le préfixe www. est autorisé si vous le saisissez ; www et le domaine sans www restent deux hôtes distincts.",
     "targetUnavailable": "La cible ne peut pas être validée : adresse non publique, résolution DNS indisponible ou délai réseau dépassé. Vérifiez cet hôte ou réessayez.",
