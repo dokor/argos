@@ -1060,6 +1060,7 @@ class AccountLifecycleIT extends MariaDbReportFixture {
                                             new AccountRateLimiter(dao, tokens, clock, settings), new AccountSitesService(dao,sessions,new UrlNormalizer(),new DomainService(new DomainDao(dao.transactions)),new AuditDao(dao.transactions),clock),new AccountHistoryService(dao,sessions,mapper,clock)));
             config.register(new com.dokor.argos.webservices.api.account.DomainDiscoveriesWs(discoveries(),new AccountCsrf(settings)));
             config.register(new com.dokor.argos.webservices.api.account.UsageHistoryWs(new UsageHistoryService(sessions,new UsagePolicy(ConfigFactory.empty()),clock)));
+            config.register(new com.dokor.argos.webservices.api.account.UsageTimelineWs(new UsageTimelineService(sessions,new UsagePolicy(ConfigFactory.empty()),clock)));
             config.register(new com.dokor.argos.webservices.api.account.ConnectedAnalysesWs(connectedAnalyses(),new AccountCsrf(settings)));
             config.register(new com.dokor.argos.webservices.api.account.AdminWs(administration(),new AccountCsrf(settings)));
             config.register(new com.dokor.argos.webservices.api.feedback.FeedbackWs(feedback(),new AccountCsrf(settings),new AccountRateLimiter(dao,tokens,clock,settings)));
@@ -1945,6 +1946,29 @@ class AccountLifecycleIT extends MariaDbReportFixture {
             assertEquals(1,mapper.readTree(response.body()).get("total").asInt());
         }
         assertEquals(original,dao.transaction(c->dao.session(a.context().session().getId(),c,false)).getLastActivityAt());
+    }
+
+    @Test void usageTimelineHttpEnforcesOwnerVerificationAndReadOnlySessionActivity() throws Exception {
+        var owner=user("timeline-owner@example.com",true);var other=user("timeline-other@example.com",true);var pending=user("timeline-pending@example.com",false);
+        var run=personal.create("https://example.com/private-owner-page",bearer(owner),CSRF).audit();
+        sql("UPDATE ARG_USAGE_RUN SET state='COUNTED',counted_at='2026-10-10',period='2026-10' WHERE id="+run.runId());
+        var original=dao.transaction(c->dao.session(owner.context().session().getId(),c,false)).getLastActivityAt();clock.now=clock.now.plusSeconds(30);
+        String path="/account/usage/timeline?granularity=DAY&dimension=URL&from=2026-10-01&until=2026-10-15";
+        try(var http=new HttpFixture()) {
+            assertEquals(401,http.call("GET",path,null,null,false).statusCode());
+            assertEquals(403,http.call("GET",path,bearer(pending),null,false).statusCode());
+            var response=http.call("GET",path,bearer(owner),null,false);
+            assertEquals(200,response.statusCode(),response.body());assertTrue(response.headers().firstValue("cache-control").orElse("").contains("no-store"));
+            var own=mapper.readTree(response.body());assertEquals(1,own.get("total").asLong());assertTrue(response.body().contains("private-owner-page"));
+            var foreign=http.call("GET",path+"&filter="+run.auditId(),bearer(other),null,false);
+            assertEquals(200,foreign.statusCode());assertEquals(0,mapper.readTree(foreign.body()).get("total").asLong());assertFalse(foreign.body().contains("private-owner-page"));
+            assertEquals(400,http.call("GET",path+"&ownerId="+owner.context().user().getId(),bearer(other),null,false).statusCode());
+            assertEquals(400,http.call("GET",path+"&dimension=GLOBAL",bearer(owner),null,false).statusCode());
+        }
+        assertEquals(original,dao.transaction(c->dao.session(owner.context().session().getId(),c,false)).getLastActivityAt());
+        auth.archive(bearer(owner),CSRF,true);
+        var timeline=new UsageTimelineService(sessions,new UsagePolicy(ConfigFactory.empty()),clock);
+        error(401,()->timeline.timeline(bearer(owner),"DAY","GLOBAL","2026-10-01","2026-10-15",List.of(),null));
     }
 
     private com.dokor.argos.services.connected.discovery.DiscoveryService discoveries(){

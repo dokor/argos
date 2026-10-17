@@ -1255,5 +1255,20 @@
   "quotaBlocked": "No credits remaining for another analysis.",
   "usage": "View my quotas",
   "back": "Back to overview"
+},
+"usageTimeline": {
+  "title": "Consumption history",
+  "intro": "Credits actually consumed, dated when each report was published. Reservations and failures without a report are excluded.",
+  "granularity": "Time scale", "DAY": "Day", "MONTH": "Month", "YEAR": "Year",
+  "dimension": "Breakdown", "GLOBAL": "Total", "DOMAIN": "Site / domain", "URL": "URL",
+  "dimensionHint": "A site is an exact hostname: example.fr, www.example.fr and other subdomains stay separate. URLs follow Argos’s normalized identity.",
+  "period": "Period", "days30": "Last 30 days", "days90": "Last 90 days", "months12": "Last 12 months", "months36": "Last 36 months", "years5": "Last 5 years", "years10": "Last 10 years",
+  "from": "Start inclusive", "until": "End exclusive", "apply": "Apply dates", "rangeHint": "Maximum: 366 days, 60 months or 20 years. For months and years, choose the first day of the period.",
+  "total": "credits consumed", "selection": "in the selection", "all": "all sites and URLs", "other": "Others", "unknown": "Historical target unavailable",
+  "filters": "Isolate sites or URLs", "search": "Search targets", "searchAction": "Search", "clear": "Clear selection", "selected": "selected targets", "more": "Showing 20 results. Refine your search to find another target.", "filterHint": "Up to 20 targets. The top 5 are displayed; “Others” preserves the rest of the total.",
+  "table": "View data as a table", "date": "Period", "category": "Target", "credits": "Credits", "chart": "Credits consumed by period", "maximum": "Maximum per period", "point": "Period detail", "selectPeriod": "Show detail",
+  "empty": "No recorded debits for this selection", "emptyHint": "Change the period or clear the filters. Reservations remain visible in the ledger below.",
+  "loading": "Loading consumption history…", "error": "Consumption history could not be loaded. Try again.", "invalid": "Check the dates and the maximum range for the selected time scale.", "retry": "Try again",
+  "coverage": "Continuous ledger coverage since", "coverageHint": "Before this date, retained data may be incomplete. A dash means no confirmed data, rather than a confirmed zero.", "coverageUnknown": "The start of ledger coverage is unknown. History may be incomplete.", "partial": "Partial history", "undated": "historical debits without a date, excluded from the chart", "timezone": "Quota timezone"
 }
 }
