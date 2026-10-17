@@ -4,7 +4,7 @@ import { chromium } from '../../apps/playwright-service/node_modules/playwright/
 
 const base = process.env.HEADER_BASE_URL ?? 'http://127.0.0.1:3000';
 assert.ok(['127.0.0.1', 'localhost'].includes(new URL(base).hostname), 'Local frontend only');
-const output = 'outputs/ui-review';
+const output = 'outputs/ui-review/account-journey';
 await mkdir(output, { recursive: true });
 // Run the read-only preview backend on 3018 and build/start Next with that API_BASE.
 const browser = await chromium.launch();
@@ -19,6 +19,8 @@ try {
     const route = (lang === 'en' ? '/en' : '') + '/account/admin/analytics';
     assert.equal((await page.goto(base + route)).status(), 200);
     await page.locator('main dl dd').filter({ hasText: /^24$/ }).waitFor();
+    await page.getByRole('heading', { name: lang === 'fr' ? 'Du compte au premier usage' : 'From registration to first use', exact: true }).waitFor();
+    await page.getByRole('region', { name: lang === 'fr' ? 'Retours après inscription' : 'Returns after registration', exact: true }).getByText(lang === 'fr' ? 'Indisponible' : 'Unavailable', { exact: true }).waitFor();
     await page.evaluate(() => document.fonts.ready);
     assert.equal(await page.locator('h1').count(), 1);
     assert.equal(await page.locator('nav a[href$="/dashboard"]').count(), 0);

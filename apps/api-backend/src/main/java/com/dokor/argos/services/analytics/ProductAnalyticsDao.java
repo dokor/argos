@@ -63,7 +63,7 @@ public class ProductAnalyticsDao {
     public void attribute(long runId,AnalyticsDimensions d,Instant now) {
         transactions.executeAndReturn(connection -> {
             Instant since; try { since=collectionWindow(connection); if(since==null || now.isBefore(since))return null; } catch(SQLException e){throw new IllegalStateException("Measurement state unavailable");}
-            try(var query=connection.prepareStatement("INSERT IGNORE INTO ARG_PRODUCT_AUDIT_ATTR(run_id,source_route,locale,placement,created_at,audience) SELECT ?,?,?,?,?,IF(owner_user_id IS NULL,'visitor','account') FROM ARG_AUDIT_RUN WHERE id=? AND created_at>=?")) {
+            try(var query=connection.prepareStatement("INSERT IGNORE INTO ARG_PRODUCT_AUDIT_ATTR(run_id,source_route,locale,placement,created_at,audience) SELECT ?,?,?,?,?,CASE WHEN owner_user_id IS NULL THEN 'visitor' ELSE 'account' END FROM ARG_AUDIT_RUN WHERE id=? AND created_at>=?")) {
                 query.setLong(1,runId);dimensions(query,2,d);query.setTimestamp(5,Timestamp.from(now),utc());query.setLong(6,runId);query.setTimestamp(7,Timestamp.from(since),utc());
                 int inserted = query.executeUpdate();
                 collected(connection,now,inserted);

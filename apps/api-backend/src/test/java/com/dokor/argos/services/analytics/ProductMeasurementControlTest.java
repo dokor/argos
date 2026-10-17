@@ -28,9 +28,9 @@ class ProductMeasurementControlTest {
             s.execute("CREATE TABLE ARG_PRODUCT_SETTING(id BIGINT PRIMARY KEY,enabled BOOLEAN,version BIGINT,enabled_since TIMESTAMP,last_collected_at TIMESTAMP)");
             s.execute("INSERT INTO ARG_PRODUCT_SETTING VALUES(1,FALSE,0,NULL,NULL)");
             s.execute("CREATE TABLE ARG_ADMIN_EVENT(id BIGINT PRIMARY KEY,actor_id BIGINT,target_id BIGINT,old_offer VARCHAR(16),new_offer VARCHAR(16),old_limit BIGINT,new_limit BIGINT,created_at TIMESTAMP,old_state VARCHAR(16),new_state VARCHAR(16),reason_code VARCHAR(32),request_id VARCHAR(64),event_type VARCHAR(32),old_enabled BOOLEAN,new_enabled BOOLEAN)");
-            s.execute("CREATE TABLE ARG_PRODUCT_AUDIT_ATTR(run_id BIGINT PRIMARY KEY,source_route VARCHAR(100),locale VARCHAR(8),placement VARCHAR(32),created_at TIMESTAMP,first_viewed_at TIMESTAMP)");
-            s.execute("CREATE TABLE ARG_AUDIT_RUN(id BIGINT PRIMARY KEY,created_at TIMESTAMP)");
-            s.execute("INSERT INTO ARG_AUDIT_RUN VALUES(1,'2000-01-01'),(2,'2026-10-16 10:00:00')");
+            s.execute("CREATE TABLE ARG_PRODUCT_AUDIT_ATTR(run_id BIGINT PRIMARY KEY,source_route VARCHAR(100),locale VARCHAR(8),placement VARCHAR(32),created_at TIMESTAMP,first_viewed_at TIMESTAMP,audience VARCHAR(16) DEFAULT 'unknown')");
+            s.execute("CREATE TABLE ARG_AUDIT_RUN(id BIGINT PRIMARY KEY,created_at TIMESTAMP,owner_user_id BIGINT)");
+            s.execute("INSERT INTO ARG_AUDIT_RUN VALUES(1,'2000-01-01',NULL),(2,'2026-10-16 10:00:00',NULL)");
             s.execute("CREATE TABLE ARG_PRODUCT_EVENT_COUNT(event_day DATE,event_name VARCHAR(100),source_route VARCHAR(100),locale VARCHAR(8),placement VARCHAR(32),error_category VARCHAR(32),event_count BIGINT DEFAULT 1,PRIMARY KEY(event_day,event_name,source_route,locale,placement,error_category))");
         }
         dao = new AccountDao(new TransactionManagerQuerydsl(source,new Configuration(MySQLTemplates.DEFAULT)));
@@ -83,7 +83,7 @@ class ProductMeasurementControlTest {
         analytics.count(event,clock.instant());
         analytics.attribute(1,d,clock.instant()); // Old run: no retrospective attribution.
         analytics.attribute(2,d,clock.instant());
-        try(var c=source.getConnection();var s=c.createStatement()) {s.execute("INSERT INTO ARG_PRODUCT_AUDIT_ATTR VALUES(3,'/','fr','form','2000-01-01',NULL)");}
+        try(var c=source.getConnection();var s=c.createStatement()) {s.execute("INSERT INTO ARG_PRODUCT_AUDIT_ATTR VALUES(3,'/','fr','form','2000-01-01',NULL,'unknown')");}
         analytics.viewed(3,clock.instant());
         control(true).change("auth","csrf",change(false,1));
         analytics.count(event,clock.instant().plusSeconds(1));
