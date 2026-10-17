@@ -6,7 +6,7 @@ http.createServer((req,res)=>{
   if(req.method!=='GET' && req.method!=='HEAD'){mutations++;return res.writeHead(405).end();}
   if(req.url==='/slow'){
     slowHits++;
-    const timer=setTimeout(()=>res.end('<h1>Late fixture</h1>'),30000);
+    const timer=setTimeout(()=>res.end('<h1>Late fixture</h1>'),60000);
     res.on('close',()=>clearTimeout(timer));
     return;
   }

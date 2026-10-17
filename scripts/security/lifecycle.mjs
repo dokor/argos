@@ -34,10 +34,13 @@ const proxyHits = () => new Promise((resolve, reject) => {
 await idle();
 const beforeTimeout = await proxyHits();
 const started = performance.now();
-const expired = await post('/slow', 8000);
+// Lighthouse initializes its gathering pipeline before navigating. The initial
+// eight-second fixture budget expired before that navigation on both native CPUs.
+const timeoutMs = runtime ? 8000 : 20000;
+const expired = await post('/slow', timeoutMs);
 assert.equal(expired.status, 504);
 await expired.text();
-assert.ok(performance.now() - started < 18000, 'Deadline exceeded with cleanup margin');
+assert.ok(performance.now() - started < timeoutMs + 10000, 'Deadline exceeded with cleanup margin');
 assert.ok(await proxyHits() > beforeTimeout, 'Timeout must reach slow fixture');
 await idle();
 console.log('PASS timeout, slow fixture reached, no live Chrome');
@@ -48,7 +51,7 @@ const pending = fetch(endpoint, { method: 'POST', headers: { 'content-type': 'ap
   .then(r => ({ response: r.status }), () => ({ disconnected: true }));
 let reached = false;
 try {
-  for (let i = 0; i < 100; i++) { if (await proxyHits() > beforeDisconnect) { reached = true; break; } await pause(100); }
+  for (let i = 0; i < 250; i++) { if (await proxyHits() > beforeDisconnect) { reached = true; break; } await pause(100); }
 } finally { abort.abort(); }
 assert.ok(reached, 'Disconnect test must reach slow fixture');
 assert.equal((await pending).disconnected, true);

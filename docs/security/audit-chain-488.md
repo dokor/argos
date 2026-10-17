@@ -120,7 +120,8 @@ egress, public page collection, private redirects, frames, worker/fetch/WebSocke
 requests and absence of the synthetic credential in outputs/logs. MariaDB CI runs
 `AuditAdmissionIT` for concurrent queue saturation, slot release and rollback.
 Both architecture jobs also run `scripts/security/lifecycle.mjs` in each collector:
-an eight-second deadline must reach a controlled slow fixture and return 504,
+a deadline (runtime 8 s / Lighthouse 20 s, including browser/gatherer startup)
+must reach a controlled 60-second slow fixture and return 504,
 client disconnection must cancel an already started navigation, no live Chrome
 process may remain within ten seconds, and a subsequent audit must succeed without
 restart or OOM. Public fixture counters prove that unsafe methods never arrived;
