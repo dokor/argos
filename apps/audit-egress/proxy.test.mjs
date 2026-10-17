@@ -48,7 +48,8 @@ test('HTTP validation precedes the transport, including direct API use and redir
     request:(options,callback)=>{connections++;assert.equal(options.host,'8.8.8.8');assert.equal(options.headers.host,'example.com');
       assert.equal(options.headers.authorization,undefined);return http.request({...options,host:'127.0.0.1',port:fixturePort},callback);}}));
   const good=await fetchProxy(proxy,'http://example.com/',{headers:{authorization:'Bearer private'}});assert.equal(good.status,302);
-  for(const [url,method] of [['http://127.0.0.1/secret','GET'],['http://example.com:8080','GET'],['file:///tmp/test','GET'],['http://example.com/','POST']])
+  for(const [url,method] of [['http://127.0.0.1/secret','GET'],['http://example.com:8080','GET'],
+    ['http://%65xample.com/','GET'],['http://example%2ecom/','GET'],['file:///tmp/test','GET'],['http://example.com/','POST']])
     assert.equal((await fetchProxy(proxy,url,{method})).status,403);
   assert.equal(connections,1);
 });
