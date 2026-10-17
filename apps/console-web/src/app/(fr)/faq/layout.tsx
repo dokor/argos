@@ -1,3 +1,4 @@
+import JsonLd from "@/components/site/JsonLd";
 import fr from "@/lib/i18n/fr.json";
 import { localizedMetadata } from "@/lib/i18n/metadata";
 export const metadata = localizedMetadata("/faq", "fr", fr.faq.meta.title, fr.faq.meta.description);
@@ -8,5 +9,5 @@ const jsonLd = {
   }))),
 };
 export default function FaqLayout({ children }: { children: React.ReactNode }) {
-  return <><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />{children}</>;
+  return <><JsonLd data={jsonLd} />{children}</>;
 }

@@ -42,5 +42,7 @@ certificat par défaut et ne participent pas aux contrôles du nom audité. Leur
 présence ne masque aucun défaut d'une chaîne obtenue avec SNI. Une cible IP
 littérale utilise en revanche son certificat sans SNI. Aucune chaîne pertinente
 ou un indicateur SNI mal formé conserve une mesure inconnue.
-Le contrat `analysis-measurements-v5` distingue cette sélection corrigée des
+Depuis `analysis-measurements-v5`, le contrat distingue cette sélection corrigée des
 anciens rapports ; les empreintes et les rapports historiques restent figés.
+La version courante `analysis-measurements-v6` inclut également les
+[seuils d’expiration 30/15 jours](../security/web-response-policy.md).

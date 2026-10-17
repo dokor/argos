@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import Link from "next/link";
+import Link from "@/components/PageLink";
 import { useLang } from "@/lib/i18n/LangContext";
 import { createLogger, safeError } from "@/lib/logger";
 import ArgosIcon from "@/components/ArgosIcon";

@@ -1,3 +1,4 @@
+import { injectAxe } from './inject-axe.mjs';
 import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
 import { chromium } from "../../apps/playwright-service/node_modules/playwright/index.mjs";
@@ -124,9 +125,7 @@ try {
             ),
             name + ": overflow",
           );
-          await page.addScriptTag({
-            path: "apps/console-web/node_modules/axe-core/axe.min.js",
-          });
+          await injectAxe(page);
           const violations = await page.evaluate(async () =>
             (
               await window.axe.run(

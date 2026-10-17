@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useSyncExternalStore } from "react";
-import Link from "next/link";
+import Link from "@/components/PageLink";
 import { usePathname } from "next/navigation";
 import { accountRoutes, frenchPath, languageRoutes, localizedPath } from "@/lib/i18n/routes";
 import { useLang, Lang } from "@/lib/i18n/LangContext";
