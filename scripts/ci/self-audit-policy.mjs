@@ -32,6 +32,18 @@ export class ControlError extends Error {
 }
 export const requireControl = (condition, code) => { if (!condition) throw new ControlError(code); };
 
+export function normalizeServices(value) {
+  const selected = typeof value === 'string' ? [value] : value;
+  requireControl(Array.isArray(selected) && selected.length > 0 && selected.length <= SERVICES.length
+    && selected.every(service => SERVICES.includes(service))
+    && new Set(selected).size === selected.length, 'configuration-invalid');
+  return SERVICES.filter(service => selected.includes(service));
+}
+
+export function parseServices(value) {
+  try { return normalizeServices(JSON.parse(value)); } catch { return null; }
+}
+
 export function analysisKey(deployment, sample, invocation) {
   const hex = createHash('sha256').update(JSON.stringify([POLICY, SITE, deployment, invocation, sample])).digest('hex');
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`;
@@ -83,9 +95,11 @@ export function ticketMarker(key) {
 
 /** Validate and reconstruct at the write-permission boundary, discarding extra fields. */
 export function ticketInput(evidence, expectedSha, service) {
-  requireControl(SHA.test(expectedSha) && SERVICES.includes(service)
+  const selected = normalizeServices(service);
+  requireControl(SHA.test(expectedSha)
     && evidence?.schemaVersion === 1 && evidence.policy === POLICY
-    && evidence.expectedSha === expectedSha && evidence.service === service
+    && evidence.expectedSha === expectedSha
+    && JSON.stringify(normalizeServices(evidence.services ?? evidence.service)) === JSON.stringify(selected)
     && ['GO', 'SITE_NO_GO'].includes(evidence.outcome)
     && Array.isArray(evidence.findings) && evidence.findings.length <= Object.keys(CHECKS).length,
   'evidence-invalid');

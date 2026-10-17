@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 import { SITE, POLICY, SERVICES, CHECKS, ControlError, analysisKey, evaluateReports,
-  ticketInput, ticketMarker } from './self-audit-policy.mjs';
+  ticketInput, ticketMarker, normalizeServices, parseServices } from './self-audit-policy.mjs';
 import { accountClient, collectAudit, deploymentSnapshot } from './self-audit.mjs';
 import { githubApi, synchronizeTickets, ticketBody } from './self-audit-tickets.mjs';
 
@@ -136,6 +136,32 @@ test('wrong or unknown deployed SHA, unhealthy/restarting runtime and changed im
   assert.throws(() => deploymentSnapshot(sha, 'console-web', () => { throw new Error(secret); }), /runtime-unavailable/);
 });
 
+test('a grouped deployment verifies every selected revision and permits older unaffected services', () => {
+  const selected = ['api-backend', 'console-web'];
+  for (const stale of SERVICES) {
+    let current;
+    const base = dockerFixture();
+    const docker = args => {
+      if (args[0] === 'container') current = args[2];
+      const value = JSON.parse(base(args));
+      if (args[0] === 'image' && current === stale) value[0].Config.Labels['org.opencontainers.image.revision'] = 'd'.repeat(40);
+      return JSON.stringify(value);
+    };
+    if (selected.includes(stale)) assert.throws(() => deploymentSnapshot(sha, selected, docker), /revision-unverified/);
+    else assert.equal(deploymentSnapshot(sha, selected, docker).length, 4);
+  }
+});
+
+test('service lists reject empty, duplicated, unknown or malformed deployment input', () => {
+  assert.deepEqual(normalizeServices(['console-web', 'api-backend']), ['api-backend', 'console-web']);
+  assert.deepEqual(parseServices('["console-web"]'), ['console-web']);
+  for (const value of [null, [], ['console-web', 'console-web'], ['unknown'], {}, 1]) {
+    assert.throws(() => normalizeServices(value), ControlError);
+    assert.equal(parseServices(JSON.stringify(value)), null);
+  }
+  assert.equal(parseServices('not-json'), null);
+});
+
 function collectorFixture({ failed, pending = false, reject, change = false } = {}) {
   const calls = [];
   let samples = 0, snapshots = 0, clock = 0;
@@ -165,6 +191,18 @@ test('full control authenticates, checks usage, creates exactly two idempotent p
   const creates = f.calls.filter(c => c.path === '/api/account/analyses');
   assert.equal(creates.length, 2); assert.notEqual(creates[0].options.key, creates[1].options.key);
   assert.equal(creates[0].options.retry, true); assert.ok(!JSON.stringify(result).includes(secret));
+});
+
+test('one grouped control creates two analyses in total and binds ticket evidence to all deployed services', async () => {
+  const f = collectorFixture();
+  f.options.services = SERVICES;
+  const result = await collectAudit(f.options);
+  assert.equal(result.outcome, 'GO');
+  assert.deepEqual(result.services, SERVICES);
+  assert.equal(f.calls.filter(call => call.path === '/api/account/analyses').length, 2);
+  assert.deepEqual(ticketInput(result, sha, SERVICES), [finding]);
+  assert.throws(() => ticketInput(result, sha, ['console-web']), ControlError);
+  assert.throws(() => ticketInput({ ...result, services: ['console-web'] }, sha, SERVICES), ControlError);
 });
 
 test('audit timeout, failed run, changed deployment, bad auth and quota never emit actionable findings', async () => {
@@ -199,7 +237,7 @@ test('CLI persists a filtered technical verdict, signals Actions and exits 2 wit
     const output = join(root, 'actions-output'), summary = join(root, 'actions-summary');
     const run = spawnSync(process.execPath, [fileURLToPath(new URL('./self-audit.mjs', import.meta.url))], {
       cwd: root, encoding: 'utf8', timeout: 10000,
-      env: { ...process.env, EXPECTED_SHA: secret, DEPLOYED_SERVICE: secret,
+      env: { ...process.env, EXPECTED_SHA: secret, DEPLOYED_SERVICES: secret,
         ARGOS_CI_EMAIL: secret, ARGOS_CI_PASSWORD: secret, GITHUB_OUTPUT: output, GITHUB_STEP_SUMMARY: summary },
     });
     assert.equal(run.status, 2, run.stderr);
@@ -326,9 +364,12 @@ test('deployment workflows call the same control only after deployment; credenti
   assert.match(workflow, /name: \$\{\{ needs.control.outputs.artifact_name \}\}/);
   assert.ok(!workflow.split('\n  tickets:')[0].includes('issues: write'));
   assert.ok(!workflow.split('\n  tickets:')[1].includes('ARGOS_CI_'));
-  for (const service of SERVICES) {
-    const caller = readFileSync(new URL(`../../.github/workflows/deploy-${service}.yml`, import.meta.url), 'utf8');
-    assert.match(caller, /post-deploy-audit:\s+needs: deploy\s+uses: \.\/\.github\/workflows\/post-deploy-audit.yml/);
-    assert.ok(caller.includes('service: ' + service));
-  }
+  const caller = readFileSync(new URL('../../.github/workflows/deploy.yml', import.meta.url), 'utf8');
+  assert.match(caller, /post-deploy-audit:\s+needs: \[changes, deploy, cleanup\]\s+uses: \.\/\.github\/workflows\/post-deploy-audit.yml/);
+  assert.equal(caller.split('uses: ./.github/workflows/post-deploy-audit.yml').length - 1, 1);
+  assert.ok(caller.includes('services: ${{ needs.changes.outputs.services }}'));
+  assert.match(caller, /group: deploy-production\s+queue: max\s+cancel-in-progress: false/);
+  assert.match(caller, /fail-fast: false\s+max-parallel: 1/);
+  assert.ok(!workflow.includes('DEPLOYED_SERVICE:'));
+  assert.ok(workflow.includes('DEPLOYED_SERVICES: ${{ inputs.services }}'));
 });

@@ -29,10 +29,10 @@ const cases = [
   ['audit browser harness', ['scripts/e2e/browser.mjs'], ['e2e']],
   ['visual harness only', ['scripts/e2e/connected-analysis.mjs'], []],
   ['visual manifest helper', ['scripts/e2e/acceptance-evidence.mjs'], ['frontend']],
-  ['dependency workflow only', ['.github/workflows/dependency-audit.yml'], ['dependency_frontend','dependency_playwright','dependency_lighthouse']],
-  ['authentication workflow only', ['.github/workflows/auth-experience.yml'], ['auth']],
   ['visual workflow only', ['.github/workflows/visual-regression.yml'], []],
-  ['component CI workflow', ['.github/workflows/ci.yml'], ['api','frontend','playwright','lighthouse']],
+  ['deployment routing', ['scripts/ci/deploy-paths.mjs'], ['frontend']],
+  ['deployment workflow', ['.github/workflows/deploy.yml'], ['frontend']],
+  ['post-deployment workflow', ['.github/workflows/post-deploy-audit.yml'], ['frontend']],
   ['contracts', ['scripts/contracts/generate-connected.py'], ['api','frontend','integration','e2e','auth']],
 ];
 for (const [name,paths,expected] of cases) test(name + ' selects only affected checks', () => {
@@ -40,14 +40,14 @@ for (const [name,paths,expected] of cases) test(name + ' selects only affected c
 });
 
 test('shared routing changes and explicit full runs exercise all checks', () => {
-  for (const paths of [['.github/workflows/changed-paths.yml'],['scripts/ci/changed-paths.mjs'],null]) assert.deepEqual(enabled(paths),all);
+  for (const paths of [['.github/workflows/ci.yml'],['scripts/ci/changed-paths.mjs'],null]) assert.deepEqual(enabled(paths),all);
 });
 
 test('multiple changed components combine their consumers', () => {
   assert.deepEqual(enabled(['apps/console-web/src/app/page.tsx','apps/playwright-service/app.test.mjs']),['auth','e2e','frontend','playwright']);
 });
 
-test('CLI uses merge-base for PRs, before..after for pushes, and full manual/scheduled runs', () => {
+test('CLI uses merge-base for PRs, before..after for pushes, full manual runs, and dependency-only scheduled runs', () => {
   const root=mkdtempSync(join(tmpdir(),'argos-ci-paths-'));
   const script=fileURLToPath(new URL('./changed-paths.mjs',import.meta.url));
   const output=join(root,'result.txt');
@@ -67,7 +67,8 @@ test('CLI uses merge-base for PRs, before..after for pushes, and full manual/sch
     assert.deepEqual(pr.selected,['api','auth','e2e','integration']);
     const push=run('push',base,head);assert.equal(push.result.status,0,push.result.stderr);
     assert.deepEqual(push.selected,['api','auth','e2e','frontend','integration'],'A removed frontend file must also select its consumers');
-    for(const event of ['workflow_dispatch','schedule']) assert.deepEqual(run(event,'','').selected,all);
+    assert.deepEqual(run('workflow_dispatch','','').selected,all);
+    assert.deepEqual(run('schedule','','').selected,['dependency_frontend','dependency_lighthouse','dependency_playwright']);
     assert.deepEqual(run('push','0'.repeat(40),head).selected,all);
     assert.notEqual(run('pull_request','',head).result.status,0,'Invalid diffs must fail so jobs take their full fallback');
     assert.notEqual(run('push','not-a-revision',head).result.status,0,'A failed Git comparison must not silently skip checks');

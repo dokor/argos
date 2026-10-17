@@ -3,7 +3,7 @@ name: Argos post-deployment audit
 on:
   workflow_call:
     inputs:
-      service:
+      services:
         required: true
         type: string
     secrets:
@@ -24,7 +24,7 @@ jobs:
       contents: read
     outputs:
       outcome: ${{ steps.audit.outputs.outcome }}
-      artifact_name: self-audit-${{ inputs.service }}-${{ github.sha }}-${{ github.run_attempt }}
+      artifact_name: self-audit-${{ github.sha }}-${{ github.run_attempt }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -38,7 +38,7 @@ jobs:
         continue-on-error: true
         env:
           EXPECTED_SHA: ${{ github.sha }}
-          DEPLOYED_SERVICE: ${{ inputs.service }}
+          DEPLOYED_SERVICES: ${{ inputs.services }}
           ARGOS_CI_EMAIL: ${{ secrets.ARGOS_CI_EMAIL }}
           ARGOS_CI_PASSWORD: ${{ secrets.ARGOS_CI_PASSWORD }}
         run: node scripts/ci/self-audit.mjs
@@ -46,7 +46,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: self-audit-${{ inputs.service }}-${{ github.sha }}-${{ github.run_attempt }}
+          name: self-audit-${{ github.sha }}-${{ github.run_attempt }}
           path: outputs/post-deploy-audit.json
           if-no-files-found: error
           retention-days: 14
@@ -84,5 +84,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           EXPECTED_SHA: ${{ github.sha }}
-          DEPLOYED_SERVICE: ${{ inputs.service }}
+          DEPLOYED_SERVICES: ${{ inputs.services }}
         run: node scripts/ci/self-audit-tickets.mjs

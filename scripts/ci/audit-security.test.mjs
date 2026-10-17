@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import test from 'node:test';
 import { classify } from './changed-paths.mjs';
 
-const workflow = readFileSync(new URL('../../.github/workflows/audit-security.yml', import.meta.url), 'utf8').replaceAll('\r\n', '\n');
+const workflow = readFileSync(new URL('../../.github/workflows/ci.yml', import.meta.url), 'utf8').replaceAll('\r\n', '\n');
 const gate = workflow.split('\n  security-result:\n')[1];
 const bash = process.platform === 'win32' ? join(process.env.ProgramFiles ?? 'C:/Program Files', 'Git/bin/bash.exe') : 'bash';
 
@@ -29,7 +29,7 @@ test('only a successful path classification outside the security scope can skip 
   assert.ok(gate.includes("if: ${{ always() && (needs.changes.result != 'success' || needs.changes.outputs.security != 'false') }}"));
   assert.equal(classify(['apps/console-web/src/app/page.tsx']).security, false);
   assert.equal(classify(['README.md']).security, false);
-  assert.equal(classify(['.github/workflows/audit-security.yml']).security, true);
+  assert.equal(classify(['.github/workflows/ci.yml']).security, true);
   assert.equal(classify(null).security, true);
 });
 

@@ -3,7 +3,7 @@ import { appendFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { setTimeout as sleep } from 'node:timers/promises';
-import { SITE, POLICY, SERVICES, SHA, ControlError, requireControl, analysisKey, evaluateReports } from './self-audit-policy.mjs';
+import { SITE, POLICY, SERVICES, SHA, ControlError, requireControl, normalizeServices, parseServices, analysisKey, evaluateReports } from './self-audit-policy.mjs';
 
 const IMAGE = /^sha256:[a-f0-9]{64}$/;
 const ID = /^[a-f0-9]{64}$/;
@@ -12,7 +12,8 @@ const dockerCommand = args => execFileSync('docker', args, {
 });
 
 export function deploymentSnapshot(expectedSha, service, docker = dockerCommand) {
-  requireControl(SHA.test(expectedSha) && SERVICES.includes(service), 'configuration-invalid');
+  const selected = normalizeServices(service);
+  requireControl(SHA.test(expectedSha), 'configuration-invalid');
   try {
     return SERVICES.map(name => {
       const [container] = JSON.parse(docker(['container', 'inspect', name]));
@@ -24,7 +25,7 @@ export function deploymentSnapshot(expectedSha, service, docker = dockerCommand)
       const [image] = JSON.parse(docker(['image', 'inspect', container.Image]));
       const revision = image.Config?.Labels?.['org.opencontainers.image.revision'];
       requireControl(image.Id === container.Image && SHA.test(revision)
-        && (name !== service || revision === expectedSha), 'revision-unverified');
+        && (!selected.includes(name) || revision === expectedSha), 'revision-unverified');
       return { service: name, containerId: container.Id, imageId: container.Image, revision,
         startedAt: container.State.StartedAt, restartCount: container.RestartCount };
     });
@@ -95,19 +96,21 @@ export function accountClient({ fetcher = fetch, wait = sleep } = {}) {
   };
 }
 
-export async function collectAudit({ expectedSha, service, email, password, invocation,
+export async function collectAudit({ expectedSha, service, services = service, email, password, invocation,
   snapshot = deploymentSnapshot, client = accountClient(), wait = sleep, now = Date.now } = {}) {
+  let selected = null;
+  try { selected = normalizeServices(services); } catch { /* Invalid input stays out of evidence. */ }
   const evidence = { schemaVersion: 1, policy: POLICY, expectedSha: SHA.test(expectedSha) ? expectedSha : null,
-    service: SERVICES.includes(service) ? service : null, outcome: 'CONTROL_FAILED', findings: [] };
+    services: selected, outcome: 'CONTROL_FAILED', findings: [] };
   try {
-    requireControl(SHA.test(expectedSha) && SERVICES.includes(service) && email && password
+    requireControl(SHA.test(expectedSha) && selected && email && password
       && typeof invocation === 'string' && /^[1-9][0-9]{0,19}:[1-9][0-9]{0,5}$/.test(invocation), 'configuration-invalid');
     // Authenticated usage proves the BFF, Java and database respond. Readiness
     // retries cover restarts; bad credentials and quotas are never bypassed.
     const healthDeadline = now() + 120000;
     let deployment;
     while (true) {
-      try { deployment = snapshot(expectedSha, service); await client.request('/api/account/auth/providers'); break; }
+      try { deployment = snapshot(expectedSha, selected); await client.request('/api/account/auth/providers'); break; }
       catch (error) {
         requireControl(now() < healthDeadline, 'health-timeout');
         if (error instanceof ControlError && ['authentication-failed', 'request-rejected', 'rate-limited'].includes(error.code)) throw error;
@@ -140,7 +143,7 @@ export async function collectAudit({ expectedSha, service, email, password, invo
         await wait(2000);
       }
     }
-    requireControl(JSON.stringify(deployment) === JSON.stringify(snapshot(expectedSha, service)), 'deployment-changed');
+    requireControl(JSON.stringify(deployment) === JSON.stringify(snapshot(expectedSha, selected)), 'deployment-changed');
     Object.assign(evidence, evaluateReports(...reports));
   } catch (error) {
     evidence.reason = error instanceof ControlError ? error.code : 'control-failed';
@@ -149,7 +152,7 @@ export async function collectAudit({ expectedSha, service, email, password, invo
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const evidence = await collectAudit({ expectedSha: process.env.EXPECTED_SHA, service: process.env.DEPLOYED_SERVICE,
+  const evidence = await collectAudit({ expectedSha: process.env.EXPECTED_SHA, services: parseServices(process.env.DEPLOYED_SERVICES),
     email: process.env.ARGOS_CI_EMAIL, password: process.env.ARGOS_CI_PASSWORD,
     invocation: `${process.env.GITHUB_RUN_ID}:${process.env.GITHUB_RUN_ATTEMPT}` });
   try {

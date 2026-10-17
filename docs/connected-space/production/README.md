@@ -122,13 +122,13 @@ rapports ; les anciens liens ne sont pas conservés.
 
 ## 5. Lancement depuis GitHub Actions
 
-Les quatre workflows `deploy-*` acceptent un lancement manuel
+Le workflow `deploy.yml` accepte un lancement manuel avec le choix `service`
 (`workflow_dispatch`) sur `main` uniquement. Les déclenchements automatiques
 sur les chemins existants sont conservés. Réactiver un workflow ne rejoue pas
 les pushes survenus pendant sa désactivation.
 
-Avant la première bascule Clarté, relever le SHA de `main` dont les six workflows
-de validation sont verts. Garder ce SHA identique pendant les quatre lancements
+Avant la première bascule Clarté, relever le SHA de `main` dont les contrôles CI et Secrets
+sont verts. Garder ce SHA identique pendant les quatre lancements
 et vérifier le `headSha` de chaque run. Ne pas fusionner d'autres changements
 pendant la bascule. Les fichiers actifs sont `/srv/configs/api-backend/prod.conf`
 et `/srv/configs/console-web/.env.prod` ; les pipelines ne les remplacent pas.
@@ -139,19 +139,19 @@ la console, l'ancienne API et les deux collecteurs avant les lancements pour
 abandonner les travaux en cours. Ne pas arrêter MariaDB ni les autres applications
 du serveur. Vérifier qu'aucune instance API annexe n'écrit dans la base Argos.
 
-Réactiver et lancer les workflows un par un, en attendant le succès de chacun :
+Réactiver le workflow et lancer les services un par un, en attendant le succès de chacun :
 
-1. `deploy-playwright-service.yml`, puis contrôler l'état healthy du collecteur.
-2. `deploy-lighthouse-service.yml`, puis contrôler l'état healthy du collecteur.
-3. `deploy-api-backend.yml`, puis vérifier le démarrage, le succès de V27 et les
+1. `deploy.yml` avec `service=playwright-service`, puis contrôler l'état healthy du collecteur.
+2. `deploy.yml` avec `service=lighthouse-service`, puis contrôler l'état healthy du collecteur.
+3. `deploy.yml` avec `service=api-backend`, puis vérifier le démarrage, le succès de V27 et les
    compteurs SQL du [contrat de remise à zéro](../reset-v27.md).
-4. `deploy-console-web.yml`, puis effectuer les smoke tests et le bootstrap ADMIN.
+4. `deploy.yml` avec `service=console-web`, puis effectuer les smoke tests et le bootstrap ADMIN.
 
 Exemple pour le premier service, depuis un poste authentifié GitHub :
 
 ```sh
-gh workflow enable deploy-playwright-service.yml --repo dokor/argos
-gh workflow run deploy-playwright-service.yml --ref main --repo dokor/argos
+gh workflow enable deploy.yml --repo dokor/argos
+gh workflow run deploy.yml --ref main -f service=playwright-service --repo dokor/argos
 ```
 
 Un `up -d --build` réussi ne prouve pas que l'application a terminé son démarrage.

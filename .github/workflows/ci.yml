@@ -3,11 +3,12 @@ name: CI
 on:
   workflow_dispatch:
   pull_request:
-  push:
     branches: [main]
+  schedule:
+    - cron: '0 4 * * *'
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -15,7 +16,32 @@ permissions:
 
 jobs:
   changes:
-    uses: ./.github/workflows/changed-paths.yml
+    name: Detect changed paths
+    timeout-minutes: 5
+    runs-on: ubuntu-24.04
+    outputs:
+      api: ${{ steps.paths.outputs.api }}
+      frontend: ${{ steps.paths.outputs.frontend }}
+      playwright: ${{ steps.paths.outputs.playwright }}
+      lighthouse: ${{ steps.paths.outputs.lighthouse }}
+      integration: ${{ steps.paths.outputs.integration }}
+      auth: ${{ steps.paths.outputs.auth }}
+      security: ${{ steps.paths.outputs.security }}
+      e2e: ${{ steps.paths.outputs.e2e }}
+      dependency_frontend: ${{ steps.paths.outputs.dependency_frontend }}
+      dependency_playwright: ${{ steps.paths.outputs.dependency_playwright }}
+      dependency_lighthouse: ${{ steps.paths.outputs.dependency_lighthouse }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - id: paths
+        name: Classify changed paths
+        run: node scripts/ci/changed-paths.mjs
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
 
   api-backend-tests:
     name: API backend tests
@@ -153,3 +179,379 @@ jobs:
       - run: npm ci
       - run: npm run check
       - run: npm run test
+
+  integration:
+    name: MariaDB integration (11.4)
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.integration == 'true') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      mariadb:
+        image: mariadb:11.4
+        env:
+          MARIADB_ROOT_PASSWORD: synthetic-root-fixture
+          MARIADB_DATABASE: argos_credentials_test
+          MARIADB_USER: argos_fixture
+          MARIADB_PASSWORD: synthetic-fixture
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s --health-timeout=5s --health-retries=15
+    env:
+      ARGOS_TEST_CREDENTIALS_URL: jdbc:mariadb://127.0.0.1:3306/argos_credentials_test
+      ARGOS_TEST_CREDENTIALS_USER: argos_fixture
+      ARGOS_TEST_CREDENTIALS_PASSWORD: synthetic-fixture
+      ARGOS_TEST_MARIADB_URL: jdbc:mariadb://127.0.0.1:3306/argos_progress_test
+      ARGOS_TEST_MARIADB_USER: argos_fixture
+      ARGOS_TEST_MARIADB_PASSWORD: synthetic-fixture
+      ARGOS_TEST_DOMAIN_CACHE_URL: jdbc:mariadb://127.0.0.1:3306/argos_domain_cache_test
+      ARGOS_TEST_DOMAIN_CACHE_USER: argos_fixture
+      ARGOS_TEST_DOMAIN_CACHE_PASSWORD: synthetic-fixture
+    defaults:
+      run:
+        working-directory: apps/api-backend
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: apps/api-backend/pom.xml
+      - name: Create isolated integration schemas
+        env:
+          DB_FIXTURE_CONTAINER: ${{ job.services.mariadb.id }}
+        run: |
+          docker exec "$DB_FIXTURE_CONTAINER" mariadb -uroot -psynthetic-root-fixture -e "
+            CREATE DATABASE argos_progress_test;
+            CREATE DATABASE argos_domain_cache_test;
+            CREATE DATABASE argos_querydsl_test;
+            GRANT ALL PRIVILEGES ON argos_progress_test.* TO 'argos_fixture'@'%';
+            GRANT ALL PRIVILEGES ON argos_domain_cache_test.* TO 'argos_fixture'@'%';
+            GRANT ALL PRIVILEGES ON argos_querydsl_test.* TO 'argos_fixture'@'%';
+          "
+      - name: Run MariaDB integration tests
+        run: >-
+          mvn --batch-mode -P mariadb-integration
+          -Dit.test=AdminStatisticsIT,ProblemStatisticsIT,PremiumWaitlistIT,AuditScopeIT,NotificationsIT,ReportSharingMigrationIT,ClarteFreshStartMigrationIT,ConnectedModelIT,AccountLifecycleIT,AccountSessionSecurityIT,AccountSecurityMigrationIT,ReportCredentialMigrationIT,AuditPublicationIT,AccountJourneyIT,ProductAnalyticsIT,ReportRetentionIT,AuditClaimIT,NewsletterPrivacyIT,AuditRunProgressIT,DomainAnalysisConcurrencyIT,AuditAdmissionIT,UsageIT,UsageTimelineIT,DiscoveryIT,BatchIT,DiagnosticMigrationIT,CanonicalCountsMigrationIT,OverviewIT
+          verify
+      - name: Verify packaged startup and explicit QueryDSL preview
+        env:
+          QUERYDSL_SMOKE_JDBC_URL: jdbc:mariadb://127.0.0.1:3306/argos_querydsl_test
+          QUERYDSL_SMOKE_USER: argos_fixture
+          QUERYDSL_DB_PASSWORD: synthetic-fixture
+        run: bash scripts/querydsl-smoke.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mariadb-integration-11.4-${{ github.sha }}
+          path: |
+            apps/api-backend/target/failsafe-reports/
+            apps/api-backend/target/querydsl-startup.log
+            apps/api-backend/target/querydsl-monitoring.json
+            apps/api-backend/target/querydsl-preview/
+          if-no-files-found: error
+          retention-days: 14
+
+  audit-e2e:
+    name: Controlled audit E2E
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.e2e == 'true') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      mariadb:
+        image: mariadb:11.4
+        env:
+          MARIADB_ROOT_PASSWORD: synthetic-root-fixture
+          MARIADB_DATABASE: argos_credentials_test
+          MARIADB_USER: argos_fixture
+          MARIADB_PASSWORD: synthetic-fixture
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s --health-timeout=5s --health-retries=15
+    env:
+      ARGOS_E2E: 'true'
+      ARGOS_TEST_CREDENTIALS_URL: jdbc:mariadb://127.0.0.1:3306/argos_credentials_test
+      ARGOS_TEST_CREDENTIALS_USER: argos_fixture
+      ARGOS_TEST_CREDENTIALS_PASSWORD: synthetic-fixture
+      ACCOUNT_ORIGIN: http://127.0.0.1:3000
+      API_BASE: http://127.0.0.1:8081
+      PLAYWRIGHT_SERVICE_URL: http://127.0.0.1:3016
+      LIGHTHOUSE_SERVICE_URL: http://127.0.0.1:3017
+      PLAYWRIGHT_TIMEOUT_SECONDS: '10'
+      LIGHTHOUSE_TIMEOUT_SECONDS: '30'
+      NEXT_TELEMETRY_DISABLED: '1'
+      APP_LOGS_ENABLED: 'false'
+      NEXT_PUBLIC_APP_LOGS_ENABLED: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: apps/api-backend/pom.xml
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.21.0'
+          cache: npm
+          cache-dependency-path: |
+            apps/console-web/package-lock.json
+            apps/playwright-service/package-lock.json
+            apps/lighthouse-service/package-lock.json
+      - run: npm ci --prefix apps/console-web
+      - run: npm ci --prefix apps/playwright-service
+      - run: npm ci --prefix apps/lighthouse-service
+      - name: Install controlled Chromium
+        working-directory: apps/playwright-service
+        run: npx playwright install --with-deps chromium
+      - name: Build frontend for the local backend
+        run: npm run build --prefix apps/console-web
+      - name: Start local frontend and controlled headless services
+        run: |
+          mkdir -p outputs
+          node --check scripts/e2e/headless.mjs
+          node --check scripts/e2e/browser.mjs
+          node scripts/e2e/headless.mjs > outputs/headless-e2e.log 2>&1 &
+          npm run start --prefix apps/console-web -- --hostname 127.0.0.1 > outputs/frontend-e2e.log 2>&1 &
+          node --input-type=module <<'JS'
+          for (const url of ['http://127.0.0.1:3016/health','http://127.0.0.1:3017/health','http://127.0.0.1:3000']) {
+            let ready=false;
+            for(let i=0;i<60;i++) {
+              try {if((await fetch(url)).ok) {ready=true;break;}} catch {}
+              await new Promise(resolve=>setTimeout(resolve,500));
+            }
+            if(!ready) throw new Error('Controlled service failed readiness');
+          }
+          JS
+      - name: Run real database and browser lifecycle
+        run: mvn --batch-mode -f apps/api-backend/pom.xml -P mariadb-integration -Dit.test=ControlledAuditE2eIT verify
+      - name: Rehearse consistent backup and isolated restore
+        env:
+          DB_FIXTURE_CONTAINER: ${{ job.services.mariadb.id }}
+        run: |
+          docker exec "$DB_FIXTURE_CONTAINER" mariadb-dump -uroot -psynthetic-root-fixture --single-transaction --hex-blob argos_credentials_test > outputs/controlled-backup.sql
+          docker exec "$DB_FIXTURE_CONTAINER" mariadb -uroot -psynthetic-root-fixture -e 'CREATE DATABASE argos_restore_test'
+          docker exec -i "$DB_FIXTURE_CONTAINER" mariadb -uroot -psynthetic-root-fixture argos_restore_test < outputs/controlled-backup.sql
+          query="SELECT COUNT(*), SHA2(GROUP_CONCAT(CONCAT(id,':',run_id,':',HEX(token_hash),':',SHA2(report_json,256)) ORDER BY id SEPARATOR '|'),256) FROM ARG_AUDIT_REPORT"
+          original=$(docker exec "$DB_FIXTURE_CONTAINER" mariadb -uroot -psynthetic-root-fixture -N argos_credentials_test -e "$query")
+          restored=$(docker exec "$DB_FIXTURE_CONTAINER" mariadb -uroot -psynthetic-root-fixture -N argos_restore_test -e "$query")
+          test "$original" = "$restored"
+          printf '%s\n' '{"fixture":"isolated-mariadb-11.4","backup":"single-transaction-hex-blob","restore":"PASS","reportCountAndHashDigestEqual":true}' > outputs/controlled-restore.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: controlled-e2e-${{ github.sha }}
+          path: |
+            outputs/controlled-e2e.json
+            outputs/controlled-e2e-error.log
+            outputs/controlled-restore.json
+            outputs/domain-e2e*.json
+            outputs/domain-e2e-error.log
+            outputs/admin-e2e*.json
+            outputs/admin-e2e-error.log
+            outputs/ui-review/clarte-domains/real/
+            outputs/ui-review/clarte-admin/real/
+            outputs/ui-review/clarte-evidence/real-*.pdf
+            apps/api-backend/target/failsafe-reports/
+          if-no-files-found: error
+          retention-days: 14
+
+  auth:
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.auth == 'true') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      mariadb:
+        image: mariadb:11.4
+        env:
+          MARIADB_ROOT_PASSWORD: synthetic-root-fixture
+          MARIADB_DATABASE: argos_credentials_test
+          MARIADB_USER: argos_fixture
+          MARIADB_PASSWORD: synthetic-fixture
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s --health-timeout=5s --health-retries=15
+    env:
+      ARGOS_TEST_CREDENTIALS_URL: jdbc:mariadb://127.0.0.1:3306/argos_credentials_test
+      ARGOS_TEST_CREDENTIALS_USER: argos_fixture
+      ARGOS_TEST_CREDENTIALS_PASSWORD: synthetic-fixture
+      ACCOUNT_ORIGIN: http://localhost:3000
+      API_BASE: http://127.0.0.1:33317
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: apps/api-backend/pom.xml
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.21.0'
+          cache: npm
+          cache-dependency-path: |
+            apps/console-web/package-lock.json
+            apps/playwright-service/package-lock.json
+      - run: npm ci --prefix apps/console-web
+      - run: npm ci --prefix apps/playwright-service
+      - working-directory: apps/playwright-service
+        run: npx playwright install --with-deps chromium
+      - name: Compile the isolated account fixture
+        working-directory: apps/api-backend
+        run: mvn --batch-mode -Duser.timezone=UTC test-compile dependency:build-classpath -Dmdep.includeScope=test -Dmdep.outputFile=target/auth-classpath.txt
+      - run: npm run build --prefix apps/console-web
+      - name: Start local fixture and frontend
+        run: |
+          mkdir -p outputs/auth-experience
+          java -Duser.timezone=UTC -Dargos.account.browser.fixture=true -cp "apps/api-backend/target/test-classes:apps/api-backend/target/classes:$(cat apps/api-backend/target/auth-classpath.txt)" com.dokor.argos.services.domain.report.AccountBrowserFixture > outputs/auth-backend.log 2>&1 &
+          echo $! > outputs/auth-backend.pid
+          npm run start --prefix apps/console-web > outputs/auth-frontend.log 2>&1 &
+          echo $! > outputs/auth-frontend.pid
+          node --input-type=module <<'JS'
+          for (const url of ['http://127.0.0.1:33317/api/account/auth/providers','http://localhost:3000/account/register']) {
+            let ready = false;
+            for (let i = 0; i < 90; i++) {
+              try { if ((await fetch(url)).ok) { ready = true; break; } } catch {}
+              await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            if (!ready) throw new Error('Local auth fixture did not become ready');
+          }
+          JS
+      - name: Verify captured-email lifecycle and localized navigation
+        run: node scripts/e2e/auth-experience.mjs
+      - name: Upload synthetic evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: auth-experience-${{ github.sha }}
+          path: outputs/auth-experience/
+          retention-days: 14
+      - name: Stop local services
+        if: always()
+        run: |
+          for file in outputs/auth-backend.pid outputs/auth-frontend.pid; do
+            if [ -f "$file" ]; then kill "$(cat "$file")" || true; fi
+          done
+
+  dependency-console-web:
+    name: Production dependency audit (console-web)
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.dependency_frontend == 'true') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.21.0'
+      - name: Check locked production dependencies
+        working-directory: apps/console-web
+        run: npm audit --omit=dev --audit-level=high
+
+  dependency-playwright-service:
+    name: Production dependency audit (playwright-service)
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.dependency_playwright == 'true') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.21.0'
+      - name: Check locked production dependencies
+        working-directory: apps/playwright-service
+        run: npm audit --omit=dev --audit-level=high
+
+  dependency-lighthouse-service:
+    name: Production dependency audit (lighthouse-service)
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.dependency_lighthouse == 'true') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.21.0'
+      - name: Check locked production dependencies
+        working-directory: apps/lighthouse-service
+        run: npm audit --omit=dev --audit-level=high
+
+  security:
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.security == 'true') }}
+    name: ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: amd64
+            name: Audit egress and browser isolation AMD64
+          - runner: ubuntu-24.04-arm
+            arch: arm64
+            name: Audit egress and browser isolation ARM64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    env:
+      EXPECTED_DOCKER_ARCH: ${{ matrix.arch }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.21.0'
+      - run: node --test apps/audit-egress/proxy.test.mjs
+      - name: Verify native Docker architecture
+        run: |
+          test -z "${DOCKER_DEFAULT_PLATFORM:-}"
+          actual=$(docker version --format '{{.Server.Arch}}')
+          test "$actual" = "$EXPECTED_DOCKER_ARCH"
+      - name: Real Chromium sandbox, egress firewall and secondary request fixtures
+        run: bash scripts/security/docker-smoke.sh
+      - name: Diagnostics
+        if: failure()
+        run: |
+          docker ps -a
+          docker logs argos-security-gateway 2>&1 || true
+          docker logs argos-security-runtime 2>&1 || true
+
+  security-result:
+    # A skipped matrix has no expanded job names. Publish the required context
+    # separately, including an explicit skip for paths outside the security scope.
+    name: Audit egress and browser isolation
+    needs: [changes, security]
+    if: ${{ always() && (needs.changes.result != 'success' || needs.changes.outputs.security != 'false') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      CHANGES_RESULT: ${{ needs.changes.result }}
+      SECURITY_REQUIRED: ${{ needs.changes.outputs.security }}
+      SECURITY_RESULT: ${{ needs.security.result }}
+    steps:
+      - name: Require successful path detection and both native security suites
+        run: |
+          test "$CHANGES_RESULT" = success
+          test "$SECURITY_REQUIRED" = true
+          test "$SECURITY_RESULT" = success

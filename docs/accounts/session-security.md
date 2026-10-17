@@ -95,7 +95,7 @@ traduits par le frontend existant en FR/EN, sans détails internes.
 | Archivage et partage | `AccountLifecycleIT` : accès privé, reset et callback social refusés ; rapports partagés valides maintenus jusqu'à expiration |
 
 Les suites MariaDB sont incluses explicitement dans le workflow
-`mariadb-integration.yml` ; elles utilisent uniquement les schémas jetables prévus
+le job `integration` de `ci.yml` ; elles utilisent uniquement les schémas jetables prévus
 par [la procédure MariaDB](../testing/mariadb.md). Aucun test de session ne dépend
 d'une application OAuth, d'un SMTP réel ou d'un délai mural pour expirer un token.
 La recette des fournisseurs réels, des redirects/cookies en HTTPS déployé et le
