@@ -2,7 +2,7 @@
 
 ## Contrats conservés
 
-Le catalogue affiché est `report-content-v3`. Les tableaux FR/EN sont copiés pour chaque clé avant de personnaliser un titre. Le contenu affiché est indépendant des mesures stockées : aucun score, poids, niveau de gravité, rang ni version de classement n’est recalculé.
+Le catalogue affiché est `report-content-v7`. Les tableaux FR/EN sont copiés pour chaque clé avant de personnaliser un titre. Le contenu affiché est indépendant des mesures stockées : aucun score, poids, niveau de gravité, rang ni version de classement n’est recalculé.
 
 Le titre nomme le sujet, l’observation reprend les mesures structurées conservées (y compris longueur du titre, état d’une métadonnée, nombre de h1 et images sans alt), l’impact décrit un effet possible, l’action explique la correction à examiner et la vérification indique le contrôle à rejouer. Une clé inconnue reste identifiable dans les métadonnées techniques, sans recycler son titre anglais comme impact français. Le web et le PDF utilisent le même catalogue.
 
@@ -57,5 +57,7 @@ Les contrôles automatisés et la revue visuelle ne prouvent pas la compréhensi
 3. Quelle est la prochaine étape et quelle limite du diagnostic faut-il retenir ?
 
 Consigner ses réponses réelles, le délai, les hésitations et les corrections nécessaires. Ne pas déclarer le seuil acquis en l’absence de cette séance.
+
+La [revue du 18 octobre 2026](reviews/532-2026-10-18.md) décrit les régressions observées après la livraison initiale et leur correction dans les composants utilisés actuellement. Elle fournit une prévisualisation fictive pour cette séance. L’opérateur confirme qu’aucune séance de lecture non technique n’a encore été réalisée ; la case humaine de #532 reste ouverte.
 
 Résultat actuel : recette humaine non exécutée. La base MariaDB isolée n’est pas configurée dans cette session ; la nouvelle recette d’intégration est ajoutée mais non exécutée. Les tests unitaires Java et les tests de parcours synthétiques couvrent les contrôles disponibles.
