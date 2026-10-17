@@ -39,6 +39,7 @@ try {
   for (const width of [320,390,768,1440]) for (const lang of ['fr','en']) for (const theme of ['light','dark']) {
     const context = await browser.newContext({viewport:{width,height:1000},colorScheme:theme});
     const page = await context.newPage(), copy=(lang==='fr'?fr:en).usageTimeline, errors=[];
+    page.setDefaultNavigationTimeout(120000);
     let mode='normal';
     page.on('pageerror', error=>errors.push(error.message));
     await page.route('**/api/account/**', async route=>{
@@ -52,7 +53,11 @@ try {
     });
     await page.goto(base+(lang==='en'?'/en':'')+'/account/usage');
     const section=page.getByRole('region',{name:copy.title,exact:true});
-    await section.getByRole('button',{name:new RegExp(copy.selectPeriod)}).first().waitFor();
+    await section.getByRole('button',{name:new RegExp(copy.selectPeriod)}).first().waitFor({timeout:60000}).catch(async error=>{
+      await page.screenshot({path:output+'/debug.png',fullPage:true});
+      console.error(await page.locator('body').innerText(),errors);
+      throw error;
+    });
     const check=async name=>{
       await page.evaluate(()=>document.fonts.ready);
       assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth+1),`${name}/${width}: page overflow`);

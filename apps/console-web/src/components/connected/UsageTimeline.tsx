@@ -9,7 +9,7 @@ import { DataTable } from "./Primitives";
 import c from "./Connected.module.scss";
 import s from "./UsageTimeline.module.scss";
 
-export default function UsageTimeline({ timezone }: { timezone: string }) {
+export default function UsageTimeline({ timezone, refreshVersion = 0 }: { timezone: string; refreshVersion?: number }) {
   const { t, lang } = useLang(), copy = t.usageTimeline, { invalidate } = useAccountSession(), id = useId();
   const [granularity, setGranularity] = useState<UsageGranularity>("DAY");
   const [dimension, setDimension] = useState<UsageDimension>("GLOBAL");
@@ -42,7 +42,7 @@ export default function UsageTimeline({ timezone }: { timezone: string }) {
       if (alive) { invalidate(reason); setFailure(key); }
     });
     return () => { alive = false; controller.abort(); };
-  }, [key, valid, revision, invalidate]);
+  }, [key, valid, revision, refreshVersion, invalidate]);
 
   const data = result?.key === key && failure !== key ? result.data : null;
   useEffect(() => {

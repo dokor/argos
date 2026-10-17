@@ -70,7 +70,7 @@ export default function UsageView() {
         <div className={s.rule}><h3>{copy.cancelTitle}</h3><p>{copy.cancelRule}</p></div>
         <div className={s.rule}><h3>{copy.monthTitle}</h3><p>{copy.monthRule}</p></div>
       </Surface></div>
-      {usage && <UsageTimeline timezone={usage.timezone}/>}
+      {usage && <UsageTimeline timezone={usage.timezone} refreshVersion={revision}/>}
       <section aria-labelledby="usage-history-title" className={s.history}>
         <div className={s.historyHeading}><div><h2 id="usage-history-title">{copy.history}</h2><p className={s.hint}>{copy.historyHint}</p></div>
           <form className={s.filters} key={historyPeriod} onSubmit={event=>{event.preventDefault();const value=String(new FormData(event.currentTarget).get("period"));if(/^[0-9]{4}-(0[1-9]|1[0-2])$/.test(value))navigate(value);}}>
