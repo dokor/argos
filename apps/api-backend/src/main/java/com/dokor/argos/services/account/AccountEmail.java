@@ -94,7 +94,7 @@ public final class AccountEmail {
                 + paragraph(intro)
                 + (kind == Kind.REAUTH ? "<p class=\"code\" style=\"margin:24px 0;padding:16px;background:#f6f7fb;border:1px solid #dfe5ee;border-radius:9px;font-family:Consolas,monospace;font-size:18px;line-height:1.6;word-break:break-all;overflow-wrap:anywhere\">" + escape(token) + "</p>" : "")
                 + paragraph(validity) + (explicit.isEmpty() ? "" : paragraph(explicit))
-                + (action == null ? "" : "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin:24px 0\"><tr><td bgcolor=\"#5045dd\" style=\"border-radius:9px;mso-padding-alt:14px 20px\"><a href=\"" + escape(path) + "\" style=\"display:inline-block;padding:14px 20px;color:#ffffff;background:#5045dd;border-radius:9px;font-size:16px;font-weight:600;line-height:1.5;text-decoration:none\">" + escape(action) + "</a></td></tr></table>")
+                + (action == null ? "" : "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin:24px 0\"><tr><td bgcolor=\"#5045dd\" style=\"border-radius:9px;mso-padding-alt:14px 20px\"><a href=\"" + escape(path) + "\" style=\"display:inline-block;padding:14px 20px;color:#ffffff;background:#5045dd;border-radius:9px;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:600;line-height:1.5;text-decoration:none\">" + escape(action) + "</a></td></tr></table>")
                 + "<div style=\"margin-top:24px;padding-top:24px;border-top:1px solid #dfe5ee\">" + paragraph(safety) + "</div>"
                 + (action == null ? "" : "<p style=\"margin:20px 0 8px;font-size:14px\">" + (en ? "If the button does not work, copy this address:" : "Si le bouton ne fonctionne pas, copiez cette adresse :")
                     + "</p><p style=\"margin:0;word-break:break-all;overflow-wrap:anywhere;font-size:14px\"><a class=\"link\" style=\"color:#5045dd;text-decoration:underline\" href=\"" + escape(path) + "\">" + escape(path) + "</a></p>");
@@ -112,9 +112,9 @@ public final class AccountEmail {
                 <table role="presentation" width="100%%" cellpadding="0" cellspacing="0"><tr><td class="outer" align="center" style="padding:32px 16px">
                 <!--[if mso]><table role="presentation" width="600" cellpadding="0" cellspacing="0"><tr><td><![endif]-->
                 <table role="presentation" class="surface" width="100%%" cellpadding="0" cellspacing="0" bgcolor="#ffffff" style="max-width:600px;border:1px solid #dfe5ee;border-radius:9px;color:#172239;text-align:left">
-                <tr><td style="padding:20px 24px;border-bottom:1px solid #dfe5ee;font-size:22px;font-weight:700">Argos <span class="muted" style="font-size:14px;font-weight:400;color:#58677d">/ %s</span></td></tr>
-                <tr><td class="body-cell" style="padding:32px 24px">%s</td></tr>
-                <tr><td class="muted" style="padding:20px 24px;border-top:1px solid #dfe5ee;color:#58677d;font-size:14px">%s<br>
+                <tr><td style="padding:20px 24px;border-bottom:1px solid #dfe5ee;font-family:Arial,Helvetica,sans-serif;font-size:22px;line-height:1.65;font-weight:700">Argos <span class="muted" style="font-size:14px;font-weight:400;color:#58677d">/ %s</span></td></tr>
+                <tr><td class="body-cell" style="padding:32px 24px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.65">%s</td></tr>
+                <tr><td class="muted" style="padding:20px 24px;border-top:1px solid #dfe5ee;color:#58677d;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.65">%s<br>
                 <a class="link" href="%s" style="display:inline-block;padding:10px 0;color:#5045dd;text-decoration:underline">%s</a> · <a class="link" href="%s" style="display:inline-block;padding:10px 0;color:#5045dd;text-decoration:underline">%s</a></td></tr>
                 </table><!--[if mso]></td></tr></table><![endif]-->
                 </td></tr></table></body></html>
