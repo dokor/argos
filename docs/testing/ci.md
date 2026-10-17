@@ -16,6 +16,7 @@ En cas d'échec de détection, les jobs conservent un repli vers l'exécution.
 | Controlled audit E2E | [Procédure](controlled-e2e.md) | Navigateur, pipeline, fixtures contrôlées et restauration |
 | Exhaustive visual regression | [Visual regression](../../.github/workflows/visual-regression.yml) | Matrices FR/EN, thèmes, largeurs, axe, clavier et comparaisons de captures ; API simulée |
 | auth | [Authentication UX E2E](../../.github/workflows/auth-experience.yml) | Inscription, email capturé, vérification, connexion, reset et navigation FR/EN |
+| Audit egress and browser isolation | [Audit security](../../.github/workflows/audit-security.yml) | Contrôle final des tests de confinement Chromium et egress sur AMD64 et ARM64 natifs |
 | Secrets et dépendances | [Secrets](../security/secret-remediation.md), workflows dédiés | Arbre/commits introduits, dépendances npm de production |
 | Auto-audit après MEP | [Contrat et configuration](post-deploy-audit.md) | Contrôle authentifié du déploiement observé et tickets dédupliqués ; secrets réservés au job de contrôle |
 
@@ -79,6 +80,17 @@ Les workflows portant des checks requis restent déclenchés : seuls leurs jobs
 coûteux sont sautés. Cela conserve les statuts attendus par la protection de
 branche. Les déploiements conservent leurs filtres par service et leur
 sérialisation existants ; aucune autorisation de déploiement n'est ajoutée.
+
+`Audit egress and browser isolation` est un job final au nom fixe, distinct des
+workers de la matrice AMD64/ARM64. GitHub évalue la condition d'un job avant
+d'étendre sa matrice : sauter directement celle-ci produit un check `matrix.name`
+sans publier les noms développés attendus par la protection de branche.
+Le job final est explicitement `SKIPPED` seulement si la détection a réussi et
+retourné `security=false`. Sinon, il exige la réussite de la détection, une
+sélection `security=true` et la réussite de toute la matrice. Une erreur, une
+annulation ou un résultat manquant ne valide pas le contrôle. Le ruleset garde
+le même nom obligatoire ; une omission légitime reste un skip et ne devient
+pas une preuve de sécurité réussie pour le dossier de release.
 
 ## Parcours utilisateur et matrices visuelles
 

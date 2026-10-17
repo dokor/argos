@@ -23,7 +23,7 @@ jobs:
         include:
           - runner: ubuntu-24.04
             arch: amd64
-            name: Audit egress and browser isolation
+            name: Audit egress and browser isolation AMD64
           - runner: ubuntu-24.04-arm
             arch: arm64
             name: Audit egress and browser isolation ARM64
@@ -52,3 +52,22 @@ jobs:
           docker ps -a
           docker logs argos-security-gateway 2>&1 || true
           docker logs argos-security-runtime 2>&1 || true
+
+  security-result:
+    # A skipped matrix has no expanded job names. Publish the required context
+    # separately, including an explicit skip for paths outside the security scope.
+    name: Audit egress and browser isolation
+    needs: [changes, security]
+    if: ${{ always() && (needs.changes.result != 'success' || needs.changes.outputs.security != 'false') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      CHANGES_RESULT: ${{ needs.changes.result }}
+      SECURITY_REQUIRED: ${{ needs.changes.outputs.security }}
+      SECURITY_RESULT: ${{ needs.security.result }}
+    steps:
+      - name: Require successful path detection and both native security suites
+        run: |
+          test "$CHANGES_RESULT" = success
+          test "$SECURITY_REQUIRED" = true
+          test "$SECURITY_RESULT" = success
