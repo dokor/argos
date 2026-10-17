@@ -11,12 +11,30 @@ Les PR exécutent uniquement ses tests avec les autres helpers CI.
 Créer un compte Argos dédié, vérifié, avec mot de passe et rôle utilisateur
 ordinaire. Enregistrer son email et son mot de passe dans les secrets Actions
 `ARGOS_CI_EMAIL` et `ARGOS_CI_PASSWORD`. Ce compte n'a besoin d'aucun droit admin.
-Son plafond mensuel doit couvrir deux analyses par tentative de contrôle de
-chaque service ; un commit déployant les quatre services peut donc consommer
-huit analyses. Une relance du contrôle consomme deux nouvelles analyses.
+Attribuer explicitement à ce seul compte l'offre interne `CI`, sans plafond,
+via l'administration des comptes, en laissant le plafond individuel vide.
+L'offre est déclarée dans `reference.conf` et reste disponible quand
+`-Dconfig.file` remplace `application.conf` en production. Un `monthly-limit`
+absent ou null sur cette offre signifie réellement illimité ; les offres
+FREE/PREMIUM et les autres comptes conservent leur configuration.
+Chaque contrôle consomme deux analyses ; un commit déployant les quatre
+services peut donc en consommer huit. Une relance consomme deux analyses.
 Les autorisations serveur, validations SSRF et quotas habituels restent actifs.
 Une configuration absente ou un refus de quota échoue explicitement.
-Ne pas utiliser un compte personnel ni une exception de quota pour la CI.
+Ne pas utiliser un compte personnel. L'offre ne donne aucun droit administrateur
+et n'ajoute aucun contournement du contrôle d'admission.
+
+Sur une production antérieure à cette PR, déployer d'abord le backend pour
+que `GET /api/account/admin/entitlement-options` présente `CI` avec
+`monthlyLimit: null`. Puis modifier uniquement le compte dédié avec
+`PATCH /api/account/admin/users/{id}/entitlement` : `offer: "CI"`,
+`monthlyLimit: null`, sa version courante dans `expectedVersion`,
+`reasonCode: "PLAN_ADJUSTMENT"`, `confirmation: true`. Cette mutation utilise
+une session administrateur récente et le CSRF habituels, et est journalisée.
+Vérifier ensuite avec la session du compte CI que `GET /api/account/usage`
+retourne `offer: "CI"`, `limit: null`, `available: null`, `canLaunch: true`.
+Un plafond individuel vide sur FREE rétablit sa limite normale et ne rend
+pas le compte illimité. Les secrets Actions existants restent valides.
 
 Le job de contrôle utilise le runner de production `self-hosted`, son accès
 Docker existant et Node 24 fourni par `setup-node`. La cible est fixée à

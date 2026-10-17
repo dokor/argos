@@ -40,6 +40,12 @@ ceux persistés sur les comptes. Les offres sans limite configurée sont sans
 plafond. Aucun plafond chiffré n'est livré en configuration applicative.
 Les nombres employés par les tests sont uniquement des fixtures.
 
+L'offre interne `CI` est fournie sans plafond par `reference.conf`, y compris
+avec une configuration externe `-Dconfig.file`. Elle est attribuée explicitement
+au seul compte d'auto-audit via l'administration ; elle ne change ni son rôle
+utilisateur ni les offres des autres comptes. Voir le
+[provisionnement du contrôle CI](../testing/post-deploy-audit.md#configuration-dexploitation).
+
 La configuration est chargée au démarrage ; son activation ou l'affectation
 d'une offre à des comptes relève d'une décision d'exploitation et produit.
 L’[administration](administration-contract.md) permet de modifier l’offre et le plafond individuel ; aucune facturation n’est ajoutée.
