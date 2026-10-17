@@ -38,6 +38,18 @@
 .collapseToggle:hover { background: var(--argos-canvas); }
 .toggleLabel { position: fixed; left: var(--argos-nav-tooltip-left); top: var(--argos-nav-tooltip-top); transform: translateY(-50%); width: max-content; padding: 8px 12px; background: var(--argos-surface); color: var(--argos-text); border: 1px solid var(--argos-border); border-radius: 7px; font-size: 13px; z-index: 60; visibility: hidden; }
 .shell:not([data-tooltip-dismissed='true']) .collapseToggle:is(:hover, :focus-visible) .toggleLabel { visibility: visible; }
+.navGroup { min-width: 0; }
+.navGroupHeading { display: grid; grid-template-columns: minmax(0, 1fr) 44px; }
+.navGroupHeading > a { min-width: 0; }
+.navGroup[data-active='true'] .navGroupHeading > a { color: var(--argos-brand); font-weight: 650; }
+.navGroup[data-active='true'] .navGroupHeading > a > svg { color: inherit; }
+.groupToggle { position: relative; display: flex; align-items: center; justify-content: center; min-height: 44px; width: 44px; padding: 10px; border-radius: 7px; color: var(--argos-text-muted); }
+.groupToggle:hover { background: var(--argos-canvas); }
+.navChildren { display: grid; gap: 2px; margin-top: 2px; }
+.navChildren[hidden] { display: none; }
+.navigation .navChildren a { padding-left: 38px; font-size: 13px; }
+.navChildren .navLabel { white-space: normal; }
+.navChildren svg { display: none; }
 // Collapse is opt-in on desktop; mobile always keeps the full text disclosure.
 @media (min-width: 901px) {
   .shell[data-collapsed='true'] {
@@ -46,6 +58,12 @@
     .navHeading { justify-content: center; }
     .brand > span, .navCaption, .identity > div { display: none; }
     .navigation a, .collapseToggle { justify-content: center; padding-inline: 10px; }
+    // Keep disclosure buttons separate and full size in the narrow rail.
+    .navGroupHeading { grid-template-columns: minmax(0, 1fr); justify-items: stretch; }
+    .groupToggle { justify-self: center; }
+    .navChildren { border-left: 2px solid var(--argos-border); }
+    .navigation .navChildren a { padding-inline: 8px; }
+    .navChildren svg { display: block; }
     .identity { justify-content: center; padding-inline: 10px; }
     .navLabel, .toggleLabel {
       position: fixed; left: var(--argos-nav-tooltip-left); top: var(--argos-nav-tooltip-top); transform: translateY(-50%);
@@ -56,6 +74,7 @@
     }
     &:not([data-tooltip-dismissed='true']) {
       .navigation a:is(:hover, :focus-visible) .navLabel,
+      .groupToggle:is(:hover, :focus-visible) .toggleLabel,
       .collapseToggle:is(:hover, :focus-visible) .toggleLabel { visibility: visible; opacity: 1; }
     }
   }

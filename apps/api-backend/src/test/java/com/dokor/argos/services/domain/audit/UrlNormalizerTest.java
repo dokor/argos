@@ -16,6 +16,24 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class UrlNormalizerTest {
     @ParameterizedTest
+    @ValueSource(strings = {"http://127.0.0.1", "http://10.0.0.1", "http://[::1]", "http://[::ffff:8.8.8.8]",
+        "http://[2001:db8::1]", "http://2130706433", "http://127.1", "http://0x7f000001", "https://svc.internal",
+        "https://foo.test", "https://%65xample.com", "https://example%2ecom", "https://%38.8.8.8"})
+    void discoveryAndReplaySyntaxRefuseNonPublicOrAmbiguousHostsWithoutDns(String url) {
+        assertThrows(IllegalArgumentException.class, () -> UrlNormalizer.normalizeSyntax(url));
+        assertThrows(IllegalArgumentException.class, () -> UrlNormalizer.normalizeAdmissionSyntax(url));
+        var noDns = new UrlNormalizer(host -> { fail("Rejected syntax must not resolve DNS"); return null; });
+        assertThrows(IllegalArgumentException.class, () -> noDns.normalize(url));
+    }
+
+    @Test void hostnameLengthIsBoundedWithoutDnsAndPunycodeRemainsValid() {
+        String prefix = "a".repeat(63) + "." + "b".repeat(63) + "." + "c".repeat(63) + ".";
+        assertEquals("https://" + prefix + "d".repeat(61), UrlNormalizer.normalizeSyntax("https://" + prefix + "d".repeat(61)));
+        assertThrows(IllegalArgumentException.class, () -> UrlNormalizer.normalizeSyntax("https://" + prefix + "d".repeat(62)));
+        assertEquals("https://xn--caf-dma.fr/caf%C3%A9?q=%26", UrlNormalizer.normalizeSyntax("https://xn--caf-dma.fr/caf%C3%A9?q=%26"));
+    }
+
+    @ParameterizedTest
     @ValueSource(strings = {"/a%2Fb?value=x%26y", "/a%3Fb?x=%3D%23%25", "/caf%C3%A9?x=1&x=2"})
     void encodedComponentsPreserveTheRequestedResource(String suffix) {
         String expected = "https://example.com" + suffix;

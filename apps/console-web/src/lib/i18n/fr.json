@@ -16,6 +16,17 @@
     "fortyTwo": "La réponse est 42. Les pistes d’amélioration sont juste en dessous."
   },
   "connected": {
+    "navGroups": {
+      "analyses": "Analyses",
+      "newAnalysis": "Nouvelle analyse",
+      "history": "Historique des analyses",
+      "myDomains": "Mes domaines",
+      "newDomain": "Analyser un domaine",
+      "expandAnalyses": "Déplier le sous-menu Analyses",
+      "collapseAnalyses": "Replier le sous-menu Analyses",
+      "expandDomains": "Déplier le sous-menu Domaines",
+      "collapseDomains": "Replier le sous-menu Domaines"
+    },
     "collapseMenu": "Réduire le menu",
     "expandMenu": "Déployer le menu",
     "accountMenu": "Menu du compte",
@@ -1261,5 +1272,20 @@
   "quotaBlocked": "Aucun crédit disponible pour un nouveau lancement.",
   "usage": "Consulter mes quotas",
   "back": "Retour à la vue d’ensemble"
+},
+"usageTimeline": {
+  "title": "Historique de consommation",
+  "intro": "Les crédits réellement consommés, à la date de publication de chaque rapport. Les réservations et les échecs sans rapport sont exclus.",
+  "granularity": "Échelle de temps", "DAY": "Jour", "MONTH": "Mois", "YEAR": "Année",
+  "dimension": "Ventilation", "GLOBAL": "Total", "DOMAIN": "Site / domaine", "URL": "URL",
+  "dimensionHint": "Un site correspond à un hôte exact : example.fr, www.example.fr et ses sous-domaines restent distincts. Les URL suivent l’identité normalisée d’Argos.",
+  "period": "Période", "days30": "30 derniers jours", "days90": "90 derniers jours", "months12": "12 derniers mois", "months36": "36 derniers mois", "years5": "5 dernières années", "years10": "10 dernières années",
+  "from": "Début inclus", "until": "Fin exclue", "apply": "Appliquer les dates", "rangeHint": "Maximum : 366 jours, 60 mois ou 20 ans. Pour les mois et les années, choisir le premier jour de la période.",
+  "total": "crédits consommés", "selection": "dans la sélection", "all": "tous les sites et URL", "other": "Autres", "unknown": "Cible historique indisponible",
+  "filters": "Isoler des sites ou URL", "search": "Rechercher une cible", "searchAction": "Rechercher", "clear": "Effacer la sélection", "selected": "cibles sélectionnées", "more": "20 résultats affichés. Affinez la recherche pour trouver une autre cible.", "filterHint": "Jusqu’à 20 cibles. Les 5 principales sont affichées ; « Autres » conserve le reste du total.",
+  "table": "Consulter les données en tableau", "date": "Période", "category": "Cible", "credits": "Crédits", "chart": "Crédits consommés par période", "maximum": "Maximum par période", "point": "Détail de la période", "selectPeriod": "Afficher le détail",
+  "empty": "Aucun débit enregistré pour cette sélection", "emptyHint": "Modifiez la période ou effacez les filtres. Les réservations restent visibles dans le journal ci-dessous.",
+  "loading": "Chargement de l’historique…", "error": "L’historique n’a pas pu être chargé. Réessayez.", "invalid": "Vérifiez les dates et la plage maximale de l’échelle choisie.", "retry": "Réessayer",
+  "coverage": "Couverture continue du registre depuis le", "coverageHint": "Avant cette date, les données conservées peuvent être incomplètes. Un tiret indique une absence de données confirmées, pas un zéro certain.", "coverageUnknown": "Le début de couverture du registre est inconnu. L’historique peut être incomplet.", "partial": "Historique partiel", "undated": "débits historiques sans date, exclus du graphique", "timezone": "Fuseau des quotas"
 }
 }

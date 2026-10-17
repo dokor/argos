@@ -6,7 +6,9 @@ describe("audit admission", () => {
   it.each(["http://127.1", "http://2130706433", "http://0x7f000001", "https://u:p@example.com",
     "https://example.com:8443", "http://100.64.0.1", "http://192.0.2.1", "http://224.0.0.1",
     "http://[fe90::1]", "http://[::ffff:8.8.8.8]", "http://[2001:db8::1]", "https://localhost.",
-    "https://example.com\\@localhost", "https://example.com\n", "file:///etc/passwd"])("rejects %s", url => {
+    "https://example.com\\@localhost", "https://example.com\n", "file:///etc/passwd",
+    "https://%65xample.com", "https://example%2ecom", "https://%38.8.8.8",
+    `https://${"a".repeat(63)}.${"b".repeat(63)}.${"c".repeat(63)}.${"d".repeat(62)}`])("rejects %s", url => {
     expect(ssrfError(url)).not.toBeNull();
   });
   it.each(["example.com", "http://example.com:80/path?q=1", "https://example.com", "https://[2606:4700:4700::1111]"])("accepts %s", url => {

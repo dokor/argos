@@ -1,4 +1,15 @@
 import { beforeEach, afterEach, it, expect, vi } from "vitest";
+it("forwards bounded usage aggregates privately with the session owner and exact filters",async()=>{
+ fetchMock.mockResolvedValue(Response.json({total:5}));
+ const query="granularity=MONTH&dimension=URL&from=2026-01-01&until=2026-11-01&filter=9007199254740993&filter=42";
+ const response=await accountProxy(request("usage/timeline?"+query),["usage","timeline"]);
+ expect(response.status).toBe(200);expect(response.headers.get("cache-control")).toBe("private, no-store");
+ expect(fetchMock.mock.calls[0][0]).toBe("http://fixture-backend/api/account/usage/timeline?"+query);
+ expect(fetchMock.mock.calls[0][1].headers.get("authorization")).toBe("Bearer "+jwt);
+});
+it.each(["ownerId=20&from=2026-01-01&until=2026-02-01","from=2026-02-30&until=2026-03-01","from=2020-01-01&until=2026-01-01","from=2026-01-01&until=2026-02-01&dimension=URL&filter=42&filter=42"])("rejects forged timeline query %s",async query=>{
+ expect((await accountProxy(request("usage/timeline?"+query),["usage","timeline"])).status).toBe(400);expect(fetchMock).not.toHaveBeenCalled();
+});
 it("validates shared-link creation and enforces CSRF before forwarding",async()=>{
  const path=["runs","42","share"];
  expect((await accountProxy(request(path.join("/"),"POST",{days:30},false),path)).status).toBe(403);

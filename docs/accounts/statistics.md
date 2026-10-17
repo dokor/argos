@@ -66,7 +66,7 @@ autorise uniquement GET et les périodes énumérées. La réponse est privée,
 `no-store` et limitée aux agrégats et métadonnées de période ; aucune URL,
 identité personnelle ni credential de rapport n’est transmis.
 
-Trois requêtes SQL agrégées retournent un volume constant. V36 ajoute l’index
+Trois requêtes SQL agrégées retournent un volume constant. V37 ajoute l’index
 `(audit_id,created_at,id)` pour les sondes première/dernière tentative, et
 `created_at` sur les comptes. La requête des URL parcourt les identités, pas
 les résultats ou rapports volumineux ; chaque statement est borné à 15 secondes.

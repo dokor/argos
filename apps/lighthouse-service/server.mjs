@@ -1,9 +1,5 @@
 import { createLighthouseServer } from "./app.mjs";
-import lighthouse from "lighthouse";
-import { launch } from "chrome-launcher";
-import { chromium } from "playwright";
-import puppeteer from "puppeteer-core";
-import { createLighthouseCollector } from "./collector.mjs";
+import { createSupervisedCollector } from "./supervisor.mjs";
 
 const PORT = 3017;
 const SERVICE = "lighthouse-service";
@@ -14,22 +10,7 @@ function log(event, fields = {}) {
   console.log(JSON.stringify({ ts: new Date().toISOString(), service: SERVICE, event, ...fields }));
 }
 
-const CHROME_FLAGS = [
-  "--headless",
-  "--disable-gpu",
-  // Évite les crashs lorsque /dev/shm est limité par Docker.
-  "--disable-dev-shm-usage",
-];
-
-function parsePositiveInteger(value, fallback) {
-  const parsed = Number(value);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
-}
-
-const runLighthouse = createLighthouseCollector({ launch, lighthouse,
-  chromium,
-  connectPuppeteer: options => puppeteer.connect(options),
-  chromeFlags: CHROME_FLAGS, chromePath: process.env.CHROME_PATH });
+const runLighthouse = createSupervisedCollector({ log });
 
 const server = createLighthouseServer({ analyze: runLighthouse, log, maxConcurrency: MAX_CONCURRENCY });
 

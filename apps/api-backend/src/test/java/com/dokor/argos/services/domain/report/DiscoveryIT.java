@@ -374,7 +374,7 @@ class DiscoveryIT extends MariaDbReportFixture {
     @Test void accountQueueIsBoundedAndClaimsOneDomainAtATimeThenRotatesOwners() throws Exception {
         configure("discovery.account-queue-limit=2");
         var first=create(a);
-        var second=service.create(a,CSRF,UUID.randomUUID().toString(),new CreateDiscovery("other.example",50L,3L,List.of()));
+        var second=service.create(a,CSRF,UUID.randomUUID().toString(),new CreateDiscovery("other.example.com",50L,3L,List.of()));
         var full=assertThrows(AccountError.class,()->create(a));
         assertEquals(429,full.getResponse().getStatus());
         assertEquals(2,count("ARG_DOMAIN_DISCOVERY"));
@@ -388,6 +388,13 @@ class DiscoveryIT extends MariaDbReportFixture {
         var last=dao.claim(policy,clock.instant());
         assertEquals(second.id(),last.getId().toString());
         assertEquals(0,count("ARG_USAGE_RUN"));
+    }
+    @Test void invalidHostSyntaxCannotEnterTheDiscoveryQueue() throws Exception {
+        for (String host : List.of("other.example", "127.0.0.1", "2130706433", "[::1]", "%65xample.com")) {
+            var error=assertThrows(AccountError.class,()->service.create(a,CSRF,UUID.randomUUID().toString(),new CreateDiscovery(host,50L,3L,List.of())));
+            assertEquals(400,error.getResponse().getStatus());
+        }
+        assertEquals(0,count("ARG_DOMAIN_DISCOVERY"));
     }
     @Test void completedSelectionIsResumableWithoutCreatingAnAudit() {
         var first=create(a);

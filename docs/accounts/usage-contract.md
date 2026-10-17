@@ -1,5 +1,8 @@
 # Consommation mensuelle — milestone 8
 
+L’[historique graphique](usage-timeline.md) décrit les agrégats personnels,
+les dimensions et les limites de couverture du registre (#664).
+
 Epic #14, issues #449–#452. Le lancement conserve le comptage sans plafond.
 Aucun tarif, paiement ou avantage commercial premium n'est attribué par ce lot.
 L'offre `ARG_ACCOUNT_USER.offer` est indépendante du rôle d'autorisation.
@@ -39,6 +42,12 @@ Les clés d'offre sont des codes majuscules de 16 caractères maximum, comme
 ceux persistés sur les comptes. Les offres sans limite configurée sont sans
 plafond. Aucun plafond chiffré n'est livré en configuration applicative.
 Les nombres employés par les tests sont uniquement des fixtures.
+
+L'offre interne `CI` est fournie sans plafond par `reference.conf`, y compris
+avec une configuration externe `-Dconfig.file`. Elle est attribuée explicitement
+au seul compte d'auto-audit via l'administration ; elle ne change ni son rôle
+utilisateur ni les offres des autres comptes. Voir le
+[provisionnement du contrôle CI](../testing/post-deploy-audit.md#configuration-dexploitation).
 
 La configuration est chargée au démarrage ; son activation ou l'affectation
 d'une offre à des comptes relève d'une décision d'exploitation et produit.
