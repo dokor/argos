@@ -3,11 +3,16 @@ package com.dokor.argos.services.domain.report;
 import com.coreoz.plume.db.querydsl.transaction.TransactionManagerQuerydsl;
 import com.dokor.argos.db.dao.AuditReportDao;
 import com.dokor.argos.db.dao.AuditRunDao;
+import com.dokor.argos.db.dao.ProblemStatisticsDao;
 import com.dokor.argos.db.generated.Audit;
 import com.dokor.argos.db.generated.AuditReport;
 import com.dokor.argos.services.analysis.model.AuditReportJson;
+import com.dokor.argos.services.analysis.scoring.DefaultScorePolicy;
+import com.dokor.argos.services.analysis.scoring.ScorePolicy;
+import com.dokor.argos.services.statistics.ProblemProjection;
 import com.dokor.argos.util.Urls;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import java.time.Instant;
@@ -24,16 +29,26 @@ public class ReportPublishService {
     private final AhrefsDomainRatingClient domainRatings;
     private final ObjectMapper mapper;
     private final ReportRetentionPolicy retention;
+    private final ProblemStatisticsDao problemStatistics;
+    private final ScorePolicy scorePolicy;
 
     public ReportPublishService(TransactionManagerQuerydsl transactions, AuditRunDao runs,
         AuditReportDao reports, PublicReportComposer composer, AiReportSummaryService summaries,
         AhrefsDomainRatingClient domainRatings, ObjectMapper mapper) {
         this(transactions, runs, reports, composer, summaries, domainRatings, mapper, ReportRetentionPolicy.defaults());
     }
-    @Inject
     public ReportPublishService(TransactionManagerQuerydsl transactions, AuditRunDao runs,
         AuditReportDao reports, PublicReportComposer composer, AiReportSummaryService summaries,
         AhrefsDomainRatingClient domainRatings, ObjectMapper mapper, ReportRetentionPolicy retention) {
+        this(transactions,runs,reports,composer,summaries,domainRatings,mapper,retention,
+            new ProblemStatisticsDao(transactions),new DefaultScorePolicy());
+    }
+    @Inject
+    public ReportPublishService(TransactionManagerQuerydsl transactions, AuditRunDao runs,
+        AuditReportDao reports, PublicReportComposer composer, AiReportSummaryService summaries,
+        AhrefsDomainRatingClient domainRatings, ObjectMapper mapper, ReportRetentionPolicy retention,
+        ProblemStatisticsDao problemStatistics, ScorePolicy scorePolicy) {
+        this.problemStatistics=problemStatistics; this.scorePolicy=scorePolicy;
         this.retention = retention;
         this.transactions = transactions; this.runs = runs; this.reports = reports;
         this.composer = composer; this.summaries = summaries; this.domainRatings = domainRatings; this.mapper = mapper;
@@ -62,8 +77,10 @@ public class ReportPublishService {
         entity.setScoringVersion(globalScore == null ? null : internal.score().scoringVersion());
         try { entity.setReportJson(mapper.writeValueAsString(com.dokor.argos.services.analysis.AuditOutputSanitizer.tree(dto, mapper))); }
         catch (Exception error) { throw new IllegalStateException("Report serialization failed", error); }
+        final JsonNode publishedReport;
         try {
-            var diagnostic=com.dokor.argos.services.connected.summary.DiagnosticProjection.from(mapper.readTree(entity.getReportJson()),mapper.valueToTree(internal.score()));
+            publishedReport=mapper.readTree(entity.getReportJson());
+            var diagnostic=com.dokor.argos.services.connected.summary.DiagnosticProjection.from(publishedReport,mapper.valueToTree(internal.score()));
             entity.setDiagnosticJson(mapper.writeValueAsString(diagnostic));
             entity.setCriticalCount(diagnostic.criticalCount()==null?null:Math.toIntExact(diagnostic.criticalCount()));
             entity.setImportantCount(diagnostic.importantCount()==null?null:Math.toIntExact(diagnostic.importantCount()));
@@ -71,6 +88,7 @@ public class ReportPublishService {
         entity.setMeasurementCompleteness(ReportCompleteness.from(dto));
         entity.setCreatedAt(Instant.now());
         entity.setExpiresAt(retention.expiresAt(entity.getCreatedAt()));
+        var problemProjection = ProblemProjection.from(publishedReport,scorePolicy);
 
         long outcome = transactions.executeAndReturn(connection -> {
             var run = runs.lockForPublication(runId, connection).orElseThrow(() -> new IllegalStateException("Run missing"));
@@ -85,6 +103,7 @@ public class ReportPublishService {
             if (hash == null || hash.length != 32) throw new IllegalStateException("Missing report credential hash");
             entity.setTokenHash(hash);
             long reportId = reports.save(entity, connection).getId();
+            problemStatistics.write(reportId,problemProjection,connection);
             if (!runs.markCompleted(runId, claimToken, Instant.now(), resultJson, connection)) {
                 throw new IllegalStateException("Run completion rejected");
             }

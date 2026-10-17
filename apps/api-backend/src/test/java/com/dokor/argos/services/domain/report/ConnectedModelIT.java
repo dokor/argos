@@ -30,7 +30,7 @@ class ConnectedModelIT extends MariaDbReportFixture {
     }
 
     @Test void freshDatabaseHasTheNewModelAndNoSyntheticProductionRecords() throws Exception {
-        assertEquals("36", Flyway.configure().dataSource(source).load().info().current().getVersion().toString());
+        assertEquals(0, Flyway.configure().dataSource(source).load().info().pending().length);
         for (var table : List.of("ARG_PREMIUM_WAITLIST", "ARG_FEEDBACK", "ARG_ACCOUNT_NOTIFICATION", "ARG_ACCOUNT_USER", "ARG_DOMAIN_DISCOVERY", "ARG_DOMAIN_DISCOVERY_PAGE", "ARG_DOMAIN_BATCH", "ARG_DOMAIN_BATCH_PAGE", "ARG_USAGE_RUN")) {
             try (var c = source.getConnection(); var s = c.createStatement(); var r = s.executeQuery("SELECT COUNT(*) FROM " + table)) {
                 assertTrue(r.next()); assertEquals(0, r.getLong(1), table);
@@ -134,7 +134,8 @@ class ConnectedModelIT extends MariaDbReportFixture {
         batch(321,10,101,100,"RUNNING","existing-batch");
         sql("INSERT INTO ARG_FEEDBACK(id,type,status,description,created_at,updated_at) VALUES(42,'BUG','OPEN','Historical feedback','2026-10-13','2026-10-13')");
         var current=Flyway.configure().dataSource(source).load();
-        assertEquals(7,current.migrate().migrationsExecuted);current.validate();
+        int pending=current.info().pending().length;assertTrue(pending>0);
+        assertEquals(pending,current.migrate().migrationsExecuted);current.validate();
         assertEquals(0,current.migrate().migrationsExecuted);
         try(var c=source.getConnection();var statement=c.createStatement();var row=statement.executeQuery("SELECT description,urls FROM ARG_FEEDBACK WHERE id=42")) {
             assertTrue(row.next());assertEquals("Historical feedback",row.getString("description"));assertNull(row.getString("urls"));

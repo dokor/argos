@@ -31,6 +31,7 @@ class ReportPublishServiceTest {
     private final AiReportSummaryService summaries = mock(AiReportSummaryService.class);
     private final AuditReportJson internal = mock(AuditReportJson.class);
     private ReportPublishService service;
+    private final com.dokor.argos.db.dao.ProblemStatisticsDao statistics=mock(com.dokor.argos.db.dao.ProblemStatisticsDao.class);
     private Audit audit;
     private AuditRun run;
 
@@ -40,7 +41,8 @@ class ReportPublishServiceTest {
         when(connection.getAutoCommit()).thenReturn(true);
         service = new ReportPublishService(
             new TransactionManagerQuerydsl(dataSource, mock(Configuration.class)),
-            runs, reports, composer, summaries, mock(AhrefsDomainRatingClient.class), new ObjectMapper());
+            runs, reports, composer, summaries, mock(AhrefsDomainRatingClient.class), new ObjectMapper(),
+            ReportRetentionPolicy.defaults(),statistics,new com.dokor.argos.services.analysis.scoring.DefaultScorePolicy());
         audit = new Audit();
         audit.setId(7L);
         audit.setNormalizedUrl("https://example.com/page");
@@ -77,6 +79,7 @@ class ReportPublishServiceTest {
         assertTrue(report.getValue().getReportJson().contains("Example"));
         verify(connection).commit();
         verify(connection, never()).rollback();
+        verify(statistics).write(eq(88L),any(),eq(connection));
     }
 
     @Test
@@ -89,6 +92,7 @@ class ReportPublishServiceTest {
         assertEquals(99L, service.completeAndPublish(42L, audit, internal, "result", "worker-claim"));
         verify(reports, never()).save(any(AuditReport.class), any(Connection.class));
         verify(runs, never()).markCompleted(anyLong(), anyString(), any(), anyString(), any());
+        verifyNoInteractions(statistics);
         verify(connection).commit();
     }
 
@@ -117,6 +121,17 @@ class ReportPublishServiceTest {
         verify(reports, never()).save(any(AuditReport.class), any(Connection.class));
         verify(runs, never()).markCompleted(anyLong(), anyString(), any(), anyString(), any());
         verify(connection).rollback();
+    }
+
+    @Test
+    void failedProblemProjectionRollsBackPublication() throws Exception {
+        when(reports.save(any(AuditReport.class),eq(connection))).thenAnswer(call -> {
+            AuditReport report=call.getArgument(0); report.setId(88L); return report;
+        });
+        doThrow(new IllegalStateException("fixture projection failure")).when(statistics).write(eq(88L),any(),eq(connection));
+        assertThrows(IllegalStateException.class,()->service.completeAndPublish(42L,audit,internal,"result","worker-claim"));
+        verify(connection).rollback(); verify(connection,never()).commit();
+        verify(runs,never()).markCompleted(anyLong(),anyString(),any(),anyString(),any());
     }
 
     @Test

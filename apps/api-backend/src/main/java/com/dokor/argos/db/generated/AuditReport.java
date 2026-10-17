@@ -9,6 +9,18 @@ import com.querydsl.sql.Column;
  */
 @Generated("com.coreoz.plume.db.querydsl.generation.IdBeanSerializer")
 public class AuditReport extends com.coreoz.plume.db.querydsl.crud.CrudEntityQuerydsl {
+    @Column("problem_projection_version") private Integer problemProjectionVersion;
+    public Integer getProblemProjectionVersion(){return problemProjectionVersion;}
+    public void setProblemProjectionVersion(Integer value){problemProjectionVersion=value;}
+    @Column("problem_fingerprint") private String problemFingerprint;
+    public String getProblemFingerprint(){return problemFingerprint;}
+    public void setProblemFingerprint(String value){problemFingerprint=value;}
+    @Column("problem_coverage_version") private String problemCoverageVersion;
+    public String getProblemCoverageVersion(){return problemCoverageVersion;}
+    public void setProblemCoverageVersion(String value){problemCoverageVersion=value;}
+    @Column("problem_partial") private Boolean problemPartial;
+    public Boolean getProblemPartial(){return problemPartial;}
+    public void setProblemPartial(Boolean value){problemPartial=value;}
     @Column("share_token_hash") private byte[] shareTokenHash;
     public byte[] getShareTokenHash(){return shareTokenHash;}
     public void setShareTokenHash(byte[] value){shareTokenHash=value;}
