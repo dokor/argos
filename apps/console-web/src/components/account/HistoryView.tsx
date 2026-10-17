@@ -4,6 +4,7 @@ import { useLang } from "@/lib/i18n/LangContext";
 import { localizedPath } from "@/lib/i18n/routes";
 import { accountFetch, AccountClientError } from "@/lib/account-client";
 import Link from "@/components/LocalizedLink";
+import WebTip from "@/components/editorial/WebTip";
 import { useAccountSession } from "./AccountSession";
 import HistoryActions from "./HistoryActions";
 import { historyCopy } from "./historyCopy";
@@ -43,6 +44,7 @@ export default function HistoryView({ urlId }: { urlId: string }) {
   return <><main className={s.page}>
     <Link href={data ? "/account/sites/"+data.context.siteId : "/account/sites"}>{data ? copy.back : copy.sites}</Link>
     <h1>{copy.title}</h1>
+    <WebTip/>
     {!session.ready ? <p role="status">{copy.loading}</p> : !allowed ? <><p>{copy.private}</p><Link href={session.profile ? "/account" : "/account/sign-in?returnTo="+encodeURIComponent(localizedPath("/account/urls/"+urlId+"/history",lang))}>{session.profile ? t.account.verify : t.account.signIn}</Link></> : <>
       <p>{copy.intro}</p>
       {error ? <><p role="alert">{error==="resource_unavailable" || error==="cursor_invalid" ? copy.missing : t.account.errors.account_unavailable}</p><button className={s.button} onClick={()=>{setCursor(null);setRevision(v=>v+1);}}>{copy.retry}</button></> : !data ? <p role="status">{copy.loading}</p> : <>

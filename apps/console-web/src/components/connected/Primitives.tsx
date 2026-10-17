@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
 import Link from "@/components/LocalizedLink";
+import WebTip from "@/components/editorial/WebTip";
 import s from "./Connected.module.scss";
 
-export function PageHeading({ title, description, action }: { title: string; description?: string; action?: ReactNode }) {
-  return <div className={s.heading}><div><h1>{title}</h1>{description && <p>{description}</p>}</div>{action && <div className={s.actions}>{action}</div>}</div>;
+export function PageHeading({ title, description, action, showTip = true }: { title: string; description?: string; action?: ReactNode; showTip?: boolean }) {
+  return <><div className={s.heading}><div><h1>{title}</h1>{description && <p>{description}</p>}</div>{action && <div className={s.actions}>{action}</div>}</div>{showTip && <WebTip/>}</>;
 }
 export function Surface({ title, children, action }: { title: ReactNode; children: ReactNode; action?: ReactNode }) {
   return <section className={s.surface}><div className={s.surfaceHeading}><h2>{title}</h2>{action}</div>{children}</section>;

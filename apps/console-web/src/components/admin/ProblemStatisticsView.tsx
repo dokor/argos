@@ -1,4 +1,5 @@
 "use client";
+import WebTip from "@/components/editorial/WebTip";
 
 import { useEffect, useState } from "react";
 import Link from "@/components/LocalizedLink";
@@ -49,6 +50,7 @@ export default function ProblemStatisticsView() {
     <Link className={s.back} href="/account/admin">{c.back}</Link>
     {allowed && <><AdminNavigation active="analytics" /><StatisticsNavigation active="problems" /></>}
     <header className={s.header}><p className={s.eyebrow}>{c.eyebrow}</p><h1>{c.title}</h1><p>{c.intro}</p></header>
+    <WebTip/>
     {!session.ready ? <p role="status">{c.loading}</p> : !allowed ? <><p role="alert">{c.denied}</p><Link href="/account/sign-in">{c.signIn}</Link></> : <>
       <div className={s.filters}>
         <label>{c.period}<select value={days} onChange={event => setDays(Number(event.target.value))}>

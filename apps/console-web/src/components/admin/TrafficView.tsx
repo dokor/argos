@@ -1,4 +1,5 @@
 "use client";
+import WebTip from "@/components/editorial/WebTip";
 import { useEffect, useState } from "react";
 import Link from "@/components/LocalizedLink";
 import { useLang } from "@/lib/i18n/LangContext";
@@ -21,6 +22,7 @@ export default function TrafficView(){
   const sources:Record<string,string>=fr?{direct:'Direct / inconnu',search:'Moteurs',referral:'Liens référents',campaign:'Campagnes',internal:'Navigation interne'}:{direct:'Direct / unknown',search:'Search engines',referral:'Referrals',campaign:'Campaigns',internal:'Internal navigation'};
   const table=(title:string,rows:{value:string;views:number}[],labels?:Record<string,string>)=><section><h2>{title}</h2>{!rows.length?<p>{fr?'Aucune page vue mesurée sur cette période.':'No measured page views in this period.'}</p>:<div className={s.scroll} tabIndex={0} role="region" aria-label={title}><table><thead><tr><th scope="col">{title}</th><th scope="col">{fr?'Pages vues':'Page views'}</th></tr></thead><tbody>{rows.map(r=><tr key={r.value}><th scope="row">{labels?.[r.value]??r.value}</th><td>{number(r.views)}</td></tr>)}</tbody></table></div>}</section>;
   return <main className={`${s.main} ${t.traffic}`}><Link href="/account/admin">{fr?'Administration':'Administration'}</Link><h1>{fr?'Statistiques · Trafic':'Statistics · Traffic'}</h1>
+    <WebTip/>
     {!session.ready?<p role="status">{fr?'Chargement…':'Loading…'}</p>:!allowed?<p role="alert">{fr?'Accès administrateur requis.':'Administrator access required.'}</p>:<>
       <AdminNavigation active="analytics"/><StatisticsNavigation active="traffic"/>
       <p>{fr?'Pages publiques uniquement. Mesure facultative avec consentement, indépendante des comptes et des analyses réalisées.':'Public pages only. Optional consented measurement, independent of accounts and completed analyses.'}</p>

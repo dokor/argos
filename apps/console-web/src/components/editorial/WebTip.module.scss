@@ -1,9 +1,14 @@
 @use '../../styles/tokens' as t;
-.slot { min-block-size: 150px; margin-block: 24px; padding-inline: 24px; }
-.tip { max-width: 75ch; border-left: 2px solid t.$border; padding-left: 16px; color: t.$text-muted; font-size: 14px; line-height: 1.6; }
-.heading { font-weight: 650; color: t.$text; margin-bottom: 4px; }
-.tip a { display: inline-flex; align-items: center; min-height: 44px; text-decoration: underline; text-underline-offset: 3px; }
+.slot { min-block-size: 112px; margin-bottom: 24px; min-width: 0; }
+.tip { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px 24px; padding: 16px 20px; border-radius: t.$radius-sm; background: t.$brand-soft; color: t.$text; font-size: 14px; line-height: 1.6; }
+.copy { min-width: 0; max-width: 75ch; overflow-wrap: anywhere; }
+.tip .copy p { margin: 0; color: inherit; }
+.tip .copy .heading { font-weight: 650; margin-bottom: 4px; }
+.tip a { display: inline-flex; align-items: center; justify-self: start; min-height: 44px; color: t.$brand; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
 .tip a:focus-visible { outline: 2px solid t.$brand; outline-offset: 3px; }
+.aside { min-block-size: 180px; }
+.aside .tip { grid-template-columns: minmax(0, 1fr); }
+.slot:has(.tip) { min-block-size: 0; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-@media (max-width: 640px) { .slot { padding-inline: 16px; min-block-size: 220px; } }
+@media (max-width: 640px) { .slot { min-block-size: 176px; } .tip { grid-template-columns: minmax(0, 1fr); padding: 16px; } }
 @media print { .slot { display: none; } }

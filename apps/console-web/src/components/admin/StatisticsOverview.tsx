@@ -1,4 +1,5 @@
 "use client";
+import WebTip from "@/components/editorial/WebTip";
 
 import { useEffect, useState } from "react";
 import Link from "@/components/LocalizedLink";
@@ -48,6 +49,7 @@ export default function StatisticsOverview() {
 
   return <main className={s.main}>
     <header><p className={s.eyebrow}>Administration</p><h1>{c.title}</h1><p>{c.intro}</p></header>
+    <WebTip/>
     {!session.ready ? <p role="status">{c.loading}</p> : !allowed ? <p role="alert">{c.denied}</p> : <>
       <AdminNavigation active="analytics" />
       <StatisticsNavigation active="overview" />

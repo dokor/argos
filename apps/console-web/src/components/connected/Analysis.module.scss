@@ -41,6 +41,8 @@
 @media(max-width:600px) { .attempts,.facts,.modules { grid-template-columns: 1fr; } .context { margin: 0 16px 20px; padding: 18px; } .navigation { padding: 18px 16px 0; } .urlList > li { padding: 18px; } }
 
 .columns > section { margin-bottom: 0; }
+.formAside { display: grid; gap: 20px; min-width: 0; }
+.formAside > [data-web-tip], .formAside > section { margin-bottom: 0; }
 
 .knownSection { scroll-margin-top: 160px; }
 .knownUrls { list-style: none; padding: 0; margin-top: 16px; }
