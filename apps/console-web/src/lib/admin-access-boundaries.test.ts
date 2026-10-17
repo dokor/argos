@@ -7,7 +7,7 @@ import nextConfig from "../../next.config";
 import { localizedPath } from "./i18n/routes";
 
 const fetchMock = vi.fn();
-const accountRoutes = ["admin/entitlement-options", "admin/users/42/events","admin/users", "admin/users/42", "admin/runs", "admin/runs/42", "admin/runs/42/report", "admin/queue", "admin/events", "admin/feedback", "admin/feedback/42", "admin/analytics"];
+const accountRoutes = ["admin/entitlement-options", "admin/users/42/events","admin/users", "admin/users/42", "admin/runs", "admin/runs/42", "admin/runs/42/report", "admin/queue", "admin/queue/tasks", "admin/queue/tasks/BATCH/42", "admin/events", "admin/feedback", "admin/feedback/42", "admin/analytics"];
 const legacyRoutes = ["/api/audits", "/api/audits/7/history", "/api/audits/7/history/42/comparison", "/api/audits/runs/42", "/api/audits/runs/42/report"];
 function request(path: string, cookie = "") {
   return new NextRequest("https://argos.example" + path, {

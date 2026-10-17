@@ -65,7 +65,7 @@ it.each(["fr","en"] as const)("keeps the shared administration and safe detail r
  await screen.findByRole("heading",{name:"atelier.example"});
  expect(screen.getByRole("link",{name:lang==="fr"?"Retour à l’administration":"Back to administration"})).toHaveAttribute("href",(lang==="en"?"/en":"")+"/account/admin/runs?site=atelier.example&cursor=42");
  const navigation=screen.getByRole("navigation",{name:"Administration"});
- expect(navigation.querySelectorAll("a")).toHaveLength(5);
+ expect(navigation.querySelectorAll("a")).toHaveLength(6);
  expect(navigation.querySelector('[aria-current="page"]')).toHaveTextContent(lang==="fr"?"Analyses":"Analyses");
 });
 
@@ -89,7 +89,7 @@ it("shows safe page scope and human identities, keeping archived and anonymous a
  expect(await screen.findByRole("link",{name:"Alice"})).toHaveAttribute("href","/account/admin/users/42");
  expect(screen.getByText("https://www.exemple.fr/catalogue")).toBeInTheDocument();
  expect(screen.getByText(/Analyse de domaine · 3 pages/)).toBeInTheDocument();
- expect(screen.getByText("Compte archivé ou introuvable")).toHaveAttribute("title","#43");
+ expect(screen.getByTitle("#43")).toHaveTextContent("Compte archivé ou introuvable");
  expect(screen.getAllByText("Anonyme").length).toBeGreaterThan(0);
  fireEvent.click(screen.getByRole("button",{name:"Réinitialiser les filtres"}));expect(nav.push).toHaveBeenCalledWith("/account/admin/runs");
 });
