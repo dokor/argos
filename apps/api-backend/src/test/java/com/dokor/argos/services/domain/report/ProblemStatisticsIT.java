@@ -75,6 +75,31 @@ class ProblemStatisticsIT extends MariaDbReportFixture {
                 assertFalse(query.contains(field),field);
         }
     }
+    @Test void ranksCloseFrequenciesWithoutRoundingThemIntoATie() throws Exception {
+        try(var c=source.getConnection();
+            var domains=c.prepareStatement("INSERT INTO ARG_DOMAIN(id,hostname) VALUES(?,?)");
+            var audits=c.prepareStatement("INSERT INTO ARG_AUDIT(id,domain_id,input_url,normalized_url) VALUES(?,?,?,?)");
+            var runs=c.prepareStatement("INSERT INTO ARG_AUDIT_RUN(id,audit_id,status) VALUES(?,?,'COMPLETED')");
+            var reports=c.prepareStatement("INSERT INTO ARG_AUDIT_REPORT(id,audit_id,run_id,token_hash,domain,target_url,report_json,created_at,expires_at,problem_projection_version,problem_fingerprint,problem_coverage_version,problem_partial) VALUES(?,?,?,UNHEX(SHA2(?,256)),'precision.example','https://precision.example/','{}','2026-10-16 12:00:00','2027-10-17',1,?,?,0)");
+            var checks=c.prepareStatement("INSERT INTO ARG_REPORT_PROBLEM_CHECK(report_id,check_key,category,severity) VALUES(?,?,'security',?)")) {
+            for(int i=1;i<=201;i++) {
+                long id=1000+i;String host="precision-"+i+".example",url="https://"+host+"/";
+                domains.setLong(1,id);domains.setString(2,host);domains.addBatch();
+                audits.setLong(1,id);audits.setLong(2,id);audits.setString(3,url);audits.setString(4,url);audits.addBatch();
+                runs.setLong(1,id);runs.setLong(2,id);runs.addBatch();
+                reports.setLong(1,id);reports.setLong(2,id);reports.setLong(3,id);reports.setString(4,Long.toString(id));
+                reports.setString(5,POLICY.fingerprint());reports.setString(6,com.dokor.argos.services.analysis.scoring.MeasurementCoverageService.VERSION);reports.addBatch();
+                checks.setLong(1,id);
+                if(i<=199) {checks.setString(2,KEY);checks.setString(3,i<=100?"important":null);checks.addBatch();}
+                checks.setString(2,"http.security.hsts");checks.setString(3,i<=101?"important":null);checks.addBatch();
+            }
+            domains.executeBatch();audits.executeBatch();runs.executeBatch();reports.executeBatch();checks.executeBatch();
+        }
+        var findings=read(null).findings();assertEquals(2,findings.size());
+        assertEquals(KEY,findings.getFirst().key());
+        assertTrue(findings.getFirst().frequency()>findings.getLast().frequency());
+        assertTrue(findings.getFirst().affectedDomains()<findings.getLast().affectedDomains());
+    }
     @Test void suppressesSmallGroupsAndExcludesCurrentDayAndExpiredReports() throws Exception {
         for(int i=1;i<=9;i++)add(100+i,i,until.minusSeconds(3600),report(true,false),true);
         add(200,20,until.plusSeconds(1),report(true,false),true);

@@ -95,6 +95,7 @@ public class ProblemStatisticsDao {
                 COALESCE(SUM(eligible AND problem_partial=1),0),
                 COALESCE(SUM(problem_projection_version IS NULL),0) FROM latest
             """);
+             // Preserve close ranks instead of rounding count division to MariaDB's default DECIMAL scale.
              var findings = connection.prepareStatement(COHORT + """
             SELECT c.check_key,c.category,
                 CASE WHEN SUM(c.severity='critical')>0 THEN 'critical'
@@ -104,7 +105,7 @@ public class ProblemStatisticsDao {
             WHERE l.eligible=1 AND (? IS NULL OR c.category=?)
             GROUP BY c.check_key,c.category
             HAVING COUNT(c.severity)>=10 AND COUNT(*)>=10
-            ORDER BY COUNT(c.severity)/COUNT(*) DESC,COUNT(c.severity) DESC,c.check_key
+            ORDER BY COUNT(c.severity)*1e0/COUNT(*) DESC,COUNT(c.severity) DESC,c.check_key
             """)) {
             bind(summary, from, until, now, retention, policy); bind(findings, from, until, now, retention, policy);
             findings.setString(8, category); findings.setString(9, category);

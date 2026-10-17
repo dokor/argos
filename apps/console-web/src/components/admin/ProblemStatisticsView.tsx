@@ -67,7 +67,7 @@ export default function ProblemStatisticsView() {
           <div><dt>{c.reports}</dt><dd>{number(data.reports)}</dd></div>
           <div><dt>{c.partial}</dt><dd>{number(data.partialDomains)} <small>/ {number(data.retainedDomains)}</small></dd></div>
         </dl>
-        {data.pendingDomains > 0 && <p className={s.notice} role="status">{number(data.pendingDomains)} {c.pending}</p>}
+        {data.pendingDomains > 0 && <p className={s.notice} role="status">{number(data.pendingDomains)} {data.pendingDomains === 1 ? c.pendingOne : c.pending}</p>}
         <section aria-labelledby="problem-ranking-title">
           <div className={s.sectionHeading}><h2 id="problem-ranking-title">{c.findings}</h2><p>{c.order}</p></div>
           {!data.reports ? <p role="status">{c.noReports}</p> : !data.findings.length ? <p role="status">{c.empty}</p> : <ol className={s.ranking}>
@@ -84,7 +84,7 @@ export default function ProblemStatisticsView() {
           </ol>}
         </section>
         <details className={s.details}><summary>{c.methodology}</summary><div>
-          <p>{number(data.domains)} {c.audited} · {number(data.excludedDomains)} {c.excluded}.</p>
+          <p>{number(data.domains)} {data.domains === 1 ? c.auditedOne : c.audited} · {number(data.excludedDomains)} {data.excludedDomains === 1 ? c.excludedOne : c.excluded}.</p>
           <p>{c.rule}</p><p>{c.denominator}</p>
           <p>{c.threshold.replaceAll("{n}", number(data.minimumGroupSize))}</p><p>{c.limits}</p><p>{c.retention}</p>
           <dl className={s.metadata}><div><dt>{c.fingerprint}</dt><dd><code>{data.scoringFingerprint}</code></dd></div>

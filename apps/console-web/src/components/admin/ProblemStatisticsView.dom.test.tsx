@@ -25,6 +25,7 @@ it.each(["fr", "en"] as const)("shows measured denominators, exclusions and meth
   expect(screen.getByText(lang === "fr" ? /83,3/ : /83\.3/)).toBeInTheDocument();
   expect(screen.getByText(/non représentatif|not representative/)).toBeInTheDocument();
   expect(screen.getByText(/temporairement incomplet|temporarily incomplete/)).toBeInTheDocument();
+  expect(screen.getByText(lang === "fr" ? /1 domaine attend/ : /1 domain still awaits/)).toBeInTheDocument();
   expect(screen.getByText(metrics.scoringFingerprint)).toBeInTheDocument();
   expect(screen.getByRole("link", { name: lang === "fr" ? "Problèmes détectés" : "Detected problems" })).toHaveAttribute("aria-current", "page");
   expect(api).toHaveBeenCalledWith("admin/problem-statistics?days=90", "GET", undefined, expect.any(AbortSignal));
