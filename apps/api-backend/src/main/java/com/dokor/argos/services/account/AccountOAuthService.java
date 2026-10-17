@@ -14,7 +14,8 @@ import java.util.*;
 public class AccountOAuthService {
     public record Start(String url, String state, String browser) {}
 
-    public record Finish(String jwt, String returnPath) {}
+    // Internal outcome; only jwt/returnPath are used in the HTTP response.
+    public record Finish(String jwt, String returnPath, Long userId, Long sessionId, boolean registered) {}
 
     private final AccountDao dao;
     private final AccountSessionService sessions;
@@ -174,9 +175,10 @@ public class AccountOAuthService {
                                     context.session().getId(),
                                     c);
                             auth.notice(context.user(), AccountEmail.Kind.METHOD_ADDED, language);
-                            return new Finish(null, tx.getReturnPath());
+                            return new Finish(null, tx.getReturnPath(), null, null, false);
                         }
                         var existing = dao.identity(provider, identity.subject(), c);
+                        boolean registered = existing == null;
                         AccountUser user;
                         if (existing != null) {
                             user = dao.user(existing.getUserId(), c, true);
@@ -228,7 +230,7 @@ public class AccountOAuthService {
                                 user.getId(),
                                 issued.context().session().getId(),
                                 c);
-                        return new Finish(issued.jwt(), tx.getReturnPath());
+                        return new Finish(issued.jwt(), tx.getReturnPath(), user.getId(), issued.context().session().getId(), registered);
                     });
         } catch (RuntimeException failure) {
             if (AccountAuthService.duplicate(failure))

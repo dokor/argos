@@ -2,6 +2,8 @@ package com.dokor.argos.webservices.api.account;
 
 import com.coreoz.plume.jersey.security.permission.PublicApi;
 import com.dokor.argos.services.account.*;
+import com.dokor.argos.services.analytics.AccountJourneyService;
+import com.dokor.argos.services.analytics.AccountJourneyEvent;
 import com.dokor.argos.services.token.TokenService;
 
 import jakarta.inject.*;
@@ -39,6 +41,11 @@ public class AccountAuthWs {
     @Context private Provider<ContainerRequestContext> requests;
     @Context private Provider<org.glassfish.grizzly.http.server.Request> nativeRequests;
 
+    private final AccountJourneyService journey;
+
+    private String measurement() { return request().getHeaderString("X-Argos-Measurement"); }
+    private String language() { return request().getHeaderString("Accept-Language"); }
+
     private ContainerRequestContext request() {
         return requests.get();
     }
@@ -51,7 +58,7 @@ public class AccountAuthWs {
             AccountCsrf csrf,
             AccountRateLimiter rate,
             TokenService tokens,
-            AccountSettings settings) {
+            AccountSettings settings, AccountJourneyService journey) {
         this.auth = auth;
         this.sessions = sessions;
         this.oauth = oauth;
@@ -59,6 +66,7 @@ public class AccountAuthWs {
         this.rate = rate;
         this.tokens = tokens;
         this.settings = settings;
+        this.journey = journey;
     }
 
     private String authorization() {
@@ -100,7 +108,8 @@ public class AccountAuthWs {
     public Response register(Registration b) {
         if (b == null) throw new AccountError(400, "payload_invalid");
         mutation("email", AccountIdentityValues.email(b.email()));
-        auth.register(b.email(), b.password(), b.displayName(), request().getHeaderString("Accept-Language"));
+        Long user = auth.register(b.email(), b.password(), b.displayName(), language());
+        journey.record(AccountJourneyEvent.REGISTERED, user, user, "password", language(), measurement());
         return ok(Map.of("accepted", true));
     }
 
@@ -110,6 +119,7 @@ public class AccountAuthWs {
         if (b == null) throw new AccountError(400, "payload_invalid");
         String token = mutation("login", AccountIdentityValues.email(b.email()));
         var result = auth.login(b.email(), b.password(), token);
+        journey.authenticated(result.context().session().getId(), result.context().user().getId(), "password", language(), measurement());
         return Response.ok(profile(result.context().user()))
                 .header("X-Argos-Session", result.jwt())
                 .header("Cache-Control", "private, no-store")
@@ -237,6 +247,10 @@ public class AccountAuthWs {
                         code,
                         authorization(),
                         cookie == null ? null : cookie.getValue(), request().getHeaderString("Accept-Language"));
+        if (result.userId() != null) {
+            if (result.registered()) journey.record(AccountJourneyEvent.REGISTERED, result.userId(), result.userId(), provider, language(), measurement());
+            journey.authenticated(result.sessionId(), result.userId(), provider, language(), measurement());
+        }
         var response =
                 Response.ok(Map.of("returnTo", result.returnPath()))
                         .header("Cache-Control", "private, no-store");

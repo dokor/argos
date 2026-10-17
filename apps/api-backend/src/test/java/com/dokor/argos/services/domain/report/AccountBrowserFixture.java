@@ -167,7 +167,7 @@ public class AccountBrowserFixture extends MariaDbReportFixture {
                                         new AccountRateLimiter(
                                                 dao, fixture.tokens, clock, settings),
                                         fixture.tokens,
-                                        settings))
+                                        settings, org.mockito.Mockito.mock(com.dokor.argos.services.analytics.AccountJourneyService.class)))
                         .register(
                                 new AccountWs(
                                         dao,
@@ -175,7 +175,7 @@ public class AccountBrowserFixture extends MariaDbReportFixture {
                                         auth,
                                         personal,
                                         new AccountCsrf(settings),
-                                        new AccountRateLimiter(dao, fixture.tokens, clock, settings), new AccountSitesService(dao,sessions,new UrlNormalizer(),new DomainService(new DomainDao(dao.transactions)),new AuditDao(dao.transactions),clock), new AccountHistoryService(dao,sessions,fixture.mapper,clock)))
+                                        new AccountRateLimiter(dao, fixture.tokens, clock, settings), new AccountSitesService(dao,sessions,new UrlNormalizer(),new DomainService(new DomainDao(dao.transactions)),new AuditDao(dao.transactions),clock), new AccountHistoryService(dao,sessions,fixture.mapper,clock), org.mockito.Mockito.mock(com.dokor.argos.services.analytics.AccountJourneyService.class)))
                         .register(
                                 new com.dokor.argos.webservices.api.report.ReportsWs(
                                         fixture.reader, fixture.runs));
@@ -188,7 +188,7 @@ public class AccountBrowserFixture extends MariaDbReportFixture {
         config.register(new UsageHistoryWs(new UsageHistoryService(sessions,new UsagePolicy(ConfigFactory.empty()),clock)));
         config.register(new ConnectedProfilesWs(sessions,connectedProfiles));
         config.register(new ConnectedAnalysesWs(new com.dokor.argos.services.connected.ConnectedAnalysesService(dao,sessions,
-            new AccountSitesService(dao,sessions,new UrlNormalizer(),new DomainService(new DomainDao(dao.transactions)),auditDao,clock),audits,new UrlNormalizer(),connectedProfiles,fixture.mapper,fixture.tokens),new AccountCsrf(settings)));
+            new AccountSitesService(dao,sessions,new UrlNormalizer(),new DomainService(new DomainDao(dao.transactions)),auditDao,clock),audits,new UrlNormalizer(),connectedProfiles,fixture.mapper,fixture.tokens),new AccountCsrf(settings), org.mockito.Mockito.mock(com.dokor.argos.services.analytics.ProductAnalyticsService.class)));
         config.register(new AdminWs(new AdminService(dao,sessions,usage,new UsagePolicy(ConfigFactory.empty()),fixture.reader,fixture.mapper,clock),new AccountCsrf(settings)));
         var feedback=new com.dokor.argos.services.feedback.FeedbackService(dao,new FeedbackDao(dao),sessions,fixture.reports,fixture.reader,fixture.tokens,clock);
         config.register(new com.dokor.argos.webservices.api.feedback.FeedbackWs(feedback,new AccountCsrf(settings),new AccountRateLimiter(dao,fixture.tokens,clock,settings)));

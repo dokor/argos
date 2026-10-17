@@ -30,22 +30,27 @@ public class AccountAnalyticsWs {
     private final ProductAnalyticsService analytics;
     private final ProductMeasurementControl control;
     private final AccountCsrf csrf;
+    private final com.dokor.argos.services.analytics.AccountJourneyDao journey;
     @Context private jakarta.inject.Provider<ContainerRequestContext> requests;
 
     @Inject
     public AccountAnalyticsWs(AccountSessionService sessions, ProductAnalyticsService analytics,
-            ProductMeasurementControl control, AccountCsrf csrf) {
+            ProductMeasurementControl control, AccountCsrf csrf, com.dokor.argos.services.analytics.AccountJourneyDao journey) {
         this.sessions = sessions;
         this.analytics = analytics;
         this.control = control;
         this.csrf = csrf;
+        this.journey = journey;
     }
 
     @GET
     public Response metrics(@DefaultValue("30") @QueryParam("days") int days,
                             @HeaderParam("Authorization") String authorization) {
         return AccountAuthWs.ok(sessions.with(authorization, null, true, false,
-            (context, connection) -> analytics.metrics(days, context)));
+            (context, connection) -> {
+                var audits = analytics.metrics(days, context);
+                return Map.of("audits", audits, "accounts", journey.summary(java.time.Instant.parse(audits.from()), java.time.Instant.parse(audits.until())));
+            }));
     }
 
     @GET @Path("/settings")

@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { dimensions, type ProductEvent } from './contract';
-export const CONSENT_COOKIE = 'argos_product_consent';
+export const CONSENT_COOKIE = 'argos_product_consent_v2';
 export function enabled() { return process.env.PRODUCT_ANALYTICS_ENABLED === 'true' && Boolean(process.env.ADMIN_API_TOKEN?.trim()); }
 export async function collectionEnabled() {
     if (!enabled()) return false;

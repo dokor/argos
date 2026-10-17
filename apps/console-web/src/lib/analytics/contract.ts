@@ -6,16 +6,17 @@ export type Dimensions = {
     placement: 'page' | 'nav' | 'hero' | 'footer' | 'form';
 };
 export type ProductEvent = {
-    event: 'public_page_view' | 'example_open' | 'audit_cta_click' | 'audit_submission_rejected';
+    event: 'public_page_view' | 'example_open' | 'audit_cta_click' | 'audit_submission_rejected' | 'account_registration_view' | 'account_auth_rejected';
     dimensions: Dimensions;
     errorCategory?: 'none' | 'validation' | 'service' | 'rate_limit';
 };
 export function publicRoute(path: string): string | undefined { const route = frenchPath(path); return (routes as readonly string[]).includes(route) ? route : undefined; }
+const eventRoutes = [...routes, "/account/analyses/new", "/account/register", "/account/sign-in"] as readonly string[];
 export function dimensions(value: unknown): Dimensions | undefined {
     if (!value || typeof value !== 'object')
         return;
     const d = value as Record<string, unknown>;
-    if (Object.keys(d).some(k => !['route', 'lang', 'placement'].includes(k)) || typeof d.route !== 'string' || !(routes as readonly string[]).includes(d.route) || !['fr', 'en'].includes(String(d.lang)) || !['page', 'nav', 'hero', 'footer', 'form'].includes(String(d.placement)))
+    if (Object.keys(d).some(k => !['route', 'lang', 'placement'].includes(k)) || typeof d.route !== 'string' || !eventRoutes.includes(d.route) || !['fr', 'en'].includes(String(d.lang)) || !['page', 'nav', 'hero', 'footer', 'form'].includes(String(d.placement)))
         return;
     return { route: d.route, lang: d.lang as Dimensions['lang'], placement: d.placement as Dimensions['placement'] };
 }
@@ -26,10 +27,13 @@ export function eventPayload(value: unknown): ProductEvent | undefined {
     if (Object.keys(v).some(k => !['event', 'dimensions', 'errorCategory'].includes(k)))
         return;
     const d = dimensions(v.dimensions);
-    if (!d || !['public_page_view', 'example_open', 'audit_cta_click', 'audit_submission_rejected'].includes(String(v.event)))
+    if (!d || !['public_page_view', 'example_open', 'audit_cta_click', 'audit_submission_rejected', 'account_registration_view', 'account_auth_rejected'].includes(String(v.event)))
         return;
     const error = v.errorCategory ?? 'none';
-    if (!['none', 'validation', 'service', 'rate_limit'].includes(String(error)) || (v.event !== 'audit_submission_rejected' && error !== 'none'))
+    if (!['none', 'validation', 'service', 'rate_limit'].includes(String(error)) || (!['audit_submission_rejected', 'account_auth_rejected'].includes(String(v.event)) && error !== 'none'))
         return;
     return { event: v.event as ProductEvent['event'], dimensions: d, errorCategory: error as ProductEvent['errorCategory'] };
 }
+
+/** Reserved until an offer and a separately reviewed collection flow exist. */
+export const reservedPremiumEvents = ["premium_offer_view", "premium_upgrade_completed"] as const;

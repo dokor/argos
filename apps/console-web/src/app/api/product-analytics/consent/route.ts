@@ -14,4 +14,4 @@ catch {
 }).choice)))
     return NextResponse.json({ error: 'Invalid choice' }, { status: 400 }); const response = new NextResponse(null, { status: 204, headers: { 'Cache-Control': 'no-store' } }); response.cookies.set(CONSENT_COOKIE, String((body as {
     choice: string;
-}).choice), { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', path: '/' }); return response; }
+}).choice), { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/' }); return response; }

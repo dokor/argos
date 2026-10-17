@@ -2,6 +2,9 @@ package com.dokor.argos.db.generated;
 
 /** Manually maintained mapping for V10. */
 public class ProductAuditAttribution {
+    private String audience;
+    public String getAudience(){return audience;}
+    public void setAudience(String value){this.audience=value;}
     private Long runId;
     public Long getRunId(){return runId;}
     public void setRunId(Long value){this.runId=value;}

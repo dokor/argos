@@ -47,13 +47,13 @@ public class AccountAuthService {
         register(raw, password, name, "fr");
     }
 
-    public void register(String raw, String password, String name, String language) {
+    public Long register(String raw, String password, String name, String language) {
         available();
         String email = AccountIdentityValues.email(raw);
         String hash = passwords.hash(password);
         String display = AccountIdentityValues.displayName(name);
         try {
-            dao.transaction(
+            return dao.transaction(
                     c -> {
                         if (dao.email(email, c) != null) return null;
                         var u = new AccountUser();
@@ -67,10 +67,10 @@ public class AccountAuthService {
                         password(u, hash, c);
                         issue(u, "VERIFY", null, c, language);
                         sessions.event("register", "accepted", u.getId(), null, c);
-                        return null;
+                        return u.getId();
                     });
         } catch (RuntimeException failure) {
-            if (duplicate(failure)) return;
+            if (duplicate(failure)) return null;
             throw failure;
         }
     }

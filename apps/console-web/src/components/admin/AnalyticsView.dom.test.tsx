@@ -11,14 +11,16 @@ vi.mock("@/components/account/AccountSession", () => ({ useAccountSession: () =>
 vi.mock("@/components/site/SiteNav", () => ({ default: () => null }));
 vi.mock("@/components/site/SiteFooter", () => ({ default: () => null }));
 const delay = { sample: 0, excluded: 2, medianMs: null, p90Ms: null, p95Ms: null };
-const metrics: ProductMetrics = { enabled: false, capped: true, from: "2026-10-01", until: "2026-10-13", cohort: { accepted: 24, started: 22, completed: 18, failed: 2, pending: 4, viewed: 15, completedViewed: 14 }, bySource: [], queue: delay, processing: delay, endToEnd: delay, events: [] };
+const audits: ProductMetrics = { enabled: false, capped: true, from: "2026-10-01", until: "2026-10-13", cohort: { accepted: 24, started: 22, completed: 18, failed: 2, pending: 4, viewed: 15, completedViewed: 14 }, byAudience: [], bySource: [], queue: delay, processing: delay, endToEnd: delay, events: [] };
+const accounts = { activeAccounts: 0, returningAccounts: 0, activityDays: 0, authentications: 0, claimedReports: 0, cohorts: [] };
+const metrics = { audits, accounts };
 beforeEach(() => { session.ready = true; session.denied = false; session.profile = { verified: true, admin: true }; api.mockReset().mockResolvedValue(metrics); });
 
 it.each(["fr", "en"] as const)("renders metrics, empty results and unavailable delays in %s", async lang => {
   render(<LangProvider initialLang={lang}><AnalyticsView /></LangProvider>);
   await screen.findByText("24");
   expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(lang === "fr" ? "Mesure produit" : "Product measurement");
-  expect(screen.getAllByText(lang === "fr" ? "Indisponible" : "Unavailable")).toHaveLength(9);
+  expect(screen.getAllByText(lang === "fr" ? "Indisponible" : "Unavailable")).toHaveLength(11);
   expect(screen.getByText(lang === "fr" ? "Aucune source pour cette période." : "No sources for this period.")).toBeInTheDocument();
   expect(screen.getByRole("status")).toHaveTextContent("100");
   expect(api).toHaveBeenCalledWith("admin/analytics?days=30", "GET", undefined, expect.any(AbortSignal));
@@ -43,7 +45,7 @@ it("aborts stale periods, clears data while loading, and supports refresh after 
   expect(api).toHaveBeenLastCalledWith("admin/analytics?days=7", "GET", undefined, expect.any(AbortSignal));
 });
 it("ignores late responses and hides metrics immediately after revocation", async () => {
-  let resolve!: (data: ProductMetrics) => void;
+  let resolve!: (data: typeof metrics) => void;
   api.mockImplementation(() => new Promise(done => { resolve = done; }));
   const view = render(<AnalyticsView />);
   const signal = api.mock.calls.find(call => call[0] === "admin/analytics?days=30")![3];

@@ -1,6 +1,6 @@
 export const analyticsCopy = {
   fr: {
-    title: "Mesure produit", back: "Retour à l’administration", intro: "Uniquement les audits créés après accord explicite. Une ligne correspond à une analyse, jamais à une personne. Les états sont actualisés ; les cohortes récentes restent incomplètes.",
+    title: "Mesure produit", back: "Retour à l’administration", intro: "Inscriptions, premiers usages, retours et audits observés après accord explicite. Les cohortes récentes restent incomplètes ; les mesures de compte et d’audit ont des dénominateurs distincts.",
     period: "Période glissante UTC", days: "jours", refresh: "Actualiser", loading: "Chargement…", error: "Métriques indisponibles. Réessayez.", denied: "Un compte Argos administrateur vérifié est nécessaire.", signIn: "Se connecter", unavailable: "Indisponible",
     collection: "Collecte", enabled: "autorisée côté backend", disabled: "désactivée côté backend", cap: "Échantillon limité aux 100 000 analyses les plus anciennes de cette période.", cohort: "Cohorte des audits consentis",
     counts: { accepted: "Créés", started: "Démarrés", completed: "Terminés", failed: "Échoués", pending: "En attente / en cours", viewed: "Rapports affichés", completedViewed: "Terminés et affichés" },
@@ -11,7 +11,7 @@ export const analyticsCopy = {
     eventHelp: "Compteurs d’affichages et de clics, sans identifiant de visiteur. Jours calendaires UTC couvrant la période demandée, distincts de la cohorte glissante des analyses.",
   },
   en: {
-    title: "Product measurement", back: "Back to administration", intro: "Only audits created after explicit consent. Each row represents an analysis, never a person. States are updated; recent cohorts remain incomplete.",
+    title: "Product measurement", back: "Back to administration", intro: "Registrations, first use, returns and audits observed after explicit consent. Recent cohorts remain incomplete; account and audit measurements have separate denominators.",
     period: "Rolling UTC period", days: "days", refresh: "Refresh", loading: "Loading…", error: "Metrics are unavailable. Try again.", denied: "A verified Argos administrator account is required.", signIn: "Sign in", unavailable: "Unavailable",
     collection: "Collection", enabled: "enabled on the backend", disabled: "disabled on the backend", cap: "Sample limited to the oldest 100,000 analyses in this period.", cohort: "Consented audit cohort",
     counts: { accepted: "Created", started: "Started", completed: "Completed", failed: "Failed", pending: "Queued / running", viewed: "Reports viewed", completedViewed: "Completed and viewed" },

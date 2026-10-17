@@ -123,7 +123,9 @@ class AccountAdminAccessTest {
         when(metricsDao.sample(any(), any())).thenReturn(new ProductAnalyticsDao.Sample(List.of(), List.of(), false));
         var analytics = new ProductAnalyticsService(ConfigFactory.parseString("product-analytics.enabled=false"),
             metricsDao, mock(AdminReadAccess.class), mock(com.dokor.argos.db.dao.AuditReportDao.class), new TokenService());
-        var endpoint = new AccountAnalyticsWs(sessions, analytics, mock(com.dokor.argos.services.analytics.ProductMeasurementControl.class), new AccountCsrf(settings));
+        var journey = mock(com.dokor.argos.services.analytics.AccountJourneyDao.class);
+        when(journey.summary(any(), any())).thenReturn(new com.dokor.argos.services.analytics.AccountJourneyDao.Summary(0,0,0,0,0,List.of()));
+        var endpoint = new AccountAnalyticsWs(sessions, analytics, mock(com.dokor.argos.services.analytics.ProductMeasurementControl.class), new AccountCsrf(settings), journey);
         assertEquals(200, endpoint.metrics(30, authorization).getStatus());
         for (String state : List.of("USER", "PENDING", "ARCHIVED", "REVOKED", "EXPIRED")) {
             user.setState("ACTIVE"); user.setRole("ADMIN"); session.setRevokedAt(null); session.setExpiresAt(now.plusSeconds(3600));
@@ -138,6 +140,7 @@ class AccountAdminAccessTest {
         assertThrows(AccountError.class, () -> endpoint.metrics(30, null));
         assertThrows(AccountError.class, () -> endpoint.metrics(30, "Bearer legacy-secret"));
         verify(metricsDao, times(1)).sample(any(), any());
+        verify(journey, times(1)).summary(any(), any());
     }
 
     @Test void anonymousForgedAndLegacyCredentialsNeverAuthorizeAccountAdministration() {

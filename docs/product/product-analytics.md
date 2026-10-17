@@ -43,3 +43,7 @@ initiale est 28 jours, sans causalité déduite d'une variation brute. Search Co
 complète pages/requêtes sans recevoir les rapports privés. La première baseline
 reste à constituer après activation autorisée. Les informations de confidentialité,
 la durée et la purge doivent être vérifiées dans la configuration effective.
+
+## Parcours compte — #484, #485, #486
+
+Le [contrat et les définitions actuels](account-journey-measurement.md) complètent ce document : consentement v2 renouvelé, cookie SameSite Lax pour le callback social, références internes pseudonymes limitées à 90 jours et cohortes d’activation/rétention. L’administration actuelle est /account/admin/analytics ; comptes et audits ont des dénominateurs séparés.

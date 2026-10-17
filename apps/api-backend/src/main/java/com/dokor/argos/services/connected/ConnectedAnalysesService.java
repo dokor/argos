@@ -27,7 +27,13 @@ public final class ConnectedAnalysesService {
         this.dao=dao; this.sessions=sessions; this.sites=sites; this.audits=audits;
         this.normalizer=normalizer; this.profiles=profiles; this.mapper=mapper; this.tokens=tokens;
     }
+    public record Creation(SiteAnalysisAccepted accepted, boolean created) {}
+
     public SiteAnalysisAccepted create(String auth, String csrf, String key, SiteAnalysisInput input) {
+        return createObserved(auth, csrf, key, input).accepted();
+    }
+
+    public Creation createObserved(String auth, String csrf, String key, SiteAnalysisInput input) {
         requireKey(key);
         if (input==null || input.url()==null || input.url().length()>2048)
             throw new AccountError(400,"url_invalid");
@@ -42,7 +48,7 @@ public final class ConnectedAnalysesService {
                 .where(q.ownerUserId.eq(context.user().getId()),q.idempotencyKey.eq(key)).forUpdate().fetchOne();
             if(previous!=null) {
                 if(!fingerprint.equals(previous.getRequestFingerprint())) throw new AccountError(409,"idempotency_conflict");
-                return new SiteAnalysisAccepted(previous.getId().toString(),AdmittedRunStatus.valueOf(previous.getStatus()));
+                return new Creation(new SiteAnalysisAccepted(previous.getId().toString(),AdmittedRunStatus.valueOf(previous.getStatus())),false);
             }
             try { normalizer.normalize(normalized); }
             catch (IllegalArgumentException e) { throw new AccountError(400,"url_invalid"); }
@@ -54,7 +60,7 @@ public final class ConnectedAnalysesService {
             catch(Exception e) { throw new IllegalStateException("Profile serialization failed",e); }
             dao.transactions.update(q,c).set(q.idempotencyKey,key).set(q.requestFingerprint,fingerprint)
                 .set(q.profileSnapshot,json).where(q.id.eq(created.runId())).execute();
-            return new SiteAnalysisAccepted(Long.toString(created.runId()),AdmittedRunStatus.valueOf(created.status()));
+            return new Creation(new SiteAnalysisAccepted(Long.toString(created.runId()),AdmittedRunStatus.valueOf(created.status())),true);
         });
     }
     /** Recovery never creates a run or contacts its target, including for terminal requests. */

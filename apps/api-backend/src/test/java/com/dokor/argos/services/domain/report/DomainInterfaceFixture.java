@@ -134,7 +134,7 @@ final class DomainInterfaceFixture {
                         csrf,
                         new AccountRateLimiter(accounts, fixture.tokens, clock, settings),
                         fixture.tokens,
-                        settings));
+                        settings, org.mockito.Mockito.mock(com.dokor.argos.services.analytics.AccountJourneyService.class)));
         config.register(
                 new AdminWs(
                         new AdminService(
@@ -244,7 +244,7 @@ final class DomainInterfaceFixture {
                                 new AccountRateLimiter(accounts, fixture.tokens, clock, settings),
                                 sites,
                                 new AccountHistoryService(
-                                        accounts, sessions, fixture.mapper, clock)))
+                                        accounts, sessions, fixture.mapper, clock), org.mockito.Mockito.mock(com.dokor.argos.services.analytics.AccountJourneyService.class)))
                 .register(new ConnectedProfilesWs(sessions, profiles))
                 .register(new DomainDiscoveriesWs(discovery, csrf))
                 .register(new DomainBatchesWs(batches, csrf))
