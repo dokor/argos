@@ -82,6 +82,15 @@ function fixture(token) {
 const tokens = new Set(["review-complete", "review-partial", "review-unavailable", "review-empty", "review-details", "review-coverage"]);
 const port = Number(process.env.ARGOS_PREVIEW_PORT ?? 3018);
 createServer((req, res) => {
+  if (req.method === "GET" && req.url?.startsWith("/api/account/admin/statistics")) {
+    const period = new URL(req.url, "http://localhost").searchParams.get("period") ?? "all";
+    res.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store" });
+    return res.end(JSON.stringify({ generatedAt: "2026-10-17T10:00:00Z", period,
+      from: period === "all" ? null : "2026-10-10T10:00:00Z",
+      accounts: { created: 1250, validated: 900, suspended: 12, archived: 48, validationUnknown: 48, google: 610, github: 300, linkedin: 120 },
+      analyses: { total: 2430, completed: 2100, failed: 130, running: 20, queued: 80, canceled: 70, unknown: 30 },
+      domains: { total: 810, averageUrls: 3 } }));
+  }
   if (req.method === "GET" && req.url === "/api/audits/scope-catalogue") {
     res.writeHead(200, { "Content-Type": "application/json" });
     return res.end(JSON.stringify({ version: "visual-fixture", checkKeys: ["http.security.csp", "html.images.alt_coverage"] }));
