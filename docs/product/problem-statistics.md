@@ -26,7 +26,7 @@ Les sorties contiennent des clés publiques du catalogue, catégories, sévérit
 
 ## Persistance, reprise et rétention
 
-V36 ajoute les métadonnées de projection au rapport et la table `ARG_REPORT_PROBLEM_CHECK` : uniquement clé, catégorie, sévérité nullable (null = contrôle mesuré sans constat). Entités et Q* mises à jour. Aucun nouveau texte privé ni credential. Les faits et le marqueur sont écrits dans la transaction de publication, avec rollback commun au rapport et au run. Une nouvelle tentative de publication ne les duplique pas.
+V37 ajoute les métadonnées de projection au rapport et la table `ARG_REPORT_PROBLEM_CHECK` : uniquement clé, catégorie, sévérité nullable (null = contrôle mesuré sans constat). Entités et Q* mises à jour. Aucun nouveau texte privé ni credential. Les faits et le marqueur sont écrits dans la transaction de publication, avec rollback commun au rapport et au run. Une nouvelle tentative de publication ne les duplique pas.
 
 Les lectures utilisent une CTE et des agrégats SQL sur les colonnes projetées. Elles ne sélectionnent ni `report_json`, ni `result_json`, ni `diagnostic_json`. Les index bornent la fenêtre et la recherche des rapports non projetés ; un coût de tri et d’agrégation reste proportionnel à la cohorte, sans cache global indépendant des autorisations.
 
