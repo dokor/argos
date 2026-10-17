@@ -9,6 +9,19 @@ const browser=await chromium.launch(process.env.CLARTE_BROWSER_PATH?{executableP
 const results=[];
 // Canonical finding anchors are shared by both report readers; metadata markup may differ.
 const findingAnchor=key=>'finding-'+Array.from(key).map(char=>char.codePointAt(0).toString(16)).join('-');
+async function openEvidence(details,page,lang) {
+ const label=lang==='fr'?'Preuves et méthode':'Evidence and method';
+ const summary=details.locator('summary').filter({hasText:new RegExp('^'+label+'$')});
+ await summary.waitFor();
+ const panel=summary.locator('..');
+ assert.equal(await panel.evaluate(el=>el.open),false,'Technical evidence starts collapsed');
+ const block=panel.locator('[data-observed-evidence]');
+ if(await block.count()) assert.equal(await block.isVisible(),false,'The finding alone does not open its evidence');
+ await summary.focus();await page.keyboard.press('Enter');
+ assert.ok(await panel.evaluate(el=>el.open),'Evidence opens with the keyboard');
+ assert.ok(await summary.evaluate(el=>el===document.activeElement),'Evidence toggle retains focus');
+ return {panel,summary};
+}
 try {
  for(const width of [390,1056]) for(const lang of ['fr','en']) for(const colorScheme of ['light','dark']) {
   const context=await browser.newContext({viewport:{width,height:900},colorScheme});
@@ -33,6 +46,7 @@ try {
    if(await details.evaluate(el=>el.open)) {await summary.focus();await page.keyboard.press('Enter');}
    await summary.focus();await page.keyboard.press('Enter');
    assert.ok(await details.evaluate(el=>el.open));
+   const {panel:proof,summary:proofToggle}=await openEvidence(details,page,lang);
    if(state==='historical') assert.equal(await page.locator('[data-observed-evidence]').count(),0);
    else {
     const block=details.locator('[data-observed-evidence]');await block.waitFor();
@@ -52,6 +66,8 @@ try {
     const dom=page.locator('details#'+findingAnchor('lighthouse.audit.image-alt'));
     const domSummary=dom.locator('summary').first();await domSummary.focus();await page.keyboard.press('Enter');
     assert.ok(await dom.evaluate(el=>el.open));
+    await openEvidence(dom,page,lang);
+    await dom.locator('[data-observed-evidence]').waitFor();
     assert.ok((await dom.locator('[data-observed-evidence]').textContent()).includes('1,HTML,1,BODY,2,MAIN,4,IMG'));
     await dom.locator('[data-observed-evidence]').screenshot({path:`${output}/dom-${lang}-${colorScheme}-${width}.png`});
     if(width===390 && lang==='en' && colorScheme==='dark') for(const edge of [320,768]) {
@@ -61,6 +77,9 @@ try {
     }
     await page.setViewportSize({width,height:900});
    }
+   await proofToggle.focus();await page.keyboard.press('Enter');
+   assert.equal(await proof.evaluate(el=>el.open),false,'Evidence closes with the keyboard');
+   if(state!=='historical') assert.equal(await proof.locator('[data-observed-evidence]').isVisible(),false);
    await summary.focus();await page.keyboard.press('Enter');assert.equal(await details.evaluate(el=>el.open),false);
   }
   assert.deepEqual(errors,[]);await context.close();
