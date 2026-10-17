@@ -3,8 +3,10 @@
 `audit.timeout` defaults to 120 seconds, measured monotonically from processing
 start (queue waiting is separate). Collection gets this budget minus a reserve of
 5 seconds (10% for budgets below 50 seconds) for scoring/publication. Local stages
-run in their original order on one bounded, interruptible worker; SSL/Observatory
-keep their separate two-worker pool. Expiry cancels the active Future with
+run in their original order on one bounded, interruptible worker. By default,
+SSL/Observatory use that same sequential worker with their own per-call budget.
+An explicit capacity of 2 or 3 enables one or two remote workers, respectively;
+see [capacity and Raspberry measurements](progress.md). Expiry cancels the active Future with
 interruption, does not start subsequent collection, and records TIMEOUT fallback
 checks without scoring infrastructure failure. Already obtained results are kept.
 
