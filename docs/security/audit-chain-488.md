@@ -57,6 +57,15 @@ for the requested HTTP audit. The launcher's other disabled features are retaine
 Site HTTP-to-HTTPS redirects still undergo the usual destination checks;
 certificate verification for HTTPS is unchanged. Nominal fixtures require measured
 scores, so Chrome error pages with empty categories cannot masquerade as success.
+Each Lighthouse execution runs in a supervised Node process. The HTTP server
+bounds the IPC result to 8 MiB, starts a fresh process group and private temporary
+directory, and passes only the browser/proxy/runtime environment it needs. Chrome
+stays in that group. Success, an engine crash, timeout and client disconnect all
+stop the group and remove its files before admission is released or a response is
+returned. Raw child stdout/stderr are not forwarded; navigation diagnostics retain
+only bounded Chromium reason codes. An unhandled third-party CDP rejection cannot
+terminate the HTTP server. Existing per-container memory/PID/network limits still
+apply to both processes together.
 
 ## Limits and passive scope
 
