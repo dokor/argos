@@ -28,7 +28,7 @@ Limite : la fixture de la liste des utilisateurs d’administration ne fournit p
 
 ## Vérifications
 
-- `npm test -- --reporter=dot --maxWorkers=2` : 134 fichiers, 1 199 tests réussis, plus 3 tests du contrôle éditorial.
+- `npm test -- --reporter=dot --maxWorkers=4` : 134 fichiers, 1 203 tests réussis, plus 3 tests du contrôle éditorial, après intégration de `main`.
 - `npm run check:editorial` : structure FR/EN valide.
 - `npm run build -- --webpack` : compilation, TypeScript et génération des pages réussis, après le dernier ajustement SCSS.
 - `npm run lint` : aucune erreur ; un avertissement existant dans `ReportPriorityList.tsx`, fichier non modifié.
