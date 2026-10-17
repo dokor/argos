@@ -4,7 +4,8 @@
 
 Audits remain available without an account. Admission accepts HTTP(S), canonical
 ASCII hosts or public IP literals, default ports only (HTTP 80 / HTTPS 443), and
-URLs up to 2048 characters. Credentials, controls, backslashes, ambiguous numeric
+URLs up to 2048 characters (DNS names at most 253 characters). Percent-encoded
+authorities, credentials, controls, backslashes, ambiguous numeric
 hosts, trailing hostname dots, private/special-use addresses and DNS failures are
 refused. Unicode domains must be submitted in ASCII/Punycode form. Fragments do
 not affect collection. Queries are used for collection but excluded from diagnostics.
@@ -12,6 +13,10 @@ not affect collection. Queries are used for collection but excluded from diagnos
 The BFF bounds decoded request bytes before parsing JSON (8192 bytes). Java also
 bounds direct audit API bodies before Jackson. Java admission checks every DNS
 answer; collection checks the URL again after queueing and at each redirect.
+Syntax-only checks used for discovery and idempotency fingerprints apply the same
+host/IP restrictions without DNS. They cannot enqueue private literals or accept
+an ambiguous hostname while waiting for a later transport check. New admissions
+still resolve DNS; replay of a valid existing request does not require DNS.
 
 Admission DNS validation is **not** a connection guarantee. The mandatory egress
 proxy resolves every new destination, rejects the complete answer set if any
@@ -107,12 +112,22 @@ direct oversized API requests and sanitized stored diagnostics. Frontend tests
 cover syntax/IP policy and streaming byte limits; full lint/build/test results
 are recorded in the PR.
 
-`Audit security / Audit egress and browser isolation` runs real Chromium with the
+`Audit security / Audit egress and browser isolation` and its `ARM64` counterpart
+run real Chromium on native GitHub-hosted amd64/arm64 runners with the
 production seccomp/firewall on isolated Docker fixtures. The synthetic public IP
 is routed to a local bridge fixture, never a third party. It checks blocked direct
 egress, public page collection, private redirects, frames, worker/fetch/WebSocket
 requests and absence of the synthetic credential in outputs/logs. MariaDB CI runs
 `AuditAdmissionIT` for concurrent queue saturation, slot release and rollback.
+Both architecture jobs also run `scripts/security/lifecycle.mjs` in each collector:
+an eight-second deadline must reach a controlled slow fixture and return 504,
+client disconnection must cancel an already started navigation, no live Chrome
+process may remain within ten seconds, and a subsequent audit must succeed without
+restart or OOM. Public fixture counters prove that unsafe methods never arrived;
+both collector logs are checked for the synthetic credential. The smoke script
+refuses existing fixture names before installing cleanup and fails when readiness
+is not reached. Runtime admission retains its concurrency slot through failed-setup
+browser cleanup, so new work cannot overlap a browser still being closed.
 The existing controlled audit E2E uses an injected fixture-only transport mapping;
 production validators have no bypass switch.
 
@@ -121,6 +136,14 @@ full CI and controlled E2E on the exact PR head. This workstation has no Docker;
 local unit results do not certify those checks. Keep #488 open until required
 evidence and host verification are recorded. Include the new security check in
 branch protection and release evidence.
+
+The 17 October 2026 review supplements the already merged #505/#520 changes.
+Native ARM64 CI exercises the container images and policies, but does not certify
+the Raspberry kernel, deployed revisions, production rate limits or private DB
+state. The [host validation procedure](raspberry-audit-validation.md) remains
+required before closing #488; no host verification or deployment is implied by a
+green fixture job. GitHub runner labels are documented in the
+[official runner reference](https://docs.github.com/en/actions/reference/runners/github-hosted-runners).
 
 Stop old workers for V17 and grant the migration user TRIGGER permission. Each
 service deployment syncs its own revision of the gateway source. Deploy its

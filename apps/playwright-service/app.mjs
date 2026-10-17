@@ -246,13 +246,13 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
       log('analyze.error', { error: 'Collector failure' });
       if (!res.destroyed) res.status(cancelled ? 504 : 500).json({ error: cancelled ? 'Analysis timeout' : 'Internal Error' });
     } finally {
-      active--;
       clearTimeout(timer);
       res.removeListener('close', disconnected);
       if (browser) {
         try { await browser.close(); }
         catch { log('analyze.cleanup_error', { error: 'Browser cleanup failed' }); }
       }
+      active--;
     }
   });
 

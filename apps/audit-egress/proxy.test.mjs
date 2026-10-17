@@ -19,10 +19,14 @@ test('URL ambiguity, credentials, schemes, local names, ports and controls are r
   for(const value of [...denied.map(ip=>`http://${ip.includes(':')?'['+ip+']':ip}/`),
     'http://2130706433','http://0177.0.0.1','http://0x7f000001','http://127.1',
     'https://example.com:8443','http://example.com:443','https://user:secret@example.com',
+    'https://%65xample.com','https://example%2ecom','https://%38.8.8.8',
+    `https://${'a'.repeat(63)}.${'b'.repeat(63)}.${'c'.repeat(63)}.${'d'.repeat(62)}`,
     'https://localhost.','https://local','https://svc.internal','https://foo.test','file:///etc/passwd',
     'https://example.com\\@localhost','https://example.com\n','https://example.com/%00'.repeat(1000)])
     assert.throws(()=>analysisUrl(value),undefined,value);
-  for(const value of ['https://example.com','http://example.com:80/path?q=1','https://[2606:4700:4700::1111]'])assert.ok(analysisUrl(value));
+  for(const value of ['https://example.com','http://example.com:80/path?q=1','https://[2606:4700:4700::1111]',
+    'https://xn--caf-dma.fr/caf%C3%A9?q=%26',
+    `https://${'a'.repeat(63)}.${'b'.repeat(63)}.${'c'.repeat(63)}.${'d'.repeat(61)}`])assert.ok(analysisUrl(value));
 });
 test('DNS rejects errors, mixed public/private answers and changing resolutions',async()=>{
   const url=analysisUrl('https://example.com');

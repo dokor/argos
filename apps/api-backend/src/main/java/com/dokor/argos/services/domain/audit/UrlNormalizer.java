@@ -61,6 +61,7 @@ public class UrlNormalizer {
             // Reject empty ports and numeric shorthand that different URL parsers interpret differently.
             String expected = uri.getHost() + (port == -1 ? "" : ":" + port);
             if (!expected.equalsIgnoreCase(uri.getRawAuthority())) throw new IllegalArgumentException("Ambiguous URL authority");
+            validateHostSyntax(uri.getHost());
             return uri;
         } catch (URISyntaxException e) { throw new IllegalArgumentException("Malformed URL"); }
     }
@@ -70,16 +71,22 @@ public class UrlNormalizer {
         validateHost(uri.getHost(), InetAddress::getAllByName);
     }
 
-    private static void validateHost(String bracketed, Resolver resolver) {
+    private static String validateHostSyntax(String bracketed) {
         String host = bracketed.replace("[", "").replace("]", "").toLowerCase(Locale.ROOT);
         if (InetAddresses.isInetAddress(host)) {
             InetAddress address = InetAddresses.forString(host);
             if (host.contains(":") && address.getAddress().length != 16 || isBlockedAddress(address)) throw new IllegalArgumentException("Target is not public");
-            return;
+            return host;
         }
-        if (!host.matches("(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z][a-z0-9-]{1,62}")
+        if (host.length() > 253 || !host.matches("(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z][a-z0-9-]{1,62}")
             || host.matches("(?:.*\\.)?(localhost|local|internal|localdomain|test|invalid|example|onion)"))
             throw new IllegalArgumentException("Target hostname is not allowed");
+        return host;
+    }
+
+    private static void validateHost(String bracketed, Resolver resolver) {
+        String host = validateHostSyntax(bracketed);
+        if (InetAddresses.isInetAddress(host)) return;
         try {
             InetAddress[] answers = resolver.resolve(host);
             if (answers.length == 0) throw new IllegalArgumentException("Target DNS unavailable");

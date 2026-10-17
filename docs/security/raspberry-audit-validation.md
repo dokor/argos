@@ -93,8 +93,12 @@ Attendus : code de sortie 0, lancement de Chromium avec sandbox, sortie directe
 refusée, analyse de la page autorisée, redirection privée refusée, compteur de la
 fixture privée égal à zéro après frames/fetch/worker/WebSocket, marqueur
 `synthetic-secret` absent des résultats runtime/Lighthouse et des logs runtime.
-Le script ne valide pas à lui seul les logs Lighthouse, le nettoyage après
-déconnexion, les conteneurs déployés ni le BFF : poursuivre les étapes suivantes.
+Le smoke exécute aussi `scripts/security/lifecycle.mjs` pour les deux collecteurs,
+vérifie leurs logs, l'absence de mutations reçues par la fixture, les processus
+Chrome après timeout/déconnexion et la reprise sans OOM ni redémarrage. La CI
+exécute désormais cette même recette sur des runners natifs amd64 et ARM64 ;
+elle ne certifie pas le noyau ni les conteneurs réellement déployés sur le Raspberry.
+Poursuivre les étapes suivantes pour les observations locales et le BFF.
 Le test proxy couvre aussi les réponses DNS mixtes/changeantes et l’adresse IP
 réellement passée au transport. Conserver la sortie, pas seulement « tests verts ».
 

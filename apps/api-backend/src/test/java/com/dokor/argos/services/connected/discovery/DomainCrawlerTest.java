@@ -128,14 +128,18 @@ class DomainCrawlerTest {
         assertTrue(fetched.contains("https://example.com/blocked/open"));
     }
 
-    @Test
-    void redirectsAreBoundedAndExternalTargetNeverFetched() {
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.CsvSource({
+        "http://127.0.0.1/secret, INVALID_REDIRECT",
+        "https://other.com/secret, EXTERNAL_HOST"
+    })
+    void redirectsAreBoundedAndExternalTargetNeverFetched(String target, String reason) {
         responses.put(
                 "https://example.com",
-                new DiscoveryTransport.Response(302, "text/html", "http://127.0.0.1/secret", ""));
+                new DiscoveryTransport.Response(302, "text/html", target, ""));
         var result = run(50, 3, List.of());
-        assertEquals("EXTERNAL_HOST", result.reason());
-        assertFalse(fetched.stream().anyMatch(u -> u.contains("127.0.0.1")));
+        assertEquals(reason, result.reason());
+        assertFalse(fetched.contains(target));
         assertFalse(pages.getFirst().eligible());
     }
 
