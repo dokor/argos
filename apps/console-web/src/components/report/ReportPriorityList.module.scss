@@ -8,9 +8,12 @@
 .severity[data-severity=critical] {color:var(--argos-error);}
 .severity[data-severity=important] {color:var(--argos-measure-warning);}
 .impact {font-size:13px;color:t.$text-muted;margin-top:5px;}
+.explanation {font-size:13px;line-height:1.55;color:t.$text-muted;max-width:75ch;margin:8px 0;}
+.underlying {font-size:13px;margin-top:12px;}
+.findingLink {display:block;color:t.$brand;min-height:44px;padding-block:10px;overflow-wrap:anywhere;}
 .link {color:t.$brand;font-size:14px;font-weight:600;min-height:44px;text-align:left;}
 .section details {font-size:13px;margin-top:10px;}
 .section summary,.section details button {cursor:pointer;min-height:44px;}
 .section details button {display:block;color:t.$brand;}
-.link:focus-visible,.section button:focus-visible,.section summary:focus-visible{outline:3px solid t.$brand;outline-offset:3px;}
+.link:focus-visible,.findingLink:focus-visible,.section button:focus-visible,.section summary:focus-visible{outline:3px solid t.$brand;outline-offset:3px;}
 @media(max-width:700px){.section li{grid-template-columns:24px minmax(0,1fr);}.link{grid-column:2;}}

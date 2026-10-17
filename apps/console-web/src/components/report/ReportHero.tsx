@@ -41,6 +41,8 @@ export default function ReportHero({report,model=buildReportModel(report),onActi
     {score!==undefined&&score>=70&&counts.critical>0&&<p>{copy.favourable}</p>}
     {!counts.total&&<p>{copy.empty}</p>}
     {report.antiBot?.detected?<p>{copy.antiBot}</p>:partialReport(report)&&<p>{reading.partial}</p>}
+    <p>{scoreLimit(report,lang)}</p>
+    {counts.total>0&&<p>{interpretationCopy[lang].severity}</p>}
     <div className={s.stats}>{(["critical","important","opportunity"] as const).map(key=><span key={key} className={counts[key]?s[key]:undefined}><b>{counts[key]}</b> {t.report.hero.severity[key]}</span>)}</div>
     <a className={s.actionLink} aria-label={copy.actions} href="?view=actions" onClick={event=>{if(onActions){event.preventDefault();onActions();}}}>{copy.actions} <span aria-hidden="true">→</span></a>
    </div>
@@ -50,7 +52,7 @@ export default function ReportHero({report,model=buildReportModel(report),onActi
    {coverage&&<p><span>{reading.coverage}</span><br/><span>{`${Math.round(coverage.global.ratio*100)} % — ${coverage.global.sufficient?t.report.measurementCoverage.sufficient:copy.insufficient}`}</span></p>}
    {report.site?.title&&<p>{copy.siteTitle}: {report.site.title}</p>}
    {report.site?.domainRating&&Number.isFinite(report.site.domainRating.score)&&report.site.domainRating.score>=0&&report.site.domainRating.score<=100&&<p><strong>DR {Math.round(report.site.domainRating.score)}/100</strong> · {t.report.hero.domainRatingFetchedAt} {new Date(report.site.domainRating.fetchedAt).toLocaleDateString(t.report.hero.locale,{timeZone:"UTC"})} · <a href="https://ahrefs.com/" target="_blank" rel="noopener noreferrer">Domain Rating by Ahrefs</a></p>}
-   <ReportPageScope report={report} lang={lang}/><p>{scoreLimit(report,lang)}</p><p>{interpretationCopy[lang].severity}</p><p>{copy.privacy}</p>
+   <ReportPageScope report={report} lang={lang}/><p>{copy.privacy}</p>
   </details>
   {introduction&&<ReportIntroductionView note={introduction} model={model} lang={lang} onSelectFinding={onSelectFinding}/>}
  </section>;
