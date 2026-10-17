@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/PageLink";
 import AuditForm from "@/components/AuditForm";
 import SiteNav from "@/components/site/SiteNav";
 import SiteFooter from "@/components/site/SiteFooter";

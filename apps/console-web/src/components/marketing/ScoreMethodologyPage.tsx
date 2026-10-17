@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/PageLink";
 import EditorialMeta from "./EditorialMeta";
 import SiteNav from "@/components/site/SiteNav";
 import SiteFooter from "@/components/site/SiteFooter";

@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-head-element -- Shared root document for the French and English root layouts. */
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import { Geist, Geist_Mono } from "next/font/google";
 import { LangProvider } from "@/lib/i18n/LangContext";
 import { ThemeProvider } from "@/lib/theme/ThemeContext";
@@ -112,18 +113,21 @@ const jsonLd = {
   },
 };
 
-export default function SiteDocument({
+export default async function SiteDocument({
   lang = "fr",
   children,
 }: Readonly<{
   children: React.ReactNode;
   lang?: Lang;
 }>) {
+  // Reading request headers opts both root layouts into dynamic rendering.
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
   return (
     <html lang={lang} data-scroll-behavior="smooth">
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <script
+          nonce={nonce}
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify({ ...jsonLd, url: lang === "en" ? SITE_URL + "/en" : SITE_URL, inLanguage: lang, description: lang === "en" ? en.layout.description : DESCRIPTION }).replace(/</g, "\\u003c") }}
         />
