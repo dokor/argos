@@ -16,9 +16,21 @@ jobs:
   security:
     needs: changes
     if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.security == 'true') }}
-    name: Audit egress and browser isolation
-    runs-on: ubuntu-24.04
+    name: ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: amd64
+            name: Audit egress and browser isolation
+          - runner: ubuntu-24.04-arm
+            arch: arm64
+            name: Audit egress and browser isolation ARM64
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 20
+    env:
+      EXPECTED_DOCKER_ARCH: ${{ matrix.arch }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -27,6 +39,11 @@ jobs:
         with:
           node-version: '24.21.0'
       - run: node --test apps/audit-egress/proxy.test.mjs
+      - name: Verify native Docker architecture
+        run: |
+          test -z "${DOCKER_DEFAULT_PLATFORM:-}"
+          actual=$(docker version --format '{{.Server.Arch}}')
+          test "$actual" = "$EXPECTED_DOCKER_ARCH"
       - name: Real Chromium sandbox, egress firewall and secondary request fixtures
         run: bash scripts/security/docker-smoke.sh
       - name: Diagnostics

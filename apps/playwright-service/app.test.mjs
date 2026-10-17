@@ -174,6 +174,33 @@ test('global request timeout closes the active browser rather than leaving navig
   assert.equal(response.status, 504); assert.ok(closed >= 1);
 });
 
+test('failed setup retains its concurrency slot until browser cleanup completes', async t => {
+  let releaseCleanup, cleanupStarted;
+  const entered = new Promise(resolve => { cleanupStarted = resolve; });
+  const cleanup = new Promise(resolve => { releaseCleanup = resolve; });
+  let launches = 0;
+  const app = createRuntimeApp({ maxConcurrency: 1, proxy: 'http://127.0.0.1:3128', chromium: {
+    launch: async () => {
+      launches++;
+      return { newContext: async () => { throw new Error('Setup failed'); },
+        close: async () => { cleanupStarted(); await cleanup; } };
+    }
+  } });
+  const server = app.listen(0, '127.0.0.1');
+  await once(server, 'listening');
+  t.after(() => new Promise(resolve => { releaseCleanup(); server.close(resolve); server.closeAllConnections(); }));
+  const base = 'http://127.0.0.1:' + server.address().port;
+  const failed = analyze(base);
+  await entered;
+  try {
+    assert.equal((await analyze(base)).status, 429);
+    assert.equal(launches, 1);
+  } finally { releaseCleanup(); }
+  assert.equal((await failed).status, 500);
+  assert.equal((await analyze(base)).status, 500);
+  assert.equal(launches, 2);
+});
+
 for (const navigationFailure of [false, true]) {
   test(`closing a browser with pending CDP setup preserves ${navigationFailure ? 'failed' : 'completed'} navigation`, async t => {
     const fake = collector({ navigationFailure, cdpFailure: 'cleanup' });

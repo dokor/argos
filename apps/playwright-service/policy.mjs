@@ -26,12 +26,12 @@ export function analysisUrl(value) {
       || url.port || url.hostname.endsWith('.') || url.hostname.includes('%')) throw new Error('Invalid URL');
   const host = url.hostname.replace(/^\[|\]$/g,'');
   if (isIP(host)) { if (!publicAddress(host)) throw new Error('Target blocked'); }
-  else if (!/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z][a-z0-9-]{1,62}$/i.test(host)
+  else if (host.length > 253 || !/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z][a-z0-9-]{1,62}$/i.test(host)
       || /(?:^|\.)(?:localhost|local|internal|localdomain|test|invalid|example|onion)$/i.test(host))
     throw new Error('Target blocked');
   // Reject noncanonical IP spellings (WHATWG silently rewrites these).
   const authority = value.match(/^https?:\/\/([^/?#]+)/i)?.[1];
-  if (!authority || /[^\x00-\x7f]/.test(authority) || authority.endsWith(':') || authority.includes('@')
+  if (!authority || /[^\x00-\x7f]|%/.test(authority) || authority.endsWith(':') || authority.includes('@')
       || /:(?!80$|443$)\d+$/.test(authority)
       || (isIP(host) === 4 && authority.replace(/:(80|443)$/,'') !== host)) throw new Error('Invalid URL');
   return url;
