@@ -43,6 +43,7 @@ try {
   const capture=async name=>{
    await page.evaluate(()=>document.fonts.ready);
    assert.equal(await page.locator('h1').count(),1);
+   assert.equal(await page.locator('footer').count(),1);
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),name+' overflow at '+width);
    await page.addScriptTag({path:'apps/console-web/node_modules/axe-core/axe.min.js'});
    const axe=await page.evaluate(()=>window.axe.run(document.querySelector('main'),{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}}));

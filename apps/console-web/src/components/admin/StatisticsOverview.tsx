@@ -86,7 +86,7 @@ export default function StatisticsOverview() {
             {metric(c.totalDomains, data.domains.total)}{metric(c.average, data.domains.averageUrls, true)}
           </dl><p>{c.domainsHelp}</p>
         </section>
-        <footer className={s.notes}><p>{c.scope}</p><p>{c.history}</p><p>{c.listHelp}</p></footer>
+        <div className={s.notes}><p>{c.scope}</p><p>{c.history}</p><p>{c.listHelp}</p></div>
       </>}
     </>}
   </main>;
