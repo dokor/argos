@@ -40,7 +40,7 @@ jobs:
     outputs:
       services: ${{ steps.paths.outputs.services }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -70,12 +70,12 @@ jobs:
       ARGOS_REVISION: ${{ github.sha }}
       ARGOS_CHROMIUM_SECCOMP_PROFILE: /srv/apps/${{ matrix.service }}/chromium-seccomp.json
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
       - name: Authenticate to GHCR
         if: matrix.service == 'api-backend'
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}

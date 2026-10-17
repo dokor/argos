@@ -32,7 +32,7 @@ jobs:
       dependency_playwright: ${{ steps.paths.outputs.dependency_playwright }}
       dependency_lighthouse: ${{ steps.paths.outputs.dependency_lighthouse }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -54,12 +54,12 @@ jobs:
         working-directory: apps/api-backend
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           persist-credentials: false
 
       - name: Set up Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
@@ -96,7 +96,7 @@ jobs:
         if: always()
         run: docker rm -f argos-zap-test || true
       - name: Upload Java coverage
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: java-coverage-${{ github.sha }}
           path: apps/api-backend/target/site/jacoco/
@@ -115,10 +115,10 @@ jobs:
     env:
       NEXT_TELEMETRY_DISABLED: '1'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: '24.21.0'
           cache: npm
@@ -144,10 +144,10 @@ jobs:
       run:
         working-directory: apps/lighthouse-service
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: '24.21.0'
           cache: npm
@@ -168,10 +168,10 @@ jobs:
     env:
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: '24.21.0'
           cache: npm
@@ -212,10 +212,10 @@ jobs:
       run:
         working-directory: apps/api-backend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
@@ -244,7 +244,7 @@ jobs:
           QUERYDSL_SMOKE_USER: argos_fixture
           QUERYDSL_DB_PASSWORD: synthetic-fixture
         run: bash scripts/querydsl-smoke.sh
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: always()
         with:
           name: mariadb-integration-11.4-${{ github.sha }}
@@ -289,16 +289,16 @@ jobs:
       APP_LOGS_ENABLED: 'false'
       NEXT_PUBLIC_APP_LOGS_ENABLED: 'false'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
           cache: maven
           cache-dependency-path: apps/api-backend/pom.xml
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: '24.21.0'
           cache: npm
@@ -345,7 +345,7 @@ jobs:
           restored=$(docker exec "$DB_FIXTURE_CONTAINER" mariadb -uroot -psynthetic-root-fixture -N argos_restore_test -e "$query")
           test "$original" = "$restored"
           printf '%s\n' '{"fixture":"isolated-mariadb-11.4","backup":"single-transaction-hex-blob","restore":"PASS","reportCountAndHashDigestEqual":true}' > outputs/controlled-restore.json
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: always()
         with:
           name: controlled-e2e-${{ github.sha }}
@@ -389,16 +389,16 @@ jobs:
       API_BASE: http://127.0.0.1:33317
       NEXT_TELEMETRY_DISABLED: '1'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
           cache: maven
           cache-dependency-path: apps/api-backend/pom.xml
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: '24.21.0'
           cache: npm
@@ -434,7 +434,7 @@ jobs:
         run: node scripts/e2e/auth-experience.mjs
       - name: Upload synthetic evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: auth-experience-${{ github.sha }}
           path: outputs/auth-experience/
@@ -453,10 +453,10 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 8
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: '24.21.0'
       - name: Check locked production dependencies
@@ -470,10 +470,10 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 8
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: '24.21.0'
       - name: Check locked production dependencies
@@ -487,10 +487,10 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 8
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: '24.21.0'
       - name: Check locked production dependencies
@@ -516,10 +516,10 @@ jobs:
     env:
       EXPECTED_DOCKER_ARCH: ${{ matrix.arch }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: '24.21.0'
       - run: node --test apps/audit-egress/proxy.test.mjs
