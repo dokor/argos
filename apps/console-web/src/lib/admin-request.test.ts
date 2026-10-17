@@ -19,3 +19,10 @@ it("bounds analysis returns and preserves the context across reauthentication",(
   expect(safeAdminRunReturn(path)).toBeNull();
  expect(safeAccountReturn("/account/admin/runs/42?returnTo=https://evil.example")).toBe("/account/sites");
 });
+
+it("allows bounded business statistics filters independently of product analytics",()=>{
+ expect(adminPath("GET","admin/statistics")).toBe(true);
+ expect(adminPath("POST","admin/statistics")).toBe(false);
+ for(const period of ["all","7","30","90"])expect(adminQuery("admin/statistics",new URLSearchParams({period}))).not.toBeNull();
+ for(const q of ["period=365","period=7&period=30","period=","days=7","q=secret"])expect(adminQuery("admin/statistics",new URLSearchParams(q))).toBeNull();
+});

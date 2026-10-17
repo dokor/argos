@@ -24,7 +24,7 @@ Sur la révision intégrée a88bbfe3 :
 - [Parcours d’audit contrôlé](https://github.com/dokor/argos/actions/runs/39020628189) et [authentification](https://github.com/dokor/argos/actions/runs/39020628188) : réussis.
 - [Matrice visuelle exhaustive](https://github.com/dokor/argos/actions/runs/39020628186) : quatre groupes et assemblage des preuves réussis.
 
-Les ajouts finaux de premier usage par lot, StrictMode et exclusion des associations sociales sont couverts par les tests ciblés locaux ci-dessus ; les vérifications actualisées de la [PR #703](https://github.com/dokor/argos/pull/703/checks) restent la référence pour sa dernière révision. La migration analytics est V37, après V36 consacrée à l’historique de consommation dans main.
+Les ajouts finaux de premier usage par lot, StrictMode et exclusion des associations sociales sont couverts par les tests ciblés locaux ci-dessus ; les vérifications actualisées de la [PR #703](https://github.com/dokor/argos/pull/703/checks) restent la référence pour sa dernière révision. La migration analytics est V39, après V36 pour l’historique de consommation, V37 pour les problèmes détectés et V38 pour les index des statistiques des comptes et analyses.
 
 ## Recette visuelle et fonctionnelle
 

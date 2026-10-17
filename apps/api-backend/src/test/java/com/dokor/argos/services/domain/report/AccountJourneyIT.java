@@ -84,7 +84,8 @@ class AccountJourneyIT extends MariaDbReportFixture {
         sql("INSERT INTO ARG_AUDIT_RUN(id,audit_id,status,owner_user_id) VALUES(1,1,'COMPLETED',101)");
         sql("INSERT INTO ARG_PRODUCT_AUDIT_ATTR(run_id,source_route,locale,placement,created_at) VALUES(1,'/','fr','form','2026-01-01')");
         var current = org.flywaydb.core.Flyway.configure().dataSource(source).load();
-        assertEquals(1, current.migrate().migrationsExecuted); current.validate();
+        int pending = current.info().pending().length; assertTrue(pending > 0);
+        assertEquals(pending, current.migrate().migrationsExecuted); current.validate();
         assertEquals(0, current.migrate().migrationsExecuted);
         try (var c = source.getConnection(); var q = c.createStatement();
                 var row = q.executeQuery("SELECT audience,(SELECT COUNT(*) FROM ARG_PRODUCT_ACCOUNT_EVENT) FROM ARG_PRODUCT_AUDIT_ATTR")) {

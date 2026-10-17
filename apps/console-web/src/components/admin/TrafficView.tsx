@@ -5,6 +5,7 @@ import { useLang } from "@/lib/i18n/LangContext";
 import { useAccountSession } from "@/components/account/AccountSession";
 import { accountFetch } from "@/lib/account-client";
 import AdminNavigation from "./AdminNavigation";
+import StatisticsNavigation from "./StatisticsNavigation";
 import s from "./AnalyticsView.module.scss";
 import t from "./TrafficView.module.scss";
 export type TrafficMetrics={enabled:boolean;from:string;until:string;views:number;visits:number;evolution:{date:string;views:number;visits:number}[];pages:{value:string;views:number}[];sources:{value:string;views:number}[];languages:{value:string;views:number}[]};
@@ -21,7 +22,7 @@ export default function TrafficView(){
   const table=(title:string,rows:{value:string;views:number}[],labels?:Record<string,string>)=><section><h2>{title}</h2>{!rows.length?<p>{fr?'Aucune page vue mesurée sur cette période.':'No measured page views in this period.'}</p>:<div className={s.scroll} tabIndex={0} role="region" aria-label={title}><table><thead><tr><th scope="col">{title}</th><th scope="col">{fr?'Pages vues':'Page views'}</th></tr></thead><tbody>{rows.map(r=><tr key={r.value}><th scope="row">{labels?.[r.value]??r.value}</th><td>{number(r.views)}</td></tr>)}</tbody></table></div>}</section>;
   return <main className={`${s.main} ${t.traffic}`}><Link href="/account/admin">{fr?'Administration':'Administration'}</Link><h1>{fr?'Statistiques · Trafic':'Statistics · Traffic'}</h1>
     {!session.ready?<p role="status">{fr?'Chargement…':'Loading…'}</p>:!allowed?<p role="alert">{fr?'Accès administrateur requis.':'Administrator access required.'}</p>:<>
-      <AdminNavigation active="analytics"/><nav className={s.controls} aria-label={fr?'Statistiques':'Statistics'}><Link href="/account/admin/analytics">{fr?'Mesure produit':'Product measurement'}</Link><Link href="/account/admin/analytics/traffic" aria-current="page">{fr?'Trafic':'Traffic'}</Link></nav>
+      <AdminNavigation active="analytics"/><StatisticsNavigation active="traffic"/>
       <p>{fr?'Pages publiques uniquement. Mesure facultative avec consentement, indépendante des comptes et des analyses réalisées.':'Public pages only. Optional consented measurement, independent of accounts and completed analyses.'}</p>
       <div className={s.controls}><label htmlFor="traffic-days">{fr?'Période':'Period'}</label><select id="traffic-days" value={days} onChange={e=>setDays(Number(e.target.value))}>{[7,30,90].map(n=><option key={n} value={n}>{n} {fr?'jours':'days'}</option>)}</select><label htmlFor="traffic-group">{fr?'Regrouper par':'Group by'}</label><select id="traffic-group" value={group} onChange={e=>setGroup(e.target.value)}>{[['day',fr?'Jour':'Day'],['week',fr?'Semaine':'Week'],['month',fr?'Mois':'Month']].map(([v,l])=><option key={v} value={v}>{l}</option>)}</select><button onClick={()=>setRevision(v=>v+1)}>{fr?'Actualiser':'Refresh'}</button></div>
       {result?.key===key&&result.error?<p role="alert">{fr?'Statistiques indisponibles. Réessayez.':'Statistics unavailable. Try again.'}</p>:!data?<p role="status">{fr?'Chargement…':'Loading…'}</p>:<>

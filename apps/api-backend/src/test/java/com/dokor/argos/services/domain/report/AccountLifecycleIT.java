@@ -1259,6 +1259,29 @@ class AccountLifecycleIT extends MariaDbReportFixture {
         assertDoesNotThrow(() -> limiter.check("email", "same@example.com", "127.0.0.1"));
     }
 
+    @Test void statisticsHttpRequiresCurrentAdministratorAndOnlyExposesAggregates() throws Exception {
+        var admin=administrator(); var ordinary=user("statistics-user@example.com",true);
+        try(var http=new HttpFixture()) {
+            String path="/account/admin/statistics";
+            assertEquals(401,http.call("GET",path,null,null,false).statusCode());
+            assertEquals(401,http.call("GET",path,"Bearer synthetic-server-credential",null,false).statusCode());
+            assertEquals(403,http.call("GET",path,bearer(ordinary),null,false).statusCode());
+            var response=http.call("GET",path+"?period=7",bearer(admin),null,false);
+            assertEquals(200,response.statusCode());
+            assertEquals("private, no-store",response.headers().firstValue("Cache-Control").orElseThrow());
+            var body=mapper.readTree(response.body());
+            assertEquals(Set.of("generatedAt","from","period","accounts","analyses","domains"),
+                mapper.convertValue(body,new com.fasterxml.jackson.core.type.TypeReference<Map<String,Object>>() {}).keySet());
+            assertFalse(response.body().contains("example.com"));
+            assertFalse(response.body().contains("reportToken"));
+            assertEquals(400,http.call("GET",path+"?period=7&period=30",bearer(admin),null,false).statusCode());
+            assertEquals(400,http.call("GET",path+"?period=365",bearer(admin),null,false).statusCode());
+            assertEquals(400,http.call("GET",path+"?q=private",bearer(admin),null,false).statusCode());
+            sql("UPDATE ARG_ACCOUNT_USER SET role='USER' WHERE id="+admin.context().user().getId());
+            assertEquals(403,http.call("GET",path,bearer(admin),null,false).statusCode());
+        }
+    }
+
     private class HttpFixture implements AutoCloseable {
         final org.glassfish.grizzly.http.server.HttpServer server;
         final String base;
@@ -1320,6 +1343,7 @@ class AccountLifecycleIT extends MariaDbReportFixture {
             config.register(new com.dokor.argos.webservices.api.account.UsageTimelineWs(new UsageTimelineService(sessions,new UsagePolicy(ConfigFactory.empty()),clock)));
             config.register(new com.dokor.argos.webservices.api.account.ConnectedAnalysesWs(connectedAnalyses(),new AccountCsrf(settings), org.mockito.Mockito.mock(com.dokor.argos.services.analytics.ProductAnalyticsService.class)));
             config.register(new com.dokor.argos.webservices.api.account.AdminWs(administration(),new AccountCsrf(settings)));
+            config.register(new com.dokor.argos.webservices.api.account.AdminStatisticsWs(new AdminStatisticsService(sessions,new AdminStatisticsDao(),clock)));
             config.register(new com.dokor.argos.webservices.api.feedback.FeedbackWs(feedback(),new AccountCsrf(settings),new AccountRateLimiter(dao,tokens,clock,settings)));
             config.register(new com.dokor.argos.webservices.api.feedback.FeedbackAdminWs(feedback(),new AccountCsrf(settings)));
             config.register(new com.dokor.argos.webservices.api.account.AccountReportIntroductionWs(new AccountReportIntroductionService(sessions,mapper,clock,tokens),new AccountCsrf(settings)));

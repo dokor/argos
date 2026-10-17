@@ -21,6 +21,8 @@ it.each(["fr", "en"] as const)("renders metrics, empty results and unavailable d
   await screen.findByText("24");
   expect(screen.getByRole("main")).toBeInTheDocument();
   expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(lang === "fr" ? "Mesure produit" : "Product measurement");
+  expect(screen.getByRole("link", { name: lang === "fr" ? "Vue d’ensemble" : "Overview" })).toHaveAttribute("href", lang === "fr" ? "/account/admin/analytics/overview" : "/en/account/admin/analytics/overview");
+  expect(screen.getByRole("link", { name: lang === "fr" ? "Problèmes détectés" : "Detected problems" })).toHaveAttribute("href", lang === "fr" ? "/account/admin/analytics/problems" : "/en/account/admin/analytics/problems");
   expect(screen.getAllByText(lang === "fr" ? "Indisponible" : "Unavailable")).toHaveLength(11);
   expect(screen.getByText(lang === "fr" ? "Aucune source pour cette période." : "No sources for this period.")).toBeInTheDocument();
   expect(screen.getByRole("status")).toHaveTextContent("100");

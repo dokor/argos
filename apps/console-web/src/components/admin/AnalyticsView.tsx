@@ -1,6 +1,7 @@
 "use client";
 
 import AdminNavigation from "./AdminNavigation";
+import StatisticsNavigation from "./StatisticsNavigation";
 import MeasurementControl from "./MeasurementControl";
 import AccountJourneyPanel, { type AccountJourney } from "./AccountJourneyPanel";
 import { useCallback, useEffect, useState } from "react";
@@ -57,7 +58,7 @@ export default function AnalyticsView() {
     <Link href="/account/admin">{c.back}</Link><h1>{c.title}</h1><p>{c.intro}</p>
     {!session.ready ? <p role="status">{c.loading}</p> : !allowed ? <><p role="alert">{c.denied}</p><Link href="/account/sign-in">{c.signIn}</Link></> : <>
       <AdminNavigation active="analytics" />
-      <nav className={s.controls} aria-label={lang === 'fr' ? 'Statistiques' : 'Statistics'}><Link href="/account/admin/analytics" aria-current="page">{lang === 'fr' ? 'Mesure produit' : 'Product measurement'}</Link><Link href="/account/admin/analytics/traffic">{lang === 'fr' ? 'Trafic' : 'Traffic'}</Link></nav>
+      <StatisticsNavigation active="product" />
       <details className={s.settings}><summary>{c.settings}</summary>
         <MeasurementControl onDenied={onDenied} onChanged={onChanged} />
       </details>
