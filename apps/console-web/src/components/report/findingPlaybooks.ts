@@ -711,9 +711,7 @@ export const playbookGroups: Array<{keys: string[]; reference: string; verifiedA
     "keys": [
       "lighthouse.audit.unused-javascript",
       "lighthouse.audit.unused-css",
-      "lighthouse.audit.unused-css-rules",
-      "lighthouse.audit.render-blocking-resources",
-      "lighthouse.audit.render-blocking-insight"
+      "lighthouse.audit.unused-css-rules"
     ],
     "reference": "https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/script",
     "verifiedAt": "2026-10-16",
@@ -1422,6 +1420,131 @@ export const playbookGroups: Array<{keys: string[]; reference: string; verifiedA
       "expected": "Any reduction retains content and features and is checked in the actual waterfall.",
       "example": "",
       "limits": "Historical reports may express HTML size using an older method. Script count does not measure execution cost."
+    }
+  },
+  {
+    "keys": [
+      "lighthouse.audit.font-display-insight"
+    ],
+    "reference": "https://developer.chrome.com/docs/performance/insights/font-display",
+    "verifiedAt": "2026-10-18",
+    "fr": {
+      "detection": "Lighthouse examine le comportement des polices pendant le chargement. Ce signal invite à vérifier si le texte attend une police distante ; une référence de ressource masquée ne permet pas de retrouver son fichier exact.",
+      "summary": "Retrouver la déclaration de la police, choisir son comportement pendant le téléchargement, puis tester la lisibilité et les déplacements du texte.",
+      "steps": [
+        "Dans les outils du navigateur, filtrer Réseau sur les polices et retrouver la règle @font-face dans les styles chargés. Si le rapport ne conserve que l’origine ou une référence masquée, refaire cette recherche sur la même page.",
+        "Tester font-display: swap pour afficher une police de secours pendant le téléchargement, ou optional si conserver cette police de secours est acceptable. Adapter la déclaration à chaque police concernée.",
+        "Choisir une police de secours visuellement proche. Recharger sans cache avec une connexion ralentie et examiner les titres, boutons et retours à la ligne."
+      ],
+      "expected": "Le texte reste lisible pendant le chargement ; le remplacement éventuel de la police ne masque pas un bouton et ne déplace pas excessivement le contenu. Comparer plusieurs chargements au même profil et relancer le contrôle.",
+      "example": "@font-face {\n  font-family: \"PoliceExemple\";\n  src: url(\"/police-exemple.woff2\") format(\"woff2\");\n  font-display: swap;\n}\nbody { font-family: \"PoliceExemple\", sans-serif; }",
+      "limits": "Cet exemple ne désigne aucune police du site. Le score Lighthouse n’est ni une durée de texte invisible ni un gain garanti. Les polices de secours peuvent modifier la mise en page ; vérifier aussi les caractères et langues utilisés."
+    },
+    "en": {
+      "detection": "Lighthouse examines font behaviour during loading. This signal calls for checking whether text waits for a remote font; a redacted resource reference cannot identify its exact file.",
+      "summary": "Locate the font declaration, choose its behaviour during download, then test readability and text movement.",
+      "steps": [
+        "In browser tools, filter Network by fonts and locate the @font-face rule in loaded styles. If the report retains only an origin or redacted reference, repeat this investigation on the same page.",
+        "Test font-display: swap to show a fallback while downloading, or optional if retaining that fallback is acceptable. Adapt the declaration for each affected font.",
+        "Choose a visually similar fallback. Reload without cache on a throttled connection and inspect headings, buttons and line breaks."
+      ],
+      "expected": "Text stays readable during loading; any font replacement does not hide a button or excessively move content. Compare several loads using the same profile and rerun the check.",
+      "example": "@font-face {\n  font-family: \"ExampleFont\";\n  src: url(\"/example-font.woff2\") format(\"woff2\");\n  font-display: swap;\n}\nbody { font-family: \"ExampleFont\", sans-serif; }",
+      "limits": "This example identifies no font on the site. The Lighthouse score is neither a duration of invisible text nor a guaranteed saving. Fallback fonts can change layout; also check the characters and languages used."
+    }
+  },
+  {
+    "keys": [
+      "lighthouse.audit.image-delivery-insight"
+    ],
+    "reference": "https://developer.chrome.com/docs/performance/insights/image-delivery",
+    "verifiedAt": "2026-10-18",
+    "fr": {
+      "detection": "Lighthouse recherche des images dont le transfert pourrait être réduit selon leurs dimensions et leur encodage. Ses économies sont des estimations ; le score seul ne précise ni l’image ni les octets récupérables.",
+      "summary": "Retrouver l’image signalée, adapter dimensions et compression à son affichage, puis comparer le fichier réellement téléchargé et sa qualité.",
+      "steps": [
+        "Dans Réseau, filtrer sur les images et retrouver la ressource signalée. Si son adresse exacte manque, refaire un diagnostic local sur la même URL ; ne pas déduire un fichier de la seule origine affichée.",
+        "Comparer dimensions du fichier, taille affichée et densité de pixels de l’écran. Produire plusieurs tailles si nécessaire et adapter srcset et sizes au gabarit réel.",
+        "Tester compression et formats adaptés à l’image, puis vérifier visuellement les détails, la transparence et les animations. Remplacer la ressource au point qui la produit et conserver un retour arrière."
+      ],
+      "expected": "Sur mobile puis sur écran large, contrôler dans Réseau le fichier sélectionné et sa taille transférée. Le transfert ciblé diminue sans perte visuelle inacceptable ni déformation ; relancer au même profil pour comparer.",
+      "example": "",
+      "limits": "Une économie estimée n’est pas une durée de chargement gagnée. Le rapport peut omettre l’élément ou le motif détaillé. Ce contrôle n’établit pas que l’image est le LCP et ne justifie pas de charger paresseusement toutes les images."
+    },
+    "en": {
+      "detection": "Lighthouse looks for images whose transfer could be reduced based on dimensions and encoding. Savings are estimates; the score alone identifies neither the image nor recoverable bytes.",
+      "summary": "Locate the flagged image, adapt dimensions and compression to its display, then compare the actual downloaded file and its quality.",
+      "steps": [
+        "In Network, filter by images and locate the flagged resource. If its exact address is missing, repeat a local diagnosis on the same URL; do not infer a file from the displayed origin alone.",
+        "Compare file dimensions, displayed size and screen pixel density. Produce several sizes if needed and adapt srcset and sizes to the actual template.",
+        "Test compression and formats suitable for the image, then visually check details, transparency and animation. Replace the resource where it is produced and retain a rollback option."
+      ],
+      "expected": "On mobile and then a wide screen, check the selected file and transferred size in Network. Targeted transfer decreases without unacceptable visual loss or distortion; rerun with the same profile to compare.",
+      "example": "",
+      "limits": "Estimated byte savings are not time saved loading. The report may omit the element or detailed reason. This check does not establish that the image is the LCP and does not justify lazy-loading every image."
+    }
+  },
+  {
+    "keys": [
+      "lighthouse.audit.cache-insight"
+    ],
+    "reference": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Caching",
+    "verifiedAt": "2026-10-18",
+    "fr": {
+      "detection": "Lighthouse examine la durée de réutilisation des ressources et estime le transfert évitable lors de visites suivantes. Ce signal ne signifie pas que la première visite serait accélérée du même montant.",
+      "summary": "Choisir une durée de cache selon la ressource et sa mise à jour, puis vérifier une seconde visite et la réception des nouvelles versions.",
+      "steps": [
+        "Dans Réseau, retrouver la ressource signalée et lire Cache-Control dans sa réponse. Distinguer fichier statique public, contenu personnalisé et ressource tierce avant toute modification.",
+        "Pour un fichier public dont l’adresse change à chaque version, définir une durée de cache adaptée au point qui sert ce fichier. Pour une adresse stable, prévoir revalidation ou expiration compatible avec les mises à jour.",
+        "Ne pas appliquer un cache public aux réponses privées. Pour une ressource tierce non maîtrisée, évaluer son utilité ou contacter son fournisseur plutôt que prétendre changer ses en-têtes."
+      ],
+      "expected": "Avec le cache du navigateur activé, visiter deux fois la page et vérifier la réutilisation ou la revalidation prévue. Publier ensuite une version de test du fichier : elle doit être reçue sans effacer manuellement le cache. Vérifier aussi que les réponses privées restent protégées.",
+      "example": "",
+      "limits": "La durée correcte dépend de la fréquence de modification et de la stratégie de versionnement. Un cache long mal appliqué peut conserver du contenu périmé. Le score ne donne pas une durée de cache à copier ; les détails manquants doivent être relevés dans la réponse."
+    },
+    "en": {
+      "detection": "Lighthouse examines resource reuse lifetime and estimates avoidable transfer on subsequent visits. This signal does not mean the first visit would improve by the same amount.",
+      "summary": "Choose cache lifetime according to the resource and its updates, then verify a second visit and receipt of new versions.",
+      "steps": [
+        "In Network, locate the flagged resource and read Cache-Control in its response. Distinguish public static files, personalised content and third-party resources before making changes.",
+        "For a public file whose address changes with every version, set a suitable cache lifetime where it is served. For a stable address, plan revalidation or expiry compatible with updates.",
+        "Do not apply public caching to private responses. For a third-party resource outside your control, assess its usefulness or contact its provider instead of claiming to change its headers."
+      ],
+      "expected": "With browser caching enabled, visit the page twice and check the intended reuse or revalidation. Then publish a test version of the file: it must arrive without manually clearing the cache. Also verify that private responses remain protected.",
+      "example": "",
+      "limits": "The appropriate lifetime depends on update frequency and versioning strategy. Incorrectly applied long caching can retain stale content. The score does not provide a cache duration to copy; missing details must be inspected in the response."
+    }
+  },
+  {
+    "keys": [
+      "lighthouse.audit.render-blocking-insight",
+      "lighthouse.audit.render-blocking-resources"
+    ],
+    "reference": "https://developer.chrome.com/docs/performance/insights/render-blocking",
+    "verifiedAt": "2026-10-18",
+    "fr": {
+      "detection": "Lighthouse repère des requêtes qui retardent le premier affichage. Une ressource bloquante peut être nécessaire : ce constat est distinct du code inutilisé.",
+      "summary": "Identifier ce qui bloque le premier affichage, différer uniquement ce qui peut l’être et vérifier le rendu ainsi que les interactions.",
+      "steps": [
+        "Enregistrer un chargement dans Performance et retrouver les ressources signalées dans Réseau. Si le rapport ne fournit pas leur emplacement, refaire cette mesure sur la même URL.",
+        "Séparer les styles nécessaires au premier écran de ceux des états ultérieurs. Réduire les styles superflus seulement après avoir testé les pages et états qui les utilisent.",
+        "Pour un script classique externe qui peut attendre la fin du parsing HTML, tester defer en préservant l’ordre des dépendances. Ne pas remplacer indistinctement par async ; vérifier aussi les scripts inline qui en dépendent."
+      ],
+      "expected": "Comparer le premier affichage et la cascade au même profil. Tester menus, formulaires et changements de thème : aucun contenu sans style ni erreur de script ne doit apparaître. Une ressource nécessaire peut rester bloquante ; documenter ce compromis puis relancer.",
+      "example": "<!-- Script classique externe pouvant attendre la fin du parsing -->\n<script defer src=\"/exemple-interactions.js\"></script>",
+      "limits": "Un score ne donne pas le temps économisé. Différer un style essentiel peut dégrader l’affichage ; intégrer du CSS dans le document demande une gestion de la sécurité et du cache. L’exemple ne s’applique ni aux stylesheets ni à tous les scripts."
+    },
+    "en": {
+      "detection": "Lighthouse identifies requests that delay initial rendering. A blocking resource may be necessary: this finding differs from unused code.",
+      "summary": "Identify what blocks initial rendering, defer only what can wait, then check appearance and interactions.",
+      "steps": [
+        "Record a load in Performance and locate flagged resources in Network. If the report supplies no location, repeat this measurement on the same URL.",
+        "Separate styles needed for the first screen from styles for later states. Reduce redundant styles only after testing pages and states that use them.",
+        "For an external classic script that can wait until HTML parsing ends, test defer while preserving dependency order. Do not indiscriminately replace it with async; also check inline scripts depending on it."
+      ],
+      "expected": "Compare initial rendering and the waterfall with the same profile. Test menus, forms and theme changes: no unstyled content or script error should appear. A necessary resource may remain blocking; document this trade-off and rerun.",
+      "example": "<!-- External classic script that can wait until parsing ends -->\n<script defer src=\"/example-interactions.js\"></script>",
+      "limits": "A score does not specify time saved. Deferring essential styles can degrade rendering; inlining CSS requires security and cache management. The example applies neither to stylesheets nor to every script."
     }
   }
 ];

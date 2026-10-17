@@ -1,3 +1,4 @@
+import { injectAxe } from './inject-axe.mjs';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { chromium } from '../../apps/playwright-service/node_modules/playwright/index.mjs';
@@ -30,7 +31,7 @@ try {
     const again=main.locator('button[aria-expanded]');
     await again.focus();await page.keyboard.press('Enter');
     assert.equal(await main.locator('input').first().inputValue(),context.normalizedUrl);
-    await page.addScriptTag({path:'apps/console-web/node_modules/axe-core/axe.min.js'});
+    await injectAxe(page);
     const violations=await page.evaluate(async()=> (await window.axe.run(document.querySelector('main'),{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}})).violations);
     assert.deepEqual(violations.map(v=>({id:v.id,nodes:v.nodes.length})),[]);
     await again.click();await page.screenshot({path:`${output}/${width}-${lang}-${theme}.png`,fullPage:true});

@@ -1,6 +1,6 @@
 "use client";
 import type { ReactNode } from "react";
-import Link from "next/link";
+import Link from "@/components/PageLink";
 import ObservedEvidence from "./ObservedEvidence";
 import FindingGuide from "./FindingGuide";
 import { correctionGuide } from "@/lib/correctionGuides";

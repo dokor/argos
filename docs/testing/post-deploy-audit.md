@@ -220,3 +220,10 @@ Le contrat de collecte passe à `analysis-measurements-v5` pour empêcher une
 comparaison silencieuse avec l'ancienne sélection. Les rapports déjà publiés
 restent immuables ; un rejeu de leurs constats conserve donc leur résultat TLS
 historique, même après correction du collecteur.
+
+## Réponses web et expiration TLS
+
+La [politique des réponses web](../security/web-response-policy.md) décrit la CSP
+à nonce, le chargement des liens de compte et les seuils 30/15 jours du contrôle
+d’expiration TLS appliqués après les tickets #720, #721 et #722.
+Le contrat `analysis-measurements-v6` distingue ces seuils des rapports historiques.
