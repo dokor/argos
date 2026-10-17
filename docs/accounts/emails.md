@@ -60,8 +60,8 @@ Les tests relisent le MIME sérialisé, contrôlent le texte/HTML UTF-8, les six
 couvrent la transmission de la langue, y compris le retour OAuth.
 
 La recette navigateur est décrite dans [la note visuelle](email-review.md).
-Elle ne simule pas les moteurs de rendu des boîtes mail. La vérification dans
-Gmail, Outlook (Windows/web) et Apple Mail, avec images distantes bloquées et
-mode sombre, ainsi que la délivrabilité OVH restent à exécuter avec une boîte
-de test. Aucun accès à ces boîtes n’est disponible dans cette tâche ; aucune
-compatibilité universelle ni délivrabilité n’est déclarée.
+La [recette complémentaire du 17 octobre](email-delivery-review.md) documente
+le test du transport SMTP, la matrice de rendu local, deux réceptions externes
+via OVH et l’absence de DMARC observée sur le domaine d’expédition. Elle fournit
+la matrice Gmail, Outlook et Apple Mail restant à exécuter. Le rendu navigateur
+et la réception jetable ne valident pas ces clients ni leur placement antispam.

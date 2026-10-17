@@ -356,9 +356,95 @@ class AuditProcessorServiceTest {
             return processor;
         }
 
+        @Test void sequentialDefaultUsesTheCompletedHttpContextAndPublishesInCatalogueOrder() throws Exception {
+            try (var remote = new RemoteModuleExecutor(com.typesafe.config.ConfigFactory.empty())) {
+                var processor = processor(remote);
+                processor.process(1L);
+                var order = inOrder(http, html, runtime, lighthouse, observatory, ssl, zap, domains);
+                order.verify(http).analyze(any(), any());
+                order.verify(html).analyze(any(), any());
+                order.verify(runtime).analyze(any(), any());
+                order.verify(lighthouse).analyze(any(), any());
+                order.verify(observatory).analyze(argThat(ctx -> "<p>fixture</p>".equals(ctx.body())), any());
+                order.verify(ssl).analyze(argThat(ctx -> "https://example.com/final".equals(ctx.finalUrl())), any());
+                order.verify(zap).analyze(any(), any());
+                order.verify(domains).getOrRunTechAnalysis(any(), any());
+                var report = ArgumentCaptor.forClass(AuditReportJson.class);
+                verify(publisher).completeAndPublish(eq(1L), any(), report.capture(), anyString(), nullable(String.class));
+                assertEquals("1", report.getValue().meta().get("maxConcurrentModules"));
+                assertEquals(AuditModule.ordered().stream().map(AuditModule::id).toList(),
+                    report.getValue().modules().stream().map(AuditModuleResult::id).toList());
+                mapper.readTree(report.getValue().meta().get("moduleStatuses"))
+                    .forEach(status -> assertEquals("COMPLETED", status.asText()));
+            }
+        }
+
+        @Test void capacityTwoOverlapsOneRemoteCallWithLocalWork() throws Exception {
+            var remoteStarted = new CountDownLatch(1);
+            var localFinished = new CountDownLatch(1);
+            try (var remote = new RemoteModuleExecutor(Duration.ofSeconds(5), 2)) {
+                var processor = processor(remote);
+                when(observatory.analyze(any(), any())).thenAnswer(call -> {
+                    remoteStarted.countDown();
+                    assertTrue(localFinished.await(2, TimeUnit.SECONDS));
+                    return result("observatory");
+                });
+                when(html.analyze(any(), any())).thenAnswer(call -> {
+                    assertTrue(remoteStarted.await(2, TimeUnit.SECONDS));
+                    localFinished.countDown();
+                    return result("html");
+                });
+                processor.process(1L);
+                verify(publisher).completeAndPublish(eq(1L), any(), any(), anyString(), nullable(String.class));
+                verify(ssl).analyze(any(), any());
+            } finally { localFinished.countDown(); }
+        }
+
+        @Test void sequentialRemoteTimeoutCancelsTheCallAndPreservesTheOtherResults() throws Exception {
+            var stopped = new CountDownLatch(1);
+            try (var remote = new RemoteModuleExecutor(Duration.ofSeconds(1))) {
+                var processor = processor(remote);
+                when(ssl.analyze(any(), any())).thenAnswer(call -> {
+                    try { new CountDownLatch(1).await(); return result("ssl"); }
+                    finally { stopped.countDown(); }
+                });
+                processor.process(1L);
+                assertTrue(stopped.await(2, TimeUnit.SECONDS));
+                var report = ArgumentCaptor.forClass(AuditReportJson.class);
+                verify(publisher).completeAndPublish(eq(1L), any(), report.capture(), anyString(), nullable(String.class));
+                var statuses = mapper.readTree(report.getValue().meta().get("moduleStatuses"));
+                assertEquals("TIMEOUT", statuses.path("ssl").asText());
+                assertEquals("COMPLETED", statuses.path("tech").asText());
+                assertFalse(report.getValue().modules().get(5).checks().getFirst().scorable());
+            }
+        }
+
+        @Test void canceledRunClosesBothRemoteTasksWithoutPublishing() throws Exception {
+            var started = new CountDownLatch(2);
+            var stopped = new CountDownLatch(2);
+            try (var remote = new RemoteModuleExecutor(Duration.ofSeconds(5), 3)) {
+                var processor = processor(remote);
+                org.mockito.stubbing.Answer<AuditModuleResult> blocked = call -> {
+                    started.countDown();
+                    try { new CountDownLatch(1).await(); return result("late"); }
+                    finally { stopped.countDown(); }
+                };
+                when(ssl.analyze(any(), any())).thenAnswer(blocked);
+                when(observatory.analyze(any(), any())).thenAnswer(blocked);
+                doAnswer(call -> {
+                    assertTrue(started.await(2, TimeUnit.SECONDS));
+                    throw new com.dokor.argos.services.domain.audit.RunCanceledException();
+                }).when(runs).updateModuleStatus(1L, "html", "RUNNING", "synthetic-worker");
+                processor.process(1L);
+                assertTrue(stopped.await(2, TimeUnit.SECONDS));
+                verifyNoInteractions(publisher);
+                verify(runs, never()).fail(anyLong(), anyString(), nullable(String.class));
+            }
+        }
+
         private void assertRuntimeFallback(java.util.function.Consumer<RuntimeModuleAnalyzer> stub,
                                            String expectedStatus) throws Exception {
-            try (var remote = new RemoteModuleExecutor(Duration.ofSeconds(5))) {
+            try (var remote = new RemoteModuleExecutor(Duration.ofSeconds(5), 3)) {
                 var processor = processor(remote);
                 stub.accept(runtime);
                 processor.process(1L);
@@ -377,7 +463,7 @@ class AuditProcessorServiceTest {
         }
 
         @Test void incompleteHttpTraversalDoesNotAnalyzeAnUnreachedTarget() throws Exception {
-            try (var remote = new RemoteModuleExecutor(Duration.ofSeconds(5))) {
+            try (var remote = new RemoteModuleExecutor(Duration.ofSeconds(5), 3)) {
                 var processor = processor(remote);
                 when(http.analyze(any(), any())).thenReturn(new AuditModuleResult("http", "HTTP", "incomplete",
                     Map.of("responseSnapshotAvailable", false, "statusCode", 0, "partial", true,
@@ -417,7 +503,7 @@ class AuditProcessorServiceTest {
         }
 
         @Test void disabledSecurityCollectorsExplainEveryMissingControlAndOtherModulesContinue() throws Exception {
-            try (var remote = new RemoteModuleExecutor(Duration.ofSeconds(5))) {
+            try (var remote = new RemoteModuleExecutor(Duration.ofSeconds(5), 3)) {
                 var processor = processor(remote);
                 when(ssl.analyze(any(), any())).thenThrow(new ModuleUnavailableException("SSL unavailable",
                     new CollectorFailure(CollectorFailure.Code.POLICY_DISABLED)));
@@ -462,7 +548,7 @@ class AuditProcessorServiceTest {
         }
 
         @Test void partialResultKeepsItsDataWithoutAvailabilityCheck() throws Exception {
-            try (var remote = new RemoteModuleExecutor(Duration.ofSeconds(5))) {
+            try (var remote = new RemoteModuleExecutor(Duration.ofSeconds(5), 3)) {
                 var processor = processor(remote);
                 when(runtime.analyze(any(), any())).thenReturn(
                     new AuditModuleResult("runtime", "Runtime", "partial", Map.of("partial", true), List.of()));
@@ -478,7 +564,7 @@ class AuditProcessorServiceTest {
         @Test void remoteCallsHaveHttpContextOverlapLocalWorkAndPublishOneOrderedReport() throws Exception {
             var started = new CountDownLatch(2); var release = new CountDownLatch(1);
             Thread localThread = Thread.currentThread();
-            try (var remote = new RemoteModuleExecutor(Duration.ofSeconds(5))) {
+            try (var remote = new RemoteModuleExecutor(Duration.ofSeconds(5), 3)) {
                 var processor = processor(remote);
                 when(observatory.analyze(any(), any())).thenAnswer(call -> {
                     assertNotSame(localThread, Thread.currentThread()); assertEquals("https://example.com/final", ((AuditContext) call.getArgument(0)).finalUrl());
@@ -513,7 +599,7 @@ class AuditProcessorServiceTest {
             } finally { release.countDown(); }
         }
         @Test void publicationFailureIsTerminalInsteadOfSilentlyCompleting() throws Exception {
-            try (var remote = new RemoteModuleExecutor(Duration.ofSeconds(5))) {
+            try (var remote = new RemoteModuleExecutor(Duration.ofSeconds(5), 3)) {
                 var processor = processor(remote);
                 when(publisher.completeAndPublish(eq(1L), any(), any(), anyString(), eq("synthetic-worker")))
                     .thenThrow(new IllegalStateException("Synthetic publication failure"));
@@ -525,7 +611,7 @@ class AuditProcessorServiceTest {
         }
         @Test void globalDeadlinePublishesObtainedResultsSkipsRemainingWorkAndLeavesNoRunningModule() throws Exception {
             var stopped=new CountDownLatch(1);
-            try(var remote=new RemoteModuleExecutor(Duration.ofSeconds(5)); var local=new AuditModuleExecutor(Duration.ofSeconds(2))) {
+            try(var remote=new RemoteModuleExecutor(Duration.ofSeconds(5), 3); var local=new AuditModuleExecutor(Duration.ofSeconds(2))) {
                 var processor=processor(remote); processor.configureAuditModuleExecutor(local);
                 when(html.analyze(any(),any())).thenAnswer(call -> {
                     try { new CountDownLatch(1).await(); return result("html"); }
@@ -548,7 +634,7 @@ class AuditProcessorServiceTest {
             var started = new CountDownLatch(1);
             var stopped = new CountDownLatch(1);
             // Allow initial Mockito/JaCoCo class loading, then prove cancellation of an active call.
-            try (var remote = new RemoteModuleExecutor(Duration.ofSeconds(2))) {
+            try (var remote = new RemoteModuleExecutor(Duration.ofSeconds(2), 3)) {
                 var processor = processor(remote);
                 when(ssl.analyze(any(), any())).thenAnswer(call -> {
                     started.countDown();
@@ -572,32 +658,33 @@ class AuditProcessorServiceTest {
             }
         }
 
-        @Test void syntheticLatencyFixtureMeasuresSerialStagesAndParallelRun() throws Exception {
+        @Test void syntheticLatencyFixtureComparesTheSamePipelineAtEveryCapacity() throws Exception {
             // Controlled delays, not a production benchmark. No fragile elapsed-time assertion.
             int delayMs = 200;
-            try (var remote = new RemoteModuleExecutor(Duration.ofSeconds(5))) {
-                var processor = processor(remote);
-                when(html.analyze(any(), any())).thenAnswer(call -> { Thread.sleep(delayMs); return result("html"); });
-                when(observatory.analyze(any(), any())).thenAnswer(call -> { Thread.sleep(delayMs); return result("observatory"); });
-                when(ssl.analyze(any(), any())).thenAnswer(call -> { Thread.sleep(delayMs); return result("ssl"); });
-                var context = new AuditContext("https://example.com", "https://example.com", 1L);
-                var logger = org.slf4j.LoggerFactory.getLogger("latency-fixture");
-                long serialStart = System.nanoTime();
-                html.analyze(context, logger);
-                observatory.analyze(context, logger);
-                ssl.analyze(context, logger);
-                long serialMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - serialStart);
-                clearInvocations(html, observatory, ssl);
-                long parallelStart = System.nanoTime();
-                processor.process(1L);
-                long parallelMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - parallelStart);
-                verify(html).analyze(any(), any());
-                verify(observatory).analyze(any(), any());
-                verify(ssl).analyze(any(), any());
-
-                verify(publisher).completeAndPublish(eq(1L), any(), any(), anyString(), nullable(String.class));
-                System.out.printf("remote_fixture delayPerStageMs=%d serialStagesMs=%d parallelRunMs=%d%n",
-                    delayMs, serialMs, parallelMs);
+            List<AuditModuleResult> baselineModules = null;
+            String baselineStatuses = null;
+            for (int capacity : new int[]{1, 2, 3}) {
+                try (var remote = new RemoteModuleExecutor(Duration.ofSeconds(5), capacity)) {
+                    var processor = processor(remote);
+                    when(html.analyze(any(), any())).thenAnswer(call -> { Thread.sleep(delayMs); return result("html"); });
+                    when(observatory.analyze(any(), any())).thenAnswer(call -> { Thread.sleep(delayMs); return result("observatory"); });
+                    when(ssl.analyze(any(), any())).thenAnswer(call -> { Thread.sleep(delayMs); return result("ssl"); });
+                    clearInvocations(publisher);
+                    long start = System.nanoTime();
+                    processor.process(1L);
+                    long elapsedMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+                    var report = ArgumentCaptor.forClass(AuditReportJson.class);
+                    verify(publisher).completeAndPublish(eq(1L), any(), report.capture(), anyString(), nullable(String.class));
+                    if (capacity == 1) {
+                        baselineModules = report.getValue().modules();
+                        baselineStatuses = report.getValue().meta().get("moduleStatuses");
+                    } else {
+                        assertEquals(baselineModules, report.getValue().modules());
+                        assertEquals(baselineStatuses, report.getValue().meta().get("moduleStatuses"));
+                    }
+                    System.out.printf("remote_fixture maxConcurrentModules=%d delayPerStageMs=%d runMs=%d%n",
+                        capacity, delayMs, elapsedMs);
+                }
             }
         }
     }

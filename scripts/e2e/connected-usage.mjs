@@ -52,9 +52,9 @@ try{
   const displayedMonth=new Intl.DateTimeFormat(lang,{month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(usage.period+'-01T00:00:00Z'));
   const ledgerRegion=page.getByRole('region',{name:(lang==='fr'?'Journal de consommation':'Usage ledger')+' · '+displayedMonth});
   assert.ok(await ledgerRegion.evaluate(el=>el===document.activeElement),'Keyboard reaches ledger region');
-  if(width<768){await page.keyboard.press('ArrowRight');await page.waitForFunction(()=>document.querySelector('main [role=region]').scrollLeft>0);}
+  if(width<768){await page.keyboard.press('ArrowRight');await page.waitForFunction(element=>element.scrollLeft>0,await ledgerRegion.elementHandle());}
 
-  await page.getByRole('button',{name:labels.next,exact:true}).click();await page.waitForURL(/offset=20/);await runLink('2020').waitFor();assert.equal(await page.locator('tbody tr').count(),4);await check('page-two');
+  await page.getByRole('button',{name:labels.next,exact:true}).click();await page.waitForURL(/offset=20/);await runLink('2020').waitFor();assert.equal(await page.getByRole('table').locator('tbody tr').count(),4);await check('page-two');
   const languageLink=page.getByRole('link',{name:lang==='fr'?'English':'Français',exact:true});assert.ok((await languageLink.getAttribute('href')).includes('offset=20'));
   await page.getByLabel(labels.month).fill('2026-09');await page.getByRole('button',{name:labels.show,exact:true}).click();await page.waitForURL(/period=2026-09$/);assert.ok(!new URL(page.url()).searchParams.has('offset'));await runLink('2010').waitFor();await check('prior-month');
   assert.equal(await page.getByRole('link',{name:`${usage.available} ${(lang==='fr'?fr:en).connected.credits}`,exact:true}).count(),1,'Historic filter never changes current quota');
