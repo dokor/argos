@@ -13,6 +13,12 @@ const titles = {
   en: { ANALYSIS_READY: "Analysis complete", ANALYSIS_PARTIAL: "Analysis complete — partial results", ANALYSIS_FAILED: "Analysis failed", DISCOVERY_READY: "Discovery complete", DISCOVERY_PARTIAL: "Discovery complete — partial results", DISCOVERY_FAILED: "Discovery failed", BATCH_READY: "Batch complete", BATCH_PARTIAL: "Batch complete — partial results", BATCH_FAILED: "Batch failed" },
 };
 
+function ReadIcon({ all = false }: { all?: boolean }) {
+  return <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    {all ? <path d="m18 6-7 7-3-3M22 10l-7 7-3-3M2 14l3 3 3-3" /> : <path d="m5 12 4 4L19 6" />}
+  </svg>;
+}
+
 /** One bounded poll for the whole authenticated shell; initial/offline history stays in the inbox. */
 export default function NotificationCenter() {
   const { lang } = useLang(), fr = lang === "fr";
@@ -80,18 +86,33 @@ export default function NotificationCenter() {
       {!!inbox?.unread && <span className={s.badge} aria-hidden="true">{inbox.unread > 9 ? "9+" : inbox.unread}</span>}
     </button>
     {open && <section id={id} ref={panel} tabIndex={-1} className={s.panel} aria-label="Notifications">
-      <div className={s.heading}><h2>Notifications</h2><button type="button" onClick={close} aria-label={fr ? "Fermer les notifications" : "Close notifications"}>×</button></div>
-      {error && <p role="alert">{fr ? "Notifications indisponibles." : "Notifications unavailable."} <button onClick={() => refresh.current()}>{fr ? "Réessayer" : "Retry"}</button></p>}
-      {!inbox && !error && <p role="status">{fr ? "Chargement…" : "Loading…"}</p>}
-      {inbox && <>{inbox.unread > 0 && <button className={s.all} disabled={busy} onClick={() => void read()}>{fr ? "Tout marquer comme lu" : "Mark all as read"}</button>}
-        {!inbox.items.length ? <p>{fr ? "Aucune notification pour le moment." : "No notifications yet."}</p> : <ul>{inbox.items.map(n => <li key={n.id} data-unread={!n.readAt}>
-          <span aria-hidden="true">{n.type.endsWith("FAILED") ? "!" : n.type.endsWith("PARTIAL") ? "△" : "✓"}</span>
-          <div><Link href={n.href} onClick={() => { void read(n); setOpen(false); }}><strong>{title(n)}</strong><span>{description(n)}</span></Link>
-            <time dateTime={n.createdAt}>{new Intl.DateTimeFormat(lang, { dateStyle: "short", timeStyle: "short" }).format(new Date(n.createdAt))}</time>
-            {!n.readAt && <button disabled={busy} onClick={() => void read(n)}>{fr ? "Marquer comme lu" : "Mark as read"}</button>}
-          </div>
-        </li>)}</ul>}
-        <p className={s.hint}>{fr ? "30 dernières notifications · conservées 90 jours" : "Latest 30 notifications · retained for 90 days"}</p>
+      <div className={s.heading}>
+        <h2>Notifications</h2>
+        {!!inbox?.unread && <button type="button" className={s.iconButton} disabled={busy} onClick={() => void read()} aria-label={fr ? "Tout marquer comme lu" : "Mark all as read"} title={fr ? "Tout marquer comme lu" : "Mark all as read"}><ReadIcon all /></button>}
+        <button type="button" className={s.iconButton} onClick={close} aria-label={fr ? "Fermer les notifications" : "Close notifications"}><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg></button>
+      </div>
+      {error && <p className={s.message} role="alert">{fr ? "Notifications indisponibles." : "Notifications unavailable."} <button onClick={() => refresh.current()}>{fr ? "Réessayer" : "Retry"}</button></p>}
+      {!inbox && !error && <p className={s.message} role="status">{fr ? "Chargement…" : "Loading…"}</p>}
+      {inbox && <>
+        {!inbox.items.length ? <p className={s.message}>{fr ? "Aucune notification pour le moment." : "No notifications yet."}</p> : <ul className={s.list}>{inbox.items.map(n => {
+          const [headline, detail] = title(n).split(" — ");
+          const createdAt = new Date(n.createdAt);
+          const fullDate = new Intl.DateTimeFormat(lang, { dateStyle: "long", timeStyle: "short" }).format(createdAt);
+          return <li key={n.id} className={s.notice} data-unread={!n.readAt} data-kind={n.type.endsWith("FAILED") ? "error" : n.type.endsWith("PARTIAL") ? "partial" : "success"}>
+            <span className={s.statusIcon} aria-hidden="true">{n.type.endsWith("FAILED") ? "!" : n.type.endsWith("PARTIAL") ? "△" : "✓"}</span>
+            <div className={s.noticeBody}>
+              <Link className={s.noticeLink} href={n.href} onClick={() => { void read(n); setOpen(false); }}>
+                <span className={s.titleLine}><strong>{headline}</strong>{detail && <span className={s.detail}>{detail}</span>}</span>
+                <span className={s.description}>{description(n)}</span>
+              </Link>
+              <div className={s.metadata}>
+                <time dateTime={n.createdAt} title={fullDate} aria-label={fullDate}>{new Intl.DateTimeFormat(lang, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(createdAt)}</time>
+                {!n.readAt && <button type="button" className={s.readButton} disabled={busy} onClick={() => void read(n)} aria-label={fr ? "Marquer comme lu" : "Mark as read"}><ReadIcon /><span>{fr ? "Marquer lu" : "Mark read"}</span></button>}
+              </div>
+            </div>
+          </li>;
+        })}</ul>}
+        <p className={s.hint}>{fr ? "30 dernières notifications · 90 jours" : "Latest 30 notifications · 90 days"}</p>
       </>}
     </section>}
     <div className={s.toasts} aria-live="polite" aria-atomic="true">{toast && <aside className={s.toast} data-kind={toast.type.endsWith('FAILED')?'error':toast.type.endsWith('PARTIAL')?'partial':'success'} onMouseEnter={()=>setPaused(true)} onMouseLeave={()=>setPaused(false)} onFocusCapture={()=>setPaused(true)} onBlurCapture={event=>{if(!event.currentTarget.contains(event.relatedTarget))setPaused(false);}}>
