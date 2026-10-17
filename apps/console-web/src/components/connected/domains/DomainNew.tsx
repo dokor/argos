@@ -1,6 +1,7 @@
 "use client";
 import { inputHints } from "@/lib/input-hints";
 import ContextHelp from "@/components/ui/ContextHelp";
+import Stepper from "@/components/ui/Stepper";
 import { allDiscoveryPages } from "@/lib/connected/discovery-pages";
 import DomainScopeGuide from "./DomainScopeGuide";
 import { useEffect, useRef, useState } from "react";
@@ -273,6 +274,17 @@ export default function DomainNew() {
   useEffect(() => {
     window.dispatchEvent(new Event("argos-reading"));
   }, [params]);
+  const stepper = <Stepper
+    label={c.newTitle}
+    steps={[
+      { id: "scope", label: c.steps.scope },
+      { id: "selection", label: c.steps.selection },
+      { id: "confirmation", label: c.steps.confirmation },
+    ]}
+    currentStep={dialog === "launch" || (valid && request?.kind === "batch")
+      ? "confirmation" : discoveryId ? "selection" : "scope"}
+    statusLabels={c.steps.status}
+  />;
   return (
     <main className={s.page}>
       <Link className={d.link} href="/account/domains">
@@ -281,13 +293,7 @@ export default function DomainNew() {
       <PageHeading title={c.newTitle} description={c.newIntro} action={discoveryId ?
         <Link className={s.secondary} href="/account/domains/new">{c.new}</Link> : undefined} />
       <ContextHelp topic="domain"/>
-      <ol className={d.steps}>
-        <li aria-current={!discoveryId ? "step" : undefined}>{c.stepScope}</li>
-        <li aria-current={discoveryId ? "step" : undefined}>
-          {c.stepSelection}
-        </li>
-        <li>{c.stepLaunch}</li>
-      </ol>
+      {stepper}
       {blocked ? (
         <Waiting allowed={false} />
       ) : !valid || (params.has("request") && !request) ? (
@@ -737,6 +743,7 @@ export default function DomainNew() {
                     })
               }
             >
+              {dialog === "launch" && stepper}
               <p>{dialog === "launch" ? c.confirmHint : c.cancelHint}</p>
               {dialog === "launch" && (
                 <>

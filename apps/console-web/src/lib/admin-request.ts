@@ -12,7 +12,7 @@ export function adminPath(method: string, path: string): boolean {
   const ids = path.match(/\/([0-9]+)(?:\/|$)/g);
   if (ids?.some((v) => !id(v.replaceAll("/", "")))) return false;
   return method === "GET"
-    ? /^admin\/(?:feedback(?:\/[1-9]\d{0,18})?|users(?:\/[1-9]\d{0,18}(?:\/events)?)?|runs(?:\/[1-9]\d{0,18}(?:\/report)?)?|queue|run-options|events|analytics(?:\/settings)?|traffic|entitlement-options)$/.test(
+    ? /^admin\/(?:feedback(?:\/[1-9]\d{0,18})?|users(?:\/[1-9]\d{0,18}(?:\/events)?)?|runs(?:\/[1-9]\d{0,18}(?:\/report)?)?|queue(?:\/tasks(?:\/(?:DISCOVERY|BATCH|RUN)\/[1-9]\d{0,18})?)?|run-options|events|analytics(?:\/settings)?|traffic|entitlement-options)$/.test(
         path,
       )
     : method === "PATCH"
@@ -27,7 +27,9 @@ export function adminQuery(
   params: URLSearchParams,
 ): URLSearchParams | null {
   const keys =
-    path === "admin/run-options"
+    path === "admin/queue/tasks"
+      ? ["type", "status", "site", "user", "from", "until", "sort", "page", "limit"]
+      : path === "admin/run-options"
       ? ["kind", "q", "limit", "cursor"]
       : ["admin/analytics","admin/traffic"].includes(path)
       ? path === "admin/traffic" ? ["days","group"] : ["days"]
@@ -51,6 +53,15 @@ export function adminQuery(
     )
       return null;
     if (path === "admin/run-options" && ((key === "kind" && !["site", "user"].includes(value)) || (key === "q" && value.length > 100))) return null;
+    if (path === "admin/queue/tasks" && (
+      (key === "type" && !["DISCOVERY", "BATCH", "RUN"].includes(value)) ||
+      (key === "status" && !["QUEUED", "RUNNING"].includes(value)) ||
+      (key === "sort" && !["oldest", "newest", "status", "started"].includes(value)) ||
+      (key === "page" && (!/^[1-9]\d{0,4}$/.test(value) || Number(value) > 10000)) ||
+      (key === "site" && !/^[a-zA-Z0-9.:-]+$/.test(value)) ||
+      (key === "user" && value !== "anonymous" && !id(value)) ||
+      (["from", "until"].includes(key) && (!/^\d{4}-\d{2}-\d{2}$/.test(value) || !Number.isFinite(Date.parse(value)) || new Date(value).toISOString().slice(0,10) !== value))
+    )) return null;
     if(key === "group" && !["day","week","month"].includes(value)) return null;
     if (key === "days" && !["7", "30", "90"].includes(value)) return null;
     if (
@@ -68,6 +79,7 @@ export function adminQuery(
     )
       return null;
   }
+  if (path === "admin/queue/tasks" && params.has("from") && params.has("until") && params.get("from")! > params.get("until")!) return null;
   return new URLSearchParams(params);
 }
 function common(body: Record<string, unknown>): boolean {
@@ -101,6 +113,8 @@ export function adminSuspension(body: Record<string, unknown>): boolean {
   );
 }
 export function safeAdminReturn(raw: unknown): string | null {
+  const queue = safeAdminQueueReturn(raw);
+  if (queue) return queue;
   if (
     typeof raw !== "string" ||
     raw.length > 2048 ||
@@ -117,9 +131,18 @@ export function safeAdminReturn(raw: unknown): string | null {
 
 /** Only the analysis list and its validated filters can be a run-detail return target. */
 export function safeAdminRunReturn(raw: unknown): string | null {
+  const queue = safeAdminQueueReturn(raw);
+  if (queue) return queue;
   if (typeof raw !== "string" || raw.length > 2048 || /[\\#\x00-\x20]/.test(raw) || raw.split("?").length > 2) return null;
   const [path, query] = raw.split("?");
   return /^\/(?:en\/)?account\/admin\/runs$/.test(path) && adminQuery("admin/runs", new URLSearchParams(query)) ? raw : null;
+}
+
+/** A queue return is navigation only; backend authorization is always rechecked. */
+export function safeAdminQueueReturn(raw: unknown): string | null {
+  if (typeof raw !== "string" || raw.length > 2048 || /[\\#\x00-\x20]/.test(raw) || raw.split("?").length > 2) return null;
+  const [path, query] = raw.split("?");
+  return /^\/(?:en\/)?account\/admin\/queue$/.test(path) && adminQuery("admin/queue/tasks", new URLSearchParams(query)) ? raw : null;
 }
 
 export function adminMeasurement(body: Record<string, unknown>): boolean {

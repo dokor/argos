@@ -208,22 +208,7 @@ public class AccountWs {
     @Path("/methods")
     @AccountAccess("verified")
     public Response methods() {
-        return AccountAuthWs.ok(
-                sessions.with(
-                        auth(),
-                        null,
-                        true,
-                        true,
-                        (context, c) ->
-                                dao.identities(context.user().getId(), c).stream()
-                                        .map(
-                                                i ->
-                                                        Map.of(
-                                                                "id",
-                                                                i.getId().toString(),
-                                                                "provider",
-                                                                i.getProvider()))
-                                        .toList()));
+        return AccountAuthWs.ok(auth.methods(auth()));
     }
 
     @POST

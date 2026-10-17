@@ -1,6 +1,6 @@
 package com.dokor.argos.db.generated;
 
-/** Internal deduplication references, manually maintained for V36. */
+/** Internal deduplication references, manually maintained for V37. */
 public class ProductAccountEvent {
     private String eventName;
     public String getEventName() { return eventName; }

@@ -55,7 +55,7 @@ Le serveur Grizzly monte sur `/api` - toutes les routes JAX-RS sont donc préfix
 
 ### Flux, données et scoring
 
-- Le scheduler réclame un run atomiquement, puis AuditProcessorService orchestre huit modules. SSL Labs et Observatory tournent dans un pool distant borné après HTTP ; les autres restent séquentiels. Voir [progression](docs/analysis/progress.md) et [budget global](docs/analysis/deadline.md).
+- Le scheduler réclame un run atomiquement, puis AuditProcessorService orchestre huit modules après la barrière HTTP. Le défaut est séquentiel ; `audit.execution.max-concurrent-modules` (1..3) permet de faire chevaucher SSL Labs/Observatory avec le worker local après mesure de capacité. Les navigateurs restent séquentiels. Voir [progression](docs/analysis/progress.md) et [budget global](docs/analysis/deadline.md).
 - La publication et la transition COMPLETED suivent le [contrat de publication atomique](docs/security/audit-publication.md). Ne pas les remplacer par deux écritures indépendantes.
 - Le lien du rapport est pré-généré à la création du run. Depuis V7, seules les empreintes sont stockées (report_token_hash sur ARG_AUDIT_RUN, token_hash sur ARG_AUDIT_REPORT). Voir [credentials](docs/security/report-credentials.md). Ne pas réintroduire report_token/public_token en clair ni régénérer le lien à la publication.
 - Le schéma courant est défini par toutes les migrations dans apps/api-backend/src/main/resources/db/migration et les classes db.generated ; conserver les migrations historiques, y compris les anciennes colonnes qu'elles décrivent.

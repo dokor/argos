@@ -5,7 +5,7 @@ import com.querydsl.sql.*;
 import java.sql.Types;
 import static com.querydsl.core.types.PathMetadataFactory.forVariable;
 
-/** Manually maintained mapping for V36. */
+/** Manually maintained mapping for V37. */
 public class QProductAccountEvent extends RelationalPathBase<ProductAccountEvent> {
     public static final QProductAccountEvent table = new QProductAccountEvent("ARG_PRODUCT_ACCOUNT_EVENT");
     public final StringPath eventName = createString("eventName");

@@ -250,6 +250,7 @@ public class AccountAuthService {
                     (context, c) -> {
                         // Lock order remains user -> session -> token on the same transaction
                         // connection.
+                        requireVerifiedEmail(context.user());
                         var q = QAccountToken.table;
                         var t =
                                 dao.transactions
@@ -282,6 +283,7 @@ public class AccountAuthService {
                     var local =
                             dao.identity("password", context.user().getId().toString(), c, true);
                     if (password == null || password.isBlank()) {
+                        requireVerifiedEmail(context.user());
                         issue(context.user(), "REAUTH", context.session().getId(), c, language);
                         return null;
                     }
@@ -299,6 +301,11 @@ public class AccountAuthService {
         context.session().setAuthenticatedAt(clock.instant());
         dao.save(context.session(), c);
         sessions.event("reauth", "accepted", context.user().getId(), context.session().getId(), c);
+    }
+
+    private void requireVerifiedEmail(AccountUser user) {
+        if (!"ACTIVE".equals(user.getState()) || user.getEmail() == null)
+            throw AccountError.forbidden("email_unverified");
     }
 
     public void confirmEmail(String auth, String csrf, String raw) {
@@ -442,6 +449,16 @@ public class AccountAuthService {
                             "archive", "accepted", user.getId(), context.session().getId(), c);
                     return null;
                 });
+    }
+
+    public record Method(String id, String provider, boolean usable) {}
+
+    public List<Method> methods(String authorization) {
+        return sessions.with(authorization, null, true, false, (context, c) ->
+                dao.identities(context.user().getId(), c).stream()
+                        .map(identity -> new Method(identity.getId().toString(),
+                                identity.getProvider(), usable(identity)))
+                        .toList());
     }
 
     private boolean usable(AccountIdentity identity) {

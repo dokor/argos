@@ -1,5 +1,6 @@
 import { clearPendingAnalysis } from "./connected/analysis-recovery";
 export type AccountProfile = { displayName: string; email: string | null; verified: boolean; admin?: boolean };
+export type SignInMethod = { id: string; provider: string; usable: boolean };
 let csrf: string | null = null;
 export class AccountClientError extends Error { constructor(public code: string, public status: number, public retryAfter = 0) { super(code); } }
 async function csrfToken(): Promise<string> {

@@ -76,7 +76,7 @@ class AccountJourneyIT extends MariaDbReportFixture {
     }
 
     @Test void migrationDoesNotReconstructAccountHistoryOrHistoricalAudience() throws Exception {
-        var old = org.flywaydb.core.Flyway.configure().dataSource(source).cleanDisabled(false).target("35").load();
+        var old = org.flywaydb.core.Flyway.configure().dataSource(source).cleanDisabled(false).target("36").load();
         old.clean(); old.migrate();
         sql("INSERT INTO ARG_ACCOUNT_USER(id,display_name,state,role,offer,created_at) VALUES(101,'Existing','ACTIVE','USER','FREE','2026-01-01')");
         sql("INSERT INTO ARG_DOMAIN(id,hostname) VALUES(1,'example.test')");

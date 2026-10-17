@@ -63,7 +63,7 @@ try {
     console.log('PASS ' + width + '-' + lang + '-' + theme);
     await context.close();
   }
-  for (const [name, profile, status] of [['anonymous', null, 401], ['user', { verified: true, admin: false }, 200], ['pending', { verified: false, admin: true }, 200]]) {
+  for (const [name, profile, status] of [['anonymous', null, 401], ['user', { displayName: 'Review user', email: 'review@example.test', verified: true, admin: false }, 200], ['pending', { displayName: 'Review pending', email: 'pending@example.test', verified: false, admin: true }, 200]]) {
     const context = await browser.newContext();
     await context.addCookies([{ name: 'argos_admin', value: 'obsolete-synthetic-cookie', url: base, httpOnly: true }]);
     await context.route('**/api/account/me', request => request.fulfill({ status, contentType: 'application/json', body: JSON.stringify(profile ?? { error: 'session_invalid' }) }));
@@ -72,6 +72,7 @@ try {
     await page.goto(base + '/account/admin/analytics');
     if (name === 'anonymous') await page.getByRole('heading', { name: 'Connectez-vous à votre espace', exact: true }).waitFor();
     else await page.locator('main').getByRole('alert').waitFor();
+    console.log('PASS denied profile ' + name);
     assert.equal(requests.some(url => url.includes('/api/account/admin/analytics')), false, name);
     assert.equal(await page.locator('main dl').count(), 0);
     await context.close();

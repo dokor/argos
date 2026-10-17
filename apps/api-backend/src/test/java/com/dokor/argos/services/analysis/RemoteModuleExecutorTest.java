@@ -9,10 +9,51 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.*;
 
 class RemoteModuleExecutorTest {
+    @Test void configurationDefaultsToSequentialAndOnlyAcceptsTheSupportedCapacity() {
+        try (var executor = new RemoteModuleExecutor(com.typesafe.config.ConfigFactory.empty())) {
+            assertEquals(1, executor.maxConcurrentModules());
+            assertFalse(executor.parallelEnabled());
+            assertThrows(IllegalStateException.class, () -> executor.submit("ssl", () -> fail("Disabled work ran")));
+        }
+        for (int limit : new int[]{2, 3}) {
+            var config = com.typesafe.config.ConfigFactory.parseString(
+                "audit.execution.max-concurrent-modules=" + limit + "\naudit.remote-modules.timeout=3s");
+            try (var executor = new RemoteModuleExecutor(config)) {
+                assertTrue(executor.parallelEnabled());
+                assertEquals(limit, executor.maxConcurrentModules());
+                assertEquals(Duration.ofSeconds(3), executor.timeoutBudget());
+            }
+        }
+        for (int limit : new int[]{-1, 0, 4, Integer.MAX_VALUE}) {
+            var config = com.typesafe.config.ConfigFactory.parseString("audit.execution.max-concurrent-modules=" + limit);
+            assertThrows(IllegalArgumentException.class, () -> new RemoteModuleExecutor(config));
+        }
+    }
+
+    @Test void capacityTwoSerializesRemoteCallsAndCancelsExpiredQueuedWork() throws Exception {
+        var started = new CountDownLatch(1);
+        var release = new CountDownLatch(1);
+        var secondStarted = new java.util.concurrent.atomic.AtomicBoolean();
+        try (var executor = new RemoteModuleExecutor(Duration.ofSeconds(1), 2);
+             var first = executor.submit("observatory", () -> {
+                 started.countDown();
+                 release.await();
+                 return "first";
+             })) {
+            assertTrue(started.await(2, TimeUnit.SECONDS));
+            try (var second = executor.submit("ssl", () -> { secondStarted.set(true); return "second"; })) {
+                assertThrows(HttpTimeoutException.class, second::await);
+                assertFalse(secondStarted.get());
+                release.countDown();
+                assertThrows(HttpTimeoutException.class, first::await);
+            }
+        } finally { release.countDown(); }
+    }
+
     @Test void twoRemoteCallsOverlapAndCarryTheRunContext() throws Exception {
         var bothStarted = new CountDownLatch(2);
         MDC.put("runId", "synthetic-run");
-        try (var executor = new RemoteModuleExecutor(Duration.ofSeconds(5));
+        try (var executor = new RemoteModuleExecutor(Duration.ofSeconds(5), 3);
              var ssl = executor.submit("ssl", () -> { bothStarted.countDown(); assertTrue(bothStarted.await(2, TimeUnit.SECONDS));
                  assertEquals("synthetic-run", MDC.get("runId")); return MDC.get("module"); });
              var observatory = executor.submit("observatory", () -> { bothStarted.countDown(); assertTrue(bothStarted.await(2, TimeUnit.SECONDS));
@@ -30,7 +71,7 @@ class RemoteModuleExecutorTest {
             int count = active.incrementAndGet(); peak.accumulateAndGet(count, Math::max); started.countDown();
             try { release.await(); return count; } finally { active.decrementAndGet(); }
         };
-        try (var executor = new RemoteModuleExecutor(Duration.ofSeconds(5));
+        try (var executor = new RemoteModuleExecutor(Duration.ofSeconds(5), 3);
              var first = executor.submit("ssl", slow); var second = executor.submit("observatory", slow)) {
             assertTrue(started.await(2, TimeUnit.SECONDS));
             try (var third = executor.submit("ssl", slow); var fourth = executor.submit("observatory", slow);
@@ -46,7 +87,7 @@ class RemoteModuleExecutorTest {
         var started = new CountDownLatch(1);
         var interrupted = new CountDownLatch(1);
         // Leave time for the worker to start on a loaded runner before testing cancellation.
-        try (var executor = new RemoteModuleExecutor(Duration.ofSeconds(5));
+        try (var executor = new RemoteModuleExecutor(Duration.ofSeconds(5), 3);
              var task = executor.submit("ssl", () -> {
                  started.countDown();
                  try { new CountDownLatch(1).await(); return "late"; }
@@ -61,7 +102,7 @@ class RemoteModuleExecutorTest {
     @Test void closingThePoolInterruptsRunningCallsAndRejectsNewWork() throws Exception {
         var started = new CountDownLatch(1);
         var stopped = new CountDownLatch(1);
-        var executor = new RemoteModuleExecutor(Duration.ofSeconds(5));
+        var executor = new RemoteModuleExecutor(Duration.ofSeconds(5), 3);
         try (var task = executor.submit("ssl", () -> {
             started.countDown();
             try { new CountDownLatch(1).await(); return "unexpected"; }
@@ -77,7 +118,7 @@ class RemoteModuleExecutorTest {
     }
     @Test void invalidBudgetsAndBrowserModulesAreRejected() {
         assertThrows(IllegalArgumentException.class, () -> new RemoteModuleExecutor(Duration.ZERO));
-        try (var executor = new RemoteModuleExecutor(Duration.ofSeconds(1))) {
+        try (var executor = new RemoteModuleExecutor(Duration.ofSeconds(1), 3)) {
             assertThrows(IllegalArgumentException.class, () -> executor.submit("runtime", () -> null));
         }
     }
