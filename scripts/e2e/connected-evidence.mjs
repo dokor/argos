@@ -36,6 +36,8 @@ try {
    assert.ok(await details.evaluate(el=>el.open));
    if(state==='historical') assert.equal(await page.locator('[data-observed-evidence]').count(),0);
    else {
+    const evidenceSummary=details.locator('summary').filter({hasText:lang==='fr'?/^Preuves et méthode$/:/^Evidence and method$/});
+    await evidenceSummary.focus();await page.keyboard.press('Enter');
     const block=details.locator('[data-observed-evidence]');await block.waitFor();
     assert.equal(await block.locator('li').count(),state==='truncated'?10:state==='unavailable'?0:1);
     assert.ok((await block.textContent()).includes(state==='unavailable'?(lang==='fr'?'Cela ne signifie pas':'This does not mean'):(lang==='fr'?'Origine de la ressource':'Resource origin')));
@@ -53,6 +55,8 @@ try {
     const dom=page.locator('details#'+findingAnchor('lighthouse.audit.image-alt'));
     const domSummary=dom.locator('summary').first();await domSummary.focus();await page.keyboard.press('Enter');
     assert.ok(await dom.evaluate(el=>el.open));
+    const domEvidenceSummary=dom.locator('summary').filter({hasText:lang==='fr'?/^Preuves et méthode$/:/^Evidence and method$/});
+    await domEvidenceSummary.focus();await page.keyboard.press('Enter');
     assert.ok((await dom.locator('[data-observed-evidence]').textContent()).includes('1,HTML,1,BODY,2,MAIN,4,IMG'));
     await dom.locator('[data-observed-evidence]').screenshot({path:`${output}/dom-${lang}-${colorScheme}-${width}.png`});
     if(width===390 && lang==='en' && colorScheme==='dark') for(const edge of [320,768]) {
