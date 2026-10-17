@@ -3,7 +3,7 @@ import { appendFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { setTimeout as sleep } from 'node:timers/promises';
-import { SITE, POLICY, SERVICES, SHA, ControlError, requireControl, normalizeServices, parseServices, analysisKey, evaluateReports } from './self-audit-policy.mjs';
+import { SITE, POLICY, SERVICES, SHA, ControlError, requireControl, normalizeServices, parseServices, analysisKey, evaluateReports, collectionEvidence } from './self-audit-policy.mjs';
 
 const IMAGE = /^sha256:[a-f0-9]{64}$/;
 const ID = /^[a-f0-9]{64}$/;
@@ -101,7 +101,7 @@ export async function collectAudit({ expectedSha, service, services = service, e
   let selected = null;
   try { selected = normalizeServices(services); } catch { /* Invalid input stays out of evidence. */ }
   const evidence = { schemaVersion: 1, policy: POLICY, expectedSha: SHA.test(expectedSha) ? expectedSha : null,
-    services: selected, outcome: 'CONTROL_FAILED', findings: [] };
+    services: selected, outcome: 'CONTROL_FAILED', findings: [], collection: [] };
   try {
     requireControl(SHA.test(expectedSha) && selected && email && password
       && typeof invocation === 'string' && /^[1-9][0-9]{0,19}:[1-9][0-9]{0,5}$/.test(invocation), 'configuration-invalid');
@@ -135,7 +135,9 @@ export async function collectAudit({ expectedSha, service, services = service, e
         const run = await client.request('/api/account/runs/' + created.runId);
         requireControl(!['FAILED', 'CANCELED'].includes(run.status), 'audit-failed');
         if (run.status === 'COMPLETED') {
-          reports.push(await client.request(`/api/account/runs/${created.runId}/report`));
+          const report = await client.request(`/api/account/runs/${created.runId}/report`);
+          reports.push(report);
+          evidence.collection.push(collectionEvidence(report));
           break;
         }
         requireControl(['QUEUED', 'RUNNING'].includes(run.status), 'response-invalid');
@@ -163,7 +165,11 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY,
       `Argos post-deployment audit: **${evidence.outcome}**. Confirmed findings: ${evidence.findings.length}.` +
       (evidence.reason ? ` Control reason: \`${evidence.reason}\`.` : '') + '\n');
-    console.log(JSON.stringify({ outcome: evidence.outcome, reason: evidence.reason, findings: evidence.findings.length }));
+    if (process.env.GITHUB_STEP_SUMMARY && evidence.limitations?.includes('runtime-transfer-size-unavailable-after-fetch-abort'))
+      appendFileSync(process.env.GITHUB_STEP_SUMMARY,
+        'Collection limitation: runtime transfer size remains unavailable after documented fetch cancellations. Other scored measurements remain available; coverage checks passed.\n');
+    console.log(JSON.stringify({ outcome: evidence.outcome, reason: evidence.reason, findings: evidence.findings.length,
+      limitations: evidence.limitations ?? [], collection: evidence.collection }));
     process.exitCode = evidence.outcome === 'GO' ? 0 : evidence.outcome === 'SITE_NO_GO' ? 1 : 2;
   } catch { console.error('Control evidence could not be saved.'); process.exitCode = 2; }
 }

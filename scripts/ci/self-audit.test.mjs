@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 import { SITE, POLICY, SERVICES, CHECKS, ControlError, analysisKey, evaluateReports,
-  ticketInput, ticketMarker, normalizeServices, parseServices } from './self-audit-policy.mjs';
+  ticketInput, ticketMarker, normalizeServices, parseServices, collectionEvidence } from './self-audit-policy.mjs';
 import { accountClient, collectAudit, deploymentSnapshot } from './self-audit.mjs';
 import { githubApi, synchronizeTickets, ticketBody } from './self-audit-tickets.mjs';
 
@@ -88,6 +88,99 @@ test('insufficient/absent coverage, anti-bot, changed target or fingerprints are
   }
 });
 
+function abortedTransferReport(issues = [issue]) {
+  const r = report(issues);
+  r.scores.moduleExecution.completed = 7;
+  r.scores.moduleExecution.partial = 1;
+  r.measurements = { transferredBytes: null, loadMs: 1200, requests: 12, failedRequests: 2 };
+  r.scores.coverage.checks = Object.entries(CHECKS).map(([key, domain]) => ({ key, domain,
+    module: key.split('.')[0], state: 'MEASURED', reason: 'CHECK_OBSERVED', confidence: 'MEASURED' }));
+  Object.assign(r.scores.coverage.checks.find(check => check.key === 'runtime.network.bytes_estimated'), {
+    state: 'UNAVAILABLE', reason: 'CHECK_MISSING', confidence: 'UNKNOWN' });
+  r.issues.push({ id: 'runtime.network.failed_requests', categoryKey: 'performance', severity: 'important',
+    confidence: 'UNKNOWN', evidence: secret, structuredEvidence: { source: 'runtime', measurement: { value: 2, unit: 'count' },
+      observed: { version: 'observed-evidence-v1', source: 'runtime', state: 'AVAILABLE', inspected: 2,
+        redacted: true, truncated: false, items: [0, 1].map(() => ({ kind: 'resource', reason: 'net::ERR_ABORTED',
+          resourceType: 'fetch', ownership: 'FIRST_PARTY', origin: secret, resourceRef: secret })) } } });
+  return r;
+}
+
+test('documented aborted fetches allow exactly one unknown transfer-size check and retain its limitation', () => {
+  const r = abortedTransferReport();
+  const result = evaluateReports(r, structuredClone(r));
+  assert.equal(result.outcome, 'GO');
+  assert.deepEqual(result.limitations, ['runtime-transfer-size-unavailable-after-fetch-abort']);
+  assert.ok(!result.findings.some(item => item.key === 'runtime.network.bytes_estimated'));
+  assert.ok(!JSON.stringify(result).includes(secret));
+  const mixed = evaluateReports(r, report());
+  assert.equal(mixed.outcome, 'GO'); assert.deepEqual(mixed.limitations, result.limitations);
+  const unmeasured = abortedTransferReport([{ ...issue, id: 'runtime.network.bytes_estimated', categoryKey: 'performance', severity: 'critical' }]);
+  assert.equal(evaluateReports(unmeasured, unmeasured).outcome, 'GO');
+  const critical = abortedTransferReport([{ ...issue, severity: 'critical' }]);
+  assert.equal(evaluateReports(critical, structuredClone(critical)).outcome, 'SITE_NO_GO');
+});
+
+test('the transfer exception rejects every other collection gap and incomplete or different failure evidence', () => {
+  const mutations = [
+    r => { r.scores.moduleExecution.partial = 2; r.scores.moduleExecution.completed = 6; },
+    r => { r.scores.moduleExecution.total = 7; r.scores.moduleExecution.completed = 6; },
+    ...['failed','skipped','pending','running'].map(key => r => { r.scores.moduleExecution[key] = 1; }),
+    r => { r.measurements = null; }, r => { r.measurements.transferredBytes = 0; },
+    r => { r.measurements.loadMs = null; }, r => { r.measurements.loadMs = -1; },
+    ...[0,11,1.5].map(value => r => { r.measurements.failedRequests = value; }),
+    r => { r.measurements.requests = 1; },
+    ...[{ key:'runtime.js.errors' }, { domain:'security' }, { module:'http' }, { reason:'POLICY_DISABLED' },
+      { state:'BLOCKED_BY_ANTIBOT' }, { confidence:'PARTIAL' }].map(value => r => {
+        Object.assign(r.scores.coverage.checks.find(c => c.key === 'runtime.network.bytes_estimated'), value);
+      }),
+    r => { r.scores.coverage.checks.push({ key:'ssl.grade', module:'ssl', state:'UNAVAILABLE', reason:'CHECK_MISSING' }); },
+    r => { r.scores.coverage.checks[0].confidence = 'PARTIAL'; },
+    r => { r.issues.at(-1).structuredEvidence = null; },
+    r => { r.issues.at(-1).categoryKey = 'security'; },
+    r => { r.issues.at(-1).structuredEvidence.measurement.value = 1; },
+    r => { r.issues.at(-1).structuredEvidence.source = 'http'; },
+    ...[{ truncated:true }, { redacted:false }, { inspected:3 }, { source:'http' }, { version:'unknown' },
+      { state:'UNAVAILABLE' }].map(value => r => { Object.assign(r.issues.at(-1).structuredEvidence.observed, value); }),
+    r => { r.issues.at(-1).structuredEvidence.observed.items.pop(); },
+    ...[{ reason:'net::ERR_CONNECTION_RESET' }, { resourceType:'image' }, { ownership:'THIRD_PARTY' },
+      { kind:'element' }, { status:503 }].map(value => r => { Object.assign(r.issues.at(-1).structuredEvidence.observed.items[0], value); }),
+  ];
+  for (const mutate of mutations) {
+    const r = abortedTransferReport(); mutate(r);
+    assert.throws(() => evaluateReports(report(), r), error => error instanceof ControlError && error.code === 'collection-incomplete');
+  }
+});
+
+test('aborted-transfer reports still enforce coverage, anti-bot, target and comparable fingerprints', () => {
+  for (const mutate of [r => { r.scores.coverage.global.ratio = .79; },
+    r => { r.scores.coverage.provisional = true; }, r => { r.scores.coverage.domains.pop(); },
+    r => { r.scores.coverage.domains[0].sufficient = false; }, r => { r.scores.globalAvailable = false; },
+    r => { r.antiBot = { detected: true }; }, r => { r.pageIdentity.destination = SITE + '/login'; },
+    r => { r.scores.calculation.scopeFingerprint = 'other'; }]) {
+    const first = abortedTransferReport(), second = structuredClone(first); mutate(second);
+    assert.throws(() => evaluateReports(first, second), ControlError);
+  }
+});
+
+test('collection evidence records bounded technical codes without copying arbitrary report fields', () => {
+  const r = abortedTransferReport();
+  const expected = { key:'runtime.network.bytes_estimated', module:'runtime', reason:'CHECK_MISSING' };
+  assert.deepEqual(collectionEvidence(r).gaps, [expected]);
+  r.scores.coverage.checks.push({key:secret,module:secret,reason:secret,state:'UNAVAILABLE'});
+  r.scores.moduleExecution.failed = secret;
+  const diagnostic = collectionEvidence(r);
+  assert.equal(diagnostic.execution.failed, null);
+  assert.deepEqual(diagnostic.gaps[1], {key:'OTHER',module:'UNKNOWN',reason:'UNKNOWN'});
+  assert.ok(!JSON.stringify(diagnostic).includes(secret));
+  assert.ok(collectionEvidence(null).gaps.length === 0);
+});
+
+test('v2 verdicts keep the existing v1 ticket namespace and reject v1 evidence at the writer boundary', () => {
+  assert.equal(POLICY, 'self-audit-v2');
+  assert.ok(ticketMarker(finding.key).startsWith('<!-- argos-self-audit:self-audit-v1:'));
+  assert.throws(() => ticketInput({...evidence(),policy:'self-audit-v1'},sha,'console-web'),ControlError);
+});
+
 test('reviewed ticket keys still belong to their exact scored domain in the Java catalogue', () => {
   const java = readFileSync(new URL('../../apps/api-backend/src/main/java/com/dokor/argos/services/analysis/scoring/DefaultScorePolicy.java', import.meta.url), 'utf8');
   for (const [key, domain] of Object.entries(CHECKS)) {
@@ -162,7 +255,7 @@ test('service lists reject empty, duplicated, unknown or malformed deployment in
   assert.equal(parseServices('not-json'), null);
 });
 
-function collectorFixture({ failed, pending = false, reject, change = false } = {}) {
+function collectorFixture({ failed, pending = false, reject, change = false, makeReport = report } = {}) {
   const calls = [];
   let samples = 0, snapshots = 0, clock = 0;
   const client = {
@@ -174,7 +267,7 @@ function collectorFixture({ failed, pending = false, reject, change = false } = 
         return { runId: String(++samples) };
       }
       if (/\/runs\/\d+$/.test(path)) return { status: failed ? 'FAILED' : pending ? 'QUEUED' : 'COMPLETED' };
-      if (path.endsWith('/report')) return report();
+      if (path.endsWith('/report')) return makeReport();
       return {};
     },
   };
@@ -191,6 +284,20 @@ test('full control authenticates, checks usage, creates exactly two idempotent p
   const creates = f.calls.filter(c => c.path === '/api/account/analyses');
   assert.equal(creates.length, 2); assert.notEqual(creates[0].options.key, creates[1].options.key);
   assert.equal(creates[0].options.retry, true); assert.ok(!JSON.stringify(result).includes(secret));
+});
+
+test('the collector keeps filtered sample diagnostics on both allowed gaps and technical failures', async () => {
+  const allowed = await collectAudit(collectorFixture({makeReport:abortedTransferReport}).options);
+  assert.equal(allowed.outcome,'GO');
+  assert.equal(allowed.collection.length,2);
+  assert.deepEqual(allowed.limitations,['runtime-transfer-size-unavailable-after-fetch-abort']);
+  assert.ok(!JSON.stringify(allowed).includes(secret));
+  const failed = await collectAudit(collectorFixture({makeReport:()=>{
+    const r=abortedTransferReport();r.scores.moduleExecution.failed=1;return r;
+  }}).options);
+  assert.equal(failed.outcome,'CONTROL_FAILED'); assert.equal(failed.reason,'collection-incomplete');
+  assert.equal(failed.collection.length,2); assert.deepEqual(failed.findings,[]);
+  assert.deepEqual(failed.collection[0].gaps,[{key:'runtime.network.bytes_estimated',module:'runtime',reason:'CHECK_MISSING'}]);
 });
 
 test('one grouped control creates two analyses in total and binds ticket evidence to all deployed services', async () => {
