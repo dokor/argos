@@ -1092,6 +1092,79 @@ class AccountLifecycleIT extends MariaDbReportFixture {
     }
 
     @Test
+    void httpRejectsEveryInvalidSessionOnReadsMutationsAndRenewal() throws Exception {
+        try (var http = new HttpFixture()) {
+            for (String invalidation : List.of("JWT", "IDLE", "ABSOLUTE", "REVOKED", "ARCHIVED")) {
+                var account = user("http-" + invalidation.toLowerCase(Locale.ROOT) + "@example.com", true);
+                if (invalidation.equals("JWT")) clock.now = clock.now.plus(settings.jwtTtl());
+                else dao.transaction(c -> {
+                    var session = dao.session(account.context().session().getId(), c, true);
+                    switch (invalidation) {
+                        case "IDLE" -> session.setLastActivityAt(clock.instant().minus(settings.idleTtl()));
+                        case "ABSOLUTE" -> session.setExpiresAt(clock.instant());
+                        case "REVOKED" -> session.setRevokedAt(clock.instant());
+                        case "ARCHIVED" -> {
+                            var current = dao.user(account.context().user().getId(), c, true);
+                            current.setState("ARCHIVED");
+                            dao.save(current, c);
+                        }
+                    }
+                    dao.save(session, c);
+                    return null;
+                });
+                for (var route : List.of(
+                        List.of("GET", "/account/me"),
+                        List.of("GET", "/account/runs"),
+                        List.of("GET", "/account/runs/1"),
+                        List.of("GET", "/account/runs/1/report"),
+                        List.of("GET", "/account/sessions"),
+                        List.of("GET", "/account/methods"),
+                        List.of("PATCH", "/account/me"),
+                        List.of("POST", "/account/auth/renew"),
+                        List.of("POST", "/account/auth/logout"),
+                        List.of("POST", "/account/runs/1/claim"),
+                        List.of("DELETE", "/account/sessions/" + account.context().session().getId()),
+                        List.of("POST", "/account/me/archive"))) {
+                    var response = http.call(route.getFirst(), route.getLast(), bearer(account),
+                            List.of("GET", "DELETE").contains(route.getFirst()) ? null : "{}", true);
+                    assertEquals(401, response.statusCode(), invalidation + " " + route + " " + response.body());
+                    assertTrue(response.headers().firstValue("cache-control").orElse("").contains("no-store"));
+                    assertEquals("session_invalid", mapper.readTree(response.body()).get("error").asText());
+                }
+                assertEquals(401, http.create(bearer(account)).statusCode(), invalidation);
+            }
+        }
+    }
+
+    @Test
+    void httpRejectsForgedIdentityCsrfAndRevocationOfAnotherAccountsSession() throws Exception {
+        var a = user("http-csrf-a@example.com", true);
+        var b = user("http-csrf-b@example.com", true);
+        try (var http = new HttpFixture()) {
+            var forged = http.call("GET", "/account/me", null, null, false, Map.of(
+                    "Cookie", "argos_admin=synthetic-server-credential; argos_account=" + a.jwt(),
+                    "X-User-Id", a.context().user().getId().toString(), "X-Role", "ADMIN",
+                    "X-Argos-Account-Session", bearer(a)));
+            assertEquals(401, forged.statusCode());
+            for (var override : List.of(
+                    Map.of("Origin", "https://attacker.example"),
+                    Map.of("X-Argos-CSRF", "d".repeat(43)),
+                    Map.of("X-Argos-CSRF", "d".repeat(43), "Cookie", "argos_account_csrf=" + "d".repeat(43)))) {
+                assertEquals(403, http.call("POST", "/account/auth/renew", bearer(a), "{}", true, override).statusCode());
+                assertEquals(403, http.call("PATCH", "/account/me", bearer(a), "{\"displayName\":\"forged\"}", true, override).statusCode());
+            }
+            String target = "/account/sessions/" + b.context().session().getId();
+            var foreign = http.call("DELETE", target, bearer(a), null, true);
+            var missing = http.call("DELETE", "/account/sessions/999999", bearer(a), null, true);
+            assertEquals(404, foreign.statusCode());
+            assertEquals(missing.statusCode(), foreign.statusCode());
+            assertEquals(missing.body(), foreign.body());
+            assertEquals(200, http.call("GET", "/account/me", bearer(b), null, false).statusCode());
+            assertEquals(200, http.call("GET", "/account/me", bearer(a), null, false).statusCode());
+        }
+    }
+
+    @Test
     void actualJavaHttpEmailFlowHasNoTokenInJsonAndArchivedCredentialsFailEveryRoute()
             throws Exception {
         try (var http = new HttpFixture()) {
@@ -1283,6 +1356,12 @@ class AccountLifecycleIT extends MariaDbReportFixture {
         java.net.http.HttpResponse<String> call(
                 String method, String path, String bearer, String body, boolean csrf)
                 throws Exception {
+            return call(method, path, bearer, body, csrf, Map.of());
+        }
+
+        java.net.http.HttpResponse<String> call(
+                String method, String path, String bearer, String body, boolean csrf,
+                Map<String, String> headers) throws Exception {
             var r =
                     java.net.http.HttpRequest.newBuilder(java.net.URI.create(base + path))
                             .timeout(Duration.ofSeconds(10))
@@ -1292,6 +1371,7 @@ class AccountLifecycleIT extends MariaDbReportFixture {
                 r.header("Origin", "http://localhost:3000")
                         .header("X-Argos-CSRF", CSRF)
                         .header("Cookie", "argos_account_csrf=" + CSRF);
+            headers.forEach(r::setHeader);
             return client.send(
                     r.method(
                                     method,
