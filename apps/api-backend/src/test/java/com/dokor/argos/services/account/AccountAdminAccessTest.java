@@ -44,6 +44,18 @@ class AccountAdminAccessTest {
         user.setState("ACTIVE"); session.setRevokedAt(now); assertThrows(AccountError.class,()->statistics.read(authorization,"all"));
         verify(aggregates,times(2)).read(eq(connection),nullable(Instant.class),eq(now));
     }
+    @Test void queueTasksRequireCurrentAdminAndNeverAcceptLegacyCredentials() throws Exception {
+        var queue = new AdminQueueService(sessions, clock, mock(com.dokor.argos.services.configuration.ConfigurationService.class));
+        var filters = new AdminQueueService.Filters(null,null,null,null,null,null,null,1,20);
+        assertThrows(AccountError.class, () -> queue.list(null, filters));
+        assertThrows(AccountError.class, () -> queue.detail("Bearer legacy-secret", "BATCH", 1));
+        user.setRole("USER");
+        assertThrows(AccountError.class, () -> queue.list(authorization, filters));
+        assertThrows(AccountError.class, () -> queue.detail(authorization, "DISCOVERY", 1));
+        user.setRole("ADMIN"); user.setState("SUSPENDED");
+        assertThrows(AccountError.class, () -> queue.list(authorization, filters));
+        verify(connection, never()).prepareStatement(anyString());
+    }
     @Test void measurementSettingsAndRunLookupsRejectNonAdminsAndForgedCsrfBeforeStorage() throws Exception {
         var control = new com.dokor.argos.services.analytics.ProductMeasurementControl(dao,sessions,clock,ConfigFactory.parseString("product-analytics.enabled=true"));
         session.setCsrfHash(new TokenService().sha256("c".repeat(43)));

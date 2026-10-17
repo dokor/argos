@@ -1,0 +1,25 @@
+@use '../../styles/tokens' as t;
+.intro { color: t.$text-muted; }
+.counts { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); border-block: 1px solid t.$border; margin-block: 24px; }
+.counts > div { padding: 20px 16px; }
+.counts > div + div { border-left: 1px solid t.$border; }
+.counts dt { font-size: 15px; font-weight: 600; }
+.counts dd { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 12px; font-size: 14px; color: t.$text-muted; }
+.counts strong { display: block; font-size: 28px; font-weight: 650; font-variant-numeric: tabular-nums; color: t.$text; }
+.meta { display: block; color: t.$text-muted; font-size: 13px; margin-top: 8px; }
+.target { display: block; overflow-wrap: anywhere; margin-top: 8px; }
+.warning { display: block; margin-top: 8px; color: var(--argos-status-warning); font-weight: 600; }
+.observed { display: block; color: t.$text-muted; margin-top: 8px; }
+.timing { font-variant-numeric: tabular-nums; white-space: normal; }
+.timing time { display: block; }
+.details { margin-top: 24px; border-top: 1px solid t.$border; padding-top: 16px; }
+.details summary { cursor: pointer; min-height: 44px; }
+.details summary:focus-visible { outline: 3px solid t.$brand; outline-offset: 3px; }
+.heading { margin-top: 24px; }
+@media(max-width:600px) {
+  .counts { grid-template-columns: 1fr; }
+  .counts > div { padding: 16px 0; }
+  .counts > div + div { border-left: 0; border-top: 1px solid t.$border; }
+  .counts dd { margin-top: 8px; }
+  .counts strong { display: inline; margin-right: 8px; font-size: 24px; }
+}

@@ -101,7 +101,7 @@ public class AdminService {
         }
     }
 
-    private static List<Map<String, Object>> query(Connection c, String sql, List<Object> args) {
+    static List<Map<String, Object>> query(Connection c, String sql, List<Object> args) {
         try (var s = c.prepareStatement(sql)) {
             for (int i = 0; i < args.size(); i++) s.setObject(i + 1, args.get(i));
             try (var r = s.executeQuery()) {
