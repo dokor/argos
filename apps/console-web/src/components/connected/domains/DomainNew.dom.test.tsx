@@ -136,7 +136,7 @@ it("shows confirmation in the modal and restores selection and focus when closed
   expect(within(dialog).getAllByText(c.steps.status.completed)).toHaveLength(2);
   expect(dialog).toHaveTextContent(c.costText.replaceAll("{count}", "2"));
   expect(accountFetch).toHaveBeenCalledExactlyOnceWith("usage");
-  fireEvent.click(within(dialog).getByRole("button", { name: c.cancel, exact: true }));
+  fireEvent.click(within(dialog).getByRole("button", { name: c.cancel }));
   expect(screen.queryByRole("dialog")).toBeNull();
   expect(currentStep()).toHaveTextContent(c.steps.selection);
   expect(trigger).toHaveFocus();
@@ -162,7 +162,7 @@ it("launches the confirmed selection with the existing profile and admission req
   await act(async () => { fireEvent.click(screen.getByRole("button", { name: c.confirm })); });
   const dialog = screen.getByRole("dialog");
   await act(async () => {
-    fireEvent.click(within(dialog).getByRole("button", { name: c.launch, exact: true }));
+    fireEvent.click(within(dialog).getByRole("button", { name: c.launch }));
   });
   expect(accountFetch).toHaveBeenCalledWith("domain-batches", "POST", {
     discoveryId: "600", selectedPageIds: ["101", "102"], profileId: "server-default-v1",
