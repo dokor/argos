@@ -10,5 +10,5 @@ export default function AdminNavigation({ active }: { active: "users" | "events"
   const { lang } = useLang(); const c = accountsCopy[lang];
   const links = [["users", c.users], ["events", c.journal], ["runs", c.runs], ["queue", queueCopy[lang].title], ["feedback", c.feedback], ["analytics", c.analytics]] as const;
   return <><nav className={s.nav} aria-label={c.title}>{links.map(([section, label]) =>
-    <Link key={section} href={`/account/admin/${section}`} aria-current={active === section ? "page" : undefined}>{label}</Link>)}</nav><ContextHelp topic="admin"/></>;
+    <Link key={section} href={section === "analytics" ? "/account/admin/analytics/overview" : `/account/admin/${section}`} aria-current={active === section ? "page" : undefined}>{label}</Link>)}</nav><ContextHelp topic="admin"/></>;
 }

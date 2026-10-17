@@ -12,7 +12,7 @@ export function adminPath(method: string, path: string): boolean {
   const ids = path.match(/\/([0-9]+)(?:\/|$)/g);
   if (ids?.some((v) => !id(v.replaceAll("/", "")))) return false;
   return method === "GET"
-    ? /^admin\/(?:feedback(?:\/[1-9]\d{0,18})?|users(?:\/[1-9]\d{0,18}(?:\/events)?)?|runs(?:\/[1-9]\d{0,18}(?:\/report)?)?|queue(?:\/tasks(?:\/(?:DISCOVERY|BATCH|RUN)\/[1-9]\d{0,18})?)?|run-options|events|analytics(?:\/settings)?|traffic|problem-statistics|entitlement-options)$/.test(
+    ? /^admin\/(?:feedback(?:\/[1-9]\d{0,18})?|users(?:\/[1-9]\d{0,18}(?:\/events)?)?|runs(?:\/[1-9]\d{0,18}(?:\/report)?)?|statistics|queue(?:\/tasks(?:\/(?:DISCOVERY|BATCH|RUN)\/[1-9]\d{0,18})?)?|run-options|events|analytics(?:\/settings)?|traffic|problem-statistics|entitlement-options)$/.test(
         path,
       )
     : method === "PATCH"
@@ -27,7 +27,7 @@ export function adminQuery(
   params: URLSearchParams,
 ): URLSearchParams | null {
   const keys =
-    path === "admin/problem-statistics"
+    path === "admin/statistics" ? ["period"] : path === "admin/problem-statistics"
       ? ["days", "category"]
       : path === "admin/queue/tasks"
       ? ["type", "status", "site", "user", "from", "until", "sort", "page", "limit"]
@@ -64,6 +64,7 @@ export function adminQuery(
       (key === "user" && value !== "anonymous" && !id(value)) ||
       (["from", "until"].includes(key) && (!/^\d{4}-\d{2}-\d{2}$/.test(value) || !Number.isFinite(Date.parse(value)) || new Date(value).toISOString().slice(0,10) !== value))
     )) return null;
+    if (key === "period" && !["all", "7", "30", "90"].includes(value)) return null;
     if(key === "group" && !["day","week","month"].includes(value)) return null;
     if (path === "admin/problem-statistics" && ((key === "days" && !["30", "90"].includes(value))
       || (key === "category" && !["performance", "security", "seo", "a11y"].includes(value)))) return null;

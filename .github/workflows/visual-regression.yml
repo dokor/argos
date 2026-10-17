@@ -14,6 +14,7 @@ on:
       - 'scripts/e2e/connected-*.mjs'
       - 'scripts/e2e/usage-timeline.mjs'
       - 'scripts/e2e/account-history.mjs'
+      - 'scripts/e2e/admin-statistics.mjs'
       - 'scripts/e2e/public-header.mjs'
       - 'scripts/e2e/navigation-submenus.mjs'
       - 'scripts/e2e/acceptance-evidence*'

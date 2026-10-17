@@ -24,6 +24,26 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 /** Real JWT/session/role policy with a mocked registry; SQL/HTTP are covered by AccountLifecycleIT. */
 class AccountAdminAccessTest {
+    @Test void businessStatisticsRecheckLiveRoleAndSessionBeforeAggregation() {
+        var aggregates=mock(com.dokor.argos.db.dao.AdminStatisticsDao.class);
+        var snapshot=new com.dokor.argos.db.dao.AdminStatisticsDao.Snapshot(
+            new com.dokor.argos.db.dao.AdminStatisticsDao.Accounts(0,0,0,0,0,0,0,0),
+            new com.dokor.argos.db.dao.AdminStatisticsDao.Analyses(0,0,0,0,0,0,0),
+            new com.dokor.argos.db.dao.AdminStatisticsDao.Domains(0,0));
+        when(aggregates.read(eq(connection),any(),eq(now))).thenReturn(snapshot);
+        var statistics=new AdminStatisticsService(sessions,aggregates,clock);
+        assertEquals(now.minus(Duration.ofDays(7)),statistics.read(authorization,"7").from());
+        assertNull(statistics.read(authorization,"all").from());
+        assertEquals(400,assertThrows(AccountError.class,()->statistics.read(authorization,"365")).getResponse().getStatus());
+        assertThrows(AccountError.class,()->statistics.read(null,"all"));
+        assertThrows(AccountError.class,()->statistics.read("Bearer legacy-secret","all"));
+        user.setRole("USER"); assertThrows(AccountError.class,()->statistics.read(authorization,"all"));
+        user.setRole("ADMIN"); user.setState("PENDING"); assertThrows(AccountError.class,()->statistics.read(authorization,"all"));
+        user.setState("SUSPENDED"); assertThrows(AccountError.class,()->statistics.read(authorization,"all"));
+        user.setState("ARCHIVED"); assertThrows(AccountError.class,()->statistics.read(authorization,"all"));
+        user.setState("ACTIVE"); session.setRevokedAt(now); assertThrows(AccountError.class,()->statistics.read(authorization,"all"));
+        verify(aggregates,times(2)).read(eq(connection),nullable(Instant.class),eq(now));
+    }
     @Test void queueTasksRequireCurrentAdminAndNeverAcceptLegacyCredentials() throws Exception {
         var queue = new AdminQueueService(sessions, clock, mock(com.dokor.argos.services.configuration.ConfigurationService.class));
         var filters = new AdminQueueService.Filters(null,null,null,null,null,null,null,1,20);

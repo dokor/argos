@@ -11,6 +11,7 @@ export const accountRoutes: Record<string, string> = {
   "/feedback": "/en/feedback",
   "/account/admin/feedback": "/en/account/admin/feedback",
   "/account/admin/analytics": "/en/account/admin/analytics",
+  "/account/admin/analytics/overview": "/en/account/admin/analytics/overview",
   "/account/admin/analytics/problems": "/en/account/admin/analytics/problems",
   "/account/admin/analytics/traffic": "/en/account/admin/analytics/traffic",
   "/account/admin/users": "/en/account/admin/users",

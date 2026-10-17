@@ -7,7 +7,7 @@ import { LangProvider } from "@/lib/i18n/LangContext";
 const route = vi.hoisted(() => ({ pathname: "" }));
 vi.mock("next/navigation", () => ({ usePathname: () => route.pathname }));
 
-it.each(["problems", "traffic"])("offers reciprocal language links on statistics/%s", section => {
+it.each(["overview", "problems", "traffic"])("offers reciprocal language links on statistics/%s", section => {
   const french = "/account/admin/analytics/" + section, english = "/en" + french;
   route.pathname = english;
   render(<LangProvider initialLang="en"><LangToggle /></LangProvider>);
