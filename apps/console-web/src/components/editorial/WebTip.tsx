@@ -23,6 +23,6 @@ export default function WebTip() {
   return <div className={s.slot} data-web-tip>{text && tip && <aside className={s.tip} aria-label={lang === 'fr' ? 'Le saviez-vous ?' : 'Did you know?'}>
     <p className={s.heading}>{lang === 'fr' ? 'Le saviez-vous ?' : 'Did you know?'}</p>
     <p>{text}</p>
-    <a href={tip.sourceUrl} referrerPolicy="no-referrer">{lang === 'fr' ? 'En savoir plus' : 'Learn more'}<span className={s.sr}> — {text}</span></a>
+    <a href={tip.sourceUrl} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer">{lang === 'fr' ? 'En savoir plus' : 'Learn more'}<span className={s.sr}> — {text}</span></a>
   </aside>}</div>;
 }
