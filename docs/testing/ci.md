@@ -17,6 +17,7 @@ En cas d'échec de détection, les jobs conservent un repli vers l'exécution.
 | Exhaustive visual regression | [Visual regression](../../.github/workflows/visual-regression.yml) | Matrices FR/EN, thèmes, largeurs, axe, clavier et comparaisons de captures ; API simulée |
 | auth | [Authentication UX E2E](../../.github/workflows/auth-experience.yml) | Inscription, email capturé, vérification, connexion, reset et navigation FR/EN |
 | Secrets et dépendances | [Secrets](../security/secret-remediation.md), workflows dédiés | Arbre/commits introduits, dépendances npm de production |
+| Auto-audit après MEP | [Contrat et configuration](post-deploy-audit.md) | Contrôle authentifié du déploiement observé et tickets dédupliqués ; secrets réservés au job de contrôle |
 
 Java 21, Node 24.21.0 et Ubuntu 24.04 sont les versions fixées dans ci.yml lors
 de cette consolidation. Lire le YAML et les lockfiles pour leur évolution ; les
