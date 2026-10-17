@@ -117,7 +117,7 @@ export default function AccountSettings() {
             </ul>
             {!data.providers.length&&!data.methods.some(m=>m.provider!=="password")&&<p className={s.notice}>{copy.noProviders}</p>}
             <p className={s.hint}>{copy.providerHint}</p>
-            <div className={s.row}><div><h3>{a.password}</h3><p className={s.hint}>{data.methods.some(method=>method.provider==="password"&&method.usable) ? copy.passwordChange:copy.passwordAbsent}</p></div><Link className={c.secondary} href="/account/settings?section=security">{copy.security}</Link></div>
+            <div className={s.row}><div><h3>{a.password}</h3><p className={s.hint}>{data.methods.some(method=>method.provider==="password"&&method.usable) ? copy.passwordChange:copy.passwordAbsent}</p></div><Link className={c.secondary} href="/account/settings?section=security">{copy.managePassword}</Link></div>
           </>}
         </section>}
       </div><aside className={s.summary} aria-label={copy.summary}><span className={s.avatar} aria-hidden="true">{data.profile.displayName.slice(0,1).toUpperCase()}</span><h2>{data.profile.displayName}</h2><p>{data.profile.email??copy.emailAbsent}</p><StatusBadge tone={data.profile.verified ? "success":"warning"}>{data.profile.verified ? copy.verified:copy.pending}</StatusBadge><p className={s.hint}>{t.connected.personalSpace}</p><button className={c.secondary} disabled={busy} onClick={()=>void act(async()=>{await accountFetch("auth/logout","POST",{});loggedOut();})}>{a.logout}</button><Link className={s.link} href="/account/sites">{a.sites.title}</Link></aside></div>

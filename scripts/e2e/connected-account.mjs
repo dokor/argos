@@ -15,7 +15,7 @@ try {
    const request=route.request(),url=new URL(request.url()),path=url.pathname;let status=200,data=response(path);
    if(path.endsWith('/csrf'))data={csrf:'c'.repeat(43)};
    if(path.endsWith('/me'))data=localProfile;
-   if(path.endsWith('/methods'))data=localMethods.map(method=>({...method,usable:method.provider==='password'||mode!=='unavailable'&&['github','google'].includes(method.provider)}));
+   if(path.endsWith('/methods'))data=localMethods.map(method=>({...method,usable:method.provider==='password' ? method.usable!==false:mode!=='unavailable'&&method.usable!==false&&['github','google'].includes(method.provider)}));
    if(path.endsWith('/sessions'))data=localSessions;
    if(mode==='unavailable'&&path.endsWith('/auth/providers'))data={providers:[],enabled:true};
    if(mode==='load-error'&&path.endsWith('/methods')){status=503;data={error:'account_unavailable'};}
@@ -60,6 +60,11 @@ try {
   await page.getByRole('button',{name:lang==='fr'?'Retirer GitHub':'Remove GitHub'}).click();await page.getByRole('dialog').getByLabel(labels.password).fill('synthetic password');await page.getByRole('dialog').getByRole('button',{name:labels.confirm}).click();
   await page.getByRole('button',{name:lang==='fr'?'Associer GitHub':'Link GitHub'}).waitFor();
   if([320,1440].includes(width)) {
+   localMethods=[{id:'1',provider:'password',usable:false},{id:'2',provider:'github',usable:true},{id:'12',provider:'github',usable:true}];
+   await visit('connections');await page.getByRole('button',{name:lang==='fr'?'Retirer GitHub · 2':'Remove GitHub · 2'}).waitFor();await check('multiple-provider-methods');
+   localMethods=localMethods.filter(method=>method.id!=='12');await visit('connections');
+   assert.equal(await page.getByRole('button',{name:lang==='fr'?'Retirer GitHub':'Remove GitHub'}).isDisabled(),true);await check('last-usable-method');
+   localMethods=structuredClone(methods);
    await visit('security');await page.getByRole('button',{name:labels.close,exact:true}).waitFor();
    const trigger=page.getByRole('button',{name:labels.close,exact:true});await trigger.focus();await page.keyboard.press('Enter');dialog=page.getByRole('dialog');await dialog.waitFor();await check('archive-confirm',true);
    assert.equal(await dialog.getByRole('button',{name:labels.confirm}).isDisabled(),true);await page.keyboard.press('Escape');assert.equal(await trigger.evaluate(el=>el===document.activeElement),true);

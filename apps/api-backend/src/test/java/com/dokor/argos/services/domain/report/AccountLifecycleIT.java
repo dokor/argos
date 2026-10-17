@@ -534,6 +534,15 @@ class AccountLifecycleIT extends MariaDbReportFixture {
             assertEquals(1, ok);
         }
         assertEquals(1, dao.transaction(c -> dao.identities(a.context().user().getId(), c)).size());
+        var remaining = auth.methods(bearer(a)).getFirst();
+        if (remaining.provider().equals("password")) {
+            assertNotNull(auth.login("methods@example.com", PASSWORD, CSRF));
+        } else {
+            when(oauthClient.exchange(eq("github"), anyString(), anyString(), anyString()))
+                    .thenReturn(new AccountOAuthClient.Identity("123", null, false, "Remaining"));
+            var start = oauth.start("github", "login", "/account", null, CSRF);
+            assertNotNull(oauth.finish("github", start.state(), start.browser(), "code", null, CSRF).jwt());
+        }
     }
 
     @Test
@@ -696,9 +705,10 @@ class AccountLifecycleIT extends MariaDbReportFixture {
         error(403, () -> oauth.finish("github", stale.state(), stale.browser(), "code", bearer(owner), CSRF));
         auth.reauth(bearer(owner), CSRF, PASSWORD, null);
         var expired = oauth.start("github", "link", "/account", bearer(owner), CSRF);
+        String renewed = "Bearer " + sessions.renew(bearer(owner), CSRF);
         clock.now = clock.now.plusSeconds(601);
         error(400, () -> oauth.finish("github", expired.state(), expired.browser(), "code", bearer(owner), CSRF));
-        assertEquals(1, auth.methods(bearer(owner)).size());
+        assertEquals(1, auth.methods(renewed).size());
     }
 
     @Test

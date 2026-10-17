@@ -62,7 +62,7 @@ it("offers only configured providers, keeps unavailable linked methods visible a
 it("uses the server's usable methods rather than counting a password without credentials",async()=>{
  state.section="connections";methods=[{id:"1",provider:"password",usable:false},{id:"2",provider:"github",usable:true}];
  render(<AccountSettings/>);expect(await screen.findByRole("button",{name:"Retirer GitHub"})).toBeDisabled();
- expect(screen.getByRole("link",{name:"Sécurité",exact:true})).toHaveAttribute("href","/account/settings?section=security");
+ expect(screen.getByRole("link",{name:"Gérer le mot de passe"})).toHaveAttribute("href","/account/settings?section=security");
 });
 it("shows every association at a provider and removes only the confirmed method",async()=>{
  state.section="connections";methods=[{id:"1",provider:"password"},{id:"2",provider:"github"},{id:"3",provider:"github"}];
