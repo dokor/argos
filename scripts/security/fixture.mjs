@@ -1,4 +1,5 @@
 import http from 'node:http';
+import { gzipSync } from 'node:zlib';
 let hits=0, slowHits=0, mutations=0, pageHits=0;
 http.createServer((req,res)=>{
   if(req.url==='/stats')return res.end(JSON.stringify({hits,slowHits,mutations,pageHits}));
@@ -11,6 +12,18 @@ http.createServer((req,res)=>{
     return;
   }
   if(req.url==='/redirect')return res.writeHead(302,{location:'http://private.fixture.net/secret'}).end();
+  if(req.url==='/chunked' || req.url==='/gzip'){
+    const html=Buffer.from('<!doctype html><html lang="en"><head><title>Transfer fixture</title><link rel="icon" href="data:,"></head><body>'
+      + 'Synthetic transfer fixture '.repeat(1000) + '</body></html>');
+    const compressed=req.url==='/gzip';
+    const body=compressed ? gzipSync(html) : html;
+    res.writeHead(200,{'Content-Type':'text/html',...(compressed ? {'Content-Encoding':'gzip'} : {})});
+    const middle=Math.floor(body.length/2);
+    res.write(body.subarray(0,middle));
+    const timer=setTimeout(()=>res.end(body.subarray(middle)),25);
+    res.on('close',()=>clearTimeout(timer));
+    return;
+  }
   pageHits++;
   res.setHeader('Content-Type','text/html');
   res.end(`<!doctype html><html lang="en"><head><title>Security fixture</title></head><body><h1>Controlled fixture</h1>

@@ -10,11 +10,13 @@ async function serverFor(t, chromium) {
   return 'http://127.0.0.1:' + server.address().port;
 }
 function collector({ navigationFailure = false, contextFailure = false, cdpFailure = null,
-  jsCount = 1, contentLength = '321', failureCount = 1, finalUrl = 'https://www.example.co.uk/final' } = {}) {
+  jsCount = 1, contentLength = '321', failureCount = 1, finalUrl = 'https://www.example.co.uk/final',
+  responseSizes = [321], sizeFailure = false, sizeDelay = 0, finished = true, sizeStall = false } = {}) {
   let closed = 0, launched = 0;
   const handlers = {};
   const contextHandlers = {};
   let rejectInstrumentation;
+  const rejectSizes = [];
   const page = {
     on: (name, handler) => { handlers[name] = handler; },
     url: () => finalUrl,
@@ -26,11 +28,22 @@ function collector({ navigationFailure = false, contextFailure = false, cdpFailu
       if (finalUrl.startsWith('https://other.test/')) handlers.console({ type: () => 'error',
         location: () => ({ url: 'https://other.test/second.js' }) });
       for (let i = 0; i < jsCount; i++) handlers.pageerror(new Error('fixture page error'));
-      handlers.request({ url: () => 'https://assets.example.co.uk/script.js',
-        resourceType: () => 'script', method: () => 'GET' });
+
       for (let i = 0; i < failureCount; i++) handlers.requestfailed({ url: () => 'https://assets.example.co.uk/script.js?token=private-secret', resourceType: () => 'script', failure: () => ({errorText:'net::ERR_CONNECTION_RESET'}) });
-      await handlers.response({ url: () => 'https://other.test/api', status: () => 503,
-        headers: () => ({ 'content-length': contentLength }) });
+      for (const responseBodySize of responseSizes) {
+        const request = { url: () => 'https://other.test/api', resourceType: () => 'fetch', method: () => 'GET',
+          sizes: async () => {
+            if (sizeStall) await new Promise((_resolve, reject) => rejectSizes.push(reject));
+            if (sizeDelay) await new Promise(resolve => setTimeout(resolve, sizeDelay));
+            assert.equal(closed, 0, 'Size reads must settle before closing the browser');
+            if (sizeFailure) throw new Error('Size metadata unavailable');
+            return { responseBodySize };
+          } };
+        handlers.request(request);
+        handlers.response({ url: request.url, request: () => request, status: () => 503,
+          headers: () => ({ 'content-length': contentLength }) });
+        if (finished) handlers.requestfinished(request);
+      }
       if (navigationFailure) throw new Error('Timeout fixture');
       handlers.domcontentloaded();
       await new Promise(resolve => setTimeout(resolve, 15));
@@ -59,6 +72,7 @@ function collector({ navigationFailure = false, contextFailure = false, cdpFailu
       },
       close: async () => {
         closed++;
+        for (const reject of rejectSizes) reject(new Error('Browser closed'));
         if (rejectInstrumentation) {
           rejectInstrumentation(new Error('Target closed'));
           await new Promise(resolve => setImmediate(resolve));
@@ -119,7 +133,7 @@ test('runtime contract retains metrics and partitions errors using the final dom
 test('sample caps never cap the JS count or fabricate complete network totals', async t => {
   const fake = collector({ jsCount: 37, failureCount: 301, contentLength: undefined });
   // Explicit empty header models chunked/compressed responses without Content-Length.
-  const unknownBytes = collector({ contentLength: '' });
+  const unknownBytes = collector({ contentLength: '', sizeFailure: true });
   const report = await (await analyze(await serverFor(t, fake.chromium))).json();
   assert.equal(report.jsErrors.count, 37);
   assert.equal(report.jsErrors.samples.length, 10);
@@ -127,6 +141,58 @@ test('sample caps never cap the JS count or fabricate complete network totals', 
   assert.equal(report.network.failedRequestsFirstParty, null);
   const unknown = await (await analyze(await serverFor(t, unknownBytes.chromium))).json();
   assert.equal(unknown.network.totalBytesEstimated, null);
+});
+
+test('chunked responses use Chromium encoded sizes and settle before browser cleanup', async t => {
+  const fake = collector({ contentLength: '', responseSizes: [512], sizeDelay: 25 });
+  const report = await (await analyze(await serverFor(t, fake.chromium))).json();
+  assert.equal(report.network.totalBytesEstimated, 512);
+  assert.equal(report.network.topLargest[0].bytes, 512);
+  assert.equal(fake.closed(), 1);
+});
+
+test('encoded byte measurements take precedence over advertised Content-Length', async t => {
+  const fake = collector({ contentLength: '9000', responseSizes: [123] });
+  const report = await (await analyze(await serverFor(t, fake.chromium))).json();
+  assert.equal(report.network.totalBytesEstimated, 123);
+  assert.equal(report.network.topLargest[0].bytes, 123);
+});
+
+test('repeated requests to the same URL each contribute their own transfer size', async t => {
+  const fake = collector({ contentLength: '', responseSizes: [100, 200] });
+  const report = await (await analyze(await serverFor(t, fake.chromium))).json();
+  assert.equal(report.network.requests, 2);
+  assert.equal(report.network.totalBytesEstimated, 300);
+  assert.deepEqual(report.network.topLargest.map(item => item.bytes), [200, 100]);
+});
+
+test('unfinished bodies and failed size reads remain unknown even with Content-Length', async t => {
+  for (const options of [{ finished: false }, { sizeFailure: true }]) {
+    const fake = collector(options);
+    const report = await (await analyze(await serverFor(t, fake.chromium))).json();
+    assert.equal(report.network.totalBytesEstimated, null);
+    assert.deepEqual(report.network.topLargest, []);
+  }
+});
+
+test('zero byte bodies are measured; invalid sizes and overflowing totals stay unknown', async t => {
+  for (const responseSizes of [[0], [undefined], [null], [-1], [1.5], [NaN], [Infinity],
+    [Number.MAX_SAFE_INTEGER + 1], [Number.MAX_SAFE_INTEGER, 1]]) {
+    const fake = collector({ responseSizes });
+    const report = await (await analyze(await serverFor(t, fake.chromium))).json();
+    assert.equal(report.network.totalBytesEstimated, responseSizes[0] === 0 ? 0 : null);
+  }
+});
+
+test('a stalled size read remains covered by the overall collection deadline', async t => {
+  const fake = collector({ sizeStall: true });
+  const base = await serverFor(t, fake.chromium);
+  const response = await fetch(base + '/analyze/runtime', { method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ url: 'https://example.co.uk', timeoutMs: 100 }) });
+  assert.equal(response.status, 504);
+  assert.deepEqual(await response.json(), { error: 'Analysis timeout' });
+  assert.ok(fake.closed() >= 1);
 });
 
 test('console ownership follows a redirect to another registrable domain', async t => {

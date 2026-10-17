@@ -71,12 +71,17 @@ docker exec argos-security-runtime node --input-type=module -e "
 docker exec argos-security-runtime node --input-type=module -e "
   import assert from 'node:assert/strict';
   await assert.rejects(fetch('http://8.8.8.8',{signal:AbortSignal.timeout(2000)}));
-  for(const url of ['http://8.8.8.8/','http://8.8.8.8/redirect']) {
+  for(const url of ['http://8.8.8.8/','http://8.8.8.8/redirect','http://8.8.8.8/chunked','http://8.8.8.8/gzip']) {
     const response=await fetch('http://127.0.0.1:3016/analyze/runtime',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({url,timeoutMs:10000})});
     assert.equal(response.status,200);const data=await response.json();
     assert.ok(!JSON.stringify(data).includes('synthetic-secret'));
-    if(url.endsWith('/'))assert.equal(data.navigation.status,'COMPLETED');
-    else assert.equal(data.navigation.status,'FAILED');
+    if(url.endsWith('/redirect'))assert.equal(data.navigation.status,'FAILED');
+    else assert.equal(data.navigation.status,'COMPLETED');
+    if(url.endsWith('/chunked') || url.endsWith('/gzip')) {
+      assert.ok(Number.isSafeInteger(data.network.totalBytesEstimated) && data.network.totalBytesEstimated>0);
+      assert.ok(data.network.topLargest.length>0);
+      assert.ok(data.timings.loadMs!==null && data.timings.domContentLoadedMs!==null);
+    }
   }
 "
 docker run -d --name argos-security-lighthouse --network container:argos-security-gateway \

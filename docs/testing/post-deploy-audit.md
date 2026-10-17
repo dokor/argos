@@ -161,3 +161,20 @@ Corriger la santé/configuration/quota pour un échec technique ; traiter les
 tickets confirmés pour un NO-GO. Relancer les jobs du workflow de déploiement
 réexécute le déploiement et le contrôle : cela reste une action d'exploitation.
 Les secrets et le compte doivent être configurés avant le prochain déploiement.
+
+## Diagnostic d'une mesure du poids réseau absente
+
+Un rapport peut avoir une couverture suffisante et rester refusé par le contrôle
+si un collecteur est partiel. Pour `runtime.network.bytes_estimated`, l'ancien
+collecteur ne connaissait le poids que lorsque toutes les réponses portaient un
+`Content-Length`. Une réponse HTTP diffusée en flux pouvait donc rendre tout
+le module runtime partiel, même lorsque sa navigation avait terminé normalement.
+
+Le collecteur lit maintenant `request.sizes().responseBodySize` après
+`requestfinished` : Chromium mesure les octets encodés reçus, y compris pour
+les réponses chunked et gzip. Les lectures se terminent avant la fermeture du
+navigateur, dans le délai global existant. Une réponse inachevée ou une taille
+inaccessible reste inconnue ; le contrôle de complétude conserve sa décision.
+Les fixtures réseau isolées vérifient aussi ces cas avec le vrai Chromium sur
+les runners AMD64 et ARM64. Les rapports historiques restent immuables ; une
+nouvelle collecte après livraison du correctif utilise la nouvelle mesure.

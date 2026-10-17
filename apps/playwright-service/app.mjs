@@ -58,6 +58,7 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
         if (browser) cancel();
       });
       const page = await context.newPage();
+      let collecting = true;
 
       const consoleSamples = [];
       let consoleErrors = 0;
@@ -66,6 +67,7 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
       let consoleWarnings = 0;
 
       page.on('console', (msg) => {
+        if (!collecting) return;
         const type = msg.type(); // log, error, warning, ...
         const loc = msg.location?.();
         if (type === 'error') {
@@ -90,13 +92,15 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
       const jsErrorSamples = [];
       let jsErrorCount = 0;
       page.on('pageerror', (err) => {
+        if (!collecting) return;
         jsErrorCount++;
         if (jsErrorSamples.length < 10) {
           jsErrorSamples.push({ message: '[site message redacted]' });
         }
       });
 
-      const requests = new Map(); // requestId -> info
+      const transfers = new Map(); // Request identity keeps repeated URLs independent.
+      const byteMeasurements = [];
       let failedRequests = 0;
       let status4xx = 0;
       let status5xx = 0;
@@ -113,30 +117,23 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
         const resourceType=['document','stylesheet','image','media','font','script','xhr','fetch','other'].includes(type)?type:undefined;
         incidents.push({...resource, status, reason, resourceType});
       }
-      let totalBytesEstimated = 0;
-      let bytesComplete = true;
-
       const byType = {};
-      const topLargest = [];
 
       page.on('request', (request) => {
+        if (!collecting) return;
         const type = request.resourceType(); // document, script, image, xhr, fetch...
         byType[type] = (byType[type] ?? 0) + 1;
-
-        requests.set(request.url(), {
-          url: request.url(),
-          type,
-          method: request.method()
-        });
       });
 
       page.on('requestfailed', (request) => {
+        if (!collecting) return;
         failedRequests++;
         incident(request.url(),request.resourceType?.(),undefined,request.failure?.()?.errorText);
         if (failedRequestUrls.length < 300) failedRequestUrls.push(safeOrigin(request.url()));
       });
 
-      page.on('response', async (response) => {
+      page.on('response', (response) => {
+        if (!collecting) return;
         const url = response.url();
         const status = response.status();
         if (status >= 400 && status < 500) status4xx++;
@@ -146,21 +143,19 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
           if (status5xxUrls.length < 300) status5xxUrls.push(safeOrigin(url));
         }
 
-        // bytes estimation (best effort)
-        let bytes = 0;
-        const cl = response.headers()?.['content-length'];
-        if (cl && /^\d+$/.test(cl) && Number.isSafeInteger(Number(cl))) bytes = Number(cl);
-        else if (status !== 204 && status !== 304) bytesComplete = false;
-
-        totalBytesEstimated += bytes;
-
-        // keep top 10 largest
-        if (bytes > 0) {
-          const item = { url: safeOrigin(url), bytes, type: (requests.get(url)?.type ?? 'other'), status };
-          topLargest.push(item);
-          topLargest.sort((a, b) => b.bytes - a.bytes);
-          if (topLargest.length > 10) topLargest.length = 10;
-        }
+        const request = response.request();
+        transfers.set(request, { url: safeOrigin(url), bytes: null, type: request.resourceType(), status });
+      });
+      page.on('requestfinished', request => {
+        if (!collecting) return;
+        const transfer = transfers.get(request);
+        if (!transfer) return;
+        // Chromium measures encoded bytes for chunked/compressed responses too.
+        // Headers alone cannot prove the body was transferred completely.
+        byteMeasurements.push(Promise.resolve().then(() => request.sizes()).then(sizes => {
+          if (Number.isSafeInteger(sizes?.responseBodySize) && sizes.responseBodySize >= 0)
+            transfer.bytes = sizes.responseBodySize;
+        }).catch(() => { /* Failed size collection remains unknown, never zero. */ }));
       });
 
       const t0 = performance.now();
@@ -190,6 +185,10 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
         // après une redirection. La classification doit utiliser cette URL finale,
         // et non l'URL initialement saisie par l'utilisateur.
         finalUrl = page.url() || finalUrl;
+        // Freeze the observation window, then settle size reads before closing CDP.
+        // The existing request deadline still cancels a stalled browser call.
+        collecting = false;
+        await Promise.all(byteMeasurements);
         const completedBrowser = browser;
         browser = null;
         await completedBrowser.close();
@@ -197,6 +196,12 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
 
       if (cancelled) throw new Error('Analysis timeout');
 
+      const observedTransfers = [...transfers.values()];
+      const totalBytesEstimated = observedTransfers.reduce((total, item) => total + (item.bytes ?? 0), 0);
+      const bytesComplete = observedTransfers.length > 0 && observedTransfers.every(item => item.bytes !== null)
+        && Number.isSafeInteger(totalBytesEstimated);
+      const topLargest = observedTransfers.filter(item => item.bytes > 0)
+        .sort((a, b) => b.bytes - a.bytes).slice(0, 10);
       const networkOwnership = partitionNetworkErrors({ failedRequestUrls, status5xxUrls }, finalUrl);
       const consoleErrorsFirstParty = consoleOriginsComplete
         ? [...consoleErrorOrigins].reduce((count, [origin, occurrences]) =>
