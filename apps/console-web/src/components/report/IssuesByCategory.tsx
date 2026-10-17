@@ -3,12 +3,12 @@
 import React from "react";
 import { Report, Issue } from "./types";
 import { useLang } from "@/lib/i18n/LangContext";
-import { scoreChipTheme, SEVERITY_COLORS } from "./reportColors";
+import { scoreChipTheme } from "./reportColors";
 import { buildReportModel, FindingSelection, ReportModel } from "./reportModel";
 import s from "./IssuesByCategory.module.scss";
 import FindingDetails from "./FindingDetails";
 import ReportFeedback from "@/components/feedback/ReportFeedback";
-import { findingContent } from "./findingCatalogue";
+import { cleanEvidence, findingContent } from "./findingCatalogue";
 import { reportReadingCopy } from "./reportReadingCopy";
 import { domainScore } from "./reportSummaryModel";
 import { decisionCopy } from "./decisionCopy";
@@ -133,28 +133,36 @@ export default function IssuesByCategory({ report, model = buildReportModel(repo
               ) : (
                 issues.map((finding) => {
                   const { issue } = finding;
-                  const sv = SEVERITY_COLORS[issue.severity as SevKey] ?? SEVERITY_COLORS.info;
+                  const content = findingContent(issue, lang);
+                  const source = cleanEvidence(issue.structuredEvidence?.source || finding.sources.join(", "));
                   return (
                     <details key={finding.key} open={finding.key === initialOpenKey || undefined} id={finding.anchor} className={s.issueRow}>
                       <summary className={s.issueSummary}>
-                        <span className={s.sevDot} style={{ background: sv.dot }} aria-hidden="true" />
-
-                        <div className={s.issueTags}>
-                          <span className={s.sevTag} style={{ color: sv.color, background: sv.bg }}>
-                            {ti.severity[issue.severity as SevKey] ?? issue.severity}
+                        <span className={s.issueHeading}>
+                          <span className={s.issueTags}>
+                            <span className={s.sevTag} data-severity={issue.severity}>
+                              {ti.severity[issue.severity as SevKey] ?? issue.severity}
+                            </span>
+                            <span>{domains[finding.domain] ?? ti.unknownDomain}</span>
+                            {issue.effort && (
+                              <span className={s.effortTag}>{ti.effortLabel} {issue.effort}</span>
+                            )}
+                            {source && <span>{source}</span>}
                           </span>
-                          {issue.effort && (
-                            <span className={s.effortTag}>{ti.effortLabel} {issue.effort}</span>
-                          )}
-                        </div>
-
-                        <span className={s.issueTitle}>{findingContent(issue, lang).title}</span>
-                        <span className={s.issueImpact}>{findingContent(issue, lang).impact}</span>
-                        <span className={s.chevron} aria-hidden>▾</span>
+                          <span className={s.issueTitle}>{content.title}</span>
+                          <span className={s.issueImpact}>{content.impact}</span>
+                          <span className={s.issueQualification}>{content.qualification}
+                            {(!issue.confidence || issue.confidence === "UNKNOWN") && ` · ${copy.unknownConfidence}`}
+                          </span>
+                        </span>
+                        <span className={s.chevron} aria-hidden="true">▾</span>
                       </summary>
 
                       <FindingDetails finding={finding} />
-                      {issue.id && <ReportFeedback findingKey={issue.id} />}
+                      <div className={s.issueFooter}>
+                        <span>{copy.findingQuestions.severityProvenance}</span>
+                        {issue.id && <ReportFeedback findingKey={issue.id} />}
+                      </div>
                     </details>
                   );
                 })

@@ -4,6 +4,13 @@ import { cleanEvidence, findingContent, supportedFindingKeys } from "./findingCa
 import type { Issue } from "./types";
 const issue: Issue = { id: "lighthouse.audit.largest-contentful-paint", severity: "critical", title: "Largest Contentful Paint", impact: "Largest Contentful Paint", recommendation: "" };
 describe("versioned bilingual content", () => {
+  it("names font display without inventing its impact or changing its source", () => {
+    const font = { ...issue, id: 'lighthouse.audit.font-display-insight', title: 'Affichage de la police' };
+    expect(findingContent(font, 'fr').title).toBe('Affichage des polices à vérifier');
+    expect(findingContent(font, 'en').title).toBe('Review font display');
+    expect(findingContent(font, 'fr').impact).toContain('n’est pas documenté');
+    expect(font.title).toBe('Affichage de la police');
+  });
   it("preserves distinct titles and corrections in shared groups in both languages", () => {
     const keys = ["html.title", "html.meta.description.present", "html.h1.count", "html.social.meta"];
     expect(keys.map(id => findingContent({ ...issue, id }, "fr").title)).toEqual([

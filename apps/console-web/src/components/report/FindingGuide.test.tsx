@@ -12,6 +12,13 @@ import pilotCases from './fixtures/pilot-findings.json';
 import type { Issue,Report } from './types';
 import { reportReadingCopy } from './reportReadingCopy';
 const issue:Issue={id:'html.images.alt_coverage',categoryKey:'a11y',severity:'important',title:'Images',impact:'',recommendation:'',structuredEvidence:{source:'html',details:[{key:'imgCount',text:'4'},{key:'imgAltMissingCount',text:'2'}]}};
+// Web questions rearrange the sections; every shared section must retain the PDF content.
+function guideSections(container: HTMLElement) {
+  return Object.fromEntries([...container.querySelectorAll<HTMLElement>('[data-finding-guide-section]')].map(section => [
+    section.dataset.findingGuideSection,
+    section.matches('[data-finding-guide-content]') ? section.textContent : section.querySelector('[data-finding-guide-content]')?.textContent,
+  ]));
+}
 it('uses actual producer field names and keeps fictional code separate from observations',()=>{
   expect(findingContent(issue,'fr').observation).toBe('2 image(s) sans attribut alt parmi 4 images observées.');
   const {container}=render(<FindingGuide issue={issue} lang="fr"/>);
@@ -23,7 +30,7 @@ it('shares exact guide text and references between web and full PDF in both lang
     const finding={key:issue.id!,anchor:'test',domain:'a11y' as const,issue,sources:['html']};
     const web=render(<LangProvider initialLang={lang}><FindingDetails finding={finding}/></LangProvider>);
     const pdf=render(<PrintableReport report={{...historical,issues:[issue]} as Report} lang={lang} format="full"/>);
-    expect(web.container.querySelector('[data-finding-guide]')?.textContent).toBe(pdf.container.querySelector('[data-finding-guide]')?.textContent);
+    expect(guideSections(web.container)).toEqual(guideSections(pdf.container));
     web.unmount();pdf.unmount();
   }
 });
@@ -32,9 +39,9 @@ it('keeps all pilot methods, source variants and missing-data guidance identical
     const finding={key:issue.id!,anchor:'pilot',domain:issue.categoryKey as 'a11y',issue,sources:[issue.module!]};
     const web=render(<LangProvider initialLang={lang}><FindingDetails finding={finding}/></LangProvider>);
     const pdf=render(<PrintableReport report={{...historical,issues:[issue]} as Report} lang={lang} format="full"/>);
-    const webGuide=web.container.querySelector('[data-finding-guide]')!;
-    expect(webGuide.textContent).toBe(pdf.container.querySelector('[data-finding-guide]')?.textContent);
-    expect([...webGuide.querySelectorAll('a')].map(a=>a.href)).toEqual([...pdf.container.querySelectorAll('[data-finding-guide] a')].map(a=>a.getAttribute('href')));
+    const webGuide=web.container;
+    expect(guideSections(webGuide)).toEqual(guideSections(pdf.container));
+    expect([...webGuide.querySelectorAll('[data-finding-guide] a')].map(a=>a.getAttribute('href'))).toEqual([...pdf.container.querySelectorAll('[data-finding-guide] a')].map(a=>a.getAttribute('href')));
     expect(webGuide.querySelector('img,script,iframe')).toBeNull();
     expect(webGuide.querySelector('figure figcaption')?.textContent??'').not.toContain('Controlled observation');
     if(issue.id!=='lighthouse.audit.largest-contentful-paint'){
