@@ -59,6 +59,36 @@ Google et LinkedIn utilisent issuer/sub et une signature RS256 validée avec leu
 
 Tester chaque fournisseur réellement : connexion, annulation, callback rejoué, mauvaise transaction, collision d'email, adresse absente/non vérifiée, liaison depuis un compte déjà authentifié récemment, retrait, reconnexion et compte archivé. Ne jamais fusionner deux comptes à partir du seul email. Un callback social n'est pas une réauthentification récente ; utiliser le mot de passe existant ou le code email de confirmation pour les opérations sensibles.
 
+### Association et retrait des méthodes (#441)
+
+Mon compte → Connexions utilise les API existantes de méthodes ; Sécurité permet
+d'ajouter ou de changer le mot de passe avec la politique commune de 15 à 128
+points de code Unicode. L'adresse principale vérifiée reste inchangée lors d'une
+association sociale. Une identité externe appartient à un seul compte, même après
+son retrait ; aucune fusion ni aucun transfert entre comptes n'est proposé.
+
+La preuve fraîche repose sur le mot de passe existant ou sur un code email à usage
+unique, lié au compte et à la session Argos, envoyé uniquement à l'adresse déjà
+vérifiée. Google, GitHub et LinkedIn peuvent réutiliser une session fournisseur :
+leur callback, même avec un sélecteur de compte, ne renouvelle jamais cette preuve.
+La liaison est initiée avec l'intention `link` et un CSRF valide ; son callback
+revérifie compte, session, fraîcheur, cookie CSRF, fournisseur, navigateur et état
+à usage unique. Une transaction `login` ne peut pas devenir une liaison.
+
+La suppression exige confirmation explicite et preuve fraîche. Le verrou de la
+ligne utilisateur sérialise ajout, retrait et connexion avant la lecture des
+méthodes. La contrainte unique `(provider, subject)` arbitre les liaisons
+concurrentes entre comptes. Le serveur calcule `usable` dans la liste des
+méthodes avec la même règle que le retrait : mot de passe présent ou fournisseur
+configuré avec identifiant et secret. Une adresse email seule ne compte jamais.
+Toutes les associations sont affichées, y compris plusieurs identités chez un
+même fournisseur, sans afficher leur subject ou leurs credentials.
+
+Chaque ajout, changement de mot de passe et retrait réussi écrit un événement de
+sécurité et envoie une notification à l'adresse vérifiée. Les autres sessions
+sont révoquées dans la transaction ; la session courante reste ouverte. Un échec
+SMTP annule la mutation, comme pour les autres notifications de compte.
+
 L'émetteur LinkedIn accepté est `https://www.linkedin.com/oauth`, conformément au [document de découverte actuel](https://www.linkedin.com/oauth/.well-known/openid-configuration), dont la valeur diffère de l'exemple de la documentation OIDC. Les clés d'identité déjà enregistrées conservent le préfixe historique `https://www.linkedin.com|` pour éviter de créer de nouveaux comptes lors d'une reconnexion. La signature, l'audience, l'expiration et le nonce restent vérifiés.
 
 Un refus `use_existing_account` après un callback signifie que l'adresse du fournisseur correspond à un compte Argos, sans méthode déjà liée pour cette identité externe. Se connecter avec la méthode habituelle, ouvrir Mon compte, confirmer son identité puis utiliser Associer dans Méthodes de connexion. Ce refus ne doit jamais déclencher une fusion automatique. Le BFF conserve désormais les codes d'erreur publics autorisés jusqu'à l'écran FR/EN ; les autres réponses et détails restent masqués. La destination initiale reste dans un cookie HttpOnly, y compris après un refus. Le diagnostic et les limites de la correction #548 sont dans [le compte rendu LinkedIn du 13 octobre 2026](../archive/accounts/linkedin-callback-2026-10-13.md).

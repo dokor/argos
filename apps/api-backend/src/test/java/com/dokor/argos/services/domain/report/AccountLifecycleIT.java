@@ -534,6 +534,15 @@ class AccountLifecycleIT extends MariaDbReportFixture {
             assertEquals(1, ok);
         }
         assertEquals(1, dao.transaction(c -> dao.identities(a.context().user().getId(), c)).size());
+        var remaining = auth.methods(bearer(a)).getFirst();
+        if (remaining.provider().equals("password")) {
+            assertNotNull(auth.login("methods@example.com", PASSWORD, CSRF));
+        } else {
+            when(oauthClient.exchange(eq("github"), anyString(), anyString(), anyString()))
+                    .thenReturn(new AccountOAuthClient.Identity("123", null, false, "Remaining"));
+            var start = oauth.start("github", "login", "/account", null, CSRF);
+            assertNotNull(oauth.finish("github", start.state(), start.browser(), "code", null, CSRF).jwt());
+        }
     }
 
     @Test
@@ -622,6 +631,181 @@ class AccountLifecycleIT extends MariaDbReportFixture {
         error(400, () -> auth.reauth(bearer(other), CSRF, null, code));
         auth.reauth(bearer(a), CSRF, null, code);
         error(400, () -> auth.reauth(bearer(a), CSRF, null, code));
+    }
+
+    @Test
+    void everyProviderLinksIdempotentlyWithoutChangingEmailAndCanBeRemoved() {
+        for (String provider : List.of("google", "github", "linkedin")) {
+            String email = provider + "-methods@example.com";
+            var owner = user(email, true);
+            when(oauthClient.exchange(eq(provider), anyString(), anyString(), anyString()))
+                    .thenReturn(new AccountOAuthClient.Identity(
+                            "synthetic-" + provider, "different@example.com", true, "External"));
+            for (int attempt = 0; attempt < 2; attempt++) {
+                var start = oauth.start(provider, "link", "/account", bearer(owner), CSRF);
+                assertNull(oauth.finish(provider, start.state(), start.browser(), "code", bearer(owner), CSRF).jwt());
+            }
+            var methods = auth.methods(bearer(owner));
+            assertEquals(2, methods.size());
+            assertEquals(email, dao.transaction(c -> dao.user(owner.context().user().getId(), c, false)).getEmail());
+            var login = oauth.start(provider, "login", "/account", null, CSRF);
+            var social = oauth.finish(provider, login.state(), login.browser(), "code", null, CSRF);
+            var context = sessions.with("Bearer " + social.jwt(), null, true, false, (value, c) -> value);
+            assertEquals(owner.context().user().getId(), context.user().getId());
+            error(403, () -> sessions.recent(context));
+            var linked = methods.stream().filter(method -> method.provider().equals(provider)).findFirst().orElseThrow();
+            auth.removeMethod(bearer(owner), CSRF, Long.parseLong(linked.id()));
+            error(401, () -> sessions.with("Bearer " + social.jwt(), null, true, false, (value, c) -> value));
+            var removed = oauth.start(provider, "login", "/account", null, CSRF);
+            error(401, () -> oauth.finish(provider, removed.state(), removed.browser(), "code", null, CSRF));
+            assertNotNull(auth.login(email, PASSWORD, CSRF));
+            assertEquals(1, auth.methods(bearer(owner)).size());
+            assertFalse(mail.messages.getLast().text().contains("synthetic-" + provider));
+        }
+    }
+
+    @Test
+    void aSocialAccountAddsPasswordOnlyAfterVerifiedEmailProofAndRetainsPasswordLogin() {
+        String email = "social-password@example.com";
+        when(oauthClient.exchange(eq("github"), anyString(), anyString(), anyString()))
+                .thenReturn(new AccountOAuthClient.Identity("social-password", email, true, "Social"));
+        var start = oauth.start("github", "login", "/account", null, CSRF);
+        String social = "Bearer " + oauth.finish("github", start.state(), start.browser(), "code", null, CSRF).jwt();
+        error(403, () -> auth.addPassword(social, CSRF, PASSWORD));
+        error(401, () -> auth.login(email, PASSWORD, CSRF));
+        auth.reauth(social, CSRF, null, null);
+        auth.reauth(social, CSRF, null, mail.token(email));
+        error(400, () -> auth.addPassword(social, CSRF, "too short"));
+        auth.addPassword(social, CSRF, PASSWORD);
+        var local = auth.login(email, PASSWORD, CSRF);
+        var method = auth.methods(bearer(local)).stream().filter(value -> value.provider().equals("github")).findFirst().orElseThrow();
+        auth.removeMethod(bearer(local), CSRF, Long.parseLong(method.id()));
+        assertNotNull(auth.login(email, PASSWORD, CSRF));
+        error(401, () -> sessions.with(social, null, true, false, (value, c) -> value));
+    }
+
+    @Test
+    void linkingRejectsMissingChangedCsrfSessionAndExpiredStateWithoutMutatingMethods() {
+        var owner = user("link-context@example.com", true);
+        var second = auth.login("link-context@example.com", PASSWORD, CSRF);
+        when(oauthClient.exchange(eq("github"), anyString(), anyString(), anyString()))
+                .thenReturn(new AccountOAuthClient.Identity("context-check", null, false, "External"));
+        error(401, () -> oauth.start("github", "link", "/account", null, CSRF));
+        error(403, () -> oauth.start("github", "link", "/account", bearer(owner), null));
+        error(403, () -> oauth.start("github", "link", "/account", bearer(owner), "x".repeat(43)));
+        for (String csrf : Arrays.asList(null, "x".repeat(43))) {
+            var start = oauth.start("github", "link", "/account", bearer(owner), CSRF);
+            error(403, () -> oauth.finish("github", start.state(), start.browser(), "code", bearer(owner), csrf));
+            error(400, () -> oauth.finish("github", start.state(), start.browser(), "code", bearer(owner), CSRF));
+        }
+        var swapped = oauth.start("github", "link", "/account", bearer(owner), CSRF);
+        error(403, () -> oauth.finish("github", swapped.state(), swapped.browser(), "code", bearer(second), CSRF));
+        var stale = oauth.start("github", "link", "/account", bearer(owner), CSRF);
+        clock.now = clock.now.plusSeconds(301);
+        error(403, () -> oauth.finish("github", stale.state(), stale.browser(), "code", bearer(owner), CSRF));
+        auth.reauth(bearer(owner), CSRF, PASSWORD, null);
+        var expired = oauth.start("github", "link", "/account", bearer(owner), CSRF);
+        String renewed = "Bearer " + sessions.renew(bearer(owner), CSRF);
+        clock.now = clock.now.plusSeconds(601);
+        error(400, () -> oauth.finish("github", expired.state(), expired.browser(), "code", bearer(owner), CSRF));
+        assertEquals(1, auth.methods(renewed).size());
+    }
+
+    @Test
+    void aLoginCallbackNeverLinksToTheActiveSessionAndUnverifiedEmailCannotReauthenticate() {
+        var owner = user("active-login@example.com", true);
+        when(oauthClient.exchange(eq("github"), anyString(), anyString(), anyString()))
+                .thenReturn(new AccountOAuthClient.Identity("separate-login", "pending-social@example.com", false, "Pending"));
+        var start = oauth.start("github", "login", "/account", bearer(owner), CSRF);
+        String pending = "Bearer " + oauth.finish("github", start.state(), start.browser(), "code", bearer(owner), CSRF).jwt();
+        var context = sessions.with(pending, null, false, false, (value, c) -> value);
+        assertNotEquals(owner.context().user().getId(), context.user().getId());
+        assertEquals(1, auth.methods(bearer(owner)).size());
+        int sent = mail.messages.size();
+        error(403, () -> auth.reauth(pending, CSRF, null, null));
+        error(403, () -> auth.reauth(pending, CSRF, null, "x".repeat(43)));
+        error(403, () -> auth.addPassword(pending, CSRF, PASSWORD));
+        assertEquals(sent, mail.messages.size());
+    }
+
+    @Test
+    void simultaneousAccountsCannotLinkTheSameIdentity() throws Exception {
+        var a = user("race-link-a@example.com", true);
+        var b = user("race-link-b@example.com", true);
+        var first = oauth.start("github", "link", "/account", bearer(a), CSRF);
+        var second = oauth.start("github", "link", "/account", bearer(b), CSRF);
+        var barrier = new CyclicBarrier(2);
+        when(oauthClient.exchange(eq("github"), anyString(), anyString(), anyString())).thenAnswer(call -> {
+            barrier.await(10, TimeUnit.SECONDS);
+            return new AccountOAuthClient.Identity("contested-subject", null, false, "External");
+        });
+        try (var pool = Executors.newFixedThreadPool(2)) {
+            var results = List.of(
+                    pool.submit(() -> linkOutcome(first, bearer(a))),
+                    pool.submit(() -> linkOutcome(second, bearer(b))));
+            var outcomes = new ArrayList<Integer>();
+            for (var result : results) outcomes.add(result.get(15, TimeUnit.SECONDS));
+            Collections.sort(outcomes);
+            assertEquals(List.of(200, 409), outcomes);
+        }
+        assertEquals(3, auth.methods(bearer(a)).size() + auth.methods(bearer(b)).size());
+    }
+
+    private int linkOutcome(AccountOAuthService.Start start, String bearer) {
+        try {
+            oauth.finish("github", start.state(), start.browser(), "code", bearer, CSRF);
+            return 200;
+        } catch (AccountError error) {
+            assertEquals(409, error.getResponse().getStatus());
+            assertEquals(Map.of("error", "method_unavailable"), error.getResponse().getEntity());
+            return 409;
+        }
+    }
+
+    @Test
+    void missingPasswordCredentialsAreNotUsableAndMailFailureRollsBackLinking() throws Exception {
+        var owner = user("usable-password@example.com", true);
+        var otherSession = auth.login("usable-password@example.com", PASSWORD, CSRF);
+        when(oauthClient.exchange(eq("github"), anyString(), anyString(), anyString()))
+                .thenReturn(new AccountOAuthClient.Identity("usable-password", null, false, "External"));
+        var failed = oauth.start("github", "link", "/account", bearer(owner), CSRF);
+        mail.fail = true;
+        error(503, () -> oauth.finish("github", failed.state(), failed.browser(), "code", bearer(owner), CSRF));
+        assertEquals(1, auth.methods(bearer(owner)).size());
+        assertNotNull(sessions.with(bearer(otherSession), null, true, false, (value, c) -> value));
+        mail.fail = false;
+        var retry = oauth.start("github", "link", "/account", bearer(owner), CSRF);
+        oauth.finish("github", retry.state(), retry.browser(), "code", bearer(owner), CSRF);
+        sql("UPDATE ARG_ACCOUNT_IDENTITY SET password_hash=NULL WHERE user_id=" + owner.context().user().getId() + " AND provider='password'");
+        var methods = auth.methods(bearer(owner));
+        assertFalse(methods.stream().filter(method -> method.provider().equals("password")).findFirst().orElseThrow().usable());
+        var github = methods.stream().filter(method -> method.provider().equals("github")).findFirst().orElseThrow();
+        assertTrue(github.usable());
+        error(403, () -> auth.removeMethod(bearer(owner), CSRF, Long.parseLong(github.id())));
+    }
+
+    @Test
+    void methodsHttpReturnsOnlyPublicUsabilityAndRequiresConfirmationCsrfAndFreshProof() throws Exception {
+        var owner = user("methods-http@example.com", true);
+        var other = user("methods-other@example.com", true);
+        String method = auth.methods(bearer(owner)).getFirst().id();
+        try (var http = new HttpFixture()) {
+            assertEquals(401, http.call("GET", "/account/methods", null, null, false).statusCode());
+            var list = http.call("GET", "/account/methods", bearer(owner), null, false);
+            assertEquals(200, list.statusCode());
+            assertEquals("private, no-store", list.headers().firstValue("Cache-Control").orElseThrow());
+            var value = mapper.readTree(list.body()).get(0);
+            assertEquals(Set.of("id", "provider", "usable"), mapper.convertValue(value, Map.class).keySet());
+            assertTrue(value.get("usable").asBoolean());
+            String path = "/account/methods/" + method + "/remove";
+            assertEquals(400, http.call("POST", path, bearer(owner), "{\"confirmed\":false}", true).statusCode());
+            assertEquals(403, http.call("POST", path, bearer(owner), "{\"confirmed\":true}", false).statusCode());
+            assertEquals(404, http.call("POST", path, bearer(other), "{\"confirmed\":true}", true).statusCode());
+            clock.now = clock.now.plusSeconds(301);
+            assertEquals(403, http.call("POST", path, bearer(owner), "{\"confirmed\":true}", true).statusCode());
+            assertEquals(403, http.call("POST", "/account/methods/password", bearer(owner), "{\"password\":\"" + PASSWORD + "\"}", true).statusCode());
+        }
+        assertEquals(1, auth.methods(bearer(owner)).size());
     }
 
     @Test
