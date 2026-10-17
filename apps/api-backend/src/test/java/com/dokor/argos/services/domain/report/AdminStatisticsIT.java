@@ -55,8 +55,11 @@ class AdminStatisticsIT extends MariaDbReportFixture {
     }
 
     @Test void noDataReturnsRealZeroIncludingAverage() throws Exception {
+        sql("DELETE FROM ARG_AUDIT_REPORT");
+        sql("DELETE FROM ARG_AUDIT_RUN");
         try(var c=source.getConnection()) {
-            var result=statistics.read(c,Instant.parse("2026-10-18T00:00:00Z"),NOW);
+            // The saved URL/domain remain, but there are no analyses to count.
+            var result=statistics.read(c,null,NOW);
             assertEquals(0,result.accounts().created());
             assertEquals(new AdminStatisticsDao.Analyses(0,0,0,0,0,0,0),result.analyses());
             assertEquals(new AdminStatisticsDao.Domains(0,0),result.domains());

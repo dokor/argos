@@ -19,13 +19,13 @@ try {
  for(const width of [320,390,768,1440]) for(const lang of ['fr','en']) for(const theme of ['light','dark']) {
   const context=await browser.newContext({viewport:{width,height:900},colorScheme:theme});
   const page=await context.newPage(),f=fixture(),errors=[],requests=[];
-  lastPage=page;let mode='data';
+  lastPage=page;let mode='data',releaseLoading;
   page.on('pageerror',error=>errors.push(error.message));
   await page.route('**/api/account/**',async route=>{
    const req=route.request(),url=new URL(req.url());
    if(url.pathname==='/api/account/admin/statistics') {
     requests.push(url.searchParams.get('period'));
-    if(mode==='loading') await new Promise(resolve=>setTimeout(resolve,500));
+    if(mode==='loading') await new Promise(resolve=>{releaseLoading=resolve;});
     const empty=structuredClone(metrics);
     for(const group of ['accounts','analyses','domains'])for(const key of Object.keys(empty[group]))empty[group][key]=0;
     const data=mode==='empty'?empty:structuredClone(metrics);
@@ -71,6 +71,7 @@ try {
     else if(state==='empty')await page.getByText('Aucune création de compte ni première analyse dans cette période.').waitFor();
     else await page.getByLabel('Indisponible',{exact:true}).waitFor();
     await capture(state);
+    if(state==='loading'){releaseLoading();await page.locator('main dd').first().waitFor();}
     if(state==='denied')assert.equal(await page.locator('main dd').count(),0);
    }
   }
