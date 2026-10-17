@@ -42,8 +42,12 @@ function oauthFailure(request: NextRequest, state: string | null, error: OAuthCa
   return response;
 }
 export function validCsrf(request: NextRequest): boolean {
-  const cookie = request.cookies.get(CSRF_COOKIE)?.value ?? "", header = request.headers.get("x-argos-csrf") ?? "";
-  return request.headers.get("origin") === origin() && /^[A-Za-z0-9_-]{43}$/.test(cookie) && cookie.length === header.length && timingSafeEqual(Buffer.from(cookie), Buffer.from(header));
+  const cookie = request.cookies.get(CSRF_COOKIE)?.value ?? "";
+  const header = request.headers.get("x-argos-csrf") ?? "";
+  return request.headers.get("origin") === origin()
+    && /^[A-Za-z0-9_-]{43}$/.test(cookie)
+    && /^[A-Za-z0-9_-]{43}$/.test(header)
+    && timingSafeEqual(Buffer.from(cookie), Buffer.from(header));
 }
 export function accountHeaders(request: NextRequest, mutation: boolean): Headers | NextResponse {
   const session = request.cookies.get(SESSION_COOKIE)?.value;
