@@ -16,7 +16,7 @@ export function connectedFixture(path, params, baseReport, usage) {
       {...common,type:"RUN",id:"399",status:"QUEUED",diagnostic:"REQUEUED",site:"www.atelier.example",displayUrl:"https://www.atelier.example/une-page-au-chemin-volontairement-long-pour-verifier-la-lecture",userId:null,resolvedUserId:null}];
     const match=path.match(/\/tasks\/(DISCOVERY|BATCH|RUN)\/(\d+)$/);
     if(match) return tasks.find(row=>row.type===match[1]&&row.id===match[2])??child;
-    const items=(params.get("type")==="RUN"?[...tasks.filter(row=>row.type==="RUN"),child]:tasks).filter(row=>(!params.get("type")||row.type===params.get("type"))&&(!params.get("status")||row.status===params.get("status"))&&(!params.get("site")||row.site===params.get("site"))&&(!params.get("user")||row.userId===(params.get("user")==="anonymous"?null:params.get("user"))));
+    const items=(params.get("type")==="RUN"?tasks.flatMap(row=>row.type==="BATCH"?row.children:row.type==="RUN"?[row]:[]):tasks).filter(row=>(!params.get("type")||row.type===params.get("type"))&&(!params.get("status")||row.status===params.get("status"))&&(!params.get("site")||row.site===params.get("site"))&&(!params.get("user")||row.userId===(params.get("user")==="anonymous"?null:params.get("user"))));
     return {items,hasMore:false,page:Number(params.get("page")??1),snapshotAt:date,stuckSeconds:1200,counts:[{type:"DISCOVERY",queued:1,running:0},{type:"BATCH",queued:0,running:1},{type:"RUN",queued:3,running:1}]};
   }
   if(path === "/api/account/notifications") return {items:[
