@@ -61,7 +61,7 @@ try {
   assert.equal(requests.at(-1),'7');
   await page.getByRole('button',{name:refresh,exact:true}).click();
   await page.locator('main dd').filter({hasText:/1[\s,]250/}).waitFor();
-  const summary=page.locator('main summary');await summary.click();
+  const summary=page.getByText(lang==='fr'?'Comment les URL sont comptées':'How URLs are counted',{exact:true});await summary.click();
   assert.equal(await summary.evaluate(el=>el.parentElement.open),true);
   await capture('period-and-definition');
   if(width===390&&lang==='fr'&&theme==='light') {
