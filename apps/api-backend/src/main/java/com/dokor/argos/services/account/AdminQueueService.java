@@ -136,7 +136,8 @@ public final class AdminQueueService {
         row.put("diagnostic", diagnostic(row, now, configuration.auditStuckRunTimeout()));
         Instant created = instant(row.get("createdAt")), started = instant(row.get("startedAt"));
         Instant finished = instant(row.get("finishedAt"));
-        row.put("waitSeconds", created == null ? null : Math.max(0, Duration.between(created, started == null ? finished == null ? now : finished : started).toSeconds()));
+        row.put("waitSeconds", created == null || started == null && "RUNNING".equals(row.get("status")) ? null
+            : Math.max(0, Duration.between(created, started == null ? finished == null ? now : finished : started).toSeconds()));
         row.put("elapsedSeconds", started == null ? null : Math.max(0, Duration.between(started, Optional.ofNullable(instant(row.get("finishedAt"))).orElse(now)).toSeconds()));
     }
 
@@ -154,7 +155,9 @@ public final class AdminQueueService {
         if (type.equals("BATCH")) {
             long queued = number(row.get("queuedChildren")), running = number(row.get("runningChildren"));
             if (number(row.get("childCount")) != number(row.get("pageCount"))) return "INCONSISTENT";
-            String observed = queued + running == 0 ? "TERMINAL" : started == null ? "QUEUED" : "RUNNING";
+            // BatchState remembers a started batch even after all child starts were reset by recovery.
+            boolean hasStarted = status.equals("RUNNING") || started != null || running > 0 || number(row.get("childCount")) > queued;
+            String observed = queued + running == 0 ? "TERMINAL" : hasStarted ? "RUNNING" : "QUEUED";
             if (!status.equals(observed)) return "RECONCILIATION_PENDING";
             Instant oldest = instant(row.get("oldestRunningAt"));
             if (running > 0 && oldest == null) return "INCONSISTENT";

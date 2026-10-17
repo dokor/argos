@@ -34,14 +34,19 @@ ou token privé. Aucun journal ni erreur brute de collecteur n’est sélectionn
   absent pour un run RUNNING, nombre d’enfants différent de la sélection d’un lot,
   ou lot avec enfants RUNNING sans démarrage observable.
 - `RECONCILIATION_PENDING` : statut du lot différent de celui observé depuis les
-  enfants (y compris tous les enfants devenus terminaux).
+  enfants (y compris tous les enfants devenus terminaux). Comme `BatchState`, un
+  lot déjà RUNNING reste commencé si tous ses enfants sont remis en file.
 - `TERMINAL` : détail d’un travail terminé, annulé ou échoué.
 
 L’attente mesure création/admission → démarrage, ou → observation si le travail
 n’a pas démarré ; elle s’arrête à la fin pour un travail terminal jamais démarré.
 La durée écoulée mesure démarrage → fin/observation. Aucun ETA, rang ni délai
 garanti. Les lots dérivent leur premier démarrage des runs, car cette date n’est
-pas persistée sur le lot. Les dates et filtres de période sont en UTC.
+pas persistée sur le lot. Un démarrage absent n'est pas interprété comme une
+preuve de non-démarrage : après reprise, la durée d'un run remis en file est
+libellée « Depuis la soumission », car elle peut inclure une tentative antérieure.
+Un lot/run RUNNING sans date de début n'affiche pas une attente inventée.
+Les dates et filtres de période sont en UTC.
 
 ## Pagination et navigation
 

@@ -68,4 +68,18 @@ class AdminQueueServiceTest {
         assertThrows(AccountError.class, () -> AdminQueueService.validate(new AdminQueueService.Filters(null, null, null, null, null, null, null, 10001, 20)));
         assertDoesNotThrow(() -> AdminQueueService.validate(new AdminQueueService.Filters("RUN", "QUEUED", "www.example.com", "anonymous", "2026-10-17", "2026-10-17", "oldest", 1, 100)));
     }
+
+    @Test void aStartedBatchStaysRunningWhenRecoveryRequeuesAllItsUrls() {
+        var batch = task("BATCH", "RUNNING");
+        batch.put("pageCount", 3); batch.put("childCount", 3);
+        batch.put("queuedChildren", 3); batch.put("runningChildren", 0);
+        assertEquals("OBSERVED", diagnostic(batch));
+        // One terminal child also proves processing began, even without a retained started_at.
+        batch.put("status", "QUEUED"); batch.put("queuedChildren", 2);
+        assertEquals("RECONCILIATION_PENDING", diagnostic(batch));
+        batch.put("status", "RUNNING");
+        assertEquals("OBSERVED", diagnostic(batch));
+        batch.put("runningChildren", 1);
+        assertEquals("INCONSISTENT", diagnostic(batch));
+    }
 }

@@ -68,8 +68,8 @@ export default function QueueView({ type, id }: { type?: QueueType; id?: string 
   const diagnosis = (row: Task) => <span className={["OBSERVED","TERMINAL"].includes(row.diagnostic) ? q.observed : q.warning}>{text.diagnostics[row.diagnostic]}</span>;
   const timing = (row: Task) => <div className={q.timing}>
     <time dateTime={row.createdAt}>{date(row.createdAt)}</time>
-    <span className={q.meta}>{text.started}: {row.startedAt ? date(row.startedAt) : text.notStarted}</span>
-    <span className={q.meta}>{text.waiting}: {duration(row.waitSeconds)}{row.startedAt && <> · {text.elapsed}: {duration(row.elapsedSeconds)}</>}</span>
+    <span className={q.meta}>{text.started}: {row.startedAt ? date(row.startedAt) : row.status === "QUEUED" && row.diagnostic === "OBSERVED" ? text.notStarted : text.unknownStart}</span>
+    <span className={q.meta}>{row.diagnostic === "REQUEUED" ? text.sinceSubmission : text.waiting}: {duration(row.waitSeconds)}{row.startedAt && <> · {text.elapsed}: {duration(row.elapsedSeconds)}</>}</span>
   </div>;
   function table(items: Task[], title: string, children = false) {
     return <div className={s.table} tabIndex={0} role="region" aria-label={title}><table>
