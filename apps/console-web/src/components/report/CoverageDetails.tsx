@@ -14,9 +14,10 @@ export default function CoverageDetails({ coverage, lang }: { coverage?: Coverag
   const { missing, excluded, partial, points, reconciled } = coverageBreakdown(coverage);
   const format = (value: number) => value.toLocaleString(lang, { maximumFractionDigits: 2 });
   const ratio = coverage.global.ratio;
+  const measuredPercent = Math.round(ratio * 100);
   return <section className={s.details} aria-label={c.title}>
     <h3>{c.title}</h3>
-    {Number.isFinite(ratio) && <p><strong>{Math.round(ratio * 100)} % {c.measured} — {Math.round((1 - ratio) * 100)} % {c.missing}</strong></p>}
+    {Number.isFinite(ratio) && <p><strong>{measuredPercent} % {c.measured} — {100 - measuredPercent} % {c.missing}</strong></p>}
     <p>{format(coverage.global.measuredWeight)} / {format(coverage.global.expectedWeight)} · {safeCode(coverage.version)}</p>
     {Number.isFinite(coverage.threshold) && <p>{c.threshold}: {Math.round(coverage.threshold * 100)} %</p>}
     <p>{c.historical}</p>

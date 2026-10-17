@@ -6,6 +6,8 @@ Cette PR unique répond à la demande de regrouper les trois tickets. Elle livre
 
 ## Couverture : faits établis
 
+Complément du 18 octobre 2026 : la [note d’investigation #671](coverage-investigation-671.md) documente le premier run réel autorisé, à **77 %**, sa décomposition exacte et les preuves encore nécessaires pour expliquer la récurrence des 96 %. L’outil accepte aussi le résultat interne et compare les causes par méthode conservée ; la synthèse publique rend désormais le détail accessible sans connexion. Les conclusions historiques ci-dessous restent datées de la livraison initiale.
+
 Le calcul weighted-coverage-v3 utilise measuredWeight / expectedWeight et exclut uniquement NOT_APPLICABLE. Le seuil suffisant est 80 %, sans plafond à 96 %. Les mesures restent figées dans chaque rapport ; le frontend et l’outil d’investigation utilisent leur dénominateur enregistré, sans nouvelle policy.
 
 Un défaut de collecte reproductible concernait http.headers.compression et http.headers.server : la réponse avait été examinée, mais une absence d’en-tête produisait INFO + valeur null. MeasurementAvailability la classait MEASUREMENT_MISSING. La collecte conserve maintenant une valeur explicite (identity ou chaîne vide) et present=false. Une réponse absente, un challenge anti-bot et une mesure runtime inconnue ne deviennent pas des mesures réussies. Le barème V13, ses poids, son empreinte et le calcul de score sont inchangés. Le contrat des collecteurs passe à analysis-measurements-v4 pour éviter des comparaisons silencieuses entre méthodes différentes. Les anciens rapports ne sont pas réécrits.

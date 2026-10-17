@@ -11,6 +11,16 @@ import ReportHero from "./ReportHero";
 import { LangProvider } from "@/lib/i18n/LangContext";
 import type { Report } from "./types";
 
+// Compact synthetic weights reproduce the production sample's missing contributions.
+const summaryCoverage: NonNullable<Report["scores"]["coverage"]> = {
+  version:"weighted-coverage-v3",threshold:.8,provisional:true,domains:[],
+  global:{key:"global",measuredWeight:167,expectedWeight:217,ratio:167/217,available:true,sufficient:false},
+  checks:[{key:"http.status_code",module:"http",domain:"security",weight:167,state:"MEASURED",reason:"CHECK_OBSERVED",confidence:"MEASURED"},
+    ...([['accessibility',10,'a11y'],['best-practices',6,'security'],['performance',22,'performance'],['seo',8,'seo']] as const).map(([key,weight,domain])=>({
+      key:`lighthouse.score.${key}`,module:"lighthouse",domain,weight,state:"UNAVAILABLE" as const,reason:"DEADLINE_EXCEEDED",confidence:"UNKNOWN"})),
+    {key:"runtime.network.bytes_estimated",module:"runtime",domain:"performance",weight:4,state:"UNAVAILABLE",reason:"CHECK_MISSING",confidence:"UNKNOWN"}],
+};
+
 const report = {
   generatedAt: "2026-01-01T12:00:00Z",
   domain: "example.com",
@@ -26,6 +36,21 @@ const report = {
 } as unknown as Report;
 
 describe("ReportHero (rendu du rapport)", () => {
+  it.each(["fr","en"] as const)("explains missing coverage in the public summary without login in %s",lang=>{
+    render(<LangProvider initialLang={lang}><ReportHero report={{...report,access:"summary",
+      scores:{...report.scores,coverage:summaryCoverage}}}/></LangProvider>);
+    const title=lang==="fr"?"Détail de la couverture":"Coverage breakdown";
+    const summaries=screen.getAllByText(title);
+    const disclosure=summaries.find(element=>element.tagName==="SUMMARY")!;
+    expect(disclosure.closest('details')).not.toHaveAttribute('open');
+    fireEvent.click(disclosure);
+    expect(disclosure.closest('details')).toHaveAttribute('open');
+    expect(screen.getByText(lang==="fr"?"77 % mesurés — 23 % non couverts":"77 % measured — 23 % not covered")).toBeInTheDocument();
+    expect(screen.getByText('167 / 217 · weighted-coverage-v3')).toBeInTheDocument();
+    expect(screen.getAllByText('DEADLINE_EXCEEDED')).toHaveLength(4);
+    expect(screen.getByText('runtime.network.bytes_estimated')).toBeInTheDocument();
+    expect(screen.queryByRole('link',{name:/connexion|log in/i})).not.toBeInTheDocument();
+  });
   it.each(["fr", "en"] as const)("adds the 42 reference in %s without changing the score or counts", lang => {
     render(<LangProvider initialLang={lang}><ReportHero report={{ ...report, scores: { ...report.scores, global: 42 } }} /></LangProvider>);
     expect(screen.getByLabelText("Score 42/100")).toHaveTextContent("42/100");
