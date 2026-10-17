@@ -15,7 +15,6 @@ import {reportReadingCopy} from "@/components/report/reportReadingCopy";
 import ScoreGrid from "@/components/report/ScoreGrid";
 import ReportPriorityList from "@/components/report/ReportPriorityList";
 import IssuesByCategory from "@/components/report/IssuesByCategory";
-import AccessibilitySection from "@/components/report/AccessibilitySection";
 import ObservedMeasurements from "@/components/report/ObservedMeasurements";
 import ScopedRelaunch from "@/components/report/ScopedRelaunch";
 import HostingSummary from "@/components/report/HostingSummary";
@@ -74,7 +73,7 @@ export default function ReportPage({params,feedbackReference,embedded=false,shar
         <ScoreGrid compact categories={report.scores.byCategory} model={model} coverage={report.scores.coverage} onSelectDomain={domain=>reading.navigate({view:"technical",domain,severity:"all",anchor:""})}/>
         <ObservedMeasurements report={report} lang={lang}/>
         <ReportPriorityList priorities={report.summary.priorities} model={model} onSelectFinding={selectFinding} locked={locked} onDetails={()=>reading.navigate({view:"technical",anchor:""})}/>
-      </section>:locked?<ReportAccountPrompt shared={shared}/>:reading.view==="actions"?<section className={s.view} id="report-actions" aria-label={copy.actions}><ReportPriorityList priorities={report.summary.priorities} model={model} onSelectFinding={selectFinding} limit={6} onDetails={()=>reading.navigate({view:"technical",anchor:""})}/></section>:<section className={s.view} id="report-technical" aria-label={copy.technical}><IssuesByCategory report={report} model={model} selection={selection} domain={reading.domain} severity={reading.severity} onFilterChange={(domain,severity)=>reading.navigate({domain,severity,anchor:""})}/><AccessibilitySection report={report}/></section>}
+      </section>:locked?<ReportAccountPrompt shared={shared}/>:reading.view==="actions"?<section className={s.view} id="report-actions" aria-label={copy.actions}><ReportPriorityList priorities={report.summary.priorities} model={model} onSelectFinding={selectFinding} limit={6} onDetails={()=>reading.navigate({view:"technical",anchor:""})}/></section>:<section className={s.view} id="report-technical" aria-label={copy.technical}><IssuesByCategory report={report} model={model} selection={selection} domain={reading.domain} severity={reading.severity} onFilterChange={(domain,severity)=>reading.navigate({domain,severity,anchor:""})}/></section>}
       {!locked&&!shared&&!demo&&<ReportIntroductionEditor key={token} token={token} model={model} onPublished={note=>setNoteState({report,note})}/>}
       {!locked&&<ReportMethod report={report} model={model} open={methodOpen} onToggle={setMethodOpen}/>}
       {!embedded&&!demo&&<WebTip/>}
