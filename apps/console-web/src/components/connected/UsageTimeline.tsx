@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useState, type CSSProperties } from "react";
+import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
 import { useAccountSession } from "@/components/account/AccountSession";
 import { accountFetch } from "@/lib/account-client";
 import { useLang } from "@/lib/i18n/LangContext";
@@ -21,6 +21,7 @@ export default function UsageTimeline({ timezone }: { timezone: string }) {
   const [failure, setFailure] = useState<string | null>(null);
   const [active, setActive] = useState<string | null>(null);
   const [preset, setPreset] = useState("30");
+  const chartRef = useRef<HTMLDivElement>(null);
   const query = new URLSearchParams({ granularity, dimension, ...range });
   Object.keys(filters).forEach(key => query.append("filter", key));
   if (search) query.set("q", search);
@@ -44,6 +45,9 @@ export default function UsageTimeline({ timezone }: { timezone: string }) {
   }, [key, valid, revision, invalidate]);
 
   const data = result?.key === key && failure !== key ? result.data : null;
+  useEffect(() => {
+    if (data && chartRef.current) chartRef.current.scrollLeft = chartRef.current.scrollWidth;
+  }, [data]);
   const number = (value: number) => new Intl.NumberFormat(lang).format(value);
   const label = (series: Timeline["series"][number]) => series.key === "total" ? copy.GLOBAL : series.key === "other" ? copy.other : series.label ?? copy.unknown;
   const dateLabel = (value: string) => new Intl.DateTimeFormat(lang, { timeZone: "UTC", ...(granularity === "DAY" ? { day: "numeric", month: "short", year: "numeric" } : granularity === "MONTH" ? { month: "long", year: "numeric" } : { year: "numeric" }) }).format(new Date(value + "T00:00:00Z"));
@@ -104,18 +108,18 @@ export default function UsageTimeline({ timezone }: { timezone: string }) {
       {data.total > 0 && <>
         <ul className={s.legend}>{data.series.map((series, index) => <li key={series.key}><span className={s.swatch} style={{ "--series-index": index } as CSSProperties} aria-hidden="true"/><span>{label(series)}</span><strong>{number(series.total)}</strong></li>)}</ul>
         <p className={s.hint}>{copy.maximum} · {number(maximum)}</p>
-        <div className={s.chartScroll} role="region" tabIndex={0} aria-label={copy.chart}>
+        <div className={s.chartScroll} ref={chartRef} role="region" tabIndex={0} aria-label={copy.chart}>
           <div className={s.chart} style={{ "--bucket-count": data.buckets.length } as CSSProperties}>
             {data.buckets.map((bucket, index) => <button type="button" key={bucket.from} className={s.column} aria-label={`${copy.selectPeriod} · ${dateLabel(bucket.from)} · ${countLabel(bucket.total, incomplete(bucket))} ${copy.credits}${incomplete(bucket) ? " · " + copy.partial : ""}`} aria-pressed={selected?.from === bucket.from} onFocus={() => setActive(bucket.from)} onMouseEnter={() => setActive(bucket.from)} onClick={() => setActive(bucket.from)}>
               <span className={s.stack} aria-hidden="true">{data.series.map((series, seriesIndex) => <span key={series.key} className={s.segment} style={{ height: `${(bucket.values[series.key] ?? 0) / maximum * 100}%`, "--series-index": seriesIndex } as CSSProperties}/>)}</span>
-              <span className={s.tick} aria-hidden="true">{index === 0 || index === data.buckets.length - 1 || index % Math.max(1, Math.ceil(data.buckets.length / 8)) === 0 ? new Intl.DateTimeFormat(lang, { timeZone: "UTC", ...(granularity === "DAY" ? { day: "numeric", month: "short" } : granularity === "MONTH" ? { month: "short", year: "2-digit" } : { year: "numeric" }) }).format(new Date(bucket.from)) : ""}</span>
+              <span className={s.tick} aria-hidden="true">{index === 0 || index === data.buckets.length - 1 || index % (granularity === "DAY" ? 5 : granularity === "MONTH" && data.buckets.length > 24 ? 3 : 1) === 0 ? new Intl.DateTimeFormat(lang, { timeZone: "UTC", ...(granularity === "DAY" ? { day: "numeric", month: "short" } : granularity === "MONTH" ? { month: "short", year: "2-digit" } : { year: "numeric" }) }).format(new Date(bucket.from)) : ""}</span>
             </button>)}
           </div>
         </div>
         {selected && <div className={s.detail} role="status" aria-label={copy.point}><strong>{dateLabel(selected.from)} · {countLabel(selected.total, incomplete(selected))} {copy.credits}</strong><ul>{data.series.map(series => <li key={series.key}>{label(series)} <strong>{countLabel(selected.values[series.key] ?? 0, incomplete(selected))}</strong></li>)}</ul>{incomplete(selected) && <p className={s.hint}>{copy.partial}</p>}</div>}
       </>}
       <details className={s.table}><summary>{copy.table}</summary>
-        <DataTable caption={copy.title} columns={[copy.date, ...tableSeries.map(label), copy.GLOBAL]}>
+        <DataTable caption={copy.title + " · " + copy.credits} columns={[copy.date, ...tableSeries.map(label), copy.GLOBAL]}>
           {data.buckets.map(bucket => <tr key={bucket.from}><th scope="row">{dateLabel(bucket.from)}{incomplete(bucket) && <span className={s.partial}>{copy.partial}</span>}</th>{tableSeries.map(series => <td key={series.key}>{countLabel(bucket.values[series.key] ?? 0, incomplete(bucket))}</td>)}<td>{countLabel(bucket.total, incomplete(bucket))}</td></tr>)}
         </DataTable>
       </details>

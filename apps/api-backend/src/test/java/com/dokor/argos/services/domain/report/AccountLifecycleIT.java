@@ -1953,7 +1953,7 @@ class AccountLifecycleIT extends MariaDbReportFixture {
         var run=personal.create("https://example.com/private-owner-page",bearer(owner),CSRF).audit();
         sql("UPDATE ARG_USAGE_RUN SET state='COUNTED',counted_at='2026-10-10',period='2026-10' WHERE id="+run.runId());
         var original=dao.transaction(c->dao.session(owner.context().session().getId(),c,false)).getLastActivityAt();clock.now=clock.now.plusSeconds(30);
-        String path="/account/usage/timeline?granularity=DAY&dimension=URL&from=2026-10-01&until=2026-10-15";
+        String path="/account/usage/timeline?granularity=DAY&dimension=URL&from=2026-10-01&until=2026-10-11";
         try(var http=new HttpFixture()) {
             assertEquals(401,http.call("GET",path,null,null,false).statusCode());
             assertEquals(403,http.call("GET",path,bearer(pending),null,false).statusCode());
@@ -1968,7 +1968,7 @@ class AccountLifecycleIT extends MariaDbReportFixture {
         assertEquals(original,dao.transaction(c->dao.session(owner.context().session().getId(),c,false)).getLastActivityAt());
         auth.archive(bearer(owner),CSRF,true);
         var timeline=new UsageTimelineService(sessions,new UsagePolicy(ConfigFactory.empty()),clock);
-        error(401,()->timeline.timeline(bearer(owner),"DAY","GLOBAL","2026-10-01","2026-10-15",List.of(),null));
+        error(401,()->timeline.timeline(bearer(owner),"DAY","GLOBAL","2026-10-01","2026-10-11",List.of(),null));
     }
 
     private com.dokor.argos.services.connected.discovery.DiscoveryService discoveries(){

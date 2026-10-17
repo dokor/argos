@@ -23,7 +23,7 @@
 .swatch,.segment { background:var(--argos-brand);background-image:repeating-linear-gradient(calc(45deg + var(--series-index) * 30deg),transparent,transparent 3px,var(--argos-surface) 3px,var(--argos-surface) calc(3px + var(--series-index) * 1px)); }
 .swatch { display:inline-block;width:14px;height:14px;flex-shrink:0;border:1px solid var(--argos-brand); }
 .chartScroll { max-width:100%;overflow-x:auto;margin:8px 0; }
-.chart { display:grid;grid-template-columns:repeat(var(--bucket-count),minmax(24px,1fr));min-width:calc(var(--bucket-count) * 24px);height:230px;gap:2px; }
+.chart { display:grid;grid-template-columns:repeat(var(--bucket-count),minmax(44px,1fr));min-width:calc(var(--bucket-count) * 44px);height:230px;gap:2px; }
 .column { display:flex;flex-direction:column;align-items:stretch;justify-content:end;gap:8px;padding:4px 2px 0;min-width:0; }
 .column:hover,.column[aria-pressed=true] { background:var(--argos-brand-soft); }
 .column:focus-visible { outline:2px solid var(--argos-brand);outline-offset:-2px; }
