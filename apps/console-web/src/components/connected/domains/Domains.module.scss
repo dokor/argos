@@ -444,6 +444,8 @@
 }
 
 .scopeLayout { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.scopeAside { display: grid; gap: 20px; min-width: 0; }
+.scopeAside > [data-web-tip] { margin-bottom: 0; }
 .scopeLayout .columns { align-items: end; }
 .scopeGuide > div + div { border-top: 1px solid var(--argos-border); padding-top: 16px; margin-top: 16px; }
 .scopeGuide h3 { font-weight: 650; margin-bottom: 6px; }

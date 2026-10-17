@@ -1,4 +1,5 @@
 "use client";
+import WebTip from "@/components/editorial/WebTip";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "@/components/LocalizedLink";
@@ -86,6 +87,7 @@ export default function QueueView({ type, id }: { type?: QueueType; id?: string 
   const snapshotAt = snapshot?.snapshotAt ?? task?.snapshotAt, stuckSeconds = snapshot?.stuckSeconds ?? task?.stuckSeconds;
   return <main className={s.page}>
     <h1>{c.title} · {text.title}</h1>
+    <WebTip/>
     {allowed && <AdminNavigation active="queue"/>}
     {!session.ready ? <p role="status">{c.loading}</p> : !allowed ? <p role="alert">{c.denied}</p> : <>
       <p className={q.intro}>{text.intro}</p>

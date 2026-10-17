@@ -11,8 +11,8 @@ import ReportIntroductionView from "./ReportIntroductionView";
 import ReportPageScope from "./ReportPageScope";
 import s from "./ReportHero.module.scss";
 
-export default function ReportHero({report,model=buildReportModel(report),onActions,onMethod,introduction=report.introduction,onSelectFinding,demo=false,actions,context}: {
- report:Report;model?:ReportModel;onActions?:()=>void;onMethod?:()=>void;introduction?:ReportIntroduction|null;onSelectFinding?:(key:string)=>void;personal?:boolean;demo?:boolean;actions?:ReactNode;context?:ReactNode;
+export default function ReportHero({report,model=buildReportModel(report),onActions,onMethod,introduction=report.introduction,onSelectFinding,demo=false,actions,context,tip}: {
+ report:Report;model?:ReportModel;onActions?:()=>void;onMethod?:()=>void;introduction?:ReportIntroduction|null;onSelectFinding?:(key:string)=>void;personal?:boolean;demo?:boolean;actions?:ReactNode;context?:ReactNode;tip?:ReactNode;
 }) {
  const {t,lang}=useLang(),fr=lang==="fr",copy=decisionCopy[lang],reading=reportReadingCopy[lang];
  const score=globalScore(report),coverage=report.scores.coverage,counts=model.counts,date=new Date(report.generatedAt),Title=demo?"h2":"h1";
@@ -27,6 +27,7 @@ export default function ReportHero({report,model=buildReportModel(report),onActi
    <p className={s.url}>{url??(fr?"Adresse indisponible":"Address unavailable")}</p>
    <p className={s.date}>{Number.isFinite(date.getTime())?<time dateTime={report.generatedAt}>{date.toLocaleString(t.report.hero.locale,{day:"numeric",month:"long",year:"numeric",hour:"2-digit",minute:"2-digit",timeZone:"UTC"})} UTC</time>:copy.dateUnknown} · {fr?"Analyse ponctuelle":"Point-in-time analysis"}</p>
   </div>{actions&&<div className={s.actions}>{actions}</div>}</div>
+  {tip&&<div className={s.tip}>{tip}</div>}
   {report.scores.scope && report.scores.scope.kind!=="full" && <p className={s.provisional} role="status">{fr?"Analyse ciblée · Score partiel":"Targeted analysis · Partial score"} — {report.scores.scope.kind==="category" ? (t.report.priorityCards.domains as Record<string,string>)[report.scores.scope.target??""] : report.scores.scope.target}. {fr?"Aucune mesure précédente réutilisée.":"No previous measurements reused."}</p>}
   <div className={s.result}>
    <div className={s.scoreBlock}><h2 className={s.scoreTitle}>{reading.score}</h2>

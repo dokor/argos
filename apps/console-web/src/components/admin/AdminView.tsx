@@ -1,4 +1,5 @@
 "use client";
+import WebTip from "@/components/editorial/WebTip";
 import CollectorDiagnostics from "./CollectorDiagnostics";
 import RunFilterSelect from "./RunFilterSelect";
 import ExecutionStatusBadge from "@/components/connected/ExecutionStatusBadge";
@@ -147,6 +148,7 @@ export default function AdminView({ runId }: { runId?: string }) {
       <h1>
         {c.title} · {c.runs}
       </h1>
+      <WebTip/>
       {allowed && <AdminNavigation active="runs" />}
       {!session.ready ? (
         <p role="status">{c.loading}</p>

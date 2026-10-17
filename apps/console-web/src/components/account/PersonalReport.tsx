@@ -54,7 +54,7 @@ export default function PersonalReport({ runId }: { runId: string }) {
   const current=result?.id===runId ? result : null,run=current?.run,report=current?.report,error=failure?.id===runId ? failure.code : "";
   const back=<Link href={overviewReturn ?? domainReturn ?? (allowed && run?.siteId ? "/account/sites/"+run.siteId : "/account/sites")}>{overviewReturn ? t.overviewPage.back : domainReturn ? t.domainPage.backBatch : allowed && run?.siteId ? t.account.sites.back : t.account.sites.title}</Link>;
   if(!session.ready) return <main className={ui.page}><p role="status">{t.account.working}</p></main>;
-  if(!allowed) return <main className={ui.page}><h1>{c.progress}</h1><p role="alert">{session.profile ? t.account.pending : t.account.errors.session_invalid}</p><Link href={"/account/sign-in?returnTo="+encodeURIComponent("/account/runs/"+runId)}>{t.account.signIn}</Link>{back}</main>;
+  if(!allowed) return <main className={ui.page}><PageHeading title={c.progress}/><p role="alert">{session.profile ? t.account.pending : t.account.errors.session_invalid}</p><Link href={"/account/sign-in?returnTo="+encodeURIComponent("/account/runs/"+runId)}>{t.account.signIn}</Link>{back}</main>;
   const terminal=run && ["COMPLETED","FAILED","CANCELED"].includes(run.status);
   const expired=run?.reportAvailability==="EXPIRED";
   const unavailable=expired || run?.reportAvailability==="UNAVAILABLE" || error==="resource_unavailable";

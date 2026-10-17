@@ -1,4 +1,5 @@
 "use client";
+import WebTip from "@/components/editorial/WebTip";
 
 import AdminNavigation from "./AdminNavigation";
 import StatisticsNavigation from "./StatisticsNavigation";
@@ -56,6 +57,7 @@ export default function AnalyticsView() {
 
   return <><main className={s.main}>
     <Link href="/account/admin">{c.back}</Link><h1>{c.title}</h1><p>{c.intro}</p>
+    <WebTip/>
     {!session.ready ? <p role="status">{c.loading}</p> : !allowed ? <><p role="alert">{c.denied}</p><Link href="/account/sign-in">{c.signIn}</Link></> : <>
       <AdminNavigation active="analytics" />
       <StatisticsNavigation active="product" />

@@ -61,7 +61,7 @@ export default function ReportPage({params,feedbackReference,embedded=false,shar
     <Content className={s.main}>
       <ReportHero demo={demo} report={report} model={model} introduction={locked?null:note} onSelectFinding={selectFinding} onActions={()=>reading.navigate({view:"actions",anchor:""})} onMethod={locked?undefined:()=>setMethodOpen(true)}
         context={runId&&!shared&&!locked&&!demo?<nav className={s.breadcrumb} aria-label={fr?"Fil d’Ariane":"Breadcrumb"}><ol><li><Link href="/account/sites">{fr?"Mes sites":"My sites"}</Link></li><li><span aria-hidden="true">/</span><span aria-current="page">{fr?"Rapport enregistré":"Saved report"}</span></li></ol></nav>:<span>{shared?(fr?"Rapport partagé · Lecture seule · Historique du propriétaire non partagé":"Shared report · Read only · Owner history not shared"):demo?(fr?"Exemple · Données fictives":"Example · Fictional data"):(fr?"Votre analyse est prête":"Your analysis is ready")}</span>}
-        actions={!demo&&<>{runId&&<OwnerReportShare runId={runId}/>}<ReportExport compact report={report} runId={runId} shared={shared}/></>}/>
+        actions={!demo&&<>{runId&&<OwnerReportShare runId={runId}/>}<ReportExport compact report={report} runId={runId} shared={shared}/></>} tip={!demo&&<WebTip/>}/>
       {locked&&reading.view==="overview"&&<ReportAccountPrompt shared={shared}/>}
       {!embedded&&!shared&&!demo&&!locked&&<><RunClaim/><PublicReportHistory/></>}
       {runId&&<div className={s.workspace}><span>{fr?"Rapport enregistré · Espace personnel":"Saved report · Personal workspace"}</span>{workspaceActions}</div>}
@@ -76,7 +76,6 @@ export default function ReportPage({params,feedbackReference,embedded=false,shar
       </section>:locked?<ReportAccountPrompt shared={shared}/>:reading.view==="actions"?<section className={s.view} id="report-actions" aria-label={copy.actions}><ReportPriorityList priorities={report.summary.priorities} model={model} onSelectFinding={selectFinding} limit={6} onDetails={()=>reading.navigate({view:"technical",anchor:""})}/></section>:<section className={s.view} id="report-technical" aria-label={copy.technical}><IssuesByCategory report={report} model={model} selection={selection} domain={reading.domain} severity={reading.severity} onFilterChange={(domain,severity)=>reading.navigate({domain,severity,anchor:""})}/></section>}
       {!locked&&!shared&&!demo&&<ReportIntroductionEditor key={token} token={token} model={model} onPublished={note=>setNoteState({report,note})}/>}
       {!locked&&<ReportMethod report={report} model={model} open={methodOpen} onToggle={setMethodOpen}/>}
-      {!embedded&&!demo&&<WebTip/>}
     </Content>
   </div></FeedbackReportContext.Provider>;
 }

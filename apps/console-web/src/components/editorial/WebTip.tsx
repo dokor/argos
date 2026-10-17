@@ -5,7 +5,7 @@ import { selectWebTip, webTips, type WebTip as Tip } from './webTips';
 import s from './WebTip.module.scss';
 
 let pageTip: Tip | undefined;
-export default function WebTip() {
+export default function WebTip({ placement = 'banner' }: { placement?: 'banner' | 'aside' }) {
   const { lang } = useLang();
   const [tip, setTip] = useState<Tip>();
   const mounted = useRef(false);
@@ -20,9 +20,11 @@ export default function WebTip() {
     setTip(pageTip);
   }, [lang]);
   const text = tip?.translations[lang];
-  return <div className={s.slot} data-web-tip>{text && tip && <aside className={s.tip} aria-label={lang === 'fr' ? 'Le saviez-vous ?' : 'Did you know?'}>
+  return <div className={`${s.slot}${placement === 'aside' ? ` ${s.aside}` : ''}`} data-web-tip>{text && tip && <aside className={s.tip} aria-label={lang === 'fr' ? 'Le saviez-vous ?' : 'Did you know?'}>
+    <div className={s.copy}>
     <p className={s.heading}>{lang === 'fr' ? 'Le saviez-vous ?' : 'Did you know?'}</p>
     <p>{text}</p>
+    </div>
     <a href={tip.sourceUrl} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer">{lang === 'fr' ? 'En savoir plus' : 'Learn more'}<span className={s.sr}> — {text}</span></a>
   </aside>}</div>;
 }

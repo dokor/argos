@@ -4,6 +4,7 @@ import ContextHelp from "@/components/ui/ContextHelp";
 import Stepper from "@/components/ui/Stepper";
 import { allDiscoveryPages } from "@/lib/connected/discovery-pages";
 import DomainScopeGuide from "./DomainScopeGuide";
+import WebTip from "@/components/editorial/WebTip";
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "@/components/LocalizedLink";
@@ -290,7 +291,7 @@ export default function DomainNew() {
       <Link className={d.link} href="/account/domains">
         ← {c.back}
       </Link>
-      <PageHeading title={c.newTitle} description={c.newIntro} action={discoveryId ?
+      <PageHeading title={c.newTitle} description={c.newIntro} showTip={blocked || !valid || (params.has("request") && !request) || !!discoveryId} action={discoveryId ?
         <Link className={s.secondary} href="/account/domains/new">{c.new}</Link> : undefined} />
       <ContextHelp topic="domain"/>
       {stepper}
@@ -471,7 +472,7 @@ export default function DomainNew() {
                     retry={activeBatches.reload}
                   />
                 )}
-              </Surface><DomainScopeGuide /></div>
+              </Surface><div className={d.scopeAside}><WebTip placement="aside"/><DomainScopeGuide /></div></div>
             </>
           ) : (
             <>
