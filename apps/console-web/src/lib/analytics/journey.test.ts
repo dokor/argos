@@ -35,7 +35,7 @@ it("records a failed social callback with only closed fields and keeps its error
     .mockResolvedValue(new Response(null, { status: 204 }));
   vi.stubGlobal("fetch", fetch);
   const state = "s".repeat(43);
-  const response = await accountProxy(request("argos_product_consent_v2=granted; argos_oauth_" + state + "=browser; argos_return_" + state + "=/en/report/private-token",
+  const response = await accountProxy(request("argos_product_consent_v2=granted; argos_oauth_" + state + "=browser; argos_return_" + state + "=/en/report/synthetic_report_token_012345678901234567890",
     "auth/oauth/google/callback?state=" + state + "&code=private-code", "GET"), ["auth", "oauth", "google", "callback"]);
   expect(response.status).toBe(303);
   expect(fetch.mock.calls[0][1].headers.get("X-Argos-Measurement")).toBe("Bearer synthetic-server");
