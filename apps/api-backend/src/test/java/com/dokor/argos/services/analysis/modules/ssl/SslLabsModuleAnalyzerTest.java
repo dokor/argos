@@ -56,6 +56,64 @@ class SslLabsModuleAnalyzerTest {
         assertEquals(AuditStatus.FAIL, check(result,"ssl.certificate.expiry_days").status());
     }
 
+    @Test void noSniDefaultCertificateCannotInvalidateTheAuditedHostname() throws Exception {
+        for (String chains : new String[] {
+            "[{\"certIds\":[\"hostname\"],\"noSni\":false},{\"certIds\":[\"default\"],\"noSni\":true}]",
+            "[{\"certIds\":[\"default\"],\"noSni\":true},{\"certIds\":[\"hostname\"],\"noSni\":false}]"
+        }) {
+            var result = analyze("""
+                {"status":"READY","certs":[
+                  {"id":"hostname","issues":0,"notAfter":2050000000000},
+                  {"id":"default","issues":8,"notAfter":1000000000000}],
+                 "endpoints":[{"grade":"A","statusMessage":"Ready","details":{"certChains":%s}}]}
+                """.formatted(chains));
+            assertEquals(AuditStatus.PASS, check(result,"ssl.certificate.valid").status());
+            assertEquals(0, check(result,"ssl.certificate.valid").details().get("issues"));
+            assertEquals(2050000000000L, check(result,"ssl.certificate.expiry_days").details().get("notAfterMs"));
+        }
+    }
+
+    @Test void healthyNoSniCertificateCannotHideAnInvalidSniCertificate() throws Exception {
+        var result = analyze("""
+            {"status":"READY","certs":[
+              {"id":"hostname","issues":8,"notAfter":1000000000000},
+              {"id":"default","issues":0,"notAfter":2050000000000}],
+             "endpoints":[{"grade":"M","statusMessage":"Ready","details":{"certChains":[
+               {"certIds":["hostname"],"noSni":false},{"certIds":["default"],"noSni":true}]}}]}
+            """);
+        assertEquals(AuditStatus.FAIL, check(result,"ssl.certificate.valid").status());
+        assertEquals(AuditStatus.FAIL, check(result,"ssl.certificate.expiry_days").status());
+    }
+
+    @Test void literalIpTargetsStillEvaluateTheirNoSniCertificate() throws Exception {
+        for (String target : new String[] {"https://8.8.8.8", "https://[2001:4860:4860::8888]"}) {
+            for (int issues : new int[] {0, 8}) {
+                var result = analyze("""
+                    {"status":"READY","certs":[{"id":"leaf","issues":%d,"notAfter":2050000000000}],
+                     "endpoints":[{"grade":"A","statusMessage":"Ready","details":{
+                       "certChains":[{"certIds":["leaf"],"noSni":true}]}}]}
+                    """.formatted(issues), target);
+                assertEquals(issues == 0 ? AuditStatus.PASS : AuditStatus.FAIL,
+                    check(result,"ssl.certificate.valid").status());
+            }
+        }
+    }
+
+    @Test void noSniOnlyOrMalformedSniMetadataCannotClaimCertificateHealth() throws Exception {
+        for (String chains : new String[] {
+            "[{\"certIds\":[\"leaf\"],\"noSni\":true}]",
+            "[{\"certIds\":[\"leaf\"],\"noSni\":\"true\"}]",
+            "[{\"certIds\":[\"leaf\"],\"noSni\":false},{\"certIds\":[\"leaf\"],\"noSni\":1}]"
+        }) {
+            var result = analyze("""
+                {"status":"READY","certs":[{"id":"leaf","issues":0,"notAfter":2050000000000}],
+                 "endpoints":[{"grade":"A","statusMessage":"Ready","details":{"certChains":%s}}]}
+                """.formatted(chains));
+            assertEquals(AuditStatus.INFO, check(result,"ssl.certificate.valid").status());
+            assertEquals(AuditStatus.INFO, check(result,"ssl.certificate.expiry_days").status());
+        }
+    }
+
     @Test
     void literalNullGradeRemainsUnavailable() throws Exception {
         var grade = check(analyze("{\"endpoints\":[{\"grade\":\"null\"}]}"), "ssl.grade");
@@ -66,14 +124,14 @@ class SslLabsModuleAnalyzerTest {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    private static AuditContext ctx() {
-        return new AuditContext("https://example.com", "https://example.com", 1L);
+    private static AuditModuleResult analyze(String json) throws Exception {
+        return analyze(json, "https://example.com");
     }
 
-    private static AuditModuleResult analyze(String json) throws Exception {
+    private static AuditModuleResult analyze(String json, String target) throws Exception {
         SslLabsClient client = mock(SslLabsClient.class);
         when(client.analyze(anyString())).thenReturn(MAPPER.readTree(json));
-        return new SslLabsModuleAnalyzer(client).analyze(ctx(), LoggerFactory.getLogger("test"));
+        return new SslLabsModuleAnalyzer(client).analyze(new AuditContext(target, target, 1L), LoggerFactory.getLogger("test"));
     }
 
     private static AuditCheckResult check(AuditModuleResult result, String key) {

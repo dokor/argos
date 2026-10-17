@@ -74,7 +74,7 @@ public class SslLabsModuleAnalyzer {
                 boolean pending = progress != null && progress.isNumber() && progress.intValue() < 100;
                 boolean failed = "READY".equals(hostStatus) && statusMessage != null
                     && !"Ready".equalsIgnoreCase(statusMessage);
-                var analysis = analyzeEndpoint(host, hostStatus, pending || failed ? null : certificateSnapshot(result, item), nowMs);
+                var analysis = analyzeEndpoint(host, hostStatus, pending || failed ? null : certificateSnapshot(result, item, host), nowMs);
                 observations.add(new EndpointObservation(item, analysis,
                     failed ? "ASSESSMENT_FAILED" : pending ? "NOT_EVALUATED"
                         : analysis.checks().stream().anyMatch(c -> c.status() != AuditStatus.INFO)
@@ -114,16 +114,28 @@ public class SslLabsModuleAnalyzer {
      * Every served leaf must be known before concluding that certificates are healthy.
      * Keep the legacy embedded format for recorded fixtures/older adapters only.
      */
-    private static JsonNode certificateSnapshot(JsonNode host, JsonNode endpoint) {
+    private static JsonNode certificateSnapshot(JsonNode host, JsonNode endpoint, String auditedHost) {
         JsonNode chains = endpoint.path("details").path("certChains");
         if (!chains.isArray()) return endpoint;
         var copy = endpoint.deepCopy();
         var details = (com.fasterxml.jackson.databind.node.ObjectNode) copy.path("details");
         details.remove("cert");
         if (chains.isEmpty()) return copy;
+        boolean requireSni = !com.google.common.net.InetAddresses.isUriInetAddress(auditedHost);
         long issues = 0, earliestExpiry = Long.MAX_VALUE;
-        boolean issuesKnown = true, expiryKnown = true;
+        boolean issuesKnown = true, expiryKnown = true, sniLeafObserved = false;
         for (JsonNode chain : chains) {
+            // SSL Labs also records the default virtual host certificate. A chain
+            // obtained only without SNI does not describe a DNS hostname. Literal
+            // IP targets use the default certificate because SNI cannot carry an IP.
+            JsonNode noSni = chain.get("noSni");
+            if (requireSni && noSni != null && noSni.isBoolean() && noSni.booleanValue()) continue;
+            if (noSni != null && !noSni.isBoolean()) {
+                issuesKnown = false;
+                expiryKnown = false;
+                continue;
+            }
+            sniLeafObserved = true;
             JsonNode ids = chain.path("certIds");
             String leafId = ids.isArray() && !ids.isEmpty() && ids.get(0).isTextual() ? ids.get(0).textValue() : null;
             JsonNode leaf = null;
@@ -142,8 +154,8 @@ public class SslLabsModuleAnalyzer {
         }
         var certificate = details.putObject("cert");
         // A measured defect remains useful even if another served chain is unknown.
-        if (issuesKnown || issues > 0) certificate.put("issues", issues);
-        if (expiryKnown) certificate.put("notAfter", earliestExpiry);
+        if (sniLeafObserved && (issuesKnown || issues > 0)) certificate.put("issues", issues);
+        if (sniLeafObserved && expiryKnown) certificate.put("notAfter", earliestExpiry);
         return copy;
     }
 

@@ -194,7 +194,7 @@ Le collecteur lit maintenant `request.sizes().responseBodySize` après
 `requestfinished` : Chromium mesure les octets encodés reçus, y compris pour
 les réponses chunked et gzip. Les lectures se terminent avant la fermeture du
 navigateur, dans le délai global existant. Une réponse inachevée ou une taille
-inaccessible reste inconnue ; le contrôle de complétude conserve sa décision.
+inaccessible reste inconnue et suit la politique de complétude décrite ci-dessus.
 Les fixtures réseau isolées vérifient aussi ces cas avec le vrai Chromium sur
 les runners AMD64 et ARM64. Les rapports historiques restent immuables ; une
 nouvelle collecte après livraison du correctif utilise la nouvelle mesure.
@@ -203,3 +203,20 @@ Une requête fetch annulée après ses en-têtes peut conserver un poids inconnu
 même après le passage aux tailles Chromium. La politique v2 traite uniquement
 le cas documenté ci-dessus et conserve cette incertitude dans les rapports.
 Une attente supplémentaire ne permet pas de terminer un transfert déjà annulé.
+
+## Certificats SSL Labs et SNI
+
+SSL Labs conserve aussi les chaînes obtenues uniquement sans indication de nom
+SNI (`certChains[].noSni: true`). Elles décrivent le certificat par défaut du
+serveur mutualisé. Pour une cible DNS, le collecteur les conserve dans les
+données du fournisseur mais les exclut du calcul de validité et d'expiration du
+certificat du nom audité. Toutes les chaînes obtenues avec SNI restent évaluées ;
+un défaut mesuré sur l'une d'elles continue de bloquer le contrôle.
+Si aucune chaîne pertinente n'est connue, le résultat reste inconnu, jamais PASS.
+Les cibles IP littérales continuent d'utiliser leur certificat sans SNI.
+
+Référence : [contrat CertificateChain de SSL Labs v3](https://github.com/ssllabs/ssllabs-scan/blob/master/ssllabs-api-docs-v3.md#certificatechain).
+Le contrat de collecte passe à `analysis-measurements-v5` pour empêcher une
+comparaison silencieuse avec l'ancienne sélection. Les rapports déjà publiés
+restent immuables ; un rejeu de leurs constats conserve donc leur résultat TLS
+historique, même après correction du collecteur.
