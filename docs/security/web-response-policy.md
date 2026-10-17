@@ -12,6 +12,9 @@ Le HTML porte `Cache-Control: private, no-store` : ne pas remettre en cache une
 page avec un nonce réutilisable. Les assets Next.js et les API restent hors du
 proxy CSP. Ce choix suit le [contrat de nonce de Next.js](https://nextjs.org/docs/app/guides/content-security-policy)
 et implique un rendu serveur à chaque consultation, à surveiller en charge.
+Les suites E2E chargent leur copie locale d’axe-core avec l’API d’évaluation
+Playwright (`injectAxe`), sans balise inline non autorisée ni désactivation de la
+CSP. Les scripts de l’application restent soumis à la politique réelle.
 
 Les liens internes utilisent `PageLink`, sans préchargement spéculatif par défaut :
 les pages dynamiques n’ont pas de coque statique à précharger sans annuler des

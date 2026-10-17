@@ -1,3 +1,4 @@
+import { injectAxe } from './inject-axe.mjs';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { chromium } from '../../apps/playwright-service/node_modules/playwright/index.mjs';
@@ -45,7 +46,7 @@ try {
    assert.equal(await page.locator('h1').count(),1);
    assert.equal(await page.locator('footer').count(),1);
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),name+' overflow at '+width);
-   await page.addScriptTag({path:'apps/console-web/node_modules/axe-core/axe.min.js'});
+   await injectAxe(page);
    const axe=await page.evaluate(()=>window.axe.run(document.querySelector('main'),{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}}));
    assert.deepEqual(axe.violations.map(v=>({id:v.id,nodes:v.nodes.map(n=>n.target)})),[]);
    const screenshot=name+'-'+lang+'-'+theme+'-'+width+'.png';

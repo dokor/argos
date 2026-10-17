@@ -1,3 +1,4 @@
+import { injectAxe } from './inject-axe.mjs';
 import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
 import {chromium} from '../../apps/playwright-service/node_modules/playwright/index.mjs';
@@ -43,7 +44,7 @@ try {
    assert.equal(await page.locator('h1').count(),1);assert.equal(await page.getByRole('contentinfo').count(),1);
    await page.evaluate(()=>document.fonts.ready);
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
-   await page.addScriptTag({path:'apps/console-web/node_modules/axe-core/axe.min.js'});
+   await injectAxe(page);
    const violations=await page.evaluate(async()=>(await window.axe.run(document.querySelector('[data-connected-shell]'),{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}})).violations.map(v=>v.id));
    assert.deepEqual(violations,[]);
    await page.screenshot({path:`${output}/${state}-${lang}-${colorScheme}-${width}.png`,fullPage:true});
