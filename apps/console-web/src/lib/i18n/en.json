@@ -1071,6 +1071,12 @@
     "stepScope": "1. Scope",
     "stepSelection": "2. Selection",
     "stepLaunch": "3. Confirmation",
+    "steps": {
+      "scope": "Scope",
+      "selection": "Selection",
+      "confirmation": "Confirmation",
+      "status": { "completed": "Completed", "current": "In progress", "upcoming": "Upcoming" }
+    },
     "hostname": "Domain name",
     "hostHint": "Domain with or without http:// or https://, without a path or port (trailing slash accepted). The protocol is ignored; only this exact host is analyzed, excluding its subdomains. The www. prefix is allowed when entered; www and the domain without www remain distinct hosts.",
     "targetUnavailable": "The target could not be validated: non-public address, unavailable DNS resolution or network timeout. Check this host or try again.",

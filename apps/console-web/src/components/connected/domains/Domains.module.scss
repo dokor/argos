@@ -286,18 +286,6 @@
 .selection p {
   padding-left: 30px;
 }
-.steps {
-  list-style: none;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px 24px;
-  margin-bottom: 24px;
-  color: var(--argos-text-muted);
-}
-.steps [aria-current] {
-  color: var(--argos-brand);
-  font-weight: 650;
-}
 .dialog {
   background: var(--argos-surface);
   color: var(--argos-text);
