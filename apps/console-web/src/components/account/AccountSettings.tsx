@@ -4,9 +4,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "@/components/LocalizedLink";
 import { useLang } from "@/lib/i18n/LangContext";
 import { localizedPath } from "@/lib/i18n/routes";
-import { accountFetch, AccountClientError, type AccountProfile } from "@/lib/account-client";
+import { accountFetch, AccountClientError, type AccountProfile, type SignInMethod } from "@/lib/account-client";
 import { safeAccountReturn } from "@/lib/account-return";
 import { oauthCallbackError } from "@/lib/oauth-callback-error";
+import { validNewPassword } from "@/lib/account-form-validation";
 import { PageHeading, EmptyState, StatusBadge } from "@/components/connected/Primitives";
 import { useAccountSession } from "./AccountSession";
 import UsageStrip from "@/components/connected/UsageStrip";
@@ -15,7 +16,7 @@ import ConfirmAccountAction from "./ConfirmAccountAction";
 import s from "./AccountSettings.module.scss";
 import c from "@/components/connected/Connected.module.scss";
 
-type Method = { id: string; provider: string };
+type Method = SignInMethod;
 type Session = { id: string; createdAt: string; current: boolean };
 type Data = { profile: AccountProfile; methods: Method[]; sessions: Session[]; providers: string[]; returnTo: string };
 type Action = { title: string; description: string; run: () => Promise<void>; archive?: boolean };
@@ -64,9 +65,10 @@ export default function AccountSettings() {
   const complete=()=>{if(alive.current){setMessage(a.done);refresh();}};
   const request=(next:Action)=>{setError("");setMessage("");setAction(next);};
   const label=(provider:string)=>provider==="password" ? a.password : socialProviderNames[provider]??provider;
-  const usable=(method:Method)=>method.provider==="password" || !!data?.providers.includes(method.provider);
-  const canRemove=(method:Method)=>!!data?.methods.some(other=>other.id!==method.id&&usable(other));
-  const remove=(method:Method)=>request({title:a.remove+" · "+label(method.provider),description:copy.removeHint,run:async()=>{await accountFetch("methods/"+method.id+"/remove","POST",{confirmed:true});complete();}});
+  const canRemove=(method:Method)=>!!data?.methods.some(other=>other.id!==method.id&&other.usable);
+  const connections=data?.methods.filter(method=>method.provider!=="password").map(method=>({provider:method.provider,method}))??[];
+  const availableProviders=data?.providers.filter(provider=>!connections.some(row=>row.provider===provider))??[];
+  const remove=(method:Method,name=label(method.provider))=>request({title:a.remove+" · "+name,description:copy.removeHint,run:async()=>{await accountFetch("methods/"+method.id+"/remove","POST",{confirmed:true});complete();}});
   const archive=()=>request({title:a.archive,description:a.archiveHint+" "+copy.archiveDetail,archive:true,run:async()=>{await accountFetch("me/archive","POST",{confirmed:true});loggedOut();}});
   return <main className={c.page}>
     <PageHeading title={a.title} description={copy.intro}/>
@@ -86,7 +88,7 @@ export default function AccountSettings() {
         </section>}
         {section==="security"&&<>
           {data.profile.verified ? <><section className={s.panel}><h2>{a.password}</h2><p className={s.hint}>{data.methods.some(m=>m.provider==="password") ? copy.passwordChange:copy.passwordAbsent}</p>
-            <form className={s.form} onSubmit={e=>{e.preventDefault();request({title:copy.savePassword,description:copy.passwordEffect,run:async()=>{await accountFetch("methods/password","POST",{password});if(alive.current){setPassword("");complete();}}});}}>
+            <form className={s.form} onSubmit={e=>{e.preventDefault();if(!validNewPassword(password)){setError(a.errors.password_policy);document.getElementById("new-password")?.focus();return;}request({title:copy.savePassword,description:copy.passwordEffect,run:async()=>{await accountFetch("methods/password","POST",{password});if(alive.current){setPassword("");complete();}}});}}>
               <label htmlFor="new-password">{copy.newPassword}</label><input id="new-password" type="password" autoComplete="new-password" value={password} onChange={e=>setPassword(e.target.value)} required maxLength={256} aria-describedby="password-policy"/><p className={s.hint} id="password-policy">{a.passwordHint}</p><div><button className={c.primary}>{copy.savePassword}</button></div>
             </form>
             {data.methods.filter(m=>m.provider==="password").map(m=><div className={s.row} key={m.id}><span className={s.hint}>{canRemove(m) ? copy.removeHint:copy.lastMethod}</span><button className={c.secondary} disabled={!canRemove(m)} onClick={()=>remove(m)}>{copy.removePassword}</button></div>)}
@@ -98,14 +100,29 @@ export default function AccountSettings() {
         </>}
         {section==="connections"&&<section className={s.panel}><h2>{copy.associated}</h2><p className={s.hint}>{copy.connectionsHint}</p>
           {!data.profile.verified ? <p>{a.pending}</p> : <>
-            <ul className={s.list}>{Array.from(new Set([...data.providers,...data.methods.filter(m=>m.provider!=="password").map(m=>m.provider)])).map(provider=>{const method=data.methods.find(m=>m.provider===provider),configured=data.providers.includes(provider);return <li className={s.row} key={provider}><div className={s.provider}><SocialProviderLogo provider={provider}/><div><h3>{label(provider)}</h3><p className={s.hint}>{!configured ? copy.providerUnavailable:method ? copy.linked:copy.unlinked}</p>{method&&!canRemove(method)&&<p className={s.hint}>{copy.lastMethod}</p>}</div></div>{method ? <button className={c.secondary} disabled={!canRemove(method)} onClick={()=>remove(method)} aria-label={a.remove+" "+label(provider)}>{a.remove}</button> : <button className={c.secondary} onClick={()=>request({title:a.add+" "+label(provider),description:copy.linkHint,run:async()=>{const result=await accountFetch<{url:string}>("auth/oauth/"+provider+"/start","POST",{intent:"link",returnTo:localizedPath("/account/settings?section=connections",lang)});if(alive.current)window.location.assign(result.url);}})} aria-label={a.add+" "+label(provider)}>{a.add}</button>}</li>;})}</ul>
+            <ul className={s.list}>
+              {connections.map(row=>{
+                const {provider,method}=row;
+                const siblings=connections.filter(row=>row.provider===provider);
+                const name=label(provider)+(siblings.length>1 ? " · "+(siblings.indexOf(row)+1):"");
+                return <li className={s.row} key={method.id}>
+                  <div className={s.provider}><SocialProviderLogo provider={provider}/><div><h3>{name}</h3><p className={s.hint}>{method.usable ? copy.linked:copy.providerUnavailable}</p>{!canRemove(method)&&<p className={s.hint}>{copy.lastMethod}</p>}</div></div>
+                  <button className={c.secondary} disabled={busy||!canRemove(method)} onClick={()=>remove(method,name)} aria-label={a.remove+" "+name}>{a.remove}</button>
+                </li>;
+              })}
+              {availableProviders.map(provider=><li className={s.row} key={provider}>
+                <div className={s.provider}><SocialProviderLogo provider={provider}/><div><h3>{label(provider)}</h3><p className={s.hint}>{copy.unlinked}</p></div></div>
+                <button className={c.secondary} disabled={busy} onClick={()=>request({title:a.add+" "+label(provider),description:copy.linkHint,run:async()=>{const result=await accountFetch<{url:string}>("auth/oauth/"+provider+"/start","POST",{intent:"link",returnTo:localizedPath("/account/settings?section=connections",lang)});if(alive.current)window.location.assign(result.url);}})} aria-label={a.add+" "+label(provider)}>{a.add}</button>
+              </li>)}
+            </ul>
             {!data.providers.length&&!data.methods.some(m=>m.provider!=="password")&&<p className={s.notice}>{copy.noProviders}</p>}
             <p className={s.hint}>{copy.providerHint}</p>
+            <div className={s.row}><div><h3>{a.password}</h3><p className={s.hint}>{data.methods.some(method=>method.provider==="password"&&method.usable) ? copy.passwordChange:copy.passwordAbsent}</p></div><Link className={c.secondary} href="/account/settings?section=security">{copy.security}</Link></div>
           </>}
         </section>}
       </div><aside className={s.summary} aria-label={copy.summary}><span className={s.avatar} aria-hidden="true">{data.profile.displayName.slice(0,1).toUpperCase()}</span><h2>{data.profile.displayName}</h2><p>{data.profile.email??copy.emailAbsent}</p><StatusBadge tone={data.profile.verified ? "success":"warning"}>{data.profile.verified ? copy.verified:copy.pending}</StatusBadge><p className={s.hint}>{t.connected.personalSpace}</p><button className={c.secondary} disabled={busy} onClick={()=>void act(async()=>{await accountFetch("auth/logout","POST",{});loggedOut();})}>{a.logout}</button><Link className={s.link} href="/account/sites">{a.sites.title}</Link></aside></div>
       {section==="profile"&&data.profile.verified&&<UsageStrip/>}
-      {action&&<ConfirmAccountAction title={action.title} description={action.description} archive={action.archive} hasPassword={(!data.profile.verified&&!!data.profile.email)||data.methods.some(m=>m.provider==="password")} hasEmail={!!data.profile.email} onCancel={()=>setAction(null)} onConfirm={async()=>{await action.run();if(alive.current)setAction(null);}}/>}
+      {action&&<ConfirmAccountAction title={action.title} description={action.description} archive={action.archive} hasPassword={(!data.profile.verified&&!!data.profile.email)||data.methods.some(m=>m.provider==="password"&&m.usable)} hasEmail={data.profile.verified&&!!data.profile.email} onCancel={()=>setAction(null)} onConfirm={async()=>{await action.run();if(alive.current)setAction(null);}}/>}
     </>}
   </main>;
 }

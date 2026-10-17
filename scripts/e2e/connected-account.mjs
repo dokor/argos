@@ -15,7 +15,7 @@ try {
    const request=route.request(),url=new URL(request.url()),path=url.pathname;let status=200,data=response(path);
    if(path.endsWith('/csrf'))data={csrf:'c'.repeat(43)};
    if(path.endsWith('/me'))data=localProfile;
-   if(path.endsWith('/methods'))data=localMethods;
+   if(path.endsWith('/methods'))data=localMethods.map(method=>({...method,usable:method.provider==='password'||mode!=='unavailable'&&['github','google'].includes(method.provider)}));
    if(path.endsWith('/sessions'))data=localSessions;
    if(mode==='unavailable'&&path.endsWith('/auth/providers'))data={providers:[],enabled:true};
    if(mode==='load-error'&&path.endsWith('/methods')){status=503;data={error:'account_unavailable'};}

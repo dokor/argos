@@ -75,6 +75,7 @@ public class AccountOAuthService {
                             .execute();
                     var tx = new AccountOauth();
                     if (intent.equals("link")) {
+                        if (!AccountCsrf.valid(csrf)) throw AccountError.forbidden("csrf_invalid");
                         var context = sessions.require(authorization, csrf, true, true, c);
                         sessions.recent(context);
                         tx.setUserId(context.user().getId());
@@ -147,7 +148,8 @@ public class AccountOAuthService {
             return dao.transaction(
                     c -> {
                         if (tx.getIntent().equals("link")) {
-                            var context = sessions.require(authorization, null, true, true, c);
+                            if (!AccountCsrf.valid(csrf)) throw AccountError.forbidden("csrf_invalid");
+                            var context = sessions.require(authorization, csrf, true, true, c);
                             sessions.recent(context);
                             if (!context.user().getId().equals(tx.getUserId())
                                     || !context.session().getId().equals(tx.getSessionId()))
@@ -232,7 +234,8 @@ public class AccountOAuthService {
                     });
         } catch (RuntimeException failure) {
             if (AccountAuthService.duplicate(failure))
-                throw new AccountError(409, "use_existing_account");
+                throw new AccountError(409, tx.getIntent().equals("link")
+                        ? "method_unavailable" : "use_existing_account");
             throw failure;
         }
     }

@@ -7,7 +7,7 @@ const state=vi.hoisted(()=>({section:"profile",push:vi.fn(),denied:false,invalid
 vi.mock("next/navigation",()=>({useRouter:()=>({push:state.push}),useSearchParams:()=>new URLSearchParams("section="+state.section),usePathname:()=>"/account/settings"}));
 vi.mock("./AccountSession",()=>({useAccountSession:()=>({denied:state.denied,invalidate:state.invalidate})}));
 vi.mock("@/lib/account-client",()=>({accountFetch:vi.fn(),AccountClientError:class extends Error{constructor(public code:string,public status:number){super(code);}}}));
-let methods:{id:string;provider:string}[],providers:string[],calls:string[];
+let methods:{id:string;provider:string;usable?:boolean}[],providers:string[],calls:string[];
 beforeEach(()=>{
  state.section="security";state.denied=false;state.push.mockReset();calls=[];
  methods=[{id:"1",provider:"password"},{id:"2",provider:"github"}];providers=["github","google"];
@@ -15,7 +15,7 @@ beforeEach(()=>{
  vi.mocked(accountFetch).mockReset();vi.mocked(accountFetch).mockImplementation(async(path,method)=>{
   if(method&&method!=="GET"){calls.push(path);return {};}
   if(path==="me")return {displayName:"Camille",email:"fixture@example.com",verified:true};
-  if(path==="methods")return methods;if(path==="auth/providers")return {providers};
+  if(path==="methods")return methods.map(method=>({...method,usable:method.usable??(method.provider==="password"||providers.includes(method.provider))}));if(path==="auth/providers")return {providers};
   if(path==="sessions")return [{id:"3",createdAt:"2026-10-14T08:00:00Z",current:true},{id:"4",createdAt:"2026-10-13T08:00:00Z",current:false}];return {};
  });
 });
@@ -58,6 +58,35 @@ it("does not count an unconfigured linked provider as a usable alternative",asyn
 it("offers only configured providers, keeps unavailable linked methods visible and protects the final access",async()=>{
  state.section="connections";methods=[{id:"2",provider:"github"},{id:"3",provider:"linkedin"}];providers=["github","google"];
  render(<AccountSettings/>);expect(await screen.findByRole("button",{name:"Associer Google"})).toBeEnabled();expect(screen.queryByRole("button",{name:"Associer LinkedIn"})).not.toBeInTheDocument();expect(screen.getByRole("button",{name:"Retirer GitHub"})).toBeDisabled();expect(screen.getByRole("button",{name:"Retirer LinkedIn"})).toBeEnabled();expect(screen.getByText(/temporairement indisponible/)).toBeInTheDocument();
+});
+it("uses the server's usable methods rather than counting a password without credentials",async()=>{
+ state.section="connections";methods=[{id:"1",provider:"password",usable:false},{id:"2",provider:"github",usable:true}];
+ render(<AccountSettings/>);expect(await screen.findByRole("button",{name:"Retirer GitHub"})).toBeDisabled();
+ expect(screen.getByRole("link",{name:"Sécurité",exact:true})).toHaveAttribute("href","/account/settings?section=security");
+});
+it("shows every association at a provider and removes only the confirmed method",async()=>{
+ state.section="connections";methods=[{id:"1",provider:"password"},{id:"2",provider:"github"},{id:"3",provider:"github"}];
+ render(<AccountSettings/>);fireEvent.click(await screen.findByRole("button",{name:"Retirer GitHub · 2"}));
+ const dialog=screen.getByRole("dialog");expect(dialog).toHaveTextContent("Les autres sessions seront déconnectées");
+ fireEvent.change(within(dialog).getByLabelText("Mot de passe actuel"),{target:{value:"synthetic password"}});
+ fireEvent.submit(within(dialog).getByRole("button",{name:"Confirmer et continuer"}).closest("form")!);
+ await waitFor(()=>expect(accountFetch).toHaveBeenCalledWith("methods/3/remove","POST",{confirmed:true}));
+ expect(calls).toEqual(["auth/reauth","methods/3/remove"]);
+});
+it("checks the shared password policy before asking for identity confirmation",async()=>{
+ render(<AccountSettings/>);await screen.findByLabelText("Nouveau mot de passe");
+ fireEvent.change(screen.getByLabelText("Nouveau mot de passe"),{target:{value:"short"}});
+ fireEvent.submit(screen.getByRole("button",{name:"Enregistrer le mot de passe"}).closest("form")!);
+ expect(screen.getByRole("alert")).toHaveTextContent("15 et 128");expect(screen.getByLabelText("Nouveau mot de passe")).toHaveFocus();
+ expect(screen.queryByRole("dialog")).not.toBeInTheDocument();expect(calls).toEqual([]);
+});
+it("does not start linking when the identity proof is refused",async()=>{
+ state.section="connections";const base=vi.mocked(accountFetch).getMockImplementation()!;
+ vi.mocked(accountFetch).mockImplementation(async(...args)=>{if(args[0]==="auth/reauth")throw new AccountClientError("token_invalid",400);return base(...args);});
+ render(<AccountSettings/>);fireEvent.click(await screen.findByRole("button",{name:"Associer Google"}));
+ const dialog=screen.getByRole("dialog");fireEvent.change(within(dialog).getByLabelText("Mot de passe actuel"),{target:{value:"synthetic password"}});
+ fireEvent.submit(within(dialog).getByRole("button",{name:"Confirmer et continuer"}).closest("form")!);
+ expect(await within(dialog).findByRole("alert")).toHaveTextContent("invalide");expect(calls).toEqual([]);
 });
 it("stops before the protected mutation if reauthentication finishes after unmount",async()=>{
  let resolve!:()=>void;const base=vi.mocked(accountFetch).getMockImplementation()!;
