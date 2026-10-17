@@ -942,7 +942,7 @@ class AccountLifecycleIT extends MariaDbReportFixture {
                         List.of("DELETE", "/account/sessions/" + account.context().session().getId()),
                         List.of("POST", "/account/me/archive"))) {
                     var response = http.call(route.getFirst(), route.getLast(), bearer(account),
-                            route.getFirst().equals("GET") ? null : "{}", true);
+                            List.of("GET", "DELETE").contains(route.getFirst()) ? null : "{}", true);
                     assertEquals(401, response.statusCode(), invalidation + " " + route + " " + response.body());
                     assertTrue(response.headers().firstValue("cache-control").orElse("").contains("no-store"));
                     assertEquals("session_invalid", mapper.readTree(response.body()).get("error").asText());
