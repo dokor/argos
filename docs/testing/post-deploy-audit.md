@@ -81,15 +81,29 @@ respecté jusqu'à 30 secondes ; au-delà, le contrôle s'arrête sans réessaye
 tôt. Chaque run dispose de 240 secondes d'attente, avec polling toutes les deux
 secondes. Le job entier est limité à 15 minutes.
 
-## Politique de décision `self-audit-v1`
+## Politique de décision `self-audit-v2`
 
 | Verdict | Condition | Conséquence |
 | --- | --- | --- |
-| `CONTROL_FAILED` (exit 2) | Auth/quota, santé/révision non vérifiée, timeout, run échoué, module incomplet, couverture insuffisante, anti-bot ou rapports incomparables | Job rouge, preuve filtrée, aucun ticket de défaut du site |
+| `CONTROL_FAILED` (exit 2) | Auth/quota, santé/révision non vérifiée, timeout, run échoué, module incomplet hors exception ci-dessous, couverture insuffisante, anti-bot ou rapports incomparables | Job rouge, preuve filtrée, aucun ticket de défaut du site |
 | `SITE_NO_GO` (exit 1) | Au moins un défaut critique mesuré et critique dans les deux audits | Job rouge et synchronisation des tickets |
-| `GO` (exit 0) | Aucun défaut critique confirmé, contrôle complet | Job vert ; les défauts importants confirmés créent aussi des tickets |
+| `GO` (exit 0) | Aucun défaut critique confirmé, contrôle validé avec ses limites explicites | Job vert ; les défauts importants confirmés créent aussi des tickets |
 
-Les huit modules doivent avoir terminé sans état partiel, sauté ou échoué.
+Les huit modules doivent avoir terminé sans état partiel, sauté ou échoué,
+avec une exception strictement bornée : sept modules complets et un module runtime
+partiel dont la seule mesure scorée absente est le poids réseau
+(`runtime.network.bytes_estimated / UNAVAILABLE / CHECK_MISSING / UNKNOWN`).
+Le chargement et les compteurs de requêtes doivent être mesurés. Chaque requête
+échouée doit avoir une observation complète, non tronquée, de type fetch première
+partie avec le seul code `net::ERR_ABORTED` ; les nombres d'observations et
+le compteur doivent coïncider (dix maximum). Les autres contrôles scorés sont
+mesurés ou explicitement non applicables, sans confiance partielle.
+La mesure de poids reste inconnue. La preuve, le log et le résumé Actions
+conservent la limitation `runtime-transfer-size-unavailable-after-fetch-abort`.
+Toute autre mesure absente, panne réseau, collecte partielle ou observation
+incomplète reste un échec technique. Cette exception permet ensuite l'évaluation
+habituelle des défauts mesurés : un critique confirmé reste `SITE_NO_GO`.
+
 La couverture globale et les quatre domaines doivent atteindre 80 %, sans
 statut provisoire. Les empreintes de scoring, de mesure et de périmètre doivent
 être présentes et identiques dans les deux rapports. La page demandée et la
@@ -117,7 +131,9 @@ dans Actions et ne fait ni rollback, ni fusion, ni nouveau déploiement.
 ## Tickets et confidentialité
 
 Une empreinte de la cible et de la clé canonique identifie le ticket à travers
-les déploiements, indépendamment du SHA. Le writer liste toutes les issues
+les déploiements, indépendamment du SHA. Son namespace historique reste
+`self-audit-v1` même lorsque la politique de verdict évolue, afin de retrouver
+les tickets existants. Le writer liste toutes les issues
 ouvertes et fermées du dépôt, avec pagination bornée, sans dépendre de l'index
 de recherche. Il reconnaît uniquement les marqueurs d'issues créées par
 `github-actions[bot]`, ignore les PR et échoue si plusieurs tickets possèdent
@@ -137,8 +153,12 @@ de rapport n'est copié. Le writer valide à nouveau la preuve avant toute écri
 Les rapports complets restent privés dans le compte CI, accessibles à son
 opérateur. Aucun rapport brut ni log Docker n'est téléversé.
 
-L'artefact `self-audit-SERVICE-SHA-ATTEMPT` conserve pendant 14 jours le verdict,
-sa raison technique fixe, les identités runtime et les seuls constats filtrés.
+L'artefact `self-audit-SHA-ATTEMPT` conserve pendant 14 jours le verdict,
+sa raison technique fixe, les identités runtime, les constats filtrés et les
+limitations autorisées. Pour chaque échantillon, `collection` conserve les
+compteurs de modules et les clés/modules/codes autorisés des lacunes de mesure,
+y compris lorsque la décision échoue. Les champs inconnus deviennent
+`OTHER`/`UNKNOWN` ; aucun texte, URL ou identifiant provenant du rapport n'est copié.
 Son nom est conservé dans les outputs du job de contrôle : une relance du seul
 writer reprend cette preuve, tandis qu'un nouveau contrôle publie un nouvel
 artefact sans écraser ni relire celui d'une tentative précédente.
@@ -178,3 +198,8 @@ inaccessible reste inconnue ; le contrôle de complétude conserve sa décision.
 Les fixtures réseau isolées vérifient aussi ces cas avec le vrai Chromium sur
 les runners AMD64 et ARM64. Les rapports historiques restent immuables ; une
 nouvelle collecte après livraison du correctif utilise la nouvelle mesure.
+
+Une requête fetch annulée après ses en-têtes peut conserver un poids inconnu
+même après le passage aux tailles Chromium. La politique v2 traite uniquement
+le cas documenté ci-dessus et conserve cette incertitude dans les rapports.
+Une attente supplémentaire ne permet pas de terminer un transfert déjà annulé.
