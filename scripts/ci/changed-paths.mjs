@@ -21,9 +21,8 @@ const unitTest = path => /\.(test|spec)\.[cm]?[jt]sx?$/.test(path)
 
 export function classify(paths) {
   const matches = predicate => paths === null || paths.some(predicate);
-  const workflow = name => matches(path => path === '.github/workflows/' + name + '.yml');
-  const common = matches(path => path.startsWith('scripts/ci/') || path.startsWith('.github/actions/'))
-    || workflow('changed-paths');
+  const common = matches(path => (path.startsWith('scripts/ci/') && !path.startsWith('scripts/ci/deploy-paths'))
+    || path.startsWith('.github/actions/') || path === '.github/workflows/ci.yml');
   const component = app => matches(path => path.startsWith('apps/' + app + '/') && !documentation(path));
   const production = app => matches(path => path.startsWith('apps/' + app + '/')
     && !documentation(path) && !unitTest(path) && !path.includes('/src/test/')
@@ -43,29 +42,41 @@ export function classify(paths) {
     && !path.endsWith('.test.mjs') && path !== 'scripts/e2e/auth-experience.mjs');
 
   return {
-    api: common || workflow('ci') || contracts || component('api-backend'),
-    frontend: common || workflow('ci') || contracts || npmConfig || component('console-web')
+    api: common || contracts || component('api-backend'),
+    frontend: common || contracts || npmConfig || component('console-web')
       || matches(path => path.startsWith('scripts/release/') || path.startsWith('scripts/check-release-evidence')
-        || path.startsWith('scripts/e2e/acceptance-evidence') || path.startsWith('scripts/e2e/visual-suites')),
-    playwright: common || workflow('ci') || npmConfig || component('playwright-service'),
-    lighthouse: common || workflow('ci') || npmConfig || component('lighthouse-service'),
-    integration: common || workflow('mariadb-integration') || backendProduction || backendFixtures
+        || path.startsWith('scripts/e2e/acceptance-evidence') || path.startsWith('scripts/e2e/visual-suites')
+        || path.startsWith('scripts/ci/deploy-paths') || path === '.github/workflows/deploy.yml'
+        || path === '.github/workflows/post-deploy-audit.yml'),
+    playwright: common || npmConfig || component('playwright-service'),
+    lighthouse: common || npmConfig || component('lighthouse-service'),
+    integration: common || backendProduction || backendFixtures
       || matches(path => path.startsWith('apps/api-backend/src/test/') && path.endsWith('IT.java')),
-    e2e: common || workflow('controlled-e2e') || backendProduction || backendFixtures || frontendProduction
+    e2e: common || backendProduction || backendFixtures || frontendProduction
       || production('playwright-service') || production('lighthouse-service') || production('audit-egress')
       || auditScripts || matches(path => path.endsWith('/ControlledAuditE2eIT.java')),
-    auth: common || workflow('auth-experience') || backendProduction || backendFixtures || frontendProduction
+    auth: common || backendProduction || backendFixtures || frontendProduction
       || dependency('playwright-service') || matches(path => path === 'scripts/e2e/auth-experience.mjs'),
-    security: common || workflow('audit-security') || npmConfig || component('audit-egress')
+    security: common || npmConfig || component('audit-egress')
       || production('playwright-service') || production('lighthouse-service')
       || matches(path => path.startsWith('scripts/security/') || /^infra\/compose\/(audit-egress|playwright-service|lighthouse-service)\//.test(path)),
-    dependency_frontend: common || workflow('dependency-audit') || npmConfig || dependency('console-web'),
-    dependency_playwright: common || workflow('dependency-audit') || npmConfig || dependency('playwright-service'),
-    dependency_lighthouse: common || workflow('dependency-audit') || npmConfig || dependency('lighthouse-service'),
+    dependency_frontend: common || npmConfig || dependency('console-web'),
+    dependency_playwright: common || npmConfig || dependency('playwright-service'),
+    dependency_lighthouse: common || npmConfig || dependency('lighthouse-service'),
   };
 }
 
+export function selectChecks(paths, event) {
+  const checks = classify(paths);
+  // The daily run discovers newly disclosed vulnerabilities without rebuilding
+  // or retesting applications whose source has not changed.
+  if (event === 'schedule') {
+    for (const name of Object.keys(checks)) checks[name] = name.startsWith('dependency_');
+  }
+  return checks;
+}
+
 if (process.env.GITHUB_OUTPUT && process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const result = classify(changedPaths());
+  const result = selectChecks(changedPaths(), process.env.GITHUB_EVENT_NAME);
   for (const [name, enabled] of Object.entries(result)) appendFileSync(process.env.GITHUB_OUTPUT, name + '=' + enabled + '\n');
 }

@@ -7,7 +7,7 @@ ni une autorisation de mise en service ni une certification d'accessibilité.
 
 ## Preuves au commit testé
 
-Le workflow [Controlled audit E2E](../../.github/workflows/controlled-e2e.yml)
+Le job [Controlled audit E2E](../../.github/workflows/ci.yml)
 rejoue les harness existants sur un build de production, une MariaDB 11.4
 jetable et les vrais collecteurs Chromium. Les matrices visuelles sont désormais
 exécutées séparément par [Visual regression](../../.github/workflows/visual-regression.yml).

@@ -1,8 +1,8 @@
 # Auto-audit après déploiement — #94
 
-Les quatre workflows `deploy-*.yml` appellent
+Le workflow [`deploy.yml`](../../.github/workflows/deploy.yml) appelle une seule fois
 [`post-deploy-audit.yml`](../../.github/workflows/post-deploy-audit.yml) après la
-réussite du job `deploy`. Ce contrôle concerne les déploiements de `main` dans
+réussite de tous les services sélectionnés et du nettoyage. Ce contrôle concerne les déploiements de `main` dans
 `dokor/argos`, y compris leurs relances manuelles. Il n'ajoute aucun cron.
 Les PR exécutent uniquement ses tests avec les autres helpers CI.
 
@@ -17,8 +17,8 @@ L'offre est déclarée dans `reference.conf` et reste disponible quand
 `-Dconfig.file` remplace `application.conf` en production. Un `monthly-limit`
 absent ou null sur cette offre signifie réellement illimité ; les offres
 FREE/PREMIUM et les autres comptes conservent leur configuration.
-Chaque contrôle consomme deux analyses ; un commit déployant les quatre
-services peut donc en consommer huit. Une relance consomme deux analyses.
+Chaque contrôle consomme deux analyses au total, même si le commit déploie les
+quatre services. Une relance consomme deux analyses.
 Les autorisations serveur, validations SSRF et quotas habituels restent actifs.
 Une configuration absente ou un refus de quota échoue explicitement.
 Ne pas utiliser un compte personnel. L'offre ne donne aucun droit administrateur
@@ -54,13 +54,14 @@ Une session ouverte est déconnectée à la fin, au mieux de la disponibilité
 du service ; une panne de déconnexion conserve l'expiration normale de session.
 
 Les images sont inspectées par leur ID immuable, jamais par un tag. Le label
-`org.opencontainers.image.revision` du service qui vient d'être déployé doit
-égaler le SHA complet du workflow. Les autres services peuvent légitimement
+`org.opencontainers.image.revision` de chaque service sélectionné doit
+égaler le SHA complet du workflow. Les services non sélectionnés peuvent légitimement
 porter d'autres SHA : leurs révisions sont enregistrées séparément. Les quatre
 conteneurs doivent être démarrés, sans OOM, avec un healthcheck sain s'il existe.
 Les IDs, images, révisions, heures de démarrage et compteurs de redémarrage
-doivent être identiques avant et après les deux audits. Un autre déploiement
-pendant la mesure invalide le contrôle et nécessite une relance.
+doivent être identiques avant et après les deux audits. Le groupe de concurrence global empêche un autre déploiement géré par ce
+workflow pendant la mesure. Un changement externe invalide le contrôle et
+nécessite une relance.
 Le label reste une déclaration du build ; voir la
 [provenance runtime](../release/runtime-provenance.md).
 

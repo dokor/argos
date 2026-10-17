@@ -22,7 +22,7 @@ inventaire avant chaque lot si `main` a avancé.
 | Scoring / couverture | `docs/scoring/measurement-coverage.md`, `docs/scoring/audit-comparison.md` | Préserver la méthode figée et les conditions de comparabilité ; ne pas simplifier depuis la maquette |
 | Preuves | Issue #538 et collecte Lighthouse/Runtime | Étendre la donnée réelle, pas inventer depuis une valeur numérique |
 | Tests | Vitest, tests Java, suites MariaDB et `scripts/e2e/*` | Étendre les suites actuelles, ne pas remplacer le moteur par des mocks pour prouver la concurrence |
-| Livraison | `.github/workflows/ci.yml`, `mariadb-integration.yml`, `controlled-e2e.yml` | Ajouter les chemins/documents/scripts de recette aux gates réellement concernés |
+| Livraison | `.github/workflows/ci.yml` | Ajouter les chemins/documents/scripts de recette aux gates réellement concernés |
 
 ## Différences à traiter explicitement
 

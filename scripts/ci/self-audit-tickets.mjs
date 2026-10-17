@@ -1,23 +1,23 @@
 import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { setTimeout as sleep } from 'node:timers/promises';
-import { SITE, requireControl, ticketInput, ticketMarker } from './self-audit-policy.mjs';
+import { SITE, requireControl, normalizeServices, parseServices, ticketInput, ticketMarker } from './self-audit-policy.mjs';
 
 const END = '<!-- /argos-self-audit -->';
 export function ticketBody(finding, sha, service, runId) {
   return [ticketMarker(finding.key), '## Contrôle Argos après déploiement', '',
     `Constat \`${finding.key}\` confirmé par deux analyses comparables de ${SITE}/.`,
     `Domaine : **${finding.domain}**. Sévérité confirmée : **${finding.severity}**.`, '',
-    `Service déployé : \`${service}\`. Révision observée : \`${sha}\`.`,
+    `Services déployés : ${normalizeServices(service).map(name => '\`' + name + '\`').join(', ')}. Révision observée : \`${sha}\`.`,
     `[Contrôle et preuve filtrée](https://github.com/dokor/argos/actions/runs/${runId}).`, '',
     'Vérifier le contrôle indiqué, corriger sa cause puis confirmer sur le prochain audit.',
     'Les preuves détaillées restent dans le compte CI Argos ; aucun lien porteur de token n’est publié.',
     'Origine : #94. La fermeture est manuelle ; une récidive rouvre ce même ticket.', END].join('\n');
 }
 
-export async function synchronizeTickets({ evidence, sha, service, runId, api }) {
+export async function synchronizeTickets({ evidence, sha, service, services = service, runId, api }) {
   requireControl(typeof runId === 'string' && /^[1-9][0-9]{0,19}$/.test(runId), 'configuration-invalid');
-  const findings = ticketInput(evidence, sha, service);
+  const findings = ticketInput(evidence, sha, services);
   if (!findings.length) return { created: 0, updated: 0 };
   const existing = [];
   // List state=all rather than eventually-consistent search. If pagination is
@@ -35,7 +35,7 @@ export async function synchronizeTickets({ evidence, sha, service, runId, api })
     const matches = existing.filter(issue => typeof issue.body === 'string' && issue.body.includes(marker));
     requireControl(matches.length <= 1, 'ticket-duplicates-exist');
     const issue = matches[0];
-    const block = ticketBody(finding, sha, service, runId);
+    const block = ticketBody(finding, sha, services, runId);
     if (!issue) {
       await api('POST', '/issues', { title: `[Auto-audit] ${finding.key}`, body: block });
       result.created++;
@@ -84,7 +84,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     const raw = readFileSync('outputs/post-deploy-audit.json', 'utf8');
     requireControl(raw.length <= 65536, 'evidence-invalid');
     const result = await synchronizeTickets({ evidence: JSON.parse(raw), sha: process.env.EXPECTED_SHA,
-      service: process.env.DEPLOYED_SERVICE, runId: process.env.GITHUB_RUN_ID, api: githubApi(process.env.GH_TOKEN) });
+      services: parseServices(process.env.DEPLOYED_SERVICES), runId: process.env.GITHUB_RUN_ID, api: githubApi(process.env.GH_TOKEN) });
     console.log(JSON.stringify(result));
   } catch { console.error('Ticket synchronization failed; inspect the filtered control artifact and retry.'); process.exitCode = 2; }
 }

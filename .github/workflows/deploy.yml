@@ -1,0 +1,124 @@
+name: Deploy (Raspberry)
+
+on:
+  workflow_dispatch:
+    inputs:
+      service:
+        description: Service to redeploy
+        type: choice
+        default: all
+        options: [all, api-backend, console-web, playwright-service, lighthouse-service]
+  push:
+    branches: [main]
+    paths:
+      - 'apps/api-backend/**'
+      - 'apps/console-web/**'
+      - 'apps/playwright-service/**'
+      - 'apps/lighthouse-service/**'
+      - 'apps/audit-egress/**'
+      - 'infra/compose/api-backend/**'
+      - 'infra/compose/console-web/**'
+      - 'infra/compose/playwright-service/**'
+      - 'infra/compose/lighthouse-service/**'
+      - '.github/workflows/deploy.yml'
+      - 'scripts/ci/deploy-paths.mjs'
+
+permissions:
+  contents: read
+
+# Keep the deployment and its final observation together across all services.
+concurrency:
+  group: deploy-production
+  queue: max
+  cancel-in-progress: false
+
+jobs:
+  changes:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      services: ${{ steps.paths.outputs.services }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Select services affected by the whole push
+        id: paths
+        env:
+          BASE_SHA: ${{ github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+          DEPLOY_SERVICE: ${{ inputs.service }}
+        run: node scripts/ci/deploy-paths.mjs
+
+  deploy:
+    name: Deploy ${{ matrix.service }}
+    needs: changes
+    if: needs.changes.outputs.services != '[]'
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        service: ${{ fromJSON(needs.changes.outputs.services) }}
+    runs-on: self-hosted
+    permissions:
+      contents: read
+      packages: read
+    env:
+      SERVICE: ${{ matrix.service }}
+      ARGOS_REVISION: ${{ github.sha }}
+      ARGOS_CHROMIUM_SECCOMP_PROFILE: /srv/apps/${{ matrix.service }}/chromium-seccomp.json
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Authenticate to GHCR
+        if: matrix.service == 'api-backend'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify shared Codex runtime access
+        if: matrix.service == 'api-backend'
+        run: docker pull ghcr.io/dokor/codex-runtime:0.156.1-r1
+      - name: Sync service and compose sources
+        run: |
+          mkdir -p "/srv/apps/$SERVICE/src"
+          rsync -a --delete "./apps/$SERVICE/" "/srv/apps/$SERVICE/src/"
+          rsync -a "./infra/compose/$SERVICE/docker-compose.prod.yml" "/srv/apps/$SERVICE/docker-compose.prod.yml"
+          chown -R "$USER:$USER" "/srv/apps/$SERVICE"
+      - name: Sync security gateway sources
+        if: matrix.service != 'console-web'
+        run: |
+          mkdir -p "/srv/apps/$SERVICE/egress"
+          rsync -a --delete ./apps/audit-egress/ "/srv/apps/$SERVICE/egress/"
+      - name: Sync Chromium sandbox profile and ensure shared network
+        if: matrix.service == 'playwright-service' || matrix.service == 'lighthouse-service'
+        run: |
+          rsync -a "./infra/compose/$SERVICE/chromium-seccomp.json" "/srv/apps/$SERVICE/chromium-seccomp.json"
+          docker network inspect argos_internal >/dev/null 2>&1 || docker network create argos_internal
+      - name: Deploy (local build)
+        run: |
+          cd "/srv/apps/$SERVICE"
+          docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
+
+  cleanup:
+    needs: deploy
+    runs-on: self-hosted
+    steps:
+      - name: Cleanup old images once after all builds
+        run: docker image prune -f
+
+  post-deploy-audit:
+    needs: [changes, deploy, cleanup]
+    uses: ./.github/workflows/post-deploy-audit.yml
+    permissions:
+      contents: read
+      issues: write
+    with:
+      services: ${{ needs.changes.outputs.services }}
+    secrets:
+      ARGOS_CI_EMAIL: ${{ secrets.ARGOS_CI_EMAIL }}
+      ARGOS_CI_PASSWORD: ${{ secrets.ARGOS_CI_PASSWORD }}

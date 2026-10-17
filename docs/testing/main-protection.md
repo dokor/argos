@@ -29,7 +29,7 @@ Le test rouge est le seul échec de sa suite : 856 tests réussis, un échec
 La dernière révision de la PR fournit le contrôle positif, avec ses résultats
 CI et sa décision de fusion disponibles sur GitHub.
 
-Le check `auth` se déclenche désormais sur chaque PR et chaque push de `main`,
+Le check `auth` se déclenche dans CI sur chaque PR vers `main`,
 sans filtre de chemins. Il est aussi exigé par le vérificateur de preuves de
 release. Les autres jobs conservent leurs filtres internes : GitHub accepte un
 job explicitement `SKIPPED` ; ce statut diffère d'un check absent. Le dossier
@@ -47,6 +47,7 @@ Références : [rulesets](https://docs.github.com/en/rest/repos/rules),
 
 Les workflows requis restent présents sur chaque PR ; le [routage CI](ci.md)
 sélectionne leurs jobs selon les fichiers modifiés, y compris pour auth,
-MariaDB et la sécurité des collecteurs. Un push main utilise aussi ce filtrage.
-Pour un dossier complet de release, déclencher manuellement les workflows sur
+MariaDB et la sécurité des collecteurs. Après merge, seuls le déploiement et
+le scan des commits intégrés repartent.
+Pour un dossier complet de release, déclencher manuellement `ci.yml` et `secrets.yml` sur
 la même révision candidate ; les statuts sautés ne constituent pas une preuve.
