@@ -1,8 +1,10 @@
 # Argos
 
-Argos analyse n'importe quel site web et produit un rapport scoré, privé et actionnable - sans compte, sans tracking.
+Argos analyse une URL publique et produit un rapport scoré avec des priorités de correction. Un audit peut être lancé sans compte ; l'espace connecté donne accès aux détails, à l'historique et au partage des rapports.
 
-Soumettez une URL, attendez ~20 secondes, récupérez un rapport complet avec un score global (0-100), des priorités triées par impact, et des recommandations concrètes.
+Le délai dépend de la file d'attente et des services d'analyse. La progression se met à jour jusqu'à la publication du rapport ; une collecte indisponible reste signalée dans sa couverture. Voir les [règles d'accès](docs/report/unified-reports.md) et les [promesses publiques](docs/product/public-content.md).
+
+Les mesures produit et d'audience sont optionnelles, désactivées par défaut et soumises au consentement. Leurs finalités et limites sont décrites dans l'[inventaire de confidentialité](docs/product/privacy-inventory.md).
 
 ---
 
@@ -40,14 +42,14 @@ apps/
 ### api-backend
 - Java 21 avec [Plume](https://github.com/Coreoz/Plume) (Guice + Grizzly + Jersey + QueryDSL)
 - MariaDB (via HikariCP + migrations Flyway)
-- Pipeline de huit modules ; SSL Labs et Observatory sont exécutés dans un pool distant borné après HTTP, les autres modules restent séquentiels (voir [progression](docs/analysis/progress.md))
-- Calcul du score par module et score global
+- Pipeline de huit modules après la barrière HTTP, séquentiel par défaut ; une concurrence bornée peut être configurée pour les collecteurs distants, les navigateurs restant séquentiels (voir [progression](docs/analysis/progress.md))
+- Scores par domaine (performance, sécurité, SEO, accessibilité), score global et couverture des mesures
 - Génération des rapports accessibles via token unique (non indexable)
 - Synthèse exécutive optionnelle générée par Codex à partir des résultats Argos normalisés
 
 ### console-web
 - Next.js 16 (App Router), TypeScript, React 19
-- Landing page publique + console privée (dashboard + vue rapport)
+- Site public FR/EN, lecteur de rapport commun, espace connecté et administration par rôle
 - SCSS modules avec tokens partagés (`src/styles/_tokens.scss`)
 - i18n FR / EN via context React
 

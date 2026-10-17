@@ -1,5 +1,10 @@
 # Recette UI — #668, #669, #675 — 16 octobre 2026
 
+Compte rendu historique et captures de cette revue. Pour les commandes et
+comportements actuels, consulter la [recette du rapport](../../../testing/report.md)
+et les [conventions d'interface](../../../ux/public-design.md). Les résultats
+ci-dessous ne valident pas les modifications ultérieures.
+
 Les données `atelier.example` sont fictives. Aucun service de production n’a été appelé.
 
 - #668 : footer commun connecté compact, cinq destinations conservées et localisées ; contact à droite sur desktop et retour à la ligne sur mobile. Le footer public reste distinct.
@@ -11,6 +16,12 @@ Les données `atelier.example` sont fictives. Aucun service de production n’a 
 Validation : build de production et ESLint ciblé réussis. La suite complète a passé 95 fichiers / 878 tests ; les deux échecs provenaient d’une assertion du nouveau test sur les espaces de la formule. Après correction de cette assertion, les cinq fichiers concernés passent (44 tests). Contrôles éditoriaux FR/EN réussis.
 
 Captures avant/après du calcul, exemple en sombre, footer desktop et fil d’Ariane mobile joints dans ce dossier. Les captures de sections masquent uniquement la navigation publique fixe ; la mesure des débordements et les interactions utilisent la page complète.
+
+Captures conservées : [tableau initial](before-table.png),
+[exemple FR mobile](after-example-fr-320-light.png),
+[exemple EN mobile sombre](after-example-en-390-dark.png),
+[footer desktop sombre](after-footer-en-1120-dark.png) et
+[fil d'Ariane mobile sombre](after-breadcrumb-en-320-dark.png).
 
 Reproduction depuis la racine, dans des terminaux distincts :
 
