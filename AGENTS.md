@@ -191,6 +191,11 @@ Le one-liner du rapport est retourné comme clé (`"high"` | `"good"` | `"fair"`
 - Fournir le lien de la PR dans la réponse finale. La création ou la mise à jour de la PR est autorisée pour les changements demandés ; sa fusion et le déploiement nécessitent une demande explicite.
 - Si l'accès distant empêche la création de la PR, conserver les changements et signaler précisément le blocage.
 
+### Identité Git
+- Utiliser exclusivement le compte personnel **dokor** et l'identité Git `dokor <antoinelelouet@msn.com>` pour les contributions à Argos.
+- Avant de créer un commit, vérifier l'auteur et le committer avec `git var GIT_AUTHOR_IDENT` et `git var GIT_COMMITTER_IDENT`. La configuration globale peut désigner un compte professionnel ; configurer l'identité personnelle au niveau local du dépôt si nécessaire.
+- Ne pas attribuer de commit ou de trailer `Co-authored-by` au compte professionnel. Vérifier également les messages préparés pour les PR et les commits de fusion.
+
 ### Nommage Java
 - Classes de service : `XxxService` (logique métier), `XxxDao` (accès DB), `XxxWs` (endpoint REST)
 - Entités QueryDSL générées : ne pas modifier manuellement sauf pour ajouter des champs après migration Flyway
