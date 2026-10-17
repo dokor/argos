@@ -3,7 +3,7 @@ import { pathToFileURL } from 'node:url';
 
 // Each script owns a distinct output directory, so artifacts can be merged safely.
 export const groups = {
-  public: ['connected-cleanup', 'public-header', 'account-history', 'connected-shell', 'connected-evidence'],
+  public: ['connected-cleanup', 'public-header', 'account-history', 'connected-shell', 'connected-evidence', 'navigation-submenus'],
   analysis: ['connected-analysis', 'connected-analysis-recovery', 'connected-overview'],
   account: ['connected-account', 'connected-usage', 'usage-timeline', 'connected-admin'],
   domains: ['connected-domains'],

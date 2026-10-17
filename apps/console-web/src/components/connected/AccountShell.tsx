@@ -17,6 +17,7 @@ import { useAccountSession } from "@/components/account/AccountSession";
 import { EmptyState, PageHeading } from "./Primitives";
 import QuotaSummary from "./QuotaSummary";
 import NavigationIcon from "./NavigationIcon";
+import NavigationGroup from "./NavigationGroup";
 import AccountMenu from "./AccountMenu";
 import WebTip from "@/components/editorial/WebTip";
 import NotificationCenter from "./NotificationCenter";
@@ -40,11 +41,17 @@ export default function AccountShell({ children }: { children: ReactNode }) {
   if (/^\/account\/(sign-in|register|verify|forgot|reset)$/.test(pathname)) return children;
   const isAccount = pathname === "/account/settings";
   const isSites = /^\/account\/(analyses|sites|runs|urls)(\/|$)/.test(pathname);
+  const isDomains = /^\/account\/domains(\/|$)/.test(pathname);
+  const newAnalysis = pathname === "/account/analyses/new";
+  const newDomain = pathname === "/account/domains/new";
+  const groupCopy = c.navGroups;
   const valid = session.ready && !!session.profile && !session.denied;
   const admin = valid && session.profile?.verified && session.profile.admin;
-  const context = pathname === "/account" ? c.overview : pathname.startsWith("/account/admin") ? c.admin : isSites ? c.sites
-    : pathname.startsWith("/account/domains") ? c.domains : pathname === "/account/usage" ? c.usage : pathname === "/account/integrations" ? c.integrations : c.account;
+  const context = pathname === "/account" ? c.overview : pathname.startsWith("/account/admin") ? c.admin : isSites ? groupCopy.analyses
+    : isDomains ? c.domains : pathname === "/account/usage" ? c.usage : pathname === "/account/integrations" ? c.integrations : c.account;
   const close = () => setOpenPath(null);
+  const currentLocation = (href: string, inSection = false): "page" | "location" | undefined =>
+    pathname === href ? "page" : inSection ? "location" : undefined;
   const positionTooltip = (target: EventTarget) => {
     if (!(target instanceof Element)) return;
     const item = target.closest("#account-navigation a, #account-navigation button");
@@ -73,8 +80,18 @@ export default function AccountShell({ children }: { children: ReactNode }) {
           </button>
         </div>
         <Link href="/account" aria-current={pathname === "/account" ? "page" : undefined} onClick={close} aria-label={c.overview}><NavigationIcon name="overview"/><span className={s.navLabel}>{c.overview}</span></Link>
-        <Link href="/account/sites" aria-current={isSites ? "page" : undefined} onClick={close} aria-label={c.sites}><NavigationIcon name="sites"/><span className={s.navLabel}>{c.sites}</span></Link>
-        <Link href="/account/domains" aria-current={pathname.startsWith("/account/domains") ? "page" : undefined} onClick={close} aria-label={c.domains}><NavigationIcon name="domains"/><span className={s.navLabel}>{c.domains}</span></Link>
+        <NavigationGroup label={groupCopy.analyses} href="/account/sites" icon="sites" route={pathname} active={isSites}
+          expandLabel={groupCopy.expandAnalyses} collapseLabel={groupCopy.collapseAnalyses} onNavigate={close}
+          items={[
+            { href: "/account/analyses/new", label: groupCopy.newAnalysis, icon: "add", current: currentLocation("/account/analyses/new") },
+            { href: "/account/sites", label: groupCopy.history, icon: "history", current: currentLocation("/account/sites", isSites && !newAnalysis) },
+          ]}/>
+        <NavigationGroup label={c.domains} href="/account/domains" icon="domains" route={pathname} active={isDomains}
+          expandLabel={groupCopy.expandDomains} collapseLabel={groupCopy.collapseDomains} onNavigate={close}
+          items={[
+            { href: "/account/domains", label: groupCopy.myDomains, icon: "list", current: currentLocation("/account/domains", isDomains && !newDomain) },
+            { href: "/account/domains/new", label: groupCopy.newDomain, icon: "add", current: currentLocation("/account/domains/new") },
+          ]}/>
         <Link href="/account/integrations" aria-current={pathname === "/account/integrations" ? "page" : undefined} onClick={close} aria-label={`${c.integrations} — ${c.soon}`}><NavigationIcon name="integrations"/><span className={s.navLabel}>{c.integrations}<span className={s.soon}>{c.soon}</span></span></Link>
         <div className={s.navBottom}>
           <Link href="/account/settings" aria-current={isAccount ? "page" : undefined} onClick={close} aria-label={c.account}><NavigationIcon name="account"/><span className={s.navLabel}>{c.account}</span></Link>

@@ -9,6 +9,11 @@ const paths = {
   help: "M9 9a3 3 0 1 1 5 2c-2 1-2 2-2 3m0 3v.01M2 12a10 10 0 1 0 20 0 10 10 0 0 0-20 0",
   collapse: "m14 7-5 5 5 5",
   expand: "m10 7 5 5-5 5",
+  chevronDown: "m7 10 5 5 5-5",
+  chevronUp: "m7 14 5-5 5 5",
+  add: "M12 5v14M5 12h14",
+  history: "M3 11a9 9 0 1 1 2.6 7M3 4v7h7M12 7v5l3 2",
+  list: "M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01",
 };
 
 export default function NavigationIcon({ name }: { name: keyof typeof paths }) {
