@@ -49,7 +49,7 @@ public class AccountAnalyticsWs {
         return AccountAuthWs.ok(sessions.with(authorization, null, true, false,
             (context, connection) -> {
                 var audits = analytics.metrics(days, context);
-                return Map.of("audits", audits, "accounts", journey.summary(java.time.Instant.parse(audits.from()), java.time.Instant.parse(audits.until())));
+                return audits.withAccounts(journey.summary(java.time.Instant.parse(audits.from()), java.time.Instant.parse(audits.until())));
             }));
     }
 

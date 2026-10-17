@@ -23,13 +23,12 @@ try {
     await page.getByRole('region', { name: lang === 'fr' ? 'Retours après inscription' : 'Returns after registration', exact: true }).getByText(lang === 'fr' ? 'Indisponible' : 'Unavailable', { exact: true }).waitFor();
     await page.evaluate(() => document.fonts.ready);
     assert.equal(await page.locator('h1').count(), 1);
+    assert.equal(await page.locator('main').count(), 1);
     assert.equal(await page.locator('nav a[href$="/dashboard"]').count(), 0);
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth), false, 'Page overflow');
     assert.ok((await page.locator('main').getByRole('link').first().getAttribute('href')).endsWith('/account/admin'));
-    if (width <= 760) await page.locator('button[aria-controls="site-nav-links site-nav-preferences"]').click();
-    const languageLink = page.locator('nav').first().getByRole('link', { name: lang === 'fr' ? 'English' : 'Français', exact: true });
+    const languageLink = page.getByRole('group', { name: 'Language', exact: true }).getByRole('link', { name: lang === 'fr' ? 'English' : 'Français', exact: true });
     assert.equal(await languageLink.getAttribute('href'), (lang === 'fr' ? '/en' : '') + '/account/admin/analytics');
-    if (width <= 760) await page.keyboard.press('Escape');
     const periodResponse = page.waitForResponse(response => response.url().includes('/api/account/admin/analytics?days=7'));
     await page.getByRole('combobox').selectOption('7');
     await periodResponse;

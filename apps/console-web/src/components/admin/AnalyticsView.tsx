@@ -14,9 +14,10 @@ import s from "./AnalyticsView.module.scss";
 type Counts = Record<"accepted" | "started" | "completed" | "failed" | "pending" | "viewed" | "completedViewed", number>;
 type Delay = { sample: number; excluded: number; medianMs: number | null; p90Ms: number | null; p95Ms: number | null };
 export type ProductMetrics = {
+  accounts?: AccountJourney;
   enabled: boolean; capped: boolean; from: string; until: string; cohort: Counts;
   bySource: { route: string; lang: string; placement: string; counts: Counts }[];
-  byAudience: { audience: string; counts: Counts }[];
+  byAudience?: { audience: string; counts: Counts }[];
   queue: Delay; processing: Delay; endToEnd: Delay;
   events: { event: string; route: string; lang: string; placement: string; error: string; count: number }[];
 };
@@ -27,14 +28,14 @@ export default function AnalyticsView() {
   const [denied, setDenied] = useState(false);
   const onDenied = useCallback(() => setDenied(true), []);
   const onChanged = useCallback(() => setRevision(value => value + 1), []);
-  const [result, setResult] = useState<{ request: string; data: { audits: ProductMetrics; accounts: AccountJourney } | null; error: boolean } | null>(null);
+  const [result, setResult] = useState<{ request: string; data: ProductMetrics | null; error: boolean } | null>(null);
   const allowed = session.ready && !session.denied && session.profile?.verified && session.profile.admin && !denied;
   const request = days + ":" + revision;
   const current = allowed && result?.request === request ? result : null;
   useEffect(() => {
     if (!allowed) return;
     const controller = new AbortController();
-    void accountFetch<{ audits: ProductMetrics; accounts: AccountJourney }>("admin/analytics?days=" + days, "GET", undefined, controller.signal)
+    void accountFetch<ProductMetrics>("admin/analytics?days=" + days, "GET", undefined, controller.signal)
       .then(data => { if (!controller.signal.aborted) setResult({ request, data, error: false }); })
       .catch(error => {
         if (controller.signal.aborted) return;
@@ -44,9 +45,9 @@ export default function AnalyticsView() {
     return () => controller.abort();
   }, [allowed, days, request]);
   const seconds = (value: number | null) => value === null ? c.unavailable : new Intl.NumberFormat(lang, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value / 1000) + " s";
-  const data = current?.data?.audits;
+  const data = current?.data;
 
-  return <><main className={s.main}>
+  return <><div className={s.main}>
     <Link href="/account/admin">{c.back}</Link><h1>{c.title}</h1><p>{c.intro}</p>
     {!session.ready ? <p role="status">{c.loading}</p> : !allowed ? <><p role="alert">{c.denied}</p><Link href="/account/sign-in">{c.signIn}</Link></> : <>
       <AdminNavigation active="analytics" />
@@ -60,7 +61,7 @@ export default function AnalyticsView() {
       {current?.error ? <p role="alert">{c.error}</p> : !data ? <p role="status">{c.loading}</p> : <>
         <p>{c.collection} {data.enabled ? c.enabled : c.disabled} · {data.from} → {data.until}</p>
         {data.capped && <p role="status">{c.cap}</p>}
-        {current?.data?.accounts && <AccountJourneyPanel data={current.data.accounts} />}
+        {data.accounts ? <AccountJourneyPanel data={data.accounts} /> : <p role="status">{c.accountUnavailable}</p>}
         <h2>{c.cohort}</h2><dl>{Object.entries(c.counts).map(([key, label]) => <div key={key}><dt>{label}</dt><dd>{data.cohort[key as keyof Counts]}</dd></div>)}</dl>
         <p>{c.dedup}</p>
         <div className={s.scroll} tabIndex={0} role="region" aria-label={lang === "fr" ? "Audience à la création" : "Audience at creation"}><table><thead><tr><th scope="col">{lang === "fr" ? "Audience à la création" : "Audience at creation"}</th><th scope="col">{c.counts.accepted}</th><th scope="col">{c.counts.completed}</th></tr></thead><tbody>{data.byAudience?.map(row => <tr key={row.audience}><th scope="row">{row.audience === "visitor" ? (lang === "fr" ? "Sans compte" : "Without account") : row.audience === "account" ? (lang === "fr" ? "Avec compte" : "With account") : (lang === "fr" ? "Historique non qualifié" : "Unclassified history")}</th><td>{row.counts.accepted}</td><td>{row.counts.completed}</td></tr>)}</tbody></table></div><h2>{c.delays}</h2>
@@ -77,5 +78,5 @@ export default function AnalyticsView() {
         <h2>{c.events}</h2><p>{c.eventHelp}</p>{!data.events.length ? <p>{c.emptyEvents}</p> : <ul>{data.events.map((row, index) => <li key={index}>{row.event} · {row.route} · {row.lang} · {row.placement} · {row.error} : {row.count}</li>)}</ul>}
       </>}
     </>}
-  </main></>;
+  </div></>;
 }

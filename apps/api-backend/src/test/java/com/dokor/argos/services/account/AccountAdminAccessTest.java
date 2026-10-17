@@ -126,7 +126,13 @@ class AccountAdminAccessTest {
         var journey = mock(com.dokor.argos.services.analytics.AccountJourneyDao.class);
         when(journey.summary(any(), any())).thenReturn(new com.dokor.argos.services.analytics.AccountJourneyDao.Summary(0,0,0,0,0,List.of()));
         var endpoint = new AccountAnalyticsWs(sessions, analytics, mock(com.dokor.argos.services.analytics.ProductMeasurementControl.class), new AccountCsrf(settings), journey);
-        assertEquals(200, endpoint.metrics(30, authorization).getStatus());
+        var response = endpoint.metrics(30, authorization);
+        assertEquals(200, response.getStatus());
+        var summary = (com.dokor.argos.services.analytics.ProductMetrics.Summary) response.getEntity();
+        assertEquals(0, summary.cohort().accepted());
+        assertNotNull(summary.accounts());
+        var json = new com.fasterxml.jackson.databind.ObjectMapper().valueToTree(summary);
+        assertTrue(json.has("cohort")); assertTrue(json.has("accounts")); assertFalse(json.has("audits"));
         for (String state : List.of("USER", "PENDING", "ARCHIVED", "REVOKED", "EXPIRED")) {
             user.setState("ACTIVE"); user.setRole("ADMIN"); session.setRevokedAt(null); session.setExpiresAt(now.plusSeconds(3600));
             switch (state) {

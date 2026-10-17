@@ -75,6 +75,23 @@ class AccountJourneyIT extends MariaDbReportFixture {
         }
     }
 
+    @Test void migrationDoesNotReconstructAccountHistoryOrHistoricalAudience() throws Exception {
+        var old = org.flywaydb.core.Flyway.configure().dataSource(source).cleanDisabled(false).target("35").load();
+        old.clean(); old.migrate();
+        sql("INSERT INTO ARG_ACCOUNT_USER(id,display_name,state,role,offer,created_at) VALUES(101,'Existing','ACTIVE','USER','FREE','2026-01-01')");
+        sql("INSERT INTO ARG_DOMAIN(id,hostname) VALUES(1,'example.test')");
+        sql("INSERT INTO ARG_AUDIT(id,domain_id,input_url,normalized_url) VALUES(1,1,'https://example.test','https://example.test')");
+        sql("INSERT INTO ARG_AUDIT_RUN(id,audit_id,status,owner_user_id) VALUES(1,1,'COMPLETED',101)");
+        sql("INSERT INTO ARG_PRODUCT_AUDIT_ATTR(run_id,source_route,locale,placement,created_at) VALUES(1,'/','fr','form','2026-01-01')");
+        var current = org.flywaydb.core.Flyway.configure().dataSource(source).load();
+        assertEquals(1, current.migrate().migrationsExecuted); current.validate();
+        assertEquals(0, current.migrate().migrationsExecuted);
+        try (var c = source.getConnection(); var q = c.createStatement();
+                var row = q.executeQuery("SELECT audience,(SELECT COUNT(*) FROM ARG_PRODUCT_ACCOUNT_EVENT) FROM ARG_PRODUCT_AUDIT_ATTR")) {
+            assertTrue(row.next()); assertEquals("unknown", row.getString(1)); assertEquals(0, row.getLong(2));
+        }
+    }
+
     @Test void audienceIsRecordedAtCreationAndDoesNotChangeWhenClaimed() throws Exception {
         prepare();
         var analytics = new ProductAnalyticsDao(new TransactionManagerQuerydsl(source, new Configuration(MySQLTemplates.DEFAULT)));

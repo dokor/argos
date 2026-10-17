@@ -13,7 +13,7 @@ vi.mock("@/components/site/SiteFooter", () => ({ default: () => null }));
 const delay = { sample: 0, excluded: 2, medianMs: null, p90Ms: null, p95Ms: null };
 const audits: ProductMetrics = { enabled: false, capped: true, from: "2026-10-01", until: "2026-10-13", cohort: { accepted: 24, started: 22, completed: 18, failed: 2, pending: 4, viewed: 15, completedViewed: 14 }, byAudience: [], bySource: [], queue: delay, processing: delay, endToEnd: delay, events: [] };
 const accounts = { activeAccounts: 0, returningAccounts: 0, activityDays: 0, authentications: 0, claimedReports: 0, cohorts: [] };
-const metrics = { audits, accounts };
+const metrics: ProductMetrics = { ...audits, accounts };
 beforeEach(() => { session.ready = true; session.denied = false; session.profile = { verified: true, admin: true }; api.mockReset().mockResolvedValue(metrics); });
 
 it.each(["fr", "en"] as const)("renders metrics, empty results and unavailable delays in %s", async lang => {
@@ -58,4 +58,12 @@ it("denies and removes the controls after a backend role refusal", async () => {
   render(<AnalyticsView />);
   await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("administrateur"));
   expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
+});
+
+it("keeps existing audit metrics visible while the backend has no account extension", async () => {
+  api.mockResolvedValue(audits);
+  render(<AnalyticsView />);
+  await screen.findByText("24");
+  expect(screen.getByText("Mesures du parcours compte indisponibles sur cette version du service.")).toBeInTheDocument();
+  expect(screen.queryByText("Du compte au premier usage")).not.toBeInTheDocument();
 });
