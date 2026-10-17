@@ -2,6 +2,11 @@
 
 Référence : `argos-rapport-unifie.html`, validée dans la conversation du 15 octobre 2026. SHA-256 : `041d6db997def3b1974ecaa4fd2a96222791850a85c2255dc9db1650c0d4d413`.
 
+Cette comparaison est un relevé figé, conservé à son chemin avec ses captures et
+résultats. Elle ne décrit pas automatiquement le rendu courant. Pour modifier le
+lecteur ou rejouer sa validation, partir du [contrat actuel](../report/unified-reports.md)
+et de la [recette web/PDF](../testing/report.md).
+
 À gauche : captures de la maquette originale dans un iframe isolé. À droite : **build de production Next.js**, vraies routes avec une API locale fictive. La largeur du conteneur de référence est ajustée à celle du rapport réel (écart inférieur à 2 px). Aucun CSS du produit n'est remplacé pour la capture. Les captures portent sur le corps du rapport ; la navigation extérieure du compte reste celle de l'application.
 
 | Variante / fenêtre | Maquette validée | Application corrigée |

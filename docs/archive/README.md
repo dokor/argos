@@ -34,6 +34,19 @@ Le [JSON V1](../release/v1-evidence-2026-10-05.json) reste à son chemin d'origi
 la suite `scripts/check-release-evidence.test.mjs` l'utilise comme fixture historique
 pour vérifier qu'un dossier incomplet reste NO_GO.
 
+## Rapports et interface
+
+| Date | Compte rendu | Référence maintenue |
+| --- | --- | --- |
+| 15 octobre 2026 | [Intégration du rapport unifié, PR #644](report/integration-644-2026-10-15.md) | [Contrat d'accès et mesures](../report/unified-reports.md), [recette web/PDF](../testing/report.md) |
+| 15 octobre 2026 | [Revue Clarté, #590–#592](../connected-space/evidence/clarte-590-592/README.md) et [#593–#598](../connected-space/evidence/clarte-593-598/README.md), conservées avec leurs captures | [Dossier connecté](../connected-space/README.md), [règles communes](../connected-space/domain-common-metric.md) |
+| 15 octobre 2026 | [Revue du diagnostic et des menus, #635–#637](../connected-space/review-635-637.md) | [Diagnostic des collecteurs](../analysis/security-collector-diagnostics.md), [navigation connectée](../connected-space/navigation-submenus.md) |
+| 16 octobre 2026 | [Footer, navigation et méthode du score, #668/#669/#675](ui/issues-668-669-675-2026-10-16/README.md), avec ses cinq captures | [Recette du rapport et de la navigation mobile](../testing/report.md), [conventions d'interface](../ux/public-design.md) |
+
+La [comparaison visuelle à la maquette du 15 octobre](../report-fidelity/README.md)
+reste à son chemin avec ses références, captures et résultats figés. Ce relevé
+ne remplace pas une recette sur le code courant.
+
 ## Conservation
 
 - Archiver un bilan daté en conservant ses résultats, limites, date et périmètre.

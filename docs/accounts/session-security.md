@@ -65,7 +65,7 @@ refusés sur toutes les opérations authentifiées, renouvellement compris.
 | GET `/audits`, `/audits/runs/{id}`, `/audits/{id}/history`, `/audits/{id}/history/{runId}/comparison`, `/audits/runs/{id}/report` | Accès administratif serveur distinct `ADMIN_API_TOKEN` ; un JWT utilisateur ou cookie admin ne le remplace pas |
 
 Les extensions du socle gardent leurs matrices spécialisées :
-[sites](sites-contract.md), [historique et comparaison](history-validation.md),
+[sites](sites-contract.md), [historique et comparaison](history.md),
 [usage](usage-contract.md), [administration explicite](administration-contract.md),
 [partage des rapports](../security/report-credentials.md) et
 [retours utilisateurs](../feedback/contract.md). Les routes privées supplémentaires

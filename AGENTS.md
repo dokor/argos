@@ -1,6 +1,6 @@
 # Argos - Instructions pour agents IA
 
-Argos est un outil d'audit de site web : l'utilisateur soumet une URL, huit modules d'analyse produisent un rapport scoré accessible par un lien privé. Le délai dépend des services distants. Voir les contrats actifs dans [docs/README.md](docs/README.md) et l'[inventaire de maintenance](docs/maintenance.md).
+Argos est un outil d'audit de site web : l'utilisateur soumet une URL publique, huit modules d'analyse produisent un rapport scoré. Le lien public donne accès à la synthèse ; les détails et le partage suivent les [règles d'accès](docs/report/unified-reports.md). Le délai dépend de la file et des services d'analyse. Voir les contrats actifs dans [docs/README.md](docs/README.md) et l'[inventaire de maintenance](docs/maintenance.md).
 
 ---
 
@@ -129,26 +129,27 @@ Les Route Handlers BFF, y compris les routes dynamiques des comptes/admin, sont 
 ### Composants rapport (`src/components/report/`)
 | Composant | Rôle |
 |---|---|
-| `ReportHero` | Score global, compteurs critiques/important/opportunités (source : `issues`), one-liner i18n |
-| `PriorityCards` | Top 6 actions recommandées (source : `summary.priorities`) |
+| `ReportHero` | Identité et périmètre, score, couverture, verdict et compteurs du modèle de lecture |
+| `ReportPriorityList` | Trois priorités en vue d'ensemble, six au plus dans le plan d'action (source : `summary.priorities`) |
 | `ScoreGrid` | Grille des scores par catégorie |
 | `IssuesByCategory` | Liste filtrée des issues groupées par catégorie |
-| `AuditProgressView` | Vue de progression avec polling toutes les 1,5 s + statut par module |
+| `ObservedMeasurements` | Mesures collectées ; une donnée absente reste « Non mesuré » et zéro reste une mesure |
+| `AuditProgressView` | Polling des modules et de la publication ; intervalles et plafond définis dans le composant |
 
 **Règle de cohérence des compteurs** :
-- `ReportHero` compte les sévérités depuis `report.issues` (pas `priorities`) : `info` → affiché comme "Opportunités"
-- `PriorityCards` utilise exclusivement `report.summary.priorities`
-- Ces deux listes sont distinctes et ne doivent pas être confondues
+- `buildReportModel` déduplique les constats de `report.issues` et fournit les compteurs à `ReportHero` : `info` → affiché comme "Opportunités". Les comptes stockés par catégorie ne remplacent pas cette projection.
+- `ReportPriorityList` utilise `report.summary.priorities` et résout ses liens avec ce même modèle.
+- Ces populations sont distinctes ; respecter le [modèle de lecture](docs/report/read-model.md) et les [compteurs canoniques](docs/report/canonical-finding-counts.md), y compris pour les exports.
 
 ### i18n
 Clés de traduction dans `src/lib/i18n/fr.json` et `en.json` :
 `layout`, `nav`, `landing`, `report`, `auditForm`, `account`, `langToggle`
 
-Le one-liner du rapport est retourné comme clé (`"high"` | `"good"` | `"fair"` | `"low"`) par le backend et traduit côté frontend via `t.report.hero.oneLiner[key]`.
+Le verdict visible du rapport est déterministe : `ReportHero` utilise les constats canoniques, la disponibilité du score et les textes FR/EN de `decisionCopy.ts`. Ne pas le remplacer par une synthèse générée non validée ; voir les [règles de lecture](docs/report/read-model.md).
 
 ### SEO / Indexabilité
 - `src/app/robots.ts` - crawl autorisé sur `/`, API bloquée ; comptes et rapports portent noindex
-- `src/app/sitemap.ts` - homepage uniquement, changeFrequency weekly
+- `src/app/sitemap.ts` - pages publiques déclarées (accueil, acquisition, ressources, guides, exemple et informations), avec variantes FR/EN et alternates ; comptes et rapports privés exclus
 - `src/app/layout.tsx` - métadonnées OG complètes, JSON-LD `WebApplication`, `manifest.json`
 - Les segments `/account` et `/en/account` ont des `layout.tsx` avec `robots: { index: false }` (les pages `"use client"` ne peuvent pas exporter `metadata`)
 - `public/og.png` - image OG 1200×630 générée avec Pillow (script `outputs/gen_og.py`)
