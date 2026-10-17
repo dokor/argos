@@ -7,7 +7,7 @@ import java.util.HexFormat;
 
 /** Bump when collector semantics/configuration change; independent of scoring weights. */
 public final class MeasurementContract {
-    public static final String VERSION = "analysis-measurements-v5";
+    public static final String VERSION = "analysis-measurements-v6";
     private MeasurementContract() {}
     public static String fingerprint(String profileSnapshot) {
         return digest(VERSION + "\n" + (profileSnapshot == null ? "default" : profileSnapshot));

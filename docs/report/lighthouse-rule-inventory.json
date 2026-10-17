@@ -388,7 +388,7 @@
           "group": "insights"
         }
       ],
-      "content": "explicit-fallback-fr-en",
+      "content": "specific-fr-en",
       "selection": "conditional-at-runtime"
     },
     {
@@ -744,7 +744,7 @@
           "group": "insights"
         }
       ],
-      "content": "explicit-fallback-fr-en",
+      "content": "specific-fr-en",
       "selection": "conditional-at-runtime"
     },
     {
@@ -944,7 +944,7 @@
           "group": "insights"
         }
       ],
-      "content": "explicit-fallback-fr-en",
+      "content": "specific-fr-en",
       "selection": "conditional-at-runtime"
     },
     {

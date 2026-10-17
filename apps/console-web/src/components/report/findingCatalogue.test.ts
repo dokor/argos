@@ -8,7 +8,7 @@ describe("versioned bilingual content", () => {
     const font = { ...issue, id: 'lighthouse.audit.font-display-insight', title: 'Affichage de la police' };
     expect(findingContent(font, 'fr').title).toBe('Affichage des polices à vérifier');
     expect(findingContent(font, 'en').title).toBe('Review font display');
-    expect(findingContent(font, 'fr').impact).toContain('n’est pas documenté');
+    expect(findingContent(font, 'fr').impact).toContain('peut retarder la lecture');
     expect(font.title).toBe('Affichage de la police');
   });
   it("preserves distinct titles and corrections in shared groups in both languages", () => {

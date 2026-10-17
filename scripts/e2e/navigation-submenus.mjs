@@ -1,3 +1,4 @@
+import { injectAxe } from './inject-axe.mjs';
 import assert from 'node:assert/strict';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { chromium } from '../../apps/playwright-service/node_modules/playwright/index.mjs';
@@ -47,7 +48,7 @@ try {
         return { label: node.getAttribute('aria-label'), width: rect.width, height: rect.height };
       }));
       assert.ok(boxes.every(box => box.width >= 44 && box.height >= 44), JSON.stringify(boxes));
-      await page.addScriptTag({ path: 'apps/console-web/node_modules/axe-core/axe.min.js' });
+      await injectAxe(page);
       const violations = await page.evaluate(async () => (await window.axe.run(document.querySelector('[data-connected-shell]'), {
         runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21aa'] },
       })).violations.map(item => ({ id: item.id, targets: item.nodes.map(node => node.target) })));

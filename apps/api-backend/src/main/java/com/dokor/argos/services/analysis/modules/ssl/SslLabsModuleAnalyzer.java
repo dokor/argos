@@ -233,10 +233,12 @@ public class SslLabsModuleAnalyzer {
         // ssl.certificate.expiry_days
         if (notAfterMs > 0) {
             long diffMs = notAfterMs - nowMs;
-            long expiryDays = diffMs / (1000L * 60 * 60 * 24);
+            long expiryDays = Math.floorDiv(diffMs, 1000L * 60 * 60 * 24);
 
             AuditStatus expiryStatus;
-            if (expiryDays > 60) {
+            // ACME certificates commonly last 90 days and renew in the last 30.
+            // A 60-day warning penalizes healthy certificates before renewal is due.
+            if (expiryDays > 30) {
                 expiryStatus = AuditStatus.PASS;
             } else if (expiryDays >= 15) {
                 expiryStatus = AuditStatus.WARN;
@@ -256,7 +258,7 @@ public class SslLabsModuleAnalyzer {
                 expiryDays,
                 Map.of("expiryDays", expiryDays, "notAfterMs", notAfterMs),
                 "Le certificat SSL expire dans " + expiryDays + " jour(s).",
-                expiryDays < 60 ? "Renouvelez le certificat SSL avant son expiration." : null
+                expiryStatus != AuditStatus.PASS ? "Vérifiez le renouvellement automatique ou renouvelez le certificat SSL avant son expiration." : null
             ));
         } else {
             // Date d'expiration indisponible => INFO (inconnu), pas WARN (qui suggérerait

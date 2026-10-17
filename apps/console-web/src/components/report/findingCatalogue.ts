@@ -4,15 +4,15 @@ import { describeObservation, findingQualification, missingLocation } from "./fi
 import { findingPlaybook } from "./findingPlaybooks";
 import { findingExplanation } from "./findingExplanation";
 
-export const CATALOGUE_VERSION = "report-content-v7";
+export const CATALOGUE_VERSION = "report-content-v8";
 export type FindingContent = { title: string; observation: string; impact: string; recommendation: string; verification: string; qualification: string; missingInformation: string };
 type Copy = [title: string, impact: string];
 const catalogue: Record<string, Record<Lang, Copy>> = {};
 function add(keys: string[], fr: Copy, en: Copy) { for (const key of keys) catalogue[key] = { fr: [...fr], en: [...en] }; }
 
 add(["lighthouse.audit.font-display-insight"],
-  ["Affichage des polices à vérifier", "L’effet sur les utilisateurs n’est pas documenté pour ce contrôle ; le vérifier sur le parcours concerné."],
-  ["Review font display", "The effect on users is not documented for this check; verify it in the affected journey."]);
+  ["Affichage des polices à vérifier", "Attendre une police distante peut retarder la lecture ; son remplacement peut déplacer le texte. Vérifier ces effets sur la page."],
+  ["Review font display", "Waiting for a remote font can delay reading; replacing it can move text. Check these effects on the page."]);
 
 add(["lighthouse.audit.largest-contentful-paint"],
   ["L’affichage du contenu principal est à examiner", "Une attente prolongée peut retarder la lecture de la page."],
@@ -219,6 +219,12 @@ add(["lighthouse.audit.lcp-discovery-insight"],
 add(["lighthouse.audit.lcp-breakdown-insight"],
   ["Les phases d’affichage du contenu principal sont à examiner", "La décomposition du LCP aide à chercher quelle phase retarde l’affichage."],
   ["Review the phases leading to main content display", "The LCP breakdown helps investigate which phase delays display."]);
+add(["lighthouse.audit.image-delivery-insight"],
+  ["Le poids des images téléchargées est à examiner", "Des images plus lourdes que nécessaire peuvent prolonger le téléchargement, notamment sur une connexion limitée."],
+  ["Review downloaded image size", "Images larger than necessary can prolong downloads, especially on a limited connection."]);
+add(["lighthouse.audit.cache-insight"],
+  ["La réutilisation des ressources en cache est à vérifier", "Télécharger à nouveau des fichiers inchangés peut augmenter le transfert lors des visites suivantes."],
+  ["Review cached resource reuse", "Downloading unchanged files again can increase transfer on subsequent visits."]);
 export const supportedFindingKeys = Object.keys(catalogue);
 export function cleanEvidence(text?: string | null): string {
   return (text ?? "").replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f\u202a-\u202e\u2066-\u2069]/g, "")

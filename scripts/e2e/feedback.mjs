@@ -1,3 +1,4 @@
+import { injectAxe } from './inject-axe.mjs';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
@@ -13,7 +14,7 @@ const output='outputs/feedback-browser';await mkdir(output,{recursive:true});
 const browser=await chromium.launch({headless:true,...(process.env.ARGOS_BROWSER_EXECUTABLE?{executablePath:process.env.ARGOS_BROWSER_EXECUTABLE}:{})});
 const evidence=[];
 async function accessibility(page) {
-  await page.addScriptTag({path:'apps/console-web/node_modules/axe-core/axe.min.js'});
+  await injectAxe(page);
   const issues=await page.evaluate(async()=> (await window.axe.run(document.querySelector('dialog[open]') ?? document.querySelector('main'),{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}})).violations);
   assert.deepEqual(issues.map(issue=>({id:issue.id,nodes:issue.nodes.length})),[]);
 }

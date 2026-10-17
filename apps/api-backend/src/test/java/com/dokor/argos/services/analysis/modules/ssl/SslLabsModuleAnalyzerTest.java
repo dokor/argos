@@ -7,6 +7,8 @@ import com.dokor.argos.services.analysis.model.AuditModuleResult;
 import com.dokor.argos.services.analysis.model.enums.AuditStatus;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.slf4j.LoggerFactory;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -21,6 +23,24 @@ import static org.mockito.Mockito.when;
  * « indisponible/inconnu » (INFO, non scoré) vs « médiocre » (WARN/FAIL) - issue #100.
  */
 class SslLabsModuleAnalyzerTest {
+    @ParameterizedTest
+    @CsvSource({"90,PASS", "61,PASS", "60,PASS", "39,PASS", "31,PASS", "30,WARN", "15,WARN", "14,FAIL", "0,FAIL", "-1,FAIL"})
+    void expiryWarningsStartInTheRenewalWindow(long days, AuditStatus expected) throws Exception {
+        // The half-day margin keeps the boundary stable while analyze() reads its clock.
+        long notAfter = java.time.Instant.now().plusSeconds(days * 86400 + 43200).toEpochMilli();
+        var expiry = check(analyze("""
+            {"status":"READY","certs":[{"id":"leaf","issues":0,"notAfter":%d}],
+             "endpoints":[{"grade":"A","statusMessage":"Ready","details":{
+               "certChains":[{"certIds":["leaf"],"noSni":false}]}}]}
+            """.formatted(notAfter)), "ssl.certificate.expiry_days");
+        assertEquals(expected, expiry.status());
+        assertEquals(days, expiry.value());
+        assertEquals(true, expiry.scorable());
+        assertEquals(notAfter, expiry.details().get("notAfterMs"));
+        if (expected == AuditStatus.PASS) assertNull(expiry.recommendation());
+        else org.junit.jupiter.api.Assertions.assertNotNull(expiry.recommendation());
+    }
+
     @Test void v3CertificatesAreResolvedByLeafIdNotArrayOrder() throws Exception {
         var result = analyze("""
             {"status":"READY","certs":[
