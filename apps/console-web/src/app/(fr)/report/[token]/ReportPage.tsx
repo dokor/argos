@@ -1,7 +1,7 @@
 "use client";
 import {useEffect,useMemo,useState,type ReactNode} from "react";
 import {usePathname} from "next/navigation";
-import ReportFeedback,{FeedbackReportContext} from "@/components/feedback/ReportFeedback";
+import {FeedbackReportContext} from "@/components/feedback/ReportFeedback";
 import type {FeedbackReference} from "@/lib/feedback-request";
 import {accountFetch} from "@/lib/account-client";
 import {buildReportModel, type FindingSelection} from "@/components/report/reportModel";
@@ -15,7 +15,6 @@ import {reportReadingCopy} from "@/components/report/reportReadingCopy";
 import ScoreGrid from "@/components/report/ScoreGrid";
 import ReportPriorityList from "@/components/report/ReportPriorityList";
 import IssuesByCategory from "@/components/report/IssuesByCategory";
-import AccessibilitySection from "@/components/report/AccessibilitySection";
 import ObservedMeasurements from "@/components/report/ObservedMeasurements";
 import ScopedRelaunch from "@/components/report/ScopedRelaunch";
 import HostingSummary from "@/components/report/HostingSummary";
@@ -58,7 +57,7 @@ export default function ReportPage({params,feedbackReference,embedded=false,shar
   const reference=feedbackReference??(!shared&&token?{reportToken:token}:undefined);
   const Content=demo?"div":"main";
   return <FeedbackReportContext.Provider value={reference}><div className={s.page+" "+(embedded?s.embedded:"")} id={demo?undefined:"top"}>
-    {!embedded&&!demo&&<ReportHeader signedIn={!locked}/>}
+    {!embedded&&!demo&&<ReportHeader signedIn={!locked} feedbackReference={reference}/>}
     <Content className={s.main}>
       <ReportHero demo={demo} report={report} model={model} introduction={locked?null:note} onSelectFinding={selectFinding} onActions={()=>reading.navigate({view:"actions",anchor:""})} onMethod={locked?undefined:()=>setMethodOpen(true)}
         context={runId&&!shared&&!locked&&!demo?<nav className={s.breadcrumb} aria-label={fr?"Fil d’Ariane":"Breadcrumb"}><ol><li><Link href="/account/sites">{fr?"Mes sites":"My sites"}</Link></li><li><span aria-hidden="true">/</span><span aria-current="page">{fr?"Rapport enregistré":"Saved report"}</span></li></ol></nav>:<span>{shared?(fr?"Rapport partagé · Lecture seule · Historique du propriétaire non partagé":"Shared report · Read only · Owner history not shared"):demo?(fr?"Exemple · Données fictives":"Example · Fictional data"):(fr?"Votre analyse est prête":"Your analysis is ready")}</span>}
@@ -74,10 +73,9 @@ export default function ReportPage({params,feedbackReference,embedded=false,shar
         <ScoreGrid compact categories={report.scores.byCategory} model={model} coverage={report.scores.coverage} onSelectDomain={domain=>reading.navigate({view:"technical",domain,severity:"all",anchor:""})}/>
         <ObservedMeasurements report={report} lang={lang}/>
         <ReportPriorityList priorities={report.summary.priorities} model={model} onSelectFinding={selectFinding} locked={locked} onDetails={()=>reading.navigate({view:"technical",anchor:""})}/>
-      </section>:locked?<ReportAccountPrompt shared={shared}/>:reading.view==="actions"?<section className={s.view} id="report-actions" aria-label={copy.actions}><ReportPriorityList priorities={report.summary.priorities} model={model} onSelectFinding={selectFinding} limit={6} onDetails={()=>reading.navigate({view:"technical",anchor:""})}/></section>:<section className={s.view} id="report-technical" aria-label={copy.technical}><IssuesByCategory report={report} model={model} selection={selection} domain={reading.domain} severity={reading.severity} onFilterChange={(domain,severity)=>reading.navigate({domain,severity,anchor:""})}/><AccessibilitySection report={report}/></section>}
+      </section>:locked?<ReportAccountPrompt shared={shared}/>:reading.view==="actions"?<section className={s.view} id="report-actions" aria-label={copy.actions}><ReportPriorityList priorities={report.summary.priorities} model={model} onSelectFinding={selectFinding} limit={6} onDetails={()=>reading.navigate({view:"technical",anchor:""})}/></section>:<section className={s.view} id="report-technical" aria-label={copy.technical}><IssuesByCategory report={report} model={model} selection={selection} domain={reading.domain} severity={reading.severity} onFilterChange={(domain,severity)=>reading.navigate({domain,severity,anchor:""})}/></section>}
       {!locked&&!shared&&!demo&&<ReportIntroductionEditor key={token} token={token} model={model} onPublished={note=>setNoteState({report,note})}/>}
       {!locked&&<ReportMethod report={report} model={model} open={methodOpen} onToggle={setMethodOpen}/>}
-      {!demo&&!shared&&<ReportFeedback/>}
     </Content>
   </div></FeedbackReportContext.Provider>;
 }

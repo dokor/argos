@@ -9,6 +9,7 @@ import { useAccountNav } from "@/lib/useAccountNav";
 import ArgosIcon from "@/components/ArgosIcon";
 import LangToggle from "@/components/LangToggle";
 import ThemeToggle from "@/components/ThemeToggle";
+import FeedbackButton from "@/components/feedback/FeedbackButton";
 import s from "./SiteChrome.module.scss";
 
 /** Navigation commune à toutes les pages, sauf les rapports. */
@@ -53,6 +54,7 @@ export default function SiteNav() {
             </svg>
             <span>{accountLabel}</span>
           </Link>
+          <FeedbackButton variant="icon" className={s.feedbackAccess} />
           <div id="site-nav-preferences" className={s.navPreferences}>
             <ThemeToggle />
             <LangToggle />

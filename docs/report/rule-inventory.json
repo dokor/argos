@@ -8,7 +8,7 @@
     "weight": 1,
     "domain": "seo",
     "owner": "html",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Snapshot HTML reçu sans exécution JS ; présence/état/valeur des métadonnées, longueur du titre, h1Count, imgCount et imgAltMissingCount, anchorCount et noHrefCount selon la clé.",
     "content": "specific-fr-en",
     "detection": {
@@ -28,7 +28,7 @@
     "weight": 2,
     "domain": "a11y",
     "owner": "html",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Snapshot HTML reçu sans exécution JS ; présence/état/valeur des métadonnées, longueur du titre, h1Count, imgCount et imgAltMissingCount, anchorCount et noHrefCount selon la clé.",
     "content": "specific-fr-en",
     "detection": {
@@ -45,7 +45,7 @@
     "weight": 0,
     "domain": "html",
     "owner": "html",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Snapshot HTML reçu sans exécution JS ; présence/état/valeur des métadonnées, longueur du titre, h1Count, imgCount et imgAltMissingCount, anchorCount et noHrefCount selon la clé.",
     "content": "explicit-fallback-fr-en",
     "detection": null,
@@ -61,7 +61,7 @@
     "weight": 1,
     "domain": "a11y",
     "owner": "html",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Snapshot HTML reçu sans exécution JS ; présence/état/valeur des métadonnées, longueur du titre, h1Count, imgCount et imgAltMissingCount, anchorCount et noHrefCount selon la clé.",
     "content": "specific-fr-en",
     "detection": {
@@ -80,7 +80,7 @@
     "weight": 3,
     "domain": "seo",
     "owner": "html",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Snapshot HTML reçu sans exécution JS ; présence/état/valeur des métadonnées, longueur du titre, h1Count, imgCount et imgAltMissingCount, anchorCount et noHrefCount selon la clé.",
     "content": "specific-fr-en",
     "detection": {
@@ -101,7 +101,7 @@
     "weight": 4,
     "domain": "a11y",
     "owner": "html",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Snapshot HTML reçu sans exécution JS ; présence/état/valeur des métadonnées, longueur du titre, h1Count, imgCount et imgAltMissingCount, anchorCount et noHrefCount selon la clé.",
     "content": "specific-fr-en",
     "detection": {
@@ -120,7 +120,7 @@
     "weight": 2,
     "domain": "a11y",
     "owner": "html",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Snapshot HTML reçu sans exécution JS ; présence/état/valeur des métadonnées, longueur du titre, h1Count, imgCount et imgAltMissingCount, anchorCount et noHrefCount selon la clé.",
     "content": "specific-fr-en",
     "detection": {
@@ -139,7 +139,7 @@
     "weight": 2,
     "domain": "seo",
     "owner": "html",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Snapshot HTML reçu sans exécution JS ; présence/état/valeur des métadonnées, longueur du titre, h1Count, imgCount et imgAltMissingCount, anchorCount et noHrefCount selon la clé.",
     "content": "specific-fr-en",
     "detection": {
@@ -158,7 +158,7 @@
     "weight": 2,
     "domain": "seo",
     "owner": "html",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Snapshot HTML reçu sans exécution JS ; présence/état/valeur des métadonnées, longueur du titre, h1Count, imgCount et imgAltMissingCount, anchorCount et noHrefCount selon la clé.",
     "content": "specific-fr-en",
     "detection": {
@@ -177,7 +177,7 @@
     "weight": 3,
     "domain": "seo",
     "owner": "html",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Snapshot HTML reçu sans exécution JS ; présence/état/valeur des métadonnées, longueur du titre, h1Count, imgCount et imgAltMissingCount, anchorCount et noHrefCount selon la clé.",
     "content": "specific-fr-en",
     "detection": {
@@ -196,7 +196,7 @@
     "weight": 2,
     "domain": "seo",
     "owner": "html",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Snapshot HTML reçu sans exécution JS ; présence/état/valeur des métadonnées, longueur du titre, h1Count, imgCount et imgAltMissingCount, anchorCount et noHrefCount selon la clé.",
     "content": "specific-fr-en",
     "detection": {
@@ -215,7 +215,7 @@
     "weight": 2,
     "domain": "a11y",
     "owner": "html",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Snapshot HTML reçu sans exécution JS ; présence/état/valeur des métadonnées, longueur du titre, h1Count, imgCount et imgAltMissingCount, anchorCount et noHrefCount selon la clé.",
     "content": "specific-fr-en",
     "detection": {
@@ -234,7 +234,7 @@
     "weight": 1,
     "domain": "seo",
     "owner": "html",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Snapshot HTML reçu sans exécution JS ; présence/état/valeur des métadonnées, longueur du titre, h1Count, imgCount et imgAltMissingCount, anchorCount et noHrefCount selon la clé.",
     "content": "specific-fr-en",
     "detection": {
@@ -253,7 +253,7 @@
     "weight": 1,
     "domain": "seo",
     "owner": "html",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Snapshot HTML reçu sans exécution JS ; présence/état/valeur des métadonnées, longueur du titre, h1Count, imgCount et imgAltMissingCount, anchorCount et noHrefCount selon la clé.",
     "content": "specific-fr-en",
     "detection": {
@@ -272,7 +272,7 @@
     "weight": 1,
     "domain": "seo",
     "owner": "html",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Snapshot HTML reçu sans exécution JS ; présence/état/valeur des métadonnées, longueur du titre, h1Count, imgCount et imgAltMissingCount, anchorCount et noHrefCount selon la clé.",
     "content": "specific-fr-en",
     "detection": {
@@ -292,7 +292,7 @@
     "weight": 4,
     "domain": "seo",
     "owner": "html",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Snapshot HTML reçu sans exécution JS ; présence/état/valeur des métadonnées, longueur du titre, h1Count, imgCount et imgAltMissingCount, anchorCount et noHrefCount selon la clé.",
     "content": "specific-fr-en",
     "detection": {
@@ -311,7 +311,7 @@
     "weight": 2,
     "domain": "performance",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -328,7 +328,7 @@
     "weight": 0,
     "domain": "http",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "explicit-fallback-fr-en",
     "detection": null,
@@ -344,7 +344,7 @@
     "weight": 2,
     "domain": "performance",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -363,7 +363,7 @@
     "weight": 2,
     "domain": "security",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -382,7 +382,7 @@
     "weight": 2,
     "domain": "performance",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -401,7 +401,7 @@
     "weight": 2,
     "domain": "performance",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -420,7 +420,7 @@
     "weight": 2,
     "domain": "seo",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -439,7 +439,7 @@
     "weight": 2,
     "domain": "performance",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -459,7 +459,7 @@
     "weight": 2,
     "domain": "performance",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -478,7 +478,7 @@
     "weight": 2,
     "domain": "performance",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -497,7 +497,7 @@
     "weight": 2,
     "domain": "performance",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -516,7 +516,7 @@
     "weight": 2,
     "domain": "security",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -535,7 +535,7 @@
     "weight": 2,
     "domain": "performance",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -555,7 +555,7 @@
     "weight": 6,
     "domain": "security",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -576,7 +576,7 @@
     "weight": 10,
     "domain": "security",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -591,15 +591,15 @@
     "sources": [
       "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:616",
       "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:106",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:363",
       "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:375",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:387",
       "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/zap/ZapModuleAnalyzer.java:26"
     ],
     "scorable": true,
     "weight": 8,
     "domain": "security",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -618,7 +618,7 @@
     "weight": 6,
     "domain": "security",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -637,7 +637,7 @@
     "weight": 3,
     "domain": "security",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -657,7 +657,7 @@
     "weight": 4,
     "domain": "security",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -677,7 +677,7 @@
     "weight": 6,
     "domain": "security",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -696,7 +696,7 @@
     "weight": 2,
     "domain": "seo",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -715,7 +715,7 @@
     "weight": 3,
     "domain": "seo",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -735,7 +735,7 @@
     "weight": 2,
     "domain": "performance",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -752,7 +752,7 @@
     "weight": 0,
     "domain": "lighthouse",
     "owner": "lighthouse",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Note de catégorie sur 100 ; pour les audits, ratio score, catégorie, poids Lighthouse et numericValue/numericUnit si fournis ; échantillons observés optionnels.",
     "content": "explicit-fallback-fr-en",
     "detection": null,
@@ -768,7 +768,7 @@
     "weight": 10,
     "domain": "a11y",
     "owner": "lighthouse",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Note de catégorie sur 100 ; pour les audits, ratio score, catégorie, poids Lighthouse et numericValue/numericUnit si fournis ; échantillons observés optionnels.",
     "content": "specific-fr-en",
     "detection": {
@@ -787,7 +787,7 @@
     "weight": 6,
     "domain": "security",
     "owner": "lighthouse",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Note de catégorie sur 100 ; pour les audits, ratio score, catégorie, poids Lighthouse et numericValue/numericUnit si fournis ; échantillons observés optionnels.",
     "content": "specific-fr-en",
     "detection": {
@@ -806,7 +806,7 @@
     "weight": 22,
     "domain": "performance",
     "owner": "lighthouse",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Note de catégorie sur 100 ; pour les audits, ratio score, catégorie, poids Lighthouse et numericValue/numericUnit si fournis ; échantillons observés optionnels.",
     "content": "specific-fr-en",
     "detection": {
@@ -825,7 +825,7 @@
     "weight": 8,
     "domain": "seo",
     "owner": "lighthouse",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Note de catégorie sur 100 ; pour les audits, ratio score, catégorie, poids Lighthouse et numericValue/numericUnit si fournis ; échantillons observés optionnels.",
     "content": "specific-fr-en",
     "detection": {
@@ -842,7 +842,7 @@
     "weight": 0,
     "domain": "observatory",
     "owner": "observatory",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Note et informations de sous-tests disponibles dans la réponse source ; ne pas inventer un sous-test absent.",
     "content": "explicit-fallback-fr-en",
     "detection": null,
@@ -858,7 +858,7 @@
     "weight": 0,
     "domain": "observatory",
     "owner": "observatory",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Note et informations de sous-tests disponibles dans la réponse source ; ne pas inventer un sous-test absent.",
     "content": "explicit-fallback-fr-en",
     "detection": null,
@@ -874,7 +874,7 @@
     "weight": 8,
     "domain": "security",
     "owner": "observatory",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Note et informations de sous-tests disponibles dans la réponse source ; ne pas inventer un sous-test absent.",
     "content": "specific-fr-en",
     "detection": {
@@ -893,7 +893,7 @@
     "weight": 0,
     "domain": "observatory",
     "owner": "observatory",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Note et informations de sous-tests disponibles dans la réponse source ; ne pas inventer un sous-test absent.",
     "content": "explicit-fallback-fr-en",
     "detection": null,
@@ -909,7 +909,7 @@
     "weight": 4,
     "domain": "performance",
     "owner": "runtime",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Compteurs, attribution site/tiers si fournie, échantillon plafonné de ressources ; octets estimés. Navigation incomplète et champs absents restent indisponibles.",
     "content": "specific-fr-en",
     "detection": {
@@ -926,7 +926,7 @@
     "weight": 0,
     "domain": "runtime",
     "owner": "runtime",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Compteurs, attribution site/tiers si fournie, échantillon plafonné de ressources ; octets estimés. Navigation incomplète et champs absents restent indisponibles.",
     "content": "explicit-fallback-fr-en",
     "detection": null,
@@ -944,7 +944,7 @@
     "weight": 5,
     "domain": "performance",
     "owner": "runtime",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Compteurs, attribution site/tiers si fournie, échantillon plafonné de ressources ; octets estimés. Navigation incomplète et champs absents restent indisponibles.",
     "content": "specific-fr-en",
     "detection": {
@@ -964,7 +964,7 @@
     "weight": 6,
     "domain": "performance",
     "owner": "runtime",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Compteurs, attribution site/tiers si fournie, échantillon plafonné de ressources ; octets estimés. Navigation incomplète et champs absents restent indisponibles.",
     "content": "specific-fr-en",
     "detection": {
@@ -984,7 +984,7 @@
     "weight": 8,
     "domain": "performance",
     "owner": "runtime",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Compteurs, attribution site/tiers si fournie, échantillon plafonné de ressources ; octets estimés. Navigation incomplète et champs absents restent indisponibles.",
     "content": "specific-fr-en",
     "detection": {
@@ -1004,7 +1004,7 @@
     "weight": 4,
     "domain": "performance",
     "owner": "runtime",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Compteurs, attribution site/tiers si fournie, échantillon plafonné de ressources ; octets estimés. Navigation incomplète et champs absents restent indisponibles.",
     "content": "specific-fr-en",
     "detection": {
@@ -1024,7 +1024,7 @@
     "weight": 4,
     "domain": "performance",
     "owner": "runtime",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Compteurs, attribution site/tiers si fournie, échantillon plafonné de ressources ; octets estimés. Navigation incomplète et champs absents restent indisponibles.",
     "content": "specific-fr-en",
     "detection": {
@@ -1044,7 +1044,7 @@
     "weight": 4,
     "domain": "performance",
     "owner": "runtime",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Compteurs, attribution site/tiers si fournie, échantillon plafonné de ressources ; octets estimés. Navigation incomplète et champs absents restent indisponibles.",
     "content": "specific-fr-en",
     "detection": {
@@ -1064,7 +1064,7 @@
     "weight": 0,
     "domain": "performance",
     "owner": "runtime",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Compteurs, attribution site/tiers si fournie, échantillon plafonné de ressources ; octets estimés. Navigation incomplète et champs absents restent indisponibles.",
     "content": "specific-fr-en",
     "detection": {
@@ -1077,15 +1077,15 @@
   {
     "key": "ssl.certificate.expiry_days",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:236",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:253",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:456"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:248",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:265",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:468"
     ],
     "scorable": true,
     "weight": 3,
     "domain": "security",
     "owner": "ssl",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Note, certificat, jours avant expiration ou protocoles par points de terminaison selon la clé ; couverture des points de terminaison éventuellement partielle.",
     "content": "specific-fr-en",
     "detection": {
@@ -1099,13 +1099,13 @@
     "key": "ssl.certificate.valid",
     "sources": [
       "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:104",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:206"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:218"
     ],
     "scorable": true,
     "weight": 6,
     "domain": "security",
     "owner": "ssl",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Note, certificat, jours avant expiration ou protocoles par points de terminaison selon la clé ; couverture des points de terminaison éventuellement partielle.",
     "content": "specific-fr-en",
     "detection": {
@@ -1122,7 +1122,7 @@
     "weight": 0,
     "domain": "ssl",
     "owner": "ssl",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Note, certificat, jours avant expiration ou protocoles par points de terminaison selon la clé ; couverture des points de terminaison éventuellement partielle.",
     "content": "explicit-fallback-fr-en",
     "detection": null,
@@ -1133,14 +1133,14 @@
     "key": "ssl.grade",
     "sources": [
       "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:99",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:173",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:458"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:185",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:470"
     ],
     "scorable": true,
     "weight": 10,
     "domain": "security",
     "owner": "ssl",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Note, certificat, jours avant expiration ou protocoles par points de terminaison selon la clé ; couverture des points de terminaison éventuellement partielle.",
     "content": "specific-fr-en",
     "detection": {
@@ -1154,13 +1154,13 @@
     "key": "ssl.protocols.legacy_disabled",
     "sources": [
       "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:102",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:339"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:351"
     ],
     "scorable": true,
     "weight": 3,
     "domain": "security",
     "owner": "ssl",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Note, certificat, jours avant expiration ou protocoles par points de terminaison selon la clé ; couverture des points de terminaison éventuellement partielle.",
     "content": "specific-fr-en",
     "detection": {
@@ -1174,14 +1174,14 @@
     "key": "ssl.protocols.tls12",
     "sources": [
       "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:101",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:310",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:323"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:322",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:335"
     ],
     "scorable": true,
     "weight": 2,
     "domain": "security",
     "owner": "ssl",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Note, certificat, jours avant expiration ou protocoles par points de terminaison selon la clé ; couverture des points de terminaison éventuellement partielle.",
     "content": "specific-fr-en",
     "detection": {
@@ -1195,14 +1195,14 @@
     "key": "ssl.protocols.tls13",
     "sources": [
       "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:100",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:294",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:307"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:306",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:319"
     ],
     "scorable": true,
     "weight": 2,
     "domain": "security",
     "owner": "ssl",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Note, certificat, jours avant expiration ou protocoles par points de terminaison selon la clé ; couverture des points de terminaison éventuellement partielle.",
     "content": "specific-fr-en",
     "detection": {
@@ -1221,7 +1221,7 @@
     "weight": 0,
     "domain": "tech",
     "owner": "tech",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Indices du HTML/en-têtes et motifs de bannières ; ne pas en déduire une version installée certaine.",
     "content": "explicit-fallback-fr-en",
     "detection": null,
@@ -1237,7 +1237,7 @@
     "weight": 0,
     "domain": "tech",
     "owner": "tech",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Indices du HTML/en-têtes et motifs de bannières ; ne pas en déduire une version installée certaine.",
     "content": "explicit-fallback-fr-en",
     "detection": null,
@@ -1253,7 +1253,7 @@
     "weight": 0,
     "domain": "tech",
     "owner": "tech",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Indices du HTML/en-têtes et motifs de bannières ; ne pas en déduire une version installée certaine.",
     "content": "explicit-fallback-fr-en",
     "detection": null,
@@ -1269,7 +1269,7 @@
     "weight": 0,
     "domain": "tech",
     "owner": "tech",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Indices du HTML/en-têtes et motifs de bannières ; ne pas en déduire une version installée certaine.",
     "content": "explicit-fallback-fr-en",
     "detection": null,
@@ -1283,7 +1283,7 @@
     "weight": 0,
     "domain": "tech",
     "owner": "tech",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Indices du HTML/en-têtes et motifs de bannières ; ne pas en déduire une version installée certaine.",
     "content": "explicit-fallback-fr-en",
     "detection": null,
@@ -1299,7 +1299,7 @@
     "weight": 0,
     "domain": "tech",
     "owner": "tech",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Indices du HTML/en-têtes et motifs de bannières ; ne pas en déduire une version installée certaine.",
     "content": "explicit-fallback-fr-en",
     "detection": null,
@@ -1315,7 +1315,7 @@
     "weight": 0,
     "domain": "tech",
     "owner": "tech",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Indices du HTML/en-têtes et motifs de bannières ; ne pas en déduire une version installée certaine.",
     "content": "explicit-fallback-fr-en",
     "detection": null,
@@ -1331,7 +1331,7 @@
     "weight": 0,
     "domain": "tech",
     "owner": "tech",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Indices du HTML/en-têtes et motifs de bannières ; ne pas en déduire une version installée certaine.",
     "content": "explicit-fallback-fr-en",
     "detection": null,
@@ -1347,7 +1347,7 @@
     "weight": 3,
     "domain": "security",
     "owner": "tech",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Indices du HTML/en-têtes et motifs de bannières ; ne pas en déduire une version installée certaine.",
     "content": "specific-fr-en",
     "detection": {
@@ -1364,7 +1364,7 @@
     "weight": 0,
     "domain": "zap",
     "owner": "zap",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Identifiant de plugin, niveau de risque et éléments assainis disponibles ; une alerte passive ne démontre pas une exploitation.",
     "content": "explicit-fallback-fr-en",
     "detection": null,
@@ -1380,7 +1380,7 @@
     "weight": 0,
     "domain": "zap",
     "owner": "zap",
-    "collectorContract": "analysis-measurements-v4",
+    "collectorContract": "analysis-measurements-v5",
     "availableFacts": "Identifiant de plugin, niveau de risque et éléments assainis disponibles ; une alerte passive ne démontre pas une exploitation.",
     "content": "explicit-fallback-fr-en",
     "detection": null,

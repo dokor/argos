@@ -36,3 +36,11 @@ restent figés. Les poids du barème ne changent pas et un même contrôle n'est
 compté qu'une fois, indépendamment du nombre d'adresses.
 
 La réponse SSL Labs v3 associe chaque chaîne à des identifiants de certificats dans le tableau hôte `certs`. La validité et l'expiration sont résolues par identifiant de certificat feuille, jamais par position dans ce tableau. Plusieurs certificats servis retiennent le pire constat ; une référence absente ou ambiguë ne produit pas de succès. Le diagnostic TLS sur le domaine soumis reste indépendant de la réussite du téléchargement HTML.
+
+Pour une cible DNS, les chaînes marquées `noSni: true` sont uniquement celles du
+certificat par défaut et ne participent pas aux contrôles du nom audité. Leur
+présence ne masque aucun défaut d'une chaîne obtenue avec SNI. Une cible IP
+littérale utilise en revanche son certificat sans SNI. Aucune chaîne pertinente
+ou un indicateur SNI mal formé conserve une mesure inconnue.
+Le contrat `analysis-measurements-v5` distingue cette sélection corrigée des
+anciens rapports ; les empreintes et les rapports historiques restent figés.

@@ -63,7 +63,7 @@ Les littéraux sont inventoriés de manière conservatrice, y compris contrôles
 | runtime.network.failed_requests | runtime | 4 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:135 |
 | runtime.network.request_count | runtime | 4 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:165 |
 | runtime.network.third_party_errors | runtime | 0 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:150 |
-| ssl.certificate.expiry_days | ssl | 3 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:236 |
+| ssl.certificate.expiry_days | ssl | 3 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:248 |
 | ssl.certificate.valid | ssl | 6 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:104 |
 | ssl.collect | ssl | 0 | explicit-fallback-fr-en | Availability stub from orchestrator |
 | ssl.grade | ssl | 10 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:99 |
