@@ -34,8 +34,7 @@ const proxyHits = () => new Promise((resolve, reject) => {
 await idle();
 const beforeTimeout = await proxyHits();
 const started = performance.now();
-// Lighthouse initializes its gathering pipeline before navigating. The initial
-// eight-second fixture budget expired before that navigation on both native CPUs.
+// Include the actual collector startup; still prove that navigation reached the fixture.
 const timeoutMs = runtime ? 8000 : 20000;
 const expired = await post('/slow', timeoutMs);
 assert.equal(expired.status, 504);
@@ -61,6 +60,9 @@ const recovered = await post('/', runtime ? 10000 : 40000);
 assert.equal(recovered.status, 200);
 const data = await recovered.json();
 if (runtime) assert.equal(data.navigation.status, 'COMPLETED');
-else assert.ok(data.categories?.accessibility);
+else {
+  assert.equal(data.runtimeError, undefined);
+  assert.equal(typeof data.categories?.accessibility?.score, 'number');
+}
 await idle();
 console.log('PASS new analysis after cleanup');

@@ -19,3 +19,30 @@ test('abort kills Chrome, releases the collector and cannot double-kill during c
   await assert.rejects(result, /Chrome closed/);
   assert.equal(killed, 1);
 });
+
+test('each audit starts with a fresh protected context without a redundant global storage reset', async () => {
+  let launches = 0, contexts = 0, killed = 0;
+  const protectedPage = { url: () => 'about:blank#argos-lighthouse', on: () => {} };
+  const collect = createLighthouseCollector({
+    launch: async () => { launches++; return { port: 9222, kill: async () => { killed++; } }; },
+    chromium: { connectOverCDP: async () => ({ newContext: async options => {
+      contexts++;
+      assert.deepEqual(options, { serviceWorkers: 'block', acceptDownloads: false });
+      return { route: async () => {}, routeWebSocket: async () => {}, on: () => {},
+        newPage: async () => ({ goto: async () => {} }) };
+    } }) },
+    connectPuppeteer: async () => ({ pages: async () => [protectedPage], disconnect: async () => {} }),
+    lighthouse: async (url, flags, _config, page) => {
+      assert.equal(url, 'https://example.com');
+      assert.equal(flags.disableStorageReset, true);
+      assert.equal(page, protectedPage);
+      return { lhr: { categories: {} } };
+    },
+    chromeFlags: [], proxy: 'http://127.0.0.1:3128'
+  });
+  await collect('https://example.com');
+  await collect('https://example.com');
+  assert.equal(launches, 2);
+  assert.equal(contexts, 2);
+  assert.equal(killed, 2);
+});

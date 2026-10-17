@@ -33,6 +33,9 @@ export function createLighthouseCollector({ launch, lighthouse, chromeFlags, chr
       });
       if (signal?.aborted) throw new Error('Analysis timeout');
       return await lighthouse(url, { port: chrome.port, output: 'json', logLevel: 'error',
+        // This browser/profile and incognito context are new for every audit.
+        // A redundant browser-wide cache reset can stall with the protected CDP page.
+        disableStorageReset: true,
         locale: 'fr', maxWaitForLoad: Math.min(45000, timeoutMs) }, undefined, protectedPage);
     } finally {
       signal?.removeEventListener('abort', cancel);

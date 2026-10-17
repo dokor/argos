@@ -48,6 +48,8 @@ action remains ERRNO, and neither SYS_ADMIN nor an unconfined profile is granted
 Each audit launches a fresh browser and closes it on completion/failure/deadline
 or client disconnect. Linux/ARM64 sandbox compatibility must be verified on the
 deployment host; there is no production `--no-sandbox` fallback.
+Lighthouse receives a new incognito context and browser profile for each run, so
+its redundant browser-wide storage reset is disabled. No context/profile is reused.
 
 ## Limits and passive scope
 
@@ -126,6 +128,9 @@ client disconnection must cancel an already started navigation, no live Chrome
 process may remain within ten seconds, and a subsequent audit must succeed without
 restart or OOM. Public fixture counters prove that unsafe methods never arrived;
 both collector logs are checked for the synthetic credential. The smoke script
+also requires an actual numeric Lighthouse accessibility score and no runtime
+error; an empty category in an unsuccessful LHR cannot pass the nominal check.
+The smoke script
 refuses existing fixture names before installing cleanup and fails when readiness
 is not reached. Runtime admission retains its concurrency slot through failed-setup
 browser cleanup, so new work cannot overlap a browser still being closed.

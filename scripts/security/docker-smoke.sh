@@ -89,7 +89,10 @@ docker exec argos-security-lighthouse node --input-type=module -e "
   import assert from 'node:assert/strict';
   const response=await fetch('http://127.0.0.1:3017/analyze',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({url:'http://8.8.8.8/',timeoutMs:40000})});
   assert.equal(response.status,200);const lhr=await response.json();
-  assert.ok(lhr.categories.accessibility);assert.ok(!JSON.stringify(lhr).includes('synthetic-secret'));
+  assert.equal(lhr.runtimeError,undefined);
+  assert.equal(typeof lhr.categories?.accessibility?.score,'number');
+  assert.ok(lhr.categories.accessibility.score>=0 && lhr.categories.accessibility.score<=1);
+  assert.ok(!JSON.stringify(lhr).includes('synthetic-secret'));
 "
 docker exec argos-security-private node --input-type=module -e "import assert from 'node:assert/strict';const r=await fetch('http://127.0.0.1/stats');assert.equal((await r.json()).hits,0)"
 for service in runtime lighthouse; do

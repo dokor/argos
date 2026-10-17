@@ -230,7 +230,10 @@ const recovered = await post('/', runtime ? 10000 : 40000);
 assert.equal(recovered.status, 200);
 const data = await recovered.json();
 if (runtime) assert.equal(data.navigation.status, 'COMPLETED');
-else assert.ok(data.categories?.accessibility);
+else {
+  assert.equal(data.runtimeError, undefined);
+  assert.equal(typeof data.categories?.accessibility?.score, 'number');
+}
 await idle();
 console.log('PASS new analysis after cleanup');
 JS

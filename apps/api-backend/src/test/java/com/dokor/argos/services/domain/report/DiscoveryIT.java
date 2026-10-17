@@ -389,7 +389,7 @@ class DiscoveryIT extends MariaDbReportFixture {
         assertEquals(second.id(),last.getId().toString());
         assertEquals(0,count("ARG_USAGE_RUN"));
     }
-    @Test void invalidHostSyntaxCannotEnterTheDiscoveryQueue() {
+    @Test void invalidHostSyntaxCannotEnterTheDiscoveryQueue() throws Exception {
         for (String host : List.of("other.example", "127.0.0.1", "2130706433", "[::1]", "%65xample.com")) {
             var error=assertThrows(AccountError.class,()->service.create(a,CSRF,UUID.randomUUID().toString(),new CreateDiscovery(host,50L,3L,List.of())));
             assertEquals(400,error.getResponse().getStatus());
