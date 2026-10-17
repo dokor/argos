@@ -49,7 +49,16 @@ Depuis `apps/api-backend`, régénérer les 12 variantes et leurs fichiers `.eml
 mvn -Dtest=AccountEmailTest -Daccount.mail.preview.dir=../../outputs/account-email-preview test
 ```
 
-Ouvrir les fichiers HTML localement. Les `.eml` permettent l’import dans une
+Reconstruire ensuite la galerie depuis la racine :
+
+```sh
+node scripts/build-account-email-gallery.mjs
+```
+
+Ouvrir la [galerie autonome](email-previews/index.html) pour parcourir les six
+messages FR/EN, l’objet, le texte d’aperçu, les versions HTML/texte et les
+largeurs mobile/ordinateur en clair/sombre. Les fichiers HTML individuels
+restent disponibles. Les `.eml` permettent l’import dans une
 boîte de recette, sans expédier de vrai jeton. Ne jamais envoyer ces aperçus
 aux utilisateurs ou ajouter une route d’aperçu publique en production.
 
