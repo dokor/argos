@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import AccountShell, { AccountFooter } from "./AccountShell";
 import { LangProvider } from "@/lib/i18n/LangContext";
 const state = vi.hoisted(() => ({ path: "/account/integrations", session: {
@@ -37,7 +38,7 @@ it("collapses and restores navigation without losing accessible destinations or 
   expect(toggle).toHaveAttribute("aria-expanded", "false");
   expect(shell).toHaveAttribute("data-collapsed", "true");
   expect(screen.getByRole("button", { name: /Menu du compte/ }).parentElement).toHaveAttribute("data-compact", "true");
-  for (const label of ["Vue d’ensemble", "Analyse de site", "Domaines", "Intégrations — Bientôt", "Mon compte", "Offre et quotas", "Aide"]) {
+  for (const label of ["Vue d’ensemble", "Analyses", "Domaines", "Intégrations — Bientôt", "Mon compte", "Offre et quotas", "Aide"]) {
     expect(within(navigation).getByRole("link", { name: label })).toBeInTheDocument();
   }
   const integrations = within(navigation).getByRole("link", { name: "Intégrations — Bientôt" });
@@ -51,7 +52,8 @@ it("collapses and restores navigation without losing accessible destinations or 
   state.path = "/account/domains";
   view.rerender(<AccountShell>{content}</AccountShell>);
   expect(shell).toHaveAttribute("data-collapsed", "true");
-  expect(within(navigation).getByRole("link", { name: "Domaines" })).toHaveAttribute("aria-current", "page");
+  expect(within(navigation).getByRole("link", { name: "Mes domaines" })).toHaveAttribute("aria-current", "page");
+  expect(within(navigation).getByRole("link", { name: "Domaines" })).not.toHaveAttribute("aria-current");
   fireEvent.click(screen.getByRole("button", { name: "Déployer le menu" }));
   expect(shell).toHaveAttribute("data-collapsed", "false");
   expect(screen.getByRole("button", { name: /Menu du compte/ }).parentElement).toHaveAttribute("data-compact", "false");
@@ -114,7 +116,7 @@ it("closes the mobile disclosure on Escape, navigation and a changed route", () 
   fireEvent.click(menu); expect(menu).toHaveAttribute("aria-expanded", "true");
   fireEvent.keyDown(menu, { key: "Escape" }); expect(menu).toHaveAttribute("aria-expanded", "false"); expect(menu).toHaveFocus();
   fireEvent.click(menu);
-  const link = screen.getByRole("link", { name: "Analyse de site" });
+  const link = screen.getByRole("link", { name: "Analyses" });
   link.addEventListener("click", event => event.preventDefault(), { once: true });
   fireEvent.click(link);
   expect(menu).toHaveAttribute("aria-expanded", "false");
@@ -154,4 +156,91 @@ it("does not replace an unavailable quota with zero or block access to results",
   expect(screen.getByText("Private result")).toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "Réessayer" }));
   expect(state.session.refreshUsage).toHaveBeenCalled();
+});
+
+it.each(["fr", "en"] as const)("routes the four submenu destinations and separates parent links from keyboard disclosures in %s", async lang => {
+  const user = userEvent.setup();
+  const prefix = lang === "en" ? "/en" : "";
+  state.path = prefix + "/account/integrations";
+  render(<LangProvider initialLang={lang}><AccountShell>{content}</AccountShell></LangProvider>);
+  const navigation = screen.getByRole("navigation", { name: lang === "fr" ? "Navigation de l’espace connecté" : "Workspace navigation" });
+  const queries = within(navigation);
+  const menu = screen.getByRole("button", { name: "Menu" });
+  await user.click(menu);
+  const toggle = queries.getByRole("button", { name: lang === "fr" ? "Déplier le sous-menu Analyses" : "Expand Analyses submenu" });
+  const panel = document.getElementById(toggle.getAttribute("aria-controls")!)!;
+  expect(panel).toHaveAttribute("hidden");
+  toggle.focus();
+  await user.keyboard("{Enter}");
+  expect(toggle).toHaveAttribute("aria-expanded", "true");
+  expect(panel).not.toHaveAttribute("hidden");
+  expect(menu).toHaveAttribute("aria-expanded", "true");
+  expect(state.path).toBe(prefix + "/account/integrations");
+  await user.keyboard(" ");
+  expect(toggle).toHaveAttribute("aria-expanded", "false");
+  expect(queries.queryByRole("link", { name: lang === "fr" ? "Nouvelle analyse" : "New analysis" })).not.toBeInTheDocument();
+  await user.keyboard("{Enter}");
+  await user.tab();
+  expect(queries.getByRole("link", { name: lang === "fr" ? "Nouvelle analyse" : "New analysis" })).toHaveFocus();
+  await user.click(queries.getByRole("button", { name: lang === "fr" ? "Déplier le sous-menu Domaines" : "Expand Domains submenu" }));
+  const destinations = lang === "fr" ? ["Nouvelle analyse", "Historique des analyses", "Mes domaines", "Analyser un domaine"]
+    : ["New analysis", "Analysis history", "My domains", "Analyse a domain"];
+  const paths = ["/account/analyses/new", "/account/sites", "/account/domains", "/account/domains/new"];
+  destinations.forEach((label, index) => expect(queries.getByRole("link", { name: label })).toHaveAttribute("href", prefix + paths[index]));
+  const parent = queries.getByRole("link", { name: "Analyses" });
+  expect(parent).toHaveAttribute("href", prefix + "/account/sites");
+  parent.addEventListener("click", event => event.preventDefault(), { once: true });
+  await user.click(parent);
+  expect(toggle).toHaveAttribute("aria-expanded", "true");
+  expect(menu).toHaveAttribute("aria-expanded", "false");
+  await user.click(menu);
+  const child = queries.getByRole("link", { name: destinations[3] });
+  child.addEventListener("click", event => event.preventDefault(), { once: true });
+  await user.click(child);
+  expect(menu).toHaveAttribute("aria-expanded", "false");
+});
+
+it.each([
+  ["/account/analyses/new", "Nouvelle analyse", "Analyses", "page"],
+  ["/account/sites", "Historique des analyses", "Analyses", "page"],
+  ["/account/sites/9", "Historique des analyses", "Analyses", "location"],
+  ["/account/urls/9/history", "Historique des analyses", "Analyses", "location"],
+  ["/account/runs/9", "Historique des analyses", "Analyses", "location"],
+  ["/account/domains", "Mes domaines", "Domaines", "page"],
+  ["/account/domains/new", "Analyser un domaine", "Domaines", "page"],
+  ["/account/domains/9/batches/8", "Mes domaines", "Domaines", "location"],
+])("opens the current group directly at %s", (path, label, group, current) => {
+  state.path = path;
+  const view = render(<AccountShell>{content}</AccountShell>);
+  const navigation = screen.getByRole("navigation", { name: "Navigation de l’espace connecté" });
+  expect(within(navigation).getByRole("link", { name: label })).toHaveAttribute("aria-current", current);
+  const parent = within(navigation).getByRole("link", { name: group });
+  expect(parent.parentElement?.parentElement).toHaveAttribute("data-active", "true");
+  expect(parent).not.toHaveAttribute("aria-current");
+  expect(navigation.querySelectorAll("[aria-current]")).toHaveLength(1);
+  // Refreshing the shell restores an open active group without persistent storage.
+  fireEvent.click(within(navigation).getByRole("button", { name: `Replier le sous-menu ${group}` }));
+  expect(within(navigation).queryByRole("link", { name: label })).not.toBeInTheDocument();
+  view.unmount();
+  render(<AccountShell>{content}</AccountShell>);
+  expect(screen.getByRole("link", { name: label })).toBeInTheDocument();
+});
+
+it("keeps manual disclosure choices until a new page in that section is reached", () => {
+  state.path = "/account/analyses/new";
+  const view = render(<AccountShell>{content}</AccountShell>);
+  fireEvent.click(screen.getByRole("button", { name: "Déplier le sous-menu Domaines" }));
+  fireEvent.click(screen.getByRole("button", { name: "Replier le sous-menu Analyses" }));
+  view.rerender(<AccountShell>{content}</AccountShell>);
+  expect(screen.getByRole("button", { name: "Déplier le sous-menu Analyses" })).toHaveAttribute("aria-expanded", "false");
+  state.path = "/account/usage";
+  view.rerender(<AccountShell>{content}</AccountShell>);
+  expect(screen.getByRole("button", { name: "Déplier le sous-menu Analyses" })).toHaveAttribute("aria-expanded", "false");
+  expect(screen.getByRole("button", { name: "Replier le sous-menu Domaines" })).toHaveAttribute("aria-expanded", "true");
+  state.path = "/account/urls/9/history";
+  view.rerender(<AccountShell>{content}</AccountShell>);
+  expect(screen.getByRole("button", { name: "Replier le sous-menu Analyses" })).toHaveAttribute("aria-expanded", "true");
+  fireEvent.click(screen.getByRole("button", { name: "Réduire le menu" }));
+  expect(screen.getByRole("link", { name: "Historique des analyses" })).toHaveAttribute("aria-current", "location");
+  expect(screen.getByRole("button", { name: "Replier le sous-menu Domaines" })).toHaveAttribute("aria-expanded", "true");
 });

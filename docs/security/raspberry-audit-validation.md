@@ -93,8 +93,12 @@ Attendus : code de sortie 0, lancement de Chromium avec sandbox, sortie directe
 refusée, analyse de la page autorisée, redirection privée refusée, compteur de la
 fixture privée égal à zéro après frames/fetch/worker/WebSocket, marqueur
 `synthetic-secret` absent des résultats runtime/Lighthouse et des logs runtime.
-Le script ne valide pas à lui seul les logs Lighthouse, le nettoyage après
-déconnexion, les conteneurs déployés ni le BFF : poursuivre les étapes suivantes.
+Le smoke exécute aussi `scripts/security/lifecycle.mjs` pour les deux collecteurs,
+vérifie leurs logs, l'absence de mutations reçues par la fixture, les processus
+Chrome après timeout/déconnexion et la reprise sans OOM ni redémarrage. La CI
+exécute désormais cette même recette sur des runners natifs amd64 et ARM64 ;
+elle ne certifie pas le noyau ni les conteneurs réellement déployés sur le Raspberry.
+Poursuivre les étapes suivantes pour les observations locales et le BFF.
 Le test proxy couvre aussi les réponses DNS mixtes/changeantes et l’adresse IP
 réellement passée au transport. Conserver la sortie, pas seulement « tests verts ».
 
@@ -128,7 +132,7 @@ http.createServer((req, res) => {
   if (req.url === '/stats') return res.end(JSON.stringify({ slowHits }));
   if (req.url === '/slow') {
     slowHits++;
-    const timer = setTimeout(() => res.end('<h1>Late fixture</h1>'), 30000);
+    const timer = setTimeout(() => res.end('<h1>Late fixture</h1>'), 60000);
     res.on('close', () => clearTimeout(timer));
     return;
   }
@@ -201,10 +205,11 @@ const proxyHits = () => new Promise((resolve, reject) => {
 await idle();
 const beforeTimeout = await proxyHits();
 const started = performance.now();
-const expired = await post('/slow', 8000);
+const timeoutMs = runtime ? 8000 : 20000;
+const expired = await post('/slow', timeoutMs);
 assert.equal(expired.status, 504);
 await expired.text();
-assert.ok(performance.now() - started < 18000, 'Deadline exceeded with cleanup margin');
+assert.ok(performance.now() - started < timeoutMs + 10000, 'Deadline exceeded with cleanup margin');
 assert.ok(await proxyHits() > beforeTimeout, 'Timeout must reach slow fixture');
 await idle();
 console.log('PASS timeout, slow fixture reached, no live Chrome');
@@ -215,7 +220,7 @@ const pending = fetch(endpoint, { method: 'POST', headers: { 'content-type': 'ap
   .then(r => ({ response: r.status }), () => ({ disconnected: true }));
 let reached = false;
 try {
-  for (let i = 0; i < 100; i++) { if (await proxyHits() > beforeDisconnect) { reached = true; break; } await pause(100); }
+  for (let i = 0; i < 250; i++) { if (await proxyHits() > beforeDisconnect) { reached = true; break; } await pause(100); }
 } finally { abort.abort(); }
 assert.ok(reached, 'Disconnect test must reach slow fixture');
 assert.equal((await pending).disconnected, true);
@@ -225,7 +230,10 @@ const recovered = await post('/', runtime ? 10000 : 40000);
 assert.equal(recovered.status, 200);
 const data = await recovered.json();
 if (runtime) assert.equal(data.navigation.status, 'COMPLETED');
-else assert.ok(data.categories?.accessibility);
+else {
+  assert.equal(data.runtimeError, undefined);
+  assert.equal(typeof data.categories?.accessibility?.score, 'number');
+}
 await idle();
 console.log('PASS new analysis after cleanup');
 JS
@@ -244,7 +252,10 @@ requête lente arrivée avant la déconnexion, aucun processus Chrome vivant apr
 nettoyage, nouvelle analyse 200 sans redémarrage ni OOM. Un lancement trop lent
 pour atteindre la fixture n’est pas une preuve de timeout de navigation : mesurer
 et diagnostiquer, puis ajuster explicitement le budget de recette sans dépasser les
-plafonds applicatifs ni considérer le test initial comme réussi. Après chaque bloc,
+plafonds applicatifs ni considérer le test initial comme réussi. La recette retient
+20 s pour Lighthouse et 8 s pour runtime, démarrage inclus, face à une réponse
+retardée de 60 s. Elle exige un vrai score sur la fixture nominale et le respect
+du protocole HTTP demandé, sans upgrade HTTPS implicite du navigateur. Après chaque bloc,
 vérifier que les conteneurs/réseaux `argos-security-*` ont disparu ; ne pas lancer
 un `docker system prune` ou supprimer des volumes pour nettoyer cette recette.
 

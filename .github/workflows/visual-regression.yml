@@ -17,6 +17,7 @@ on:
       - 'scripts/e2e/admin-analytics.mjs'
       - '.agents/skills/argos-visual-review/scripts/preview-backend.mjs'
       - 'scripts/e2e/public-header.mjs'
+      - 'scripts/e2e/navigation-submenus.mjs'
       - 'scripts/e2e/acceptance-evidence*'
       - 'docs/connected-space/reference/**'
       - 'docs/connected-space/fixtures/**'

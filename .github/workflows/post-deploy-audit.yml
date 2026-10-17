@@ -1,0 +1,88 @@
+name: Argos post-deployment audit
+
+on:
+  workflow_call:
+    inputs:
+      service:
+        required: true
+        type: string
+    secrets:
+      ARGOS_CI_EMAIL:
+        required: true
+      ARGOS_CI_PASSWORD:
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  control:
+    if: github.repository == 'dokor/argos' && github.ref == 'refs/heads/main'
+    runs-on: self-hosted
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    outputs:
+      outcome: ${{ steps.audit.outputs.outcome }}
+      artifact_name: self-audit-${{ inputs.service }}-${{ github.sha }}-${{ github.run_attempt }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.21.0'
+      - name: Audit the observed deployment
+        id: audit
+        continue-on-error: true
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+          DEPLOYED_SERVICE: ${{ inputs.service }}
+          ARGOS_CI_EMAIL: ${{ secrets.ARGOS_CI_EMAIL }}
+          ARGOS_CI_PASSWORD: ${{ secrets.ARGOS_CI_PASSWORD }}
+        run: node scripts/ci/self-audit.mjs
+      - name: Retain filtered evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: self-audit-${{ inputs.service }}-${{ github.sha }}-${{ github.run_attempt }}
+          path: outputs/post-deploy-audit.json
+          if-no-files-found: error
+          retention-days: 14
+      - name: Enforce post-deployment verdict
+        if: always()
+        env:
+          CONTROL_STEP: ${{ steps.audit.outcome }}
+        run: test "$CONTROL_STEP" = success
+
+  tickets:
+    needs: control
+    # A site NO-GO must still create tickets. Technical failures never do.
+    if: ${{ !cancelled() && (needs.control.outputs.outcome == 'GO' || needs.control.outputs.outcome == 'SITE_NO_GO') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    permissions:
+      contents: read
+      issues: write
+    concurrency:
+      group: argos-self-audit-tickets
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.21.0'
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.control.outputs.artifact_name }}
+          path: outputs
+      - name: Synchronize actionable findings
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_SHA: ${{ github.sha }}
+          DEPLOYED_SERVICE: ${{ inputs.service }}
+        run: node scripts/ci/self-audit-tickets.mjs

@@ -44,3 +44,15 @@ jobs:
       - name: Cleanup old images
         run: |
           docker image prune -f
+
+  post-deploy-audit:
+    needs: deploy
+    uses: ./.github/workflows/post-deploy-audit.yml
+    permissions:
+      contents: read
+      issues: write
+    with:
+      service: console-web
+    secrets:
+      ARGOS_CI_EMAIL: ${{ secrets.ARGOS_CI_EMAIL }}
+      ARGOS_CI_PASSWORD: ${{ secrets.ARGOS_CI_PASSWORD }}

@@ -67,9 +67,14 @@ class ConnectedAnalysesServiceTest {
     }
     @Test void newAdmissionStillChecksDnsAndCannotReserveABlockedTarget() {
         when(normalizer.normalize(anyString())).thenThrow(new IllegalArgumentException("Target blocked"));
-        var error=assertThrows(AccountError.class,()->service.create("auth","csrf",KEY,new SiteAnalysisInput("http://127.0.0.1","server-default-v1")));
-        assertEquals(400,error.getResponse().getStatus());verify(normalizer).normalize("http://127.0.0.1");
+        var error=assertThrows(AccountError.class,()->service.create("auth","csrf",KEY,new SiteAnalysisInput("https://example.com","server-default-v1")));
+        assertEquals(400,error.getResponse().getStatus());verify(normalizer).normalize("https://example.com");
         verifyNoInteractions(audits,sites);
+    }
+    @Test void syntaxRefusesPrivateTargetsBeforeLookingUpAnIdempotencyKey() {
+        var error=assertThrows(AccountError.class,()->service.create("auth","csrf",KEY,new SiteAnalysisInput("http://127.0.0.1","server-default-v1")));
+        assertEquals(400,error.getResponse().getStatus());
+        verifyNoInteractions(query,normalizer,audits,sites);
     }
     @Test void recoveryCannotReadAnotherOwnerOrAcceptAnInvalidKey() {
         stored(run("QUEUED"));user.setId(20L);
