@@ -1,9 +1,9 @@
 import { createLighthouseServer } from "./app.mjs";
 import lighthouse from "lighthouse";
-import { launch } from "chrome-launcher";
+import { launch, Launcher } from "chrome-launcher";
 import { chromium } from "playwright";
 import puppeteer from "puppeteer-core";
-import { createLighthouseCollector } from "./collector.mjs";
+import { createLighthouseCollector, lighthouseChromeFlags } from "./collector.mjs";
 
 const PORT = 3017;
 const SERVICE = "lighthouse-service";
@@ -14,12 +14,7 @@ function log(event, fields = {}) {
   console.log(JSON.stringify({ ts: new Date().toISOString(), service: SERVICE, event, ...fields }));
 }
 
-const CHROME_FLAGS = [
-  "--headless",
-  "--disable-gpu",
-  // Évite les crashs lorsque /dev/shm est limité par Docker.
-  "--disable-dev-shm-usage",
-];
+const CHROME_FLAGS = lighthouseChromeFlags(Launcher.defaultFlags());
 
 function parsePositiveInteger(value, fallback) {
   const parsed = Number(value);

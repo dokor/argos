@@ -1,5 +1,16 @@
 import { proxyEndpoint, browserFlags, protectContext } from './browser-policy.mjs';
 
+export function lighthouseChromeFlags(defaultFlags) {
+  const prefix = '--disable-features=';
+  const features = defaultFlags.filter(flag => flag.startsWith(prefix))
+    .flatMap(flag => flag.slice(prefix.length).split(',').filter(Boolean));
+  // Match Playwright: audit the requested HTTP URL instead of a browser-generated
+  // HTTPS upgrade. Preserve every feature disabled by chrome-launcher itself.
+  return ['--headless', '--disable-gpu', '--disable-dev-shm-usage',
+    prefix + [...new Set([...features, 'HttpsUpgrades', 'HttpsFirstModeIncognito',
+      'HttpsFirstBalancedMode', 'HttpsFirstBalancedModeAutoEnable'])].join(',')];
+}
+
 // The abort signal kills the actual Chrome process; expiry alone is not cancellation.
 export function createLighthouseCollector({ launch, lighthouse, chromeFlags, chromePath, chromium, connectPuppeteer, log = () => {}, proxy = process.env.AUDIT_EGRESS_PROXY }) {
   return async (url, { signal, timeoutMs = 60000 } = {}) => {

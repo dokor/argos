@@ -51,6 +51,12 @@ deployment host; there is no production `--no-sandbox` fallback.
 Lighthouse receives a new incognito context and browser profile for each run. Its
 protected page is explicitly activated before collection, since chrome-launcher
 also creates a default blank tab. No context/profile is reused.
+Lighthouse disables Chromium's automatic HTTPS upgrades and incognito/balanced
+HTTPS-First heuristics so they do not substitute a browser-generated navigation
+for the requested HTTP audit. The launcher's other disabled features are retained.
+Site HTTP-to-HTTPS redirects still undergo the usual destination checks;
+certificate verification for HTTPS is unchanged. Nominal fixtures require measured
+scores, so Chrome error pages with empty categories cannot masquerade as success.
 
 ## Limits and passive scope
 
@@ -171,4 +177,5 @@ controls therefore reduce, rather than eliminate, abuse of public web endpoints.
 Primary implementation references:
 [Chromium proxy semantics](https://chromium.googlesource.com/chromium/src/net/+/HEAD/docs/proxy.md),
 [Playwright network interception](https://playwright.dev/docs/network),
-[Playwright 1.63.0 seccomp profile](https://github.com/microsoft/playwright/blob/v1.63.0/utils/docker/seccomp_profile.json).
+[Playwright 1.63.0 seccomp profile](https://github.com/microsoft/playwright/blob/v1.63.0/utils/docker/seccomp_profile.json),
+[Chromium HTTPS upgrade modes](https://chromium.googlesource.com/chromium/src/+/main/chrome/browser/ssl/https_upgrades_browsertest.cc).

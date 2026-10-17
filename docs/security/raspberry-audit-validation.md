@@ -252,10 +252,10 @@ requête lente arrivée avant la déconnexion, aucun processus Chrome vivant apr
 nettoyage, nouvelle analyse 200 sans redémarrage ni OOM. Un lancement trop lent
 pour atteindre la fixture n’est pas une preuve de timeout de navigation : mesurer
 et diagnostiquer, puis ajuster explicitement le budget de recette sans dépasser les
-plafonds applicatifs ni considérer le test initial comme réussi. La première CI
-native a montré que le budget initial de 8 s expirait avant la navigation Lighthouse
-sur les deux architectures ; la recette retient 20 s pour Lighthouse et 8 s pour
-runtime, face à une réponse retardée de 60 s. Après chaque bloc,
+plafonds applicatifs ni considérer le test initial comme réussi. La recette retient
+20 s pour Lighthouse et 8 s pour runtime, démarrage inclus, face à une réponse
+retardée de 60 s. Elle exige un vrai score sur la fixture nominale et le respect
+du protocole HTTP demandé, sans upgrade HTTPS implicite du navigateur. Après chaque bloc,
 vérifier que les conteneurs/réseaux `argos-security-*` ont disparu ; ne pas lancer
 un `docker system prune` ou supprimer des volumes pour nettoyer cette recette.
 
