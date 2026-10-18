@@ -28,6 +28,11 @@ public class AuditReportDao extends CrudDaoQuerydsl<AuditReport> {
                 .fetchOne()
         );
     }
+    /** Immutable admission marker: all generic/public readers fail closed for CI reports. */
+    public boolean isCiPrivate(long runId) {
+        var run=com.dokor.argos.db.generated.QAuditRun.auditRun;
+        return transactionManager.selectQuery().select(run.ciNavigationOrigins).from(run).where(run.id.eq(runId)).fetchOne()!=null;
+    }
 
     public Optional<AuditReport> findByRunId(long runId) {
         return Optional.ofNullable(

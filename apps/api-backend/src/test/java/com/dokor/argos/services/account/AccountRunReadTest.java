@@ -29,10 +29,10 @@ class AccountRunReadTest {
             statement.execute("""
                 CREATE TABLE ARG_AUDIT_RUN(id BIGINT PRIMARY KEY,audit_id BIGINT,owner_user_id BIGINT,
                   status VARCHAR(20),created_at TIMESTAMP(3),module_statuses TEXT,
-                  started_at TIMESTAMP(3),finished_at TIMESTAMP(3),profile_snapshot TEXT)
+                  started_at TIMESTAMP(3),finished_at TIMESTAMP(3),profile_snapshot TEXT,ci_navigation_origins TEXT)
                 """);
             statement.execute("""
-                INSERT INTO ARG_AUDIT_RUN VALUES
+                INSERT INTO ARG_AUDIT_RUN(id,audit_id,owner_user_id,status,created_at,module_statuses,started_at,finished_at,profile_snapshot) VALUES
                 (1,7,10,'QUEUED','2026-10-16 08:00:00','[]',NULL,NULL,'profile'),
                 (2,7,10,'COMPLETED','2026-10-16 08:00:00','[]','2026-10-16 08:01:00','2026-10-16 08:02:00',NULL),
                 (3,7,20,'QUEUED','2026-10-16 09:00:00','[]',NULL,NULL,NULL),
@@ -47,6 +47,11 @@ class AccountRunReadTest {
     }
 
     @AfterEach void close() throws Exception { connection.close(); }
+    @Test void privateCiRunsCannotUseTheHistoricalPersonalReader() throws Exception {
+        try(var s=connection.createStatement()){s.execute("UPDATE ARG_AUDIT_RUN SET ci_navigation_origins='[\"https://example.com\"]' WHERE id=1");}
+        assertEquals(java.util.List.of(2L),reads.list(10,100,connection).stream().map(run->run.getId()).toList());
+        assertTrue(reads.owned(1,10,connection).isEmpty());
+    }
 
     @Test void projectsOnlyStatusAndScopesByOwnerEvenForTheSameAudit() {
         var rows = reads.list(10, 100, connection);

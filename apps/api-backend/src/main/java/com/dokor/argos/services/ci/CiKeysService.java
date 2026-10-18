@@ -114,6 +114,9 @@ public class CiKeysService {
             if(credential==null && limiter.blocked(peer)) throw fail(CiErrorCode.AUTHENTICATION_FAILED);
             try {
                 return dao.transaction(c->{
+                    // Fresh intention/progress reads after an account/key lock wait; pools restore isolation on close.
+                    try {c.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);}
+                    catch(java.sql.SQLException failed){throw new IllegalStateException("CI transaction unavailable");}
                     var q=QCiApiKey.table;var i=QCiIntegration.table;
                     String id=credential==null?"":credential.substring(9,41);
                     var candidate=credential==null?null:dao.transactions.selectQuery(c).select(i.ownerUserId,q.secretHash,q.expiresAt,q.overlapUntil,q.revokedAt).from(q).join(i).on(i.id.eq(q.integrationId)).where(q.publicId.eq(id)).fetchOne();

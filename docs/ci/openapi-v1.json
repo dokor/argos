@@ -1,0 +1,752 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Argos Premium CI API",
+    "version": "1.0.0-preview",
+    "description": "Preview contract. premium-ci.enabled=false until complete acceptance #467. Bearer machine key required on every call. Unknown query parameters are rejected. No cookie/admin/report-token substitution; no anonymous fallback. Responses and errors are private no-store. Body <=8192 bytes. Detailed exports (#736), verdicts (#466) and publication clients are separate contracts."
+  },
+  "servers": [
+    {
+      "url": "/api/ci/v1"
+    }
+  ],
+  "security": [
+    {
+      "argosCiApiKey": []
+    }
+  ],
+  "paths": {
+    "/analyses": {
+      "post": {
+        "summary": "Admit full analyses atomically; recover the same intention after ambiguity.",
+        "x-required-scopes": [
+          "audits:write"
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+              "maxLength": 36
+            },
+            "description": "Generate once, persist and reuse the same UUID for this intention, including after rotation/timeout."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Input"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Existing matching intention; no new analysis or execution debit.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Admission"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Fresh admission: all runs and reservations committed together.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Admission"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/CiError"
+          }
+        }
+      }
+    },
+    "/admissions/by-key/{key}": {
+      "get": {
+        "summary": "Recover the original intention using its key; missing/out-of-scope is uniform 404.",
+        "x-required-scopes": [
+          "results:read"
+        ],
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+              "maxLength": 36
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authorized private response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Admission"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/CiError"
+          }
+        }
+      }
+    },
+    "/admissions/{id}": {
+      "get": {
+        "summary": "Read this integration's admission.",
+        "x-required-scopes": [
+          "results:read"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+              "maxLength": 36
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authorized private response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Admission"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/CiError"
+          }
+        }
+      }
+    },
+    "/runs/{id}": {
+      "get": {
+        "summary": "Read safe progress and a controlled terminal failure code.",
+        "x-required-scopes": [
+          "results:read"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]{0,18}$",
+              "maxLength": 19,
+              "description": "Positive signed 64-bit run identifier; never an access credential."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authorized private response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Run"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/CiError"
+          }
+        }
+      }
+    },
+    "/runs/{id}/report": {
+      "get": {
+        "summary": "Read summary-v1 only after publication; absent, pending, expired and out-of-scope report is uniform 404.",
+        "x-required-scopes": [
+          "results:read"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]{0,18}$",
+              "maxLength": 19,
+              "description": "Positive signed 64-bit run identifier; never an access credential."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authorized private response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Report"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/CiError"
+          }
+        }
+      }
+    },
+    "/usage": {
+      "get": {
+        "summary": "Read this stable integration's ledger, including after downgrade.",
+        "x-required-scopes": [
+          "usage:read"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Authorized private response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Usage"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/CiError"
+          }
+        }
+      }
+    },
+    "/preflight": {
+      "get": {
+        "summary": "Read rights/target states/usage without DNS, proof mutation, reservation or target contact.",
+        "x-required-scopes": [
+          "usage:read"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Authorized private response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Preflight"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/CiError"
+          }
+        }
+      }
+    },
+    "/identity": {
+      "get": {
+        "summary": "Read current key identity and declared scope; not proof of admission eligibility.",
+        "x-required-scopes": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Authorized private response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Identity"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/CiError"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "argosCiApiKey": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "Argos CI API key",
+        "description": "Dedicated scoped, expiring machine credential; never a browser JWT or public report token."
+      }
+    },
+    "schemas": {
+      "Input": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "url",
+          "samples",
+          "profileId"
+        ],
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "pattern": "^https://",
+            "maxLength": 2048,
+            "description": "Public HTTPS URL on a verified origin. Queries, fragments, credentials and private targets are rejected."
+          },
+          "samples": {
+            "type": "integer",
+            "enum": [
+              1,
+              2
+            ]
+          },
+          "profileId": {
+            "const": "standard-v1",
+            "type": "string"
+          }
+        }
+      },
+      "Run": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "sample",
+          "status",
+          "createdAt",
+          "startedAt",
+          "finishedAt",
+          "failureCode"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]{0,18}$",
+            "maxLength": 19,
+            "description": "Positive signed 64-bit run identifier; never an access credential."
+          },
+          "sample": {
+            "type": "integer",
+            "enum": [
+              1,
+              2
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "QUEUED",
+              "RUNNING",
+              "COMPLETED",
+              "FAILED",
+              "CANCELED"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "maxLength": 40
+          },
+          "startedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "maxLength": 40
+          },
+          "finishedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "maxLength": 40
+          },
+          "failureCode": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "RUN_FAILED",
+              null
+            ],
+            "description": "RUN_FAILED only for FAILED. Controlled catalog code; no raw worker error."
+          }
+        }
+      },
+      "Admission": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "apiVersion",
+          "id",
+          "profileId",
+          "samples",
+          "createdAt",
+          "runs"
+        ],
+        "properties": {
+          "apiVersion": {
+            "const": 1
+          },
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+            "maxLength": 36
+          },
+          "profileId": {
+            "const": "standard-v1"
+          },
+          "samples": {
+            "type": "integer",
+            "enum": [
+              1,
+              2
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "maxLength": 40
+          },
+          "runs": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 2,
+            "items": {
+              "$ref": "#/components/schemas/Run"
+            }
+          }
+        }
+      },
+      "UsageSnapshot": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "period",
+          "timezone",
+          "startsAt",
+          "resetsAt",
+          "used",
+          "reserved",
+          "limit",
+          "available"
+        ],
+        "properties": {
+          "period": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$"
+          },
+          "timezone": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time",
+            "maxLength": 40
+          },
+          "resetsAt": {
+            "type": "string",
+            "format": "date-time",
+            "maxLength": 40
+          },
+          "used": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "reserved": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "available": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        }
+      },
+      "Usage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "apiVersion",
+          "usage"
+        ],
+        "properties": {
+          "apiVersion": {
+            "const": 1
+          },
+          "usage": {
+            "$ref": "#/components/schemas/UsageSnapshot"
+          }
+        }
+      },
+      "Preflight": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "apiVersion",
+          "newAccessAllowed",
+          "scopes",
+          "targets",
+          "usage"
+        ],
+        "properties": {
+          "apiVersion": {
+            "const": 1
+          },
+          "newAccessAllowed": {
+            "type": "boolean",
+            "description": "Current Premium/ci_access only. This is not an admission guarantee or capacity reservation."
+          },
+          "scopes": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 3,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "audits:write",
+                "results:read",
+                "usage:read"
+              ]
+            }
+          },
+          "targets": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 100,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "origin",
+                "state",
+                "authorizedForKey"
+              ],
+              "properties": {
+                "origin": {
+                  "type": "string",
+                  "format": "uri",
+                  "pattern": "^https://",
+                  "maxLength": 261,
+                  "description": "Exact verified HTTPS origin. No wildcard, credentials, query, path or nonstandard port."
+                },
+                "state": {
+                  "type": "string",
+                  "enum": [
+                    "PENDING",
+                    "VERIFIED",
+                    "REVOKED",
+                    "EXPIRED"
+                  ]
+                },
+                "authorizedForKey": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "usage": {
+            "$ref": "#/components/schemas/UsageSnapshot"
+          }
+        }
+      },
+      "Report": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "apiVersion",
+          "kind",
+          "runId",
+          "globalScore",
+          "scoringVersion",
+          "criticalCount",
+          "importantCount",
+          "completeness",
+          "generatedAt",
+          "expiresAt"
+        ],
+        "properties": {
+          "apiVersion": {
+            "const": 1
+          },
+          "kind": {
+            "const": "summary-v1"
+          },
+          "runId": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]{0,18}$",
+            "maxLength": 19,
+            "description": "Positive signed 64-bit run identifier; never an access credential."
+          },
+          "globalScore": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 100
+          },
+          "scoringVersion": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "criticalCount": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "importantCount": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "completeness": {
+            "type": "string",
+            "enum": [
+              "FULL",
+              "PARTIAL",
+              "UNKNOWN"
+            ]
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "maxLength": 40
+          },
+          "expiresAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "maxLength": 40
+          }
+        }
+      },
+      "Identity": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "apiVersion",
+          "integrationId",
+          "keyId",
+          "scopes",
+          "origins"
+        ],
+        "properties": {
+          "apiVersion": {
+            "const": 1
+          },
+          "integrationId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+            "maxLength": 36
+          },
+          "keyId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$"
+          },
+          "scopes": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 3,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "audits:write",
+                "results:read",
+                "usage:read"
+              ]
+            }
+          },
+          "origins": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 100,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "format": "uri",
+              "pattern": "^https://",
+              "maxLength": 261,
+              "description": "Exact verified HTTPS origin. No wildcard, credentials, query, path or nonstandard port."
+            }
+          }
+        }
+      },
+      "Error": {
+        "$ref": "../../apps/api-backend/src/main/resources/ci/error-response-v1.schema.json"
+      }
+    },
+    "responses": {
+      "CiError": {
+        "description": "Versioned #741 envelope. 400 invalid configuration/target, uniform 401 authentication, 403 scope/entitlement/proof, uniform 404 own resource unavailable, 409 intention conflict, 429 quota/rate, controlled 500/502/503/504. Unknown exceptions never expose raw diagnostics. Recover ambiguous POSTs with the original intention.",
+        "headers": {
+          "Cache-Control": {
+            "schema": {
+              "type": "string",
+              "const": "private, no-store"
+            }
+          },
+          "Retry-After": {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2764800
+            },
+            "description": "Present only when permitted by the canonical error catalog."
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -27,13 +27,13 @@ public class AccountRunReadDao {
 
     public List<AuditRun> list(long owner, int limit, Connection connection) {
         return transactions.selectQuery(connection).select(STATUS).from(RUN)
-            .where(RUN.ownerUserId.eq(owner))
+            .where(RUN.ownerUserId.eq(owner),RUN.ciNavigationOrigins.isNull())
             .orderBy(RUN.createdAt.desc(), RUN.id.desc())
             .limit(Math.max(1, Math.min(limit, 100))).fetch();
     }
 
     public Optional<AuditRun> owned(long id, long owner, Connection connection) {
         return Optional.ofNullable(transactions.selectQuery(connection).select(STATUS).from(RUN)
-            .where(RUN.id.eq(id), RUN.ownerUserId.eq(owner)).fetchOne());
+            .where(RUN.id.eq(id), RUN.ownerUserId.eq(owner),RUN.ciNavigationOrigins.isNull()).fetchOne());
     }
 }
