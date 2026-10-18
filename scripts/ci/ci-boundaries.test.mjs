@@ -69,6 +69,7 @@ test('workflow actions are pinned to reviewed full commits and privileged publis
   const workflow=readFileSync(new URL('workflows/post-deploy-audit.yml',root),'utf8');
   const publisher=workflow.split('\n  tickets:')[1];
   assert.match(publisher,/github.repository == 'dokor\/argos' && github.ref == 'refs\/heads\/main'/);
+  assert.match(publisher,/needs.control.outputs.artifact_id != '' && needs.control.outputs.evidence_sha256 != ''/);
   assert.match(publisher,/artifact-ids: \$\{\{ needs.control.outputs.artifact_id \}\}/);
   assert.match(publisher,/EXPECTED_EVIDENCE_SHA256: \$\{\{ needs.control.outputs.evidence_sha256 \}\}/);
   assert.doesNotMatch(publisher,/ARGOS_CI_(?:EMAIL|PASSWORD)|id-token:|contents: write/);
