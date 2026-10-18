@@ -149,7 +149,7 @@ class CiAdmissionIT extends MariaDbReportFixture {
         key=keys.create(browser,CSRF,new CiKeysService.Input("Both restored",List.of("results:read"),List.of(target,second),integration,null),"fixture");
         sql("UPDATE ARG_ACCOUNT_USER SET offer='FREE' WHERE id="+owner);
         assertEquals("details-v1",ci.export(auth(),"fixture",run).kind());
-        var q=QCiApiKey.table;dao.transaction(c->{dao.transactions.update(q,c).set(q.expiresAt,clock.instant().minusSeconds(1)).where(q.publicId.eq(key.key().id())).execute();return null;});
+        clock.now=Instant.parse(key.key().expiresAt()).plusMillis(1);
         assertEquals(CiErrorCode.AUTHENTICATION_FAILED,code(assertThrows(WebApplicationException.class,()->ci.export(auth(),"fixture",run))));
     }
     @Test void deletionIsScopedIdempotentAndPreservesUsageAndOriginalIntention() throws Exception {
