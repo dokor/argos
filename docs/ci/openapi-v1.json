@@ -3,7 +3,7 @@
   "info": {
     "title": "Argos Premium CI API",
     "version": "1.0.0-preview",
-    "description": "Preview contract. premium-ci.enabled=false until complete acceptance #467. Bearer machine key required on every call. Unknown query parameters are rejected. No cookie/admin/report-token substitution; no anonymous fallback. Responses and errors are private no-store. Body <=8192 bytes. Private details-v1 JSON exports are bounded to 65536 bytes. Verdicts (#466) and publication clients are separate contracts."
+    "description": "Preview contract. premium-ci.enabled=false until complete acceptance #467. Bearer machine key required on every call. Unknown query parameters are rejected. No cookie/admin/report-token substitution; no anonymous fallback. Responses and errors are private no-store. Body <=8192 bytes. Private details-v1 JSON exports are bounded to 65536 bytes. Verdicts require two comparable samples of the same admission. Publication clients are separate and cannot change the audit outcome."
   },
   "servers": [
     {
@@ -483,6 +483,159 @@
           },
           "default": {
             "$ref": "#/components/responses/CiError"
+          }
+        }
+      }
+    },
+    "/policies/standard-v1": {
+      "get": {
+        "summary": "Read immutable parameters before reserving two analyses.",
+        "x-required-scopes": [
+          "results:read"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Private no-store. Audit outcome and publication are independent.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerdictPolicy"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Controlled CI error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Controlled CI error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Controlled CI error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Controlled CI error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Controlled CI error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admissions/{id}/verdict": {
+      "get": {
+        "summary": "Read the confirmed result of this owned admission. No admission, reservation or Git mutation.",
+        "x-required-scopes": [
+          "results:read"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+              "maxLength": 36
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Private no-store. Audit outcome and publication are independent.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Verdict"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Controlled CI error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Controlled CI error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Controlled CI error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Controlled CI error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Controlled CI error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
@@ -1269,6 +1422,358 @@
           },
           "deleted": {
             "const": true
+          }
+        }
+      },
+      "VerdictPolicy": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "apiVersion",
+          "kind",
+          "profileId",
+          "policyId",
+          "requiredSamples",
+          "coverageVersion",
+          "minimumCoverage",
+          "scoringVersion",
+          "measurementVersion",
+          "pipelineSeverity",
+          "ticketSeverities",
+          "eligibleTicketKeys",
+          "historicalComparison",
+          "exceptions",
+          "fingerprint"
+        ],
+        "properties": {
+          "apiVersion": {
+            "type": "integer",
+            "const": 1
+          },
+          "kind": {
+            "type": "string",
+            "const": "policy-v1"
+          },
+          "profileId": {
+            "type": "string",
+            "const": "standard-v1"
+          },
+          "policyId": {
+            "type": "string",
+            "const": "premium-ci-verdict-v1"
+          },
+          "requiredSamples": {
+            "type": "integer",
+            "const": 2
+          },
+          "coverageVersion": {
+            "type": "string",
+            "const": "weighted-coverage-v3"
+          },
+          "minimumCoverage": {
+            "type": "number",
+            "const": 0.8
+          },
+          "scoringVersion": {
+            "type": "integer",
+            "const": 13
+          },
+          "measurementVersion": {
+            "type": "string",
+            "const": "analysis-measurements-v6"
+          },
+          "pipelineSeverity": {
+            "type": "string",
+            "const": "critical"
+          },
+          "ticketSeverities": {
+            "type": "array",
+            "maxItems": 2,
+            "items": {
+              "type": "string"
+            },
+            "const": [
+              "critical",
+              "important"
+            ]
+          },
+          "eligibleTicketKeys": {
+            "type": "array",
+            "maxItems": 128,
+            "items": {
+              "type": "string"
+            },
+            "const": [
+              "html.anchors.href_coverage",
+              "html.doctype.html5",
+              "html.h1.count",
+              "html.images.alt_coverage",
+              "html.lang",
+              "html.link.canonical.present",
+              "html.meta.charset.present",
+              "html.meta.description.present",
+              "html.meta.robots.present",
+              "html.meta.viewport.present",
+              "html.social.meta",
+              "html.title",
+              "http.final_url.https",
+              "http.headers.caching",
+              "http.headers.compression",
+              "http.headers.content_type",
+              "http.protocol.http2",
+              "http.protocol.version",
+              "http.redirect.count",
+              "http.redirect.to_https",
+              "http.security.cookie_flags",
+              "http.security.csp",
+              "http.security.hsts",
+              "http.security.permissions_policy",
+              "http.security.referrer_policy",
+              "http.security.x_content_type_options",
+              "http.security.x_frame_options",
+              "http.seo.robots_txt",
+              "http.seo.sitemap",
+              "http.status_code",
+              "runtime.console.errors",
+              "runtime.js.errors",
+              "runtime.network.5xx",
+              "runtime.network.bytes_estimated",
+              "runtime.network.failed_requests",
+              "runtime.network.request_count",
+              "ssl.certificate.expiry_days",
+              "ssl.certificate.valid",
+              "ssl.protocols.legacy_disabled",
+              "ssl.protocols.tls12",
+              "ssl.protocols.tls13",
+              "tech.security.version_disclosure"
+            ]
+          },
+          "historicalComparison": {
+            "type": "boolean",
+            "const": false
+          },
+          "exceptions": {
+            "type": "array",
+            "maxItems": 2,
+            "items": {
+              "type": "string"
+            },
+            "const": []
+          },
+          "fingerprint": {
+            "type": "string",
+            "const": "794f2999e4d51a0326dcbb27087d07bfde2234326867c2ef68fec9f3b3b0ac98"
+          }
+        }
+      },
+      "Fingerprints": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "scoring",
+          "measurement",
+          "scope"
+        ],
+        "properties": {
+          "scoring": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          },
+          "measurement": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          },
+          "scope": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          }
+        }
+      },
+      "ConfirmedFinding": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "category",
+          "severity",
+          "ticketEligible"
+        ],
+        "properties": {
+          "key": {
+            "type": "string",
+            "enum": [
+              "http.security.hsts",
+              "http.security.csp",
+              "http.security.x_frame_options",
+              "http.security.x_content_type_options",
+              "http.security.referrer_policy",
+              "http.security.permissions_policy",
+              "http.security.cookie_flags",
+              "http.status_code",
+              "http.redirect.count",
+              "http.final_url.https",
+              "http.redirect.to_https",
+              "http.headers.content_type",
+              "html.title",
+              "html.meta.description.present",
+              "html.link.canonical.present",
+              "html.h1.count",
+              "html.meta.viewport.present",
+              "html.doctype.html5",
+              "html.social.meta",
+              "http.seo.robots_txt",
+              "http.seo.sitemap",
+              "html.images.alt_coverage",
+              "html.anchors.href_coverage",
+              "html.lang",
+              "lighthouse.score.performance",
+              "lighthouse.score.accessibility",
+              "lighthouse.score.best-practices",
+              "lighthouse.score.seo",
+              "runtime.console.errors",
+              "runtime.js.errors",
+              "runtime.network.5xx",
+              "runtime.network.failed_requests",
+              "runtime.network.third_party_errors",
+              "ssl.grade",
+              "ssl.certificate.valid",
+              "ssl.certificate.expiry_days",
+              "ssl.protocols.tls13",
+              "ssl.protocols.tls12",
+              "ssl.protocols.legacy_disabled",
+              "observatory.score",
+              "http.antibot.challenge",
+              "http.protocol.version",
+              "http.errors",
+              "http.response_time_ms",
+              "http.protocol.http2",
+              "http.headers.compression",
+              "http.headers.caching",
+              "http.headers.server",
+              "html.meta.robots.present",
+              "html.scripts.count",
+              "html.size.bytes",
+              "html.analysis.duration_ms",
+              "html.meta.charset.present",
+              "runtime.network.request_count",
+              "runtime.network.bytes_estimated",
+              "runtime.analysis.duration_ms",
+              "tech.security.version_disclosure"
+            ]
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "performance",
+              "security",
+              "seo",
+              "a11y"
+            ]
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "critical",
+              "important"
+            ]
+          },
+          "ticketEligible": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Verdict": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "apiVersion",
+          "kind",
+          "admissionId",
+          "policyId",
+          "policyFingerprint",
+          "sampleCount",
+          "outcome",
+          "exitCode",
+          "error",
+          "fingerprints",
+          "confirmedFindings"
+        ],
+        "properties": {
+          "apiVersion": {
+            "type": "integer",
+            "const": 1
+          },
+          "kind": {
+            "type": "string",
+            "const": "verdict-v1"
+          },
+          "admissionId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+            "maxLength": 36
+          },
+          "policyId": {
+            "type": "string",
+            "const": "premium-ci-verdict-v1"
+          },
+          "policyFingerprint": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64,
+            "const": "794f2999e4d51a0326dcbb27087d07bfde2234326867c2ef68fec9f3b3b0ac98"
+          },
+          "sampleCount": {
+            "type": "integer",
+            "enum": [
+              1,
+              2
+            ]
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "GO",
+              "SITE_NO_GO",
+              "CONTROL_FAILED"
+            ]
+          },
+          "exitCode": {
+            "type": "integer",
+            "enum": [
+              0,
+              1,
+              2
+            ]
+          },
+          "error": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "../../apps/api-backend/src/main/resources/ci/error-response-v1.schema.json#/properties/error"
+              }
+            ]
+          },
+          "fingerprints": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Fingerprints"
+              }
+            ]
+          },
+          "confirmedFindings": {
+            "type": "array",
+            "maxItems": 128,
+            "items": {
+              "$ref": "#/components/schemas/ConfirmedFinding"
+            }
           }
         }
       }

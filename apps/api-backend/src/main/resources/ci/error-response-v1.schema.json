@@ -58,7 +58,12 @@
             "ARTIFACT_INVALID",
             "INTERNAL_ERROR",
             "REQUEST_REJECTED",
-            "REAUTHENTICATION_REQUIRED"
+            "REAUTHENTICATION_REQUIRED",
+            "COLLECTION_TIMEOUT",
+            "ANTIBOT_DETECTED",
+            "VERDICT_POLICY_UNSUPPORTED",
+            "CONFIRMATION_REQUIRED",
+            "FINDINGS_UNCONFIRMED"
           ]
         },
         "stage": {

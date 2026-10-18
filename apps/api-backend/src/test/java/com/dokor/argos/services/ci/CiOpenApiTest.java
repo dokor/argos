@@ -20,6 +20,8 @@ class CiOpenApiTest {
         records.putAll(Map.of("Export",CiAdmissionService.Export.class,"ExportDetails",CiExportProjection.class,
             "ExportCategory",CiExportProjection.Category.class,"ExportCheck",CiExportProjection.Check.class,"ExportFinding",CiExportProjection.Finding.class,
             "ArtifactPolicy",CiAdmissionService.ArtifactPolicy.class,"PublicIssue",CiAdmissionService.PublicIssue.class,"Deletion",CiAdmissionService.Deletion.class));
+        records.putAll(Map.of("VerdictPolicy",CiVerdictPolicy.Policy.class,"Verdict",CiVerdictEngine.Verdict.class,
+            "Fingerprints",CiVerdictEngine.Fingerprints.class,"ConfirmedFinding",CiVerdictEngine.Finding.class));
         records.forEach((name,type)->{
             var actual=Arrays.stream(type.getRecordComponents()).map(java.lang.reflect.RecordComponent::getName).collect(Collectors.toSet());
             var declared=new HashSet<String>();schemas.path(name).path("properties").fieldNames().forEachRemaining(declared::add);
@@ -27,7 +29,7 @@ class CiOpenApiTest {
         });
         var errors=path.getParent().resolve(schemas.path("Error").path("$ref").asText()).normalize();
         assertTrue(Files.exists(errors));assertEquals("Argos CI error v1 (preview)",mapper.readTree(errors.toFile()).path("title").asText());
-        assertEquals(9,api.path("paths").size());
+        assertEquals(11,api.path("paths").size());
         assertTrue(api.path("paths").path("/analyses").path("post").path("parameters").get(0).path("required").asBoolean());
         assertEquals("bearer",api.path("components").path("securitySchemes").path("argosCiApiKey").path("scheme").asText());
     }

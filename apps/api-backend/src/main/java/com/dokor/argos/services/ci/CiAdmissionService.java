@@ -89,6 +89,7 @@ public class CiAdmissionService {
             String origin=CiOrigin.ofUrl(input.url());quotas.admit(identity,origin,input.samples(),c);
             var row=new CiRequest();row.setPublicId(UUID.randomUUID().toString());row.setOwnerUserId(identity.owner());row.setIntegrationId(identity.integrationId());
             row.setIdempotencyHash(intent);row.setRequestFingerprint(fingerprint);row.setProfileId(input.profileId());row.setSamples(input.samples());row.setCreatedAt(clock.instant().truncatedTo(java.time.temporal.ChronoUnit.MILLIS));
+            row.setVerdictPolicyJson(json(CiVerdictPolicy.STANDARD));
             var origins=CiOrigin.scope(identity.targets().stream().map(CiTargetsService.Grant::origin).toList());row.setNavigationOrigins(json(origins));requests.save(row,c);
             for(int n=1;n<=input.samples();n++) {
                 var run=runs.createCiQueuedRun(audit,clock.instant(),identity.owner(),c,origins);quotas.attribute(run,identity,origin,row.getPublicId(),n,c);
@@ -161,6 +162,28 @@ public class CiAdmissionService {
         try {entitlement.requireNewAccess(identity.owner(),c);}catch(CiEntitlementService.Denied denied){allowed=false;}
         var proofs=targets.inspect(identity.owner(),identity.targets(),c);
         return new Preflight(1,allowed,identity.scopes().stream().sorted().toList(),proofs,quotas.snapshot(identity,c));
+    });}
+    public CiVerdictPolicy.Policy verdictPolicy(String auth,String peer){return keys.withCredential(auth,peer,"results:read",(identity,c)->CiVerdictPolicy.STANDARD);}
+    public CiVerdictEngine.Verdict verdict(String auth,String peer,String id){return keys.withCredential(auth,peer,"results:read",(identity,c)->{
+        var row=requests.byId(identity,uuid(id),c);visible(identity,row);
+        if(!CiVerdictPolicy.matches(row.getVerdictPolicyJson(),mapper))return CiVerdictEngine.failure(id,row.getSamples(),CiErrorCode.VERDICT_POLICY_UNSUPPORTED);
+        if(row.getSamples()!=2)return CiVerdictEngine.failure(id,row.getSamples(),CiErrorCode.CONFIRMATION_REQUIRED);
+        var states=requests.runs(row,c);
+        if(states.stream().anyMatch(run->Set.of("FAILED","CANCELED").contains(run.status())))return CiVerdictEngine.failure(id,2,CiErrorCode.RUN_FAILED);
+        if(states.stream().anyMatch(run->!"COMPLETED".equals(run.status())))return CiVerdictEngine.failure(id,2,CiErrorCode.WAIT_TIMEOUT);
+        var snapshots=new ArrayList<CiVerdictEngine.Snapshot>();var q=QAuditReport.auditReport;
+        for(var run:states) {
+            long runId=Long.parseLong(run.id());
+            try {report(runId,c);}catch(jakarta.ws.rs.WebApplicationException missing) {
+                if(missing.getResponse().getStatus()!=404)throw missing;
+                return CiVerdictEngine.failure(id,2,CiErrorCode.RESOURCE_NOT_AVAILABLE);
+            }
+            var evidence=dao.transactions.selectQuery(c).select(q.ciVerdictJson).from(q).where(q.runId.eq(runId),
+                com.querydsl.core.types.dsl.Expressions.numberTemplate(Integer.class,"OCTET_LENGTH({0})",q.ciVerdictJson).loe(CiVerdictEngine.MAX_BYTES)).fetchOne();
+            if(evidence==null)return CiVerdictEngine.failure(id,2,CiErrorCode.RESOURCE_NOT_AVAILABLE);
+            try {snapshots.add(CiVerdictEngine.read(evidence,mapper));}catch(IllegalArgumentException invalid){throw fail(CiErrorCode.INTERNAL_ERROR);}
+        }
+        return CiVerdictEngine.evaluate(id,snapshots);
     });}
     private void visible(CiKeysService.Context identity,CiRequest row) {
         if(row==null || row.getOwnerUserId()!=identity.owner() || row.getIntegrationId()!=identity.integrationId())throw fail(CiErrorCode.RESOURCE_NOT_AVAILABLE);

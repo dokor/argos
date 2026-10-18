@@ -62,6 +62,80 @@ class CiAdmissionIT extends MariaDbReportFixture {
     private CiErrorCode code(WebApplicationException e){return ((CiErrors.Envelope)e.getResponse().getEntity()).error().code();}
     private CiAdmissionService.Creation admit(String intention,int count){return ci.create(auth(),"fixture",intention,input(count));}
     private long runId(CiAdmissionService.Creation created){return Long.parseLong(created.admission().runs().getFirst().id());}
+    private void publishVerdictPair(CiAdmissionService.Creation created,com.fasterxml.jackson.databind.node.ObjectNode first,
+                                   com.fasterxml.jackson.databind.node.ObjectNode second) throws Exception {
+        int sample=0;
+        for(var view:created.admission().runs()) {
+            long id=Long.parseLong(view.id());assertTrue(runDao.claimRun(id,"verdict-worker",clock.instant()));
+            var raw=sample++==0?first:second;var composer=mock(PublicReportComposer.class);
+            when(composer.compose(any())).thenReturn(mapper.treeToValue(raw,ReportDto.class));
+            var score=new com.dokor.argos.services.analysis.scoring.AuditScoreReport(13,"a".repeat(64),
+                com.dokor.argos.services.analysis.scoring.ScoreAggregate.of("global",85,100),List.of(),List.of(),List.of(),Map.of(),List.of());
+            var internal=new com.dokor.argos.services.analysis.model.AuditReportJson(1,"https://example.com","https://example.com",clock.instant(),
+                Map.of("measurementContractVersion","analysis-measurements-v6"),List.of(),score);
+            var publisher=new ReportPublishService(dao.transactions,runDao,reports,composer,mock(AiReportSummaryService.class),mock(AhrefsDomainRatingClient.class),mapper);
+            var audit=new Audit();audit.setId(runs.getRun(id).orElseThrow().getAuditId());audit.setNormalizedUrl("https://example.com");
+            publisher.completeAndPublish(id,audit,internal,"{}","verdict-worker");
+        }
+    }
+    @Test void verdictConfirmsItsOwnPairWithoutAnotherAuditReservationOrCharge() throws Exception {
+        String intention=UUID.randomUUID().toString();var created=admit(intention,2);assertEquals(2,ci.usage(auth(),"fixture").usage().reserved());
+        assertEquals(CiVerdictPolicy.STANDARD,ci.verdictPolicy(auth(),"fixture"));
+        var raw=CiVerdictFixtures.report(mapper);CiVerdictFixtures.finding(raw,"http.security.csp","critical");
+        publishVerdictPair(created,raw,raw);var before=ci.usage(auth(),"fixture").usage();
+        for(int n=0;n<3;n++) {
+            var verdict=ci.verdict(auth(),"fixture",created.admission().id());assertEquals("SITE_NO_GO",verdict.outcome());
+            assertEquals(1,verdict.confirmedFindings().size());assertTrue(verdict.confirmedFindings().getFirst().ticketEligible());
+        }
+        assertEquals(before,ci.usage(auth(),"fixture").usage());assertEquals(2,before.used());assertEquals(0,before.reserved());
+        assertFalse(admit(intention,2).created());assertEquals(2L,dao.transactions.selectQuery().select(QUsageRun.table.id.count()).from(QUsageRun.table).fetchOne());
+        key=keys.rotate(browser,CSRF,key.key().id(),"fixture");assertEquals("SITE_NO_GO",ci.verdict(auth(),"fixture",created.admission().id()).outcome());
+        sql("UPDATE ARG_ACCOUNT_USER SET offer='FREE' WHERE id="+owner);assertEquals("SITE_NO_GO",ci.verdict(auth(),"fixture",created.admission().id()).outcome());
+        assertEquals("{}",reports.findByRunId(runId(created)).orElseThrow().getReportJson());
+        assertFalse(reports.findByRunId(runId(created)).orElseThrow().getCiVerdictJson().contains("example.com"));
+    }
+    @Test void verdictChecksCurrentOwnershipIntegrationScopesAndRevocationBeforeReturningAnyEvidence() throws Exception {
+        var created=admit(UUID.randomUUID().toString(),2);String id=created.admission().id();
+        var other=issue(browser,target,List.of("results:read"));
+        assertEquals(CiErrorCode.RESOURCE_NOT_AVAILABLE,code(assertThrows(WebApplicationException.class,()->ci.verdict("Bearer "+other.credential(),"fixture",id))));
+        String foreignBrowser=login(user("verdict-other@example.com"));var foreign=issue(foreignBrowser,verified(foreignBrowser),List.of("results:read"));
+        assertEquals(CiErrorCode.RESOURCE_NOT_AVAILABLE,code(assertThrows(WebApplicationException.class,()->ci.verdict("Bearer "+foreign.credential(),"fixture",id))));
+        var writeOnly=issue(browser,target,List.of("audits:write"));
+        assertEquals(CiErrorCode.PERMISSION_DENIED,code(assertThrows(WebApplicationException.class,()->ci.verdict("Bearer "+writeOnly.credential(),"fixture",id))));
+        assertEquals(CiErrorCode.AUTHENTICATION_FAILED,code(assertThrows(WebApplicationException.class,()->ci.verdict(browser,"fixture",id))));
+        keys.revoke(browser,CSRF,key.key().id(),"fixture");
+        assertEquals(CiErrorCode.AUTHENTICATION_FAILED,code(assertThrows(WebApplicationException.class,()->ci.verdict(auth(),"fixture",id))));
+    }
+    @Test void unknownPolicyPendingAndTerminalFailureNeverProduceAReadyVerdict() throws Exception {
+        var created=admit(UUID.randomUUID().toString(),2);String id=created.admission().id();
+        assertEquals(CiErrorCode.WAIT_TIMEOUT,ci.verdict(auth(),"fixture",id).error().code());
+        sql("UPDATE ARG_CI_REQUEST SET verdict_policy_json=NULL WHERE public_id='"+id+"'");
+        assertEquals(CiErrorCode.VERDICT_POLICY_UNSUPPORTED,ci.verdict(auth(),"fixture",id).error().code());
+        String policyJson=mapper.writeValueAsString(CiVerdictPolicy.STANDARD);
+        dao.transaction(c->{dao.transactions.update(QCiRequest.table,c).set(QCiRequest.table.verdictPolicyJson,policyJson).where(QCiRequest.table.publicId.eq(id)).execute();return null;});
+        sql("UPDATE ARG_AUDIT_RUN SET status='FAILED' WHERE id="+runId(created));
+        assertEquals(CiErrorCode.RUN_FAILED,ci.verdict(auth(),"fixture",id).error().code());
+    }
+    @Test void singleSampleIsExploratoryAndCannotTurnIntoAnImplicitSecondAdmission() {
+        var created=admit(UUID.randomUUID().toString(),1);
+        assertEquals(CiErrorCode.CONFIRMATION_REQUIRED,ci.verdict(auth(),"fixture",created.admission().id()).error().code());
+        assertEquals(1L,dao.transactions.selectQuery().select(QUsageRun.table.id.count()).from(QUsageRun.table).fetchOne());
+    }
+    @Test void incomparableDeletedExpiredAndTamperedEvidenceFailsClosedWithoutRawFallback() throws Exception {
+        var created=admit(UUID.randomUUID().toString(),2);String id=created.admission().id();
+        var raw=CiVerdictFixtures.report(mapper);var changed=raw.deepCopy();((com.fasterxml.jackson.databind.node.ObjectNode)changed.at("/scores/calculation")).put("scopeFingerprint","d".repeat(64));
+        publishVerdictPair(created,raw,changed);
+        assertEquals(CiErrorCode.REPORTS_INCOMPARABLE,ci.verdict(auth(),"fixture",id).error().code());
+        long first=runId(created);var q=QAuditReport.auditReport;String saved=reports.findByRunId(first).orElseThrow().getCiVerdictJson();
+        dao.transaction(c->{dao.transactions.update(q,c).set(q.ciVerdictJson,"{\"raw\":\"synthetic-private-466\"}").where(q.runId.eq(first)).execute();return null;});
+        var rejected=assertThrows(WebApplicationException.class,()->ci.verdict(auth(),"fixture",id));assertEquals(CiErrorCode.INTERNAL_ERROR,code(rejected));
+        assertFalse(mapper.writeValueAsString(rejected.getResponse().getEntity()).contains("synthetic-private-466"));
+        dao.transaction(c->{dao.transactions.update(q,c).set(q.ciVerdictJson,saved).where(q.runId.eq(first)).execute();return null;});
+        clock.now=clock.now.plus(Duration.ofDays(40));assertEquals(CiErrorCode.RESOURCE_NOT_AVAILABLE,ci.verdict(auth(),"fixture",id).error().code());
+        clock.now=clock.now.minus(Duration.ofDays(40));
+        ci.deleteReport(auth(),"fixture",first);assertEquals(CiErrorCode.RESOURCE_NOT_AVAILABLE,ci.verdict(auth(),"fixture",id).error().code());
+        assertEquals(2L,dao.transactions.selectQuery().select(QUsageRun.table.id.count()).from(QUsageRun.table).fetchOne());
+    }
     @Test void doctorPreflightCannotResolveContactVerifyOrAdmitATargetEvenWithHostileUpstreamErrors() {
         clearInvocations(proof,transport);
         doThrow(new RuntimeException("synthetic-private-737 ::error:: @everyone")).when(transport).validate(anyString(),any());
@@ -275,7 +349,7 @@ class CiAdmissionIT extends MariaDbReportFixture {
         server.start();
         try {
             String base="http://127.0.0.1:"+server.getListeners().iterator().next().getPort();var client=HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build();
-            for(String path:List.of("/ci/v1/usage","/ci/v1/preflight","/ci/v1/runs/1/report","/ci;ignored/v1/usage","/ci/v9/unknown")) {
+            for(String path:List.of("/ci/v1/usage","/ci/v1/preflight","/ci/v1/policies/standard-v1","/ci/v1/admissions/a2942a5c-b63a-45cd-a88a-d02b1af5db02/verdict","/ci/v1/runs/1/report","/ci;ignored/v1/usage","/ci/v9/unknown")) {
                 var denied=client.send(HttpRequest.newBuilder(URI.create(base+path)).header("Authorization",browser).GET().build(),HttpResponse.BodyHandlers.ofString());
                 assertEquals(401,denied.statusCode(),path);assertEquals("AUTHENTICATION_FAILED",mapper.readTree(denied.body()).path("error").path("code").asText());
             }
@@ -287,6 +361,11 @@ class CiAdmissionIT extends MariaDbReportFixture {
             var replay=client.send(request,HttpResponse.BodyHandlers.ofString());assertEquals(200,replay.statusCode());
             assertEquals(mapper.readTree(response.body()).path("id"),mapper.readTree(replay.body()).path("id"));
             assertFalse(response.body().contains(key.credential()));assertFalse(response.body().contains("reportToken"));
+            String admitted=mapper.readTree(response.body()).path("id").asText();
+            var verdict=client.send(HttpRequest.newBuilder(URI.create(base+"/ci/v1/admissions/"+admitted+"/verdict")).header("Authorization",auth()).GET().build(),HttpResponse.BodyHandlers.ofString());
+            assertEquals(200,verdict.statusCode());assertEquals("CONFIRMATION_REQUIRED",mapper.readTree(verdict.body()).path("error").path("code").asText());
+            var policy=client.send(HttpRequest.newBuilder(URI.create(base+"/ci/v1/policies/standard-v1")).header("Authorization",auth()).GET().build(),HttpResponse.BodyHandlers.ofString());
+            assertEquals(200,policy.statusCode());assertEquals("private, no-store",policy.headers().firstValue("cache-control").orElseThrow());
             var recover=client.send(HttpRequest.newBuilder(URI.create(base+"/ci/v1/admissions/by-key/"+intention)).header("Authorization",auth()).GET().build(),HttpResponse.BodyHandlers.ofString());assertEquals(200,recover.statusCode());
             var query=client.send(HttpRequest.newBuilder(URI.create(base+"/ci/v1/usage?owner=99")).header("Authorization",auth()).GET().build(),HttpResponse.BodyHandlers.ofString());assertEquals(400,query.statusCode());
             var identityQuery=client.send(HttpRequest.newBuilder(URI.create(base+"/ci/v1/identity?owner=99")).header("Authorization",auth()).GET().build(),HttpResponse.BodyHandlers.ofString());assertEquals(400,identityQuery.statusCode());

@@ -52,6 +52,7 @@ public class QAuditReport extends com.querydsl.sql.RelationalPathBase<AuditRepor
     public final NumberPath<Integer> importantCount=createNumber("importantCount",Integer.class);
     public final StringPath reportJson = createString("reportJson");
     public final StringPath ciExportJson = createString("ciExportJson");
+    public final StringPath ciVerdictJson = createString("ciVerdictJson");
     public final StringPath introductionJson = createString("introductionJson");
 
     public final NumberPath<Long> runId = createNumber("runId", Long.class);
@@ -97,6 +98,7 @@ public class QAuditReport extends com.querydsl.sql.RelationalPathBase<AuditRepor
 
     public void addMetadata() {
         addMetadata(ciExportJson,ColumnMetadata.named("ci_export_json").ofType(Types.LONGVARCHAR));
+        addMetadata(ciVerdictJson,ColumnMetadata.named("ci_verdict_json").ofType(Types.LONGVARCHAR));
         addMetadata(problemProjectionVersion,ColumnMetadata.named("problem_projection_version").ofType(Types.SMALLINT));
         addMetadata(problemFingerprint,ColumnMetadata.named("problem_fingerprint").ofType(Types.VARCHAR).withSize(64));
         addMetadata(problemCoverageVersion,ColumnMetadata.named("problem_coverage_version").ofType(Types.VARCHAR).withSize(64));

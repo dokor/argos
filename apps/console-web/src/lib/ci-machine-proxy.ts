@@ -4,6 +4,9 @@ import { ciFailure, ciUpstreamError, validCiOrigin } from "./ci-management-proxy
 import { ssrfError } from "./audit-url-validation";
 import exportCatalogue from "./ci-export-catalog-v1.json";
 import { ciBackendOrigin } from "./ci-backend-origin";
+import verdictPolicy from "./ci-verdict-policy-v1.json";
+import errorCatalogue from "./ci-error-catalog.json";
+import {validPolicy,validVerdict} from "./ci-verdict-contract.mjs";
 
 const headers={"Cache-Control":"private, no-store","X-Content-Type-Options":"nosniff","Referrer-Policy":"no-referrer","X-Robots-Tag":"noindex, nofollow, noarchive","Vary":"Authorization"};
 const publicIssue={title:"Argos audit: review required",body:"An Argos CI audit requires an authenticated review. Open Argos with your own account. Findings are available only through authenticated access."};
@@ -47,6 +50,8 @@ function details(v:unknown):boolean {
 }
 function success(path:string,v:unknown):boolean {
   if(!object(v))return false;
+  if(path==="v1/policies/standard-v1")return validPolicy(v,verdictPolicy);
+  if(path.endsWith("/verdict"))return validVerdict(v,verdictPolicy,exportCatalogue,errorCatalogue.errors);
   if(path.endsWith("/export"))return exact(v,["apiVersion","kind","summary","reportPath","details","artifactPolicy","publicIssue"]) && v.apiVersion===1 && v.kind==="details-v1"
     && success(path.replace(/export$/,"report"),v.summary) && object(v.summary) && v.reportPath===`/api/ci/v1/runs/${v.summary.runId}/report` && details(v.details)
     && object(v.artifactPolicy) && exact(v.artifactPolicy,["visibility","retentionDays","diagnosticRetentionDays","automaticUpload"])
@@ -83,7 +88,7 @@ export async function ciMachineProxy(request:NextRequest,parts:string[]):Promise
   if(!authorization || !/^Bearer argos_ci_[a-f0-9]{32}\.[A-Za-z0-9_-]{43}$/.test(authorization))return ciFailure("AUTHENTICATION_FAILED");
   if([...request.nextUrl.searchParams.keys()].length)return ciFailure("CONFIG_INVALID");
   const path=parts.join("/");
-  const get=request.method==="GET" && new RegExp(`^v1/(?:identity|usage|preflight|admissions/(?:${uuid}|by-key/${uuid})|runs/[1-9][0-9]{0,18}(?:/report|/export)?)$`).test(path);
+  const get=request.method==="GET" && new RegExp(`^v1/(?:identity|usage|preflight|policies/standard-v1|admissions/(?:${uuid}(?:/verdict)?|by-key/${uuid})|runs/[1-9][0-9]{0,18}(?:/report|/export)?)$`).test(path);
   const post=request.method==="POST" && path==="v1/analyses";
   const deletion=request.method==="DELETE" && /^v1\/runs\/[1-9][0-9]{0,18}\/report$/.test(path);
   const unknown=!get && !post && !deletion;
@@ -110,7 +115,7 @@ export async function ciMachineProxy(request:NextRequest,parts:string[]):Promise
     if(unknown)return ciFailure("RESOURCE_NOT_AVAILABLE");
     if(deletion && (!object(data) || data.deleted!==true) || !deletion && object(data) && data.deleted===true)return ciFailure("TRANSPORT_FAILED");
     if(object(data) && (path.startsWith("v1/runs/") && (path.endsWith("/export") && object(data.summary)?data.summary.runId:path.endsWith("/report")?data.runId:data.id)!==path.split("/")[2]
-      || new RegExp(`^v1/admissions/${uuid}$`).test(path) && data.id!==path.split("/")[2]))return ciFailure("TRANSPORT_FAILED");
+      || new RegExp(`^v1/admissions/${uuid}(?:/verdict)?$`).test(path) && (path.endsWith("/verdict")?data.admissionId:data.id)!==path.split("/")[2]))return ciFailure("TRANSPORT_FAILED");
     return NextResponse.json(data,{status:response.status,headers:{...headers,...(path.endsWith("/export")?{"Content-Disposition":`attachment; filename="argos-ci-run-${path.split("/")[2]}.json"`}:{})}});
   }catch{return ciFailure("TRANSPORT_FAILED");}
 }

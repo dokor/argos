@@ -51,7 +51,8 @@ L’[OpenAPI](openapi-v1.json) décrit les champs stricts et leurs bornes :
   128 constats dédupliqués, identifiés par les clés exactes du catalogue v1 ;
 - omittedFindings : nombre de constats non représentés, notamment les contrôles
   dynamiques non approuvés. Une valeur positive interdit de conclure que l’export
-  contient tous les constats ; le verdict complet relève de #466 ;
+  contient tous les constats ; consommer le [verdict serveur #466](verdicts.md),
+  sans reconstruire un GO depuis cet export ;
 - artifactPolicy : export privé, dépôt d’artefact volontaire, plafond de sept jours
   pour ces artefacts et d’un jour pour les diagnostics contrôlés ;
 - publicIssue : titre et texte fixes utilisables dans un dépôt public.

@@ -18,6 +18,8 @@ courants, sans cache ; un refus ne devient jamais un audit anonyme.
 | POST `/analyses` | audits:write | 201 pour une nouvelle intention ; 200 pour une intention identique déjà admise |
 | GET `/admissions/by-key/{key}` | results:read | Retrouver l’intention d’origine après une réponse perdue |
 | GET `/admissions/{id}` | results:read | Intention et ses un ou deux résumés de runs |
+| GET `/admissions/{id}/verdict` | results:read | Verdict confirmé de l’intention, sans nouveau run ni débit |
+| GET `/policies/standard-v1` | results:read | Paramètres et empreinte de la politique avant admission |
 | GET `/runs/{id}` | results:read | Statut/dates/échantillon ; failureCode contrôlé RUN_FAILED si échec |
 | GET `/runs/{id}/report` | results:read | Synthèse numérique privée summary-v1 publiée et non expirée |
 | GET `/usage` | usage:read | Consommation de cette intégration stable, sans chiffres des autres clients |
@@ -36,7 +38,8 @@ sur une origine vérifiée exacte de la clé. Pas de query, fragment, identifian
 IP ou port alternatif. Les chemins sont permis ; ne soumettre aucune URL qui
 contient un secret dans son chemin. Les ressources tierces et redirections gardent
 les contrôles de #734 et l’egress obligatoire. La double mesure réserve deux
-analyses ensemble, exécutées en séquence ; les verdicts/comparaisons restent #466.
+analyses ensemble, exécutées en séquence ; le [contrat de verdict #466](verdicts.md)
+exige deux mesures comparables. Une mesure seule reste exploratoire.
 
 ## Une intention durable, sans double réservation
 
