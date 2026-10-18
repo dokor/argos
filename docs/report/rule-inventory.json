@@ -305,7 +305,7 @@
   {
     "key": "http.antibot.challenge",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:205"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:206"
     ],
     "scorable": true,
     "weight": 2,
@@ -338,7 +338,7 @@
   {
     "key": "http.errors",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:272"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:273"
     ],
     "scorable": true,
     "weight": 2,
@@ -357,7 +357,7 @@
   {
     "key": "http.final_url.https",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:513"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:514"
     ],
     "scorable": true,
     "weight": 2,
@@ -376,7 +376,7 @@
   {
     "key": "http.headers.caching",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:814"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:815"
     ],
     "scorable": true,
     "weight": 2,
@@ -395,7 +395,7 @@
   {
     "key": "http.headers.compression",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:788"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:789"
     ],
     "scorable": true,
     "weight": 2,
@@ -414,7 +414,7 @@
   {
     "key": "http.headers.content_type",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:596"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:597"
     ],
     "scorable": true,
     "weight": 2,
@@ -433,7 +433,7 @@
   {
     "key": "http.headers.server",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:831"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:832"
     ],
     "scorable": true,
     "weight": 2,
@@ -452,8 +452,8 @@
   {
     "key": "http.protocol.http2",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:759",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:771"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:760",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:772"
     ],
     "scorable": true,
     "weight": 2,
@@ -472,7 +472,7 @@
   {
     "key": "http.protocol.version",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:256"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:257"
     ],
     "scorable": true,
     "weight": 2,
@@ -491,7 +491,7 @@
   {
     "key": "http.redirect.count",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:492"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:493"
     ],
     "scorable": true,
     "weight": 2,
@@ -510,7 +510,7 @@
   {
     "key": "http.redirect.to_https",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:552"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:553"
     ],
     "scorable": true,
     "weight": 2,
@@ -529,7 +529,7 @@
   {
     "key": "http.response_time_ms",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:574"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:575"
     ],
     "scorable": true,
     "weight": 2,
@@ -548,8 +548,8 @@
   {
     "key": "http.security.cookie_flags",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:686",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:713"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:687",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:714"
     ],
     "scorable": true,
     "weight": 6,
@@ -568,8 +568,8 @@
   {
     "key": "http.security.csp",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:625",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:873",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:626",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:874",
       "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/zap/ZapModuleAnalyzer.java:25"
     ],
     "scorable": true,
@@ -589,7 +589,7 @@
   {
     "key": "http.security.hsts",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:616",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:617",
       "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:106",
       "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:377",
       "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:389",
@@ -612,7 +612,7 @@
   {
     "key": "http.security.permissions_policy",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:661"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:662"
     ],
     "scorable": true,
     "weight": 6,
@@ -631,7 +631,7 @@
   {
     "key": "http.security.referrer_policy",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:652"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:653"
     ],
     "scorable": true,
     "weight": 3,
@@ -650,7 +650,7 @@
   {
     "key": "http.security.x_content_type_options",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:634",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:635",
       "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/zap/ZapModuleAnalyzer.java:27"
     ],
     "scorable": true,
@@ -670,7 +670,7 @@
   {
     "key": "http.security.x_frame_options",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:643",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:644",
       "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/zap/ZapModuleAnalyzer.java:28"
     ],
     "scorable": true,
@@ -690,7 +690,7 @@
   {
     "key": "http.seo.robots_txt",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:901"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:902"
     ],
     "scorable": true,
     "weight": 2,
@@ -709,7 +709,7 @@
   {
     "key": "http.seo.sitemap",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:908"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:909"
     ],
     "scorable": true,
     "weight": 3,
@@ -728,8 +728,8 @@
   {
     "key": "http.status_code",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:366",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:402"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:367",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:403"
     ],
     "scorable": true,
     "weight": 2,
