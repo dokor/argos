@@ -116,8 +116,11 @@ public class CiKeysService {
                 return dao.transaction(c->{
                     var q=QCiApiKey.table;var i=QCiIntegration.table;
                     String id=credential==null?"":credential.substring(9,41);
-                    Long owner=credential==null?null:dao.transactions.selectQuery(c).select(i.ownerUserId).from(q).join(i).on(i.id.eq(q.integrationId)).where(q.publicId.eq(id)).fetchOne();
-                    if(owner==null) {CiKeyMaterial.matches(tokens,credential,null);throw new InvalidCredential();}
+                    var candidate=credential==null?null:dao.transactions.selectQuery(c).select(i.ownerUserId,q.secretHash).from(q).join(i).on(i.id.eq(q.integrationId)).where(q.publicId.eq(id)).fetchOne();
+                    // Reject a wrong secret before taking any account/key lock. The same values
+                    // are rechecked below under lock, so revocation cannot race this preliminary read.
+                    if(!CiKeyMaterial.matches(tokens,credential,candidate==null?null:candidate.get(q.secretHash)))throw new InvalidCredential();
+                    Long owner=candidate.get(i.ownerUserId);
                     var user=dao.user(owner,c,true);
                     var key=dao.transactions.selectQuery(c).select(q).from(q).where(q.publicId.eq(id)).forUpdate().fetchOne();
                     boolean secretMatches=CiKeyMaterial.matches(tokens,credential,key==null?null:key.getSecretHash());
