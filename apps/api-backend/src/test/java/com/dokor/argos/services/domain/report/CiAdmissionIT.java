@@ -138,7 +138,9 @@ class CiAdmissionIT extends MariaDbReportFixture {
         assertTrue(sharing.shared(oldShare).isEmpty());
         var report=ci.report(auth(),"fixture",run);assertEquals("summary-v1",report.kind());assertNull(report.globalScore());
         assertFalse(mapper.writeValueAsString(report).contains("synthetic-private-upstream"));
-        assertEquals(1,ci.usage(auth(),"fixture").usage().used());
+        // Publisher uses its real publication date; do not bind this privacy test to the calendar month of the fixture clock.
+        assertEquals("COUNTED",dao.transactions.selectQuery().select(QUsageRun.table.state).from(QUsageRun.table).where(QUsageRun.table.id.eq(run)).fetchOne());
+        assertEquals(0,ci.usage(auth(),"fixture").usage().reserved());
         sql("UPDATE ARG_AUDIT_REPORT SET expires_at='2026-10-17' WHERE run_id="+run);
         assertEquals(CiErrorCode.RESOURCE_NOT_AVAILABLE,code(assertThrows(WebApplicationException.class,()->ci.report(auth(),"fixture",run))));
     }
