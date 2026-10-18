@@ -1,5 +1,5 @@
 /** Bound decoded bytes before JSON parsing, including chunked requests without Content-Length. */
-export async function boundedJson(request: Request, maxBytes = 8192): Promise<unknown> {
+export async function boundedJson(request: Pick<Request, "headers" | "body">, maxBytes = 8192): Promise<unknown> {
   const declared = request.headers.get("content-length");
   if (declared && (!/^\d+$/.test(declared) || Number(declared) > maxBytes)) throw new RangeError("Payload too large");
   if (!request.body) throw new SyntaxError("Missing JSON body");

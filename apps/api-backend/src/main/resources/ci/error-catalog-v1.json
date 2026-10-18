@@ -409,6 +409,40 @@
         "message": "Argos could not complete this request.",
         "action": "Keep the correlation identifier and recover the original request state."
       }
+    },
+    "REQUEST_REJECTED": {
+      "httpStatus": 403,
+      "stage": "AUTHENTICATION",
+      "category": "PERMISSION",
+      "messageKey": "ci.errors.REQUEST_REJECTED",
+      "actionCode": "RELOAD_ACCOUNT",
+      "retryable": false,
+      "recovery": "NONE",
+      "fr": {
+        "message": "La demande de gestion a été refusée.",
+        "action": "Recharger la page du compte puis recommencer avec sa session."
+      },
+      "en": {
+        "message": "The management request was rejected.",
+        "action": "Reload the account page and retry with your session."
+      }
+    },
+    "REAUTHENTICATION_REQUIRED": {
+      "httpStatus": 403,
+      "stage": "AUTHENTICATION",
+      "category": "PERMISSION",
+      "messageKey": "ci.errors.REAUTHENTICATION_REQUIRED",
+      "actionCode": "REAUTHENTICATE_ACCOUNT",
+      "retryable": false,
+      "recovery": "NONE",
+      "fr": {
+        "message": "Une authentification récente est requise.",
+        "action": "Confirmer son identité dans la sécurité du compte avant cette action."
+      },
+      "en": {
+        "message": "Recent authentication is required.",
+        "action": "Confirm your identity in account security before this action."
+      }
     }
   }
 }

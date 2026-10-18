@@ -10,6 +10,11 @@ import com.querydsl.sql.Column;
 @Generated("com.coreoz.plume.db.querydsl.generation.IdBeanSerializer")
 public class AuditRun extends com.coreoz.plume.db.querydsl.crud.CrudEntityQuerydsl {
 
+    @Column("ci_navigation_origins")
+    private String ciNavigationOrigins;
+    public String getCiNavigationOrigins() { return ciNavigationOrigins; }
+    public void setCiNavigationOrigins(String value) { ciNavigationOrigins=value; }
+
     @Column("execution_scope")
     private String executionScope;
     public String getExecutionScope() { return executionScope; }

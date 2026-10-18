@@ -15,13 +15,33 @@ export function browserFlags(proxy) {
 }
 
 /** Context-wide rules cover frames, workers and popups; DNS/TCP enforcement is in the proxy. */
-export async function protectContext(context, cancel) {
+export function navigationScope(value, initialUrl) {
+  if (value === undefined) return undefined;
+  if (!Array.isArray(value) || value.length < 1 || value.length > 100) throw new Error('Invalid navigation scope');
+  const origins = value.map(origin => {
+    analysisUrl(origin);
+    const parsed = new URL(origin);
+    if (parsed.protocol !== 'https:' || parsed.origin !== origin) throw new Error('Invalid navigation scope');
+    return origin;
+  });
+  if (new Set(origins).size !== origins.length || !origins.includes(new URL(initialUrl).origin))
+    throw new Error('Invalid navigation scope');
+  return origins;
+}
+
+export async function protectContext(context, cancel, navigationOrigins) {
+  const authorized = navigationOrigins ? new Set(navigationOrigins) : null;
   let requests = 0, bytes = 0;
   await context.route('**/*', async route => {
     const request = route.request();
     try {
       if (++requests > 300) { cancel(); throw new Error('Request limit'); }
       analysisUrl(request.url());
+      if (authorized && request.isNavigationRequest() && !request.frame().parentFrame()
+          && !authorized.has(new URL(request.url()).origin)) {
+        cancel();
+        throw new Error('Main navigation outside scope');
+      }
       if (!['GET','HEAD'].includes(request.method())) throw new Error('Scope limit');
       await route.continue();
     } catch { await route.abort('blockedbyclient').catch(() => {}); }
