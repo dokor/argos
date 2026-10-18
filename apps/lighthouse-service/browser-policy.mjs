@@ -48,7 +48,7 @@ export async function protectContext(context, cancel, navigationOrigins) {
   });
   await context.routeWebSocket('**/*', socket => socket.close());
   context.on('page', async page => {
-    page.on('download', download => { void download.cancel(); });
+    page.on('download', download => { void download.cancel().catch(() => {}); });
     try {
       const cdp = await context.newCDPSession(page);
       await cdp.send('Network.enable');

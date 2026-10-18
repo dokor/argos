@@ -7,7 +7,7 @@ import { readFile } from 'node:fs/promises';
 import { analysisUrl, publicAddress, resolveTarget } from './policy.mjs';
 import { createEgressProxy } from './proxy.mjs';
 
-const denied = ['0.1.2.3','10.1.2.3','127.0.0.2','169.254.169.254','100.64.1.1',
+const denied = ['0.1.2.3','10.1.2.3','127.0.0.2','168.63.129.16','169.254.169.254','100.64.1.1',
   '172.31.0.1','192.168.0.1','192.0.0.8','192.0.2.1','198.18.0.1','198.51.100.1',
   '203.0.113.1','224.0.0.1','255.255.255.255','::','::1','::ffff:8.8.8.8',
   'fc00::1','fe90::1','ff02::1','2001::1','2001:db8::1','2002:808:808::1','3fff::1'];
@@ -33,6 +33,8 @@ test('DNS rejects errors, mixed public/private answers and changing resolutions'
   await assert.rejects(resolveTarget(url,async()=>[]));
   await assert.rejects(resolveTarget(url,async()=>{throw new Error('DNS down');}));
   await assert.rejects(resolveTarget(url,async()=>[{address:'8.8.8.8'},{address:'127.0.0.1'}]));
+  for(const address of ['168.63.129.16','100.100.100.200','fd00:ec2::254','::ffff:169.254.169.254'])
+    await assert.rejects(resolveTarget(url,async()=>[{address:'8.8.8.8'},{address}]));
   let calls=0;const resolve=async()=>[{address:++calls===1?'8.8.8.8':'127.0.0.1'}];
   assert.equal(await resolveTarget(url,resolve),'8.8.8.8');await assert.rejects(resolveTarget(url,resolve));
 });

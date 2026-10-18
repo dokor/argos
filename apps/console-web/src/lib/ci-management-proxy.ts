@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
+import { ciBackendOrigin } from "./ci-backend-origin";
 import catalog from "./ci-error-catalog.json";
 import { boundedJson } from "./bounded-request";
 import { ssrfError } from "./audit-url-validation";
@@ -108,7 +109,7 @@ export async function ciManagementProxy(request: NextRequest,parts: string[],get
     } catch { return ciFailure("CONFIG_INVALID"); }
   }
   try {
-    const upstream=await fetch((process.env.API_BASE??"http://api-backend:8081")+"/api/account/ci/"+path+(after!==null?"?after="+after:""),
+    const upstream=await fetch(ciBackendOrigin()+"/api/account/ci/"+path+(after!==null?"?after="+after:""),
       {method:request.method,headers:forwarded,body,cache:"no-store",redirect:"error",signal:AbortSignal.timeout(15000)});
     if(!/^application\/json(?:\s*;\s*charset=utf-8)?$/i.test(upstream.headers.get("content-type")??"")) return ciFailure("TRANSPORT_FAILED");
     const data=await boundedJson(upstream,upstream.ok?262144:4096);
