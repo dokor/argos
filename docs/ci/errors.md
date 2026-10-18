@@ -127,3 +127,12 @@ intercomptes, lecture réseau bornée, interruption/récupération réelle,
 doctor sans effet de bord et publisher créé puis réponse perdue seront livrés
 avec #462/#463/#464/#465/#738–#740 et validés ensemble dans #467. Ce lot ne
 prétend pas les avoir exécutés.
+
+Le [contrat de verdict #466](verdicts.md) complète le catalogue avec
+COLLECTION_TIMEOUT, ANTIBOT_DETECTED, VERDICT_POLICY_UNSUPPORTED,
+CONFIRMATION_REQUIRED et FINDINGS_UNCONFIRMED. Ce sont des contrôles impossibles,
+jamais des défauts de site ni une autorisation de nouvelle analyse. Leur étape
+est VERDICT, avec action REVIEW_MEASUREMENT et aucune reprise automatique.
+Le résultat machine sépare auditExitCode (0/1/2) et statut de publication ; une
+publication activée échouée/indéterminée peut donner le code de processus 3 sans
+réécrire le verdict d’audit.

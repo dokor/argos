@@ -14,6 +14,7 @@ public class CiRequest extends CrudEntityQuerydsl {
     @Column("request_fingerprint") private byte[] requestFingerprint;
     @Column("navigation_origins") private String navigationOrigins;
     @Column("profile_id") private String profileId;
+    @Column("verdict_policy_json") private String verdictPolicyJson;
     @Column("samples") private Integer samples;
     @Column("created_at") private Instant createdAt;
     @Override public String toString(){return "CiRequest#"+id;}

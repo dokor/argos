@@ -2,6 +2,7 @@ import { afterEach,beforeEach,describe,expect,it,vi } from "vitest";
 import { NextRequest } from "next/server";
 import { ciMachineProxy } from "./ci-machine-proxy";
 import { boundedJson } from "./bounded-request";
+import verdictPolicy from "./ci-verdict-policy-v1.json";
 const id="a2942a5c-b63a-45cd-a88a-d02b1af5db02",secret="argos_ci_"+"1".repeat(32)+"."+"x".repeat(43);
 const now="2026-10-18T12:00:00Z";
 const run={id:"9001",sample:1,status:"QUEUED",createdAt:now,startedAt:null,finishedAt:null,failureCode:null};
@@ -22,6 +23,20 @@ const call=(request:NextRequest)=>ciMachineProxy(request,request.nextUrl.pathnam
 describe("CI machine BFF",()=>{
   beforeEach(()=>{vi.stubEnv("API_BASE","http://java:8081");vi.stubGlobal("fetch",vi.fn());});
   afterEach(()=>{vi.unstubAllGlobals();vi.unstubAllEnvs();});
+  it("returns the frozen policy and an owned verdict while rejecting foreign IDs, prose and inconsistent success",async()=>{
+    vi.mocked(fetch).mockResolvedValueOnce(Response.json(verdictPolicy));
+    expect((await call(req("v1/policies/standard-v1","GET"))).status).toBe(200);
+    const verdict={apiVersion:1,kind:"verdict-v1",admissionId:id,policyId:verdictPolicy.policyId,policyFingerprint:verdictPolicy.fingerprint,
+      sampleCount:2,outcome:"GO",exitCode:0,error:null,fingerprints:{scoring:"a".repeat(64),measurement:"b".repeat(64),scope:"c".repeat(64)},confirmedFindings:[]};
+    vi.mocked(fetch).mockResolvedValueOnce(Response.json(verdict));
+    const response=await call(req("v1/admissions/"+id+"/verdict","GET"));expect(response.status).toBe(200);expect(await response.json()).toEqual(verdict);
+    expect(response.headers.get("cache-control")).toBe("private, no-store");
+    for(const data of [{...verdict,admissionId:"b2942a5c-b63a-45cd-a88a-d02b1af5db02"},{...verdict,raw:"synthetic-private-466 ::error::"},
+      {...verdict,sampleCount:1},{...verdict,confirmedFindings:[{key:"http.security.csp",category:"security",severity:"critical",ticketEligible:true}]}]) {
+      vi.mocked(fetch).mockResolvedValueOnce(Response.json(data));const rejected=await call(req("v1/admissions/"+id+"/verdict","GET"));
+      expect(rejected.status).toBe(502);expect(await rejected.text()).not.toContain("synthetic-private-466");
+    }
+  });
   it("requires a machine bearer even on unknown paths; cookies cannot substitute",async()=>{
     for(const auth of ["","Bearer browser","Basic admin"])for(const path of ["v1/analyses","v2/unknown"]) {
       const response=await call(req(path,"POST",{},auth));expect(response.status).toBe(401);expect((await response.json()).error.code).toBe("AUTHENTICATION_FAILED");

@@ -42,6 +42,10 @@ public class CiAdmissionWs {
     public Response byKey(@Context ContainerRequestContext request,@PathParam("key") String key){return ok(ci.byKey(auth(request),peer(request),key));}
     @GET @Path("/admissions/{id}") @Operation(description="Read this integration's admission and at most two run summaries.")
     public Response get(@Context ContainerRequestContext request,@PathParam("id") String id){return ok(ci.get(auth(request),peer(request),id));}
+    @GET @Path("/policies/standard-v1") @Operation(description="Read immutable verdict parameters before admission. Two analyses are required and reserved together; publication is independent.")
+    public Response verdictPolicy(@Context ContainerRequestContext request){return ok(ci.verdictPolicy(auth(request),peer(request)));}
+    @GET @Path("/admissions/{id}/verdict") @Operation(description="Evaluate two private runs of this intention. No new run, reservation or Git mutation. GO=0, SITE_NO_GO=1, CONTROL_FAILED=2.")
+    public Response verdict(@Context ContainerRequestContext request,@PathParam("id") String id){return ok(ci.verdict(auth(request),peer(request),id));}
     @GET @Path("/runs/{id}") @Operation(description="Read authorized run progress without raw errors, credentials or evidence.")
     public Response run(@Context ContainerRequestContext request,@PathParam("id") String id){return ok(ci.run(auth(request),peer(request),runId(id)));}
     @GET @Path("/runs/{id}/report") @Operation(description="Read the private numeric summary-v1 report. Detailed exports and verdicts are separate contracts.")
