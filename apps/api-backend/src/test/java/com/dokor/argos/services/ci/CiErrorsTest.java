@@ -97,4 +97,12 @@ class CiErrorsTest {
         assertEquals(CiErrorCode.FEATURE_NOT_AVAILABLE,
             CiErrors.entitlementCode(CiEntitlementService.Denial.FEATURE_NOT_AVAILABLE));
     }
+
+    @Test void globalNullOmissionCannotBreakTheVersionedEnvelope() {
+        var omittingMapper = new ObjectMapper().setSerializationInclusion(
+            com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL);
+        var json = omittingMapper.valueToTree(CiErrors.create(CiErrorCode.AUTHENTICATION_FAILED, null));
+        assertTrue(json.path("error").has("retryAfterSeconds"));
+        assertTrue(json.path("error").path("retryAfterSeconds").isNull());
+    }
 }
