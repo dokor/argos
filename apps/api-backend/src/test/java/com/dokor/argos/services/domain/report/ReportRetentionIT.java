@@ -8,6 +8,41 @@ import java.time.Instant;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ReportRetentionIT extends MariaDbReportFixture {
+    @Test void purgeWaitingForARunDoesNotLockItsReportAheadOfExplicitDeletion() throws Exception {
+        sql("UPDATE ARG_AUDIT_REPORT SET expires_at='2030-01-01'");
+        sql("UPDATE ARG_AUDIT_REPORT SET created_at='2026-09-01' WHERE id=1");
+        sql("UPDATE ARG_AUDIT_RUN SET ci_navigation_origins='[\"https://example.com\"]' WHERE id=1");
+        var waiting=new java.util.concurrent.CountDownLatch(1);
+        var observed=org.mockito.Mockito.mock(javax.sql.DataSource.class);
+        org.mockito.Mockito.when(observed.getConnection()).thenAnswer(call->{
+            var delegate=source.getConnection();
+            return java.lang.reflect.Proxy.newProxyInstance(getClass().getClassLoader(),new Class<?>[]{java.sql.Connection.class},(proxy,method,args)->{
+                Object value=invoke(delegate,method,args);
+                if(method.getName().equals("prepareStatement") && args[0].toString().startsWith("SELECT status,ci_navigation_origins"))
+                    return java.lang.reflect.Proxy.newProxyInstance(getClass().getClassLoader(),new Class<?>[]{java.sql.PreparedStatement.class},(p,m,a)->{
+                        if(m.getName().equals("executeQuery"))waiting.countDown();
+                        return invoke(value,m,a);
+                    });
+                return value;
+            });
+        });
+        var retention=new ReportRetentionService(new TransactionManagerQuerydsl(observed,new Configuration(MySQLTemplates.DEFAULT)),ReportRetentionPolicy.defaults());
+        var pool=java.util.concurrent.Executors.newSingleThreadExecutor();
+        try(var held=source.getConnection()) {
+            held.setAutoCommit(false);
+            try {
+                try(var s=held.createStatement()){s.execute("SET innodb_lock_wait_timeout=2");s.executeQuery("SELECT id FROM ARG_AUDIT_RUN WHERE id=1 FOR UPDATE").close();}
+                var purging=pool.submit(()->retention.purge(Instant.parse("2026-10-18T12:00:00Z")));
+                assertTrue(waiting.await(10,java.util.concurrent.TimeUnit.SECONDS));
+                // Same order as CI DELETE: holding the run must still allow deleting its report.
+                try(var s=held.createStatement()){assertEquals(1,s.executeUpdate("DELETE FROM ARG_AUDIT_REPORT WHERE id=1"));}
+                held.commit();assertEquals(0,purging.get(10,java.util.concurrent.TimeUnit.SECONDS));
+            }finally{held.rollback();}
+        }finally{pool.shutdownNow();assertTrue(pool.awaitTermination(10,java.util.concurrent.TimeUnit.SECONDS));}
+    }
+    private static Object invoke(Object target,java.lang.reflect.Method method,Object[] args) throws Throwable {
+        try{return method.invoke(target,args);}catch(java.lang.reflect.InvocationTargetException e){throw e.getCause();}
+    }
     @Test void ciRetentionCeilingAndFailedDiagnosticCleanupPreservePublicAndRunningPayloads() throws Exception {
         var now=Instant.parse("2026-10-18T12:00:00Z");
         sql("UPDATE ARG_AUDIT_REPORT SET created_at='2026-10-18',expires_at='2030-01-01'");

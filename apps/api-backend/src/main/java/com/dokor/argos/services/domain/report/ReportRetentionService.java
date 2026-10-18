@@ -43,12 +43,12 @@ public class ReportRetentionService {
         return transactions.executeAndReturn(connection -> {
             record Candidate(long reportId, long runId) {}
             var candidates = new ArrayList<Candidate>();
-            String select = "SELECT p.id,p.run_id,p.created_at,p.expires_at,(r.ci_navigation_origins IS NOT NULL) "
+            String select = "SELECT p.id,p.run_id "
                 + "FROM ARG_AUDIT_REPORT p JOIN ARG_AUDIT_RUN r ON r.id=p.run_id "
                 + "WHERE r.status IN ('COMPLETED','FAILED') "
                 + "AND (p.expires_at <= ? OR DATE_ADD(p.created_at, INTERVAL ? YEAR) <= ? "
                 + "OR (r.ci_navigation_origins IS NOT NULL AND DATE_ADD(p.created_at, INTERVAL ? DAY) <= ?)) "
-                + "ORDER BY p.created_at,p.id LIMIT " + BATCH_SIZE + " FOR UPDATE";
+                + "ORDER BY p.created_at,p.id LIMIT " + BATCH_SIZE;
             try (var query = connection.prepareStatement(select)) {
                 query.setTimestamp(1, Timestamp.from(now), utc());
                 query.setInt(2, policy.retentionYears());
@@ -57,27 +57,41 @@ public class ReportRetentionService {
                 query.setTimestamp(5,Timestamp.from(now),utc());
                 try (var result = query.executeQuery()) {
                     while (result.next()) {
-                        var report = new AuditReport();
-                        report.setCreatedAt(result.getTimestamp(3, utc()).toInstant());
-                        var explicit = result.getTimestamp(4, utc());
-                        report.setExpiresAt(explicit == null ? null : explicit.toInstant());
-                        boolean expired=result.getBoolean(5) ? policy.ciExpired(report.getCreatedAt(),report.getExpiresAt(),now) : policy.expired(report,now);
-                        if(expired)candidates.add(new Candidate(result.getLong(1), result.getLong(2)));
+                        candidates.add(new Candidate(result.getLong(1), result.getLong(2)));
                     }
                 }
                 // Preserve run IDs, audit/domain metadata, states, dates and attempts.
                 // Revoke progress credentials as well as deleting the published report.
-                try (var clear = connection.prepareStatement("UPDATE ARG_AUDIT_RUN SET result_json=NULL,module_statuses=NULL,last_error=NULL,claim_token=NULL,report_token_hash=NULL WHERE id=? AND status IN ('COMPLETED','FAILED')");
+                // Discovery is nonlocking. Always lock run before report, as publication and
+                // explicit deletion do. Recheck current state/expiry under both locks.
+                candidates.sort(Comparator.comparingLong(Candidate::runId));int removed=0;
+                try (var lockRun=connection.prepareStatement("SELECT status,ci_navigation_origins FROM ARG_AUDIT_RUN WHERE id=? FOR UPDATE");
+                     var lockReport=connection.prepareStatement("SELECT created_at,expires_at FROM ARG_AUDIT_REPORT WHERE id=? AND run_id=? FOR UPDATE");
+                     var clear = connection.prepareStatement("UPDATE ARG_AUDIT_RUN SET result_json=NULL,module_statuses=NULL,last_error=NULL,claim_token=NULL,report_token_hash=NULL WHERE id=? AND status IN ('COMPLETED','FAILED')");
                      var delete = connection.prepareStatement("DELETE FROM ARG_AUDIT_REPORT WHERE id=? AND run_id=?")) {
                     for (var candidate : candidates) {
+                        boolean ci;
+                        lockRun.setLong(1,candidate.runId());
+                        try(var row=lockRun.executeQuery()) {
+                            if(!row.next() || !Set.of("COMPLETED","FAILED").contains(row.getString(1)))continue;
+                            ci=row.getString(2)!=null;
+                        }
+                        lockReport.setLong(1,candidate.reportId());lockReport.setLong(2,candidate.runId());
+                        try(var row=lockReport.executeQuery()) {
+                            if(!row.next())continue;
+                            var report=new AuditReport();report.setCreatedAt(row.getTimestamp(1,utc()).toInstant());
+                            var explicit=row.getTimestamp(2,utc());report.setExpiresAt(explicit==null?null:explicit.toInstant());
+                            if(!(ci?policy.ciExpired(report.getCreatedAt(),report.getExpiresAt(),now):policy.expired(report,now)))continue;
+                        }
                         clear.setLong(1, candidate.runId());
                         if (clear.executeUpdate() != 1) throw new IllegalStateException("Retention terminal run changed");
                         delete.setLong(1, candidate.reportId());
                         delete.setLong(2, candidate.runId());
                         if (delete.executeUpdate() != 1) throw new IllegalStateException("Retention report changed");
+                        removed++;
                     }
                 }
-                return candidates.size();
+                return removed;
             } catch (SQLException unavailable) {
                 // No SQL arguments, credentials or report contents in scheduler logs.
                 throw new IllegalStateException("Report retention transaction failed");
@@ -91,7 +105,7 @@ public class ReportRetentionService {
             try(var s=c.prepareStatement("SELECT id FROM ARG_AUDIT_RUN WHERE ci_navigation_origins IS NOT NULL "
                 +"AND status IN ('COMPLETED','FAILED','CANCELED') AND finished_at<=? "
                 +"AND (result_json IS NOT NULL OR last_error IS NOT NULL OR module_statuses IS NOT NULL OR claim_token IS NOT NULL OR report_token_hash IS NOT NULL) "
-                +"ORDER BY finished_at,id LIMIT "+BATCH_SIZE+" FOR UPDATE")) {
+                +"ORDER BY id LIMIT "+BATCH_SIZE+" FOR UPDATE")) {
                 s.setTimestamp(1,Timestamp.from(now.minus(java.time.Duration.ofDays(1))),utc());
                 try(var rows=s.executeQuery()){while(rows.next())ids.add(rows.getLong(1));}
                 try(var clear=c.prepareStatement("UPDATE ARG_AUDIT_RUN SET result_json=NULL,last_error=NULL,module_statuses=NULL,claim_token=NULL,report_token_hash=NULL WHERE id=?")) {
