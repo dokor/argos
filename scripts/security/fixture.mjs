@@ -21,6 +21,7 @@ const handler=(req,res)=>{
   if(req.url==='/redirect')return res.writeHead(302,{location:'http://private.fixture.net/secret'}).end();
   if(req.url==='/cross-origin')return res.writeHead(302,{location:'https://outside.fixture.net/forbidden'}).end();
   if(req.url==='/second-origin')return res.writeHead(302,{location:'https://second.fixture.net/'}).end();
+  if(req.url==='/chain')return res.writeHead(302,{location:'https://second.fixture.net/cross-origin'}).end();
   if(req.url==='/chunked' || req.url==='/gzip'){
     const html=Buffer.from('<!doctype html><html lang="en"><head><title>Transfer fixture</title><link rel="icon" href="data:,"></head><body>'
       + 'Synthetic transfer fixture '.repeat(1000) + '</body></html>');
