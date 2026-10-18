@@ -198,4 +198,18 @@ class CiKeysIT extends MariaDbReportFixture {
             assertEquals(401,revoked.statusCode());assertEquals("private, no-store",revoked.headers().firstValue("cache-control").orElseThrow());
         } finally {server.shutdownNow();}
     }
+    @Test void incorrectSecretCannotWaitOnOrHoldTheVictimsAccountLock() throws Exception {
+        var issued=issue();String wrong="Bearer argos_ci_"+issued.key().id()+"."+"z".repeat(43);
+        try(var c=source.getConnection();var pool=Executors.newSingleThreadExecutor()) {
+            c.setAutoCommit(false);
+            try(var s=c.prepareStatement("SELECT id FROM ARG_ACCOUNT_USER WHERE id=? FOR UPDATE")) {
+                s.setLong(1,owner.getId());try(var r=s.executeQuery()){assertTrue(r.next());}
+            }
+            try {
+                var rejected=pool.submit(()->{try{keys.withCredential(wrong,"attacker",null,(ctx,connection)->ctx);return null;}
+                    catch(WebApplicationException denied){return code(denied);}});
+                assertEquals(CiErrorCode.AUTHENTICATION_FAILED,rejected.get(5,TimeUnit.SECONDS));
+            }finally{c.rollback();}
+        }
+    }
 }
