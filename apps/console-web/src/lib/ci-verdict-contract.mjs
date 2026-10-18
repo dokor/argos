@@ -19,7 +19,7 @@ export function validVerdict(value,policy,catalogue,errors) {
       && ['stage','category','messageKey','actionCode','retryable','recovery'].every(key=>error[key]===errors[error.code]?.[key]);
   }
   if(!['GO','SITE_NO_GO'].includes(value.outcome) || value.error!==null || value.sampleCount!==2
-    || !exact(value.fingerprints,['scoring','measurement','scope'])
+    || !exact(value.fingerprints,['scoring','measurement','scope','evidence'])
     || !Object.values(value.fingerprints).every(v=>typeof v==='string' && /^[a-f0-9]{64}$/.test(v)))return false;
   const seen=new Set();
   for(const item of value.confirmedFindings) {

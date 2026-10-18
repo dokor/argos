@@ -1572,7 +1572,8 @@
         "required": [
           "scoring",
           "measurement",
-          "scope"
+          "scope",
+          "evidence"
         ],
         "properties": {
           "scoring": {
@@ -1586,6 +1587,11 @@
             "maxLength": 64
           },
           "scope": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          },
+          "evidence": {
             "type": "string",
             "pattern": "^[a-f0-9]{64}$",
             "maxLength": 64

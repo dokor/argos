@@ -6,7 +6,7 @@ import {validPolicy,validVerdict} from '../../apps/console-web/src/lib/ci-verdic
 const resource=name=>JSON.parse(readFileSync(new URL('../../apps/api-backend/src/main/resources/ci/'+name,import.meta.url),'utf8'));
 const policy=resource('verdict-policy-v1.json'),catalogue=resource('export-catalog-v1.json'),errors=resource('error-catalog-v1.json').errors;
 const base={apiVersion:1,kind:'verdict-v1',admissionId:'a2942a5c-b63a-45cd-a88a-d02b1af5db02',policyId:policy.policyId,policyFingerprint:policy.fingerprint,
-  sampleCount:2,outcome:'GO',exitCode:0,error:null,fingerprints:{scoring:'a'.repeat(64),measurement:'b'.repeat(64),scope:'c'.repeat(64)},confirmedFindings:[]};
+  sampleCount:2,outcome:'GO',exitCode:0,error:null,fingerprints:{scoring:'a'.repeat(64),measurement:'b'.repeat(64),scope:'c'.repeat(64),evidence:'e'.repeat(64)},confirmedFindings:[]};
 test('the final process result keeps audit and publication independent',()=>{
   assert.equal(pipelineResult(base).exitCode,0);
   const blocked={...base,outcome:'SITE_NO_GO',exitCode:1,confirmedFindings:[{key:'http.security.csp',category:'security',severity:'critical',ticketEligible:true}]};
