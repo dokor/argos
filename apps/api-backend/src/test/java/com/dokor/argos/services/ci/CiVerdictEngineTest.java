@@ -61,6 +61,12 @@ class CiVerdictEngineTest {
             assertEquals(CiErrorCode.REPORTS_INCOMPARABLE,CiVerdictEngine.evaluate(ID,List.of(snapshot(clean),snapshot(changed))).error().code());
         }
         assertEquals(CiErrorCode.CONFIRMATION_REQUIRED,CiVerdictEngine.evaluate(ID,List.of(snapshot(clean))).error().code());
+        var weights=clean.deepCopy();((ObjectNode)weights.at("/scores/calculation/configuredDomainWeights")).put("performance",0.4).put("security",0.1);
+        assertEquals(CiErrorCode.REPORTS_INCOMPARABLE,CiVerdictEngine.evaluate(ID,List.of(snapshot(clean),snapshot(weights))).error().code());
+        var population=clean.deepCopy();((ObjectNode)population.at("/scores/coverage/checks/0")).put("state","NOT_APPLICABLE").put("confidence","UNKNOWN").put("reason","CONDITIONAL_SIGNAL_ABSENT");
+        assertEquals(CiErrorCode.REPORTS_INCOMPARABLE,CiVerdictEngine.evaluate(ID,List.of(snapshot(clean),snapshot(population))).error().code());
+        var invented=clean.deepCopy();for(var check:invented.at("/scores/coverage/checks"))((ObjectNode)check).put("state","UNAVAILABLE").put("confidence","UNKNOWN");
+        assertEquals(CiErrorCode.MEASUREMENT_INCOMPLETE,snapshot(invented).failure());
         ((ObjectNode)clean.path("scores")).put("global",0);assertEquals(0,snapshot(clean).globalScore());
         var lower=clean.deepCopy();((ObjectNode)lower.path("scores")).put("global",1);
         assertEquals("GO",CiVerdictEngine.evaluate(ID,List.of(snapshot(clean),snapshot(lower))).outcome()); // No invented score-regression gate.

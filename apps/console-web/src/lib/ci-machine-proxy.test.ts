@@ -27,7 +27,7 @@ describe("CI machine BFF",()=>{
     vi.mocked(fetch).mockResolvedValueOnce(Response.json(verdictPolicy));
     expect((await call(req("v1/policies/standard-v1","GET"))).status).toBe(200);
     const verdict={apiVersion:1,kind:"verdict-v1",admissionId:id,policyId:verdictPolicy.policyId,policyFingerprint:verdictPolicy.fingerprint,
-      sampleCount:2,outcome:"GO",exitCode:0,error:null,fingerprints:{scoring:"a".repeat(64),measurement:"b".repeat(64),scope:"c".repeat(64)},confirmedFindings:[]};
+      sampleCount:2,outcome:"GO",exitCode:0,error:null,fingerprints:{scoring:"a".repeat(64),measurement:"b".repeat(64),scope:"c".repeat(64),evidence:"e".repeat(64)},confirmedFindings:[]};
     vi.mocked(fetch).mockResolvedValueOnce(Response.json(verdict));
     const response=await call(req("v1/admissions/"+id+"/verdict","GET"));expect(response.status).toBe(200);expect(await response.json()).toEqual(verdict);
     expect(response.headers.get("cache-control")).toBe("private, no-store");

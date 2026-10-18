@@ -10,13 +10,16 @@ public final class CiVerdictFixtures {
         var s=r.putObject("scores");s.put("global",85).put("globalAvailable",true);
         s.putObject("moduleExecution").put("total",8).put("completed",8).put("partial",0).put("failed",0).put("skipped",0).put("pending",0).put("running",0);
         s.putObject("calculation").put("scoringVersion",13).put("scoringFingerprint","a".repeat(64)).put("measurementFingerprint","b".repeat(64)).put("scopeFingerprint","c".repeat(64));
+        var weights=((ObjectNode)s.path("calculation")).putObject("configuredDomainWeights");
+        var composition=((ObjectNode)s.path("calculation")).putArray("domains");
+        for(String key:List.of("performance","security","seo","a11y")){weights.put(key,0.25);composition.addObject().put("key",key).put("score",85).put("maxScore",100).put("ratio",0.85).put("effectiveWeight",0.25);}
         var c=s.putObject("coverage");c.put("version","weighted-coverage-v3").put("threshold",0.8).put("provisional",false);
         aggregate(c.putObject("global"));var domains=c.putArray("domains");
         for(String key:List.of("performance","security","seo","a11y"))aggregate(domains.addObject().put("key",key));
         var checks=c.putArray("checks");var policy=new DefaultScorePolicy();
         for(String key:new TreeSet<>(policy.cataloguedKeys())) {
             var rule=policy.ruleFor(null,key);
-            if(rule.applicability().contributesToScore() && rule.weight()>0)checks.addObject().put("key",key).put("domain",rule.businessCategory().tag()).put("state","MEASURED").put("confidence","MEASURED");
+            if(rule.applicability().contributesToScore() && rule.weight()>0)checks.addObject().put("key",key).put("domain",rule.businessCategory().tag()).put("weight",rule.weight()).put("state","MEASURED").put("confidence","MEASURED");
         }
         return r;
     }

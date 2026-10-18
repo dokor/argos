@@ -59,6 +59,10 @@ sur les états de mesure MEASURED et les deux observations comparables.
 Les versions de scoring et de méthode doivent être supportées ; leurs empreintes
 et celle du périmètre doivent être présentes et identiques. Elles identifient
 les paramètres appliqués et les URL demandée/finale, sans révéler ces URL. Elles
+incluent aussi une signature des pondérations configurées/effectives, des
+dénominateurs par domaine et des états/poids de chaque contrôle. Les ratios de
+couverture sont revérifiés depuis ces états, sans croire une suffisance incohérente.
+Une population de mesure différente interdit la confirmation. Ces empreintes
 ne prouvent ni un SHA déployé, ni un contenu figé, ni un environnement statistique
 reproductible. Les exceptions propres au contrôle interne Argos ne sont pas
 activées : notamment aucun passe-droit pour l’ancienne lacune d’octets runtime.
