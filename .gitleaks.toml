@@ -5,7 +5,7 @@ useDefault = true
 [[rules]]
 id = "argos-ci-api-key"
 description = "Argos CI API credential"
-regex = '''\b(argos_ci_[a-f0-9]{32}\.[A-Za-z0-9_-]{43})\b'''
+regex = '''\b(argos_ci_[a-f0-9]{32}\.[A-Za-z0-9_-]{43})(?:[^A-Za-z0-9_-]|$)'''
 secretGroup = 1
 keywords = ["argos_ci_"]
 
