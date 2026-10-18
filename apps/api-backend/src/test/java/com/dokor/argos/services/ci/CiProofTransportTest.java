@@ -51,6 +51,8 @@ class CiProofTransportTest {
                 assertTrue(client.matches("https://ci.example.com",id,tokens.sha256(proof)));
                 assertEquals(1,calls.get());status.set(302);
                 assertFalse(client.matches("https://ci.example.com",id,tokens.sha256(proof)));assertEquals(2,calls.get());
+                assertFalse(client.matches("https://wrong.example.com",id,tokens.sha256(proof)));
+                assertEquals(2,calls.get(),"A trusted certificate for a different hostname must not reach HTTP");
                 for(String rejected:List.of("https://168.63.129.16","https://169.254.169.254","https://[fd00:ec2::254]"))
                     assertFalse(client.matches(rejected,id,tokens.sha256(proof)));
             }
@@ -59,11 +61,13 @@ class CiProofTransportTest {
                 assertEquals(2,calls.get(),"An untrusted certificate must not reach HTTP");
             }
             assertFalse(tunnel.requests.isEmpty());
-            assertTrue(tunnel.requests.stream().allMatch(value->value.startsWith("CONNECT ci.example.com:443 HTTP/1.1\r\n")));
+            assertTrue(tunnel.requests.stream().anyMatch(value->value.startsWith("CONNECT wrong.example.com:443 HTTP/1.1\r\n")));
+            assertTrue(tunnel.requests.stream().allMatch(value->value.startsWith("CONNECT ci.example.com:443 HTTP/1.1\r\n")
+                || value.startsWith("CONNECT wrong.example.com:443 HTTP/1.1\r\n")));
             assertTrue(headers.stream().noneMatch(value->value.toLowerCase(Locale.ROOT).matches("(?s).*(authorization|cookie).*")));
         }finally{server.stop(0);}
     }
-    /** Fixture maps only one reserved example.com host to localhost; no external connection exists. */
+    /** Fixture maps only two reserved example.com hosts to localhost; no external connection exists. */
     private static final class Tunnel implements AutoCloseable {
         private final ServerSocket listener=new ServerSocket(0,50,InetAddress.getLoopbackAddress());
         private final ExecutorService threads=Executors.newVirtualThreadPerTaskExecutor();
@@ -82,7 +86,8 @@ class CiProofTransportTest {
                 while(raw.size()<16384) {int b=input.read();if(b<0)throw new EOFException();raw.write(b);
                     if(raw.toString(StandardCharsets.ISO_8859_1).endsWith("\r\n\r\n"))break;}
                 String request=raw.toString(StandardCharsets.ISO_8859_1);requests.add(request);
-                if(!request.startsWith("CONNECT ci.example.com:443 HTTP/1.1\r\n"))return;
+                if(!request.startsWith("CONNECT ci.example.com:443 HTTP/1.1\r\n")
+                    && !request.startsWith("CONNECT wrong.example.com:443 HTTP/1.1\r\n"))return;
                 try(var upstream=new Socket(InetAddress.getLoopbackAddress(),target)) {
                     sockets.add(upstream);client.getOutputStream().write("HTTP/1.1 200 Connection Established\r\n\r\n".getBytes(StandardCharsets.US_ASCII));
                     threads.submit(()->{try{input.transferTo(upstream.getOutputStream());}catch(IOException closed){}finally{try{upstream.shutdownOutput();}catch(IOException closed){}}});

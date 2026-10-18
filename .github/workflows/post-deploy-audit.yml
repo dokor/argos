@@ -62,7 +62,7 @@ jobs:
   tickets:
     needs: control
     # A site NO-GO must still create tickets. Technical failures never do.
-    if: ${{ !cancelled() && github.repository == 'dokor/argos' && github.ref == 'refs/heads/main' && (needs.control.outputs.outcome == 'GO' || needs.control.outputs.outcome == 'SITE_NO_GO') }}
+    if: ${{ !cancelled() && github.repository == 'dokor/argos' && github.ref == 'refs/heads/main' && needs.control.outputs.artifact_id != '' && needs.control.outputs.evidence_sha256 != '' && (needs.control.outputs.outcome == 'GO' || needs.control.outputs.outcome == 'SITE_NO_GO') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 8
     permissions:
