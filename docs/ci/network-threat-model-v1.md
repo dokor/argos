@@ -69,6 +69,14 @@ Les compteurs privés, de mutation, d’origine étrangère, de mauvais certific
 de cookie persistant et de credential doivent rester à zéro. Les deadlines,
 déconnexions, processus Chrome et capacité sont exercés en HTTP et CI HTTPS.
 
+Ces fixtures ont révélé un passage non couvert par le routage Playwright :
+[seule l’URL initiale d’une chaîne de redirections appelle le route handler](https://playwright.dev/docs/api/class-browsercontext#browser-context-route).
+Une garde CDP bloque donc la réponse de redirection principale avant sa suite,
+et la première navigation attend son installation, y compris dans un popup.
+Une instrumentation indisponible refuse la navigation ; la destination de chaque
+Location doit rester dans les origines HTTPS autorisées. Les sous-frames publics
+restent soumis au proxy et à la politique IP commune.
+
 ## Origines API, artefacts et permissions
 
 Les clients API de contrôle interne gardent leurs origines fixes HTTPS.
