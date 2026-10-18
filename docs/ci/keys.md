@@ -109,6 +109,9 @@ natif, 60 par fenêtre de 15 minutes, partagé entre instances. Les en-têtes
 Forwarded/X-Forwarded-For/X-Real-IP ne changent pas ce pair. Les valeurs brutes
 de pair et les credentials ne sont pas stockés dans ce compteur. Les échecs
 sont engagés après la transaction rejetée ; un rollback ne les efface pas.
+Depuis #735, ce compteur d’erreurs ne bloque pas une clé valide d’un pair
+partagé : des budgets d’entrée et de trafic authentifié bornent séparément
+les requêtes. Voir [quotas et anti-abus](quotas.md).
 
 Un proxy qui agrège les connexions agrège aussi ce budget : la recette de
 routage/capacité #735/#737 doit vérifier cet effet et les protections d'entrée
