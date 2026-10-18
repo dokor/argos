@@ -25,8 +25,8 @@ variables:
     - test "$(node --version)" = 'v24.21.0'
     - >-
       curl --proto '=https' --tlsv1.2 --fail --silent --show-error --max-time 30 --max-redirs 0
-      --output argos-ci.mjs https://raw.githubusercontent.com/dokor/argos/783afd48f09528eb39fb7377705ea0ef00773f73/clients/ci/dist/argos-ci.mjs
-    - echo 'b413156ed98308838208505f6c75eb88503cb4327765f8d39c72ca0dbfdd50be  argos-ci.mjs' | sha256sum --check --strict
+      --output argos-ci.mjs https://raw.githubusercontent.com/dokor/argos/efe5fb4f002d75bcf76cd698d71d82c4a39d7ab8/clients/ci/dist/argos-ci.mjs
+    - echo '8929a521e0085b2a1a7172c44daa94587b4bf05270ad66484d9d2f3c43017340  argos-ci.mjs' | sha256sum --check --strict
 
 argos_control:
   extends: .argos_rules
