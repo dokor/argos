@@ -118,6 +118,13 @@ class CiAdmissionIT extends MariaDbReportFixture {
         assertEquals(1,dao.transactions.selectQuery().select(QCiRequest.table).from(QCiRequest.table).fetch().size());
         assertEquals(1,ci.usage(auth(),"fixture").usage().reserved());
     }
+    @Test void terminalWorkerFailureUsesAControlledCodeAndReleasesOnlyItsReservation() {
+        long run=runId(admit(UUID.randomUUID().toString(),1));assertTrue(runDao.claimRun(run,"failed-worker",clock.instant()));
+        assertTrue(runDao.markFailed(run,clock.instant(),"synthetic-private-upstream","failed-worker"));
+        var status=ci.run(auth(),"fixture",run);assertEquals("FAILED",status.status());assertEquals("RUN_FAILED",status.failureCode());
+        assertFalse(status.toString().contains("synthetic-private-upstream"));
+        assertEquals(0,ci.usage(auth(),"fixture").usage().reserved());assertEquals(0,ci.usage(auth(),"fixture").usage().used());
+    }
     @Test void reportsStayPrivateEvenWithAKnownLegacyTokenAndExportsIgnoreRawEvidence() throws Exception {
         var created=admit(UUID.randomUUID().toString(),1);long run=runId(created);
         sql("UPDATE ARG_AUDIT_RUN SET report_token_hash=UNHEX(SHA2('synthetic-ci-known',256)) WHERE id="+run);
@@ -158,6 +165,7 @@ class CiAdmissionIT extends MariaDbReportFixture {
             assertFalse(response.body().contains(key.credential()));assertFalse(response.body().contains("reportToken"));
             var recover=client.send(HttpRequest.newBuilder(URI.create(base+"/ci/v1/admissions/by-key/"+intention)).header("Authorization",auth()).GET().build(),HttpResponse.BodyHandlers.ofString());assertEquals(200,recover.statusCode());
             var query=client.send(HttpRequest.newBuilder(URI.create(base+"/ci/v1/usage?owner=99")).header("Authorization",auth()).GET().build(),HttpResponse.BodyHandlers.ofString());assertEquals(400,query.statusCode());
+            var identityQuery=client.send(HttpRequest.newBuilder(URI.create(base+"/ci/v1/identity?owner=99")).header("Authorization",auth()).GET().build(),HttpResponse.BodyHandlers.ofString());assertEquals(400,identityQuery.statusCode());
             var injected=client.send(HttpRequest.newBuilder(URI.create(base+"/ci/v1/analyses")).header("Authorization",auth()).header("Idempotency-Key",UUID.randomUUID().toString()).header("Content-Type","application/json")
                 .POST(HttpRequest.BodyPublishers.ofString("{\"url\":\"https://example.com\",\"samples\":1,\"profileId\":\"standard-v1\",\"owner\":99}")).build(),HttpResponse.BodyHandlers.ofString());assertEquals(400,injected.statusCode());
             long run=mapper.readTree(response.body()).path("runs").get(0).path("id").asLong();
