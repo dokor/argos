@@ -8,6 +8,17 @@ import java.time.Instant;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ReportRetentionIT extends MariaDbReportFixture {
+    @Test void ciRetentionCeilingAndFailedDiagnosticCleanupPreservePublicAndRunningPayloads() throws Exception {
+        var now=Instant.parse("2026-10-18T12:00:00Z");
+        sql("UPDATE ARG_AUDIT_REPORT SET created_at='2026-10-18',expires_at='2030-01-01'");
+        sql("UPDATE ARG_AUDIT_REPORT SET created_at='2026-09-17',ci_export_json='{}' WHERE id=1");
+        sql("UPDATE ARG_AUDIT_RUN SET ci_navigation_origins='[\"https://example.com\"]',result_json='{}',module_statuses='{}',last_error='synthetic-private-736',finished_at='2026-10-16' WHERE id IN(1,2,5)");
+        assertEquals(1,service().purge(now));assertTrue(reports.findByRunId(1).isEmpty());
+        assertEquals(1,service().purgeCiDiagnostics(now));assertEquals(0,service().purgeCiDiagnostics(now));
+        assertEquals(1,count("SELECT COUNT(*) FROM ARG_AUDIT_RUN WHERE id=5 AND last_error IS NULL AND result_json IS NULL"));
+        assertEquals(1,count("SELECT COUNT(*) FROM ARG_AUDIT_RUN WHERE id=2 AND status='QUEUED' AND result_json IS NOT NULL"));
+        assertEquals(2,count("SELECT COUNT(*) FROM ARG_AUDIT_REPORT WHERE id IN(3,4)"));
+    }
     private ReportRetentionService service() {
         return new ReportRetentionService(new TransactionManagerQuerydsl(source,new Configuration(MySQLTemplates.DEFAULT)),ReportRetentionPolicy.defaults());
     }

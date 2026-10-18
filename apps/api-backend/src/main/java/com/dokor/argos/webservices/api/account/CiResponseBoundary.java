@@ -21,6 +21,9 @@ public class CiResponseBoundary implements ContainerResponseFilter {
         if(!applies(request.getUriInfo().getPath())) return;
         response.getHeaders().putSingle("Cache-Control","private, no-store");
         response.getHeaders().putSingle("X-Content-Type-Options","nosniff");
+        response.getHeaders().putSingle("Referrer-Policy","no-referrer");
+        response.getHeaders().putSingle("X-Robots-Tag","noindex, nofollow, noarchive");
+        response.getHeaders().putSingle("Vary","Authorization");
         if(response.getStatus()<400 || response.getEntity() instanceof CiErrors.Envelope) return;
         String internal=response.getEntity() instanceof Map<?,?> values ? String.valueOf(values.get("error")) : "";
         var code=response.getStatus()==401 ? CiErrorCode.AUTHENTICATION_FAILED
