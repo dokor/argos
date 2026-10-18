@@ -21,7 +21,8 @@ const unitTest = path => /\.(test|spec)\.[cm]?[jt]sx?$/.test(path)
 
 export function classify(paths) {
   const matches = predicate => paths === null || paths.some(predicate);
-  const common = matches(path => (path.startsWith('scripts/ci/') && !path.startsWith('scripts/ci/deploy-paths'))
+  const common = matches(path => path.startsWith('clients/ci/') && !documentation(path)
+    || (path.startsWith('scripts/ci/') && !path.startsWith('scripts/ci/deploy-paths'))
     || path.startsWith('.github/actions/') || path === '.github/workflows/ci.yml' || path === '.github/action-pins.json');
   const component = app => matches(path => path.startsWith('apps/' + app + '/') && !documentation(path));
   const production = app => matches(path => path.startsWith('apps/' + app + '/')

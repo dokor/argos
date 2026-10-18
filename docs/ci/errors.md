@@ -93,13 +93,16 @@ quota/débit/capacité/fournisseur prévus. Cette borne de protocole couvre une
 reste non retryable, même avec une échéance connue. Une date ou un coût non
 connu n'est pas inventé ; aucun remboursement n'est promis.
 
-Le futur client conserve les sorties de verdict 0 = GO, 1 = SITE_NO_GO,
+Le client conserve les sorties de verdict 0 = GO, 1 = SITE_NO_GO,
 2 = CONTROL_FAILED (#466). Un diagnostic de ce protocole est un échec technique,
 jamais la preuve que le site est sain. Le verdict et le statut du publisher
-sont indépendants : DISABLED, SKIPPED, SUCCEEDED, FAILED, UNKNOWN. Une publication
-activée échouée/indéterminée rend le job non réussi (sortie 2), en conservant
+sont indépendants : DISABLED, PREVIEW, NO_FINDINGS, LIMIT_REACHED, SUCCEEDED, FAILED, UNKNOWN. Une publication
+activée échouée/indéterminée rend le job non réussi (sortie 3), en conservant
 le verdict d'audit dans le résultat machine ; un SITE_NO_GO demeure visible.
-La politique de verdict complète et les sorties exécutables restent à livrer.
+Un contrôle impossible garde la sortie 2. Voir [le client portable](../../clients/ci/README.md)
+et [la politique de verdict](verdicts.md). Une preuve de publication invalide ne permet
+pas de relire le verdict : le publisher indique auditOutcome=UNKNOWN, auditExitCode=null
+et publication=FAILED (sortie 3), sans remplacer le résultat du job de contrôle.
 
 ## Précontrôle doctor à brancher dans #464/#465
 
