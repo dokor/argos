@@ -1,0 +1,414 @@
+{
+  "schemaVersion": 1,
+  "status": "preview",
+  "errors": {
+    "CONFIG_INVALID": {
+      "httpStatus": 400,
+      "stage": "CONFIGURATION",
+      "category": "CONFIGURATION",
+      "messageKey": "ci.errors.CONFIG_INVALID",
+      "actionCode": "FIX_CONFIGURATION",
+      "retryable": false,
+      "recovery": "NONE",
+      "fr": {
+        "message": "La configuration CI est invalide.",
+        "action": "Corriger les paramètres avec un exemple de la documentation."
+      },
+      "en": {
+        "message": "The CI configuration is invalid.",
+        "action": "Correct the settings using a documented example."
+      }
+    },
+    "CLIENT_VERSION_UNSUPPORTED": {
+      "httpStatus": 400,
+      "stage": "CONFIGURATION",
+      "category": "CONFIGURATION",
+      "messageKey": "ci.errors.CLIENT_VERSION_UNSUPPORTED",
+      "actionCode": "UPDATE_CLIENT",
+      "retryable": false,
+      "recovery": "NONE",
+      "fr": {
+        "message": "Cette version du client est incompatible.",
+        "action": "Utiliser une version compatible et épinglée."
+      },
+      "en": {
+        "message": "This client version is incompatible.",
+        "action": "Use a compatible pinned version."
+      }
+    },
+    "AUTHENTICATION_FAILED": {
+      "httpStatus": 401,
+      "stage": "AUTHENTICATION",
+      "category": "AUTHENTICATION",
+      "messageKey": "ci.errors.AUTHENTICATION_FAILED",
+      "actionCode": "CHECK_ARGOS_SECRET",
+      "retryable": false,
+      "recovery": "NONE",
+      "fr": {
+        "message": "L'authentification Argos a échoué.",
+        "action": "Vérifier la présence du secret CI puis gérer la clé depuis son compte."
+      },
+      "en": {
+        "message": "Argos authentication failed.",
+        "action": "Check that the CI secret is set and manage the key in your account."
+      }
+    },
+    "FEATURE_NOT_AVAILABLE": {
+      "httpStatus": 403,
+      "stage": "ENTITLEMENT",
+      "category": "PERMISSION",
+      "messageKey": "ci.errors.FEATURE_NOT_AVAILABLE",
+      "actionCode": "REVIEW_PREMIUM_ACCESS",
+      "retryable": false,
+      "recovery": "NONE",
+      "fr": {
+        "message": "L'accès CI Premium n'est pas disponible.",
+        "action": "Consulter les droits actuels dans son compte ; aucune réactivation n'est confirmée."
+      },
+      "en": {
+        "message": "Premium CI access is unavailable.",
+        "action": "Review current access in your account; reactivation is not confirmed."
+      }
+    },
+    "PERMISSION_DENIED": {
+      "httpStatus": 403,
+      "stage": "AUTHENTICATION",
+      "category": "PERMISSION",
+      "messageKey": "ci.errors.PERMISSION_DENIED",
+      "actionCode": "REVIEW_KEY_SCOPES",
+      "retryable": false,
+      "recovery": "NONE",
+      "fr": {
+        "message": "La clé n'autorise pas cette opération.",
+        "action": "Vérifier les permissions nécessaires depuis son compte."
+      },
+      "en": {
+        "message": "The key does not allow this operation.",
+        "action": "Review the required scopes in your account."
+      }
+    },
+    "RESOURCE_NOT_AVAILABLE": {
+      "httpStatus": 404,
+      "stage": "WAIT",
+      "category": "RESOURCE",
+      "messageKey": "ci.errors.RESOURCE_NOT_AVAILABLE",
+      "actionCode": "CHECK_OWN_RESOURCE",
+      "retryable": false,
+      "recovery": "NONE",
+      "fr": {
+        "message": "Cette ressource n'est pas disponible.",
+        "action": "Vérifier l'identifiant dans sa propre intégration."
+      },
+      "en": {
+        "message": "This resource is unavailable.",
+        "action": "Check the identifier in your own integration."
+      }
+    },
+    "TARGET_VERIFICATION_REQUIRED": {
+      "httpStatus": 403,
+      "stage": "TARGET",
+      "category": "TARGET",
+      "messageKey": "ci.errors.TARGET_VERIFICATION_REQUIRED",
+      "actionCode": "VERIFY_TARGET",
+      "retryable": false,
+      "recovery": "NONE",
+      "fr": {
+        "message": "La preuve de la cible est requise.",
+        "action": "Vérifier son domaine depuis la gestion des cibles."
+      },
+      "en": {
+        "message": "Target verification is required.",
+        "action": "Verify your domain in target management."
+      }
+    },
+    "TARGET_REJECTED": {
+      "httpStatus": 400,
+      "stage": "TARGET",
+      "category": "TARGET",
+      "messageKey": "ci.errors.TARGET_REJECTED",
+      "actionCode": "REVIEW_TARGET_RULES",
+      "retryable": false,
+      "recovery": "NONE",
+      "fr": {
+        "message": "Cette cible ne peut pas être analysée.",
+        "action": "Consulter les règles des cibles publiques autorisées."
+      },
+      "en": {
+        "message": "This target cannot be audited.",
+        "action": "Review the allowed public target rules."
+      }
+    },
+    "QUOTA_EXCEEDED": {
+      "httpStatus": 429,
+      "stage": "ADMISSION",
+      "category": "LIMIT",
+      "messageKey": "ci.errors.QUOTA_EXCEEDED",
+      "actionCode": "REVIEW_USAGE",
+      "retryable": false,
+      "recovery": "NONE",
+      "fr": {
+        "message": "Le quota disponible est insuffisant.",
+        "action": "Consulter sa consommation et l'échéance connue ; ne pas relancer en boucle."
+      },
+      "en": {
+        "message": "The available quota is insufficient.",
+        "action": "Review your usage and the known reset time; do not retry in a loop."
+      }
+    },
+    "RATE_LIMITED": {
+      "httpStatus": 429,
+      "stage": "ADMISSION",
+      "category": "LIMIT",
+      "messageKey": "ci.errors.RATE_LIMITED",
+      "actionCode": "WAIT_WITHIN_BUDGET",
+      "retryable": true,
+      "recovery": "RETRY_READ",
+      "fr": {
+        "message": "Le débit de requêtes autorisé est atteint.",
+        "action": "Attendre le délai indiqué dans le budget prévu ; récupérer une admission ambiguë."
+      },
+      "en": {
+        "message": "The request rate limit was reached.",
+        "action": "Wait within the time budget; recover any ambiguous admission."
+      }
+    },
+    "CAPACITY_UNAVAILABLE": {
+      "httpStatus": 503,
+      "stage": "ADMISSION",
+      "category": "AVAILABILITY",
+      "messageKey": "ci.errors.CAPACITY_UNAVAILABLE",
+      "actionCode": "WAIT_WITHIN_BUDGET",
+      "retryable": true,
+      "recovery": "RECOVER_ADMISSION",
+      "fr": {
+        "message": "La capacité d'admission est temporairement indisponible.",
+        "action": "Récupérer la demande avec la même clé d'idempotence avant toute reprise."
+      },
+      "en": {
+        "message": "Admission capacity is temporarily unavailable.",
+        "action": "Recover the request with the same idempotency key before resuming."
+      }
+    },
+    "IDEMPOTENCY_CONFLICT": {
+      "httpStatus": 409,
+      "stage": "ADMISSION",
+      "category": "CONFLICT",
+      "messageKey": "ci.errors.IDEMPOTENCY_CONFLICT",
+      "actionCode": "RECOVER_ORIGINAL_REQUEST",
+      "retryable": false,
+      "recovery": "NONE",
+      "fr": {
+        "message": "Cette intention correspond à une demande différente.",
+        "action": "Retrouver la demande initiale ; ne pas générer une nouvelle clé automatiquement."
+      },
+      "en": {
+        "message": "This request intent belongs to a different request.",
+        "action": "Find the original request; do not generate a new key automatically."
+      }
+    },
+    "TRANSPORT_FAILED": {
+      "httpStatus": 502,
+      "stage": "WAIT",
+      "category": "AVAILABILITY",
+      "messageKey": "ci.errors.TRANSPORT_FAILED",
+      "actionCode": "RECOVER_ORIGINAL_REQUEST",
+      "retryable": true,
+      "recovery": "RECOVER_ADMISSION",
+      "fr": {
+        "message": "La réponse Argos n'a pas pu être obtenue.",
+        "action": "L'état d'admission peut être inconnu ; récupérer la demande initiale."
+      },
+      "en": {
+        "message": "The Argos response could not be obtained.",
+        "action": "Admission may be unknown; recover the original request."
+      }
+    },
+    "UPSTREAM_UNAVAILABLE": {
+      "httpStatus": 503,
+      "stage": "COLLECTION",
+      "category": "AVAILABILITY",
+      "messageKey": "ci.errors.UPSTREAM_UNAVAILABLE",
+      "actionCode": "RECOVER_ORIGINAL_REQUEST",
+      "retryable": true,
+      "recovery": "RECOVER_ADMISSION",
+      "fr": {
+        "message": "Un service nécessaire est temporairement indisponible.",
+        "action": "Retrouver le run existant avant de reprendre ; aucun remboursement n'est confirmé."
+      },
+      "en": {
+        "message": "A required service is temporarily unavailable.",
+        "action": "Find the existing run before resuming; no refund is confirmed."
+      }
+    },
+    "WAIT_TIMEOUT": {
+      "httpStatus": 504,
+      "stage": "WAIT",
+      "category": "AVAILABILITY",
+      "messageKey": "ci.errors.WAIT_TIMEOUT",
+      "actionCode": "RESUME_EXISTING_RUN",
+      "retryable": true,
+      "recovery": "RESUME_POLLING",
+      "fr": {
+        "message": "Le délai d'attente du contrôle est dépassé.",
+        "action": "Retrouver le run admis et reprendre son suivi dans un nouveau budget explicite."
+      },
+      "en": {
+        "message": "The control wait deadline was exceeded.",
+        "action": "Find the admitted run and resume polling with an explicit new budget."
+      }
+    },
+    "RUN_FAILED": {
+      "httpStatus": 422,
+      "stage": "COLLECTION",
+      "category": "MEASUREMENT",
+      "messageKey": "ci.errors.RUN_FAILED",
+      "actionCode": "REVIEW_MEASUREMENT",
+      "retryable": false,
+      "recovery": "NONE",
+      "fr": {
+        "message": "Le contrôle technique n'a pas abouti.",
+        "action": "Consulter l'état autorisé du run ; ne pas conclure que le site est sain."
+      },
+      "en": {
+        "message": "The technical control did not complete.",
+        "action": "Review the authorized run status; do not conclude that the site is healthy."
+      }
+    },
+    "MEASUREMENT_INCOMPLETE": {
+      "httpStatus": 422,
+      "stage": "VERDICT",
+      "category": "MEASUREMENT",
+      "messageKey": "ci.errors.MEASUREMENT_INCOMPLETE",
+      "actionCode": "REVIEW_MEASUREMENT",
+      "retryable": false,
+      "recovery": "NONE",
+      "fr": {
+        "message": "Les mesures sont insuffisantes pour conclure.",
+        "action": "Consulter la couverture ; conserver un verdict de contrôle impossible."
+      },
+      "en": {
+        "message": "Measurements are insufficient for a verdict.",
+        "action": "Review coverage and retain a control-failed verdict."
+      }
+    },
+    "REPORTS_INCOMPARABLE": {
+      "httpStatus": 422,
+      "stage": "VERDICT",
+      "category": "MEASUREMENT",
+      "messageKey": "ci.errors.REPORTS_INCOMPARABLE",
+      "actionCode": "REVIEW_MEASUREMENT",
+      "retryable": false,
+      "recovery": "NONE",
+      "fr": {
+        "message": "Les mesures ne peuvent pas être comparées.",
+        "action": "Vérifier les versions et périmètres ; ne pas confirmer un constat automatiquement."
+      },
+      "en": {
+        "message": "These measurements cannot be compared.",
+        "action": "Review versions and scopes; do not confirm a finding automatically."
+      }
+    },
+    "PUBLICATION_AUTH_FAILED": {
+      "httpStatus": 401,
+      "stage": "PUBLICATION",
+      "category": "PUBLICATION",
+      "messageKey": "ci.errors.PUBLICATION_AUTH_FAILED",
+      "actionCode": "CHECK_GIT_SECRET",
+      "retryable": false,
+      "recovery": "NONE",
+      "fr": {
+        "message": "L'authentification de publication a échoué.",
+        "action": "Vérifier le secret Git et les permissions minimales ; reprendre seulement la publication."
+      },
+      "en": {
+        "message": "Publication authentication failed.",
+        "action": "Check the Git secret and minimal permissions; resume publication only."
+      }
+    },
+    "DESTINATION_UNAVAILABLE": {
+      "httpStatus": 404,
+      "stage": "PUBLICATION",
+      "category": "PUBLICATION",
+      "messageKey": "ci.errors.DESTINATION_UNAVAILABLE",
+      "actionCode": "CHECK_OWN_DESTINATION",
+      "retryable": false,
+      "recovery": "NONE",
+      "fr": {
+        "message": "La destination des tickets n'est pas disponible.",
+        "action": "Vérifier son dépôt ou projet et ses droits ; conserver le résultat d'audit."
+      },
+      "en": {
+        "message": "The issue destination is unavailable.",
+        "action": "Check your repository or project and permissions; retain the audit result."
+      }
+    },
+    "PUBLICATION_RATE_LIMITED": {
+      "httpStatus": 429,
+      "stage": "PUBLICATION",
+      "category": "PUBLICATION",
+      "messageKey": "ci.errors.PUBLICATION_RATE_LIMITED",
+      "actionCode": "RESUME_PUBLICATION",
+      "retryable": true,
+      "recovery": "RETRY_PUBLICATION",
+      "fr": {
+        "message": "La publication atteint une limite de débit.",
+        "action": "Respecter le délai et reprendre seulement le publisher dans son budget."
+      },
+      "en": {
+        "message": "Publication reached a rate limit.",
+        "action": "Respect the delay and resume the publisher only within its budget."
+      }
+    },
+    "PUBLICATION_STATE_UNKNOWN": {
+      "httpStatus": 502,
+      "stage": "PUBLICATION",
+      "category": "PUBLICATION",
+      "messageKey": "ci.errors.PUBLICATION_STATE_UNKNOWN",
+      "actionCode": "RECONCILE_PUBLICATION",
+      "retryable": true,
+      "recovery": "RECONCILE_PUBLICATION",
+      "fr": {
+        "message": "L'état de publication est indéterminé.",
+        "action": "Réconcilier les tickets existants ; aucune création à l'aveugle ni nouvel audit."
+      },
+      "en": {
+        "message": "Publication status is unknown.",
+        "action": "Reconcile existing issues; do not create blindly or start a new audit."
+      }
+    },
+    "ARTIFACT_INVALID": {
+      "httpStatus": 422,
+      "stage": "PUBLICATION",
+      "category": "PUBLICATION",
+      "messageKey": "ci.errors.ARTIFACT_INVALID",
+      "actionCode": "VERIFY_ARTIFACT",
+      "retryable": false,
+      "recovery": "NONE",
+      "fr": {
+        "message": "La preuve de publication n'est pas valide.",
+        "action": "Vérifier provenance, intégrité et version ; refuser l'artefact sans relancer l'audit."
+      },
+      "en": {
+        "message": "Publication evidence is invalid.",
+        "action": "Verify provenance, integrity and version; reject the artifact without rerunning the audit."
+      }
+    },
+    "INTERNAL_ERROR": {
+      "httpStatus": 500,
+      "stage": "WAIT",
+      "category": "INTERNAL",
+      "messageKey": "ci.errors.INTERNAL_ERROR",
+      "actionCode": "RECOVER_ORIGINAL_REQUEST",
+      "retryable": true,
+      "recovery": "RECOVER_ADMISSION",
+      "fr": {
+        "message": "Argos n'a pas pu terminer cette requête.",
+        "action": "Conserver l'identifiant de corrélation et récupérer l'état de la demande initiale."
+      },
+      "en": {
+        "message": "Argos could not complete this request.",
+        "action": "Keep the correlation identifier and recover the original request state."
+      }
+    }
+  }
+}
