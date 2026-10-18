@@ -9,10 +9,10 @@ async function serverFor(t, chromium) {
   t.after(() => new Promise(resolve => { server.close(resolve); server.closeAllConnections(); }));
   return 'http://127.0.0.1:' + server.address().port;
 }
-function collector({ navigationFailure = false, contextFailure = false, cdpFailure = null,
+function collector({ navigationFailure = false, contextFailure = false, cdpFailure = null, requireGuard = false,
   jsCount = 1, contentLength = '321', failureCount = 1, finalUrl = 'https://www.example.co.uk/final',
   responseSizes = [321], sizeFailure = false, sizeDelay = 0, finished = true, sizeStall = false } = {}) {
-  let closed = 0, launched = 0;
+  let closed = 0, launched = 0, guarded = false;
   const handlers = {};
   const contextHandlers = {};
   let rejectInstrumentation;
@@ -21,6 +21,7 @@ function collector({ navigationFailure = false, contextFailure = false, cdpFailu
     on: (name, handler) => { handlers[name] = handler; },
     url: () => finalUrl,
     goto: async () => {
+      if (requireGuard) assert.equal(guarded,true,'CI navigation must await its redirect guard');
       handlers.console({ type: () => 'error', text: () => 'fixture',
         location: () => ({ url: 'https://assets.example.co.uk/script.js' }) });
       handlers.console({ type: () => 'error', text: () => 'third party',
@@ -62,6 +63,10 @@ function collector({ navigationFailure = false, contextFailure = false, cdpFailu
           on: (name, handler) => { contextHandlers[name] = handler; },
           newCDPSession: async () => {
             if (cdpFailure === 'active') throw new Error('Instrumentation unavailable');
+            if (!cdpFailure) return {on:()=>{},send:async method=>{
+              if(method==='Page.getFrameTree')return {frameTree:{frame:{id:'main'}}};
+              if(method==='Fetch.enable')guarded=true;
+            }};
             return { send: () => new Promise((_resolve, reject) => { rejectInstrumentation = reject; }) };
           },
           newPage: async () => {
@@ -99,6 +104,14 @@ test('health and invalid inputs never launch Chromium', async t => {
       headers: { 'content-type': 'application/json' }, body })).status, 400);
   }
   assert.equal(launches, 0);
+});
+
+test('CI installs its redirect guard before the first main navigation',async t=>{
+  const fake=collector({requireGuard:true});
+  const base=await serverFor(t,fake.chromium);
+  const response=await fetch(base+'/analyze/runtime',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({url:'https://example.co.uk',navigationOrigins:['https://example.co.uk']})});
+  assert.equal(response.status,200);assert.equal((await response.json()).navigation.status,'COMPLETED');
 });
 
 test('runtime contract retains metrics and partitions errors using the final domain', async t => {

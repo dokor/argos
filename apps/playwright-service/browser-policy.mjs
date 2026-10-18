@@ -87,6 +87,7 @@ export async function protectContext(context, cancel, navigationOrigins) {
   });
   await context.routeWebSocket('**/*', socket => socket.close());
   context.on('page', page => preparePage(page).catch(error => { cancel(error); }));
+  return preparePage;
 }
 export function safeOrigin(value) { try { return new URL(value).origin; } catch { return '[invalid URL]'; } }
 
