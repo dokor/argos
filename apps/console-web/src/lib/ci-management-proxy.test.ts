@@ -7,6 +7,8 @@ import { ciUpstreamError } from "./ci-management-proxy";
 const origin="https://argos.example.com", id="49e4eac3-00a9-4de4-81dc-f4686fb677cc", csrf="c".repeat(43);
 const target={id,origin:"https://example.com",method:"HTTPS_FILE",state:"PENDING",verifiedAt:null,validUntil:null,
   nextCheckAt:"2026-10-18T12:00:00Z",challengeExpiresAt:"2026-10-19T12:00:00Z"};
+const key={id:"1".repeat(32),integrationId:id,slot:1,name:"Deployment",scopes:["results:read"],targets:[{id,origin:"https://example.com",authorizationEpoch:1}],
+  createdAt:"2026-10-18T12:00:00Z",expiresAt:"2027-10-18T12:00:00Z",lastUsedAt:null,revokedAt:null,overlapUntil:null};
 function request(path="targets",method="GET",body?:object,authenticated=true) {
   return new NextRequest(origin+"/api/account/ci/"+path,{method,headers:{Origin:origin,"Content-Type":"application/json",
     "X-Argos-CSRF":csrf,...(authenticated?{Cookie:`argos_account=browser-session; argos_account_csrf=${csrf}`}:{})},
@@ -59,5 +61,28 @@ describe("CI management BFF",()=>{
     expect(await result.json()).toEqual(data);
     const invalid=ciUpstreamError({...data,error:{...data.error,actionCode:"::error::synthetic-secret"}},429);
     expect(invalid.status).toBe(502);expect(await invalid.text()).not.toContain("synthetic-secret");
+  });
+  it("shows the key credential only in a valid creation response and never in lists",async()=>{
+    const credential="argos_ci_"+key.id+"."+"A".repeat(43);
+    vi.mocked(fetch).mockResolvedValueOnce(Response.json({key,credential}));
+    const created=await call(request("keys","POST",{name:"Deployment",scopes:["results:read"],targetIds:[id]}));
+    expect(created.status).toBe(200);expect((await created.json()).credential).toBe(credential);
+    vi.mocked(fetch).mockResolvedValueOnce(Response.json({items:[key],integrations:[{id,slot:1,canReplace:false}],nextCursor:null}));
+    const listed=await call(request("keys"));expect(listed.status).toBe(200);expect(await listed.text()).not.toContain(credential);
+    vi.mocked(fetch).mockResolvedValueOnce(Response.json({items:[{...key,credential}],integrations:[],nextCursor:null}));
+    const unsafe=await call(request("keys"));expect(unsafe.status).toBe(502);expect(await unsafe.text()).not.toContain(credential);
+  });
+  it("rejects unapproved scopes, owners, target substitution fields and unbounded expiry forms",async()=>{
+    const valid={name:"Deployment",scopes:["results:read"],targetIds:[id]};
+    for(const input of [{...valid,scopes:["admin"]},{...valid,ownerUserId:"22"},{...valid,targetIds:[]},
+      {...valid,scopes:["results:read","results:read"]},{...valid,name:"Injection\r\n::error::"},{...valid,expiresAt:"never"}]) {
+      const response=await call(request("keys","POST",input));expect(response.status).toBe(400);
+    }
+    expect(fetch).not.toHaveBeenCalled();
+  });
+  it("does not blindly accept a rotation response for a different key identifier",async()=>{
+    vi.mocked(fetch).mockResolvedValueOnce(Response.json({key,credential:"argos_ci_"+"2".repeat(32)+"."+"A".repeat(43)}));
+    const response=await call(request(`keys/${key.id}/rotate`,"POST",{}));expect(response.status).toBe(502);
+    expect((await response.json()).error.code).toBe("TRANSPORT_FAILED");
   });
 });
