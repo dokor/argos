@@ -167,7 +167,7 @@ la visibilité juste avant chaque écriture et réconcilier les créations ambig
 
 GitHub : protéger la branche par défaut et l’environnement `argos-ci`, ajouter
 ARGOS_API_KEY à cet environnement et ARGOS_TARGET_URL aux variables. Le modèle
-est manuel au départ ; son déclenchement push est aussi vérifié défensivement
+accepte push sur main et le lancement manuel ; la branche par défaut est aussi vérifiée défensivement
 par le client. Aucun événement PR, pull_request_target ou workflow_run, aucun
 checkout de code client. Le token GitHub de lecture est limité aux étapes de
 vérification de destination ; aucune permission issues:write. Activer
@@ -185,6 +185,15 @@ Le job de prévisualisation facultatif s’exécute après un échec site sans m
 le code du contrôle. Sur un contrôle impossible, aucune écriture Git n’a lieu.
 Les CI de déploiement peuvent ordonner ces jobs après leur déploiement approuvé ;
 aucun déploiement n’est exécuté par les modèles.
+
+Les modèles lancent `audit`, dont l’admission applique le preflight pour une
+nouvelle intention. `doctor` reste disponible séparément pour diagnostiquer
+l’installation ; il ne bloque ainsi pas une reprise historique après épuisement
+du quota ou perte du droit de nouvelle admission. Sur GitLab, la reprise de
+prévisualisation exige encore la trace contrôlée du producteur : configurer son
+effacement au plus après 24 h, puis refuser la reprise si elle a disparu. Ne pas
+prolonger cette rétention pour contourner une preuve manquante. La rétention des
+logs du fournisseur doit être validée avant ouverture #467, séparément des artefacts.
 
 Sources officielles : [sécurité des événements GitHub](https://docs.github.com/en/actions/reference/security/securely-using-pull_request_target),
 [artefacts GitHub](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/download-workflow-artifacts),
