@@ -1,7 +1,7 @@
 import { readJson } from './transport.mjs';
 import { requireValue, Failure } from './diagnostics.mjs';
 import { digest } from './contracts.mjs';
-import { VERSION } from './resources.mjs';
+import { VERSION, errors } from './resources.mjs';
 
 /** Provider credentials never accompany an Argos request. Fixed public SaaS origins only. */
 export async function providerProof(config, env, { fetcher, signal }, proof = false) {
@@ -51,9 +51,13 @@ export async function providerProof(config, env, { fetcher, signal }, proof = fa
     && job.pipeline?.sha === config.provenance.sha && String(job.pipeline?.id) === env.CI_PIPELINE_ID, 'ARTIFACT_INVALID');
   const trace = await get(`${root}/jobs/${job.id}/trace`, true);
   const proofs = trace.split(/\r?\n/).flatMap(line => {
-    try { const row = JSON.parse(line); return row.clientVersion === VERSION && ['audit', 'resume'].includes(row.command)
-      && ['GO', 'SITE_NO_GO'].includes(row.auditOutcome) && digest(row.evidenceSha256) ? [row.evidenceSha256] : []; } catch { return []; }
+    try { const row = JSON.parse(line); return row.clientVersion === VERSION && ['audit', 'resume', 'artifact-check'].includes(row.command)
+      && (['GO', 'SITE_NO_GO'].includes(row.auditOutcome) && digest(row.evidenceSha256)
+        || row.auditOutcome === 'CONTROL_FAILED' && row.auditExitCode === 2 && row.exitCode === 2) ? [row] : []; } catch { return []; }
   });
   requireValue(proofs.length === 1, 'ARTIFACT_INVALID');
-  return { digest: proofs[0], producerId: String(job.id) };
+  const result = proofs[0];
+  if (result.auditOutcome === 'CONTROL_FAILED') return { controlFailed: true,
+    code: Object.hasOwn(errors, result.diagnostic?.code ?? '') ? result.diagnostic.code : 'TRANSPORT_FAILED' };
+  return { digest: result.evidenceSha256, producerId: String(job.id) };
 }
