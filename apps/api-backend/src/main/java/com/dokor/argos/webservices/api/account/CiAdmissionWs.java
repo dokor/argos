@@ -46,6 +46,10 @@ public class CiAdmissionWs {
     public Response run(@Context ContainerRequestContext request,@PathParam("id") String id){return ok(ci.run(auth(request),peer(request),runId(id)));}
     @GET @Path("/runs/{id}/report") @Operation(description="Read the private numeric summary-v1 report. Detailed exports and verdicts are separate contracts.")
     public Response report(@Context ContainerRequestContext request,@PathParam("id") String id){return ok(ci.report(auth(request),peer(request),runId(id)));}
+    @GET @Path("/runs/{id}/export") @Operation(description="Read bounded details-v1 JSON. Catalogue keys and numeric data only; private artifacts require explicit upload.")
+    public Response export(@Context ContainerRequestContext request,@PathParam("id") String id){return ok(ci.export(auth(request),peer(request),runId(id)));}
+    @DELETE @Path("/runs/{id}/report") @Operation(description="Delete a terminal private CI report and diagnostics. Requires results:read and audits:write; accounting and idempotency remain.")
+    public Response deleteReport(@Context ContainerRequestContext request,@PathParam("id") String id){return ok(ci.deleteReport(auth(request),peer(request),runId(id)));}
     @GET @Path("/usage") @Operation(description="Read this stable integration's monthly ledger. No new admission.")
     public Response usage(@Context ContainerRequestContext request){return ok(ci.usage(auth(request),peer(request)));}
     @GET @Path("/preflight") @Operation(description="Read current rights, declared target states and usage; no DNS/proof verification, reservation or target contact.")

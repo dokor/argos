@@ -143,4 +143,4 @@ Les tests de contrat relient OpenAPI aux DTO et au schéma d’erreur canonique.
 La preuve réseau d’admission est simulée dans ces fixtures ; les contrôles d’egress
 réels restent dans les fixtures d’isolation. Aucun résultat de production, abonnement
 réel ou test de charge n’est revendiqué. Les maquettes UI, documentation en ligne,
-client, exports et recette complète restent les lots dépendants avant ouverture.
+client et recette complète restent les lots dépendants avant ouverture. Les exports privés structurés sont décrits dans [le contrat #736](private-exports.md).
