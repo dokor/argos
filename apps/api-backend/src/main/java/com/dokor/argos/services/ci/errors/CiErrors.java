@@ -1,6 +1,7 @@
 package com.dokor.argos.services.ci.errors;
 
 import com.dokor.argos.services.ci.CiEntitlementService;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.ws.rs.core.Response;
 import java.util.Objects;
 import java.util.UUID;
@@ -9,6 +10,7 @@ import java.util.UUID;
 public final class CiErrors {
     public static final int SCHEMA_VERSION = 1;
     public static final long MAX_RETRY_AFTER_SECONDS = 32L * 24 * 60 * 60;
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     public record Error(CiErrorCode code, CiErrorCode.Stage stage, CiErrorCode.Category category,
                         String messageKey, CiErrorCode.Action actionCode, boolean retryable,
                         CiErrorCode.Recovery recovery, Long retryAfterSeconds) {}
