@@ -71,6 +71,13 @@ test('lost POST recovers then replays the SAME key/input; no extra intention and
   assert.equal(JSON.parse(writes[0].body).samples, 2); assert.equal(network.calls.filter(c => c.path.includes('/by-key/')).length, 2);
   assert.ok(!JSON.stringify(out).includes('synthetic-private-465'));
 });
+test('an accepted POST with an unknown success schema is recovered read-only and never promoted to GO', async () => {
+  const network = fixture({ post: () => Response.json({ ...admitted, raw: 'synthetic-private-465' }, { status: 201 }) });
+  const out = await main(['audit'], env, network); assert.equal(out.exitCode, 2); assert.equal(out.diagnostic.code, 'TRANSPORT_FAILED');
+  assert.equal(network.calls.filter(c => c.path.includes('/by-key/')).length, 2);
+  assert.equal(network.calls.filter(c => c.method === 'POST').length, 1);
+  assert.ok(!JSON.stringify(out).includes('synthetic-private-465'));
+});
 test('idempotence survives rerun attempts and target changes conflict rather than silently reading another input', async () => {
   const gh = { ...env, GITHUB_ACTIONS: 'true', GITHUB_REPOSITORY: 'customer/site', GITHUB_SHA: env.ARGOS_SHA, GITHUB_RUN_ID: '123', GITHUB_RUN_ATTEMPT: '1', GITHUB_JOB: 'argos_control', GITHUB_EVENT_NAME: 'push', GITHUB_REF: 'refs/heads/main' };
   assert.equal(configuration(gh, 'audit').intent, configuration({ ...gh, GITHUB_RUN_ATTEMPT: '2' }, 'audit').intent);
@@ -194,4 +201,11 @@ test('provider artifact consent fails closed for public repos, retained latest a
   }
   const proof = await main(['publication-preview'], gl, { fetcher: async url => Response.json(url.includes('/jobs?') ? [{ id: 789, name: 'argos_control', status: 'success', pipeline: { id: 123, sha: '0'.repeat(40) } }] : { id: 42, path_with_namespace: 'customer/site', visibility: 'private', keep_latest_artifact: false }) });
   assert.equal(proof.exitCode, 3); assert.equal(proof.diagnostic.code, 'ARTIFACT_INVALID');
+  const producerFailure = await main(['audit'], env, fixture({ first: () => responseError('AUTHENTICATION_FAILED') }));
+  assert.equal(producerFailure.command, 'audit');
+  const skip = await main(['publication-preview'], gl, { fetcher: async url => url.includes('/trace')
+    ? new Response(JSON.stringify({ ...producerFailure, diagnostic: { ...producerFailure.diagnostic, message: 'synthetic-private-465' } }) + '\n', { headers: { 'content-type': 'text/plain' } })
+    : Response.json(url.includes('/jobs?') ? [{ id: 789, name: 'argos_control', status: 'failed', pipeline: { id: 123, sha: env.ARGOS_SHA } }] : { id: 42, path_with_namespace: 'customer/site', visibility: 'private', keep_latest_artifact: false }) });
+  assert.equal(skip.exitCode, 2); assert.equal(skip.publication, 'DISABLED'); assert.equal(skip.diagnostic.code, 'AUTHENTICATION_FAILED');
+  assert.ok(!JSON.stringify(skip).includes('synthetic-private-465'));
 });

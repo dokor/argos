@@ -11,6 +11,7 @@ import { pipelineResult } from '../../../scripts/ci/ci-verdict.mjs';
 import { providerProof } from './providers.mjs';
 
 const base = '/api/ci/v1/';
+const commands = ['doctor', 'audit', 'resume', 'export', 'publication-preview', 'artifact-check', 'intent'];
 const defaultSleep = (ms, signal) => wait(ms, undefined, { signal });
 function validate(kind, value, expected) { requireValue(validResponse(kind, value, expected), 'TRANSPORT_FAILED'); return value; }
 async function preflight(api, config, checkNew = true) {
@@ -28,9 +29,13 @@ async function admission(api, config, resume, sleep, signal, random) {
   if (resume) { requireValue(existing, 'RESOURCE_NOT_AVAILABLE'); return existing; }
   if (!existing) await preflight(api, config);
   for (let attempt = 1; attempt <= 3; attempt++) {
-    try { return validate('Admission', await api.once('POST', base + 'analyses', { url: config.target, samples: config.samples, profileId: 'standard-v1' }, config.intent), config); }
+    try {
+      const value = await api.once('POST', base + 'analyses', { url: config.target, samples: config.samples, profileId: 'standard-v1' }, config.intent);
+      requireValue(validResponse('Admission', value, config), 'TRANSPORT_FAILED');
+      return value;
+    }
     catch (e) {
-      if (!(e instanceof Failure) || (!e.ambiguous && !e.transient)) throw e;
+      if (!(e instanceof Failure) || (!e.ambiguous && !e.transient && e.code !== 'TRANSPORT_FAILED')) throw e;
       // Every ambiguous submission is recovered before any same-key replay.
       await findAdmission(api, config);
       // A recovered ID alone does not attest that changed input matches the original.
@@ -49,7 +54,7 @@ function prepareOutput(config) {
   } catch { throw new Failure('ARTIFACT_INVALID'); }
 }
 export async function execute(command, env, { fetcher = fetch, signal = new AbortController().signal, now = Date.now, sleep = defaultSleep, random = Math.random } = {}) {
-  requireValue(['doctor', 'audit', 'resume', 'export', 'publication-preview', 'artifact-check', 'intent'].includes(command));
+  requireValue(commands.includes(command));
   requireValue(Number(process.versions.node.split('.')[0]) >= 24, 'CLIENT_VERSION_UNSUPPORTED');
   const config = configuration(env, command);
   const deadline = now() + config.timeout * 1000;
@@ -60,6 +65,8 @@ export async function execute(command, env, { fetcher = fetch, signal = new Abor
   if (command === 'publication-preview') {
     const proof = config.provenance.provider === 'gitlab' ? await providerProof(config, env, { fetcher, signal: globalSignal }, true)
       : { producerId: env.ARGOS_EVIDENCE_PRODUCER, digest: env.ARGOS_EVIDENCE_SHA256 };
+    if (proof.controlFailed) return { auditOutcome: 'CONTROL_FAILED', auditExitCode: 2, publication: 'DISABLED', exitCode: 2,
+      diagnostic: diagnostic(new Failure(proof.code), config.lang) };
     const expected = { ...config.provenance, ...proof, now: now() };
     let evidence;
     try { evidence = readTrusted(join(config.output, 'evidence.json'), expected); } catch { throw new Failure('ARTIFACT_INVALID'); }
@@ -109,13 +116,14 @@ export async function main(args, env, dependencies = {}) {
   try {
     requireValue(args.length === 1);
     if (args[0] === '--version') return { clientVersion: VERSION, exitCode: 0 };
-    if (args[0] === '--help') return { clientVersion: VERSION, exitCode: 0, commands: ['doctor', 'intent', 'audit', 'resume', 'export', 'artifact-check', 'publication-preview'], documentationUrl: 'https://github.com/dokor/argos/tree/main/clients/ci' };
+    if (args[0] === '--help') return { clientVersion: VERSION, exitCode: 0, commands, documentationUrl: 'https://github.com/dokor/argos/tree/main/clients/ci' };
     const result = await execute(args[0], env, dependencies);
     return { clientVersion: VERSION, command: args[0], ...result };
   } catch (e) {
     const failure = dependencies.signal?.aborted || ['AbortError', 'TimeoutError'].includes(e?.name) ? new Failure('WAIT_TIMEOUT') : e;
+    const command = commands.includes(args[0]) ? args[0] : 'UNKNOWN';
     return args[0] === 'publication-preview'
-      ? { clientVersion: VERSION, auditOutcome: 'UNKNOWN', auditExitCode: null, publication: 'FAILED', exitCode: 3, diagnostic: diagnostic(failure, lang) }
-      : { clientVersion: VERSION, auditOutcome: 'CONTROL_FAILED', auditExitCode: 2, publication: 'DISABLED', exitCode: 2, diagnostic: diagnostic(failure, lang) };
+      ? { clientVersion: VERSION, command, auditOutcome: 'UNKNOWN', auditExitCode: null, publication: 'FAILED', exitCode: 3, diagnostic: diagnostic(failure, lang) }
+      : { clientVersion: VERSION, command, auditOutcome: 'CONTROL_FAILED', auditExitCode: 2, publication: 'DISABLED', exitCode: 2, diagnostic: diagnostic(failure, lang) };
   }
 }
