@@ -9,8 +9,12 @@ import java.util.Map;
 @Provider
 public class CiResponseBoundary implements ContainerResponseFilter {
     private static final org.slf4j.Logger logger=org.slf4j.LoggerFactory.getLogger(CiResponseBoundary.class);
+    /** Jersey matches resource paths without matrix parameters; authentication must do the same. */
+    static String normalizedPath(String path) {
+        return path.replaceAll(";[^/]*","").replaceAll("^/+|/+$","");
+    }
     public static boolean applies(String path) {
-        path=path.replaceAll("^/+|/+$","");
+        path=normalizedPath(path);
         return path.equals("account/ci") || path.startsWith("account/ci/") || path.equals("ci") || path.startsWith("ci/");
     }
     @Override public void filter(ContainerRequestContext request,ContainerResponseContext response) {

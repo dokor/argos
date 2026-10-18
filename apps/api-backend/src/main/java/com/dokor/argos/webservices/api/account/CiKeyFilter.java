@@ -14,7 +14,7 @@ public class CiKeyFilter implements ContainerRequestFilter {
     @Context private jakarta.inject.Provider<org.glassfish.grizzly.http.server.Request> transport;
     @Inject public CiKeyFilter(CiKeysService keys){this.keys=keys;}
     @Override public void filter(ContainerRequestContext request) {
-        String path=request.getUriInfo().getPath().replaceAll("^/+|/+$","");
+        String path=CiResponseBoundary.normalizedPath(request.getUriInfo().getPath());
         if(!path.equals("ci") && !path.startsWith("ci/")) return;
         try {
             String peer=transport==null?"direct":AccountAuthWs.remote(transport.get());

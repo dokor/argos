@@ -174,7 +174,8 @@ class CiKeysIT extends MariaDbReportFixture {
         server.start();
         try {
             String base="http://127.0.0.1:"+server.getListeners().iterator().next().getPort();var client=HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build();
-            for(String path:List.of("/ci/v1/identity","/ci/v1/missing","/ci/v2/unknown","/ci/%76%31/identity")) {
+            for(String path:List.of("/ci/v1/identity","/ci/v1/missing","/ci/v2/unknown","/ci/%76%31/identity",
+                    "/ci;ignored=1/v1/identity","/ci;ignored=1/v1/missing")) {
                 var response=client.send(HttpRequest.newBuilder(URI.create(base+path)).timeout(Duration.ofSeconds(5)).GET().build(),HttpResponse.BodyHandlers.ofString());
                 assertEquals(401,response.statusCode(),path);assertEquals("AUTHENTICATION_FAILED",mapper.readTree(response.body()).path("error").path("code").asText());
             }
