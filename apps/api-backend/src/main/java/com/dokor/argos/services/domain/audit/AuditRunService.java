@@ -73,6 +73,18 @@ public class AuditRunService {
     }
     public QueuedRun createQueuedRun(long auditId, Instant now, Long ownerUserId, java.sql.Connection connection,
                                      com.dokor.argos.services.analysis.AuditScope scope) {
+        return createQueuedRun(auditId,now,ownerUserId,connection,scope,null);
+    }
+    /** Never returns a public credential. The visibility marker exists before the run is inserted. */
+    public AuditRun createCiQueuedRun(long auditId,Instant now,long owner,java.sql.Connection connection,List<String> origins) {
+        if(connection==null)throw new IllegalArgumentException("CI admission requires a transaction");
+        try {
+            String navigation=objectMapper.writeValueAsString(com.dokor.argos.services.ci.CiOrigin.scope(origins));
+            return createQueuedRun(auditId,now,owner,connection,com.dokor.argos.services.analysis.AuditScope.full(),navigation).run();
+        }catch(com.fasterxml.jackson.core.JsonProcessingException failed){throw new IllegalStateException("CI scope serialization failed");}
+    }
+    private QueuedRun createQueuedRun(long auditId,Instant now,Long ownerUserId,java.sql.Connection connection,
+                                     com.dokor.argos.services.analysis.AuditScope scope,String navigation) {
         scope = scopes.validate(scope);
         final var admittedScope = scope;
         if(ownerUserId!=null) {
@@ -89,6 +101,7 @@ public class AuditRunService {
         AuditRun run = new AuditRun();
         run.setAuditId(auditId);
         run.setOwnerUserId(ownerUserId);
+        run.setCiNavigationOrigins(navigation);
         run.setStatus(AuditRunStatus.QUEUED.name());
         run.setCreatedAt(now);
         run.setReportTokenHash(tokenService.sha256(reportToken));
@@ -112,6 +125,7 @@ public class AuditRunService {
         if (reportToken == null || reportToken.isBlank() || reportToken.length() > 512) return Optional.empty();
         byte[] hash = tokenService.sha256(reportToken);
         return auditRunDao.findByReportTokenHash(hash)
+            .filter(run -> run.getCiNavigationOrigins()==null)
             .filter(run -> run.getReportTokenHash() != null && java.security.MessageDigest.isEqual(hash, run.getReportTokenHash()));
     }
 

@@ -43,12 +43,14 @@ public class ReportReadService {
 
         byte[] hash = tokenService.sha256(token);
         return auditReportDao.findByTokenHash(hash)
+            .filter(entity -> entity.getRunId()==null || !auditReportDao.isCiPrivate(entity.getRunId()))
             .filter(entity -> entity.getTokenHash() != null && java.security.MessageDigest.isEqual(hash, entity.getTokenHash()))
             .filter(this::notExpired)
             .flatMap(this::deserialize);
     }
 
     public Optional<ReportDto> getByRunId(long runId) {
+        if(auditReportDao.isCiPrivate(runId))return Optional.empty();
         return auditReportDao.findByRunId(runId).filter(this::notExpired).flatMap(this::deserialize);
     }
 
