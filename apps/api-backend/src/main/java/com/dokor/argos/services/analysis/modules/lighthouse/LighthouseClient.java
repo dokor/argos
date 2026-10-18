@@ -40,10 +40,15 @@ public class LighthouseClient {
     }
 
     public JsonNode analyze(String url) throws Exception {
+        return analyze(url,java.util.List.of());
+    }
+    public JsonNode analyze(String url,java.util.List<String> navigationOrigins) throws Exception {
         return ExternalServiceCall.timed(logger, "lighthouse", url, () -> {
             URI endpoint = URI.create(baseUrl + "/analyze");
-            String payload = objectMapper.writeValueAsString(Map.of("url", url, "timeoutMs",
-                Math.max(1, AuditDeadline.requestTimeout(requestTimeout).toMillis())));
+            var input=new java.util.HashMap<String,Object>(); input.put("url",url);
+            input.put("timeoutMs",Math.max(1,AuditDeadline.requestTimeout(requestTimeout).toMillis()));
+            if(!navigationOrigins.isEmpty()) { com.dokor.argos.services.ci.CiOrigin.require(navigationOrigins,url);input.put("navigationOrigins",navigationOrigins); }
+            String payload = objectMapper.writeValueAsString(input);
             return http.postJson(endpoint, payload, "application/json", requestTimeout,
                 Duration.ofSeconds(5), BoundedBodyHandlers.MAX_JSON_BYTES, Map.of());
         });

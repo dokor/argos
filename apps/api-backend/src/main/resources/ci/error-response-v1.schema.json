@@ -3,23 +3,142 @@
   "title": "Argos CI error v1 (preview)",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "requestId", "error"],
+  "required": [
+    "schemaVersion",
+    "requestId",
+    "error"
+  ],
   "properties": {
-    "schemaVersion": {"const": 1},
-    "requestId": {"type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", "maxLength": 36},
+    "schemaVersion": {
+      "const": 1
+    },
+    "requestId": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+      "maxLength": 36
+    },
     "error": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["code", "stage", "category", "messageKey", "actionCode", "retryable", "recovery", "retryAfterSeconds"],
+      "required": [
+        "code",
+        "stage",
+        "category",
+        "messageKey",
+        "actionCode",
+        "retryable",
+        "recovery",
+        "retryAfterSeconds"
+      ],
       "properties": {
-        "code": {"enum": ["CONFIG_INVALID", "CLIENT_VERSION_UNSUPPORTED", "AUTHENTICATION_FAILED", "FEATURE_NOT_AVAILABLE", "PERMISSION_DENIED", "RESOURCE_NOT_AVAILABLE", "TARGET_VERIFICATION_REQUIRED", "TARGET_REJECTED", "QUOTA_EXCEEDED", "RATE_LIMITED", "CAPACITY_UNAVAILABLE", "IDEMPOTENCY_CONFLICT", "TRANSPORT_FAILED", "UPSTREAM_UNAVAILABLE", "WAIT_TIMEOUT", "RUN_FAILED", "MEASUREMENT_INCOMPLETE", "REPORTS_INCOMPARABLE", "PUBLICATION_AUTH_FAILED", "DESTINATION_UNAVAILABLE", "PUBLICATION_RATE_LIMITED", "PUBLICATION_STATE_UNKNOWN", "ARTIFACT_INVALID", "INTERNAL_ERROR"]},
-        "stage": {"enum": ["CONFIGURATION", "AUTHENTICATION", "ENTITLEMENT", "TARGET", "ADMISSION", "WAIT", "COLLECTION", "VERDICT", "PUBLICATION"]},
-        "category": {"enum": ["CONFIGURATION", "AUTHENTICATION", "PERMISSION", "RESOURCE", "TARGET", "LIMIT", "AVAILABILITY", "CONFLICT", "MEASUREMENT", "PUBLICATION", "INTERNAL"]},
-        "messageKey": {"type": "string", "pattern": "^ci\\.errors\\.[A-Z_]+$", "maxLength": 64},
-        "actionCode": {"enum": ["FIX_CONFIGURATION", "UPDATE_CLIENT", "CHECK_ARGOS_SECRET", "REVIEW_PREMIUM_ACCESS", "REVIEW_KEY_SCOPES", "CHECK_OWN_RESOURCE", "VERIFY_TARGET", "REVIEW_TARGET_RULES", "REVIEW_USAGE", "WAIT_WITHIN_BUDGET", "RECOVER_ORIGINAL_REQUEST", "RESUME_EXISTING_RUN", "REVIEW_MEASUREMENT", "CHECK_GIT_SECRET", "CHECK_OWN_DESTINATION", "RESUME_PUBLICATION", "RECONCILE_PUBLICATION", "VERIFY_ARTIFACT"]},
-        "retryable": {"type": "boolean"},
-        "recovery": {"enum": ["NONE", "RETRY_READ", "RECOVER_ADMISSION", "RESUME_POLLING", "RETRY_PUBLICATION", "RECONCILE_PUBLICATION"]},
-        "retryAfterSeconds": {"type": ["integer", "null"], "minimum": 1, "maximum": 2764800}
+        "code": {
+          "enum": [
+            "CONFIG_INVALID",
+            "CLIENT_VERSION_UNSUPPORTED",
+            "AUTHENTICATION_FAILED",
+            "FEATURE_NOT_AVAILABLE",
+            "PERMISSION_DENIED",
+            "RESOURCE_NOT_AVAILABLE",
+            "TARGET_VERIFICATION_REQUIRED",
+            "TARGET_REJECTED",
+            "QUOTA_EXCEEDED",
+            "RATE_LIMITED",
+            "CAPACITY_UNAVAILABLE",
+            "IDEMPOTENCY_CONFLICT",
+            "TRANSPORT_FAILED",
+            "UPSTREAM_UNAVAILABLE",
+            "WAIT_TIMEOUT",
+            "RUN_FAILED",
+            "MEASUREMENT_INCOMPLETE",
+            "REPORTS_INCOMPARABLE",
+            "PUBLICATION_AUTH_FAILED",
+            "DESTINATION_UNAVAILABLE",
+            "PUBLICATION_RATE_LIMITED",
+            "PUBLICATION_STATE_UNKNOWN",
+            "ARTIFACT_INVALID",
+            "INTERNAL_ERROR",
+            "REQUEST_REJECTED",
+            "REAUTHENTICATION_REQUIRED"
+          ]
+        },
+        "stage": {
+          "enum": [
+            "CONFIGURATION",
+            "AUTHENTICATION",
+            "ENTITLEMENT",
+            "TARGET",
+            "ADMISSION",
+            "WAIT",
+            "COLLECTION",
+            "VERDICT",
+            "PUBLICATION"
+          ]
+        },
+        "category": {
+          "enum": [
+            "CONFIGURATION",
+            "AUTHENTICATION",
+            "PERMISSION",
+            "RESOURCE",
+            "TARGET",
+            "LIMIT",
+            "AVAILABILITY",
+            "CONFLICT",
+            "MEASUREMENT",
+            "PUBLICATION",
+            "INTERNAL"
+          ]
+        },
+        "messageKey": {
+          "type": "string",
+          "pattern": "^ci\\.errors\\.[A-Z_]+$",
+          "maxLength": 64
+        },
+        "actionCode": {
+          "enum": [
+            "FIX_CONFIGURATION",
+            "UPDATE_CLIENT",
+            "CHECK_ARGOS_SECRET",
+            "REVIEW_PREMIUM_ACCESS",
+            "REVIEW_KEY_SCOPES",
+            "CHECK_OWN_RESOURCE",
+            "VERIFY_TARGET",
+            "REVIEW_TARGET_RULES",
+            "REVIEW_USAGE",
+            "WAIT_WITHIN_BUDGET",
+            "RECOVER_ORIGINAL_REQUEST",
+            "RESUME_EXISTING_RUN",
+            "REVIEW_MEASUREMENT",
+            "CHECK_GIT_SECRET",
+            "CHECK_OWN_DESTINATION",
+            "RESUME_PUBLICATION",
+            "RECONCILE_PUBLICATION",
+            "VERIFY_ARTIFACT",
+            "RELOAD_ACCOUNT",
+            "REAUTHENTICATE_ACCOUNT"
+          ]
+        },
+        "retryable": {
+          "type": "boolean"
+        },
+        "recovery": {
+          "enum": [
+            "NONE",
+            "RETRY_READ",
+            "RECOVER_ADMISSION",
+            "RESUME_POLLING",
+            "RETRY_PUBLICATION",
+            "RECONCILE_PUBLICATION"
+          ]
+        },
+        "retryAfterSeconds": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 2764800
+        }
       }
     }
   }
