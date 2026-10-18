@@ -107,8 +107,11 @@ public class CiKeysService {
     /** Common machine gate. Admission handlers must additionally recheck entitlement and target grants on c. */
     public <T> T withCredential(String authorization,String peer,String requiredScope,BiFunction<Context,Connection,T> work) {
         return CiAccountOperations.boundary(()->{
-            if(!enabled() || limiter.blocked(peer)) throw fail(CiErrorCode.AUTHENTICATION_FAILED);
+            if(!enabled()) throw fail(CiErrorCode.AUTHENTICATION_FAILED);
             String credential=CiKeyMaterial.credential(authorization);
+            // A malicious caller behind a shared proxy must not lock out a valid credential.
+            // Ingress and authenticated budgets separately bound storage/traffic costs.
+            if(credential==null && limiter.blocked(peer)) throw fail(CiErrorCode.AUTHENTICATION_FAILED);
             try {
                 return dao.transaction(c->{
                     var q=QCiApiKey.table;var i=QCiIntegration.table;
@@ -126,7 +129,7 @@ public class CiKeysService {
                     var result=work.apply(context,c);
                     key.setLastUsedAt(now());dao.save(key,QCiApiKey.table,c);return result;
                 });
-            } catch(InvalidCredential rejected) {limiter.failed(peer);throw fail(CiErrorCode.AUTHENTICATION_FAILED);}
+            } catch(InvalidCredential rejected) {if(!limiter.blocked(peer))limiter.failed(peer);throw fail(CiErrorCode.AUTHENTICATION_FAILED);}
         });
     }
     private Issued issue(CiIntegration integration,String name,List<String> scopes,List<CiTargetsService.Grant> grants,Instant expires,Connection c) {

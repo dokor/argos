@@ -154,7 +154,9 @@ class CiKeysIT extends MariaDbReportFixture {
             for(var failure:failures) failure.get(15,TimeUnit.SECONDS);
         }
         for(int n=0;n<48;n++) unauthorized(()->keys.withCredential(null,"brute",null,(ctx,c)->ctx));
-        unauthorized(()->keys.withCredential("Bearer "+issued.credential(),"brute",null,(ctx,c)->ctx));
+        // An invalid caller sharing the proxy/runner peer cannot lock out this valid key.
+        keys.withCredential("Bearer "+issued.credential(),"brute",null,(ctx,c)->ctx);
+        unauthorized(()->keys.withCredential(null,"brute",null,(ctx,c)->ctx));
         clock.now=clock.instant().plusSeconds(900);
         keys.withCredential("Bearer "+issued.credential(),"brute",null,(ctx,c)->ctx);
         var closed=service(new CiPolicy(ConfigFactory.empty()));
