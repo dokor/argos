@@ -3,6 +3,7 @@ import { boundedJson } from "./bounded-request";
 import { ciFailure, ciUpstreamError, validCiOrigin } from "./ci-management-proxy";
 import { ssrfError } from "./audit-url-validation";
 import exportCatalogue from "./ci-export-catalog-v1.json";
+import { ciBackendOrigin } from "./ci-backend-origin";
 
 const headers={"Cache-Control":"private, no-store","X-Content-Type-Options":"nosniff","Referrer-Policy":"no-referrer","X-Robots-Tag":"noindex, nofollow, noarchive","Vary":"Authorization"};
 const publicIssue={title:"Argos audit: review required",body:"An Argos CI audit requires an authenticated review. Open Argos with your own account. Findings are available only through authenticated access."};
@@ -100,7 +101,7 @@ export async function ciMachineProxy(request:NextRequest,parts:string[]):Promise
     // Unknown paths still authenticate through a fixed read-only endpoint; never proxy arbitrary paths.
     const upstreamPath=unknown?"v1/identity":path;
     const signal=AbortSignal.timeout(15000);
-    const response=await fetch((process.env.API_BASE??"http://api-backend:8081")+"/api/ci/"+upstreamPath,
+    const response=await fetch(ciBackendOrigin()+"/api/ci/"+upstreamPath,
       {method:unknown?"GET":request.method,headers:forwarded,body,cache:"no-store",redirect:"error",signal});
     if(!/^application\/json(?:\s*;\s*charset=utf-8)?$/i.test(response.headers.get("content-type")??""))return ciFailure("TRANSPORT_FAILED");
     const data=await boundedJson(response,response.ok?65536:4096,signal);

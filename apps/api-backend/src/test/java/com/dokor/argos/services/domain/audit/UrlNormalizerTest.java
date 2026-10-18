@@ -54,6 +54,11 @@ class UrlNormalizerTest {
         assertThrows(IllegalArgumentException.class, () -> mixed.normalize("https://example.com"));
         assertThrows(IllegalArgumentException.class, () -> new UrlNormalizer(host -> { throw new java.net.UnknownHostException(); }).normalize("https://example.com"));
         assertThrows(IllegalArgumentException.class, () -> new UrlNormalizer(host -> new InetAddress[0]).normalize("https://example.com"));
+        for(String address:java.util.List.of("168.63.129.16","100.100.100.200","fd00:ec2::254","::ffff:169.254.169.254")) {
+            var metadata=new UrlNormalizer(host->new InetAddress[]{InetAddress.getByName("8.8.8.8"),InetAddress.getByName(address)});
+            assertThrows(IllegalArgumentException.class,()->metadata.normalize("https://example.com"));
+            assertThrows(IllegalArgumentException.class,()->UrlNormalizer.normalizeSyntax("https://"+(address.contains(":")?"["+address+"]":address)));
+        }
     }
 
     @ParameterizedTest @ValueSource(strings = {"https://u:p@example.com", "https://@example.com", "https://example.com:",
