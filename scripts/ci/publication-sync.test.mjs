@@ -4,7 +4,7 @@ import * as fs from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { synchronizeIssues, PublicationRejected } from '../../clients/ci/src/publication-sync.mjs';
-import { publicationConfiguration, candidates, PUBLIC_ISSUE, managedBlock } from '../../clients/ci/src/publication-policy.mjs';
+import { publicationConfiguration, previewConfiguration, candidates, PUBLIC_ISSUE, managedBlock } from '../../clients/ci/src/publication-policy.mjs';
 import { writePrivate } from '../../clients/ci/src/evidence.mjs';
 import { VERSION, policy, errors } from '../../clients/ci/src/resources.mjs';
 import { Failure } from '../../clients/ci/src/diagnostics.mjs';
@@ -94,6 +94,7 @@ test('disabled is the default: no artifact, lock, read, write or provider call; 
   assert.ok(f.state.calls.every(c => ['destination', 'list', 'journal-read'].includes(c))); assert.equal(f.state.payloads.length, 0);
 });
 test('checked-in provider configurations are strictly valid, disabled and require explicit publication consent', () => {
+  assert.deepEqual(previewConfiguration({}).environments, publicationConfiguration().environments);
   for (const provider of ['github', 'gitlab']) {
     const sample = JSON.parse(fs.readFileSync(new URL(`../../clients/ci/examples/publication.${provider}.json`, import.meta.url)));
     const config = publicationConfiguration(sample); assert.equal(config.mode, 'DISABLED'); assert.equal(config.destination.provider, provider);

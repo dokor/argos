@@ -525,7 +525,7 @@ function selectFindings(evidence, config) {
 }
 function previewConfiguration(env) {
   const csv = (name, fallback) => env[name] === undefined ? fallback : env[name] === '' ? [] : env[name].split(',');
-  return publicationConfiguration({ mode: 'PREVIEW', environments: csv('ARGOS_PUBLICATION_ENVIRONMENTS', environments),
+  return publicationConfiguration({ mode: 'PREVIEW', environments: csv('ARGOS_PUBLICATION_ENVIRONMENTS', ['production']),
     categories: csv('ARGOS_PUBLICATION_CATEGORIES', domains), severities: csv('ARGOS_PUBLICATION_SEVERITIES', ['critical', 'important']),
     labels: csv('ARGOS_PUBLICATION_LABELS', ['argos-ci']), maxNewIssues: Number(env.ARGOS_PUBLICATION_MAX_NEW ?? '5') });
 }
