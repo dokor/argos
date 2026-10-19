@@ -259,8 +259,13 @@ jobs:
       - name: Run MariaDB integration tests
         run: >-
           mvn --batch-mode -P mariadb-integration
-          -Dit.test=BillingIT,AdminStatisticsIT,ProblemStatisticsIT,PremiumWaitlistIT,CiEntitlementIT,CiTargetsIT,CiKeysIT,CiQuotaIT,CiAdmissionIT,AuditScopeIT,NotificationsIT,ReportSharingMigrationIT,ClarteFreshStartMigrationIT,ConnectedModelIT,AccountLifecycleIT,AccountSessionSecurityIT,AccountSecurityMigrationIT,ReportCredentialMigrationIT,AuditPublicationIT,AccountJourneyIT,ProductAnalyticsIT,ReportRetentionIT,AuditClaimIT,NewsletterPrivacyIT,AuditRunProgressIT,DomainAnalysisConcurrencyIT,AuditAdmissionIT,UsageIT,UsageTimelineIT,DiscoveryIT,BatchIT,DiagnosticMigrationIT,CanonicalCountsMigrationIT,OverviewIT
+          -Dit.test=PremiumCiJourneyIT,BillingIT,AdminStatisticsIT,ProblemStatisticsIT,PremiumWaitlistIT,CiEntitlementIT,CiTargetsIT,CiKeysIT,CiQuotaIT,CiAdmissionIT,AuditScopeIT,NotificationsIT,ReportSharingMigrationIT,ClarteFreshStartMigrationIT,ConnectedModelIT,AccountLifecycleIT,AccountSessionSecurityIT,AccountSecurityMigrationIT,ReportCredentialMigrationIT,AuditPublicationIT,AccountJourneyIT,ProductAnalyticsIT,ReportRetentionIT,AuditClaimIT,NewsletterPrivacyIT,AuditRunProgressIT,DomainAnalysisConcurrencyIT,AuditAdmissionIT,UsageIT,UsageTimelineIT,DiscoveryIT,BatchIT,DiagnosticMigrationIT,CanonicalCountsMigrationIT,OverviewIT
           verify
+      - name: Verify and collect controlled Premium CI acceptance (launch remains NO_GO)
+        working-directory: ${{ github.workspace }}
+        run: |
+          python3 -B scripts/ci/test_premium_acceptance.py
+          python3 -B scripts/ci/premium_acceptance.py --output outputs/premium-ci-acceptance.json
       - name: Verify packaged startup and explicit QueryDSL preview
         env:
           QUERYDSL_SMOKE_JDBC_URL: jdbc:mariadb://127.0.0.1:3306/argos_querydsl_test
@@ -272,6 +277,7 @@ jobs:
         with:
           name: mariadb-integration-11.4-${{ github.sha }}
           path: |
+            outputs/premium-ci-acceptance.json
             apps/api-backend/target/failsafe-reports/
             apps/api-backend/target/querydsl-startup.log
             apps/api-backend/target/querydsl-monitoring.json
