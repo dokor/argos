@@ -9,7 +9,7 @@
 @mixin anchors {
   .page { --argos-anchor-offset: 88px; }
   .page main [id] { scroll-margin-top: var(--argos-anchor-offset); }
-  @media (max-width: 1180px) {
+  @media (max-width: 1260px) {
     .page { --argos-anchor-offset: 136px; }
   }
 }
