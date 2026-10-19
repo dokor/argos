@@ -21,7 +21,10 @@ it.each(["fr", "en"] as const)("explains public plans without reading billing or
   render(<LangProvider initialLang={lang}><PricingPage /></LangProvider>);
   expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
   const premium = screen.getByRole("article", { name: "Premium" });
-  expect(within(premium).getByText(c.futurePrice)).toBeInTheDocument();
+  expect(within(premium).getByText(c.premiumPrice.replace(/\s/g," "))).toBeInTheDocument();
+  expect(within(premium).getByText(c.periods.replace(/\s/g," "))).toBeInTheDocument();
+  expect(within(premium).getByText(c.annualTtc.replace(/\s/g," "))).toBeInTheDocument();
+  expect(screen.getByText(c.taxNote)).toBeInTheDocument();
   expect(within(premium).getByText(c.coming)).toBeInTheDocument();
   expect(screen.getByText(c.notice)).toBeInTheDocument();
   expect(screen.getByRole("link", { name: c.plans[2].action })).toHaveAttribute("href", "#premium");
@@ -40,17 +43,17 @@ it.each(["fr", "en"] as const)("keeps account access separate from all seven sub
   expect(statuses.querySelectorAll("dt")).toHaveLength(7);
   for (const status of Object.values(subscriptionStatuses)) expect(within(statuses as HTMLElement).getByText(status[lang][0])).toBeInTheDocument();
   expect(screen.getByRole("link", { name: pricingCopy[lang].manage })).toHaveAttribute("href", localizedPath("/account/billing", lang));
-  expect(document.querySelectorAll("details")).toHaveLength(7);
+  expect(document.querySelectorAll("details")).toHaveLength(8);
   const table = screen.getByRole("table");
   expect(within(table).getAllByRole("columnheader")).toHaveLength(4);
-  expect(within(table).getAllByRole("rowheader")).toHaveLength(9);
+  expect(within(table).getAllByRole("rowheader")).toHaveLength(10);
 });
 
 it("server-renders both languages and declares reciprocal public canonical and sitemap entries", () => {
   for (const lang of ["fr", "en"] as const) {
     const html = renderToStaticMarkup(<LangProvider initialLang={lang}><PricingPage /></LangProvider>);
     expect(html).toContain(pricingCopy[lang].eyebrow);
-    expect(html).toContain(pricingCopy[lang].futurePrice);
+    expect(html).toContain(pricingCopy[lang].premiumPrice);
     const metadata = lang === "fr" ? frenchMetadata : englishMetadata;
     expect(metadata.alternates?.canonical).toBe("https://argos.lelouet.fr" + localizedPath("/tarifs", lang));
     expect(metadata.alternates?.languages).toMatchObject({ fr: "https://argos.lelouet.fr/tarifs", en: "https://argos.lelouet.fr/en/pricing" });

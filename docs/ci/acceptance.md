@@ -154,10 +154,14 @@ SSRF, sandbox ou masquage des secrets. Limiter l'accès et la rétention des dia
 
 1. **Aujourd'hui : NO_GO.** Garder les six drapeaux `premium-ci.enabled`,
    `billing.enabled`, `billing.payments-enabled`, `billing.prices-approved`,
-   `billing.launch-approved`, `billing.tax-ready` à `false`. Aucun prix ni TVA inventé.
-2. Décider prix EUR mensuel/annuel, réduction annuelle, fiscalité HT/TTC et politique
+   `billing.launch-approved`, `billing.tax-ready` à `false`. Garder aussi
+   `audit.queue.premium-priority-enabled=false` jusqu'aux mesures sous charge.
+2. Prix approuvés : 19 EUR HT/mois, 199 EUR HT/an (29 EUR / 12,7 % d'économie).
+   Valider la fiscalité HT/TTC et la politique
    de grâce/crédit/remboursement/litige/fermeture. La fermeture attend actuellement la
    fin effective de l'abonnement : accepter ou modifier ce comportement avant vente.
+   Recetter aussi le droit courant et la progression des demandes gratuites anciennes
+   lorsque la priorité Premium est activée dans un environnement de test autorisé.
 3. Ressources de test autorisées, recette réelle complète, métriques/alertes exercées,
    revue sécurité et critères P0 tous validés au SHA candidat : décision humaine dans
    #467 et revue du [contrôle de release général](../../scripts/check-release-evidence.mjs) si applicable.
