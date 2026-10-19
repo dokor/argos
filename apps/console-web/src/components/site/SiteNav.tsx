@@ -44,6 +44,7 @@ export default function SiteNav() {
           <Link href="/#how-it-works" className={s.navLink} onClick={() => setMenuPath(null)}>{t.nav.how}</Link>
           <Link href="/exemple-rapport" className={s.navLink} onClick={() => setMenuPath(null)} aria-current={pathname === "/exemple-rapport" ? "page" : undefined}>{t.nav.example}</Link>
           <Link href="/ressources" className={s.navLink} onClick={() => setMenuPath(null)} aria-current={onResources ? "location" : undefined}>{t.nav.guides}</Link>
+          <Link href="/tarifs" className={s.navLink} onClick={() => setMenuPath(null)} aria-current={pathname === "/tarifs" ? "page" : undefined}>{lang === "fr" ? "Tarifs" : "Pricing"}</Link>
           <Link href="/docs" className={s.navLink} onClick={() => setMenuPath(null)}>{lang === "fr" ? "Développeurs" : "Developers"}</Link>
         </div>
         <div className={s.navActions}>
