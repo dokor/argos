@@ -130,6 +130,10 @@ volontaire et minimal ; ne pas demander de logs CI bruts, de secret ou d'URL Che
 En exploitation, corréler le `requestId`/code, vérifier la configuration et l'état Stripe
 depuis les outils autorisés, puis laisser la relecture reprendre. Ne jamais accorder
 Premium par SQL pour contourner un paiement ambigu, ni effacer l'intention pour réessayer.
+Les erreurs de transport/contrat du BFF journalisent le même identifiant et l'étape
+`BILLING_BFF`, sans exception brute ni payload. Une intervention administrative sur
+les droits CI doit revendiquer explicitement `grant_source='MANUAL'` sous les mêmes
+verrous ; les changements de l'offre du compte restent prioritaires sur le projecteur.
 
 ## Preuves et recette restante
 
