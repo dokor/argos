@@ -12,11 +12,12 @@ import { providerProof } from './providers.mjs';
 import { previewConfiguration, publicationConfiguration, selectFindings, fingerprint, FRESHNESS_MS } from './publication-policy.mjs';
 import { synchronizeIssues } from './publication-sync.mjs';
 import { githubPublication } from './github-publication.mjs';
+import { gitlabPublication } from './gitlab-publication.mjs';
 import { azureJournal } from './azure-journal.mjs';
 import { sealProof, openProof } from './private-transfer.mjs';
 
 const base = '/api/ci/v1/';
-const commands = ['doctor', 'audit', 'resume', 'export', 'publication-preview', 'publication-stage', 'publish-github', 'artifact-check', 'intent'];
+const commands = ['doctor', 'audit', 'resume', 'export', 'publication-preview', 'publication-stage', 'publish-github', 'publish-gitlab', 'artifact-check', 'intent'];
 const defaultSleep = (ms, signal) => wait(ms, undefined, { signal });
 function validate(kind, value, expected) { requireValue(validResponse(kind, value, expected), 'TRANSPORT_FAILED'); return value; }
 async function preflight(api, config, checkNew = true) {
@@ -81,29 +82,44 @@ export async function execute(command, env, { fetcher = fetch, signal = new Abor
   const deadline = now() + config.timeout * 1000;
   const globalSignal = AbortSignal.any([signal, AbortSignal.timeout(config.timeout * 1000)]);
   const api = transport({ key: config.key, signal: globalSignal, deadline, now, fetcher, sleep, random });
-  if (['publication-stage', 'publish-github'].includes(command)) {
+  if (['publication-stage', 'publish-github', 'publish-gitlab'].includes(command)) {
     let publication;
     try { requireValue((env.ARGOS_PUBLICATION_CONFIG?.length ?? 0) <= 16384);
       publication = publicationConfiguration(JSON.parse(env.ARGOS_PUBLICATION_CONFIG ?? '{}')); }
     catch { throw new Failure('CONFIG_INVALID'); }
     if (publication.mode === 'DISABLED') return { publication: 'DISABLED', auditOutcome: 'UNKNOWN', auditExitCode: null, exitCode: 0 };
-    requireValue(config.provenance.provider === 'github' && !env.ARGOS_API_KEY && !publication.reopenResolved, 'CONFIG_INVALID');
-    const invocation = env.ARGOS_EVIDENCE_INVOCATION ?? config.provenance.invocation;
-    const [rootRun, attempt] = invocation.split(':');
-    requireValue(/^[1-9][0-9]{0,19}:[1-9][0-9]{0,5}$/.test(invocation) && rootRun === env.GITHUB_RUN_ID
-      && Number(attempt) <= Number(env.GITHUB_RUN_ATTEMPT), 'ARTIFACT_INVALID');
-    const expected = { ...config.provenance, invocation, producerId: env.ARGOS_EVIDENCE_PRODUCER, digest: env.ARGOS_EVIDENCE_SHA256, now: now() };
-    requireValue(expected.producerId === 'argos_control', 'ARTIFACT_INVALID');
-    const github = githubPublication(publication, env, { fetcher, now });
+    const github = config.provenance.provider === 'github';
+    requireValue(['github', 'gitlab'].includes(config.provenance.provider) && !env.ARGOS_API_KEY && !publication.reopenResolved
+      && (command === 'publication-stage' || command === (github ? 'publish-github' : 'publish-gitlab')), 'CONFIG_INVALID');
+    let source, sourceReader;
+    if (github) {
+      const invocation = env.ARGOS_EVIDENCE_INVOCATION ?? config.provenance.invocation, [rootRun, attempt] = invocation.split(':');
+      requireValue(/^[1-9][0-9]{0,19}:[1-9][0-9]{0,5}$/.test(invocation) && rootRun === env.GITHUB_RUN_ID
+        && Number(attempt) <= Number(env.GITHUB_RUN_ATTEMPT), 'ARTIFACT_INVALID');
+      source = { invocation, producerId: env.ARGOS_EVIDENCE_PRODUCER, digest: env.ARGOS_EVIDENCE_SHA256, cipherDigest: env.ARGOS_CIPHER_SHA256 };
+      requireValue(source.producerId === 'argos_control', 'ARTIFACT_INVALID');
+    } else if (command === 'publication-stage') {
+      requireValue(env.CI_JOB_NAME === 'argos_control' && !env.ARGOS_GITLAB_PUBLISH_TOKEN, 'CONFIG_INVALID');
+      source = { invocation: config.provenance.invocation, producerId: env.CI_JOB_ID, digest: env.ARGOS_EVIDENCE_SHA256 };
+    } else {
+      sourceReader = gitlabPublication(publication, env, { fetcher, now }, true);
+      source = await sourceReader.sourceProof({ signal: globalSignal });
+      if (source.controlFailed) return { auditOutcome: 'CONTROL_FAILED', auditExitCode: 2, publication: 'DISABLED', exitCode: 2,
+        diagnostic: diagnostic(new Failure(source.code), config.lang) };
+    }
+    const expected = { ...config.provenance, invocation: source.invocation, producerId: source.producerId, digest: source.digest, now: now() };
     const readOnly = command === 'publication-stage' || publication.mode === 'PREVIEW';
-    const store = azureJournal(readOnly ? env.ARGOS_GITHUB_JOURNAL_READ_SAS_URL : env.ARGOS_GITHUB_JOURNAL_SAS_URL,
+    const publisher = github ? githubPublication(publication, env, { fetcher, now }) : gitlabPublication(publication, env, { fetcher, now }, readOnly);
+    const secret = github ? readOnly ? env.ARGOS_GITHUB_JOURNAL_READ_SAS_URL : env.ARGOS_GITHUB_JOURNAL_SAS_URL
+      : readOnly ? env.ARGOS_GITLAB_JOURNAL_READ_SAS_URL : env.ARGOS_GITLAB_JOURNAL_SAS_URL;
+    const store = azureJournal(secret,
       publication.destination, { fetcher, now, readOnly });
     const options = { signal: globalSignal };
     let evidence;
     if (command === 'publication-stage') {
       evidence = readTrusted(join(config.output, 'evidence.json'), expected);
       try {
-        await github.readDestination(options);
+        if (github) await publisher.readDestination(options); else await publisher.verifyStage(options);
         requireValue(now() - Date.parse(evidence.issuedAt) <= FRESHNESS_MS, 'ARTIFACT_INVALID');
         const key = await store.encryptionKey(options); let cipherSha256;
         try { cipherSha256 = sealProof(evidence, expected, publication, key, join(config.output, 'evidence.enc.json')); }
@@ -112,16 +128,21 @@ export async function execute(command, env, { fetcher = fetch, signal = new Abor
       } catch (error) { return { ...pipelineResult(evidence.verdict, { publication: 'FAILED' }), proofStaged: false, diagnostic: diagnostic(error, config.lang) }; }
     }
     const key = await store.encryptionKey(options);
-    try { evidence = openProof(join(config.output, 'evidence.enc.json'), env.ARGOS_CIPHER_SHA256, expected, publication, key, now()); }
+    try { evidence = openProof(join(config.output, 'evidence.enc.json'), source.cipherDigest, expected, publication, key, now()); }
     finally { key.fill(0); }
+    requireValue(!source.auditOutcome || source.auditOutcome === evidence.verdict.outcome, 'ARTIFACT_INVALID');
     // Exact digest and producer are supplied outside the private store, by the current control job.
     prepareOutput(config); const path = join(config.output, 'evidence.json');
     requireValue(writePrivate(path, evidence) === expected.digest, 'ARTIFACT_INVALID');
-    const adapter = { ...github, loadJournal: store.loadJournal,
-      withDestinationLease: (key, operation, opts) => store.withDestinationLease(key, session => operation({ ...github, ...session,
+    const readDestination = async opts => {
+      if (sourceReader) requireValue(fingerprint(await sourceReader.sourceProof(opts)) === fingerprint(source), 'ARTIFACT_INVALID');
+      return publisher.readDestination(opts);
+    };
+    const adapter = { ...publisher, readDestination, loadJournal: store.loadJournal,
+      withDestinationLease: (key, operation, opts) => store.withDestinationLease(key, session => operation({ ...publisher, ...session, readDestination,
         createIssue: async (payload, mutationOptions) => {
           await session.assertHeld(mutationOptions);
-          return github.createIssue(payload, mutationOptions);
+          return publisher.createIssue(payload, mutationOptions);
         } }), opts) };
     try { return await synchronizeIssues({ evidencePath: path, expected, auditVerdict: evidence.verdict, config: publication,
       adapter, signal: globalSignal, now, sleep, random, lang: config.lang, timeoutMs: Math.min(config.timeout * 1000, 120000) }); }
@@ -191,7 +212,7 @@ export async function main(args, env, dependencies = {}) {
   } catch (e) {
     const failure = dependencies.signal?.aborted || ['AbortError', 'TimeoutError'].includes(e?.name) ? new Failure('WAIT_TIMEOUT') : e;
     const command = commands.includes(args[0]) ? args[0] : 'UNKNOWN';
-    return ['publication-preview', 'publication-stage', 'publish-github'].includes(args[0])
+    return ['publication-preview', 'publication-stage', 'publish-github', 'publish-gitlab'].includes(args[0])
       ? { clientVersion: VERSION, command, auditOutcome: 'UNKNOWN', auditExitCode: null, publication: 'FAILED', exitCode: 3, diagnostic: diagnostic(failure, lang) }
       : { clientVersion: VERSION, command, auditOutcome: 'CONTROL_FAILED', auditExitCode: 2, publication: 'DISABLED', exitCode: 2, diagnostic: diagnostic(failure, lang) };
   }
