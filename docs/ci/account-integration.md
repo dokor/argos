@@ -80,6 +80,12 @@ restent hors Argos ; aucun élargissement vers un rôle administrateur n'est pro
 Les modèles intégrés sont générés depuis `clients/ci/templates/*` par
 `node scripts/contracts/sync-ci-integration-templates.mjs`. Les tests vérifient
 leur égalité exacte ; une mise à jour du client exige de régénérer ce catalogue.
+Les variantes PREVIEW sont dérivées avec substitutions exactes contrôlées :
+GitHub issues:read/actions:read et SAS r dans le publisher ; GitLab environnement
+protégé `argos-publisher-preview` avec token read_api/SAS r, retrait du token
+de publication et du SAS rw du processus. Pins, provenance et chiffrement sont
+conservés. L'identité GitHub Actions est fixée à 41898282 comme dans le client ;
+le bot GitLab reste un identifiant de la configuration vérifiée du projet.
 La documentation web publique reste #742 ; en attendant, les liens du compte
 pointent vers les guides publics versionnés dans GitHub, sans lien `/docs` cassé.
 

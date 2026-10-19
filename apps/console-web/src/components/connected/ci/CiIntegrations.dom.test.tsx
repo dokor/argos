@@ -5,7 +5,7 @@ import CiIntegrations from "./CiIntegrations";
 import {LangProvider} from "@/lib/i18n/LangContext";
 import {ciManagement,CiManagementError,type CiIssued,type CiKeys,type CiStatus,type CiTarget} from "@/lib/ci-management-client";
 import {accountFetch} from "@/lib/account-client";
-import {key,keys,status,target,issued,profile,usage,methods} from "../../../../../../scripts/e2e/ci-integrations-fixture.mjs";
+import {key,keys,status,target,issued,profile,usage,methods} from "./fixtures/ci-integrations.mjs";
 const session=vi.hoisted(()=>({profile:{verified:true,email:"fixture@example.com"},usage:{used:12,reserved:2,available:76}}));
 vi.mock("@/components/account/AccountSession",()=>({useAccountSession:()=>session}));
 vi.mock("@/lib/ci-management-client",async original=>({...await original<typeof import("@/lib/ci-management-client")>(),ciManagement:vi.fn()}));
@@ -72,7 +72,7 @@ it("prepares disabled publication config and an explicit preview, without any Gi
   await ready();const before=vi.mocked(ciManagement).mock.calls.length;fireEvent.click(screen.getByRole("button",{name:"Configuration CI"}));fireEvent.click(screen.getByRole("checkbox",{name:"Préparer la configuration optionnelle d’issues"}));
   expect(screen.getByRole("region",{name:"ARGOS_PUBLICATION_CONFIG (JSON)"})).toHaveTextContent('"mode": "DISABLED"');
   fireEvent.change(screen.getByLabelText("Mode de la configuration préparée"),{target:{value:"PREVIEW"}});expect(screen.queryByRole("region",{name:"ARGOS_PUBLICATION_CONFIG (JSON)"})).not.toBeInTheDocument();
-  fireEvent.change(screen.getByLabelText("Chemin du dépôt/projet"),{target:{value:"customer/site"}});fireEvent.change(screen.getByLabelText("ID numérique immuable du dépôt/projet"),{target:{value:"42"}});fireEvent.change(screen.getByLabelText("ID numérique du bot vérifié"),{target:{value:"101"}});fireEvent.click(screen.getByRole("checkbox",{name:/J’autorise les constats/}));
+  fireEvent.change(screen.getByLabelText("Chemin du dépôt/projet"),{target:{value:"customer/site"}});fireEvent.change(screen.getByLabelText("ID numérique immuable du dépôt/projet"),{target:{value:"42"}});expect(screen.getByLabelText("ID numérique du bot vérifié")).toHaveValue("41898282");fireEvent.click(screen.getByRole("checkbox",{name:/J’autorise les constats/}));
   expect(screen.getByRole("region",{name:"ARGOS_PUBLICATION_CONFIG (JSON)"})).toHaveTextContent('"mode": "PREVIEW"');expect(vi.mocked(ciManagement).mock.calls).toHaveLength(before);
 });
 it("renders English controls and controlled errors without raw provider text",async()=>{
