@@ -30,6 +30,7 @@ curl --fail --silent --show-error --proto '=https' --tlsv1.2 \\
 printf '%s  %s\\n' '${checksum}' 'argos-ci.mjs' | sha256sum --check --strict
 node argos-ci.mjs --version`;
 export const firstAudit=`# ARGOS_API_KEY: protected CI secret, already configured
+set -eu
 export ARGOS_TARGET_URL=https://example.com
 export ARGOS_ENVIRONMENT=production
 export ARGOS_SAMPLES=2
@@ -56,7 +57,7 @@ umask 077
 test -n "\${ARGOS_API_KEY:?}" && test -n "\${ARGOS_IDEMPOTENCY_KEY:?}"
 printf 'header = "Authorization: Bearer %s"\\nheader = "Idempotency-Key: %s"\\n' \\
   "$ARGOS_API_KEY" "$ARGOS_IDEMPOTENCY_KEY" | \\
-  curl --proto '=https' --tlsv1.2 --silent --show-error \\
+  curl --proto '=https' --tlsv1.2 --fail-with-body --silent --show-error \\
     --max-time 15 --max-redirs 0 --config - \\
     --header 'Content-Type: application/json' \\
     --request POST --data '{"url":"https://example.com","samples":2,"profileId":"standard-v1"}' \\

@@ -20,6 +20,8 @@ test('copied shell and journal examples parse without execution; distribution di
   assert.equal(createHash('sha256').update(readFileSync(new URL('clients/ci/dist/argos-ci.mjs',root))).digest('hex'),checksum);
   assert.deepEqual(JSON.parse(request),{url:'https://example.com',samples:2,profileId:'standard-v1'});
   assert.ok(admissionCurl.includes('--config -'));assert.ok(admissionCurl.includes('${ARGOS_IDEMPOTENCY_KEY:?}'));
+  assert.ok(admissionCurl.includes('--fail-with-body'),'A rejected admission must fail the copied curl command');
+  assert.ok(firstAudit.includes('set -eu'),'Do not continue a copied example after failed doctor or audit');
 });
 test('installation pins match the source distribution, templates, and publication configuration stays disabled',()=>{
   const content=read('apps/console-web/src/components/docs/content.ts'),catalog=JSON.parse(read('apps/console-web/src/lib/ci-integration-templates.json'));
