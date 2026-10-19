@@ -4,6 +4,8 @@
 currently available (19 October 2026). This document does not authorize merging,
 deployment, payments or CI activation. Keep #467 open until actual acceptance passes.
 
+Preparation: [step-by-step environment, permission and secret setup guide in French](test-environments.md).
+
 ## Controlled evidence and its limits
 
 Run the full **CI** workflow using `workflow_dispatch` on the candidate branch;
