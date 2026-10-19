@@ -144,10 +144,10 @@ class BillingIT extends MariaDbReportFixture {
                 try(var update=writer.prepareStatement("UPDATE ARG_BILLING_ACCOUNT SET phase='OPEN' WHERE id=733")){update.executeUpdate();}
                 writer.commit();
             }catch(SQLException failed){throw new RuntimeException(failed);}
-            when(sessions.with(anyString(),nullable(String.class),anyBoolean(),anyBoolean(),any())).thenAnswer(inv->{
+            doAnswer(inv->{
                 BiFunction<AccountSessionService.Context,Connection,Object> work=inv.getArgument(4);
                 return work.apply(new AccountSessionService.Context(dao.user(733,c,true),new AccountSession()),c);
-            });
+            }).when(sessions).with(anyString(),nullable(String.class),anyBoolean(),anyBoolean(),any());
             assertThrows(AccountError.class,()->auth.archive("owner","csrf",true));return null;
         });
         try(var c=source.getConnection()){assertEquals("ACTIVE",dao.user(733,c,false).getState());}
