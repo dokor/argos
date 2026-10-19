@@ -35,6 +35,16 @@ class ControlledAcceptanceTests(unittest.TestCase):
         self.assertEqual("INCOMPLETE", result["controlledStatus"])
         self.assertIn("unbound-checkout", result["blockers"])
 
+    def test_every_required_suite_including_separate_closed_defaults_is_mandatory(self):
+        for key, (kind, suffix) in acceptance.SUITES.items():
+            with self.subTest(suite=key):
+                path = self.write(kind, suffix)
+                path.unlink()
+                result = acceptance.collect(self.root, "a" * 40, True)
+                self.assertEqual("INCOMPLETE", result["controlledStatus"])
+                self.assertIn("controlled:" + key, result["blockers"])
+                self.write(kind, suffix)
+
     @patch("premium_acceptance.binding", return_value=("a" * 40, True))
     def test_cli_success_means_controlled_only_and_launch_check_exits_nonzero(self, _binding):
         output = self.root / "report.json"
