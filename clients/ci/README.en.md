@@ -1,10 +1,10 @@
-# Argos Premium CI client — preview 0.1.0
+# Argos Premium CI client — preview 0.2.0
 
 Node.js 24, no npm dependencies or Docker. **Server access remains disabled until
 acceptance #467.** The [GitHub](templates/github-actions.yml) and
 [GitLab](templates/gitlab-ci.yml) examples pin the standalone distribution to a
 full commit and an independently reviewed SHA-256. They execute no project code.
-Ticket publishers are subsequent work (#738/#739/#740); this version offers
+The common synchronization engine is #738; HTTP ticket publishers remain #739/#740. The CLI offers
 optional **publication preview only**, with no Git mutations.
 
 Set the protected secret ARGOS_API_KEY and the authorized public HTTPS
@@ -44,13 +44,15 @@ unlimited verified domains, one-year keys. Rotation preserves usage and access
 only within the original integration/scope. Expired/revoked keys fail explicitly.
 
 Private export is opt-in (ARGOS_EXPORT_PRIVATE=1). Evidence contains only the
-filtered verdict and provenance, no URL or credential; maximum 64 KiB and seven
-days. Use a private physical directory with no symlinks and restrictive ACLs
+filtered verdict and provenance (ci-evidence-v2), no URL or credential; maximum 64 KiB and seven
+days, also capped by both source report expirations. Use a private physical directory with no symlinks and restrictive ACLs
 (0600 files on Unix). Existing files are never overwritten. Export checks
 summary-v1/details-v1 and the expected COMPLETED run before writing details.json;
 the examples never upload this detailed file. omittedFindings is not a verdict.
 Server reports expire within 30 days. Deleting one does not revoke provider copies.
 Delete those separately; diagnostics must not be retained beyond 24 hours.
+Delete private artifacts before making their source repository public and immediately
+if visibility changes unexpectedly.
 
 Artifact upload requires explicit consent and API verification of a private
 destination. GitLab also requires keep_latest_artifact=false and maintainer-only
@@ -62,6 +64,28 @@ The client then validates repository/SHA/run/attempt/producer/environment,
 version/schema/expiry, external digest, regular non-symlink/non-hardlink file and
 size. No API key is needed for publication preview, no audit is rerun, and no
 provider credential is sent to Argos. A producer failure cannot authorize findings.
+
+Publication requires a receipt checked within fifteen minutes. Refresh with
+`resume`, the original intention UUID and API key in a job without Git write
+rights, using a new output directory. This reads the original admission, both
+reports and verdict, with no POST, new audit or charge. Observation start dates
+do not change; rereading a result after a human resolution does not prove recurrence.
+A v1 artifact cannot be locally upgraded. This is a bounded snapshot, not immediate
+revocation after a later server deletion; acceptance #467 must approve that window.
+
+Preview filters: ARGOS_PUBLICATION_ENVIRONMENTS, ARGOS_PUBLICATION_CATEGORIES,
+ARGOS_PUBLICATION_SEVERITIES, ARGOS_PUBLICATION_LABELS (CSV), and
+ARGOS_PUBLICATION_MAX_NEW (0..10, default 5). The common engine defaults to
+DISABLED and requires a private durable journal, shared fenced lease and complete
+pagination for actual synchronization. It preserves human notes/labels/assignments,
+never rewrites existing issue text or automatically closes issues, and respects
+ignore/accepted-risk/false-positive decisions. Reopening is disabled by default;
+it needs a later observation and a provider-proven atomic decision precondition.
+Public destinations receive one fixed generic notice, without identifiers or
+finding details; ambiguous public creation can be explicitly bound by a trusted
+publicIssueId without another POST. See the [versioned policy and adapter contract](../../docs/ci/issue-synchronization.md)
+and [disabled provider examples](examples/). These guarantees are exercised with
+fixtures; the future connectors must demonstrate them before enabling SYNC.
 
 Use protected default branches/environments, no fork/PR/MR event, no untrusted
 project scripts or artifacts executed with secrets. GitHub uses hosted Ubuntu;

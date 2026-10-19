@@ -27,6 +27,7 @@ const failed = code => ({ ...go, outcome: 'CONTROL_FAILED', exitCode: 2, fingerp
 const responseError = (code, delay = null) => Response.json({ schemaVersion: 1, requestId: id, error: { ...error(code), retryAfterSeconds: delay } }, { status: errors[code].httpStatus });
 function fixture({ post, lookup, verdict = go, first = null, check = preflight, identityValue = identity } = {}) {
   const calls = []; let created = false, reads = 0, posts = 0;
+  const startedAt = new Date(Date.now() - 5000).toISOString(), finishedAt = new Date(Date.now() - 1000).toISOString(), expiresAt = new Date(Date.now() + 86400000).toISOString();
   const fetcher = async (url, options) => {
     const path = new URL(url).pathname; calls.push({ path, method: options.method, intent: options.headers['Idempotency-Key'], body: options.body });
     assert.equal(new URL(url).origin, 'https://argos.lelouet.fr'); assert.equal(options.redirect, 'error');
@@ -35,6 +36,8 @@ function fixture({ post, lookup, verdict = go, first = null, check = preflight, 
     if (path.endsWith('/standard-v1')) return Response.json(policy);
     if (path.endsWith('/identity')) return Response.json(identityValue);
     if (path.endsWith('/preflight')) return Response.json(check);
+    if (path === '/api/ci/v1/admissions/' + id) return Response.json({ ...admitted, runs: admitted.runs.map(r => ({ ...r, status: 'COMPLETED', startedAt, finishedAt })) });
+    if (path.endsWith('/report')) return Response.json({ apiVersion: 1, kind: 'summary-v1', runId: path.split('/').at(-2), globalScore: 80, scoringVersion: 13, criticalCount: 0, importantCount: 0, completeness: 'FULL', generatedAt: finishedAt, expiresAt });
     if (path.includes('/by-key/')) return lookup?.(++reads) ?? (created ? Response.json(admitted) : responseError('RESOURCE_NOT_AVAILABLE'));
     if (path.endsWith('/analyses')) { created = true; return await post?.(++posts) ?? Response.json(admitted, { status: 201 }); }
     if (path.endsWith('/verdict')) return typeof verdict === 'function' ? verdict() : Response.json(verdict);
@@ -135,6 +138,40 @@ test('private evidence is opt-in, filtered, bounded and bound to external digest
   assert.equal(preview.exitCode, 1); assert.equal(preview.publication, 'PREVIEW'); assert.equal(preview.eligibleFindings, 1);
   assert.equal((await main(['publication-preview'], { ...runEnv, ARGOS_EVIDENCE_SHA256: '0'.repeat(64) })).exitCode, 3);
   fs.writeFileSync(path, bytes + ' '); assert.throws(() => readTrusted(path, expected));
+});
+test('publication proof lifetime is capped by source retention; expired/deleted source reports cannot mint a receipt', async t => {
+  const root = temp(t), expiresAt = new Date(Date.now() + 60000).toISOString();
+  const summary = { apiVersion: 1, kind: 'summary-v1', runId: '1', globalScore: 80, scoringVersion: 13, criticalCount: 0, importantCount: 0, completeness: 'FULL', generatedAt: time, expiresAt };
+  const network = fixture({ first: p => p.endsWith('/report') ? Response.json({ ...summary, runId: p.split('/').at(-2) }) : null });
+  const out = await main(['audit'], { ...env, ARGOS_EXPORT_PRIVATE: '1', ARGOS_OUTPUT_DIR: root }, network);
+  assert.equal(out.exitCode, 0); const evidence = JSON.parse(fs.readFileSync(join(root, 'evidence.json')));
+  assert.equal(evidence.schemaVersion, 2); assert.equal(evidence.expiresAt, expiresAt); assert.equal(evidence.sourceExpiresAt, expiresAt);
+  assert.ok(Date.parse(evidence.observationStartedAt) <= Date.parse(evidence.issuedAt));
+  const absentRoot = temp(t), absent = fixture({ first: p => p.endsWith('/report') ? responseError('RESOURCE_NOT_AVAILABLE') : null });
+  const failed = await main(['audit'], { ...env, ARGOS_EXPORT_PRIVATE: '1', ARGOS_OUTPUT_DIR: absentRoot }, absent);
+  assert.equal(failed.diagnostic.code, 'RESOURCE_NOT_AVAILABLE'); assert.equal(fs.existsSync(join(absentRoot, 'evidence.json')), false);
+  assert.equal(absent.calls.filter(c => c.method === 'POST').length, 1);
+});
+test('receipt refresh uses only historical reads and preserves original observation dates and intention', async t => {
+  const root = temp(t), renewed = temp(t), network = fixture({ lookup: () => Response.json(admitted) });
+  const first = await main(['resume'], { ...env, ARGOS_EXPORT_PRIVATE: '1', ARGOS_OUTPUT_DIR: root }, network);
+  assert.equal(first.exitCode, 0); const initial = JSON.parse(fs.readFileSync(join(root, 'evidence.json')));
+  const next = await main(['resume'], { ...env, ARGOS_EXPORT_PRIVATE: '1', ARGOS_OUTPUT_DIR: renewed, ARGOS_INVOCATION: '124:1', ARGOS_IDEMPOTENCY_KEY: configuration(env, 'resume').intent }, network);
+  assert.equal(next.exitCode, 0); const refreshed = JSON.parse(fs.readFileSync(join(renewed, 'evidence.json')));
+  assert.equal(refreshed.observationStartedAt, initial.observationStartedAt); assert.equal(refreshed.sourceExpiresAt, initial.sourceExpiresAt);
+  assert.equal(refreshed.admissionId, initial.admissionId); assert.ok(network.calls.every(c => c.method === 'GET'));
+  assert.equal(network.calls.filter(c => c.path.includes('/by-key/'))[0].path, network.calls.filter(c => c.path.includes('/by-key/'))[1].path);
+});
+test('preview applies controlled filters and preserves a known audit verdict on publication configuration failure', async t => {
+  const root = temp(t), runEnv = { ...env, ARGOS_EXPORT_PRIVATE: '1', ARGOS_OUTPUT_DIR: root };
+  const out = await main(['audit'], runEnv, fixture({ verdict: { ...go, confirmedFindings: [
+    { key: 'http.security.csp', category: 'security', severity: 'important', ticketEligible: true },
+    { key: 'html.title', category: 'seo', severity: 'important', ticketEligible: true }] } }));
+  const expected = { ARGOS_EVIDENCE_SHA256: out.evidenceSha256, ARGOS_EVIDENCE_PRODUCER: env.ARGOS_PRODUCER_ID };
+  const selected = await main(['publication-preview'], { ...runEnv, ...expected, ARGOS_PUBLICATION_CATEGORIES: 'seo', ARGOS_PUBLICATION_MAX_NEW: '0', ARGOS_PUBLICATION_LABELS: '' });
+  assert.equal(selected.eligibleFindings, 1); assert.equal(selected.newIssueLimit, 0); assert.equal(selected.publicationPolicyVersion, 1);
+  const invalid = await main(['publication-preview'], { ...runEnv, ...expected, ARGOS_PUBLICATION_CATEGORIES: 'unknown' });
+  assert.equal(invalid.auditOutcome, 'GO'); assert.equal(invalid.auditExitCode, 0); assert.equal(invalid.exitCode, 3); assert.equal(invalid.diagnostic.code, 'CONFIG_INVALID');
 });
 test('strict export schema rejects unknown catalogue, run, category, injected strings and omitted findings is not a verdict', () => {
   const summary = { apiVersion: 1, kind: 'summary-v1', runId: '1', globalScore: 0, scoringVersion: 13, criticalCount: null, importantCount: null, completeness: 'PARTIAL', generatedAt: time, expiresAt: null };
