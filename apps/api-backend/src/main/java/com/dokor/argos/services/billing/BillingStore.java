@@ -33,6 +33,11 @@ public final class BillingStore {
     private void save(BillingAccount a,Connection c){dao.save(a,QBillingAccount.table,c);}
     private void sameEnvironment(BillingAccount a){require(a.getStripeAccount().equals(settings.id("account-id"))&&a.getLiveMode()==settings.live());}
     public BillingAccount claim(long owner,boolean create){
+        return claim(owner,create,false);
+    }
+    /** Access to invoices/cancellation must survive an administrative entitlement change. */
+    public BillingAccount claimPortal(long owner){return claim(owner,false,true);}
+    private BillingAccount claim(long owner,boolean create,boolean portalOnly){
         return locked(owner,(scope,c)->{
             if(!scope.state.equals("ACTIVE"))throw AccountError.unauthorized();
             var a=scope.row;
@@ -44,8 +49,8 @@ public final class BillingStore {
                 var t=QBillingAccount.table;dao.transactions.insert(t,c).populate(a).execute();
             }
             sameEnvironment(a);
-            if(scope.source!=null&&!scope.source.equals("STRIPE")||a.getManagedOffer()&&!scope.offer.equals("PREMIUM")
-                ||!a.getManagedOffer()&&scope.offer.equals("PREMIUM"))throw new BillingError("billing_managed_elsewhere");
+            if(!portalOnly&&(scope.source!=null&&!scope.source.equals("STRIPE")||a.getManagedOffer()&&!scope.offer.equals("PREMIUM")
+                ||!a.getManagedOffer()&&scope.offer.equals("PREMIUM")))throw new BillingError("billing_managed_elsewhere");
             if(a.getLeaseUntil()!=null&&a.getLeaseUntil().isAfter(clock.instant()))throw new BillingError("billing_sync_pending");
             a.setLeaseToken(UUID.randomUUID().toString());a.setLeaseUntil(clock.instant().plusSeconds(120));save(a,c);return a;
         });

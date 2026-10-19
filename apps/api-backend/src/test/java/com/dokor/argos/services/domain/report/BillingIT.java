@@ -115,11 +115,25 @@ class BillingIT extends MariaDbReportFixture {
         auth.archive("owner","csrf",true);
         try(var c=source.getConnection()){assertEquals("ARCHIVED",dao.user(733,c,false).getState());}
     }
+    @Test void invoiceAndCancellationPortalSurvivesManualEntitlementChangesWithoutGrantingRights()throws Exception{
+        customer();sql("INSERT INTO ARG_ACCOUNT_CI_ENTITLEMENT(id,ci_access,valid_until,updated_at) VALUES(733,0,'2027-10-19 12:00:00',NOW())");
+        var configuration=obj("billing_portal.configuration").put("id","bpc_fixture733").put("active",true);
+        var features=configuration.putObject("features");features.putObject("invoice_history").put("enabled",true);
+        features.putObject("payment_method_update").put("enabled",true);features.putObject("subscription_cancel").put("enabled",true).put("mode","at_period_end");
+        features.putObject("subscription_update").put("enabled",false);gateway.reads.put("/v1/billing_portal/configurations/bpc_fixture733",configuration);
+        assertEquals("https://billing.stripe.com/p/session?secret=fixture_only",service.portal("owner","c".repeat(43),"en","local").url());
+        assertFalse(access());assertEquals("FREE",offer());assertThrows(BillingError.class,()->service.reconcile(733));
+        ((ObjectNode)features.path("subscription_update")).put("enabled",true);
+        assertThrows(BillingError.class,()->service.portal("owner","c".repeat(43),"en","local"));
+        assertEquals(1,gateway.requests.stream().filter(p->p.equals("POST /v1/billing_portal/sessions")).count());
+    }
     private static class FlowGateway extends Gateway {
         int customerPosts,checkoutPosts;boolean loseCheckoutResponse;
         void emptySubscriptions(){reads.put("/v1/subscriptions",list());}
         @Override public JsonNode post(String path,Map<String,String> data,String key){
             requests.add("POST "+path);
+            if(path.equals("/v1/billing_portal/sessions"))return obj("billing_portal.session").put("customer",data.get("customer"))
+                .put("configuration",data.get("configuration")).put("return_url",data.get("return_url")).put("url","https://billing.stripe.com/p/session?secret=fixture_only");
             if(path.equals("/v1/customers")){customerPosts++;assertEquals("argos-customer-"+BINDING,key);return reads.get("/v1/customers/"+CUSTOMER).deepCopy();}
             if(path.equals("/v1/checkout/sessions")){
                 checkoutPosts++;assertTrue(key.startsWith("argos-checkout-"));assertEquals("true",data.get("automatic_tax[enabled]"));assertEquals("1",data.get("line_items[0][quantity]"));

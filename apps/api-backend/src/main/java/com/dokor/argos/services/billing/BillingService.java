@@ -129,7 +129,7 @@ public final class BillingService {
             var item=items.path("data").get(0);require(number(item,"quantity")==1);reader.price(item.path("price"),a.getCheckoutInterval(),false);}
     }
     public Destination portal(String auth,String csrf,String lang,String remote){
-        long owner=actor(auth,csrf,remote);settings.requireEnabled();var claimed=store.claim(owner,false);
+        long owner=actor(auth,csrf,remote);settings.requireEnabled();var claimed=store.claimPortal(owner);
         try{
             if(claimed.getCustomerId()==null)throw new BillingError("billing_sync_pending");
             var reader=new StripeBillingReader(gateway,settings,clock.instant());reader.environment();reader.customer(claimed);
