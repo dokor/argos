@@ -130,6 +130,7 @@ $text-3xl:  26px;
 
 // ── Largeurs de layout ────────────────────────────────────────────────────────
 $container-width:  1100px;
+$page-content-width: $container-width - 2 * $page-gutter;
 $dashboard-width:  1140px;
 $login-form-width: 320px;
 
