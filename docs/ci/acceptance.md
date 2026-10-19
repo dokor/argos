@@ -4,6 +4,8 @@
 ni autorisation de fusion, déploiement ou activation. Aucun environnement de recette
 externe n'est disponible à ce stade (décision du 19 octobre 2026).
 
+Préparation : [guide pas à pas des environnements, permissions et secrets](test-environments.md).
+
 ## Ce que démontre la CI
 
 La branche candidate doit exécuter le workflow **CI** complet par `workflow_dispatch`
