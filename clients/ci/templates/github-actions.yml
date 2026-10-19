@@ -34,9 +34,9 @@ jobs:
           node-version: '24.21.0'
       - name: Download the reviewed standalone client (no project checkout)
         run: |
-          curl --proto '=https' --tlsv1.2 --fail --silent --show-error --max-time 30 --max-redirs 0 \
-            --output argos-ci.mjs https://raw.githubusercontent.com/dokor/argos/efe5fb4f002d75bcf76cd698d71d82c4a39d7ab8/clients/ci/dist/argos-ci.mjs
-          echo '8929a521e0085b2a1a7172c44daa94587b4bf05270ad66484d9d2f3c43017340  argos-ci.mjs' | sha256sum --check --strict
+          curl --proto '=https' --tlsv1.2 --fail --silent --show-error --max-time 30 --max-redirs 0 --max-filesize 1048576 \
+            --output argos-ci.mjs https://raw.githubusercontent.com/dokor/argos/f979ac960423384718af5c3c5ef0ec03b7b212f3/clients/ci/dist/argos-ci.mjs
+          echo 'b720d8b7b4dbdc5c9b76410aec7a52d566bc327323a56e1c91670e7f7897ccd6  argos-ci.mjs' | sha256sum --check --strict
       - name: Admit two samples and consume the confirmed server verdict
         id: control
         shell: bash
@@ -75,7 +75,7 @@ jobs:
           retention-days: 7
 
   argos_preview:
-    # Preview only. Real, optional publishers follow in #738/#739; no issues:write here.
+    # Preview only. Real, optional publishers follow in #739; no issues:write here.
     needs: argos_control
     if: ${{ always() && vars.ARGOS_PUBLICATION_PREVIEW == 'true' && github.event.repository.fork == false && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && (needs.argos_control.outputs.audit_outcome == 'GO' || needs.argos_control.outputs.audit_outcome == 'SITE_NO_GO') && needs.argos_control.outputs.artifact_id != '' && needs.argos_control.outputs.evidence_sha256 != '' }}
     runs-on: ubuntu-24.04
@@ -89,9 +89,9 @@ jobs:
           node-version: '24.21.0'
       - name: Download the same reviewed client
         run: |
-          curl --proto '=https' --tlsv1.2 --fail --silent --show-error --max-time 30 --max-redirs 0 \
-            --output argos-ci.mjs https://raw.githubusercontent.com/dokor/argos/efe5fb4f002d75bcf76cd698d71d82c4a39d7ab8/clients/ci/dist/argos-ci.mjs
-          echo '8929a521e0085b2a1a7172c44daa94587b4bf05270ad66484d9d2f3c43017340  argos-ci.mjs' | sha256sum --check --strict
+          curl --proto '=https' --tlsv1.2 --fail --silent --show-error --max-time 30 --max-redirs 0 --max-filesize 1048576 \
+            --output argos-ci.mjs https://raw.githubusercontent.com/dokor/argos/f979ac960423384718af5c3c5ef0ec03b7b212f3/clients/ci/dist/argos-ci.mjs
+          echo 'b720d8b7b4dbdc5c9b76410aec7a52d566bc327323a56e1c91670e7f7897ccd6  argos-ci.mjs' | sha256sum --check --strict
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
           artifact-ids: ${{ needs.argos_control.outputs.artifact_id }}
