@@ -30,7 +30,8 @@ async function start() {
       env: { ...process.env, AZURITE_ACCOUNTS: account + ':' + accountKey.toString('base64') }, stdio: ['ignore', 'ignore', 'ignore', 'ipc'], windowsHide: true });
   } else {
     container = 'argos-azurite-' + process.pid;
-    const run = spawnSync('docker', ['run', '--rm', '--detach', '--name', container, '-p', `127.0.0.1:${port}:10000`,
+    const run = spawnSync('docker', ['run', '--rm', '--detach', '--name', container,
+      '--user', `${process.getuid()}:${process.getgid()}`, '-e', 'HOME=/fixture', '-p', `127.0.0.1:${port}:10000`,
       '-e', 'AZURITE_ACCOUNTS=' + account + ':' + accountKey.toString('base64'), '-v', `${root}:/fixture`,
       'mcr.microsoft.com/azure-storage/azurite:3.37.0@sha256:f9791d0a0613e93057c06ae31f7ac0c0222f0530590e67e020b0986c66a36fa6',
       'azurite-blob', '--blobHost', '0.0.0.0', '--cert', '/fixture/cert.pem', '--key', '/fixture/key.pem', '--location', '/fixture/data', '--silent', '--disableTelemetry'], { stdio: 'pipe', encoding: 'utf8' });

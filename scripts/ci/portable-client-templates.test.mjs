@@ -23,14 +23,39 @@ test('both provider templates parse and pin the exact standalone bytes, Node and
     assert.ok(text.includes(checksum + '  argos-ci.mjs')); assert.match(text, /24\.21\.0/);
     assert.match(text, /--proto '=https' --tlsv1\.2/); assert.match(text, /--max-time 30 --max-redirs 0/);
     const code = text.split('\n').filter(line => !line.trimStart().startsWith('#')).join('\n');
-    assert.doesNotMatch(code, /curl[^\n]+\|\s*(?:bash|sh)|npm\s+(?:install|ci)|pull_request_target|workflow_run|issues:\s*write|contents:\s*write|id-token:|@main|docker\s/);
+    assert.doesNotMatch(code, /curl[^\n]+\|\s*(?:bash|sh)|npm\s+(?:install|ci)|pull_request_target|workflow_run|contents:\s*write|id-token:|@main|docker\s/);
     assert.match(text, /NODE_OPTIONS: ''/); assert.match(text, /NODE_TLS_REJECT_UNAUTHORIZED: '1'/);
   }
   for (const match of githubText.matchAll(/uses:\s+([\w-]+\/[\w-]+)@([a-f0-9]{40}) # (v\d+)/g)) {
     assert.equal(pins[match[1] + '@' + match[3]], match[2]); assert.notEqual(match[1], 'actions/checkout');
   }
-  assert.equal((githubText.match(/uses:/g) ?? []).length, 4);
+  assert.equal((githubText.match(/uses:/g) ?? []).length, 7);
   assert.equal(githubText.match(/argos\/([a-f0-9]{40})\//)[1], gitlabText.match(/argos\/([a-f0-9]{40})\//)[1]);
+});
+test('GitHub publisher alone gets issues:write, encrypted artifact by current producer ID, no project code or audit key', () => {
+  assert.deepEqual(github.permissions, { contents: 'read' });
+  const publisher = github.jobs.argos_publish;
+  assert.deepEqual(publisher.permissions, { actions: 'read', issues: 'write' });
+  assert.equal(publisher.needs, 'argos_control'); assert.equal(publisher.environment, 'argos-publisher');
+  assert.equal(publisher.concurrency.group, 'argos-github-issues-${{ github.repository_id }}');
+  assert.equal(publisher.concurrency['cancel-in-progress'], false);
+  assert.match(publisher.if, /always\(\)/); assert.match(publisher.if, /SITE_NO_GO/); assert.match(publisher.if, /ARGOS_GITHUB_PUBLISH == 'true'/);
+  assert.doesNotMatch(JSON.stringify(publisher), /ARGOS_API_KEY|READ_SAS|checkout|control-result/);
+  for (const [name, job] of Object.entries(github.jobs)) if (name !== 'argos_publish') assert.doesNotMatch(JSON.stringify(job.permissions ?? {}), /write/);
+  const download = publisher.steps.find(s => s.uses?.startsWith('actions/download-artifact@'));
+  assert.equal(download.with['artifact-ids'], '${{ needs.argos_control.outputs.encrypted_artifact_id }}'); assert.equal(download.with['run-id'], undefined);
+  const publish = publisher.steps.find(s => s.run === 'node argos-ci.mjs publish-github');
+  assert.equal(publish.env.GITHUB_TOKEN, '${{ github.token }}'); assert.equal(publish.env.ARGOS_EVIDENCE_PRODUCER, 'argos_control');
+  assert.equal(publish.env.ARGOS_EVIDENCE_SHA256, '${{ needs.argos_control.outputs.evidence_sha256 }}');
+  assert.equal(publish.env.ARGOS_CIPHER_SHA256, '${{ needs.argos_control.outputs.cipher_sha256 }}');
+  assert.equal(publish.env.ARGOS_EVIDENCE_INVOCATION, '${{ needs.argos_control.outputs.evidence_invocation }}');
+  assert.deepEqual(github.on.workflow_dispatch.inputs.operation.options, ['audit', 'resume']);
+  const control = github.jobs.argos_control.steps.find(s => s.id === 'control');
+  assert.match(control.run, /case "\$ARGOS_CI_OPERATION"/); assert.match(control.run, /resume\) export ARGOS_IDEMPOTENCY_KEY=/);
+  const seal = github.jobs.argos_control.steps.find(s => s.id === 'seal');
+  assert.doesNotMatch(JSON.stringify(seal), /ARGOS_API_KEY|secrets\.ARGOS_GITHUB_JOURNAL_SAS_URL/);
+  const upload = github.jobs.argos_control.steps.find(s => s.id === 'encrypted_upload');
+  assert.equal(upload.with.path, '.argos-ci/evidence.enc.json'); assert.equal(upload.with['retention-days'], 7);
 });
 test('GitHub refuses untrusted events and separates control secrets from artifact/provenance-only preview', () => {
   assert.deepEqual(Object.keys(github.on).sort(), ['push', 'workflow_dispatch']); assert.deepEqual(github.on.push.branches, ['main']);
@@ -65,7 +90,7 @@ test('GitLab requires protected default branch, fresh isolated shell jobs and pr
   assert.equal(preview.script.at(-1), 'env -u ARGOS_API_KEY node argos-ci.mjs publication-preview');
 });
 test('all literal shell commands in the two parsed models have valid Bash syntax', () => {
-  const commands = github.jobs.argos_control.steps.concat(github.jobs.argos_preview.steps).flatMap(s => s.run ? [s.run] : [])
+  const commands = Object.values(github.jobs).flatMap(j => j.steps).flatMap(s => s.run ? [s.run] : [])
     .concat(Object.values(gitlab).flatMap(j => Array.isArray(j?.script) ? j.script.filter(s => typeof s === 'string') : []));
   const bash = process.platform === 'win32' ? 'C:/Program Files/Git/bin/bash.exe' : 'bash';
   for (const command of commands) { const result = spawnSync(bash, ['-n'], { input: command, encoding: 'utf8' }); assert.equal(result.status, 0, result.stderr); }
