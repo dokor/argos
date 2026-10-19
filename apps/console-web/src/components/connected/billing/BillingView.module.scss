@@ -1,0 +1,31 @@
+@use '../../../styles/tokens' as t;
+.notice,.error {padding:24px;border-left:3px solid t.$brand;background:t.$surface;margin-block:24px;line-height:1.7;}
+.notice h2,.error h2 {font-size:20px;font-weight:650;margin-bottom:8px;}
+.error {border-color:var(--argos-error);overflow-wrap:anywhere;}
+.hint {color:t.$text-muted;font-size:13px;line-height:1.65;}
+.ciClosed {padding-block:12px;border-bottom:1px solid t.$border;color:t.$text-muted;line-height:1.7;}
+.state {display:grid;grid-template-columns:minmax(0,1fr) minmax(0,340px);gap:32px;padding-block:32px;border-bottom:1px solid t.$border;}
+.state h2,.pricing h2,.details h2 {font-size:22px;font-weight:650;margin-bottom:16px;}
+.state p {margin-top:12px;line-height:1.7;overflow-wrap:anywhere;}
+.actions {display:flex;flex-direction:column;align-items:flex-start;gap:12px;}
+.actions button {white-space:normal;text-align:center;}
+.actions button:disabled {opacity:.5;cursor:not-allowed;}
+.pricing {padding-block:32px;max-width:960px;}
+.pricing fieldset {border:0;padding:0;min-width:0;}
+.pricing legend {margin-bottom:16px;}
+.plans {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;}
+.plan {padding:24px;border:1px solid t.$border;border-radius:8px;background:t.$surface;display:flex;flex-direction:column;gap:12px;cursor:pointer;line-height:1.6;}
+.plan[data-selected="true"] {border-color:t.$brand;box-shadow:inset 0 0 0 1px t.$brand;}
+.plan strong {font-size:clamp(22px,2.8vw,32px);font-weight:650;line-height:1.2;}
+.plan small {color:t.$text-muted;font-size:13px;}
+.choice {display:flex;align-items:center;gap:12px;font-weight:600;min-height:44px;}
+.choice input {width:20px;height:20px;accent-color:t.$brand;}
+.choice input:focus-visible {outline:2px solid t.$brand;outline-offset:4px;}
+.tax {margin-block:24px;line-height:1.7;color:t.$text-muted;max-width:75ch;}
+.details {padding-block:32px;border-top:1px solid t.$border;line-height:1.75;max-width:960px;}
+.details ul {list-style:disc;padding-left:24px;margin-bottom:20px;}
+.details p {margin-bottom:20px;max-width:75ch;}
+.details a {text-decoration:underline;text-underline-offset:4px;color:t.$brand;}
+.warning {color:t.$text;font-weight:500;}
+@media(max-width:1000px){.state {grid-template-columns:1fr;}.plans {gap:16px;}}
+@media(max-width:600px){.plans {grid-template-columns:1fr;}.plan,.notice,.error {padding:16px;}.state {gap:24px;}.actions {width:100%;}.actions button {width:100%;}}

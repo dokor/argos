@@ -25,6 +25,8 @@ public class ApplicationModule extends AbstractModule {
         install(new GuiceJacksonModule());
         bind(java.time.Clock.class).toInstance(java.time.Clock.systemUTC());
         bind(com.dokor.argos.services.ci.CiPolicy.class).asEagerSingleton();
+        bind(com.dokor.argos.services.billing.BillingSettings.class).asEagerSingleton();
+        bind(com.dokor.argos.services.billing.StripeGateway.class).to(com.dokor.argos.services.billing.StripeHttpClient.class);
         bind(com.dokor.argos.services.account.AccountSessionSigner.class).in(Singleton.class);
         bind(com.dokor.argos.webservices.api.account.AccountPermissionProvider.class).in(Singleton.class);
         bind(com.dokor.argos.services.account.AccountMail.class).to(com.dokor.argos.services.account.SmtpAccountMail.class);

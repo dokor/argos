@@ -426,6 +426,16 @@ public class AccountAuthService {
                 (context, c) -> {
                     sessions.recent(context);
                     var user = context.user();
+                    // The account lock also serializes Checkout claims. Never strand a payable
+                    // subscription or an uncertain Checkout behind revoked sign-in credentials.
+                    var billingTable = QBillingAccount.table;
+                    var billing = dao.transactions.selectQuery(c).select(billingTable).from(billingTable)
+                            .where(billingTable.id.eq(user.getId())).fetchOne();
+                    if (billing != null && (!(Set.of("NONE", "ENDED").contains(billing.getStatus()))
+                            || !(Set.of("NONE", "EXPIRED").contains(billing.getPhase())
+                                || "ENDED".equals(billing.getStatus()))
+                            || (billing.getLeaseUntil() != null && billing.getLeaseUntil().isAfter(clock.instant()))))
+                        throw new AccountError(409, "billing_in_progress");
                     user.setState("ARCHIVED");
                     user.setAdminVersion(user.getAdminVersion() + 1);
                     user.setArchivedAt(clock.instant());
