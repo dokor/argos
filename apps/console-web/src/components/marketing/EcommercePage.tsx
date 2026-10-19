@@ -20,6 +20,11 @@ export default function EcommercePage() {
       </div><p className={s.heroNote}>{fr ? "Données illustratives issues de la démonstration commune ; aucun audit client ni parcours de commande mesuré." : "Illustrative data from the shared demo; no customer audit or measured ordering journey."}</p><Link href="/exemple-rapport">{fr ? "Comparer le HTML avant et après correction" : "Compare HTML before and after correction"}</Link></div></section>
     <section id="audit" className={`${s.section} ${s.ctaSection}`} aria-labelledby="audit-title"><div className={s.container}><h2 id="audit-title" className={s.sectionTitle}>{fr ? "Analyser une page de ma boutique" : "Analyse a page from my store"}</h2><p className={s.paragraph}>{fr ? "Une URL publique : fiche produit ou catégorie. Aucune connexion, commande ni étape de paiement n’est testée." : "One public URL: a product or category page. No login, order or payment step is tested."}</p><AuditForm mode="public" sourceRoute="/ressources/audit-site-ecommerce" /></div></section>
     <section className={s.section}><div className={s.container}><h2 className={s.sectionTitle}>{t.marketing.common.measuresTitle}</h2><div className={s.measureGrid}>{copy.measures.map(item => <article className={s.card} key={item.title}><h3>{item.title}</h3><p>{item.description}</p></article>)}</div></div></section>
+    <section className={s.section} aria-labelledby="ecommerce-guide-title"><div className={s.container}>
+      <h2 id="ecommerce-guide-title" className={s.sectionTitle}>{fr ? "Auditer le parcours de votre boutique" : "Audit your store’s shopping journey"}</h2>
+      <p className={s.paragraph}>{fr ? "Complétez l’analyse d’une page avec sept étapes : catalogue, fiches produit, vitesse mobile, panier et paiement. Conservez les preuves pour prioriser vos corrections." : "Complement a page analysis with seven steps covering your catalogue, product pages, mobile speed, cart and checkout. Keep evidence to prioritise fixes."}</p>
+      <Link href="/guides/checklist-audit-ecommerce">{fr ? "Lire la checklist d’audit e-commerce" : "Read the ecommerce audit checklist"}</Link>
+    </div></section>
     <ChoosingArgos audience="ecommerce" />
   </main><SiteFooter /></div>;
 }

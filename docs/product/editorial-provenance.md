@@ -11,6 +11,7 @@ Dates de première version = première publication du texte dans le dépôt, pas
 | Vitesse / SEO / sécurité | 2026-10-10 63c8a2b / 7bfdcd0 / cd5259c | même date, versions initiales de cet epic |
 | Test accessibilité | 2026-10-11 33f2177 | même date ; fuseau Europe/Paris |
 | WordPress / Shopify / conversion FR et EN | 2026-10-16, ajout dans la PR des issues #67/#68/#74 | même date, versions initiales ; preuves et limites dans `docs/seo/pages-wordpress-shopify-conversion.md` |
+| Checklist e-commerce FR et EN | 2026-10-19, guide complémentaire | même date, versions initiales ; sources et périmètre dans `docs/seo/ecommerce-audit-checklist.md` |
 
 Données communes dans lib/editorial.ts : auteur partagé via À propos, dates explicites, sources et lecture estimée (pas un temps mesuré). EditorialMeta ne lit ni date de build ni date courante. Une révision de typographie, navigation ou instrumentation ne rafraîchit pas le contenu. Modifier revised uniquement avec une explication du changement technique ou éditorial. Les traductions futures peuvent conserver la première version du texte source et consigner séparément leur livraison ; ne pas les présenter comme anciennes traductions.
 

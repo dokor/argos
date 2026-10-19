@@ -77,6 +77,7 @@ const copy = {
     exampleEnd: "L’ordre réel dépend de l’impact sur vos utilisateurs, de votre objectif et du coût de correction. Un score global ne remplace pas ce jugement.",
     nextTitle: "Approfondir un point",
     links: [
+      { href: "/guides/checklist-audit-ecommerce", label: "Vérifier une boutique du catalogue au paiement" },
       { href: "/exemple-rapport", label: "Lire un exemple de rapport commenté" },
       { href: "/methodologie-score#resume", label: "Comprendre le calcul du score" },
       { href: "/ressources/audit-technique-gratuit#result-title", label: "Comprendre les résultats et les limites du score Argos" },
@@ -119,6 +120,7 @@ const copy = {
     exampleEnd: "The actual order depends on user impact, your goals, and the cost of each fix. An overall score cannot replace that judgment.",
     nextTitle: "Explore further",
     links: [
+      { href: "/guides/checklist-audit-ecommerce", label: "Check a store from catalogue to checkout" },
       { href: "/exemple-rapport", label: "Read a commented example report" },
       { href: "/methodologie-score#resume", label: "Understand score calculation" },
       { href: "/ressources/audit-technique-gratuit#result-title", label: "Understand Argos results and score limits" },
