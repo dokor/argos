@@ -9,12 +9,12 @@ import { PageHeading, StatusBadge } from "../Primitives";
 import CiKeyManager from "./CiKeyManager";
 import CiTargetsManager from "./CiTargetsManager";
 import CiConfiguration from "./CiConfiguration";
-import { CiCode, CiError, CiSecret, docs, useCiDate, useCiText, type CiAction } from "./CiUi";
+import { CiCode, CiError, CiSecret, useCiDocs, useCiDate, useCiText, type CiAction } from "./CiUi";
 import c from "../Connected.module.scss";
 import s from "./CiIntegrations.module.scss";
 
 export default function CiIntegrations(){
-  const tx=useCiText(),date=useCiDate(),{profile,usage}=useAccountSession();
+  const docs=useCiDocs(),tx=useCiText(),date=useCiDate(),{profile,usage}=useAccountSession();
   const [tab,setTab]=useState("keys"),[status,setStatus]=useState<CiStatus|null>(null),[keys,setKeys]=useState<CiKeys>({items:[],integrations:[],nextCursor:null});
   const [targets,setTargets]=useState<CiTarget[]>([]),[targetCursor,setTargetCursor]=useState<string|null>(null),[methods,setMethods]=useState<SignInMethod[]>([]);
   const [error,setError]=useState<CiManagementError|null>(null),[mutationError,setMutationError]=useState(false),[notice,setNotice]=useState<"saved"|"secretLost"|null>(null),[busy,setBusy]=useState(false),[loading,setLoading]=useState(true),[loaded,setLoaded]=useState(false);
@@ -86,7 +86,7 @@ export default function CiIntegrations(){
       {tab==="config"&&<CiConfiguration/>}
     </div>
     <div className={s.help}><section><h2>{tx("Tester la connexion dans votre CI","Test the connection in your CI")}</h2><p>{tx("Avec le client vérifié et ARGOS_API_KEY / ARGOS_TARGET_URL déjà configurés dans le runner protégé :","With the verified client and ARGOS_API_KEY / ARGOS_TARGET_URL already configured in the protected runner:")}</p><CiCode value="node argos-ci.mjs doctor" label={tx("Précontrôle en lecture seule","Read-only preflight")}/><p className={s.hint}>{tx("Aucun audit, crédit réservé ou ticket. READY ne garantit pas la capacité future. Aucun secret n’est saisi dans ce navigateur. Un audit au résultat ambigu se reprend avec resume et l’intention initiale.","No audit, reserved credit or issue. READY does not guarantee future capacity. No secret is entered in this browser. Resume an ambiguous audit with resume and its original intention.")}</p></section>
-      <section><h2>{tx("Documentation développeur","Developer documentation")}</h2><p>{tx("Installation épinglée, contrats API, permissions minimales et dépannage dans le guide versionné en ligne.","Pinned installation, API contracts, minimum permissions and troubleshooting in the online versioned guide.")}</p><a className={c.secondary} href={tx(docs.start,docs.start.replace("README.md","README.en.md"))} referrerPolicy="no-referrer">{tx("Lire le guide CI versionné","Read the versioned CI guide")}</a></section>
+      <section><h2>{tx("Documentation développeur","Developer documentation")}</h2><p>{tx("Installation épinglée, contrats API, permissions minimales et dépannage dans le guide versionné en ligne.","Pinned installation, API contracts, minimum permissions and troubleshooting in the online versioned guide.")}</p><a className={c.secondary} href={docs.start} referrerPolicy="no-referrer">{tx("Lire le guide CI versionné","Read the versioned CI guide")}</a></section>
     </div>
     {action&&profile&&<ConfirmAccountAction title={action.title} description={action.description} hasPassword={methods.some(m=>m.provider==="password"&&m.usable)} hasEmail={!!profile.email} onCancel={()=>setAction(null)}
       onConfirm={async()=>{const work=action.run;setAction(null);await act(work,true);}}/>}

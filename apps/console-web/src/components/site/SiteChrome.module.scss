@@ -45,7 +45,7 @@
 .navLinks {
   // Reserve the same columns for both translations and active states.
   display: grid;
-  grid-template-columns: 144px 144px 48px;
+  grid-template-columns: 144px 144px 48px 104px;
   flex-shrink: 0;
 }
 
@@ -151,7 +151,7 @@
   font-size: t.$text-base;
 }
 
-@media (max-width: 1100px) and (min-width: 761px) {
+@media (max-width: 1180px) and (min-width: 761px) {
   .navInner { flex-wrap: wrap; gap: t.$space-2 t.$space-4; }
   .navLinks { order: 3; width: 100%; justify-content: space-between; }
 }

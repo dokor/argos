@@ -14,7 +14,7 @@ import s from "./SiteChrome.module.scss";
 
 /** Navigation commune à toutes les pages, sauf les rapports. */
 export default function SiteNav() {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const pathname = frenchPath(usePathname());
   const signedIn = useAccountNav();
   const [menuPath, setMenuPath] = useState<string | null>(null);
@@ -44,6 +44,7 @@ export default function SiteNav() {
           <Link href="/#how-it-works" className={s.navLink} onClick={() => setMenuPath(null)}>{t.nav.how}</Link>
           <Link href="/exemple-rapport" className={s.navLink} onClick={() => setMenuPath(null)} aria-current={pathname === "/exemple-rapport" ? "page" : undefined}>{t.nav.example}</Link>
           <Link href="/ressources" className={s.navLink} onClick={() => setMenuPath(null)} aria-current={onResources ? "location" : undefined}>{t.nav.guides}</Link>
+          <Link href="/docs" className={s.navLink} onClick={() => setMenuPath(null)}>{lang === "fr" ? "Développeurs" : "Developers"}</Link>
         </div>
         <div className={s.navActions}>
           <Link href="/#audit" className={s.auditCta} onClick={() => setMenuPath(null)}>{t.nav.freeAudit}</Link>

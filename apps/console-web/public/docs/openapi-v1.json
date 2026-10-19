@@ -1,0 +1,1816 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Argos Premium CI API",
+    "version": "1.0.0-preview",
+    "description": "Preview contract. premium-ci.enabled=false until complete acceptance #467. Bearer machine key required on every call. Unknown query parameters are rejected. No cookie/admin/report-token substitution; no anonymous fallback. Responses and errors are private no-store. Body <=8192 bytes. Private details-v1 JSON exports are bounded to 65536 bytes. Verdicts require two comparable samples of the same admission. Publication clients are separate and cannot change the audit outcome."
+  },
+  "servers": [
+    {
+      "url": "/api/ci/v1"
+    }
+  ],
+  "security": [
+    {
+      "argosCiApiKey": []
+    }
+  ],
+  "paths": {
+    "/analyses": {
+      "post": {
+        "summary": "Admit full analyses atomically; recover the same intention after ambiguity.",
+        "x-required-scopes": [
+          "audits:write"
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+              "maxLength": 36
+            },
+            "description": "Generate once, persist and reuse the same UUID for this intention, including after rotation/timeout."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Input"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Existing matching intention; no new analysis or execution debit.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Admission"
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store"
+                }
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "const": "no-referrer"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Fresh admission: all runs and reservations committed together.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Admission"
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store"
+                }
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "const": "no-referrer"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/CiError"
+          }
+        }
+      }
+    },
+    "/admissions/by-key/{key}": {
+      "get": {
+        "summary": "Recover the original intention using its key; missing/out-of-scope is uniform 404.",
+        "x-required-scopes": [
+          "results:read"
+        ],
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+              "maxLength": 36
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authorized private response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Admission"
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store"
+                }
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "const": "no-referrer"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/CiError"
+          }
+        }
+      }
+    },
+    "/admissions/{id}": {
+      "get": {
+        "summary": "Read this integration's admission.",
+        "x-required-scopes": [
+          "results:read"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+              "maxLength": 36
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authorized private response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Admission"
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store"
+                }
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "const": "no-referrer"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/CiError"
+          }
+        }
+      }
+    },
+    "/runs/{id}": {
+      "get": {
+        "summary": "Read safe progress and a controlled terminal failure code.",
+        "x-required-scopes": [
+          "results:read"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]{0,18}$",
+              "maxLength": 19,
+              "description": "Positive signed 64-bit run identifier; never an access credential."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authorized private response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Run"
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store"
+                }
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "const": "no-referrer"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/CiError"
+          }
+        }
+      }
+    },
+    "/runs/{id}/report": {
+      "get": {
+        "summary": "Read summary-v1 only after publication; absent, pending, expired and out-of-scope report is uniform 404.",
+        "x-required-scopes": [
+          "results:read"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]{0,18}$",
+              "maxLength": 19,
+              "description": "Positive signed 64-bit run identifier; never an access credential."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authorized private response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Report"
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store"
+                }
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "const": "no-referrer"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/CiError"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Idempotently delete a terminal private report and diagnostics, preserving accounting and the original intention.",
+        "x-required-scopes": [
+          "audits:write",
+          "results:read"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]{0,18}$",
+              "maxLength": 19,
+              "description": "Positive signed 64-bit run identifier; never an access credential."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authorized private response; no raw collector or target content.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Deletion"
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store"
+                }
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "const": "no-referrer"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/CiError"
+          }
+        }
+      }
+    },
+    "/usage": {
+      "get": {
+        "summary": "Read this stable integration's ledger, including after downgrade.",
+        "x-required-scopes": [
+          "usage:read"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Authorized private response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Usage"
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store"
+                }
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "const": "no-referrer"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/CiError"
+          }
+        }
+      }
+    },
+    "/preflight": {
+      "get": {
+        "summary": "Read rights/target states/usage without DNS, proof mutation, reservation or target contact.",
+        "x-required-scopes": [
+          "usage:read"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Authorized private response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Preflight"
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store"
+                }
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "const": "no-referrer"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/CiError"
+          }
+        }
+      }
+    },
+    "/identity": {
+      "get": {
+        "summary": "Read current key identity and declared scope; not proof of admission eligibility.",
+        "x-required-scopes": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Authorized private response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Identity"
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store"
+                }
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "const": "no-referrer"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/CiError"
+          }
+        }
+      }
+    },
+    "/runs/{id}/export": {
+      "get": {
+        "summary": "Read details-v1 JSON, at most 65536 bytes; no raw evidence or public sharing link.",
+        "x-required-scopes": [
+          "results:read"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]{0,18}$",
+              "maxLength": 19,
+              "description": "Positive signed 64-bit run identifier; never an access credential."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authorized private response; no raw collector or target content.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Export"
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store"
+                }
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "const": "no-referrer"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/CiError"
+          }
+        }
+      }
+    },
+    "/policies/standard-v1": {
+      "get": {
+        "summary": "Read immutable parameters before reserving two analyses.",
+        "x-required-scopes": [
+          "results:read"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Private no-store. Audit outcome and publication are independent.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerdictPolicy"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Controlled CI error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Controlled CI error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Controlled CI error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Controlled CI error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Controlled CI error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admissions/{id}/verdict": {
+      "get": {
+        "summary": "Read the confirmed result of this owned admission. No admission, reservation or Git mutation.",
+        "x-required-scopes": [
+          "results:read"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+              "maxLength": 36
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Private no-store. Audit outcome and publication are independent.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Verdict"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Controlled CI error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Controlled CI error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Controlled CI error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Controlled CI error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Controlled CI error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "argosCiApiKey": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "Argos CI API key",
+        "description": "Dedicated scoped, expiring machine credential; never a browser JWT or public report token."
+      }
+    },
+    "schemas": {
+      "Input": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "url",
+          "samples",
+          "profileId"
+        ],
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "pattern": "^https://",
+            "maxLength": 2048,
+            "description": "Public HTTPS URL on a verified origin. Queries, fragments, credentials and private targets are rejected."
+          },
+          "samples": {
+            "type": "integer",
+            "enum": [
+              1,
+              2
+            ]
+          },
+          "profileId": {
+            "const": "standard-v1",
+            "type": "string"
+          }
+        }
+      },
+      "Run": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "sample",
+          "status",
+          "createdAt",
+          "startedAt",
+          "finishedAt",
+          "failureCode"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]{0,18}$",
+            "maxLength": 19,
+            "description": "Positive signed 64-bit run identifier; never an access credential."
+          },
+          "sample": {
+            "type": "integer",
+            "enum": [
+              1,
+              2
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "QUEUED",
+              "RUNNING",
+              "COMPLETED",
+              "FAILED",
+              "CANCELED"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "maxLength": 40
+          },
+          "startedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "maxLength": 40
+          },
+          "finishedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "maxLength": 40
+          },
+          "failureCode": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "RUN_FAILED",
+              null
+            ],
+            "description": "RUN_FAILED only for FAILED. Controlled catalog code; no raw worker error."
+          }
+        }
+      },
+      "Admission": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "apiVersion",
+          "id",
+          "profileId",
+          "samples",
+          "createdAt",
+          "runs"
+        ],
+        "properties": {
+          "apiVersion": {
+            "const": 1
+          },
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+            "maxLength": 36
+          },
+          "profileId": {
+            "const": "standard-v1"
+          },
+          "samples": {
+            "type": "integer",
+            "enum": [
+              1,
+              2
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "maxLength": 40
+          },
+          "runs": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 2,
+            "items": {
+              "$ref": "#/components/schemas/Run"
+            }
+          }
+        }
+      },
+      "UsageSnapshot": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "period",
+          "timezone",
+          "startsAt",
+          "resetsAt",
+          "used",
+          "reserved",
+          "limit",
+          "available"
+        ],
+        "properties": {
+          "period": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$"
+          },
+          "timezone": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time",
+            "maxLength": 40
+          },
+          "resetsAt": {
+            "type": "string",
+            "format": "date-time",
+            "maxLength": 40
+          },
+          "used": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "reserved": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "available": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        }
+      },
+      "Usage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "apiVersion",
+          "usage"
+        ],
+        "properties": {
+          "apiVersion": {
+            "const": 1
+          },
+          "usage": {
+            "$ref": "#/components/schemas/UsageSnapshot"
+          }
+        }
+      },
+      "Preflight": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "apiVersion",
+          "newAccessAllowed",
+          "scopes",
+          "targets",
+          "usage"
+        ],
+        "properties": {
+          "apiVersion": {
+            "const": 1
+          },
+          "newAccessAllowed": {
+            "type": "boolean",
+            "description": "Current Premium/ci_access only. This is not an admission guarantee or capacity reservation."
+          },
+          "scopes": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 3,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "audits:write",
+                "results:read",
+                "usage:read"
+              ]
+            }
+          },
+          "targets": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 100,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "origin",
+                "state",
+                "authorizedForKey"
+              ],
+              "properties": {
+                "origin": {
+                  "type": "string",
+                  "format": "uri",
+                  "pattern": "^https://",
+                  "maxLength": 261,
+                  "description": "Exact verified HTTPS origin. No wildcard, credentials, query, path or nonstandard port."
+                },
+                "state": {
+                  "type": "string",
+                  "enum": [
+                    "PENDING",
+                    "VERIFIED",
+                    "REVOKED",
+                    "EXPIRED"
+                  ]
+                },
+                "authorizedForKey": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "usage": {
+            "$ref": "#/components/schemas/UsageSnapshot"
+          }
+        }
+      },
+      "Report": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "apiVersion",
+          "kind",
+          "runId",
+          "globalScore",
+          "scoringVersion",
+          "criticalCount",
+          "importantCount",
+          "completeness",
+          "generatedAt",
+          "expiresAt"
+        ],
+        "properties": {
+          "apiVersion": {
+            "const": 1
+          },
+          "kind": {
+            "const": "summary-v1"
+          },
+          "runId": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]{0,18}$",
+            "maxLength": 19,
+            "description": "Positive signed 64-bit run identifier; never an access credential."
+          },
+          "globalScore": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 100
+          },
+          "scoringVersion": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "criticalCount": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "importantCount": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "completeness": {
+            "type": "string",
+            "enum": [
+              "FULL",
+              "PARTIAL",
+              "UNKNOWN"
+            ]
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "maxLength": 40
+          },
+          "expiresAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "maxLength": 40
+          }
+        }
+      },
+      "Identity": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "apiVersion",
+          "integrationId",
+          "keyId",
+          "scopes",
+          "origins"
+        ],
+        "properties": {
+          "apiVersion": {
+            "const": 1
+          },
+          "integrationId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+            "maxLength": 36
+          },
+          "keyId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$"
+          },
+          "scopes": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 3,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "audits:write",
+                "results:read",
+                "usage:read"
+              ]
+            }
+          },
+          "origins": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 100,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "format": "uri",
+              "pattern": "^https://",
+              "maxLength": 261,
+              "description": "Exact verified HTTPS origin. No wildcard, credentials, query, path or nonstandard port."
+            }
+          }
+        }
+      },
+      "Error": {
+        "$ref": "../../apps/api-backend/src/main/resources/ci/error-response-v1.schema.json"
+      },
+      "Export": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "apiVersion",
+          "kind",
+          "summary",
+          "reportPath",
+          "details",
+          "artifactPolicy",
+          "publicIssue"
+        ],
+        "properties": {
+          "apiVersion": {
+            "const": 1
+          },
+          "kind": {
+            "const": "details-v1"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/Report"
+          },
+          "reportPath": {
+            "type": "string",
+            "pattern": "^/api/ci/v1/runs/[1-9][0-9]{0,18}/report$"
+          },
+          "details": {
+            "$ref": "#/components/schemas/ExportDetails"
+          },
+          "artifactPolicy": {
+            "$ref": "#/components/schemas/ArtifactPolicy"
+          },
+          "publicIssue": {
+            "$ref": "#/components/schemas/PublicIssue"
+          }
+        }
+      },
+      "ExportDetails": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "categories",
+          "checks",
+          "findings",
+          "omittedFindings"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "categories": {
+            "type": "array",
+            "maxItems": 4,
+            "items": {
+              "$ref": "#/components/schemas/ExportCategory"
+            }
+          },
+          "checks": {
+            "type": "array",
+            "maxItems": 256,
+            "items": {
+              "$ref": "#/components/schemas/ExportCheck"
+            }
+          },
+          "findings": {
+            "type": "array",
+            "maxItems": 128,
+            "items": {
+              "$ref": "#/components/schemas/ExportFinding"
+            }
+          },
+          "omittedFindings": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          }
+        }
+      },
+      "ExportCategory": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "score"
+        ],
+        "properties": {
+          "key": {
+            "type": "string",
+            "enum": [
+              "performance",
+              "security",
+              "seo",
+              "a11y"
+            ]
+          },
+          "score": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 100
+          }
+        }
+      },
+      "ExportCheck": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "category",
+          "state"
+        ],
+        "properties": {
+          "key": {
+            "type": "string",
+            "enum": [
+              "http.security.hsts",
+              "http.security.csp",
+              "http.security.x_frame_options",
+              "http.security.x_content_type_options",
+              "http.security.referrer_policy",
+              "http.security.permissions_policy",
+              "http.security.cookie_flags",
+              "http.status_code",
+              "http.redirect.count",
+              "http.final_url.https",
+              "http.redirect.to_https",
+              "http.headers.content_type",
+              "html.title",
+              "html.meta.description.present",
+              "html.link.canonical.present",
+              "html.h1.count",
+              "html.meta.viewport.present",
+              "html.doctype.html5",
+              "html.social.meta",
+              "http.seo.robots_txt",
+              "http.seo.sitemap",
+              "html.images.alt_coverage",
+              "html.anchors.href_coverage",
+              "html.lang",
+              "lighthouse.score.performance",
+              "lighthouse.score.accessibility",
+              "lighthouse.score.best-practices",
+              "lighthouse.score.seo",
+              "runtime.console.errors",
+              "runtime.js.errors",
+              "runtime.network.5xx",
+              "runtime.network.failed_requests",
+              "runtime.network.third_party_errors",
+              "ssl.grade",
+              "ssl.certificate.valid",
+              "ssl.certificate.expiry_days",
+              "ssl.protocols.tls13",
+              "ssl.protocols.tls12",
+              "ssl.protocols.legacy_disabled",
+              "observatory.score",
+              "http.antibot.challenge",
+              "http.protocol.version",
+              "http.errors",
+              "http.response_time_ms",
+              "http.protocol.http2",
+              "http.headers.compression",
+              "http.headers.caching",
+              "http.headers.server",
+              "html.meta.robots.present",
+              "html.scripts.count",
+              "html.size.bytes",
+              "html.analysis.duration_ms",
+              "html.meta.charset.present",
+              "runtime.network.request_count",
+              "runtime.network.bytes_estimated",
+              "runtime.analysis.duration_ms",
+              "tech.security.version_disclosure"
+            ]
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "performance",
+              "security",
+              "seo",
+              "a11y"
+            ]
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "MEASURED",
+              "UNAVAILABLE",
+              "BLOCKED_BY_ANTIBOT",
+              "NOT_APPLICABLE"
+            ]
+          }
+        }
+      },
+      "ExportFinding": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "category",
+          "severity"
+        ],
+        "properties": {
+          "key": {
+            "type": "string",
+            "enum": [
+              "http.security.hsts",
+              "http.security.csp",
+              "http.security.x_frame_options",
+              "http.security.x_content_type_options",
+              "http.security.referrer_policy",
+              "http.security.permissions_policy",
+              "http.security.cookie_flags",
+              "http.status_code",
+              "http.redirect.count",
+              "http.final_url.https",
+              "http.redirect.to_https",
+              "http.headers.content_type",
+              "html.title",
+              "html.meta.description.present",
+              "html.link.canonical.present",
+              "html.h1.count",
+              "html.meta.viewport.present",
+              "html.doctype.html5",
+              "html.social.meta",
+              "http.seo.robots_txt",
+              "http.seo.sitemap",
+              "html.images.alt_coverage",
+              "html.anchors.href_coverage",
+              "html.lang",
+              "lighthouse.score.performance",
+              "lighthouse.score.accessibility",
+              "lighthouse.score.best-practices",
+              "lighthouse.score.seo",
+              "runtime.console.errors",
+              "runtime.js.errors",
+              "runtime.network.5xx",
+              "runtime.network.failed_requests",
+              "runtime.network.third_party_errors",
+              "ssl.grade",
+              "ssl.certificate.valid",
+              "ssl.certificate.expiry_days",
+              "ssl.protocols.tls13",
+              "ssl.protocols.tls12",
+              "ssl.protocols.legacy_disabled",
+              "observatory.score",
+              "http.antibot.challenge",
+              "http.protocol.version",
+              "http.errors",
+              "http.response_time_ms",
+              "http.protocol.http2",
+              "http.headers.compression",
+              "http.headers.caching",
+              "http.headers.server",
+              "html.meta.robots.present",
+              "html.scripts.count",
+              "html.size.bytes",
+              "html.analysis.duration_ms",
+              "html.meta.charset.present",
+              "runtime.network.request_count",
+              "runtime.network.bytes_estimated",
+              "runtime.analysis.duration_ms",
+              "tech.security.version_disclosure"
+            ]
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "performance",
+              "security",
+              "seo",
+              "a11y"
+            ]
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "critical",
+              "important",
+              "info"
+            ]
+          }
+        }
+      },
+      "ArtifactPolicy": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "visibility",
+          "retentionDays",
+          "diagnosticRetentionDays",
+          "automaticUpload"
+        ],
+        "properties": {
+          "visibility": {
+            "const": "private"
+          },
+          "retentionDays": {
+            "const": 7
+          },
+          "diagnosticRetentionDays": {
+            "const": 1
+          },
+          "automaticUpload": {
+            "const": false
+          }
+        }
+      },
+      "PublicIssue": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "title",
+          "body"
+        ],
+        "properties": {
+          "title": {
+            "const": "Argos audit: review required"
+          },
+          "body": {
+            "const": "An Argos CI audit requires an authenticated review. Open Argos with your own account. Findings are available only through authenticated access."
+          }
+        }
+      },
+      "Deletion": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "apiVersion",
+          "runId",
+          "deleted"
+        ],
+        "properties": {
+          "apiVersion": {
+            "const": 1
+          },
+          "runId": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]{0,18}$",
+            "maxLength": 19,
+            "description": "Positive signed 64-bit run identifier; never an access credential."
+          },
+          "deleted": {
+            "const": true
+          }
+        }
+      },
+      "VerdictPolicy": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "apiVersion",
+          "kind",
+          "profileId",
+          "policyId",
+          "requiredSamples",
+          "coverageVersion",
+          "minimumCoverage",
+          "scoringVersion",
+          "measurementVersion",
+          "pipelineSeverity",
+          "ticketSeverities",
+          "eligibleTicketKeys",
+          "historicalComparison",
+          "exceptions",
+          "fingerprint"
+        ],
+        "properties": {
+          "apiVersion": {
+            "type": "integer",
+            "const": 1
+          },
+          "kind": {
+            "type": "string",
+            "const": "policy-v1"
+          },
+          "profileId": {
+            "type": "string",
+            "const": "standard-v1"
+          },
+          "policyId": {
+            "type": "string",
+            "const": "premium-ci-verdict-v1"
+          },
+          "requiredSamples": {
+            "type": "integer",
+            "const": 2
+          },
+          "coverageVersion": {
+            "type": "string",
+            "const": "weighted-coverage-v3"
+          },
+          "minimumCoverage": {
+            "type": "number",
+            "const": 0.8
+          },
+          "scoringVersion": {
+            "type": "integer",
+            "const": 13
+          },
+          "measurementVersion": {
+            "type": "string",
+            "const": "analysis-measurements-v6"
+          },
+          "pipelineSeverity": {
+            "type": "string",
+            "const": "critical"
+          },
+          "ticketSeverities": {
+            "type": "array",
+            "maxItems": 2,
+            "items": {
+              "type": "string"
+            },
+            "const": [
+              "critical",
+              "important"
+            ]
+          },
+          "eligibleTicketKeys": {
+            "type": "array",
+            "maxItems": 128,
+            "items": {
+              "type": "string"
+            },
+            "const": [
+              "html.anchors.href_coverage",
+              "html.doctype.html5",
+              "html.h1.count",
+              "html.images.alt_coverage",
+              "html.lang",
+              "html.link.canonical.present",
+              "html.meta.charset.present",
+              "html.meta.description.present",
+              "html.meta.robots.present",
+              "html.meta.viewport.present",
+              "html.social.meta",
+              "html.title",
+              "http.final_url.https",
+              "http.headers.caching",
+              "http.headers.compression",
+              "http.headers.content_type",
+              "http.protocol.http2",
+              "http.protocol.version",
+              "http.redirect.count",
+              "http.redirect.to_https",
+              "http.security.cookie_flags",
+              "http.security.csp",
+              "http.security.hsts",
+              "http.security.permissions_policy",
+              "http.security.referrer_policy",
+              "http.security.x_content_type_options",
+              "http.security.x_frame_options",
+              "http.seo.robots_txt",
+              "http.seo.sitemap",
+              "http.status_code",
+              "runtime.console.errors",
+              "runtime.js.errors",
+              "runtime.network.5xx",
+              "runtime.network.bytes_estimated",
+              "runtime.network.failed_requests",
+              "runtime.network.request_count",
+              "ssl.certificate.expiry_days",
+              "ssl.certificate.valid",
+              "ssl.protocols.legacy_disabled",
+              "ssl.protocols.tls12",
+              "ssl.protocols.tls13",
+              "tech.security.version_disclosure"
+            ]
+          },
+          "historicalComparison": {
+            "type": "boolean",
+            "const": false
+          },
+          "exceptions": {
+            "type": "array",
+            "maxItems": 2,
+            "items": {
+              "type": "string"
+            },
+            "const": []
+          },
+          "fingerprint": {
+            "type": "string",
+            "const": "794f2999e4d51a0326dcbb27087d07bfde2234326867c2ef68fec9f3b3b0ac98"
+          }
+        }
+      },
+      "Fingerprints": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "scoring",
+          "measurement",
+          "scope",
+          "evidence"
+        ],
+        "properties": {
+          "scoring": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          },
+          "measurement": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          },
+          "scope": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          },
+          "evidence": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          }
+        }
+      },
+      "ConfirmedFinding": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "category",
+          "severity",
+          "ticketEligible"
+        ],
+        "properties": {
+          "key": {
+            "type": "string",
+            "enum": [
+              "http.security.hsts",
+              "http.security.csp",
+              "http.security.x_frame_options",
+              "http.security.x_content_type_options",
+              "http.security.referrer_policy",
+              "http.security.permissions_policy",
+              "http.security.cookie_flags",
+              "http.status_code",
+              "http.redirect.count",
+              "http.final_url.https",
+              "http.redirect.to_https",
+              "http.headers.content_type",
+              "html.title",
+              "html.meta.description.present",
+              "html.link.canonical.present",
+              "html.h1.count",
+              "html.meta.viewport.present",
+              "html.doctype.html5",
+              "html.social.meta",
+              "http.seo.robots_txt",
+              "http.seo.sitemap",
+              "html.images.alt_coverage",
+              "html.anchors.href_coverage",
+              "html.lang",
+              "lighthouse.score.performance",
+              "lighthouse.score.accessibility",
+              "lighthouse.score.best-practices",
+              "lighthouse.score.seo",
+              "runtime.console.errors",
+              "runtime.js.errors",
+              "runtime.network.5xx",
+              "runtime.network.failed_requests",
+              "runtime.network.third_party_errors",
+              "ssl.grade",
+              "ssl.certificate.valid",
+              "ssl.certificate.expiry_days",
+              "ssl.protocols.tls13",
+              "ssl.protocols.tls12",
+              "ssl.protocols.legacy_disabled",
+              "observatory.score",
+              "http.antibot.challenge",
+              "http.protocol.version",
+              "http.errors",
+              "http.response_time_ms",
+              "http.protocol.http2",
+              "http.headers.compression",
+              "http.headers.caching",
+              "http.headers.server",
+              "html.meta.robots.present",
+              "html.scripts.count",
+              "html.size.bytes",
+              "html.analysis.duration_ms",
+              "html.meta.charset.present",
+              "runtime.network.request_count",
+              "runtime.network.bytes_estimated",
+              "runtime.analysis.duration_ms",
+              "tech.security.version_disclosure"
+            ]
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "performance",
+              "security",
+              "seo",
+              "a11y"
+            ]
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "critical",
+              "important"
+            ]
+          },
+          "ticketEligible": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Verdict": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "apiVersion",
+          "kind",
+          "admissionId",
+          "policyId",
+          "policyFingerprint",
+          "sampleCount",
+          "outcome",
+          "exitCode",
+          "error",
+          "fingerprints",
+          "confirmedFindings"
+        ],
+        "properties": {
+          "apiVersion": {
+            "type": "integer",
+            "const": 1
+          },
+          "kind": {
+            "type": "string",
+            "const": "verdict-v1"
+          },
+          "admissionId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+            "maxLength": 36
+          },
+          "policyId": {
+            "type": "string",
+            "const": "premium-ci-verdict-v1"
+          },
+          "policyFingerprint": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64,
+            "const": "794f2999e4d51a0326dcbb27087d07bfde2234326867c2ef68fec9f3b3b0ac98"
+          },
+          "sampleCount": {
+            "type": "integer",
+            "enum": [
+              1,
+              2
+            ]
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "GO",
+              "SITE_NO_GO",
+              "CONTROL_FAILED"
+            ]
+          },
+          "exitCode": {
+            "type": "integer",
+            "enum": [
+              0,
+              1,
+              2
+            ]
+          },
+          "error": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "../../apps/api-backend/src/main/resources/ci/error-response-v1.schema.json#/properties/error"
+              }
+            ]
+          },
+          "fingerprints": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Fingerprints"
+              }
+            ]
+          },
+          "confirmedFindings": {
+            "type": "array",
+            "maxItems": 128,
+            "items": {
+              "$ref": "#/components/schemas/ConfirmedFinding"
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "CiError": {
+        "description": "Versioned #741 envelope. 400 invalid configuration/target, uniform 401 authentication, 403 scope/entitlement/proof, uniform 404 own resource unavailable, 409 intention conflict, 429 quota/rate, controlled 500/502/503/504. Unknown exceptions never expose raw diagnostics. Recover ambiguous POSTs with the original intention.",
+        "headers": {
+          "Cache-Control": {
+            "schema": {
+              "type": "string",
+              "const": "private, no-store"
+            }
+          },
+          "Retry-After": {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2764800
+            },
+            "description": "Present only when permitted by the canonical error catalog."
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    }
+  }
+}
