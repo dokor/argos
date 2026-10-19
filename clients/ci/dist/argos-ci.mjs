@@ -656,10 +656,15 @@ async function synchronizeIssues({ evidencePath, expected, auditVerdict = null, 
   try {
     config = publicationConfiguration(input);
     if (config.mode === 'DISABLED') return result(verdict, 'DISABLED', counts, null, lang);
+    if (auditVerdict !== null) {
+      requireValue(validVerdict(auditVerdict, policy, catalogue, errors), 'ARTIFACT_INVALID');
+      if (auditVerdict.outcome === 'CONTROL_FAILED') return result(auditVerdict, 'DISABLED', counts, auditVerdict.error.code, lang);
+    }
     requireValue(Number.isInteger(timeoutMs) && timeoutMs >= 1 && timeoutMs <= 600000);
     const deadline = now() + timeoutMs, combined = AbortSignal.any([signal, lifetime.signal, AbortSignal.timeout(timeoutMs)]);
     let evidence;
     try { evidence = readTrusted(evidencePath, { ...expected, now: now() }); } catch { throw new Failure('ARTIFACT_INVALID'); }
+    requireValue(auditVerdict === null || fingerprint(auditVerdict) === fingerprint(evidence.verdict), 'ARTIFACT_INVALID');
     verdict = evidence.verdict;
     const fresh = () => requireValue(Date.parse(evidence.issuedAt) <= now() && now() - Date.parse(evidence.issuedAt) <= FRESHNESS_MS
       && Date.parse(evidence.sourceExpiresAt) > now() && Date.parse(evidence.expiresAt) > now(), 'ARTIFACT_INVALID');

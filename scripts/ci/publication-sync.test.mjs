@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { synchronizeIssues, PublicationRejected } from '../../clients/ci/src/publication-sync.mjs';
 import { publicationConfiguration, candidates, PUBLIC_ISSUE, managedBlock } from '../../clients/ci/src/publication-policy.mjs';
 import { writePrivate } from '../../clients/ci/src/evidence.mjs';
-import { VERSION, policy } from '../../clients/ci/src/resources.mjs';
+import { VERSION, policy, errors } from '../../clients/ci/src/resources.mjs';
 import { Failure } from '../../clients/ci/src/diagnostics.mjs';
 
 const clock = Date.parse('2026-10-19T00:00:00Z'), iso = offset => new Date(clock + offset).toISOString();
@@ -76,7 +76,7 @@ function setup(t, provider = 'github', overrides = {}) {
   const args = extra => ({ evidencePath, expected: { ...evidence.provenance, digest: hash }, auditVerdict: evidence.verdict,
     config, adapter, now: () => clock, sleep: async () => {}, ...extra });
   return { root, evidence, evidencePath, config, state, journal, args, reboot: () => { adapter = makeAdapter(); },
-    write: value => { fs.unlinkSync(evidencePath); const digest = writePrivate(evidencePath, value); return args({ expected: { ...value.provenance, digest } }); } };
+    write: value => { fs.unlinkSync(evidencePath); const digest = writePrivate(evidencePath, value); return args({ expected: { ...value.provenance, digest }, auditVerdict: value.verdict }); } };
 }
 function sessionPatch(f, patch) {
   const adapter = f.args().adapter;
@@ -99,6 +99,15 @@ test('checked-in provider configurations are strictly valid, disabled and requir
     const config = publicationConfiguration(sample); assert.equal(config.mode, 'DISABLED'); assert.equal(config.destination.provider, provider);
     assert.equal(config.allowPrivateDetails, false); assert.equal(config.allowPublicNotice, false); assert.equal(config.reopenResolved, false);
   }
+});
+test('a technical control or different original intention cannot be replaced by another successful artifact', async t => {
+  const f = setup(t); const { stage, category, messageKey, actionCode, retryable, recovery } = errors.MEASUREMENT_INCOMPLETE;
+  const technical = { ...go, outcome: 'CONTROL_FAILED', exitCode: 2, fingerprints: null, confirmedFindings: [],
+    error: { code: 'MEASUREMENT_INCOMPLETE', stage, category, messageKey, actionCode, retryable, recovery, retryAfterSeconds: null } };
+  const blocked = await synchronizeIssues(f.args({ auditVerdict: technical }));
+  assert.equal(blocked.auditOutcome, 'CONTROL_FAILED'); assert.equal(blocked.exitCode, 2); assert.equal(f.state.calls.length, 0);
+  const mismatch = await synchronizeIssues(f.args({ auditVerdict: { ...go, admissionId: 'b2942a5c-b63a-45cd-a88a-d02b1af5db02' } }));
+  assert.equal(mismatch.diagnostic.code, 'ARTIFACT_INVALID'); assert.equal(f.state.calls.length, 0);
 });
 for (const provider of ['github', 'gitlab']) {
   test(`${provider}: same cause is created once across retries, concurrent calls and a durable journal restart`, async t => {
