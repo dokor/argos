@@ -1,5 +1,8 @@
 # Documentation Argos
 
+Pour intégrer la CI Premium : [documentation publique FR/EN et entretien](ci/public-documentation.md).
+Les routes /docs et /en/docs sont proposées dans #742 ; l’accès CI reste fermé jusqu’à #467.
+
 Ce dossier conserve les contrats, décisions et procédures utiles pour modifier ou
 exploiter Argos. Le [README du dépôt](../README.md) sert au démarrage ; le
 [runbook](../infra/RUNBOOK.md) décrit l'exploitation. Le code, les migrations et les
