@@ -4,7 +4,10 @@ import {boundedJson} from "./bounded-request";
 import {ciBackendOrigin} from "./ci-backend-origin";
 import {billingCodes,billingSnapshot,stripeDestination,record,exact,type BillingCode} from "./billing-contract";
 const headers={"Cache-Control":"private, no-store","Referrer-Policy":"no-referrer","X-Content-Type-Options":"nosniff","X-Robots-Tag":"noindex, nofollow"};
-const error=(code:BillingCode,status=503,requestId:string=randomUUID())=>NextResponse.json({error:code,requestId},{status,headers});
+const error=(code:BillingCode,status=503,requestId:string=randomUUID())=>{
+  if(status>=500)console.warn("billing_bff_failure",{code,requestId,stage:"BILLING_BFF"});
+  return NextResponse.json({error:code,requestId},{status,headers});
+};
 /** Browser never chooses customer, price, subscription, origin or return URL. */
 export async function billingProxy(request:NextRequest,parts:string[],auth:()=>Headers|NextResponse):Promise<NextResponse>{
   const path=parts.join("/"),method=request.method;

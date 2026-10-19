@@ -3,8 +3,8 @@ import {NextRequest} from "next/server";
 import {billingProxy} from "./billing-proxy";
 import {disabled} from "@/components/connected/billing/fixtures/billing.mjs";
 const fetchMock=vi.fn();
-beforeEach(()=>{vi.stubGlobal("fetch",fetchMock);fetchMock.mockReset();vi.stubEnv("API_BASE","http://127.0.0.1:8081");});
-afterEach(()=>{vi.unstubAllGlobals();vi.unstubAllEnvs();});
+beforeEach(()=>{vi.spyOn(console,"warn").mockImplementation(()=>{});vi.stubGlobal("fetch",fetchMock);fetchMock.mockReset();vi.stubEnv("API_BASE","http://127.0.0.1:8081");});
+afterEach(()=>{vi.restoreAllMocks();vi.unstubAllGlobals();vi.unstubAllEnvs();});
 const auth=()=>new Headers({Authorization:"Bearer private-browser-session","Content-Type":"application/json"});
 function req(path="",body?:unknown){return new NextRequest("https://argos.lelouet.fr/api/account/billing"+path,{method:body===undefined?"GET":"POST",
   headers:{"Content-Type":"application/json"},...(body===undefined?{}:{body:JSON.stringify(body)})});}
@@ -50,4 +50,11 @@ it("preserves only the controlled requestId for server-side correlation",async()
   const requestId="73300000-0000-4000-8000-000000000001";
   fetchMock.mockResolvedValue(Response.json({error:"billing_sync_pending",requestId},{status:409}));
   const r=await billingProxy(req(),[],auth);expect(r.status).toBe(409);expect(await r.json()).toEqual({error:"billing_sync_pending",requestId});
+});
+it("correlates a transport failure with a minimal server log without logging the provider error",async()=>{
+  fetchMock.mockRejectedValue(new Error("private-provider-payload with credentials"));
+  const r=await billingProxy(req(),[],auth),data=await r.json();
+  expect(r.status).toBe(503);expect(data.error).toBe("billing_unavailable");
+  expect(JSON.stringify(vi.mocked(console.warn).mock.calls)).toContain(data.requestId);
+  expect(JSON.stringify(vi.mocked(console.warn).mock.calls)).not.toMatch(/private-provider-payload|credentials|Authorization|Bearer/);
 });
