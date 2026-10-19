@@ -153,10 +153,14 @@ redaction. Restrict access to diagnostics and enforce limited retention.
 
 1. **Now: NO_GO.** Keep `premium-ci.enabled`, `billing.enabled`,
    `billing.payments-enabled`, `billing.prices-approved`, `billing.launch-approved`,
-   `billing.tax-ready` false. Do not invent prices or VAT.
-2. Approve EUR monthly/annual prices, annual discount, tax display and grace, credit,
+   `billing.tax-ready` false. Also keep `audit.queue.premium-priority-enabled=false`
+   until queue behavior under load has been accepted.
+2. Approved prices: EUR 19/month and EUR 199/year excluding tax (EUR 29 / 12.7% saved).
+   Approve tax display and grace, credit,
    refund, dispute and closure policy. Account closure currently waits for the actual
    subscription end: accept or change this behavior before selling subscriptions.
+   Validate current entitlements and progress of older free requests with Premium
+   priority enabled only in an authorized test environment.
 3. With authorized test resources, complete actual acceptance, alerts, capacity and
    security review at the candidate SHA; record all P0 evidence and a human decision
    in #467, plus the repository's general release process where applicable.

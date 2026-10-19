@@ -10,6 +10,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.StringExpression;
+import com.dokor.argos.services.scheduler.AuditQueuePolicy;
 
 import java.time.Instant;
 import java.util.List;
@@ -24,14 +25,22 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
 
 
     private final com.dokor.argos.services.account.UsageService usage;
+    private final AuditQueuePolicy queuePolicy;
+    private final java.time.Clock clock;
     public AuditRunDao(TransactionManagerQuerydsl transactionManager) {
         this(transactionManager,new com.dokor.argos.services.account.UsageService(transactionManager,
             new com.dokor.argos.services.account.UsagePolicy(com.typesafe.config.ConfigFactory.empty()),java.time.Clock.systemUTC()));
     }
-    @Inject
     public AuditRunDao(TransactionManagerQuerydsl transactionManager, com.dokor.argos.services.account.UsageService usage) {
+        this(transactionManager, usage, new AuditQueuePolicy(com.typesafe.config.ConfigFactory.empty()), java.time.Clock.systemUTC());
+    }
+    @Inject
+    public AuditRunDao(TransactionManagerQuerydsl transactionManager, com.dokor.argos.services.account.UsageService usage,
+            AuditQueuePolicy queuePolicy, java.time.Clock clock) {
         super(transactionManager, QAuditRun.auditRun);
         this.usage=usage;
+        this.queuePolicy=queuePolicy;
+        this.clock=clock;
     }
     public com.dokor.argos.services.account.UsageService usage() { return usage; }
 
@@ -87,8 +96,16 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
     }
 
     public Optional<AuditRun> findNextQueuedRun() {
-        return Optional.ofNullable(
-            transactionManager.selectQuery()
+        Instant now = clock.instant();
+        // Current server-side owner and entitlement only; no client-provided priority.
+        // Older requests outrank recent Premium work. Keep fair owner rotation within a band.
+        var band = Expressions.numberTemplate(Integer.class,
+                "CASE WHEN {0}<={1} THEN 0 WHEN EXISTS (SELECT 1 FROM ARG_ACCOUNT_USER qp "
+                    + "JOIN ARG_ACCOUNT_CI_ENTITLEMENT qe ON qe.id=qp.id "
+                    + "WHERE qp.id={2} AND qp.state='ACTIVE' AND qp.offer='PREMIUM' "
+                    + "AND qe.ci_access=1 AND qe.valid_until>{3}) THEN 1 ELSE 2 END",
+                RUN.createdAt, now.minusSeconds(queuePolicy.agingSeconds), RUN.ownerUserId, now);
+        var query = transactionManager.selectQuery()
                 .select(RUN)
                 .from(RUN)
                 .where(
@@ -96,8 +113,9 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
                     RUN.claimToken.isNull(),
                     RUN.ciNavigationOrigins.isNull().or(Expressions.booleanTemplate(
                         "NOT EXISTS (SELECT 1 FROM ARG_USAGE_RUN ci_busy WHERE ci_busy.user_id={0} AND ci_busy.state='RESERVED' AND ci_busy.ci_started_at IS NOT NULL)",RUN.ownerUserId))
-                )
-                .orderBy(Expressions.dateTimeTemplate(Instant.class,
+                );
+        if (queuePolicy.premiumPriorityEnabled) query.orderBy(band.asc());
+        return Optional.ofNullable(query.orderBy(Expressions.dateTimeTemplate(Instant.class,
                     "COALESCE((SELECT MAX(h.started_at) FROM ARG_AUDIT_RUN h WHERE h.owner_user_id <=> {0}), {1})",
                     RUN.ownerUserId, Instant.EPOCH).asc(), RUN.createdAt.asc(), RUN.id.asc())
                 .limit(1)

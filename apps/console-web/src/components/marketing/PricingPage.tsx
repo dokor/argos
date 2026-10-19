@@ -25,15 +25,16 @@ export default function PricingPage() {
           {c.plans.map((plan, index) => <article key={plan.name} className={`${s.plan} ${index === 2 ? s.premium : ""}`} aria-labelledby={`plan-${index}`}>
             <div className={s.planTop}><p className={s.audience}>{plan.audience}</p><span className={s.badge}>{index === 2 ? c.coming : c.available}</span></div>
             <h2 id={`plan-${index}`}>{plan.name}</h2>
-            <p className={`${s.price} ${index === 2 ? s.pendingPrice : ""}`}>{index === 2 ? c.futurePrice : c.free}</p>
+            <p className={s.price}>{index === 2 ? c.premiumPrice : c.free}</p>
             <p className={s.priceNote}>{index === 2 ? c.premiumNote : c.freeNote}</p>
             <p className={s.description}>{plan.description}</p>
             <Link href={plan.href} className={`${s.cta} ${index === 2 ? s.primary : ""}`}>{plan.action}</Link>
             <ul>{plan.features.map(feature => <li key={feature}><span aria-hidden="true">✓</span>{feature}</li>)}</ul>
-            {index === 2 && <div className={s.periods}><p>{c.periods}</p><p>{c.annual}</p></div>}
+            {index === 2 && <div className={s.periods}><p>{c.periods}</p><p>{c.annual}</p><p>{c.annualTtc}</p></div>}
           </article>)}
         </div>
         <p className={s.launchNote}><span className={s.noticeDot} aria-hidden="true" />{c.notice}</p>
+        <p className={s.taxNote}>{c.taxNote}</p>
       </section>
 
       <section id="comparison" className={`${s.container} ${s.section}`} aria-labelledby="comparison-title">

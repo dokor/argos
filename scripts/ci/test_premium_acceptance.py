@@ -28,7 +28,7 @@ class ControlledAcceptanceTests(unittest.TestCase):
         self.assertEqual("PASS", result["controlledStatus"])
         self.assertEqual("NO_GO", result["launchStatus"])
         self.assertEqual(list(acceptance.EXTERNAL_BLOCKERS), result["blockers"])
-        self.assertEqual(11, len(result["controlledSuites"]))
+        self.assertEqual(13, len(result["controlledSuites"]))
 
     def test_local_preview_is_never_revision_bound(self):
         result = acceptance.collect(self.root, "a" * 40, False)

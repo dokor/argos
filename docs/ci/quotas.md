@@ -55,6 +55,27 @@ production. La recette #737/#467 doit mesurer charge, équité, attentes, fourni
 et reprise sur l’infrastructure visée avant ouverture. Ne pas présenter un
 benchmark ou une capacité commerciale comme déjà validés.
 
+## Priorité Premium relative
+
+`audit.queue.premium-priority-enabled=false` reste livré jusqu'à la recette #467.
+À l'ouverture, une sélection avec concurrence dans la file peut favoriser Premium,
+sur les audits CI et les analyses personnelles rattachées au compte. L'éligibilité
+est relue côté serveur : compte ACTIVE, offre PREMIUM et droit CI courant non expiré.
+Une clé, un paramètre client, un simple retour Checkout ou une ancienne offre ne
+permettent pas de choisir une priorité. Les demandes anonymes ne sont pas Premium.
+
+Les demandes en attente depuis `priority-aging-seconds` (120 s par défaut, entier
+10–3600) passent dans la bande la plus ancienne avant les demandes Premium récentes.
+Dans chaque bande, la rotation existante par dernier démarrage de propriétaire est
+conservée, puis ancienneté et identifiant. Les runs CI d'un compte déjà occupé restent
+exclus. Le claim atomique, les quotas, budgets horaires et plafonds d'admission sont
+inchangés ; une file pleine peut toujours refuser une demande Premium.
+
+Ce seuil n'est pas une garantie de démarrage en deux minutes. Aucun run actif n'est
+interrompu et aucune capacité supplémentaire n'est promise. La recette doit mesurer
+la latence des offres gratuites et Premium, le vieillissement et l'équité sous charge
+avant l'activation séparée de ce flag.
+
 ## Trafic, proxys et réponses explicites
 
 Le filtre machine utilise des compteurs persistants ARG_ACCOUNT_RATE partagés
