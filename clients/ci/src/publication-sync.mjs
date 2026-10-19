@@ -228,6 +228,8 @@ export async function synchronizeIssues({ evidencePath, expected, auditVerdict =
         }
         // A copied marker is not an ownership receipt, even if another automation authored it.
         requireValue(candidate.notice || !issues.some(i => i.body.includes(`<!-- argos-ci-issue-v1:${candidate.fingerprint}:`)), 'PUBLICATION_STATE_UNKNOWN');
+        requireValue(!candidate.notice || config.publicIssueId || !issues.some(i => i.authorId === destination.botId && i.isBot
+          && i.body === managedBlock(candidate, '0'.repeat(64))), 'PUBLICATION_STATE_UNKNOWN');
         if (candidate.notice && config.publicIssueId) {
           record = { ...candidate, nonce: randomBytes(32).toString('hex'), phase: 'CREATE_PENDING', issueId: null, startedAt: new Date(now()).toISOString(), operationInvocation: invocation };
           const chosen = match(record, true); requireValue(chosen, 'PUBLICATION_STATE_UNKNOWN');

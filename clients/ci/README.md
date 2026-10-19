@@ -1,13 +1,15 @@
-# Client CI Premium Argos — préversion 0.2.0
+# Client CI Premium Argos — préversion 0.3.0
 
 Client Node.js 24, autonome, sans dépendance npm, Docker, compte interactif ou
 accès aux conteneurs Argos. **L’accès serveur reste désactivé jusqu’à la recette
-#467.** Le client #465 et le moteur commun #738 ne créent pas encore de tickets réels : les connecteurs
-#739/#740 suivront. `publication-preview` vérifie la preuve et calcule
+#467.** Le connecteur GitHub #739 peut publier sur opt-in, avec GITHUB_TOKEN et
+un registre privé Azure du client. Le connecteur GitLab reste #740.
+`publication-preview` vérifie la preuve et calcule
 seulement le nombre de constats confirmés éligibles, sans mutation Git.
 
 La documentation développeur publique sur le site reste le lot #742.
 [Politique de synchronisation et décisions humaines](../../docs/ci/issue-synchronization.md).
+[Configuration, stockage, chiffrement et reprise du publisher GitHub](../../docs/ci/github-publication.md).
 [English instructions](README.en.md). Contrats : [admission](../../docs/ci/admission.md),
 [erreurs](../../docs/ci/errors.md), [verdict](../../docs/ci/verdicts.md),
 [exports privés](../../docs/ci/private-exports.md), [OpenAPI](../../docs/ci/openapi-v1.json).
@@ -161,7 +163,7 @@ ARGOS_GITLAB_READ_TOKEN doit avoir seulement read_api sur ce projet ; il ne va
 jamais chez Argos. Le hash n’est pas lu dans l’artefact. Dépôt, SHA, tentative,
 producteur, environnement, version, schéma, expiration, fichier régulier sans
 symlink/hardlink et taille sont vérifiés avant parsing/publication. Un échec
-ne déclenche jamais de nouvel audit. Les futurs publishers devront revérifier
+ne déclenche jamais de nouvel audit. Les publishers doivent revérifier
 la visibilité juste avant chaque écriture et réconcilier les créations ambiguës.
 
 La version 0.2 exige une preuve relue depuis quinze minutes maximum. Après une
@@ -180,7 +182,7 @@ Le moteur commun ajoute DISABLED par défaut, aperçu sans mutation, identité
 stable, budgets persistants, réconciliation et décisions humaines. Ses
 [exemples GitHub/GitLab](examples/) restent désactivés et utilisent des IDs fictifs.
 Il exige un journal privé durable et un verrou partagé vérifié ; les futurs
-connecteurs ne pourront pas activer SYNC en annonçant ces garanties sans les
+connecteurs ne peuvent pas activer SYNC en annonçant ces garanties sans les
 implémenter. Les fermetures sont respectées par défaut ; une réouverture exige
 une observation postérieure à la décision et une condition atomique prouvée.
 
@@ -191,10 +193,21 @@ ARGOS_API_KEY à cet environnement et ARGOS_TARGET_URL aux variables. Le modèle
 accepte push sur main et le lancement manuel ; la branche par défaut est aussi vérifiée défensivement
 par le client. Aucun événement PR, pull_request_target ou workflow_run, aucun
 checkout de code client. Le token GitHub de lecture est limité aux étapes de
-vérification de destination ; aucune permission issues:write. Activer
+vérification de destination. Seul le job optionnel isolé `argos_publish` reçoit
+issues:write et actions:read, sans clé API Argos. Activer
 ARGOS_PRIVATE_ARTIFACTS=true et/ou ARGOS_PUBLICATION_PREVIEW=true uniquement
 dans un dépôt privé. Un SITE_NO_GO échoue au contrôle et autorise la prévisualisation
 du même artefact ; un CONTROL_FAILED ne peut pas produire de constats.
+
+Pour la publication effective : suivre le [raccordement GitHub](../../docs/ci/github-publication.md)
+et configurer `ARGOS_PUBLICATION_CONFIG`, `ARGOS_GITHUB_PUBLISH`, ainsi que les
+SAS du registre privé dans les environnements séparés. `publication-stage`
+produit uniquement une preuve chiffrée transférable sept jours même dans un
+dépôt public ; `publish-github` vérifie les digests externes, la provenance et la
+fraîcheur de quinze minutes, puis utilise le moteur #738. Aucune réouverture
+GitHub automatique. Le lancement manuel `operation=resume` demande l’UUID
+initial et ne crée aucune analyse. Un publisher relancé seul consomme la
+tentative originale sortie par le contrôle, jamais une autre exécution.
 
 GitLab.com : runner Linux shell **dédié, protégé**, tag argos-ci, Node 24.21.0 et
 curl installés, répertoire neuf par job (`GIT_STRATEGY: empty`), sans cache projet.

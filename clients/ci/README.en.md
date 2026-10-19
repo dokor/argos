@@ -1,11 +1,12 @@
-# Argos Premium CI client — preview 0.2.0
+# Argos Premium CI client — preview 0.3.0
 
 Node.js 24, no npm dependencies or Docker. **Server access remains disabled until
 acceptance #467.** The [GitHub](templates/github-actions.yml) and
 [GitLab](templates/gitlab-ci.yml) examples pin the standalone distribution to a
 full commit and an independently reviewed SHA-256. They execute no project code.
-The common synchronization engine is #738; HTTP ticket publishers remain #739/#740. The CLI offers
-optional **publication preview only**, with no Git mutations.
+The common synchronization engine is #738. The optional GitHub publisher #739
+uses the current job's GITHUB_TOKEN and a customer-owned private Azure blob
+journal. GitLab publishing remains #740. Preview never mutates Git issues.
 
 Set the protected secret ARGOS_API_KEY and the authorized public HTTPS
 ARGOS_TARGET_URL. The key needs audits:write, results:read and usage:read. The
@@ -17,7 +18,7 @@ private response, raw exception, secret or target value appears in output.
 ARGOS_LANG=en selects English diagnostics. There is no verbose mode.
 
 Commands: --help, --version, doctor, intent, audit, resume, export, artifact-check,
-publication-preview. Doctor reads policy/identity/preflight only: no target DNS
+publication-preview, publication-stage, publish-github. Doctor reads policy/identity/preflight only: no target DNS
 or HTTP, run, reservation, file or Git mutation. READY does not reserve capacity.
 Audit defaults to two sequential samples, reserving two analyses together. A
 single sample is exploratory and cannot produce GO. Only the confirmed server
@@ -85,7 +86,43 @@ Public destinations receive one fixed generic notice, without identifiers or
 finding details; ambiguous public creation can be explicitly bound by a trusted
 publicIssueId without another POST. See the [versioned policy and adapter contract](../../docs/ci/issue-synchronization.md)
 and [disabled provider examples](examples/). These guarantees are exercised with
-fixtures; the future connectors must demonstrate them before enabling SYNC.
+fixtures; the [GitHub integration contract](../../docs/ci/github-publication.md)
+adds the real storage implementation and documents remaining hosted acceptance.
+
+GitHub setup: put ARGOS_PUBLICATION_CONFIG in a trusted repository variable,
+keep mode DISABLED by default and opt in with ARGOS_GITHUB_PUBLISH=true only
+after review. Provision one private block blob shared by every workflow for
+this destination, containing the journal and a random 32-byte evidenceKey.
+The protected argos-ci environment gets ARGOS_GITHUB_JOURNAL_READ_SAS_URL
+(blob-scoped HTTPS SAS, sp=r); argos-publisher gets ARGOS_GITHUB_JOURNAL_SAS_URL
+(same blob, sp=rw). No list/delete/account-wide SAS, PAT or audit key in the
+publisher. This storage is required in this version; GITHUB_TOKEN alone cannot
+provide a private conditional journal. Missing storage fails before creation,
+without resetting deduplication history. Preserve and back up this journal.
+
+publication-stage has Git read permissions only and seals the proof using
+AES-256-GCM with provenance, the external digest and exact configuration as AAD.
+Only ciphertext is uploaded, with seven-day retention; no encryption key is in
+an artifact/output/log. The isolated publisher has issues:write and actions:read
+only, downloads the exact producer artifact ID, verifies both external digests,
+decrypts and validates a proof no older than fifteen minutes. Public repositories
+receive one strictly generic notice. Private repositories require separate
+consent to publish the limited catalogue metadata. Existing human content,
+labels and assignments are untouched; any closure or ignore decision holds
+automation. GitHub automatic reopening is refused because an atomic decision
+precondition is not established.
+
+Azure's renewable lease and ETag condition protect every journal update. A
+durable preparation precedes POST; ambiguous creation is reconciled and never
+blindly replayed. An in-flight GitHub POST may finish after cancellation, with
+its prepared identity still reserved. Retry only the publisher while the proof
+is fresh: it accepts the producer's original attempt from trusted job outputs
+within the same run/SHA. After expiry, dispatch operation=resume with the
+original_intent UUID to reread the original results, without an admission POST
+or new charge. Publication errors are exit 3 and preserve the audit's 0/1;
+technical control failures remain 2 with no issue. Stop publishers and handle
+private issues/artifacts before making a repository public; a provider visibility
+change cannot be made atomic with issue creation.
 
 Use protected default branches/environments, no fork/PR/MR event, no untrusted
 project scripts or artifacts executed with secrets. GitHub uses hosted Ubuntu;

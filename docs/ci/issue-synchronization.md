@@ -2,8 +2,9 @@
 
 **Préversion, premium-ci.enabled=false jusqu’à #467.** Ce lot fournit le moteur
 commun `clients/ci/src/publication-sync.mjs` et ses fixtures GitHub/GitLab. Les
-connecteurs HTTP et leurs credentials minimaux restent #739/#740 : aucun ticket
-client réel n’est créé par cette livraison. Le contrôle interne #94 garde sa
+contrat et les fixtures seuls ne créent aucun ticket client réel. Le
+[connecteur GitHub #739](github-publication.md) fournit désormais les requêtes
+GitHub et le registre privé Azure ; GitLab reste #740. Le contrôle interne #94 garde sa
 politique propre ; sa réouverture systématique n’est pas utilisée ici.
 
 ## Activation et sélection
@@ -247,8 +248,10 @@ Validation : `node --test scripts/ci/publication-sync.test.mjs` exerce les deux
 adaptateurs de fixture avec stockage sur disque, concurrence et redémarrage,
 réponse perdue/issue invisible, faux bot/marqueur, pagination, budget, décisions,
 notes, visibilité, délai, cas public et erreur hostile. Ce n’est ni un test de
-mutation des APIs hébergées ni une preuve de CAS GitHub/GitLab. Les connecteurs
-et leur stockage réel doivent démontrer ce contrat dans #739/#740 puis #467.
+mutation des APIs hébergées ni une preuve de CAS GitHub/GitLab. Le lot #739
+ajoute les tests de requêtes GitHub et une vérification réelle de lease/ETag
+sur l’émulateur Azure ; la recette hébergée reste obligatoire dans #467 et
+le connecteur GitLab dans #740.
 Sources des mécanismes provider à vérifier lors de leur implémentation :
 [GitHub issues](https://docs.github.com/en/rest/issues/issues),
 [GitHub concurrence](https://docs.github.com/en/actions/concepts/workflows-and-actions/concurrency),

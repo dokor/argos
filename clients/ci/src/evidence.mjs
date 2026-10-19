@@ -19,11 +19,12 @@ export function safeDirectory(path) {
   return absolute;
   } catch { throw new Failure('ARTIFACT_INVALID'); }
 }
-export function writePrivate(path, value) {
+export function writePrivate(path, value, maximum = MAX_BYTES) {
   try {
+  requireValue([MAX_BYTES, 131072].includes(maximum), 'ARTIFACT_INVALID');
   safeDirectory(dirname(resolve(path)));
   const bytes = Buffer.from(JSON.stringify(value) + '\n');
-  requireValue(bytes.length <= MAX_BYTES, 'ARTIFACT_INVALID');
+  requireValue(bytes.length <= maximum, 'ARTIFACT_INVALID');
   const fd = fs.openSync(path, fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_EXCL | (fs.constants.O_NOFOLLOW ?? 0), 0o600);
   try { fs.writeFileSync(fd, bytes); fs.fsyncSync(fd); } finally { fs.closeSync(fd); }
   return hash(bytes);
@@ -31,19 +32,25 @@ export function writePrivate(path, value) {
 }
 export function readTrusted(path, expected) {
   requireValue(digest(expected.digest), 'ARTIFACT_INVALID');
+  const bytes = readBounded(path, expected.digest);
+  try {
+    const value = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
+    requireValue(validEvidence(value, expected), 'ARTIFACT_INVALID'); return value;
+  } catch { throw new Failure('ARTIFACT_INVALID'); }
+}
+export function readBounded(path, expectedDigest, maximum = MAX_BYTES) {
+  requireValue(digest(expectedDigest) && [MAX_BYTES, 131072].includes(maximum), 'ARTIFACT_INVALID');
   safeDirectory(dirname(resolve(path)));
   const before = fs.lstatSync(path); let fd;
   try {
-    requireValue(before.isFile() && !before.isSymbolicLink() && before.nlink === 1 && before.size > 0 && before.size <= MAX_BYTES, 'ARTIFACT_INVALID');
+    requireValue(before.isFile() && !before.isSymbolicLink() && before.nlink === 1 && before.size > 0 && before.size <= maximum, 'ARTIFACT_INVALID');
     fd = fs.openSync(path, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW ?? 0));
     const opened = fs.fstatSync(fd);
     requireValue(opened.isFile() && opened.dev === before.dev && opened.ino === before.ino && opened.size === before.size, 'ARTIFACT_INVALID');
-    const bytes = Buffer.alloc(MAX_BYTES + 1); let size = 0;
+    const bytes = Buffer.alloc(maximum + 1); let size = 0;
     while (size < bytes.length) { const n = fs.readSync(fd, bytes, size, bytes.length - size, null); if (!n) break; size += n; }
-    requireValue(size === opened.size && fs.fstatSync(fd).size === size && hash(bytes.subarray(0, size)) === expected.digest, 'ARTIFACT_INVALID');
-    const value = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes.subarray(0, size)));
-    requireValue(validEvidence(value, expected), 'ARTIFACT_INVALID');
-    return value;
+    requireValue(size === opened.size && fs.fstatSync(fd).size === size && hash(bytes.subarray(0, size)) === expectedDigest, 'ARTIFACT_INVALID');
+    return bytes.subarray(0, size);
   } catch { throw new Failure('ARTIFACT_INVALID'); }
   finally { if (fd !== undefined) fs.closeSync(fd); }
 }
