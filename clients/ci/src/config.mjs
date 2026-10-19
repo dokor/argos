@@ -27,6 +27,7 @@ export function configuration(env, command) {
   const target = env.ARGOS_TARGET_URL;
   if (['audit', 'doctor', 'resume', 'export'].includes(command)) requireValue(targetUrl(target), 'TARGET_REJECTED');
   const key = env.ARGOS_API_KEY;
+  if (['audit', 'doctor', 'resume', 'export'].includes(command)) requireValue(!env.ARGOS_GITLAB_PUBLISH_TOKEN, 'CONFIG_INVALID');
   if (['audit', 'doctor', 'resume', 'export'].includes(command)) requireValue(typeof key === 'string' && /^argos_ci_[a-f0-9]{32}\.[A-Za-z0-9_-]{43}$/.test(key), 'AUTHENTICATION_FAILED');
   // Rerunning the same workflow/job keeps the intention; changed input conflicts on the server.
   const bytes = createHash('sha256').update(JSON.stringify(['argos-ci-v1', provider, repository, invocation.split(':')[0]])).digest().subarray(0, 16);

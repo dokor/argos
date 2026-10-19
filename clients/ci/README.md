@@ -1,15 +1,17 @@
-# Client CI Premium Argos — préversion 0.3.0
+# Client CI Premium Argos — préversion 0.4.0
 
 Client Node.js 24, autonome, sans dépendance npm, Docker, compte interactif ou
 accès aux conteneurs Argos. **L’accès serveur reste désactivé jusqu’à la recette
 #467.** Le connecteur GitHub #739 peut publier sur opt-in, avec GITHUB_TOKEN et
-un registre privé Azure du client. Le connecteur GitLab reste #740.
+un registre privé Azure du client. Le connecteur GitLab #740 est également
+disponible sur opt-in, avec un credential dédié au projet.
 `publication-preview` vérifie la preuve et calcule
 seulement le nombre de constats confirmés éligibles, sans mutation Git.
 
 La documentation développeur publique sur le site reste le lot #742.
 [Politique de synchronisation et décisions humaines](../../docs/ci/issue-synchronization.md).
 [Configuration, stockage, chiffrement et reprise du publisher GitHub](../../docs/ci/github-publication.md).
+[Configuration, droits et reprise du publisher GitLab](../../docs/ci/gitlab-publication.md).
 [English instructions](README.en.md). Contrats : [admission](../../docs/ci/admission.md),
 [erreurs](../../docs/ci/errors.md), [verdict](../../docs/ci/verdicts.md),
 [exports privés](../../docs/ci/private-exports.md), [OpenAPI](../../docs/ci/openapi-v1.json).
@@ -187,6 +189,16 @@ implémenter. Les fermetures sont respectées par défaut ; une réouverture exi
 une observation postérieure à la décision et une condition atomique prouvée.
 
 ## Intégration des modèles
+
+GitLab avec publication : utiliser [gitlab-publication.yml](templates/gitlab-publication.yml)
+à la place du modèle de contrôle/aperçu ci-dessous. Il transfère seulement une
+preuve chiffrée, vérifie la provenance par API/trace, utilise un token read_api
+séparé du token api de publication et les SAS r/rw du registre privé dans des
+environnements distincts. Les rôles acceptés sont Planner/Reporter, jamais
+Maintainer/admin ; token de projet privilégié, identité dédiée seulement sur
+choix explicite. [Offres, limites, configuration et recette requise](../../docs/ci/gitlab-publication.md).
+Les instances Self-Managed restent hors périmètre. Publication off par défaut,
+aucune réouverture, reprise du seul publisher ou resume sans nouvelle analyse.
 
 GitHub : protéger la branche par défaut et l’environnement `argos-ci`, ajouter
 ARGOS_API_KEY à cet environnement et ARGOS_TARGET_URL aux variables. Le modèle

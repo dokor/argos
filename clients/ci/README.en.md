@@ -1,4 +1,4 @@
-# Argos Premium CI client — preview 0.3.0
+# Argos Premium CI client — preview 0.4.0
 
 Node.js 24, no npm dependencies or Docker. **Server access remains disabled until
 acceptance #467.** The [GitHub](templates/github-actions.yml) and
@@ -6,7 +6,8 @@ acceptance #467.** The [GitHub](templates/github-actions.yml) and
 full commit and an independently reviewed SHA-256. They execute no project code.
 The common synchronization engine is #738. The optional GitHub publisher #739
 uses the current job's GITHUB_TOKEN and a customer-owned private Azure blob
-journal. GitLab publishing remains #740. Preview never mutates Git issues.
+journal. The GitLab publisher #740 is also opt-in, with a project-specific
+credential. Preview never mutates Git issues.
 
 Set the protected secret ARGOS_API_KEY and the authorized public HTTPS
 ARGOS_TARGET_URL. The key needs audits:write, results:read and usage:read. The
@@ -18,7 +19,7 @@ private response, raw exception, secret or target value appears in output.
 ARGOS_LANG=en selects English diagnostics. There is no verbose mode.
 
 Commands: --help, --version, doctor, intent, audit, resume, export, artifact-check,
-publication-preview, publication-stage, publish-github. Doctor reads policy/identity/preflight only: no target DNS
+publication-preview, publication-stage, publish-github, publish-gitlab. Doctor reads policy/identity/preflight only: no target DNS
 or HTTP, run, reservation, file or Git mutation. READY does not reserve capacity.
 Audit defaults to two sequential samples, reserving two analyses together. A
 single sample is exploratory and cannot produce GO. Only the confirmed server
@@ -130,6 +131,31 @@ GitLab.com requires a dedicated protected Linux shell runner tagged argos-ci,
 Node 24.21.0 and curl, fresh workspaces and no project cache. The sample does not
 deploy or roll back anything. SHA/environment are declarations, never evidence
 of the deployed revision. Self-hosted provider APIs are not supported yet.
+
+For actual GitLab publication use [gitlab-publication.yml](templates/gitlab-publication.yml)
+instead of the plain preview model. Keep ARGOS_GITLAB_PUBLISH=false and mode
+DISABLED by default. The control keeps ARGOS_API_KEY and a read-only blob SAS in
+the protected argos-ci environment; argos-publisher gets the api-scoped
+ARGOS_GITLAB_PUBLISH_TOKEN and blob rw SAS. Both jobs need a separate read_api
+ARGOS_GITLAB_READ_TOKEN for provider provenance. Only ciphertext is uploaded,
+seven-day retention and maintainer artifact access, keep_latest_artifact=false.
+The publisher verifies every current-pipeline job page, its exact original
+producer's metadata/trace and both digests before decrypting a fresh v2 proof.
+
+Prefer a project access token with an expiry. GitLab.com requires GitLab
+Premium/Ultimate for project tokens, independently of Argos Premium. The
+explicit dedicated-user fallback requires a non-admin account used solely for
+automation and membership in this project alone. api is not an issues-only
+scope. Accepted roles are Planner 15 or Reporter 20, with actual API/trace
+access checked; higher roles and additional scopes are refused. Never use an
+admin PAT or CI_JOB_TOKEN fallback. Protect/mask/hide variables and their
+environment scopes; no MR/fork secrets, shell debugging or project code/hooks.
+Private findings use confidential issues; public projects receive one generic
+notice. Existing content/labels/assignees and closures are preserved; reopening
+is refused. Retry only the publisher or refresh via read-only resume with the
+original intention, without a new admission or charge. See the [full GitLab
+contract](../../docs/ci/gitlab-publication.md) for storage, error actions, token
+rotation and pending real-provider acceptance. Self-Managed remains unsupported.
 
 For local use, also supply ARGOS_REPOSITORY, ARGOS_SHA (40 hex), ARGOS_INVOCATION
 (e.g. 123:1), ARGOS_PRODUCER_ID. ARGOS_ENVIRONMENT is production/staging/preview;
