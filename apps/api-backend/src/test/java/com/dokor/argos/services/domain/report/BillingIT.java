@@ -131,6 +131,27 @@ class BillingIT extends MariaDbReportFixture {
         assertThrows(BillingError.class,()->service.portal("owner","c".repeat(43),"en","local"));
         assertEquals(1,gateway.requests.stream().filter(p->p.equals("POST /v1/billing_portal/sessions")).count());
     }
+    @Test @SuppressWarnings("unchecked") void accountClosureUsesCurrentBillingStateAfterAnOlderMvccSnapshot()throws Exception{
+        var auth=new AccountAuthService(dao,null,sessions,null,new AccountSettings(config()),null,clock);
+        dao.transaction(c->{
+            try{c.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);}
+            catch(SQLException failed){throw new RuntimeException(failed);}
+            // A session lookup can establish an MVCC snapshot before waiting for the account lock.
+            assertEquals("NONE",store.read(733,c).getPhase());
+            try(var writer=source.getConnection()){
+                writer.setAutoCommit(false);
+                try(var lock=writer.prepareStatement("SELECT id FROM ARG_ACCOUNT_USER WHERE id=733 FOR UPDATE")){lock.executeQuery().close();}
+                try(var update=writer.prepareStatement("UPDATE ARG_BILLING_ACCOUNT SET phase='OPEN' WHERE id=733")){update.executeUpdate();}
+                writer.commit();
+            }catch(SQLException failed){throw new RuntimeException(failed);}
+            when(sessions.with(anyString(),nullable(String.class),anyBoolean(),anyBoolean(),any())).thenAnswer(inv->{
+                BiFunction<AccountSessionService.Context,Connection,Object> work=inv.getArgument(4);
+                return work.apply(new AccountSessionService.Context(dao.user(733,c,true),new AccountSession()),c);
+            });
+            assertThrows(AccountError.class,()->auth.archive("owner","csrf",true));return null;
+        });
+        try(var c=source.getConnection()){assertEquals("ACTIVE",dao.user(733,c,false).getState());}
+    }
     private static class FlowGateway extends Gateway {
         int customerPosts,checkoutPosts;boolean loseCheckoutResponse;
         void emptySubscriptions(){reads.put("/v1/subscriptions",list());}
