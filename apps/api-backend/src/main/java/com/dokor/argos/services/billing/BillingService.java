@@ -44,6 +44,12 @@ public final class BillingService {
         long owner=sessions.with(auth,csrf,true,true,(ctx,c)->{sessions.recent(ctx);return ctx.user().getId();});
         rate.check("billing",Long.toString(owner),remote);return owner;
     }
+    private void currentActor(String auth,String csrf,long owner){
+        sessions.with(auth,csrf,true,true,(ctx,c)->{
+            if(!ctx.user().getId().equals(owner))throw AccountError.unauthorized();
+            sessions.recent(ctx);return null;
+        });
+    }
     public Destination checkout(String auth,String csrf,String interval,String lang,String remote){
         long owner=actor(auth,csrf,remote);settings.requirePayments();
         if(!Set.of("MONTH","YEAR").contains(interval)||!Set.of("fr","en").contains(lang))throw new BillingError("billing_request_invalid");
@@ -56,6 +62,7 @@ public final class BillingService {
                 if(a.getCustomerAttemptedAt()!=null&&!a.getCustomerAttemptedAt().plus(Duration.ofHours(23)).isAfter(clock.instant()))
                     throw new BillingError("billing_sync_pending");
                 a=store.update(a,row->{if(row.getCustomerAttemptedAt()==null)row.setCustomerAttemptedAt(clock.instant());row.setPhase("CUSTOMER_PENDING");});
+                currentActor(auth,csrf,owner);
                 var customer=reader.post("/v1/customers",Map.of("metadata[argos_billing_id]",a.getBindingId()),"argos-customer-"+a.getBindingId());
                 type(customer,"customer");reader.mode(customer);require(text(customer.path("metadata"),"argos_billing_id").equals(a.getBindingId()));
                 String id=id(customer,"id","cus");a=store.update(a,row->{row.setCustomerId(id);row.setPhase("NONE");});
@@ -102,6 +109,7 @@ public final class BillingService {
                     data.put("subscription_data[metadata][argos_billing_id]",a.getBindingId());data.put("locale",a.getCheckoutLang());
                     String page=a.getCheckoutOrigin()+(a.getCheckoutLang().equals("en")?"/en":"")+"/account/billing";
                     data.put("success_url",page+"?payment=return");data.put("cancel_url",page+"?payment=cancel");
+                    currentActor(auth,csrf,owner);
                     var created=reader.post("/v1/checkout/sessions",data,"argos-checkout-"+a.getCheckoutKey());
                     validateSession(created,a,reader,false);String id=id(created,"id","cs");a=store.update(a,row->row.setCheckoutId(id));
                 }
@@ -113,8 +121,10 @@ public final class BillingService {
                 throw new BillingError("billing_sync_pending");
             }
             String url=destination(text(session,"url"),false);store.update(a,row->{row.setPhase("OPEN");row.setLastError(null);});
+            currentActor(auth,csrf,owner);
             return new Destination(url);
-        }catch(BillingError failure){store.failure(claimed,failure.code());throw failure;}
+        }catch(AccountError rejected){throw rejected;}
+        catch(BillingError failure){store.failure(claimed,failure.code());throw failure;}
         catch(Exception ignored){store.failure(claimed,"billing_unavailable");throw BillingError.unavailable();}
         finally{store.release(claimed);}
     }
@@ -142,13 +152,15 @@ public final class BillingService {
                 &&!bool(f.path("subscription_update"),"enabled"));
             store.update(claimed,row->{}); // Revalidate the persisted owner lease immediately before the provider POST.
             String page=returnOrigin()+(lang.equals("en")?"/en":"")+"/account/billing";
+            currentActor(auth,csrf,owner);
             var n=reader.post("/v1/billing_portal/sessions",Map.of("customer",claimed.getCustomerId(),
                 "configuration",settings.id("portal-config-id"),"return_url",page,"locale",lang),"argos-portal-"+UUID.randomUUID());
             type(n,"billing_portal.session");reader.mode(n);
             require(text(n,"customer").equals(claimed.getCustomerId())&&text(n,"return_url").equals(page)
                 &&text(n,"configuration").equals(settings.id("portal-config-id")));
-            return new Destination(destination(text(n,"url"),true));
-        }catch(BillingError e){throw e;}catch(Exception ignored){throw BillingError.unavailable();}finally{store.release(claimed);}
+            String url=destination(text(n,"url"),true);currentActor(auth,csrf,owner);
+            return new Destination(url);
+        }catch(AccountError|BillingError e){throw e;}catch(Exception ignored){throw BillingError.unavailable();}finally{store.release(claimed);}
     }
     private String returnOrigin(){
         URI target=URI.create(accounts.origin());
