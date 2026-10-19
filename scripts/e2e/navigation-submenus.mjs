@@ -65,7 +65,7 @@ try {
     assert.equal(await link(g.newAnalysis).getAttribute('aria-current'), 'page');
     assert.equal(await link(g.analyses).getAttribute('aria-current'), null, 'Group differs from current page');
     assert.equal(await nav.getByRole('link', { name: c.admin, exact: true }).count(), admin ? 1 : 0);
-    assert.equal(await link(`${c.integrations} — ${c.soon}`).getAttribute('href'), prefix + '/account/integrations');
+    assert.equal(await link(c.integrations).getAttribute('href'), prefix + '/account/integrations');
 
     const url = page.url();
     await button(g.expandDomains).focus();

@@ -2,10 +2,11 @@ import { clearPendingAnalysis } from "./connected/analysis-recovery";
 export type AccountProfile = { displayName: string; email: string | null; verified: boolean; admin?: boolean };
 export type SignInMethod = { id: string; provider: string; usable: boolean };
 let csrf: string | null = null;
+export function resetAccountCsrf() { csrf = null; }
 export class AccountClientError extends Error { constructor(public code: string, public status: number, public retryAfter = 0) { super(code); } }
-async function csrfToken(): Promise<string> {
+async function csrfToken(signal?: AbortSignal): Promise<string> {
   if (csrf) return csrf;
-  const response = await fetch("/api/account/csrf", { cache: "no-store" });
+  const response = await fetch("/api/account/csrf", { cache: "no-store", ...(signal ? {signal,redirect:"error" as const} : {}) });
   if (!response.ok) throw new AccountClientError("account_unavailable", response.status);
   csrf = (await response.json()).csrf;
   return csrf!;
@@ -24,6 +25,6 @@ export async function accountFetch<T>(path: string, method = "GET", body?: unkno
   if (/^runs\/\d+\/claim$/.test(path) && typeof window !== "undefined") window.dispatchEvent(new Event("argos-usage-refresh"));
   return data as T;
 }
-export async function accountAuditHeaders(): Promise<Record<string,string>> {
-  return { "X-Argos-CSRF": await csrfToken() };
+export async function accountAuditHeaders(signal?: AbortSignal): Promise<Record<string,string>> {
+  return { "X-Argos-CSRF": await csrfToken(signal) };
 }
