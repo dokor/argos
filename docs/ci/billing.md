@@ -62,6 +62,10 @@ n'est supposé. Les valeurs présentes dans les tests sont exclusivement fictive
   opaque. Une recherche vide, éventuellement consistante, n'autorise jamais une nouvelle
   création aveugle. Une ambiguïté durable reste bloquée avec diagnostic explicite.
 - Les décisions administratives et droits manuels existants ne sont pas remplacés.
+  Un changement de droits n'empêche pas le propriétaire actif d'accéder au portail
+  de factures/annulation, qui ne projette aucun droit. Une suspension administrative
+  conserve son effet de sécurité ; sa procédure doit traiter séparément tout abonnement
+  facturable avant lancement (ne pas laisser un client suspendu sans moyen d'annulation).
   Une transaction verrouille compte, droits CI puis facturation ; un bail et une génération
   empêchent les synchronisations concurrentes de publier une observation périmée.
 
