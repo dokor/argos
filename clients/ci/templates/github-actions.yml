@@ -35,8 +35,8 @@ jobs:
       - name: Download the reviewed standalone client (no project checkout)
         run: |
           curl --proto '=https' --tlsv1.2 --fail --silent --show-error --max-time 30 --max-redirs 0 --max-filesize 1048576 \
-            --output argos-ci.mjs https://raw.githubusercontent.com/dokor/argos/f979ac960423384718af5c3c5ef0ec03b7b212f3/clients/ci/dist/argos-ci.mjs
-          echo 'b720d8b7b4dbdc5c9b76410aec7a52d566bc327323a56e1c91670e7f7897ccd6  argos-ci.mjs' | sha256sum --check --strict
+            --output argos-ci.mjs https://raw.githubusercontent.com/dokor/argos/d809f64599b8b4bf470262169615cae18bef3de2/clients/ci/dist/argos-ci.mjs
+          echo 'f3cc2f7af72dad85174f9b42412c8d62f00fdd1e55db77d1da26f54c3857b16a  argos-ci.mjs' | sha256sum --check --strict
       - name: Admit two samples and consume the confirmed server verdict
         id: control
         shell: bash
@@ -90,8 +90,8 @@ jobs:
       - name: Download the same reviewed client
         run: |
           curl --proto '=https' --tlsv1.2 --fail --silent --show-error --max-time 30 --max-redirs 0 --max-filesize 1048576 \
-            --output argos-ci.mjs https://raw.githubusercontent.com/dokor/argos/f979ac960423384718af5c3c5ef0ec03b7b212f3/clients/ci/dist/argos-ci.mjs
-          echo 'b720d8b7b4dbdc5c9b76410aec7a52d566bc327323a56e1c91670e7f7897ccd6  argos-ci.mjs' | sha256sum --check --strict
+            --output argos-ci.mjs https://raw.githubusercontent.com/dokor/argos/d809f64599b8b4bf470262169615cae18bef3de2/clients/ci/dist/argos-ci.mjs
+          echo 'f3cc2f7af72dad85174f9b42412c8d62f00fdd1e55db77d1da26f54c3857b16a  argos-ci.mjs' | sha256sum --check --strict
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
           artifact-ids: ${{ needs.argos_control.outputs.artifact_id }}
