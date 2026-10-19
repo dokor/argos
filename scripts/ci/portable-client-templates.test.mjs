@@ -10,14 +10,14 @@ const yaml = require('js-yaml'); // Existing locked frontend dev dependency; non
 const reference = new yaml.Type('!reference', { kind: 'sequence', construct: value => ({ reference: value }) });
 const schema = yaml.DEFAULT_SCHEMA.extend([reference]);
 const read = name => readFileSync(new URL('../../clients/ci/templates/' + name, import.meta.url), 'utf8');
-const githubText = read('github-actions.yml'), gitlabText = read('gitlab-ci.yml');
-const github = yaml.load(githubText), gitlab = yaml.load(gitlabText, { schema });
+const githubText = read('github-actions.yml'), gitlabText = read('gitlab-ci.yml'), publicationText = read('gitlab-publication.yml');
+const github = yaml.load(githubText), gitlab = yaml.load(gitlabText, { schema }), publication = yaml.load(publicationText, { schema });
 const pins = JSON.parse(readFileSync(new URL('../../.github/action-pins.json', import.meta.url), 'utf8'));
 const bundle = readFileSync(new URL('../../clients/ci/dist/argos-ci.mjs', import.meta.url));
 const checksum = createHash('sha256').update(bundle).digest('hex');
 
 test('both provider templates parse and pin the exact standalone bytes, Node and all actions without running project code', () => {
-  for (const text of [githubText, gitlabText]) {
+  for (const text of [githubText, gitlabText, publicationText]) {
     const urls = [...text.matchAll(/https:\/\/raw\.githubusercontent\.com\/dokor\/argos\/([a-f0-9]{40})\/clients\/ci\/dist\/argos-ci.mjs/g)];
     assert.ok(urls.length); assert.ok(urls.every(u => u[1] === urls[0][1]));
     assert.ok(text.includes(checksum + '  argos-ci.mjs')); assert.match(text, /24\.21\.0/);
@@ -31,6 +31,26 @@ test('both provider templates parse and pin the exact standalone bytes, Node and
   }
   assert.equal((githubText.match(/uses:/g) ?? []).length, 7);
   assert.equal(githubText.match(/argos\/([a-f0-9]{40})\//)[1], gitlabText.match(/argos\/([a-f0-9]{40})\//)[1]);
+});
+test('GitLab publisher model isolates environment credentials, transfers ciphertext only and supports read-only resume', () => {
+  assert.deepEqual(publication.default.tags, ['argos-ci']); assert.equal(publication.variables.GIT_STRATEGY, 'empty');
+  assert.deepEqual(publication.default.cache, []); assert.deepEqual(publication.default.before_script, []); assert.deepEqual(publication.default.after_script, []);
+  assert.equal(publication.variables.ARGOS_GITLAB_PUBLISH, 'false');
+  const rule = publication.argos_publish.rules[0];
+  assert.equal(rule.when, 'always'); assert.match(rule.if, /ARGOS_GITLAB_PUBLISH == "true"/);
+  assert.match(rule.if, /CI_COMMIT_REF_PROTECTED == "true"/); assert.match(rule.if, /CI_COMMIT_BRANCH == \$CI_DEFAULT_BRANCH/);
+  assert.doesNotMatch(rule.if, /merge_request/);
+  assert.equal(publication['.argos_publication_rules'].rules[0].when, undefined);
+  assert.doesNotMatch(publication['.argos_publication_rules'].rules[0].if, /ARGOS_GITLAB_PUBLISH/);
+  const control = publication.argos_control, publisher = publication.argos_publish;
+  assert.equal(control.environment.name, 'argos-ci'); assert.equal(publisher.environment.name, 'argos-publisher');
+  assert.deepEqual(control.dependencies, []); assert.deepEqual(publisher.dependencies, ['argos_control']);
+  assert.deepEqual(control.artifacts.paths, ['.argos-ci/evidence.enc.json']); assert.equal(control.artifacts.access, 'maintainer');
+  assert.equal(control.artifacts.expire_in, '7 days'); assert.equal(control.artifacts.when, 'always');
+  assert.match(control.script.at(-1), /publication-stage/); assert.match(control.script.at(-1), /resume\) export ARGOS_IDEMPOTENCY_KEY=/);
+  assert.equal(publisher.script.at(-1), 'env -u ARGOS_API_KEY node argos-ci.mjs publish-gitlab');
+  assert.equal(publisher.resource_group, 'argos-gitlab-issues-${CI_PROJECT_ID}');
+  assert.doesNotMatch(publicationText, /CI_JOB_TOKEN|glpat-|Bearer |ARGOS_API_KEY:\s*\S/);
 });
 test('GitHub publisher alone gets issues:write, encrypted artifact by current producer ID, no project code or audit key', () => {
   assert.deepEqual(github.permissions, { contents: 'read' });
@@ -91,7 +111,7 @@ test('GitLab requires protected default branch, fresh isolated shell jobs and pr
 });
 test('all literal shell commands in the two parsed models have valid Bash syntax', () => {
   const commands = Object.values(github.jobs).flatMap(j => j.steps).flatMap(s => s.run ? [s.run] : [])
-    .concat(Object.values(gitlab).flatMap(j => Array.isArray(j?.script) ? j.script.filter(s => typeof s === 'string') : []));
+    .concat([gitlab, publication].flatMap(model => Object.values(model).flatMap(j => Array.isArray(j?.script) ? j.script.filter(s => typeof s === 'string') : [])));
   const bash = process.platform === 'win32' ? 'C:/Program Files/Git/bin/bash.exe' : 'bash';
   for (const command of commands) { const result = spawnSync(bash, ['-n'], { input: command, encoding: 'utf8' }); assert.equal(result.status, 0, result.stderr); }
 });
