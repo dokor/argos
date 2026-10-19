@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "mode": "DISABLED",
+  "destination": {
+    "provider": "github",
+    "origin": "https://api.github.com",
+    "id": "42",
+    "repository": "customer/site",
+    "visibility": "private",
+    "botId": "101"
+  },
+  "environments": ["production"],
+  "categories": ["performance", "security", "seo", "a11y"],
+  "severities": ["critical", "important"],
+  "labels": ["argos-ci"],
+  "maxNewIssues": 5,
+  "maxNotifications": 5,
+  "allowPrivateDetails": false,
+  "allowPublicNotice": false,
+  "publicIssueId": null,
+  "reopenResolved": false,
+  "groups": []
+}

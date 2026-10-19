@@ -4,11 +4,12 @@ import { setTimeout as wait } from 'node:timers/promises';
 import { configuration } from './config.mjs';
 import { VERSION, policy } from './resources.mjs';
 import { Failure, requireValue, diagnostic } from './diagnostics.mjs';
-import { validResponse } from './contracts.mjs';
+import { validResponse, timestamp } from './contracts.mjs';
 import { transport } from './transport.mjs';
 import { writePrivate, safeDirectory, readTrusted } from './evidence.mjs';
 import { pipelineResult } from '../../../scripts/ci/ci-verdict.mjs';
 import { providerProof } from './providers.mjs';
+import { previewConfiguration, selectFindings, fingerprint, FRESHNESS_MS } from './publication-policy.mjs';
 
 const base = '/api/ci/v1/';
 const commands = ['doctor', 'audit', 'resume', 'export', 'publication-preview', 'artifact-check', 'intent'];
@@ -53,6 +54,22 @@ function prepareOutput(config) {
   safeDirectory(config.output);
   } catch { throw new Failure('ARTIFACT_INVALID'); }
 }
+async function publicationEvidence(api, admitted, verdict, config, now) {
+  const current = validate('Admission', await api.read(`${base}admissions/${admitted.id}`), { id: admitted.id, samples: admitted.samples });
+  requireValue(current.runs.every(r => r.status === 'COMPLETED' && timestamp(r.startedAt) && timestamp(r.finishedAt)
+    && Date.parse(r.startedAt) <= Date.parse(r.finishedAt) && Date.parse(r.finishedAt) <= now())
+    && current.runs.every((r, i) => r.id === admitted.runs[i].id), 'ARTIFACT_INVALID');
+  const summaries = [];
+  for (const run of current.runs) summaries.push(validate('Report', await api.read(`${base}runs/${run.id}/report`), run.id));
+  requireValue(summaries.every(s => timestamp(s.expiresAt) && Date.parse(s.expiresAt) > now()), 'ARTIFACT_INVALID');
+  const checked = validate('Verdict', await api.read(`${base}admissions/${admitted.id}/verdict`), { id: admitted.id, samples: admitted.samples });
+  requireValue(fingerprint(checked) === fingerprint(verdict), 'ARTIFACT_INVALID');
+  const issuedAt = now(), sourceExpiresAt = Math.min(...summaries.map(s => Date.parse(s.expiresAt)));
+  return { schemaVersion: 2, kind: 'ci-evidence-v2', clientVersion: VERSION, provenance: config.provenance,
+    issuedAt: new Date(issuedAt).toISOString(), observationStartedAt: new Date(Math.min(...current.runs.map(r => Date.parse(r.startedAt)))).toISOString(),
+    sourceExpiresAt: new Date(sourceExpiresAt).toISOString(), expiresAt: new Date(Math.min(issuedAt + 7 * 86400000, sourceExpiresAt)).toISOString(),
+    admissionId: admitted.id, samples: admitted.samples, runIds: current.runs.map(r => r.id), verdict };
+}
 export async function execute(command, env, { fetcher = fetch, signal = new AbortController().signal, now = Date.now, sleep = defaultSleep, random = Math.random } = {}) {
   requireValue(commands.includes(command));
   requireValue(Number(process.versions.node.split('.')[0]) >= 24, 'CLIENT_VERSION_UNSUPPORTED');
@@ -70,8 +87,12 @@ export async function execute(command, env, { fetcher = fetch, signal = new Abor
     const expected = { ...config.provenance, ...proof, now: now() };
     let evidence;
     try { evidence = readTrusted(join(config.output, 'evidence.json'), expected); } catch { throw new Failure('ARTIFACT_INVALID'); }
-    const result = pipelineResult(evidence.verdict, { publication: 'PREVIEW' });
-    return { ...result, eligibleFindings: evidence.verdict.confirmedFindings.filter(f => f.ticketEligible).length };
+    try {
+      requireValue(now() - Date.parse(evidence.issuedAt) <= FRESHNESS_MS, 'ARTIFACT_INVALID');
+      const publication = previewConfiguration(env);
+      return { ...pipelineResult(evidence.verdict, { publication: 'PREVIEW' }), eligibleFindings: selectFindings(evidence, publication).length,
+        newIssueLimit: publication.maxNewIssues, publicationPolicyVersion: 1 };
+    } catch (e) { return { ...pipelineResult(evidence.verdict, { publication: 'FAILED' }), diagnostic: diagnostic(e, config.lang) }; }
   }
   validate('VerdictPolicy', await api.read(base + 'policies/standard-v1'));
   const identity = validate('Identity', await api.read(base + 'identity'));
@@ -103,9 +124,7 @@ export async function execute(command, env, { fetcher = fetch, signal = new Abor
   const result = { ...pipelineResult(verdict) };
   if (config.exportPrivate) {
     prepareOutput(config);
-    result.evidenceSha256 = writePrivate(join(config.output, 'evidence.json'), { schemaVersion: 1, kind: 'ci-evidence-v1', clientVersion: VERSION,
-      provenance: config.provenance, expiresAt: new Date(now() + 7 * 86400000).toISOString(), admissionId: admitted.id, samples: admitted.samples,
-      runIds: admitted.runs.map(r => r.id), verdict });
+    result.evidenceSha256 = writePrivate(join(config.output, 'evidence.json'), await publicationEvidence(api, admitted, verdict, config, now));
   }
   return { ...result, deploymentRevisionAttested: false };
 }

@@ -55,6 +55,8 @@ const req=request({hostname:'127.0.0.1',servername:'localhost',port:process.env.
       posts++; const intent = req.headers['idempotency-key']; if (!intents.has(intent)) { credits += 2; intents.set(intent, admission); }
       if (!lost) { lost = true; req.socket.destroy(); return; } return send(admission, 200);
     }
+    if (req.url === '/api/ci/v1/admissions/' + id) return send({ ...admission, runs: admission.runs.map(r => ({ ...r, status: 'COMPLETED', startedAt: new Date(Date.now() - 5000).toISOString(), finishedAt: new Date(Date.now() - 1000).toISOString() })) });
+    if (req.url.endsWith('/report')) return send({ apiVersion: 1, kind: 'summary-v1', runId: req.url.split('/').at(-2), globalScore: 80, scoringVersion: 13, criticalCount: 0, importantCount: 0, completeness: 'FULL', generatedAt: new Date().toISOString(), expiresAt: new Date(Date.now() + 86400000).toISOString() });
     if (req.url.endsWith('/verdict')) return send(blocked ? { ...verdict, outcome: 'SITE_NO_GO', exitCode: 1,
       confirmedFindings: [{ key: 'http.security.csp', category: 'security', severity: 'critical', ticketEligible: true }] } : verdict);
     assert.fail('Unexpected network endpoint');

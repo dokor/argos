@@ -48,12 +48,15 @@ export function readTrusted(path, expected) {
   finally { if (fd !== undefined) fs.closeSync(fd); }
 }
 export function validEvidence(v, expected) {
-  return exact(v, ['schemaVersion', 'kind', 'clientVersion', 'provenance', 'expiresAt', 'admissionId', 'samples', 'runIds', 'verdict'])
-    && v.schemaVersion === 1 && v.kind === 'ci-evidence-v1' && v.clientVersion === VERSION
+  const now = expected.now ?? Date.now();
+  return exact(v, ['schemaVersion', 'kind', 'clientVersion', 'provenance', 'issuedAt', 'observationStartedAt', 'sourceExpiresAt', 'expiresAt', 'admissionId', 'samples', 'runIds', 'verdict'])
+    && v.schemaVersion === 2 && v.kind === 'ci-evidence-v2' && v.clientVersion === VERSION
     && exact(v.provenance, ['provider', 'repository', 'sha', 'invocation', 'producerId', 'environment'])
     && Object.keys(v.provenance).every(k => v.provenance[k] === expected[k])
-    && timestamp(v.expiresAt) && Date.parse(v.expiresAt) > (expected.now ?? Date.now())
-    && Date.parse(v.expiresAt) <= (expected.now ?? Date.now()) + 7 * 86400000
+    && timestamp(v.issuedAt) && Date.parse(v.issuedAt) <= now && timestamp(v.observationStartedAt)
+    && Date.parse(v.observationStartedAt) <= Date.parse(v.issuedAt) && timestamp(v.sourceExpiresAt) && Date.parse(v.sourceExpiresAt) > now
+    && timestamp(v.expiresAt) && Date.parse(v.expiresAt) > now && Date.parse(v.expiresAt) <= Date.parse(v.sourceExpiresAt)
+    && Date.parse(v.expiresAt) <= Date.parse(v.issuedAt) + 7 * 86400000
     && [1, 2].includes(v.samples) && Array.isArray(v.runIds) && v.runIds.length === v.samples
     && new Set(v.runIds).size === v.samples && v.runIds.every(id => typeof id === 'string' && /^[1-9][0-9]{0,18}$/.test(id) && BigInt(id) <= 9223372036854775807n)
     && validResponse('Verdict', v.verdict, { id: v.admissionId, samples: v.samples }) && v.verdict.outcome !== 'CONTROL_FAILED';

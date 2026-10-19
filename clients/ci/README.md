@@ -1,12 +1,13 @@
-# Client CI Premium Argos — préversion 0.1.0
+# Client CI Premium Argos — préversion 0.2.0
 
 Client Node.js 24, autonome, sans dépendance npm, Docker, compte interactif ou
 accès aux conteneurs Argos. **L’accès serveur reste désactivé jusqu’à la recette
-#467.** Cette livraison #465 ne crée pas encore de tickets : les publishers
-#738/#739/#740 suivront. `publication-preview` vérifie la preuve et calcule
+#467.** Le client #465 et le moteur commun #738 ne créent pas encore de tickets réels : les connecteurs
+#739/#740 suivront. `publication-preview` vérifie la preuve et calcule
 seulement le nombre de constats confirmés éligibles, sans mutation Git.
 
 La documentation développeur publique sur le site reste le lot #742.
+[Politique de synchronisation et décisions humaines](../../docs/ci/issue-synchronization.md).
 [English instructions](README.en.md). Contrats : [admission](../../docs/ci/admission.md),
 [erreurs](../../docs/ci/errors.md), [verdict](../../docs/ci/verdicts.md),
 [exports privés](../../docs/ci/private-exports.md), [OpenAPI](../../docs/ci/openapi-v1.json).
@@ -128,9 +129,9 @@ stdout/stderr, résumé ou annotation. Le SHA et l’environnement sont déclara
 `deploymentRevisionAttested=false`, sans preuve de révision réellement déployée,
 comparaison historique, rollback ou exception propre au site Argos.
 
-Avec ARGOS_EXPORT_PRIVATE=1, un GO ou SITE_NO_GO écrit `evidence.json` : verdict
+Avec ARGOS_EXPORT_PRIVATE=1, un GO ou SITE_NO_GO écrit `evidence.json` (`ci-evidence-v2`) : verdict
 filtré et provenance, sans cible, texte brut ni credential. Sa durée de vie est
-au plus sept jours et sa taille 64 Kio. Un contrôle impossible ne produit aucun
+au plus sept jours ET limitée par l’expiration des deux rapports sources ; taille 64 Kio. Un contrôle impossible ne produit aucun
 artefact de constats. Le fichier est privé, créé exclusivement (0600 sur Unix),
 sans écrasement ; nettoyer le dossier local après usage. Les métadonnées et
 constats restent privés même si leur contenu vient d’un catalogue contrôlé.
@@ -139,8 +140,8 @@ L’upload est volontaire. Les modèles le conditionnent au consentement et à u
 vérification API de confidentialité de la destination ; sur GitLab ils exigent
 aussi `keep_latest_artifact=false` pour que le dernier succès n’échappe pas à
 l’expiration. Réduire les accès du dépôt/projet et des artefacts, appliquer au
-plus sept jours, et supprimer les copies chez le fournisseur après changement
-de visibilité ou demande de suppression. Une copie externe n’est pas révoquée
+plus sept jours, et supprimer les copies chez le fournisseur avant tout changement prévu
+de visibilité, immédiatement en cas de dérive, ou sur demande de suppression. Une copie externe n’est pas révoquée
 par DELETE côté Argos. Les diagnostics éventuels restent au plus 24 h ; les
 modèles n’uploadent pas les logs ni un diagnostic séparé.
 
@@ -162,6 +163,26 @@ producteur, environnement, version, schéma, expiration, fichier régulier sans
 symlink/hardlink et taille sont vérifiés avant parsing/publication. Un échec
 ne déclenche jamais de nouvel audit. Les futurs publishers devront revérifier
 la visibilité juste avant chaque écriture et réconcilier les créations ambiguës.
+
+La version 0.2 exige une preuve relue depuis quinze minutes maximum. Après une
+attente plus longue, `resume` dans un job sans droits Git réactualise le verdict,
+l’admission et les deux synthèses, avec la clé et l’UUID d’intention d’origine,
+dans un dossier neuf. Zéro POST/nouvelle analyse ; la date de début des mesures
+reste inchangée. Transmettre ensuite le nouveau digest hors artefact au job Git
+séparé. Une preuve v1 ne peut pas être promue localement en v2. Une suppression
+après la relecture n’est pas une révocation instantanée de cette copie : la fenêtre
+de fraîcheur de quinze minutes doit être acceptée dans #467.
+
+La prévisualisation accepte ARGOS_PUBLICATION_ENVIRONMENTS,
+ARGOS_PUBLICATION_CATEGORIES et ARGOS_PUBLICATION_SEVERITIES (CSV de valeurs
+connues), ARGOS_PUBLICATION_LABELS et ARGOS_PUBLICATION_MAX_NEW (0..10, défaut 5).
+Le moteur commun ajoute DISABLED par défaut, aperçu sans mutation, identité
+stable, budgets persistants, réconciliation et décisions humaines. Ses
+[exemples GitHub/GitLab](examples/) restent désactivés et utilisent des IDs fictifs.
+Il exige un journal privé durable et un verrou partagé vérifié ; les futurs
+connecteurs ne pourront pas activer SYNC en annonçant ces garanties sans les
+implémenter. Les fermetures sont respectées par défaut ; une réouverture exige
+une observation postérieure à la décision et une condition atomique prouvée.
 
 ## Intégration des modèles
 

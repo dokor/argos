@@ -5,7 +5,7 @@ import * as builtin_fs from 'node:fs';
 import * as builtin_path from 'node:path';
 import * as builtin_timers_promises from 'node:timers/promises';
 const module_resources = {"policy":{"apiVersion":1,"kind":"policy-v1","profileId":"standard-v1","policyId":"premium-ci-verdict-v1","requiredSamples":2,"coverageVersion":"weighted-coverage-v3","minimumCoverage":0.8,"scoringVersion":13,"measurementVersion":"analysis-measurements-v6","pipelineSeverity":"critical","ticketSeverities":["critical","important"],"eligibleTicketKeys":["html.anchors.href_coverage","html.doctype.html5","html.h1.count","html.images.alt_coverage","html.lang","html.link.canonical.present","html.meta.charset.present","html.meta.description.present","html.meta.robots.present","html.meta.viewport.present","html.social.meta","html.title","http.final_url.https","http.headers.caching","http.headers.compression","http.headers.content_type","http.protocol.http2","http.protocol.version","http.redirect.count","http.redirect.to_https","http.security.cookie_flags","http.security.csp","http.security.hsts","http.security.permissions_policy","http.security.referrer_policy","http.security.x_content_type_options","http.security.x_frame_options","http.seo.robots_txt","http.seo.sitemap","http.status_code","runtime.console.errors","runtime.js.errors","runtime.network.5xx","runtime.network.bytes_estimated","runtime.network.failed_requests","runtime.network.request_count","ssl.certificate.expiry_days","ssl.certificate.valid","ssl.protocols.legacy_disabled","ssl.protocols.tls12","ssl.protocols.tls13","tech.security.version_disclosure"],"historicalComparison":false,"exceptions":[],"fingerprint":"794f2999e4d51a0326dcbb27087d07bfde2234326867c2ef68fec9f3b3b0ac98"},"catalogue":{"http.security.hsts":"security","http.security.csp":"security","http.security.x_frame_options":"security","http.security.x_content_type_options":"security","http.security.referrer_policy":"security","http.security.permissions_policy":"security","http.security.cookie_flags":"security","http.status_code":"performance","http.redirect.count":"performance","http.final_url.https":"security","http.redirect.to_https":"security","http.headers.content_type":"seo","html.title":"seo","html.meta.description.present":"seo","html.link.canonical.present":"seo","html.h1.count":"seo","html.meta.viewport.present":"a11y","html.doctype.html5":"a11y","html.social.meta":"seo","http.seo.robots_txt":"seo","http.seo.sitemap":"seo","html.images.alt_coverage":"a11y","html.anchors.href_coverage":"a11y","html.lang":"a11y","lighthouse.score.performance":"performance","lighthouse.score.accessibility":"a11y","lighthouse.score.best-practices":"security","lighthouse.score.seo":"seo","runtime.console.errors":"performance","runtime.js.errors":"performance","runtime.network.5xx":"performance","runtime.network.failed_requests":"performance","runtime.network.third_party_errors":"performance","ssl.grade":"security","ssl.certificate.valid":"security","ssl.certificate.expiry_days":"security","ssl.protocols.tls13":"security","ssl.protocols.tls12":"security","ssl.protocols.legacy_disabled":"security","observatory.score":"security","http.antibot.challenge":"performance","http.protocol.version":"performance","http.errors":"performance","http.response_time_ms":"performance","http.protocol.http2":"performance","http.headers.compression":"performance","http.headers.caching":"performance","http.headers.server":"performance","html.meta.robots.present":"seo","html.scripts.count":"seo","html.size.bytes":"seo","html.analysis.duration_ms":"seo","html.meta.charset.present":"seo","runtime.network.request_count":"performance","runtime.network.bytes_estimated":"performance","runtime.analysis.duration_ms":"performance","tech.security.version_disclosure":"security"},"errors":{"CONFIG_INVALID":{"httpStatus":400,"stage":"CONFIGURATION","category":"CONFIGURATION","messageKey":"ci.errors.CONFIG_INVALID","actionCode":"FIX_CONFIGURATION","retryable":false,"recovery":"NONE","fr":{"message":"La configuration CI est invalide.","action":"Corriger les paramètres avec un exemple de la documentation."},"en":{"message":"The CI configuration is invalid.","action":"Correct the settings using a documented example."}},"CLIENT_VERSION_UNSUPPORTED":{"httpStatus":400,"stage":"CONFIGURATION","category":"CONFIGURATION","messageKey":"ci.errors.CLIENT_VERSION_UNSUPPORTED","actionCode":"UPDATE_CLIENT","retryable":false,"recovery":"NONE","fr":{"message":"Cette version du client est incompatible.","action":"Utiliser une version compatible et épinglée."},"en":{"message":"This client version is incompatible.","action":"Use a compatible pinned version."}},"AUTHENTICATION_FAILED":{"httpStatus":401,"stage":"AUTHENTICATION","category":"AUTHENTICATION","messageKey":"ci.errors.AUTHENTICATION_FAILED","actionCode":"CHECK_ARGOS_SECRET","retryable":false,"recovery":"NONE","fr":{"message":"L'authentification Argos a échoué.","action":"Vérifier la présence du secret CI puis gérer la clé depuis son compte."},"en":{"message":"Argos authentication failed.","action":"Check that the CI secret is set and manage the key in your account."}},"FEATURE_NOT_AVAILABLE":{"httpStatus":403,"stage":"ENTITLEMENT","category":"PERMISSION","messageKey":"ci.errors.FEATURE_NOT_AVAILABLE","actionCode":"REVIEW_PREMIUM_ACCESS","retryable":false,"recovery":"NONE","fr":{"message":"L'accès CI Premium n'est pas disponible.","action":"Consulter les droits actuels dans son compte ; aucune réactivation n'est confirmée."},"en":{"message":"Premium CI access is unavailable.","action":"Review current access in your account; reactivation is not confirmed."}},"PERMISSION_DENIED":{"httpStatus":403,"stage":"AUTHENTICATION","category":"PERMISSION","messageKey":"ci.errors.PERMISSION_DENIED","actionCode":"REVIEW_KEY_SCOPES","retryable":false,"recovery":"NONE","fr":{"message":"La clé n'autorise pas cette opération.","action":"Vérifier les permissions nécessaires depuis son compte."},"en":{"message":"The key does not allow this operation.","action":"Review the required scopes in your account."}},"RESOURCE_NOT_AVAILABLE":{"httpStatus":404,"stage":"WAIT","category":"RESOURCE","messageKey":"ci.errors.RESOURCE_NOT_AVAILABLE","actionCode":"CHECK_OWN_RESOURCE","retryable":false,"recovery":"NONE","fr":{"message":"Cette ressource n'est pas disponible.","action":"Vérifier l'identifiant dans sa propre intégration."},"en":{"message":"This resource is unavailable.","action":"Check the identifier in your own integration."}},"TARGET_VERIFICATION_REQUIRED":{"httpStatus":403,"stage":"TARGET","category":"TARGET","messageKey":"ci.errors.TARGET_VERIFICATION_REQUIRED","actionCode":"VERIFY_TARGET","retryable":false,"recovery":"NONE","fr":{"message":"La preuve de la cible est requise.","action":"Vérifier son domaine depuis la gestion des cibles."},"en":{"message":"Target verification is required.","action":"Verify your domain in target management."}},"TARGET_REJECTED":{"httpStatus":400,"stage":"TARGET","category":"TARGET","messageKey":"ci.errors.TARGET_REJECTED","actionCode":"REVIEW_TARGET_RULES","retryable":false,"recovery":"NONE","fr":{"message":"Cette cible ne peut pas être analysée.","action":"Consulter les règles des cibles publiques autorisées."},"en":{"message":"This target cannot be audited.","action":"Review the allowed public target rules."}},"QUOTA_EXCEEDED":{"httpStatus":429,"stage":"ADMISSION","category":"LIMIT","messageKey":"ci.errors.QUOTA_EXCEEDED","actionCode":"REVIEW_USAGE","retryable":false,"recovery":"NONE","fr":{"message":"Le quota disponible est insuffisant.","action":"Consulter sa consommation et l'échéance connue ; ne pas relancer en boucle."},"en":{"message":"The available quota is insufficient.","action":"Review your usage and the known reset time; do not retry in a loop."}},"RATE_LIMITED":{"httpStatus":429,"stage":"ADMISSION","category":"LIMIT","messageKey":"ci.errors.RATE_LIMITED","actionCode":"WAIT_WITHIN_BUDGET","retryable":true,"recovery":"RETRY_READ","fr":{"message":"Le débit de requêtes autorisé est atteint.","action":"Attendre le délai indiqué dans le budget prévu ; récupérer une admission ambiguë."},"en":{"message":"The request rate limit was reached.","action":"Wait within the time budget; recover any ambiguous admission."}},"CAPACITY_UNAVAILABLE":{"httpStatus":503,"stage":"ADMISSION","category":"AVAILABILITY","messageKey":"ci.errors.CAPACITY_UNAVAILABLE","actionCode":"WAIT_WITHIN_BUDGET","retryable":true,"recovery":"RECOVER_ADMISSION","fr":{"message":"La capacité d'admission est temporairement indisponible.","action":"Récupérer la demande avec la même clé d'idempotence avant toute reprise."},"en":{"message":"Admission capacity is temporarily unavailable.","action":"Recover the request with the same idempotency key before resuming."}},"IDEMPOTENCY_CONFLICT":{"httpStatus":409,"stage":"ADMISSION","category":"CONFLICT","messageKey":"ci.errors.IDEMPOTENCY_CONFLICT","actionCode":"RECOVER_ORIGINAL_REQUEST","retryable":false,"recovery":"NONE","fr":{"message":"Cette intention correspond à une demande différente.","action":"Retrouver la demande initiale ; ne pas générer une nouvelle clé automatiquement."},"en":{"message":"This request intent belongs to a different request.","action":"Find the original request; do not generate a new key automatically."}},"TRANSPORT_FAILED":{"httpStatus":502,"stage":"WAIT","category":"AVAILABILITY","messageKey":"ci.errors.TRANSPORT_FAILED","actionCode":"RECOVER_ORIGINAL_REQUEST","retryable":true,"recovery":"RECOVER_ADMISSION","fr":{"message":"La réponse Argos n'a pas pu être obtenue.","action":"L'état d'admission peut être inconnu ; récupérer la demande initiale."},"en":{"message":"The Argos response could not be obtained.","action":"Admission may be unknown; recover the original request."}},"UPSTREAM_UNAVAILABLE":{"httpStatus":503,"stage":"COLLECTION","category":"AVAILABILITY","messageKey":"ci.errors.UPSTREAM_UNAVAILABLE","actionCode":"RECOVER_ORIGINAL_REQUEST","retryable":true,"recovery":"RECOVER_ADMISSION","fr":{"message":"Un service nécessaire est temporairement indisponible.","action":"Retrouver le run existant avant de reprendre ; aucun remboursement n'est confirmé."},"en":{"message":"A required service is temporarily unavailable.","action":"Find the existing run before resuming; no refund is confirmed."}},"WAIT_TIMEOUT":{"httpStatus":504,"stage":"WAIT","category":"AVAILABILITY","messageKey":"ci.errors.WAIT_TIMEOUT","actionCode":"RESUME_EXISTING_RUN","retryable":true,"recovery":"RESUME_POLLING","fr":{"message":"Le délai d'attente du contrôle est dépassé.","action":"Retrouver le run admis et reprendre son suivi dans un nouveau budget explicite."},"en":{"message":"The control wait deadline was exceeded.","action":"Find the admitted run and resume polling with an explicit new budget."}},"RUN_FAILED":{"httpStatus":422,"stage":"COLLECTION","category":"MEASUREMENT","messageKey":"ci.errors.RUN_FAILED","actionCode":"REVIEW_MEASUREMENT","retryable":false,"recovery":"NONE","fr":{"message":"Le contrôle technique n'a pas abouti.","action":"Consulter l'état autorisé du run ; ne pas conclure que le site est sain."},"en":{"message":"The technical control did not complete.","action":"Review the authorized run status; do not conclude that the site is healthy."}},"MEASUREMENT_INCOMPLETE":{"httpStatus":422,"stage":"VERDICT","category":"MEASUREMENT","messageKey":"ci.errors.MEASUREMENT_INCOMPLETE","actionCode":"REVIEW_MEASUREMENT","retryable":false,"recovery":"NONE","fr":{"message":"Les mesures sont insuffisantes pour conclure.","action":"Consulter la couverture ; conserver un verdict de contrôle impossible."},"en":{"message":"Measurements are insufficient for a verdict.","action":"Review coverage and retain a control-failed verdict."}},"REPORTS_INCOMPARABLE":{"httpStatus":422,"stage":"VERDICT","category":"MEASUREMENT","messageKey":"ci.errors.REPORTS_INCOMPARABLE","actionCode":"REVIEW_MEASUREMENT","retryable":false,"recovery":"NONE","fr":{"message":"Les mesures ne peuvent pas être comparées.","action":"Vérifier les versions et périmètres ; ne pas confirmer un constat automatiquement."},"en":{"message":"These measurements cannot be compared.","action":"Review versions and scopes; do not confirm a finding automatically."}},"PUBLICATION_AUTH_FAILED":{"httpStatus":401,"stage":"PUBLICATION","category":"PUBLICATION","messageKey":"ci.errors.PUBLICATION_AUTH_FAILED","actionCode":"CHECK_GIT_SECRET","retryable":false,"recovery":"NONE","fr":{"message":"L'authentification de publication a échoué.","action":"Vérifier le secret Git et les permissions minimales ; reprendre seulement la publication."},"en":{"message":"Publication authentication failed.","action":"Check the Git secret and minimal permissions; resume publication only."}},"DESTINATION_UNAVAILABLE":{"httpStatus":404,"stage":"PUBLICATION","category":"PUBLICATION","messageKey":"ci.errors.DESTINATION_UNAVAILABLE","actionCode":"CHECK_OWN_DESTINATION","retryable":false,"recovery":"NONE","fr":{"message":"La destination des tickets n'est pas disponible.","action":"Vérifier son dépôt ou projet et ses droits ; conserver le résultat d'audit."},"en":{"message":"The issue destination is unavailable.","action":"Check your repository or project and permissions; retain the audit result."}},"PUBLICATION_RATE_LIMITED":{"httpStatus":429,"stage":"PUBLICATION","category":"PUBLICATION","messageKey":"ci.errors.PUBLICATION_RATE_LIMITED","actionCode":"RESUME_PUBLICATION","retryable":true,"recovery":"RETRY_PUBLICATION","fr":{"message":"La publication atteint une limite de débit.","action":"Respecter le délai et reprendre seulement le publisher dans son budget."},"en":{"message":"Publication reached a rate limit.","action":"Respect the delay and resume the publisher only within its budget."}},"PUBLICATION_STATE_UNKNOWN":{"httpStatus":502,"stage":"PUBLICATION","category":"PUBLICATION","messageKey":"ci.errors.PUBLICATION_STATE_UNKNOWN","actionCode":"RECONCILE_PUBLICATION","retryable":true,"recovery":"RECONCILE_PUBLICATION","fr":{"message":"L'état de publication est indéterminé.","action":"Réconcilier les tickets existants ; aucune création à l'aveugle ni nouvel audit."},"en":{"message":"Publication status is unknown.","action":"Reconcile existing issues; do not create blindly or start a new audit."}},"ARTIFACT_INVALID":{"httpStatus":422,"stage":"PUBLICATION","category":"PUBLICATION","messageKey":"ci.errors.ARTIFACT_INVALID","actionCode":"VERIFY_ARTIFACT","retryable":false,"recovery":"NONE","fr":{"message":"La preuve de publication n'est pas valide.","action":"Vérifier provenance, intégrité et version ; refuser l'artefact sans relancer l'audit."},"en":{"message":"Publication evidence is invalid.","action":"Verify provenance, integrity and version; reject the artifact without rerunning the audit."}},"INTERNAL_ERROR":{"httpStatus":500,"stage":"WAIT","category":"INTERNAL","messageKey":"ci.errors.INTERNAL_ERROR","actionCode":"RECOVER_ORIGINAL_REQUEST","retryable":true,"recovery":"RECOVER_ADMISSION","fr":{"message":"Argos n'a pas pu terminer cette requête.","action":"Conserver l'identifiant de corrélation et récupérer l'état de la demande initiale."},"en":{"message":"Argos could not complete this request.","action":"Keep the correlation identifier and recover the original request state."}},"REQUEST_REJECTED":{"httpStatus":403,"stage":"AUTHENTICATION","category":"PERMISSION","messageKey":"ci.errors.REQUEST_REJECTED","actionCode":"RELOAD_ACCOUNT","retryable":false,"recovery":"NONE","fr":{"message":"La demande de gestion a été refusée.","action":"Recharger la page du compte puis recommencer avec sa session."},"en":{"message":"The management request was rejected.","action":"Reload the account page and retry with your session."}},"REAUTHENTICATION_REQUIRED":{"httpStatus":403,"stage":"AUTHENTICATION","category":"PERMISSION","messageKey":"ci.errors.REAUTHENTICATION_REQUIRED","actionCode":"REAUTHENTICATE_ACCOUNT","retryable":false,"recovery":"NONE","fr":{"message":"Une authentification récente est requise.","action":"Confirmer son identité dans la sécurité du compte avant cette action."},"en":{"message":"Recent authentication is required.","action":"Confirm your identity in account security before this action."}},"COLLECTION_TIMEOUT":{"httpStatus":422,"stage":"VERDICT","category":"MEASUREMENT","messageKey":"ci.errors.COLLECTION_TIMEOUT","actionCode":"REVIEW_MEASUREMENT","retryable":false,"recovery":"NONE","fr":{"message":"La collecte a dépassé son délai.","action":"Consulter les mesures de cette intention. Aucun nouvel audit ne sera lancé automatiquement."},"en":{"message":"Collection exceeded its deadline.","action":"Review measurements for this intention. No new audit will be started automatically."}},"ANTIBOT_DETECTED":{"httpStatus":422,"stage":"VERDICT","category":"MEASUREMENT","messageKey":"ci.errors.ANTIBOT_DETECTED","actionCode":"REVIEW_MEASUREMENT","retryable":false,"recovery":"NONE","fr":{"message":"Une protection anti-bot empêche de conclure.","action":"Vérifier la cible et ses restrictions sans désactiver les protections réseau ou TLS."},"en":{"message":"An anti-bot challenge prevents a verdict.","action":"Review the target and its restrictions while preserving network and TLS protections."}},"VERDICT_POLICY_UNSUPPORTED":{"httpStatus":422,"stage":"VERDICT","category":"MEASUREMENT","messageKey":"ci.errors.VERDICT_POLICY_UNSUPPORTED","actionCode":"REVIEW_MEASUREMENT","retryable":false,"recovery":"NONE","fr":{"message":"La politique ou la méthode de mesure est incompatible.","action":"Consulter le profil effectif. Une ancienne preuve manquante ne peut pas être reconstituée."},"en":{"message":"The verdict policy or measurement method is unsupported.","action":"Review the effective profile. Missing historical evidence cannot be reconstructed."}},"CONFIRMATION_REQUIRED":{"httpStatus":422,"stage":"VERDICT","category":"MEASUREMENT","messageKey":"ci.errors.CONFIRMATION_REQUIRED","actionCode":"REVIEW_MEASUREMENT","retryable":false,"recovery":"NONE","fr":{"message":"Deux mesures comparables sont nécessaires.","action":"Une mesure seule reste exploratoire. Deux analyses doivent être annoncées et réservées ensemble."},"en":{"message":"Two comparable measurements are required.","action":"One sample remains exploratory. Two analyses must be disclosed and reserved together."}},"FINDINGS_UNCONFIRMED":{"httpStatus":422,"stage":"VERDICT","category":"MEASUREMENT","messageKey":"ci.errors.FINDINGS_UNCONFIRMED","actionCode":"REVIEW_MEASUREMENT","retryable":false,"recovery":"NONE","fr":{"message":"Les constats diffèrent entre les deux mesures.","action":"Consulter les résultats privés. Ne pas publier de défaut confirmé ni relancer automatiquement un audit."},"en":{"message":"The findings differ between the two measurements.","action":"Review the private results. Do not publish a confirmed defect or automatically start another audit."}}},"schemas":{"Input":{"type":"object","additionalProperties":false,"required":["url","samples","profileId"],"properties":{"url":{"type":"string","format":"uri","pattern":"^https://","maxLength":2048,"description":"Public HTTPS URL on a verified origin. Queries, fragments, credentials and private targets are rejected."},"samples":{"type":"integer","enum":[1,2]},"profileId":{"const":"standard-v1","type":"string"}}},"Run":{"type":"object","additionalProperties":false,"required":["id","sample","status","createdAt","startedAt","finishedAt","failureCode"],"properties":{"id":{"type":"string","pattern":"^[1-9][0-9]{0,18}$","maxLength":19,"description":"Positive signed 64-bit run identifier; never an access credential."},"sample":{"type":"integer","enum":[1,2]},"status":{"type":"string","enum":["QUEUED","RUNNING","COMPLETED","FAILED","CANCELED"]},"createdAt":{"type":"string","format":"date-time","maxLength":40},"startedAt":{"type":["string","null"],"format":"date-time","maxLength":40},"finishedAt":{"type":["string","null"],"format":"date-time","maxLength":40},"failureCode":{"type":["string","null"],"enum":["RUN_FAILED",null],"description":"RUN_FAILED only for FAILED. Controlled catalog code; no raw worker error."}}},"Admission":{"type":"object","additionalProperties":false,"required":["apiVersion","id","profileId","samples","createdAt","runs"],"properties":{"apiVersion":{"const":1},"id":{"type":"string","pattern":"^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$","maxLength":36},"profileId":{"const":"standard-v1"},"samples":{"type":"integer","enum":[1,2]},"createdAt":{"type":"string","format":"date-time","maxLength":40},"runs":{"type":"array","minItems":1,"maxItems":2,"items":{"$ref":"#/components/schemas/Run"}}}},"UsageSnapshot":{"type":"object","additionalProperties":false,"required":["period","timezone","startsAt","resetsAt","used","reserved","limit","available"],"properties":{"period":{"type":"string","pattern":"^[0-9]{4}-(0[1-9]|1[0-2])$"},"timezone":{"type":"string","maxLength":64},"startsAt":{"type":"string","format":"date-time","maxLength":40},"resetsAt":{"type":"string","format":"date-time","maxLength":40},"used":{"type":"integer","minimum":0,"maximum":9007199254740991},"reserved":{"type":"integer","minimum":0,"maximum":9007199254740991},"limit":{"type":"integer","minimum":1,"maximum":9007199254740991},"available":{"type":"integer","minimum":0,"maximum":9007199254740991}}},"Usage":{"type":"object","additionalProperties":false,"required":["apiVersion","usage"],"properties":{"apiVersion":{"const":1},"usage":{"$ref":"#/components/schemas/UsageSnapshot"}}},"Preflight":{"type":"object","additionalProperties":false,"required":["apiVersion","newAccessAllowed","scopes","targets","usage"],"properties":{"apiVersion":{"const":1},"newAccessAllowed":{"type":"boolean","description":"Current Premium/ci_access only. This is not an admission guarantee or capacity reservation."},"scopes":{"type":"array","minItems":1,"maxItems":3,"uniqueItems":true,"items":{"type":"string","enum":["audits:write","results:read","usage:read"]}},"targets":{"type":"array","minItems":1,"maxItems":100,"items":{"type":"object","additionalProperties":false,"required":["origin","state","authorizedForKey"],"properties":{"origin":{"type":"string","format":"uri","pattern":"^https://","maxLength":261,"description":"Exact verified HTTPS origin. No wildcard, credentials, query, path or nonstandard port."},"state":{"type":"string","enum":["PENDING","VERIFIED","REVOKED","EXPIRED"]},"authorizedForKey":{"type":"boolean"}}}},"usage":{"$ref":"#/components/schemas/UsageSnapshot"}}},"Report":{"type":"object","additionalProperties":false,"required":["apiVersion","kind","runId","globalScore","scoringVersion","criticalCount","importantCount","completeness","generatedAt","expiresAt"],"properties":{"apiVersion":{"const":1},"kind":{"const":"summary-v1"},"runId":{"type":"string","pattern":"^[1-9][0-9]{0,18}$","maxLength":19,"description":"Positive signed 64-bit run identifier; never an access credential."},"globalScore":{"type":["integer","null"],"minimum":0,"maximum":100},"scoringVersion":{"type":["integer","null"],"minimum":0,"maximum":9007199254740991},"criticalCount":{"type":["integer","null"],"minimum":0,"maximum":9007199254740991},"importantCount":{"type":["integer","null"],"minimum":0,"maximum":9007199254740991},"completeness":{"type":"string","enum":["FULL","PARTIAL","UNKNOWN"]},"generatedAt":{"type":"string","format":"date-time","maxLength":40},"expiresAt":{"type":["string","null"],"format":"date-time","maxLength":40}}},"Identity":{"type":"object","additionalProperties":false,"required":["apiVersion","integrationId","keyId","scopes","origins"],"properties":{"apiVersion":{"const":1},"integrationId":{"type":"string","pattern":"^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$","maxLength":36},"keyId":{"type":"string","pattern":"^[a-f0-9]{32}$"},"scopes":{"type":"array","minItems":1,"maxItems":3,"uniqueItems":true,"items":{"type":"string","enum":["audits:write","results:read","usage:read"]}},"origins":{"type":"array","minItems":1,"maxItems":100,"uniqueItems":true,"items":{"type":"string","format":"uri","pattern":"^https://","maxLength":261,"description":"Exact verified HTTPS origin. No wildcard, credentials, query, path or nonstandard port."}}}},"Error":{"$ref":"../../apps/api-backend/src/main/resources/ci/error-response-v1.schema.json"},"Export":{"type":"object","additionalProperties":false,"required":["apiVersion","kind","summary","reportPath","details","artifactPolicy","publicIssue"],"properties":{"apiVersion":{"const":1},"kind":{"const":"details-v1"},"summary":{"$ref":"#/components/schemas/Report"},"reportPath":{"type":"string","pattern":"^/api/ci/v1/runs/[1-9][0-9]{0,18}/report$"},"details":{"$ref":"#/components/schemas/ExportDetails"},"artifactPolicy":{"$ref":"#/components/schemas/ArtifactPolicy"},"publicIssue":{"$ref":"#/components/schemas/PublicIssue"}}},"ExportDetails":{"type":"object","additionalProperties":false,"required":["version","categories","checks","findings","omittedFindings"],"properties":{"version":{"const":1},"categories":{"type":"array","maxItems":4,"items":{"$ref":"#/components/schemas/ExportCategory"}},"checks":{"type":"array","maxItems":256,"items":{"$ref":"#/components/schemas/ExportCheck"}},"findings":{"type":"array","maxItems":128,"items":{"$ref":"#/components/schemas/ExportFinding"}},"omittedFindings":{"type":"integer","minimum":0,"maximum":2147483647}}},"ExportCategory":{"type":"object","additionalProperties":false,"required":["key","score"],"properties":{"key":{"type":"string","enum":["performance","security","seo","a11y"]},"score":{"type":["integer","null"],"minimum":0,"maximum":100}}},"ExportCheck":{"type":"object","additionalProperties":false,"required":["key","category","state"],"properties":{"key":{"type":"string","enum":["http.security.hsts","http.security.csp","http.security.x_frame_options","http.security.x_content_type_options","http.security.referrer_policy","http.security.permissions_policy","http.security.cookie_flags","http.status_code","http.redirect.count","http.final_url.https","http.redirect.to_https","http.headers.content_type","html.title","html.meta.description.present","html.link.canonical.present","html.h1.count","html.meta.viewport.present","html.doctype.html5","html.social.meta","http.seo.robots_txt","http.seo.sitemap","html.images.alt_coverage","html.anchors.href_coverage","html.lang","lighthouse.score.performance","lighthouse.score.accessibility","lighthouse.score.best-practices","lighthouse.score.seo","runtime.console.errors","runtime.js.errors","runtime.network.5xx","runtime.network.failed_requests","runtime.network.third_party_errors","ssl.grade","ssl.certificate.valid","ssl.certificate.expiry_days","ssl.protocols.tls13","ssl.protocols.tls12","ssl.protocols.legacy_disabled","observatory.score","http.antibot.challenge","http.protocol.version","http.errors","http.response_time_ms","http.protocol.http2","http.headers.compression","http.headers.caching","http.headers.server","html.meta.robots.present","html.scripts.count","html.size.bytes","html.analysis.duration_ms","html.meta.charset.present","runtime.network.request_count","runtime.network.bytes_estimated","runtime.analysis.duration_ms","tech.security.version_disclosure"]},"category":{"type":"string","enum":["performance","security","seo","a11y"]},"state":{"type":"string","enum":["MEASURED","UNAVAILABLE","BLOCKED_BY_ANTIBOT","NOT_APPLICABLE"]}}},"ExportFinding":{"type":"object","additionalProperties":false,"required":["key","category","severity"],"properties":{"key":{"type":"string","enum":["http.security.hsts","http.security.csp","http.security.x_frame_options","http.security.x_content_type_options","http.security.referrer_policy","http.security.permissions_policy","http.security.cookie_flags","http.status_code","http.redirect.count","http.final_url.https","http.redirect.to_https","http.headers.content_type","html.title","html.meta.description.present","html.link.canonical.present","html.h1.count","html.meta.viewport.present","html.doctype.html5","html.social.meta","http.seo.robots_txt","http.seo.sitemap","html.images.alt_coverage","html.anchors.href_coverage","html.lang","lighthouse.score.performance","lighthouse.score.accessibility","lighthouse.score.best-practices","lighthouse.score.seo","runtime.console.errors","runtime.js.errors","runtime.network.5xx","runtime.network.failed_requests","runtime.network.third_party_errors","ssl.grade","ssl.certificate.valid","ssl.certificate.expiry_days","ssl.protocols.tls13","ssl.protocols.tls12","ssl.protocols.legacy_disabled","observatory.score","http.antibot.challenge","http.protocol.version","http.errors","http.response_time_ms","http.protocol.http2","http.headers.compression","http.headers.caching","http.headers.server","html.meta.robots.present","html.scripts.count","html.size.bytes","html.analysis.duration_ms","html.meta.charset.present","runtime.network.request_count","runtime.network.bytes_estimated","runtime.analysis.duration_ms","tech.security.version_disclosure"]},"category":{"type":"string","enum":["performance","security","seo","a11y"]},"severity":{"type":"string","enum":["critical","important","info"]}}},"ArtifactPolicy":{"type":"object","additionalProperties":false,"required":["visibility","retentionDays","diagnosticRetentionDays","automaticUpload"],"properties":{"visibility":{"const":"private"},"retentionDays":{"const":7},"diagnosticRetentionDays":{"const":1},"automaticUpload":{"const":false}}},"PublicIssue":{"type":"object","additionalProperties":false,"required":["title","body"],"properties":{"title":{"const":"Argos audit: review required"},"body":{"const":"An Argos CI audit requires an authenticated review. Open Argos with your own account. Findings are available only through authenticated access."}}},"Deletion":{"type":"object","additionalProperties":false,"required":["apiVersion","runId","deleted"],"properties":{"apiVersion":{"const":1},"runId":{"type":"string","pattern":"^[1-9][0-9]{0,18}$","maxLength":19,"description":"Positive signed 64-bit run identifier; never an access credential."},"deleted":{"const":true}}},"VerdictPolicy":{"type":"object","additionalProperties":false,"required":["apiVersion","kind","profileId","policyId","requiredSamples","coverageVersion","minimumCoverage","scoringVersion","measurementVersion","pipelineSeverity","ticketSeverities","eligibleTicketKeys","historicalComparison","exceptions","fingerprint"],"properties":{"apiVersion":{"type":"integer","const":1},"kind":{"type":"string","const":"policy-v1"},"profileId":{"type":"string","const":"standard-v1"},"policyId":{"type":"string","const":"premium-ci-verdict-v1"},"requiredSamples":{"type":"integer","const":2},"coverageVersion":{"type":"string","const":"weighted-coverage-v3"},"minimumCoverage":{"type":"number","const":0.8},"scoringVersion":{"type":"integer","const":13},"measurementVersion":{"type":"string","const":"analysis-measurements-v6"},"pipelineSeverity":{"type":"string","const":"critical"},"ticketSeverities":{"type":"array","maxItems":2,"items":{"type":"string"},"const":["critical","important"]},"eligibleTicketKeys":{"type":"array","maxItems":128,"items":{"type":"string"},"const":["html.anchors.href_coverage","html.doctype.html5","html.h1.count","html.images.alt_coverage","html.lang","html.link.canonical.present","html.meta.charset.present","html.meta.description.present","html.meta.robots.present","html.meta.viewport.present","html.social.meta","html.title","http.final_url.https","http.headers.caching","http.headers.compression","http.headers.content_type","http.protocol.http2","http.protocol.version","http.redirect.count","http.redirect.to_https","http.security.cookie_flags","http.security.csp","http.security.hsts","http.security.permissions_policy","http.security.referrer_policy","http.security.x_content_type_options","http.security.x_frame_options","http.seo.robots_txt","http.seo.sitemap","http.status_code","runtime.console.errors","runtime.js.errors","runtime.network.5xx","runtime.network.bytes_estimated","runtime.network.failed_requests","runtime.network.request_count","ssl.certificate.expiry_days","ssl.certificate.valid","ssl.protocols.legacy_disabled","ssl.protocols.tls12","ssl.protocols.tls13","tech.security.version_disclosure"]},"historicalComparison":{"type":"boolean","const":false},"exceptions":{"type":"array","maxItems":2,"items":{"type":"string"},"const":[]},"fingerprint":{"type":"string","const":"794f2999e4d51a0326dcbb27087d07bfde2234326867c2ef68fec9f3b3b0ac98"}}},"Fingerprints":{"type":"object","additionalProperties":false,"required":["scoring","measurement","scope","evidence"],"properties":{"scoring":{"type":"string","pattern":"^[a-f0-9]{64}$","maxLength":64},"measurement":{"type":"string","pattern":"^[a-f0-9]{64}$","maxLength":64},"scope":{"type":"string","pattern":"^[a-f0-9]{64}$","maxLength":64},"evidence":{"type":"string","pattern":"^[a-f0-9]{64}$","maxLength":64}}},"ConfirmedFinding":{"type":"object","additionalProperties":false,"required":["key","category","severity","ticketEligible"],"properties":{"key":{"type":"string","enum":["http.security.hsts","http.security.csp","http.security.x_frame_options","http.security.x_content_type_options","http.security.referrer_policy","http.security.permissions_policy","http.security.cookie_flags","http.status_code","http.redirect.count","http.final_url.https","http.redirect.to_https","http.headers.content_type","html.title","html.meta.description.present","html.link.canonical.present","html.h1.count","html.meta.viewport.present","html.doctype.html5","html.social.meta","http.seo.robots_txt","http.seo.sitemap","html.images.alt_coverage","html.anchors.href_coverage","html.lang","lighthouse.score.performance","lighthouse.score.accessibility","lighthouse.score.best-practices","lighthouse.score.seo","runtime.console.errors","runtime.js.errors","runtime.network.5xx","runtime.network.failed_requests","runtime.network.third_party_errors","ssl.grade","ssl.certificate.valid","ssl.certificate.expiry_days","ssl.protocols.tls13","ssl.protocols.tls12","ssl.protocols.legacy_disabled","observatory.score","http.antibot.challenge","http.protocol.version","http.errors","http.response_time_ms","http.protocol.http2","http.headers.compression","http.headers.caching","http.headers.server","html.meta.robots.present","html.scripts.count","html.size.bytes","html.analysis.duration_ms","html.meta.charset.present","runtime.network.request_count","runtime.network.bytes_estimated","runtime.analysis.duration_ms","tech.security.version_disclosure"]},"category":{"type":"string","enum":["performance","security","seo","a11y"]},"severity":{"type":"string","enum":["critical","important"]},"ticketEligible":{"type":"boolean"}}},"Verdict":{"type":"object","additionalProperties":false,"required":["apiVersion","kind","admissionId","policyId","policyFingerprint","sampleCount","outcome","exitCode","error","fingerprints","confirmedFindings"],"properties":{"apiVersion":{"type":"integer","const":1},"kind":{"type":"string","const":"verdict-v1"},"admissionId":{"type":"string","pattern":"^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$","maxLength":36},"policyId":{"type":"string","const":"premium-ci-verdict-v1"},"policyFingerprint":{"type":"string","pattern":"^[a-f0-9]{64}$","maxLength":64,"const":"794f2999e4d51a0326dcbb27087d07bfde2234326867c2ef68fec9f3b3b0ac98"},"sampleCount":{"type":"integer","enum":[1,2]},"outcome":{"type":"string","enum":["GO","SITE_NO_GO","CONTROL_FAILED"]},"exitCode":{"type":"integer","enum":[0,1,2]},"error":{"oneOf":[{"type":"null"},{"$ref":"../../apps/api-backend/src/main/resources/ci/error-response-v1.schema.json#/properties/error"}]},"fingerprints":{"oneOf":[{"type":"null"},{"$ref":"#/components/schemas/Fingerprints"}]},"confirmedFindings":{"type":"array","maxItems":128,"items":{"$ref":"#/components/schemas/ConfirmedFinding"}}}}}};
-module_resources.VERSION = '0.1.0-preview.2';
+module_resources.VERSION = '0.2.0-preview.1';
 
 const module_verdictContract = (() => {
 // Pure trust-boundary validation, shared with the future portable CI client.
@@ -340,12 +340,15 @@ function readTrusted(path, expected) {
   finally { if (fd !== undefined) fs.closeSync(fd); }
 }
 function validEvidence(v, expected) {
-  return exact(v, ['schemaVersion', 'kind', 'clientVersion', 'provenance', 'expiresAt', 'admissionId', 'samples', 'runIds', 'verdict'])
-    && v.schemaVersion === 1 && v.kind === 'ci-evidence-v1' && v.clientVersion === VERSION
+  const now = expected.now ?? Date.now();
+  return exact(v, ['schemaVersion', 'kind', 'clientVersion', 'provenance', 'issuedAt', 'observationStartedAt', 'sourceExpiresAt', 'expiresAt', 'admissionId', 'samples', 'runIds', 'verdict'])
+    && v.schemaVersion === 2 && v.kind === 'ci-evidence-v2' && v.clientVersion === VERSION
     && exact(v.provenance, ['provider', 'repository', 'sha', 'invocation', 'producerId', 'environment'])
     && Object.keys(v.provenance).every(k => v.provenance[k] === expected[k])
-    && timestamp(v.expiresAt) && Date.parse(v.expiresAt) > (expected.now ?? Date.now())
-    && Date.parse(v.expiresAt) <= (expected.now ?? Date.now()) + 7 * 86400000
+    && timestamp(v.issuedAt) && Date.parse(v.issuedAt) <= now && timestamp(v.observationStartedAt)
+    && Date.parse(v.observationStartedAt) <= Date.parse(v.issuedAt) && timestamp(v.sourceExpiresAt) && Date.parse(v.sourceExpiresAt) > now
+    && timestamp(v.expiresAt) && Date.parse(v.expiresAt) > now && Date.parse(v.expiresAt) <= Date.parse(v.sourceExpiresAt)
+    && Date.parse(v.expiresAt) <= Date.parse(v.issuedAt) + 7 * 86400000
     && [1, 2].includes(v.samples) && Array.isArray(v.runIds) && v.runIds.length === v.samples
     && new Set(v.runIds).size === v.samples && v.runIds.every(id => typeof id === 'string' && /^[1-9][0-9]{0,18}$/.test(id) && BigInt(id) <= 9223372036854775807n)
     && validResponse('Verdict', v.verdict, { id: v.admissionId, samples: v.samples }) && v.verdict.outcome !== 'CONTROL_FAILED';
@@ -466,6 +469,382 @@ async function providerProof(config, env, { fetcher, signal }, proof = false) {
 return {providerProof};
 })();
 
+const module_publication_policy = (() => {
+const { createHash } = builtin_crypto;
+const { exact, digest, timestamp } = module_contracts;
+const { requireValue } = module_diagnostics;
+
+const PUBLIC_ISSUE = Object.freeze({ title: 'Argos audit: review required',
+  body: 'An Argos CI audit requires an authenticated review. Open Argos with your own account. Findings are available only through authenticated access.' });
+const FRESHNESS_MS = 15 * 60 * 1000;
+const canonical = v => Array.isArray(v) ? v.map(canonical) : v !== null && typeof v === 'object'
+  ? Object.fromEntries(Object.keys(v).sort().map(k => [k, canonical(v[k])])) : v;
+const fingerprint = value => createHash('sha256').update(JSON.stringify(canonical(value))).digest('hex');
+const domains = ['performance', 'security', 'seo', 'a11y'];
+const environments = ['production', 'staging', 'preview'];
+const id = v => typeof v === 'string' && /^[1-9][0-9]{0,19}$/.test(v);
+const list = (v, choices, max) => Array.isArray(v) && v.length > 0 && v.length <= max && new Set(v).size === v.length && v.every(x => choices.includes(x));
+const label = v => typeof v === 'string' && /^[a-z0-9][a-z0-9._:-]{0,39}$/.test(v);
+
+/** Configuration is trusted customer configuration, never taken from a report or issue. */
+function publicationConfiguration(input = {}) {
+  requireValue(input !== null && typeof input === 'object' && !Array.isArray(input));
+  const defaults = { version: 1, mode: 'DISABLED', destination: null, environments: ['production'], categories: domains,
+    severities: ['critical', 'important'], labels: ['argos-ci'], maxNewIssues: 5, maxNotifications: 5,
+    allowPrivateDetails: false, allowPublicNotice: false, publicIssueId: null, reopenResolved: false, groups: [] };
+  requireValue(Object.keys(input).every(k => Object.hasOwn(defaults, k)));
+  const v = { ...defaults, ...input };
+  requireValue(v.version === 1 && ['DISABLED', 'PREVIEW', 'SYNC'].includes(v.mode)
+    && list(v.environments, environments, 3) && list(v.categories, domains, 4) && list(v.severities, ['critical', 'important'], 2)
+    && Array.isArray(v.labels) && v.labels.length <= 10 && v.labels.every(label) && new Set(v.labels).size === v.labels.length
+    && Number.isInteger(v.maxNewIssues) && v.maxNewIssues >= 0 && v.maxNewIssues <= 10
+    && Number.isInteger(v.maxNotifications) && v.maxNotifications >= 0 && v.maxNotifications <= 20
+    && ['allowPrivateDetails', 'allowPublicNotice', 'reopenResolved'].every(k => typeof v[k] === 'boolean'));
+  if (v.destination !== null) requireValue(exact(v.destination, ['provider', 'origin', 'id', 'repository', 'visibility', 'botId'])
+    && ['github', 'gitlab'].includes(v.destination.provider) && id(v.destination.id) && id(v.destination.botId)
+    && v.destination.origin === (v.destination.provider === 'github' ? 'https://api.github.com' : 'https://gitlab.com')
+    && typeof v.destination.repository === 'string' && v.destination.repository.length <= 256
+    && /^[A-Za-z0-9_.-]+(?:\/[A-Za-z0-9_.-]+){1,15}$/.test(v.destination.repository)
+    && ['private', 'public'].includes(v.destination.visibility));
+  if (v.mode === 'SYNC') requireValue(v.destination !== null);
+  requireValue(v.publicIssueId === null || id(v.publicIssueId) && v.destination?.visibility === 'public');
+  requireValue(Array.isArray(v.groups) && v.groups.length <= 20);
+  const names = new Set(), scopes = new Set();
+  for (const group of v.groups) {
+    requireValue(exact(group, ['id', 'scopes']) && typeof group.id === 'string' && /^[a-z0-9][a-z0-9_-]{0,39}$/.test(group.id)
+      && !names.has(group.id) && Array.isArray(group.scopes) && group.scopes.length > 0 && group.scopes.length <= 100);
+    names.add(group.id);
+    for (const scope of group.scopes) { requireValue(digest(scope) && !scopes.has(scope)); scopes.add(scope); }
+  }
+  return structuredClone(v);
+}
+function selectFindings(evidence, config) {
+  if (evidence.verdict.outcome === 'CONTROL_FAILED' || !config.environments.includes(evidence.provenance.environment)) return [];
+  return evidence.verdict.confirmedFindings.filter(f => f.ticketEligible && config.categories.includes(f.category) && config.severities.includes(f.severity))
+    .sort((a, b) => (a.severity === b.severity ? 0 : a.severity === 'critical' ? -1 : 1) || a.key.localeCompare(b.key, 'en'));
+}
+function previewConfiguration(env) {
+  const csv = (name, fallback) => env[name] === undefined ? fallback : env[name] === '' ? [] : env[name].split(',');
+  return publicationConfiguration({ mode: 'PREVIEW', environments: csv('ARGOS_PUBLICATION_ENVIRONMENTS', environments),
+    categories: csv('ARGOS_PUBLICATION_CATEGORIES', domains), severities: csv('ARGOS_PUBLICATION_SEVERITIES', ['critical', 'important']),
+    labels: csv('ARGOS_PUBLICATION_LABELS', ['argos-ci']), maxNewIssues: Number(env.ARGOS_PUBLICATION_MAX_NEW ?? '5') });
+}
+function candidates(evidence, config) {
+  const selected = selectFindings(evidence, config), d = config.destination;
+  if (!selected.length) return [];
+  requireValue(d, 'CONFIG_INVALID');
+  if (d.visibility === 'public') {
+    requireValue(config.allowPublicNotice, 'DESTINATION_UNAVAILABLE');
+    // One fixed notice per destination: no target, environment, correlation ID or finding is published.
+    return [{ fingerprint: fingerprint(['argos-public-notice-v1', d.provider, d.origin, d.id]), key: null, scopes: [], environment: null, notice: true }];
+  }
+  requireValue(config.allowPrivateDetails, 'DESTINATION_UNAVAILABLE');
+  const scope = evidence.verdict.fingerprints.scope, group = config.groups.find(g => g.scopes.includes(scope));
+  const target = group ? ['group', group.id] : ['scope', scope];
+  return selected.map(f => ({ fingerprint: fingerprint(['argos-issue-v1', d.provider, d.origin, d.id, evidence.provenance.environment, target, f.key]),
+    key: f.key, scopes: group ? group.scopes : [scope], environment: evidence.provenance.environment, notice: false }));
+}
+function managedBlock(candidate, nonce) {
+  requireValue(digest(candidate.fingerprint) && digest(nonce));
+  if (candidate.notice) return PUBLIC_ISSUE.body;
+  return `<!-- argos-ci-issue-v1:${candidate.fingerprint}:${nonce} -->\n`
+    + `Argos confirmed this catalogued check in two comparable measurements: \`${candidate.key}\`.\n`
+    + `Declared environment: \`${candidate.environment}\`. Configured target scopes: ${[...candidate.scopes].sort().map(s => '`' + s + '`').join(', ')}.\n`
+    + 'Review the private results in Argos with your own account. No access credential is included here.\n<!-- /argos-ci-issue-v1 -->';
+}
+function issueTitle(candidate) { return candidate.notice ? PUBLIC_ISSUE.title : `Argos: ${candidate.key}`; }
+function decisionBlocks(issue, evidence, config, now) {
+  const d = issue.decision;
+  if (d.kind === 'UNKNOWN' || d.kind !== 'NONE' && !d.authorized) return true;
+  if (['IGNORED', 'FALSE_POSITIVE', 'ACCEPTED_RISK'].includes(d.kind)) return d.until === null || Date.parse(d.until) > now;
+  if (issue.state !== 'closed') return false;
+  if (!config.reopenResolved || d.kind === 'NONE') return true;
+  // Refreshing an old artifact after a human resolution is not a new observation.
+  const boundary = d.kind === 'RESOLVED' ? d.at : d.until;
+  return boundary === null || Date.parse(evidence.observationStartedAt) <= Date.parse(boundary);
+}
+function validDecision(d) {
+  return exact(d, ['kind', 'authorized', 'actorId', 'at', 'until', 'version'])
+    && ['NONE', 'RESOLVED', 'IGNORED', 'FALSE_POSITIVE', 'ACCEPTED_RISK', 'UNKNOWN'].includes(d.kind)
+    && typeof d.authorized === 'boolean' && (d.actorId === null || id(d.actorId))
+    && (d.at === null || timestamp(d.at)) && (d.until === null || timestamp(d.until))
+    && typeof d.version === 'string' && /^[a-zA-Z0-9_-]{1,128}$/.test(d.version)
+    && (d.kind !== 'NONE' || d.authorized === false && d.actorId === null && d.at === null && d.until === null)
+    && (d.kind !== 'RESOLVED' || d.until === null)
+    && (d.kind === 'NONE' || !d.authorized || id(d.actorId) && timestamp(d.at))
+    && (d.until === null || d.at !== null && Date.parse(d.until) > Date.parse(d.at));
+}
+
+return {PUBLIC_ISSUE,FRESHNESS_MS,fingerprint,publicationConfiguration,selectFindings,previewConfiguration,candidates,managedBlock,issueTitle,decisionBlocks,validDecision};
+})();
+
+const module_publication_sync = (() => {
+const { randomBytes } = builtin_crypto;
+const { readTrusted } = module_evidence;
+const { exact, digest, timestamp } = module_contracts;
+const { policy, catalogue, errors } = module_resources;
+const { validVerdict } = module_verdictContract;
+const { pipelineResult } = module_pipeline;
+const { recoveryDecision } = module_errorsProtocol;
+const { Failure, diagnostic, requireValue } = module_diagnostics;
+const { publicationConfiguration, candidates, managedBlock, issueTitle, validDecision, decisionBlocks, fingerprint, FRESHNESS_MS } = module_publication_policy;
+const { setTimeout : wait } = builtin_timers_promises;
+
+/** Only a connector's definite rejection can release a pending creation. Unknowns cannot. */
+class PublicationRejected extends Failure {
+  constructor(code, options) {
+    requireValue(['PUBLICATION_AUTH_FAILED', 'DESTINATION_UNAVAILABLE', 'PUBLICATION_RATE_LIMITED', 'CONFIG_INVALID'].includes(code));
+    super(code, options);
+  }
+}
+const positive = v => typeof v === 'string' && /^[1-9][0-9]{0,19}$/.test(v);
+const revision = v => typeof v === 'string' && /^[a-zA-Z0-9_-]{1,128}$/.test(v);
+const statuses = ['CREATE_PENDING', 'ACTIVE', 'REOPEN_PENDING'];
+function validIssue(v, destination) {
+  return exact(v, ['id', 'destinationId', 'authorId', 'isBot', 'kind', 'state', 'body', 'revision', 'createdAt', 'decision'])
+    && positive(v.id) && v.destinationId === destination.id && positive(v.authorId) && typeof v.isBot === 'boolean'
+    && v.kind === 'issue' && ['open', 'closed'].includes(v.state) && typeof v.body === 'string' && Buffer.byteLength(v.body) <= 65536
+    && revision(v.revision) && timestamp(v.createdAt) && validDecision(v.decision);
+}
+function validateJournal(v, destination) {
+  requireValue(exact(v, ['version', 'revision', 'destinationId', 'records', 'budgets']) && v.version === 1 && revision(v.revision)
+    && v.destinationId === destination.id && Array.isArray(v.records) && v.records.length <= 2000 && Array.isArray(v.budgets) && v.budgets.length <= 1000, 'PUBLICATION_STATE_UNKNOWN');
+  const seen = new Set(), issueIds = new Set();
+  for (const r of v.records) {
+    requireValue(exact(r, ['fingerprint', 'nonce', 'notice', 'key', 'scopes', 'environment', 'phase', 'issueId', 'startedAt', 'operationInvocation'])
+      && digest(r.fingerprint) && !seen.has(r.fingerprint) && digest(r.nonce) && typeof r.notice === 'boolean'
+      && statuses.includes(r.phase) && (r.phase === 'CREATE_PENDING' ? r.issueId === null : positive(r.issueId))
+      && timestamp(r.startedAt) && digest(r.operationInvocation) && Array.isArray(r.scopes) && r.scopes.length <= 100
+      && new Set(r.scopes).size === r.scopes.length && r.scopes.every(digest)
+      && (r.notice ? r.key === null && r.environment === null && r.scopes.length === 0
+        : typeof r.key === 'string' && Object.hasOwn(catalogue, r.key) && ['production', 'staging', 'preview'].includes(r.environment) && r.scopes.length > 0), 'PUBLICATION_STATE_UNKNOWN');
+    requireValue(r.issueId === null || !issueIds.has(r.issueId), 'PUBLICATION_STATE_UNKNOWN');
+    if (r.issueId !== null) issueIds.add(r.issueId);
+    seen.add(r.fingerprint);
+  }
+  const budgets = new Set();
+  for (const b of v.budgets) {
+    requireValue(exact(b, ['invocation', 'newIssues', 'notifications']) && digest(b.invocation) && !budgets.has(b.invocation)
+      && Number.isSafeInteger(b.newIssues) && b.newIssues >= 0 && Number.isSafeInteger(b.notifications) && b.notifications >= 0, 'PUBLICATION_STATE_UNKNOWN');
+    budgets.add(b.invocation);
+  }
+  requireValue(Buffer.byteLength(JSON.stringify(v)) <= 1024 * 1024, 'PUBLICATION_STATE_UNKNOWN');
+  return structuredClone(v);
+}
+function owned(issue, record, destination) {
+  requireValue(issue && issue.authorId === destination.botId && issue.isBot && issue.destinationId === destination.id, 'PUBLICATION_STATE_UNKNOWN');
+  const block = managedBlock(record, record.nonce);
+  if (record.notice) return issue.body === block;
+  const marker = `<!-- argos-ci-issue-v1:${record.fingerprint}:${record.nonce} -->`;
+  const start = issue.body.indexOf(marker), end = issue.body.indexOf('<!-- /argos-ci-issue-v1 -->', start);
+  return start >= 0 && end >= start && issue.body.indexOf(marker, start + marker.length) < 0
+    && issue.body.slice(start, end + '<!-- /argos-ci-issue-v1 -->'.length) === block;
+}
+function result(verdict, publication, counts, code, lang) {
+  const valid = validVerdict(verdict, policy, catalogue, errors);
+  const base = valid ? pipelineResult(verdict, { publication }) : { auditOutcome: 'UNKNOWN', auditExitCode: null, publication,
+    exitCode: publication === 'DISABLED' ? 0 : 3, errorCode: publication === 'DISABLED' ? null : code ?? 'ARTIFACT_INVALID' };
+  return { ...base, counts: structuredClone(counts), ...(code ? { diagnostic: diagnostic(new Failure(code), lang) } : {}) };
+}
+
+/** Common engine only. Connectors #739/#740 must provide the fenced durable session contract. */
+async function synchronizeIssues({ evidencePath, expected, auditVerdict = null, config: input, adapter, signal = new AbortController().signal,
+  now = Date.now, sleep = (ms, s) => wait(ms, undefined, { signal: s }), random = Math.random, timeoutMs = 120000, lang = 'fr' } = {}) {
+  const counts = { created: 0, reopened: 0, reconciled: 0, suppressed: 0, unchanged: 0, limited: 0 };
+  const lifetime = new AbortController();
+  let verdict = auditVerdict, config;
+  try {
+    config = publicationConfiguration(input);
+    if (config.mode === 'DISABLED') return result(verdict, 'DISABLED', counts, null, lang);
+    requireValue(Number.isInteger(timeoutMs) && timeoutMs >= 1 && timeoutMs <= 600000);
+    const deadline = now() + timeoutMs, combined = AbortSignal.any([signal, lifetime.signal, AbortSignal.timeout(timeoutMs)]);
+    let evidence;
+    try { evidence = readTrusted(evidencePath, { ...expected, now: now() }); } catch { throw new Failure('ARTIFACT_INVALID'); }
+    verdict = evidence.verdict;
+    const fresh = () => requireValue(Date.parse(evidence.issuedAt) <= now() && now() - Date.parse(evidence.issuedAt) <= FRESHNESS_MS
+      && Date.parse(evidence.sourceExpiresAt) > now() && Date.parse(evidence.expiresAt) > now(), 'ARTIFACT_INVALID');
+    fresh();
+    const desired = candidates(evidence, config);
+    if (!desired.length) return result(verdict, 'NO_FINDINGS', counts, null, lang);
+    requireValue(config.destination !== null && adapter, 'CONFIG_INVALID');
+    const destination = config.destination;
+    const lockKey = fingerprint(['argos-issue-destination-v1', destination.provider, destination.origin, destination.id]);
+    const invocation = fingerprint([lockKey, evidence.provenance.repository, evidence.provenance.invocation.split(':')[0]]);
+    async function call(operation, maximum = 15000) {
+      combined.throwIfAborted(); requireValue(now() < deadline, 'PUBLICATION_STATE_UNKNOWN');
+      const controller = new AbortController(); let timer;
+      const cancel = () => controller.abort();
+      combined.addEventListener('abort', cancel, { once: true });
+      try {
+        return await new Promise((resolve, reject) => {
+          const abort = () => reject(new Failure('PUBLICATION_STATE_UNKNOWN', { transient: true, ambiguous: true }));
+          controller.signal.addEventListener('abort', abort, { once: true });
+          timer = setTimeout(cancel, Math.min(maximum, deadline - now()));
+          Promise.resolve().then(() => operation({ signal: controller.signal })).then(resolve, reject);
+        });
+      } finally { clearTimeout(timer); combined.removeEventListener('abort', cancel); controller.abort(); }
+    }
+    async function read(operation) {
+      for (let attempt = 1; ; attempt++) {
+        combined.throwIfAborted(); requireValue(now() < deadline, 'PUBLICATION_STATE_UNKNOWN');
+        try { return await call(operation); }
+        catch (e) {
+          if (!(e instanceof Failure) || !e.transient || !errors[e.code]?.retryable) throw e;
+          const next = recoveryDecision({ protocolValid: true, retryable: true, retryAfterSeconds: e.retryAfterSeconds },
+            { operation: 'READ', attempt, maxAttempts: 3, remainingMs: deadline - now(), jitter: random() });
+          if (next.action === 'STOP') throw e;
+          await sleep(next.delayMs, combined);
+        }
+      }
+    }
+    async function checkDestination(session) {
+      const actual = await read(options => session.readDestination(options));
+      requireValue(exact(actual, [...Object.keys(destination), 'botVerified', 'issuesEnabled', 'conditionalReopen'])
+        && Object.keys(destination).every(k => actual[k] === destination[k]) && actual.botVerified === true && actual.issuesEnabled === true
+        && typeof actual.conditionalReopen === 'boolean', 'DESTINATION_UNAVAILABLE');
+      requireValue(!config.reopenResolved || actual.conditionalReopen, 'CONFIG_INVALID');
+    }
+    async function inventory(session) {
+      let cursor = null, bytes = 0; const rows = [], cursors = new Set(), ids = new Set();
+      for (let page = 0; page < 20; page++) {
+        const response = await read(options => session.listIssues(cursor, { ...options, limit: 100 }));
+        requireValue(exact(response, ['items', 'nextCursor', 'complete']) && Array.isArray(response.items) && response.items.length <= 100
+          && typeof response.complete === 'boolean' && (response.nextCursor === null ? response.complete : !response.complete && revision(response.nextCursor)), 'PUBLICATION_STATE_UNKNOWN');
+        for (const issue of response.items) {
+          requireValue(validIssue(issue, destination) && !ids.has(issue.id), 'PUBLICATION_STATE_UNKNOWN');
+          bytes += Buffer.byteLength(issue.body) + 512; requireValue(bytes <= 1024 * 1024, 'PUBLICATION_STATE_UNKNOWN');
+          ids.add(issue.id); rows.push(issue);
+        }
+        if (response.complete) return rows;
+        requireValue(!cursors.has(response.nextCursor), 'PUBLICATION_STATE_UNKNOWN'); cursors.add(response.nextCursor); cursor = response.nextCursor;
+      }
+      throw new Failure('PUBLICATION_STATE_UNKNOWN');
+    }
+    async function run(session, writing) {
+      let lease;
+      async function guard() {
+        combined.throwIfAborted(); fresh(); requireValue(now() < deadline, 'PUBLICATION_STATE_UNKNOWN');
+        if (writing) {
+          const next = await call(options => session.assertHeld(options));
+          requireValue(exact(next, ['key', 'fence', 'validUntil']) && next.key === lockKey && Number.isSafeInteger(next.fence) && next.fence > 0
+            && timestamp(next.validUntil) && Date.parse(next.validUntil) > now() && (!lease || lease.fence === next.fence), 'PUBLICATION_STATE_UNKNOWN');
+          lease = next;
+        }
+      }
+      if (writing) requireValue(session.capabilities?.version === 1 && session.capabilities.durableJournal === true
+        && session.capabilities.privateJournal === true && session.capabilities.fencedLease === true, 'CONFIG_INVALID');
+      await guard(); await checkDestination(session);
+      const journal = validateJournal(await read(options => session.loadJournal(options)), destination);
+      let issues = await inventory(session), budget = journal.budgets.find(b => b.invocation === invocation);
+      if (!budget) { budget = { invocation, newIssues: 0, notifications: 0 }; journal.budgets.push(budget); }
+      async function save() {
+        await guard(); validateJournal(journal, destination);
+        const saved = await call(options => session.saveJournal(structuredClone(journal), { expectedRevision: journal.revision, lease, ...options }));
+        requireValue(exact(saved, ['revision', 'committed']) && revision(saved.revision) && saved.revision !== journal.revision
+          && saved.committed === true, 'PUBLICATION_STATE_UNKNOWN'); journal.revision = saved.revision;
+      }
+      async function beforeMutation() { await guard(); await checkDestination(session); await guard(); }
+      async function preparedGate(rollback) {
+        try { await beforeMutation(); }
+        catch (e) {
+          // No Git mutation has been invoked. A live fenced session can safely undo its preparation.
+          rollback(); await save(); throw e;
+        }
+      }
+      function match(record, pending = false) {
+        if (pending && record.notice && !config.publicIssueId) return null; // Never infer ownership from a fixed public message.
+        const matches = issues.filter(i => record.issueId ? i.id === record.issueId
+          : record.notice ? i.id === config.publicIssueId : i.body.includes(`<!-- argos-ci-issue-v1:${record.fingerprint}:${record.nonce} -->`));
+        requireValue(matches.length <= 1, 'PUBLICATION_STATE_UNKNOWN');
+        const issue = matches[0];
+        if (issue) { requireValue(issue.authorId === destination.botId && issue.isBot, 'PUBLICATION_STATE_UNKNOWN');
+          if (pending) requireValue(owned(issue, record, destination), 'PUBLICATION_STATE_UNKNOWN');
+          if (pending && !record.notice) requireValue(Date.parse(issue.createdAt) >= Date.parse(record.startedAt) - 10000 && Date.parse(issue.createdAt) <= now() + 1000, 'PUBLICATION_STATE_UNKNOWN'); }
+        return issue;
+      }
+      for (const candidate of desired) {
+        await guard();
+        const conflicts = journal.records.filter(r => !candidate.notice && !r.notice && r.key === candidate.key && r.environment === candidate.environment
+          && r.fingerprint !== candidate.fingerprint && r.scopes.some(s => candidate.scopes.includes(s)));
+        requireValue(conflicts.length === 0, 'CONFIG_INVALID');
+        let record = journal.records.find(r => r.fingerprint === candidate.fingerprint);
+        if (record) requireValue(record.key === candidate.key && record.environment === candidate.environment && record.notice === candidate.notice
+          && fingerprint([...record.scopes].sort()) === fingerprint([...candidate.scopes].sort())
+          && (!config.publicIssueId || !record.notice || !record.issueId || record.issueId === config.publicIssueId), 'CONFIG_INVALID');
+        if (record?.phase === 'CREATE_PENDING') {
+          const found = match(record, true); requireValue(found, 'PUBLICATION_STATE_UNKNOWN');
+          record.issueId = found.id; record.phase = 'ACTIVE'; if (writing) await save(); counts.reconciled++;
+        }
+        if (record?.phase === 'REOPEN_PENDING') {
+          const found = match(record); requireValue(found?.state === 'open', 'PUBLICATION_STATE_UNKNOWN');
+          record.phase = 'ACTIVE'; if (writing) await save(); counts.reconciled++;
+        }
+        if (record) {
+          const existing = match(record); requireValue(existing, 'PUBLICATION_STATE_UNKNOWN');
+          // Human edits to the managed text freeze automation. Other notes and fields are never sent back.
+          if (!owned(existing, record, destination) || decisionBlocks(existing, evidence, config, now())) { counts.suppressed++; continue; }
+          if (existing.state === 'open') { counts.unchanged++; continue; }
+          if (budget.notifications >= config.maxNotifications) { counts.limited++; continue; }
+          if (!writing) { budget.notifications++; counts.reopened++; continue; }
+          const current = await read(options => session.readIssue(existing.id, options));
+          requireValue(validIssue(current, destination), 'PUBLICATION_STATE_UNKNOWN');
+          if (current.revision !== existing.revision || current.decision.version !== existing.decision.version || !owned(current, record, destination)
+            || decisionBlocks(current, evidence, config, now())) { counts.suppressed++; continue; }
+          record.phase = 'REOPEN_PENDING'; budget.notifications++; await save(); await preparedGate(() => { record.phase = 'ACTIVE'; });
+          try {
+            const updated = await call(options => session.reopenIssue({ id: current.id, expectedRevision: current.revision, decisionVersion: current.decision.version }, { lease, ...options }));
+            requireValue(validIssue(updated, destination) && updated.id === current.id && updated.state === 'open' && owned(updated, record, destination), 'PUBLICATION_STATE_UNKNOWN');
+            issues = issues.map(i => i.id === updated.id ? updated : i); record.phase = 'ACTIVE'; await save(); counts.reopened++;
+          } catch (e) {
+            if (e instanceof PublicationRejected) { record.phase = 'ACTIVE'; await save(); throw e; }
+            issues = await inventory(session); const recovered = match(record);
+            requireValue(recovered?.state === 'open', 'PUBLICATION_STATE_UNKNOWN'); record.phase = 'ACTIVE'; await save(); counts.reconciled++;
+          }
+          continue;
+        }
+        // A copied marker is not an ownership receipt, even if another automation authored it.
+        requireValue(candidate.notice || !issues.some(i => i.body.includes(`<!-- argos-ci-issue-v1:${candidate.fingerprint}:`)), 'PUBLICATION_STATE_UNKNOWN');
+        if (candidate.notice && config.publicIssueId) {
+          record = { ...candidate, nonce: randomBytes(32).toString('hex'), phase: 'CREATE_PENDING', issueId: null, startedAt: new Date(now()).toISOString(), operationInvocation: invocation };
+          const chosen = match(record, true); requireValue(chosen, 'PUBLICATION_STATE_UNKNOWN');
+          record.phase = 'ACTIVE'; record.issueId = chosen.id; journal.records.push(record);
+          if (writing) await save(); counts.reconciled++; continue;
+        }
+        if (budget.newIssues >= config.maxNewIssues || budget.notifications >= config.maxNotifications) { counts.limited++; continue; }
+        if (!writing) { budget.newIssues++; budget.notifications++; counts.created++; continue; }
+        record = { ...candidate, nonce: randomBytes(32).toString('hex'), phase: 'CREATE_PENDING', issueId: null, startedAt: new Date(now()).toISOString(), operationInvocation: invocation };
+        journal.records.push(record); budget.newIssues++; budget.notifications++; await save();
+        await preparedGate(() => { journal.records = journal.records.filter(r => r !== record); });
+        try {
+          const created = await call(options => session.createIssue({ title: issueTitle(candidate), body: managedBlock(candidate, record.nonce), labels: candidate.notice ? [] : config.labels }, { lease, ...options }));
+          requireValue(validIssue(created, destination) && owned(created, record, destination), 'PUBLICATION_STATE_UNKNOWN');
+          record.issueId = created.id; record.phase = 'ACTIVE'; issues.push(created); await save(); counts.created++;
+        } catch (e) {
+          if (e instanceof PublicationRejected) { journal.records = journal.records.filter(r => r !== record); await save(); throw e; }
+          issues = await inventory(session); const recovered = match(record, true);
+          requireValue(recovered, 'PUBLICATION_STATE_UNKNOWN'); record.issueId = recovered.id; record.phase = 'ACTIVE'; await save(); counts.reconciled++;
+        }
+      }
+      return result(verdict, config.mode === 'PREVIEW' ? 'PREVIEW' : counts.limited ? 'LIMIT_REACHED' : 'SUCCEEDED', counts, null, lang);
+    }
+    if (config.mode === 'PREVIEW') return await run(adapter, false);
+    requireValue(typeof adapter.withDestinationLease === 'function', 'CONFIG_INVALID');
+    let executions = 0, outcome;
+    await call(options => adapter.withDestinationLease(lockKey, async session => {
+      requireValue(++executions === 1, 'PUBLICATION_STATE_UNKNOWN');
+      outcome = await run(session, true);
+    }, options), timeoutMs);
+    requireValue(executions === 1 && outcome !== undefined, 'PUBLICATION_STATE_UNKNOWN');
+    return outcome;
+  } catch (e) {
+    const code = e instanceof Failure ? e.code : 'PUBLICATION_STATE_UNKNOWN';
+    return result(verdict, code === 'PUBLICATION_STATE_UNKNOWN' ? 'UNKNOWN' : 'FAILED', counts, code, lang);
+  } finally { lifetime.abort(); }
+}
+
+return {PublicationRejected,synchronizeIssues};
+})();
+
 const module_client = (() => {
 const fs = builtin_fs;
 const { join, dirname } = builtin_path;
@@ -473,11 +852,12 @@ const { setTimeout : wait } = builtin_timers_promises;
 const { configuration } = module_config;
 const { VERSION, policy } = module_resources;
 const { Failure, requireValue, diagnostic } = module_diagnostics;
-const { validResponse } = module_contracts;
+const { validResponse, timestamp } = module_contracts;
 const { transport } = module_transport;
 const { writePrivate, safeDirectory, readTrusted } = module_evidence;
 const { pipelineResult } = module_pipeline;
 const { providerProof } = module_providers;
+const { previewConfiguration, selectFindings, fingerprint, FRESHNESS_MS } = module_publication_policy;
 
 const base = '/api/ci/v1/';
 const commands = ['doctor', 'audit', 'resume', 'export', 'publication-preview', 'artifact-check', 'intent'];
@@ -522,6 +902,22 @@ function prepareOutput(config) {
   safeDirectory(config.output);
   } catch { throw new Failure('ARTIFACT_INVALID'); }
 }
+async function publicationEvidence(api, admitted, verdict, config, now) {
+  const current = validate('Admission', await api.read(`${base}admissions/${admitted.id}`), { id: admitted.id, samples: admitted.samples });
+  requireValue(current.runs.every(r => r.status === 'COMPLETED' && timestamp(r.startedAt) && timestamp(r.finishedAt)
+    && Date.parse(r.startedAt) <= Date.parse(r.finishedAt) && Date.parse(r.finishedAt) <= now())
+    && current.runs.every((r, i) => r.id === admitted.runs[i].id), 'ARTIFACT_INVALID');
+  const summaries = [];
+  for (const run of current.runs) summaries.push(validate('Report', await api.read(`${base}runs/${run.id}/report`), run.id));
+  requireValue(summaries.every(s => timestamp(s.expiresAt) && Date.parse(s.expiresAt) > now()), 'ARTIFACT_INVALID');
+  const checked = validate('Verdict', await api.read(`${base}admissions/${admitted.id}/verdict`), { id: admitted.id, samples: admitted.samples });
+  requireValue(fingerprint(checked) === fingerprint(verdict), 'ARTIFACT_INVALID');
+  const issuedAt = now(), sourceExpiresAt = Math.min(...summaries.map(s => Date.parse(s.expiresAt)));
+  return { schemaVersion: 2, kind: 'ci-evidence-v2', clientVersion: VERSION, provenance: config.provenance,
+    issuedAt: new Date(issuedAt).toISOString(), observationStartedAt: new Date(Math.min(...current.runs.map(r => Date.parse(r.startedAt)))).toISOString(),
+    sourceExpiresAt: new Date(sourceExpiresAt).toISOString(), expiresAt: new Date(Math.min(issuedAt + 7 * 86400000, sourceExpiresAt)).toISOString(),
+    admissionId: admitted.id, samples: admitted.samples, runIds: current.runs.map(r => r.id), verdict };
+}
 async function execute(command, env, { fetcher = fetch, signal = new AbortController().signal, now = Date.now, sleep = defaultSleep, random = Math.random } = {}) {
   requireValue(commands.includes(command));
   requireValue(Number(process.versions.node.split('.')[0]) >= 24, 'CLIENT_VERSION_UNSUPPORTED');
@@ -539,8 +935,12 @@ async function execute(command, env, { fetcher = fetch, signal = new AbortContro
     const expected = { ...config.provenance, ...proof, now: now() };
     let evidence;
     try { evidence = readTrusted(join(config.output, 'evidence.json'), expected); } catch { throw new Failure('ARTIFACT_INVALID'); }
-    const result = pipelineResult(evidence.verdict, { publication: 'PREVIEW' });
-    return { ...result, eligibleFindings: evidence.verdict.confirmedFindings.filter(f => f.ticketEligible).length };
+    try {
+      requireValue(now() - Date.parse(evidence.issuedAt) <= FRESHNESS_MS, 'ARTIFACT_INVALID');
+      const publication = previewConfiguration(env);
+      return { ...pipelineResult(evidence.verdict, { publication: 'PREVIEW' }), eligibleFindings: selectFindings(evidence, publication).length,
+        newIssueLimit: publication.maxNewIssues, publicationPolicyVersion: 1 };
+    } catch (e) { return { ...pipelineResult(evidence.verdict, { publication: 'FAILED' }), diagnostic: diagnostic(e, config.lang) }; }
   }
   validate('VerdictPolicy', await api.read(base + 'policies/standard-v1'));
   const identity = validate('Identity', await api.read(base + 'identity'));
@@ -572,9 +972,7 @@ async function execute(command, env, { fetcher = fetch, signal = new AbortContro
   const result = { ...pipelineResult(verdict) };
   if (config.exportPrivate) {
     prepareOutput(config);
-    result.evidenceSha256 = writePrivate(join(config.output, 'evidence.json'), { schemaVersion: 1, kind: 'ci-evidence-v1', clientVersion: VERSION,
-      provenance: config.provenance, expiresAt: new Date(now() + 7 * 86400000).toISOString(), admissionId: admitted.id, samples: admitted.samples,
-      runIds: admitted.runs.map(r => r.id), verdict });
+    result.evidenceSha256 = writePrivate(join(config.output, 'evidence.json'), await publicationEvidence(api, admitted, verdict, config, now));
   }
   return { ...result, deploymentRevisionAttested: false };
 }
