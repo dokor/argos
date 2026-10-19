@@ -58,7 +58,9 @@ le schéma **jetable** `argos_credentials_test` sur MariaDB loopback et les vari
 Flyway avant chaque test. Ne jamais lui donner une base contenant des données utiles.
 La liste explicite du job CI inclut `PremiumCiJourneyIT` et tous les tests existants.
 
-Après `mvn -P mariadb-integration ... verify`, le job collecte onze suites JUnit :
+Le profil MariaDB ignore volontairement Surefire. Après `mvn -P mariadb-integration ... verify`,
+le job exécute donc explicitement `mvn -Dtest=CiPolicyTest,BillingSettingsTest test`
+avant de collecter onze suites JUnit :
 droits fermés par défaut CI/Billing, parcours joint, facturation, droits, domaines,
 clés, quotas, admission/verdict privé, atomicité de publication et rétention.
 

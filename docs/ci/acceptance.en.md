@@ -58,8 +58,9 @@ variables. The fixture empties and migrates the database before each test. Never
 provide useful data. Locally skipped integration tests are not passes. The workflow's
 explicit integration list includes the new journey and the existing suites.
 
-After the job runs `mvn -P mariadb-integration ... verify`, it collects eleven JUnit
-suites: closed CI/Billing defaults, joined journey, billing, entitlements, targets,
+The MariaDB profile intentionally skips Surefire. After `mvn -P mariadb-integration ... verify`,
+the job explicitly runs `mvn -Dtest=CiPolicyTest,BillingSettingsTest test`, then collects
+eleven JUnit suites: closed CI/Billing defaults, joined journey, billing, entitlements, targets,
 keys, quotas, admission/private verdict, publication atomicity and retention.
 
 ```sh
