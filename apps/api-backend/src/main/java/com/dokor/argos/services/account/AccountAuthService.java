@@ -430,7 +430,7 @@ public class AccountAuthService {
                     // subscription or an uncertain Checkout behind revoked sign-in credentials.
                     var billingTable = QBillingAccount.table;
                     var billing = dao.transactions.selectQuery(c).select(billingTable).from(billingTable)
-                            .where(billingTable.id.eq(user.getId())).fetchOne();
+                            .where(billingTable.id.eq(user.getId())).forUpdate().fetchOne();
                     if (billing != null && (!(Set.of("NONE", "ENDED").contains(billing.getStatus()))
                             || !(Set.of("NONE", "EXPIRED").contains(billing.getPhase())
                                 || ("COMPLETE".equals(billing.getPhase()) && "ENDED".equals(billing.getStatus())))
