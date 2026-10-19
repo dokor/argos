@@ -15,6 +15,7 @@ const results = [];
 try {
   for (const width of [320, 390, 768, 1056, 1440]) for (const lang of ['fr', 'en']) for (const theme of ['light', 'dark']) {
     const c = copies[lang].connected;
+    const title=lang==='fr'?'Clés API et CI':'API keys and CI';
     const context = await browser.newContext({ viewport: { width, height: 900 }, colorScheme: theme });
     const page = await context.newPage(), errors = [];
     page.on('pageerror', error => errors.push(error.message));
@@ -30,7 +31,10 @@ try {
       } else if (path.endsWith('/usage')) {
         status = mode === 'quota-error' ? 503 : 200;
         data = status === 503 ? { error: 'account_unavailable' } : { offer: 'FREE', period: '2026-10', timezone: 'UTC', startsAt: '2026-10-01T00:00:00Z', resetsAt: '2027-01-01T00:00:00Z', available: mode === "unlimited" ? null : mode === "zero" ? 0 : fixture.usage.expectedAvailable, used: fixture.usage.used, reserved: fixture.usage.reserved, limit: mode === 'unlimited' ? null : mode === 'zero' ? fixture.usage.used + fixture.usage.reserved : fixture.usage.limit, canLaunch: mode !== 'zero' };
-      }
+      } else if(path.endsWith('/ci/status'))data={enabled:false,eligible:false,offer:'FREE',validUntil:null,limits:null,period:'2026-10',timezone:'UTC',startsAt:'2026-10-01T00:00:00Z',resetsAt:'2026-11-01T00:00:00Z',integrations:[]};
+      else if(path.endsWith('/ci/keys'))data={items:[],integrations:[],nextCursor:null};
+      else if(path.endsWith('/ci/targets'))data={items:[],nextCursor:null};
+      else if(path.endsWith('/methods'))data=[];
       await route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(data) });
     });
     const url = base + (lang === 'en' ? '/en' : '') + '/account/integrations';
@@ -48,7 +52,7 @@ try {
       results.push({ name, lang, theme, width, screenshot: file, overflow: false, axeViolations: 0 });
     }
     await page.goto(url);
-    await page.getByRole('heading', { name: c.api.title, exact: true }).waitFor();
+    await page.getByRole('heading', { name: title, exact: true }).waitFor();
     await page.getByRole('link', { name: `${fixture.usage.expectedAvailable} ${c.credits}` }).waitFor();
     const accountMenu=page.getByRole('button',{name:`${c.accountMenu}: Camille · Atelier de démonstration`,exact:true});
     await accountMenu.focus();await page.keyboard.press('Enter');
@@ -60,12 +64,14 @@ try {
     await page.keyboard.press('Escape');
     assert.equal(await accountMenu.getAttribute('aria-expanded'),'false');
     assert.equal(await accountMenu.evaluate(el=>el===document.activeElement),true,'Escape restores account-menu focus');
-    assert.equal(await page.locator('main button').count(), 0, 'No fake integration activation');
+    assert.equal(await page.getByRole('button',{name:lang==='fr'?'Créer une clé':'Create key',exact:true}).isDisabled(),true,'Closed CI never enables key creation');
+    await page.getByRole('button',{name:lang==='fr'?'Configuration CI':'CI configuration',exact:true}).click();
     const example = page.locator('main details').first();
     await example.locator('summary').focus(); await page.keyboard.press('Enter');
     assert.equal(await example.evaluate(el => el.open), true, 'Example opens with keyboard');
     await page.keyboard.press('Enter');
     assert.equal(await example.evaluate(el => el.open), false);
+    await page.getByRole('button',{name:lang==='fr'?'Clés API':'API keys',exact:true}).click();
     if (width <= 900) {
       const menu = page.getByRole('button', { name: c.menu, exact: true });
       await menu.focus(); await page.keyboard.press('Enter');
@@ -96,7 +102,7 @@ try {
       else if (mode === 'error') await page.getByRole('heading', { name: c.errorTitle }).waitFor();
       else if (mode === 'loading') await page.getByRole('heading', { name: c.loading }).waitFor();
       else {
-        await page.getByRole('heading', { name: c.api.title }).waitFor();
+        await page.getByRole('heading', { name: title }).waitFor();
         if (mode === 'quota-error') await page.getByText(c.quotaUnavailable, { exact: true }).waitFor();
         if (mode === 'zero') await page.getByRole('link', { name: `0 ${c.credits}` }).waitFor();
         if (mode === 'unlimited') await page.getByRole('link', { name: c.unlimitedCredits }).waitFor();

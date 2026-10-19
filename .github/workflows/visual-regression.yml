@@ -68,7 +68,7 @@ jobs:
       fail-fast: false
       max-parallel: 4
       matrix:
-        group: [public, analysis, account, domains]
+        group: [public, analysis, account, domains, integrations]
     env:
       CONNECTED_BASE_URL: http://127.0.0.1:3000
       HISTORY_BASE_URL: http://127.0.0.1:3000

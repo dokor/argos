@@ -85,4 +85,13 @@ describe("CI management BFF",()=>{
     const response=await call(request(`keys/${key.id}/rotate`,"POST",{}));expect(response.status).toBe(502);
     expect((await response.json()).error.code).toBe("TRANSPORT_FAILED");
   });
+  it("returns only the validated owner status and quota snapshot behind the browser session",async()=>{
+    const data={enabled:true,eligible:true,offer:"PREMIUM",validUntil:"2026-11-18T12:00:00Z",limits:{monthlyAnalysesPerKey:30,activeKeys:3,verifiedTargets:null,concurrentRuns:1,keyLifetimeYears:1},period:"2026-10",timezone:"UTC",startsAt:"2026-10-01T00:00:00Z",resetsAt:"2026-11-01T00:00:00Z",integrations:[{id,slot:1,used:8,reserved:2}]};
+    vi.mocked(fetch).mockResolvedValueOnce(Response.json(data));const response=await call(request("status"));expect(response.status).toBe(200);expect(response.headers.get("cache-control")).toBe("private, no-store");expect(await response.json()).toEqual(data);
+    vi.mocked(fetch).mockResolvedValueOnce(Response.json({...data,enabled:false,eligible:false,limits:null}));expect((await call(request("status"))).status).toBe(200);
+    for(const changed of [{...data,credential:"synthetic-secret"},{...data,offer:"FREE"},{...data,validUntil:null},{...data,integrations:[{id,slot:1,used:-1,reserved:0}]},{...data,integrations:[data.integrations[0],data.integrations[0]]}]){
+      vi.mocked(fetch).mockResolvedValueOnce(Response.json(changed));const denied=await call(request("status"));expect(denied.status).toBe(502);expect(await denied.text()).not.toContain("synthetic-secret");
+    }
+    vi.mocked(fetch).mockClear();expect((await call(request("status?after=1"))).status).toBe(400);expect((await call(request("status","GET",undefined,false))).status).toBe(401);expect(fetch).not.toHaveBeenCalled();
+  });
 });
