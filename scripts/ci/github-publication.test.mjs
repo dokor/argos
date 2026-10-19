@@ -40,7 +40,7 @@ function fixture(t, publication = config, evidence = proof) {
   const digest = writePrivate(join(root, 'control/evidence.json'), evidence);
   const state = { calls: [], issues: [], posts: [], visibility: publication.destination.visibility, bot: 41898282,
     hasIssues: true, archived: false, publicStorage: false, missingBlob: false, etag: 1, lease: null, lose: false, hide: false,
-    status: null, poisonLink: false, pages: null, corruptViewer: false, failedSave: false, lateBody: false,
+    status: null, createStatus: null, postAttempts: 0, poisonLink: false, pages: null, corruptViewer: false, failedSave: false,
     envelope: { version: 1, destinationId: d.id, repository: d.repository, evidenceKey: randomBytes(32).toString('base64'),
       journal: { version: 1, revision: 'initial', destinationId: d.id, records: [], budgets: [] } } };
   function issue(payload, number = state.issues.length + 1) { return { id: 1000 + number, number, url: d.origin + '/repos/' + d.repository + '/issues/' + number,
@@ -83,6 +83,9 @@ function fixture(t, publication = config, evidence = proof) {
       has_issues: state.hasIssues, visibility: state.visibility, private: state.visibility === 'private', default_branch: 'main' });
     if (u.pathname === repoRoot + '/issues' && options.method === 'POST') {
       assert.equal(state.envelope.journal.records.at(-1).phase, 'CREATE_PENDING');
+      state.postAttempts++;
+      if (state.createStatus) return new Response('synthetic-private-739 ::error::', { status: state.createStatus,
+        headers: state.createStatus === 429 ? { 'retry-after': '60' } : {} });
       state.posts.push(JSON.parse(options.body)); const row = issue(state.posts.at(-1)); state.issues.push(row);
       if (state.lose) throw new Error('synthetic-private-739'); return Response.json(row, { status: 201 });
     }
@@ -107,7 +110,7 @@ function fixture(t, publication = config, evidence = proof) {
     store: () => azureJournal(sas(), publication.destination, { fetcher, now }) };
 }
 
-test('GitHub: isolated staging reads only; publishing creates once, survives another process and never sends Argos keys', async t => {
+test('GitHub: isolated staging reads only; publishing creates once across client instances and never sends Argos keys', async t => {
   const f = fixture(t); const staged = await f.stage(); assert.equal(staged.proofStaged, true); assert.equal(f.state.posts.length, 0);
   assert.ok(f.state.calls.every(c => c.origin === d.origin || ['GET', 'HEAD'].includes(c.method)));
   fs.unlinkSync(join(f.root, 'control/evidence.enc.json'));
@@ -115,6 +118,17 @@ test('GitHub: isolated staging reads only; publishing creates once, survives ano
   assert.equal((await f.publish()).counts.unchanged, 1); assert.equal(f.state.posts.length, 1);
   assert.ok(!fs.existsSync(join(f.root, 'publisher/evidence.json'))); assert.equal(f.state.lease, null);
   assert.doesNotMatch(JSON.stringify(result), /synthetic-private|nonce|41898282|http\.security/);
+});
+test('definite POST refusal releases only its preparation; ambiguous 5xx remains reserved across publisher reruns', async t => {
+  for (const status of [401, 403, 422, 429]) {
+    const f = fixture(t); f.state.createStatus = status;
+    const result = await f.publish(); assert.equal(result.exitCode, 3); assert.equal(result.auditExitCode, 0);
+    assert.equal(f.state.envelope.journal.records.length, 0); assert.equal(f.state.envelope.journal.budgets[0].newIssues, 1);
+    assert.equal(f.state.postAttempts, 1); assert.doesNotMatch(JSON.stringify(result), /synthetic-private|::error::/);
+  }
+  const f = fixture(t); f.state.createStatus = 503;
+  assert.equal((await f.publish()).publication, 'UNKNOWN'); assert.equal(f.state.envelope.journal.records[0].phase, 'CREATE_PENDING');
+  assert.equal((await f.publish()).publication, 'UNKNOWN'); assert.equal(f.state.postAttempts, 1);
 });
 test('publisher-only rerun accepts the original producer attempt, never an unrelated run or future attempt', async t => {
   const f = fixture(t);
