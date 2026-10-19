@@ -44,6 +44,8 @@ n'est supposé. Les valeurs présentes dans les tests sont exclusivement fictive
 - Compte Argos actif, adresse vérifiée, session propriétaire, CSRF, réauthentification
   récente et limitation persistante des mutations sont requis. Le client fournit
   seulement `MONTH` ou `YEAR` ; jamais de customer, prix, montant, abonnement ou URL de retour.
+  La session est relue avant les créations sensibles et avant la remise d'une URL
+  porteuse d'accès, pour prendre en compte une révocation pendant les lectures réseau.
 - Le serveur fixe marchand, environnement, produit, prix, client et origine HTTPS.
   Aucun droit ne dépend du retour Checkout, d'un paramètre navigateur ou du contenu
   déclaratif d'un webhook. Le navigateur ne reçoit que le résumé de son compte.
