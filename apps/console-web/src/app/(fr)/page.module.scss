@@ -27,7 +27,7 @@
 }
 
 .heroInner {
-  max-width: t.$container-width - 2 * t.$page-gutter;
+  max-width: t.$page-content-width;
   margin: 0 auto;
   display: flex;
   align-items: center;
@@ -372,14 +372,19 @@
 }
 
 .container {
-  max-width: t.$container-width - 2 * t.$page-gutter;
+  max-width: t.$page-content-width;
   margin: 0 auto;
 }
 
-.containerNarrow {
-  max-width: 640px;
-  margin: 0 auto;
-  text-align: center;
+.ctaGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: center;
+  gap: t.$space-12;
+}
+
+.ctaGrid p {
+  margin-bottom: 0;
 }
 
 .sectionHeader {
@@ -449,16 +454,15 @@
 
 // ─── Steps ────────────────────────────────────────────────────────────────────
 .stepsGrid {
-  display: flex;
-  gap: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: t.$space-12;
   align-items: flex-start;
-  flex-wrap: wrap;
   position: relative;
 }
 
 .stepCard {
-  flex: 1 1 200px;
-  padding: 0 t.$space-6;
+  min-width: 0;
   position: relative;
 }
 
@@ -473,7 +477,7 @@
 
 .stepArrow {
   position: absolute;
-  right: -12px;
+  right: -36px;
   top: 8px;
   font-size: t.$text-3xl;
   color: t.$text-subtle;
@@ -542,6 +546,13 @@
   line-height: 1;
 }
 
+@media (max-width: 800px) {
+  .ctaGrid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: t.$space-8;
+  }
+}
+
 @media (max-width: 640px) {
   .audienceGrid {
     grid-template-columns: 1fr;
@@ -580,7 +591,7 @@
 
   // Steps
   .stepsGrid {
-    flex-direction: column;
+    grid-template-columns: minmax(0, 1fr);
     gap: t.$space-6;
   }
 

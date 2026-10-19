@@ -162,11 +162,13 @@ export default function LandingPage() {
       <PremiumWaitlist />
       {/* BOTTOM CTA */}
       <section className={s.sectionDark}>
-        <div className={s.containerNarrow}>
-          <h2 className={s.sectionTitleLight} style={{ marginBottom: 12 }}>
-            {tl.cta.title}
-          </h2>
-          <p className={s.sectionSubDark}>{tl.cta.sub}</p>
+        <div className={`${s.container} ${s.ctaGrid}`}>
+          <div>
+            <h2 className={s.sectionTitleLight}>
+              {tl.cta.title}
+            </h2>
+            <p className={s.sectionSubDark}>{tl.cta.sub}</p>
+          </div>
           <AuditForm mode="public" sourceRoute="/" idPrefix="final" submitLabel={tl.hero.cta} />
         </div>
       </section>

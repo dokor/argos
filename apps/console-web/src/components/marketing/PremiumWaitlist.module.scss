@@ -1,7 +1,7 @@
 @use '../../styles/tokens' as t;
 @use '../../styles/controls' as controls;
-.section { padding-block: t.$section-space; background: t.$canvas; border-block: 1px solid t.$border; color: t.$text; scroll-margin-top: 136px; }
-.container { width: min(100% - 48px, 960px); margin-inline: auto; }
+.section { padding: t.$section-space t.$page-gutter; background: t.$canvas; border-block: 1px solid t.$border; color: t.$text; scroll-margin-top: 136px; }
+.container { max-width: t.$page-content-width; margin-inline: auto; }
 .container h2 { font-size: clamp(24px, 3vw, 32px); line-height: 1.25; font-weight: 650; margin-bottom: 16px; }
 .container p { max-width: 70ch; line-height: 1.65; }
 .container form { max-width: 740px; margin-top: 24px; }
@@ -17,4 +17,5 @@
 .container :is(input,button,a):focus-visible { outline: 3px solid t.$brand; outline-offset: 3px; }
 .message { min-height: 3.5em; margin-top: 12px; }
 .message [role=alert] { color: var(--argos-error); }
-@media(max-width: 700px) { .section { padding-block: t.$section-space-mobile; } .container { width: calc(100% - 32px); } .row { flex-direction: column; } }
+@media(max-width: 700px) { .row { flex-direction: column; } }
+@media(max-width: 640px) { .section { padding: t.$section-space-mobile t.$page-gutter-mobile; } }
