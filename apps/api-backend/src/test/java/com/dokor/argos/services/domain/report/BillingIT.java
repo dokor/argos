@@ -111,6 +111,10 @@ class BillingIT extends MariaDbReportFixture {
         }
         sql("UPDATE ARG_BILLING_ACCOUNT SET status='NONE',phase='OPEN' WHERE id=733");
         assertThrows(AccountError.class,()->auth.archive("owner","csrf",true));
+        for(String phase:List.of("CUSTOMER_PENDING","CHECKOUT_PENDING","OPEN")){
+            sql("UPDATE ARG_BILLING_ACCOUNT SET status='ENDED',phase='"+phase+"' WHERE id=733");
+            assertThrows(AccountError.class,()->auth.archive("owner","csrf",true));
+        }
         sql("UPDATE ARG_BILLING_ACCOUNT SET status='ENDED',phase='COMPLETE' WHERE id=733");
         auth.archive("owner","csrf",true);
         try(var c=source.getConnection()){assertEquals("ARCHIVED",dao.user(733,c,false).getState());}
