@@ -5,4 +5,4 @@ export const policy = read('apps/api-backend/src/main/resources/ci/verdict-polic
 export const catalogue = read('apps/api-backend/src/main/resources/ci/export-catalog-v1.json');
 export const errors = read('apps/api-backend/src/main/resources/ci/error-catalog-v1.json').errors;
 export const schemas = read('docs/ci/openapi-v1.json').components.schemas;
-export const VERSION = '0.2.0-preview.1';
+export const VERSION = '0.3.0-preview.1';
