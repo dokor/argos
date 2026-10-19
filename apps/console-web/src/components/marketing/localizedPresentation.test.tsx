@@ -109,8 +109,9 @@ describe("French and English presentation parity", () => {
 
   it("keeps all resource cards and their English destinations", () => {
     const root = renderPage(ResourcesEn, "en");
-    expect(root.querySelectorAll("article")).toHaveLength(17);
+    expect(root.querySelectorAll("article")).toHaveLength(18);
     for (const href of [
+      "/guides/checklist-audit-ecommerce",
       "/guides/lcp-lent", "/guides/content-security-policy", "/guides/hsts",
       "/test-accessibilite-site-web", "/verifier-entetes-securite", "/analyse-seo-page", "/test-vitesse-site-web",
       "/exemple-rapport", "/guides/checklist-audit-site-web", "/methodologie-score",

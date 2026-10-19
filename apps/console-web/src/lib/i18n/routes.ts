@@ -27,6 +27,7 @@ export const accountRoutes: Record<string, string> = {
   "/account/reset": "/en/account/reset",
 };
 export const languageRoutes: Record<string, string> = {
+  "/guides/checklist-audit-ecommerce": "/en/guides/ecommerce-audit-checklist",
   "/guides/lcp-lent": "/en/guides/slow-lcp",
   "/guides/content-security-policy": "/en/guides/content-security-policy",
   "/guides/hsts": "/en/guides/hsts",

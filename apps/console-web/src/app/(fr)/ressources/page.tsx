@@ -16,6 +16,7 @@ const copy = {
     guidesTitle: "Comprendre les mesures",
     audiencesTitle: "Choisir votre contexte",
     guides: [
+      { href: "/guides/checklist-audit-ecommerce", title: "Checklist d’audit e-commerce", description: "Sept étapes pour vérifier le catalogue, les fiches produit, le panier et le paiement, puis prioriser les corrections." },
       { href: "/ressources/pourquoi-mon-site-ne-convertit-pas", title: "Pourquoi mon site ne convertit pas ?", description: "Distinguer obstacles techniques, offre et mesure de conversion, puis choisir les vérifications utiles." },
       { href: "/test-accessibilite-site-web", title: "Test automatique d’accessibilité", description: "Repérer des problèmes détectables et préparer les essais humains." },
       { href: "/verifier-entetes-securite", title: "Vérifier les en-têtes de sécurité", description: "Lire CSP, HSTS et les protections HTTP sans les confondre avec un pentest." },
@@ -42,6 +43,7 @@ const copy = {
     guidesTitle: "Understand the measurements",
     audiencesTitle: "Choose your context",
     guides: [
+      { href: "/guides/checklist-audit-ecommerce", title: "Ecommerce audit checklist", description: "Seven steps to check your catalogue, product pages, cart and checkout, then prioritise fixes." },
       { href: "/ressources/pourquoi-mon-site-ne-convertit-pas", title: "Why is my website not converting?", description: "Separate technical obstacles, your offer and conversion measurement, then choose useful checks." },
       { href: "/test-accessibilite-site-web", title: "Automated accessibility test", description: "Identify detectable problems and prepare human checks." },
       { href: "/verifier-entetes-securite", title: "Check security headers", description: "Read CSP, HSTS and HTTP protections without confusing them with a penetration test." },
@@ -67,7 +69,7 @@ export default function ResourcesPage() {
   const { lang } = useLang();
   const c = copy[lang];
   const fr = lang === "fr";
-  const times: Record<string, number> = { "/exemple-rapport": 7, "/guides/checklist-audit-site-web": 9, "/methodologie-score": 6, "/ressources/audit-technique-gratuit": 8, "/ressources/accessibilite-numerique": 10 };
+  const times: Record<string, number> = { "/guides/checklist-audit-ecommerce": 9, "/exemple-rapport": 7, "/guides/checklist-audit-site-web": 9, "/methodologie-score": 6, "/ressources/audit-technique-gratuit": 8, "/ressources/accessibilite-numerique": 10 };
   const languageLabel = (href: string) => !fr && !languageRoutes[href] ? " · French" : "";
   const cardMeta = (href: string) => (fr ? "Débutant · " : "Beginner · ") + (href.includes("accessibilite") ? fr ? "Accessibilité" : "Accessibility" : href.includes("score") ? fr ? "Mesures" : "Measurements" : fr ? "Diagnostic" : "Diagnosis") + (fr ? " · Lecture estimée : " : " · Estimated reading: ") + (times[href] ?? 4) + " min" + languageLabel(href);
 

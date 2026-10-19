@@ -3,6 +3,20 @@ import { technicalGuides } from "./technicalGuides";
 // Evidence and revision rules: docs/product/editorial-provenance.md.
 export type EditorialRecord = { firstVersion: string; revised: string; translatedAt?: string; minutes: number; sourcesAnchor: string; sourceUrls: string[] };
 export const editorialPages: Record<string, EditorialRecord> = {
+  "/guides/checklist-audit-ecommerce": {
+    firstVersion: "2026-10-19",
+    revised: "2026-10-19",
+    translatedAt: "2026-10-19",
+    minutes: 9,
+    sourcesAnchor: "#references",
+    sourceUrls: [
+      "https://developers.google.com/search/docs/specialty/ecommerce/help-google-understand-your-ecommerce-site-structure",
+      "https://developers.google.com/search/docs/specialty/ecommerce/designing-a-url-structure-for-ecommerce-sites",
+      "https://developers.google.com/search/docs/appearance/structured-data/product",
+      "https://web.dev/articles/vitals",
+      "https://www.w3.org/WAI/tutorials/forms/validation/",
+    ],
+  },
   ...Object.fromEntries(Object.values(technicalGuides).map(guide => [guide.route, {
     firstVersion: "2026-10-16", revised: "2026-10-16", translatedAt: "2026-10-16",
     minutes: 6, sourcesAnchor: "#references", sourceUrls: guide.sources.map(source => source.href),
