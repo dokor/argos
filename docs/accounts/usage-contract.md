@@ -4,8 +4,26 @@ L’[historique graphique](usage-timeline.md) décrit les agrégats personnels,
 les dimensions et les limites de couverture du registre (#664).
 
 Epic #14, issues #449–#452. Le lancement conserve le comptage sans plafond.
-Aucun tarif, paiement ou avantage commercial premium n'est attribué par ce lot.
+Aucun tarif ni paiement n'est attribué par ce lot.
 L'offre `ARG_ACCOUNT_USER.offer` est indépendante du rôle d'autorisation.
+
+## Prompt de correction Premium (#765)
+
+Les rapports complets proposent en pied de page un prompt FR/EN à copier dans
+Claude ou Codex. `GET /api/account/report-ai-prompt/{kind}/{id}` accepte `run`,
+`report` ou `shared`. Le BFF vérifie l'offre courante via l'API privée de
+consommation : seul le code exact `PREMIUM` autorise cet export. Les rôles ADMIN,
+les offres FREE, CI et les offres inconnues ne le débloquent pas implicitement.
+Le backend vérifie ensuite l'accès au run personnel, au rapport ou au partage
+avec la même session ; une offre Premium n'accorde aucun accès supplémentaire.
+La restriction n'est pas une simple désactivation du bouton : le prompt est
+assemblé côté serveur et la réponse est privée, sans cache.
+
+Les autres offres voient la présentation Premium et le contact existant, sans
+parcours de paiement. Les synthèses anonymes et les démonstrations n'exportent
+pas de prompt. La fonctionnalité ne consomme aucune analyse, n'appelle aucun
+service IA et n'applique aucune correction automatiquement. Elle ne retire
+aucun constat déjà accessible dans le rapport aux autres offres.
 
 ## Unité et calendrier
 

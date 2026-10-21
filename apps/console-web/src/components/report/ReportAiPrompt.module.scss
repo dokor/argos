@@ -1,0 +1,54 @@
+@use '../../styles/tokens' as t;
+@use '../../styles/controls' as controls;
+
+.section {
+  min-width: 0;
+  border-top: 1px solid t.$border;
+  padding-top: t.$space-8;
+  color: t.$text;
+}
+
+.heading { display: flex; align-items: flex-start; justify-content: space-between; gap: t.$space-6; }
+.intro { max-width: 70ch; }
+.intro h2 { font-size: t.$text-2xl; font-weight: 700; line-height: 1.3; margin-bottom: t.$space-3; }
+.intro p, .note { color: t.$text-muted; line-height: 1.65; }
+.intro .premium { color: t.$brand; font-size: t.$text-base; font-weight: 600; margin-bottom: t.$space-2; }
+.availability { margin-top: t.$space-4; color: t.$text-muted; }
+.contact { display: inline-flex; align-items: center; min-height: 44px; color: t.$brand; text-decoration: underline; font-weight: 600; }
+.copy {
+  @include controls.cta-geometry;
+  flex-shrink: 0;
+  color: t.$on-brand;
+  background: t.$brand;
+  border-color: t.$brand;
+  &:hover { opacity: 0.9; }
+  &:disabled { cursor: wait; opacity: 0.7; }
+}
+.status { min-height: 1.5em; margin-block: t.$space-2; font-size: t.$text-base; color: t.$text-muted; }
+.preview summary { cursor: pointer; width: fit-content; min-height: 44px; display: flex; align-items: center; gap: t.$space-2; font-weight: 600; color: t.$brand; }
+.preview summary::before { content: '+'; }
+.preview[open] summary::before { content: '−'; }
+.label { display: block; margin-block: t.$space-3 t.$space-2; font-weight: 600; }
+.preview textarea {
+  display: block;
+  width: 100%;
+  min-height: 240px;
+  resize: vertical;
+  padding: t.$space-4;
+  border: 1px solid t.$border;
+  border-radius: t.$radius-sm;
+  background: t.$surface-2;
+  color: t.$text;
+  font-family: inherit;
+  font-size: t.$text-lg;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.note { max-width: 75ch; margin-top: t.$space-3; font-size: t.$text-base; }
+.copy:focus-visible, .contact:focus-visible, .preview summary:focus-visible, .preview textarea:focus-visible { outline: 3px solid t.$brand; outline-offset: 3px; }
+@media (max-width: 768px) {
+  .heading { flex-direction: column; gap: t.$space-4; }
+}
+@media (max-width: 480px) {
+  .copy { width: 100%; }
+}

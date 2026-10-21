@@ -21,6 +21,7 @@ it("keeps public and shared details gated and only offers summary PDF",()=>{
  expect(screen.getByRole("link",{name:"English"})).toHaveAttribute("href","/en/share/"+token);
  expect(screen.getByRole("link",{name:"Créer mon compte"})).toHaveAttribute("href","/account/register?returnTo="+encodeURIComponent("/share/"+token));
  expect(screen.queryByRole("option",{name:/preuves/i})).not.toBeInTheDocument();
+ expect(screen.queryByText("Fonctionnalité Premium")).not.toBeInTheDocument();
  fireEvent.click(screen.getByRole("button",{name:/Constats techniques/}));
  expect(screen.getByRole("link",{name:"Créer mon compte"})).toBeInTheDocument();
  expect(document.querySelectorAll("details[id^=finding-]")).toHaveLength(0);
