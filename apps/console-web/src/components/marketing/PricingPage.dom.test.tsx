@@ -43,10 +43,14 @@ it.each(["fr", "en"] as const)("keeps account access separate from all seven sub
   expect(statuses.querySelectorAll("dt")).toHaveLength(7);
   for (const status of Object.values(subscriptionStatuses)) expect(within(statuses as HTMLElement).getByText(status[lang][0])).toBeInTheDocument();
   expect(screen.getByRole("link", { name: pricingCopy[lang].manage })).toHaveAttribute("href", localizedPath("/account/billing", lang));
-  expect(document.querySelectorAll("details")).toHaveLength(8);
+  expect(document.querySelectorAll("details")).toHaveLength(9);
   const table = screen.getByRole("table");
   expect(within(table).getAllByRole("columnheader")).toHaveLength(4);
-  expect(within(table).getAllByRole("rowheader")).toHaveLength(10);
+  expect(within(table).getAllByRole("rowheader")).toHaveLength(12);
+  const discoveryRow = within(table).getByRole("rowheader", { name: lang === "fr" ? "URL recherchées par domaine" : "URLs discovered per domain" }).closest("tr")!;
+  expect(discoveryRow.textContent).toContain(lang === "fr" ? "Jusqu’à 50" : "Up to 50");
+  expect(discoveryRow.textContent).toContain(lang === "fr" ? "Jusqu’à 500" : "Up to 500");
+  expect(within(screen.getByRole("article", { name: "Premium" })).getByText(lang === "fr" ? "Recherche de 500 URL par domaine, profondeur 5" : "Discover 500 URLs per domain, depth 5")).toBeInTheDocument();
 });
 
 it("server-renders both languages and declares reciprocal public canonical and sitemap entries", () => {

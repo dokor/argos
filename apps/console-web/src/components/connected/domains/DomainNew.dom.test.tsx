@@ -10,7 +10,7 @@ vi.mock("@/lib/account-client", async (importOriginal) => ({
 }));
 const state = vi.hoisted(() => ({
   query: "discovery=600",
-  maxUrls: 50, maxDepth: 3, active: false,
+  maxUrls: 50, maxDepth: 3, defaultUrls: 20, defaultDepth: 2, active: false,
   discoveryStatus: "COMPLETED",
   replace: vi.fn(),
   push: vi.fn(),
@@ -41,7 +41,7 @@ vi.mock("./useDomainResource", () => ({
       ? null
       : (path === "domain-batches" || path === "domain-discoveries")
         ? (state.active ? [{id:"700",domainId:"8",hostname:"other.example",status:"QUEUED"}] : [])
-        : path === "domain-discoveries/limits" ? { maxUrls: state.maxUrls, maxDepth: state.maxDepth, defaultUrls: 20, defaultDepth: 2, durationSeconds: 60 }
+        : path === "domain-discoveries/limits" ? { maxUrls: state.maxUrls, maxDepth: state.maxDepth, defaultUrls: state.defaultUrls, defaultDepth: state.defaultDepth, durationSeconds: 60 }
         : path === "analysis-profiles"
           ? {
               defaultProfileId: "server-default-v1",
@@ -89,6 +89,7 @@ vi.mock("./useDomainResource", () => ({
   }),
 }));
 beforeEach(() => {
+  state.defaultUrls = 20; state.defaultDepth = 2;
   state.query = "discovery=600";
   state.maxUrls = 50; state.maxDepth = 3; state.active = false;
   state.discoveryStatus = "COMPLETED";
@@ -272,6 +273,21 @@ it("keeps scope inputs and their discovery validations beside the quota guide", 
   expect(screen.getByLabelText(fr.domainPage.maxUrls)).toHaveAttribute("max", "50");
   expect(screen.getByLabelText(fr.domainPage.maxDepth)).toHaveAttribute("min", "0");
   expect(screen.getByLabelText(fr.domainPage.maxDepth)).toHaveAttribute("max", "3");
+});
+
+it("submits the Premium defaults of 500 URLs and depth 5 returned by the server", async () => {
+  state.query = "";
+  state.maxUrls = 500; state.defaultUrls = 500;
+  state.maxDepth = 5; state.defaultDepth = 5;
+  render(<DomainNew />);
+  expect(screen.getByLabelText(fr.domainPage.maxUrls)).toHaveValue(500);
+  expect(screen.getByLabelText(fr.domainPage.maxUrls)).toHaveAttribute("max", "500");
+  expect(screen.getByLabelText(fr.domainPage.maxDepth)).toHaveValue(5);
+  fireEvent.change(screen.getByLabelText(fr.domainPage.hostname), { target: { value: "example.com" } });
+  await act(async () => fireEvent.submit(screen.getByLabelText(fr.domainPage.hostname).closest("form")!));
+  expect(accountFetch).toHaveBeenCalledWith("domain-discoveries", "POST", {
+    hostname: "example.com", maxUrls: 500, maxDepth: 5, excludedPaths: [],
+  }, undefined, expect.any(String));
 });
 
 it("accepts operator limits above 50/3 while another domain is pending", () => {

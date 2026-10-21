@@ -26,8 +26,8 @@ public final class DiscoveryPolicy {
 
     @Inject
     public DiscoveryPolicy(Config c) {
-        maxUrls = value(c, "max-urls", 50, 1, 1000);
-        maxDepth = value(c, "max-depth", 3, 0, 10);
+        maxUrls = value(c, "max-urls", 500, 1, 1000);
+        maxDepth = value(c, "max-depth", 5, 0, 10);
         seconds = value(c, "duration-seconds", 60, 1, 300);
         perHost = value(c, "requests-per-host", 2, 1, 2);
         workers = value(c, "workers", 4, 1, 16);
@@ -51,8 +51,9 @@ public final class DiscoveryPolicy {
         return v;
     }
 
-    public void validate(CreateDiscovery input) {
-        if (input.maxUrls() > maxUrls || input.maxDepth() > maxDepth)
+    public void validate(CreateDiscovery input, String offer) {
+        var allowed = capabilities(offer);
+        if (input.maxUrls() > allowed.maxUrls() || input.maxDepth() > allowed.maxDepth())
             throw new com.dokor.argos.services.account.AccountError(400, "discovery_limits_invalid");
     }
 
@@ -63,8 +64,18 @@ public final class DiscoveryPolicy {
                 Math.min(saved.requestsPerHost(), perHost));
     }
 
-    public DiscoveryCapabilities capabilities() {
-        return new DiscoveryCapabilities((long) maxUrls, (long) maxDepth, (long) Math.min(20, maxUrls), (long) Math.min(2, maxDepth), (long) seconds);
+    public DiscoveryCapabilities capabilities(String offer) {
+        boolean premium = "PREMIUM".equals(offer);
+        long urls = Math.min(maxUrls, premium ? 500 : 50);
+        long depth = Math.min(maxDepth, premium ? 5 : 3);
+        return new DiscoveryCapabilities(urls, depth, premium ? urls : Math.min(20, urls),
+                premium ? depth : Math.min(2, depth), (long) seconds);
+    }
+
+    public DiscoveryLimits limits(CreateDiscovery input, String offer) {
+        var allowed = capabilities(offer);
+        return new DiscoveryLimits(Math.min(input.maxUrls(), allowed.maxUrls()),
+                Math.min(input.maxDepth(), allowed.maxDepth()), (long) seconds, (long) perHost);
     }
 
     public DiscoveryLimits limits(CreateDiscovery input) {

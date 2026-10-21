@@ -285,7 +285,30 @@ class DomainCrawlerTest {
         assertTrue(fetched.contains("https://example.com/d5"));
         assertEquals("EXHAUSTED",result.reason());
     }
+    @Test void premiumDiscoveryStopsAtFiveHundredUrls() {
+        StringBuilder root = new StringBuilder();
+        for (int n = 0; n < 600; n++) {
+            root.append("<a href='/p" + n + "'>page</a>");
+            html("/p" + n, "");
+        }
+        html("", root.toString());
+        var input = new CreateDiscovery("example.com", 500L, 5L, List.of());
+        var result = new DomainCrawler(policy, transport).crawl(input, policy.limits(input, "PREMIUM"),
+                new DiscoveryBudget(Duration.ofSeconds(5), () -> false), pages::add);
+        assertEquals(500, pages.size());
+        assertEquals(500, pages.stream().filter(DomainCrawler.Page::eligible).count());
+        assertEquals("URL_LIMIT", result.reason());
+    }
+    @Test void premiumDiscoveryFollowsFiveLevelsButDoesNotFetchLevelSix() {
+        html("", "<a href='/d1'>next</a>");
+        for (int n = 1; n <= 6; n++) html("/d" + n, "<a href='/d" + (n + 1) + "'>next</a>");
+        run(500, 5, List.of());
+        assertTrue(fetched.contains("https://example.com/d5"));
+        assertFalse(fetched.contains("https://example.com/d6"));
+        assertEquals(6, pages.stream().filter(DomainCrawler.Page::eligible).count());
+    }
     @Test void engineRestrictsForgedOrOldSnapshotWithoutTrustingCaller() {
+        policy = new DiscoveryPolicy(ConfigFactory.parseString("discovery.max-urls=50\ndiscovery.max-depth=3"));
         StringBuilder root = new StringBuilder();
         for(int n=0;n<80;n++){root.append("<a href='/p"+n+"'>p</a>");html("/p"+n,"");}
         html("",root.toString());
