@@ -29,6 +29,31 @@ class DiscoveryIT extends MariaDbReportFixture {
         var failure = assertThrows(AccountError.class, () -> service.create(a, CSRF, UUID.randomUUID().toString(), new CreateDiscovery("www.redpoint.fr", 20L, 2L, List.of())));
         assertEquals("discovery_target_unavailable", ((Map<?,?>) failure.getResponse().getEntity()).get("error"));
     }
+    @Test void premiumCapabilitiesAdmissionAndWorkerRetainFiveHundredUrlsAndDepthFive() throws Exception {
+        assertEquals(50, service.capabilities(a).maxUrls());
+        var input = new CreateDiscovery("example.com", 500L, 5L, List.of());
+        assertThrows(AccountError.class, () -> service.create(a, CSRF, UUID.randomUUID().toString(), input));
+        sql("UPDATE ARG_ACCOUNT_USER SET offer='PREMIUM' WHERE id=10");
+        assertEquals(500, service.capabilities(a).defaultUrls());
+        assertEquals(5, service.capabilities(a).defaultDepth());
+        var discovery = service.create(a, CSRF, UUID.randomUUID().toString(), input);
+        assertEquals(500, discovery.effectiveLimits().maxUrls());
+        assertEquals(5, discovery.effectiveLimits().maxDepth());
+        var claimed = dao.claim(policy, clock.instant());
+        var limits = policy.restrict(service.read(claimed.getEffectiveLimitsJson(), DiscoveryLimits.class));
+        assertEquals(500, limits.maxUrls());
+        assertEquals(5, limits.maxDepth());
+    }
+
+    @Test void downgradeBeforeClaimShrinksQueuedPremiumDiscovery() throws Exception {
+        sql("UPDATE ARG_ACCOUNT_USER SET offer='PREMIUM' WHERE id=10");
+        service.create(a, CSRF, UUID.randomUUID().toString(), new CreateDiscovery("example.com", 500L, 5L, List.of()));
+        sql("UPDATE ARG_ACCOUNT_USER SET offer='FREE' WHERE id=10");
+        var claimed = dao.claim(policy, clock.instant());
+        var limits = service.read(claimed.getEffectiveLimitsJson(), DiscoveryLimits.class);
+        assertEquals(50, limits.maxUrls());
+        assertEquals(3, limits.maxDepth());
+    }
     AccountDao accounts;
     AccountSessionService sessions;
     DiscoveryDao dao;
@@ -367,6 +392,7 @@ class DiscoveryIT extends MariaDbReportFixture {
         }
         assertEquals(0,count("ARG_DOMAIN_DISCOVERY"));
         configure("discovery.max-urls=200\ndiscovery.max-depth=5");
+        sql("UPDATE ARG_ACCOUNT_USER SET offer='PREMIUM' WHERE id=10");
         var accepted=service.create(a,CSRF,UUID.randomUUID().toString(),new CreateDiscovery("example.com",200L,5L,List.of()));
         assertEquals(200,accepted.effectiveLimits().maxUrls());
         assertEquals(5,accepted.effectiveLimits().maxDepth());

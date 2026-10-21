@@ -122,7 +122,7 @@ public final class DiscoveryDao extends CrudDaoQuerydsl<DomainDiscovery> {
                                     .fetchOne()
                             >= policy.workers) return null;
                     String sql =
-                            "SELECT d.id FROM ARG_DOMAIN_DISCOVERY d JOIN ARG_ACCOUNT_SITE s ON"
+                            "SELECT d.id,u.offer FROM ARG_DOMAIN_DISCOVERY d JOIN ARG_ACCOUNT_SITE s ON"
                                 + " s.id=d.site_id JOIN ARG_ACCOUNT_USER u ON u.id=d.owner_user_id"
                                 + " WHERE d.status='QUEUED' AND u.state='ACTIVE' AND d.expires_at>?"
                                 + " AND NOT EXISTS (SELECT 1 FROM ARG_DOMAIN_DISCOVERY own WHERE"
@@ -139,6 +139,7 @@ public final class DiscoveryDao extends CrudDaoQuerydsl<DomainDiscovery> {
                         try (var r = statement.executeQuery()) {
                             if (!r.next()) return null;
                             long id = r.getLong(1);
+                            var allowed = policy.capabilities(r.getString(2));
                             String token = UUID.randomUUID().toString();
                             if (execute(
                                             c,
@@ -155,8 +156,8 @@ public final class DiscoveryDao extends CrudDaoQuerydsl<DomainDiscovery> {
                                               claim_token=?,version=version+1
                                             WHERE id=? AND status='QUEUED'
                                             """,
-                                            policy.maxUrls,
-                                            policy.maxDepth,
+                                            allowed.maxUrls(),
+                                            allowed.maxDepth(),
                                             policy.seconds,
                                             policy.perHost,
                                             Timestamp.from(now),
