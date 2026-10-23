@@ -125,6 +125,8 @@ Argos est distribué sous **[Business Source License 1.1](./LICENSE)** (BSL 1.1)
 
 Copyright © 2026 [Antoine LE LOUËT](https://github.com/antoinelelouet). Pour un usage commercial hors périmètre, ou une licence alternative, contactez le titulaire.
 
+Site de l'auteur : [antoine.lelouet.fr](https://antoine.lelouet.fr).
+
 Voir [`CONTRIBUTING.md`](./CONTRIBUTING.md) pour les règles de contribution et de redistribution.
 
 
