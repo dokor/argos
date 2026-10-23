@@ -101,6 +101,7 @@ services:
       - traefik.http.routers.console-web-http.entrypoints=web
       - traefik.http.routers.console-web-http.middlewares=redirect-to-https
       - traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https
+      - traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true
 
 networks:
   proxy:
