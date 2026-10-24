@@ -6,7 +6,7 @@ import puppeteer from 'puppeteer-core';
 import { createLighthouseCollector, lighthouseChromeFlags } from './collector.mjs';
 import { MAX_RESULT_BYTES } from './supervisor.mjs';
 
-process.once('message', async ({ url, timeoutMs }) => {
+process.once('message', async ({ url, timeoutMs, navigationOrigins }) => {
   const collect = createLighthouseCollector({
     // The supervisor owns this worker's process group and scratch directory.
     // Do not let chrome-launcher detach Chrome into another process group.
@@ -30,6 +30,6 @@ process.once('message', async ({ url, timeoutMs }) => {
     chromeFlags: lighthouseChromeFlags(Launcher.defaultFlags()), chromePath: process.env.CHROME_PATH,
     log: (event, fields) => process.send({ type: 'diagnostic', event, reason: fields.reason })
   });
-  try { await collect(url, { timeoutMs }); }
+  try { await collect(url, { timeoutMs, navigationOrigins }); }
   catch { process.exit(1); }
 });

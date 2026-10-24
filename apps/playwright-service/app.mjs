@@ -1,7 +1,7 @@
 import express from 'express';
 import { resourceEvidence, evidenceEnvelope, EVIDENCE_LIMIT } from './evidence.mjs';
 import { analysisUrl } from './policy.mjs';
-import { proxyEndpoint, browserFlags, protectContext, safeOrigin } from './browser-policy.mjs';
+import { proxyEndpoint, browserFlags, protectContext, safeOrigin, navigationScope } from './browser-policy.mjs';
 import { partitionNetworkErrors, isFirstPartyUrl } from './domain.mjs';
 
 export function isValidAnalysisUrl(value) {
@@ -19,7 +19,7 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
   if (!Number.isInteger(maxConcurrency) || maxConcurrency < 1 || maxConcurrency > 4) throw new Error('Invalid concurrency');
   let active = 0;
   const app = express();
-  app.use(express.json({ limit: '8kb' }));
+  app.use(express.json({ limit: '32kb' }));
 
   // Sonde de disponibilité (healthcheck Docker + vérif amont). Volontairement
   // légère : ne lance pas de navigateur, répond immédiatement si le process est up.
@@ -30,6 +30,9 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
   app.post('/analyze/runtime', async (req, res) => {
     const { url } = req.body ?? {};
     if (!isValidAnalysisUrl(url)) return res.status(400).json({ error: 'Invalid URL' });
+    let navigationOrigins;
+    try { navigationOrigins = navigationScope(req.body?.navigationOrigins,url); }
+    catch { return res.status(400).json({ error: 'Invalid navigation scope' }); }
     let endpoint;
     try { endpoint = proxyEndpoint(proxy); } catch { return res.status(503).json({ error: 'Collector unavailable' }); }
     if (active >= maxConcurrency) return res.status(429).json({ error: 'Collector busy' });
@@ -56,7 +59,7 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
         // Pending CDP setup can reject during intentional browser cleanup.
         // Keep cancelling active collection, but preserve an already collected result.
         if (browser) cancel();
-      });
+      }, navigationOrigins);
       const page = await context.newPage();
       let collecting = true;
 

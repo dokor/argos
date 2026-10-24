@@ -91,6 +91,7 @@ public class HttpModuleAnalyzer {
                 // au moment du fetch : bloque une redirection vers une IP interne et couvre
                 // le DNS rebinding entre la soumission et le traitement (#217).
                 try {
+                    if(!context.navigationOrigins().isEmpty()) com.dokor.argos.services.ci.CiOrigin.require(context.navigationOrigins(),currentUrl);
                     UrlNormalizer.validatePublicUrl(currentUrl);
                 } catch (IllegalArgumentException ssrf) {
                     logger.warn("HTTP module: blocked SSRF target url={} reason={}",
