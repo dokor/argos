@@ -8,6 +8,7 @@ export const groups = {
   account: ['connected-account', 'connected-usage', 'usage-timeline', 'connected-admin', 'admin-analytics', 'admin-statistics'],
   integrations: ['connected-ci-integrations'],
   domains: ['connected-domains'],
+  docs: ['developer-docs'],
 };
 
 export function runGroup(name, run = spawnSync) {

@@ -25,6 +25,7 @@ export default function SiteFooter({ fixedFrench = false }: { fixedFrench?: bool
           <h2>{f.discover}</h2>
           <Link href="/#audit">{t.nav.audit}</Link>
           <Link href="/ressources">{f.resources}</Link>
+          <Link href="/docs">{fixedFrench || lang === "fr" ? "Documentation développeur" : "Developer documentation"}</Link>
           <Link href="/exemple-rapport">{f.exampleReport}</Link>
           <Link href="/faq">{f.faq}</Link>
         </nav>
