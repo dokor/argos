@@ -19,8 +19,14 @@ public class HttpsTargetProofClient {
     private final long timeoutMillis;
     private final Semaphore capacity = new Semaphore(2);
     @Inject public HttpsTargetProofClient(TokenService tokens) {
-        this(HttpClient.newBuilder().proxy(AuditEgress.configured()).followRedirects(HttpClient.Redirect.NEVER)
-            .connectTimeout(java.time.Duration.ofSeconds(3)).build(), tokens);
+        this(transport(AuditEgress.configured(),null), tokens);
+    }
+    /** Package seam for a local test CA; production always uses the JVM trust store. */
+    static HttpClient transport(java.net.ProxySelector proxy,javax.net.ssl.SSLContext roots) {
+        var builder=HttpClient.newBuilder().proxy(proxy).followRedirects(HttpClient.Redirect.NEVER)
+            .connectTimeout(java.time.Duration.ofSeconds(3));
+        if(roots!=null)builder.sslContext(roots);
+        return builder.build();
     }
     HttpsTargetProofClient(HttpClient client, TokenService tokens) { this(client,tokens,8000); }
     HttpsTargetProofClient(HttpClient client, TokenService tokens,long timeoutMillis) {

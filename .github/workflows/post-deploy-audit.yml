@@ -25,12 +25,14 @@ jobs:
     outputs:
       outcome: ${{ steps.audit.outputs.outcome }}
       artifact_name: self-audit-${{ github.sha }}-${{ github.run_attempt }}
+      artifact_id: ${{ steps.evidence.outputs.artifact-id }}
+      evidence_sha256: ${{ steps.audit.outputs.evidence_sha256 }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: '24.21.0'
       - name: Audit the observed deployment
@@ -43,13 +45,14 @@ jobs:
           ARGOS_CI_PASSWORD: ${{ secrets.ARGOS_CI_PASSWORD }}
         run: node scripts/ci/self-audit.mjs
       - name: Retain filtered evidence
+        id: evidence
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: self-audit-${{ github.sha }}-${{ github.run_attempt }}
           path: outputs/post-deploy-audit.json
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 7
       - name: Enforce post-deployment verdict
         if: always()
         env:
@@ -59,7 +62,7 @@ jobs:
   tickets:
     needs: control
     # A site NO-GO must still create tickets. Technical failures never do.
-    if: ${{ !cancelled() && (needs.control.outputs.outcome == 'GO' || needs.control.outputs.outcome == 'SITE_NO_GO') }}
+    if: ${{ !cancelled() && github.repository == 'dokor/argos' && github.ref == 'refs/heads/main' && needs.control.outputs.artifact_id != '' && needs.control.outputs.evidence_sha256 != '' && (needs.control.outputs.outcome == 'GO' || needs.control.outputs.outcome == 'SITE_NO_GO') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 8
     permissions:
@@ -69,20 +72,21 @@ jobs:
       group: argos-self-audit-tickets
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: '24.21.0'
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
-          name: ${{ needs.control.outputs.artifact_name }}
+          artifact-ids: ${{ needs.control.outputs.artifact_id }}
           path: outputs
       - name: Synchronize actionable findings
         env:
           GH_TOKEN: ${{ github.token }}
           EXPECTED_SHA: ${{ github.sha }}
           DEPLOYED_SERVICES: ${{ inputs.services }}
+          EXPECTED_EVIDENCE_SHA256: ${{ needs.control.outputs.evidence_sha256 }}
         run: node scripts/ci/self-audit-tickets.mjs

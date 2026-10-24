@@ -351,7 +351,7 @@ test('CLI persists a filtered technical verdict, signals Actions and exits 2 wit
     const raw = readFileSync(join(root, 'outputs/post-deploy-audit.json'), 'utf8');
     assert.equal(JSON.parse(raw).outcome, 'CONTROL_FAILED');
     assert.equal(JSON.parse(raw).reason, 'configuration-invalid');
-    assert.equal(readFileSync(output, 'utf8'), 'outcome=CONTROL_FAILED\n');
+    assert.match(readFileSync(output, 'utf8'), /^outcome=CONTROL_FAILED\nevidence_sha256=[a-f0-9]{64}\n$/);
     assert.ok(![raw, run.stdout, run.stderr, readFileSync(summary, 'utf8')].join('').includes(secret));
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
@@ -468,7 +468,7 @@ test('deployment workflows call the same control only after deployment; credenti
   assert.ok(!workflow.includes('schedule:')); assert.ok(!workflow.includes('workflow_dispatch:'));
   assert.match(workflow, /needs.control.outputs.outcome == 'SITE_NO_GO'/);
   assert.match(workflow, /artifact_name: self-audit-.*github.run_attempt/);
-  assert.match(workflow, /name: \$\{\{ needs.control.outputs.artifact_name \}\}/);
+  assert.match(workflow, /artifact-ids: \$\{\{ needs.control.outputs.artifact_id \}\}/);
   assert.ok(!workflow.split('\n  tickets:')[0].includes('issues: write'));
   assert.ok(!workflow.split('\n  tickets:')[1].includes('ARGOS_CI_'));
   const caller = readFileSync(new URL('../../.github/workflows/deploy.yml', import.meta.url), 'utf8');

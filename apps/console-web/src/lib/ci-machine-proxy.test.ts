@@ -28,6 +28,22 @@ describe("CI machine BFF",()=>{
     }
     expect(fetch).not.toHaveBeenCalled();
   });
+  it("rejects ambiguous backend configuration before sending any credential",async()=>{
+    for(const base of ["https://user:synthetic-private-737@backend.example","https://backend.example/path","https://backend.example?q=synthetic-private-737",
+      "https://backend.example#fragment","file:///secret","//attacker.example","http://backend.example\\@attacker.example"]) {
+      vi.stubEnv("API_BASE",base);
+      const response=await call(req("v1/preflight","GET"));expect(response.status).toBe(502);
+      expect(await response.text()).not.toContain("synthetic-private-737");
+    }
+    expect(fetch).not.toHaveBeenCalled();
+  });
+  it("refuses forged correlation IDs and injected diagnostic text instead of echoing them",async()=>{
+    for(const requestId of ["::error:: @everyone \u001b[31m","https://attacker.example/secret","a".repeat(10000)]) {
+      vi.mocked(fetch).mockResolvedValueOnce(Response.json({schemaVersion:1,requestId,error:{code:"INTERNAL_ERROR",raw:"synthetic-private-737"}},{status:500}));
+      const response=await call(req("v1/preflight","GET"));expect(response.status).toBe(502);
+      const output=await response.text();expect(output).not.toContain("synthetic-private-737");expect(output).not.toContain("everyone");expect(output).not.toContain("attacker.example");
+    }
+  });
   it("rejects injected ownership, profile bypass, private/credential/query URLs and ambiguous headers",async()=>{
     for(const body of [{url:"https://example.com",profileId:"standard-v1",samples:1,owner:99},
       {url:"https://127.0.0.1",profileId:"standard-v1",samples:1},{url:"https://example.com?a=secret",profileId:"standard-v1",samples:1},
