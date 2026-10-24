@@ -24,9 +24,9 @@ variables:
   script:
     - test "$(node --version)" = 'v24.21.0'
     - >-
-      curl --proto '=https' --tlsv1.2 --fail --silent --show-error --max-time 30 --max-redirs 0
-      --output argos-ci.mjs https://raw.githubusercontent.com/dokor/argos/efe5fb4f002d75bcf76cd698d71d82c4a39d7ab8/clients/ci/dist/argos-ci.mjs
-    - echo '8929a521e0085b2a1a7172c44daa94587b4bf05270ad66484d9d2f3c43017340  argos-ci.mjs' | sha256sum --check --strict
+      curl --proto '=https' --tlsv1.2 --fail --silent --show-error --max-time 30 --max-redirs 0 --max-filesize 1048576
+      --output argos-ci.mjs https://raw.githubusercontent.com/dokor/argos/d809f64599b8b4bf470262169615cae18bef3de2/clients/ci/dist/argos-ci.mjs
+    - echo 'f3cc2f7af72dad85174f9b42412c8d62f00fdd1e55db77d1da26f54c3857b16a  argos-ci.mjs' | sha256sum --check --strict
 
 argos_control:
   extends: .argos_rules
@@ -61,7 +61,7 @@ argos_control:
     paths: [.argos-ci/evidence.json]
 
 argos_preview:
-  # Preview only: no key Argos, no write token, no tickets until #738/#740.
+  # Preview only: no key Argos, no write token, no tickets until #740.
   stage: argos_preview
   timeout: 5 minutes
   environment:
