@@ -130,7 +130,7 @@ public class AuditDao extends CrudDaoQuerydsl<Audit> {
                 RUN.id.eq(
                     SQLExpressions.select(SUB_RUN.id.max())
                         .from(SUB_RUN)
-                        .where(SUB_RUN.auditId.eq(AUDIT.id))
+                        .where(SUB_RUN.auditId.eq(AUDIT.id),SUB_RUN.ciNavigationOrigins.isNull())
                 )
             )
             .leftJoin(AUDIT_REPORT).on(AUDIT_REPORT.runId.eq(RUN.id))
@@ -155,7 +155,7 @@ public class AuditDao extends CrudDaoQuerydsl<Audit> {
                 AUDIT_REPORT.id, AUDIT_REPORT.globalScore)
             .from(RUN)
             .leftJoin(AUDIT_REPORT).on(AUDIT_REPORT.runId.eq(RUN.id))
-            .where(RUN.auditId.eq(auditId))
+            .where(RUN.auditId.eq(auditId),RUN.ciNavigationOrigins.isNull())
             .orderBy(RUN.createdAt.desc(), RUN.id.desc())
             .limit(limit);
     }
@@ -167,7 +167,7 @@ public class AuditDao extends CrudDaoQuerydsl<Audit> {
         if (createdAt == null) return List.of();
         return transactionManager.selectQuery().select(AUDIT_REPORT).from(RUN)
             .innerJoin(AUDIT_REPORT).on(AUDIT_REPORT.runId.eq(RUN.id))
-            .where(RUN.auditId.eq(auditId), RUN.createdAt.lt(createdAt)
+            .where(RUN.ciNavigationOrigins.isNull(),RUN.auditId.eq(auditId), RUN.createdAt.lt(createdAt)
                 .or(RUN.createdAt.eq(createdAt).and(RUN.id.loe(runId))))
             .orderBy(RUN.createdAt.desc(), RUN.id.desc()).limit(2).fetch();
     }
