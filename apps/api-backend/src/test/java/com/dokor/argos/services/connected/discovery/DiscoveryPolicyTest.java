@@ -13,20 +13,43 @@ import java.util.List;
 class DiscoveryPolicyTest {
     @Test void defaultsRejectForgedLimitsAndPublishSafeDefaults() {
         var p = new DiscoveryPolicy(ConfigFactory.empty());
-        assertEquals(50, p.capabilities().maxUrls());
-        assertEquals(3, p.capabilities().maxDepth());
-        assertEquals(400, assertThrows(AccountError.class, () -> p.validate(input(51,3))).getResponse().getStatus());
-        assertThrows(AccountError.class, () -> p.validate(input(50,4)));
-        assertDoesNotThrow(() -> p.validate(input(50,0)));
+        assertEquals(50, p.capabilities("FREE").maxUrls());
+        assertEquals(3, p.capabilities("FREE").maxDepth());
+        assertEquals(20, p.capabilities("FREE").defaultUrls());
+        assertEquals(2, p.capabilities("FREE").defaultDepth());
+        assertEquals(400, assertThrows(AccountError.class, () -> p.validate(input(51,3), "FREE")).getResponse().getStatus());
+        assertThrows(AccountError.class, () -> p.validate(input(50,4), "FREE"));
+        assertDoesNotThrow(() -> p.validate(input(50,0), "FREE"));
+    }
+    @Test void premiumAllowsFiveHundredUrlsAndFiveLevelsByDefault() {
+        var p = new DiscoveryPolicy(ConfigFactory.empty());
+        assertEquals(500, p.capabilities("PREMIUM").maxUrls());
+        assertEquals(5, p.capabilities("PREMIUM").maxDepth());
+        assertEquals(500, p.capabilities("PREMIUM").defaultUrls());
+        assertEquals(5, p.capabilities("PREMIUM").defaultDepth());
+        assertDoesNotThrow(() -> p.validate(input(500,5), "PREMIUM"));
+        assertThrows(AccountError.class, () -> p.validate(input(501,5), "PREMIUM"));
+        assertThrows(AccountError.class, () -> p.validate(input(500,6), "PREMIUM"));
+        assertEquals(500, p.limits(input(500,5), "PREMIUM").maxUrls());
+        assertEquals(5, p.limits(input(500,5), "PREMIUM").maxDepth());
+        for (String offer : new String[]{"FREE", "premium", "ADMIN", "OTHER", null}) {
+            assertThrows(AccountError.class, () -> p.validate(input(500,5), offer));
+        }
     }
     @Test void operatorsCanRaiseLimitsAndQueuedSnapshotsCanOnlyShrink() {
         var large = new DiscoveryPolicy(ConfigFactory.parseString("discovery.max-urls=200\ndiscovery.max-depth=5"));
-        large.validate(input(200,5));
+        large.validate(input(200,5), "PREMIUM");
         var saved = large.limits(input(200,5));
-        var small = new DiscoveryPolicy(ConfigFactory.empty());
+        var small = new DiscoveryPolicy(ConfigFactory.parseString("discovery.max-urls=50\ndiscovery.max-depth=3"));
+        assertEquals(50, small.capabilities("PREMIUM").maxUrls());
+        assertEquals(3, small.capabilities("PREMIUM").defaultDepth());
         assertEquals(50, small.restrict(saved).maxUrls());
         assertEquals(3, small.restrict(saved).maxDepth());
         assertEquals(20, large.restrict(large.limits(input(20,2))).maxUrls());
+        var high = new DiscoveryPolicy(ConfigFactory.parseString("discovery.max-urls=1000\ndiscovery.max-depth=10"));
+        assertEquals(500, high.capabilities("PREMIUM").maxUrls());
+        assertEquals(5, high.capabilities("PREMIUM").maxDepth());
+        assertEquals(50, high.capabilities("FREE").maxUrls());
     }
     @ParameterizedTest
     @ValueSource(strings={"max-urls=0","max-urls=-1","max-urls=1001","max-urls=2.5","max-depth=-1","max-depth=11","max-depth=1.2","duration-seconds=301","account-queue-limit=0","max-requests=10001","workers=0"})

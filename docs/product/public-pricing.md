@@ -35,6 +35,13 @@ La priorité Premium prévue à l'ouverture est relative : elle ne promet aucun 
 n'interrompt pas les analyses en cours et ne contourne ni admission, quota, ni capacité.
 Elle reste désactivée jusqu'à #467. Voir [politique de file](../ci/quotas.md#priorité-premium-relative).
 
+La carte Premium, le comparatif et la FAQ annoncent une recherche jusqu’à 500 URL
+par domaine et une profondeur de 5, contre 50 et 3 avec un compte gratuit.
+Cette couverture aide à repérer les fiches produit, articles et pages profondes
+avant de sélectionner les audits. La découverte ne consomme pas de crédit et
+ne promet pas 500 audits : les URL exclues comptent dans le plafond, et les
+budgets de temps, règles robots et limites opérateur restent applicables.
+
 ## Statuts expliqués
 
 Le guide public distingue l'offre, l'état du compte et les sept états de facturation :
