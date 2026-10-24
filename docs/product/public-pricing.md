@@ -9,9 +9,11 @@ La livraison du code ne vaut pas publication en production.
 - Sans compte : audit manuel d'une URL publique, scores et synthèse, gratuit.
 - Compte gratuit : rapports détaillés sous compte vérifié, sites, URL, historique
   et partage contrôlé. Aucun quota numérique gratuit ou illimité n'est promis.
-- Premium CI : à venir, aucun Checkout proposé. Les montants restent à décider :
-  affichage prévu en EUR HT avec mention TTC, mensuel/annuel et réduction annuelle
-  sans taux inventé. Les six flags de lancement restent fermés.
+- Premium CI : 19 EUR HT/mois ou 199 EUR HT/an, payés en une fois pour l'année.
+  Économie annuelle de 29 EUR, soit 12,7 % sur douze mensualités ; équivalent
+  mensuel arrondi à 16,58 EUR HT. Exemples avec TVA à 20 % : 22,80 EUR TTC/mois
+  et 238,80 EUR TTC/an. Le TTC applicable dépend de la situation fiscale du client.
+  Les six flags de lancement restent fermés ; le CTA reste la liste d'attente.
 
 Les limites Premium reprennent les décisions de l'epic #731 : trois clés, trente
 analyses par mois et par intégration stable, domaines vérifiés illimités, un audit
@@ -23,8 +25,15 @@ pas présentés comme un pot commun de 90 analyses transférables.
 La création d'issues est facultative et nécessite les permissions de la destination
 et le journal Azure privé de cette version, avec d'éventuels coûts externes distincts.
 Les actions publiques mènent à l'audit gratuit, à l'inscription gratuite ou à la liste
-d'attente Premium déjà existante, avec consentement explicite. Aucun nouveau prix,
-paiement, droit ou appel fournisseur n'est créé par cette page.
+d'attente Premium déjà existante, avec consentement explicite. Aucune ressource Stripe,
+aucun paiement, droit ou appel fournisseur n'est créé par cette page. Les quotas restent
+mensuels avec les deux périodicités ; l'annuel ne donne pas un budget consommable
+en une seule fois. Les montants frontend partagés sont contrôlés contre les montants
+backend de `reference.conf` par `premium-pricing.test.ts`.
+
+La priorité Premium prévue à l'ouverture est relative : elle ne promet aucun délai,
+n'interrompt pas les analyses en cours et ne contourne ni admission, quota, ni capacité.
+Elle reste désactivée jusqu'à #467. Voir [politique de file](../ci/quotas.md#priorité-premium-relative).
 
 ## Statuts expliqués
 
@@ -36,14 +45,14 @@ son contrôle de session existant ; le lien de gestion de facturation reste prot
 par le parcours de compte.
 
 Les explications des remboursements et litiges décrivent la politique conservatrice
-prévue. Les modalités commerciales/fiscales, tarifs et recette #467 restent à valider
+prévue. Les tarifs sont arrêtés ; les modalités commerciales/fiscales et la recette #467 restent à valider
 avant ouverture ; une inscription sur la liste d'attente ne donne aucun droit.
 
 ## Composition et références
 
 Trois cartes d'offres, un tableau comparatif, une explication du comptage, un glossaire
-et une FAQ. Pas de faux prix, de remise chiffrée, d'essai limité, de badge « le plus
-populaire » sans données ou de sélecteur de périodicité sans montant à comparer.
+et une FAQ. Les deux prix et leur économie sont calculés depuis les mêmes montants.
+Pas d'essai limité ni de badge « le plus populaire » sans données.
 
 Conventions observées dans les pages officielles de
 [Linear](https://linear.app/pricing) et [Checkly](https://www.checklyhq.com/pricing/) :

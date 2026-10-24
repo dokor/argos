@@ -1,13 +1,18 @@
 import type { BillingSnapshot } from "@/lib/billing-contract";
+import { premiumPriceLabels } from "@/lib/premium-pricing";
+
+const frPrice = premiumPriceLabels("fr"), enPrice = premiumPriceLabels("en");
 
 export const pricingCopy = {
   fr: {
     eyebrow: "Offres et tarifs",
     title: "Commencez gratuitement. Automatisez quand vous serez prêt.",
     lead: "Un premier diagnostic sans compte, un espace gratuit pour suivre vos pages, puis Premium pour intégrer Argos à votre CI.",
-    available: "Disponible", coming: "À venir", free: "0 €", freeNote: "Gratuit, sans carte bancaire", futurePrice: "Tarif à venir",
-    premiumNote: "En euros HT · TTC applicable précisé avant paiement",
-    periods: "Mensuel ou annuel", annual: "Une réduction annuelle est prévue ; son montant reste à définir.",
+    available: "Disponible", coming: "À venir", free: "0 €", freeNote: "Gratuit, sans carte bancaire", premiumPrice: frPrice.monthly,
+    premiumNote: `HT par mois · ${frPrice.monthlyTtc} TTC avec TVA à 20 %`,
+    periods: `${frPrice.annual} HT par an`, annual: `Soit ${frPrice.equivalent} HT/mois, facturés annuellement. Économisez ${frPrice.saving} par an (${frPrice.discount}).`,
+    annualTtc: `${frPrice.annualTtc} TTC par an avec TVA à 20 %.`,
+    taxNote: "Les montants TTC sont donnés à titre d’exemple avec une TVA de 20 %. Le TTC applicable sera précisé avant paiement selon votre situation fiscale. Les quotas restent mensuels avec les deux formules.",
     notice: "Premium n’est pas encore ouvert à la souscription. Les paiements et l’accès CI restent désactivés pendant la préparation du lancement.",
     compare: "Comparer les offres", statuses: "Comprendre les statuts", plansLabel: "Les offres Argos",
     plans: [
@@ -16,7 +21,7 @@ export const pricingCopy = {
       { name: "Compte gratuit", audience: "Pour suivre vos pages", description: "Retrouvez vos analyses et passez de la synthèse aux détails.",
         features: ["Tout le diagnostic gratuit", "Rapports détaillés après vérification du compte", "Mes sites, mes URL et historique personnel", "Partage contrôlé des rapports"], action: "Créer un compte gratuit", href: "/account/register" },
       { name: "Premium", audience: "Pour vos intégrations CI", description: "Préparez des contrôles automatisés et des résultats privés dans vos pipelines.",
-        features: ["3 clés API incluses", "30 analyses par mois et par intégration", "Domaines vérifiés illimités", "1 audit simultané par compte", "Issues GitHub / GitLab en option"], action: "Être informé du lancement", href: "#premium" },
+        features: ["3 clés API incluses", "30 analyses par mois et par intégration", "Domaines vérifiés illimités", "1 audit simultané par compte", "Priorité dans la file en période d’affluence", "Issues GitHub / GitLab en option"], action: "Être informé du lancement", href: "#premium" },
     ],
     comparisonTitle: "Ce qui change avec chaque offre",
     comparisonLead: "Les fonctions Premium ci-dessous sont prévues pour l’ouverture. Elles ne sont pas disponibles aujourd’hui.",
@@ -30,6 +35,7 @@ export const pricingCopy = {
       ["Budget d’analyses CI", "Non inclus", "Non inclus", "30 / mois / intégration"],
       ["Domaines vérifiés pour la CI", "Non inclus", "Non inclus", "Illimités"],
       ["Concurrence CI", "Non inclus", "Non inclus", "1 audit / compte"],
+      ["Priorité dans la file d’analyse", "Ordre standard", "Ordre standard", "Prévue à l’ouverture"],
       ["Création d’issues GitHub / GitLab", "Non inclus", "Non inclus", "Optionnelle, à l’ouverture"],
     ],
     quotaTitle: "Une analyse correspond à une mesure publiée",
@@ -42,21 +48,24 @@ export const pricingCopy = {
     manage: "Consulter la facturation de mon compte", faq: "Vos questions sur les offres",
     questions: [
       ["L’audit gratuit va-t-il disparaître ?", "Non. L’analyse manuelle d’une page publique reste accessible sans compte. Le compte gratuit ajoute un espace personnel et l’accès aux détails après vérification de votre adresse email."],
-      ["Quel sera le prix de Premium ?", "Le montant mensuel, le montant annuel et la réduction annuelle ne sont pas encore arrêtés. Ils seront publiés en euros HT, avec mention du TTC applicable avant paiement. Aucune souscription payante n’est proposée pour le moment."],
+      ["Combien coûte Premium ?", `${frPrice.monthly} HT/mois ou ${frPrice.annual} HT/an, payés en une fois pour l’année. L’annuel économise ${frPrice.saving} (${frPrice.discount}) par rapport à 12 mensualités. Avec une TVA de 20 %, cela représente ${frPrice.monthlyTtc} TTC/mois ou ${frPrice.annualTtc} TTC/an ; le TTC applicable dépend de votre situation fiscale. Les souscriptions restent fermées jusqu’à la recette complète.`],
       ["Les 3 clés partagent-elles les mêmes 30 analyses ?", "Non. Chaque intégration dispose de son budget de 30 analyses par mois calendaire. Remplacer ou faire tourner sa clé conserve cette intégration et sa consommation. Les crédits inutilisés d’une intégration ne sont pas transférés aux autres."],
       ["Pourquoi un contrôle confirmé utilise-t-il deux analyses ?", "Deux mesures comparables permettent de confirmer les constats avant de prendre une décision CI ou de proposer une issue. La lecture des résultats et la reprise d’une publication ne créent pas une nouvelle analyse."],
       ["La création d’issues est-elle obligatoire ?", "Non. Elle est désactivée par défaut et demande un choix explicite. La publication utilise les permissions de votre dépôt ou projet et, dans cette version, un journal Azure privé à préparer séparément. Ses coûts éventuels ne sont pas un tarif Argos."],
       ["Un compte à vérifier est-il un compte payant ?", "Non. Vérifier votre email confirme l’accès au compte ; cela ne souscrit à aucune offre payante. Le statut du compte, son offre et son état d’abonnement sont distincts."],
-      ["Puis-je déjà souscrire ou activer la CI ?", "Pas encore. Vous pouvez consulter la documentation et demander à être informé du lancement. Les modalités de facturation et d’accès doivent être validées avant l’ouverture ; aucune date ni réduction n’est garantie."],
+      ["Comment fonctionne la priorité Premium ?", "À l’ouverture, les analyses Premium en attente bénéficieront d’une priorité relative en période d’affluence. Les demandes plus anciennes continuent de progresser et une analyse en cours n’est pas interrompue. Les quotas et limites de capacité restent applicables ; aucun délai de démarrage n’est garanti."],
+      ["Puis-je déjà souscrire ou activer la CI ?", "Pas encore. Les tarifs sont arrêtés, mais les paiements, l’accès CI et la priorité restent désactivés jusqu’à la recette complète. Vous pouvez demander à être informé du lancement ; aucune date d’ouverture n’est garantie."],
     ],
   },
   en: {
     eyebrow: "Plans and pricing",
     title: "Start for free. Automate when you’re ready.",
     lead: "A first check without an account, a free workspace to track your pages, then Premium to bring Argos into your CI.",
-    available: "Available", coming: "Coming soon", free: "€0", freeNote: "Free, no credit card required", futurePrice: "Pricing to be announced",
-    premiumNote: "In EUR excluding tax · applicable tax-inclusive total shown before payment",
-    periods: "Monthly or annual", annual: "An annual discount is planned; its amount has not been decided.",
+    available: "Available", coming: "Coming soon", free: "€0", freeNote: "Free, no credit card required", premiumPrice: enPrice.monthly,
+    premiumNote: `Excluding tax per month · ${enPrice.monthlyTtc} incl. VAT at 20%`,
+    periods: `${enPrice.annual} excluding tax per year`, annual: `Equivalent to ${enPrice.equivalent}/month excluding tax, billed annually. Save ${enPrice.saving} per year (${enPrice.discount}).`,
+    annualTtc: `${enPrice.annualTtc} per year including VAT at 20%.`,
+    taxNote: "Tax-inclusive amounts are examples using 20% VAT. The applicable total will be shown before payment according to your tax situation. Quotas remain monthly with either billing interval.",
     notice: "Premium subscriptions are not open yet. Payments and CI access remain disabled while launch preparations are completed.",
     compare: "Compare plans", statuses: "Understand statuses", plansLabel: "Argos plans",
     plans: [
@@ -65,7 +74,7 @@ export const pricingCopy = {
       { name: "Free account", audience: "To track your pages", description: "Keep your analyses together and move from the summary to the details.",
         features: ["All free diagnostic features", "Detailed reports after account verification", "Your sites, URLs and personal history", "Controlled report sharing"], action: "Create a free account", href: "/account/register" },
       { name: "Premium", audience: "For your CI integrations", description: "Prepare automated checks and private results in your pipelines.",
-        features: ["3 API keys included", "30 analyses per month per integration", "Unlimited verified domains", "1 concurrent audit per account", "Optional GitHub / GitLab issues"], action: "Hear about the launch", href: "#premium" },
+        features: ["3 API keys included", "30 analyses per month per integration", "Unlimited verified domains", "1 concurrent audit per account", "Queue priority during busy periods", "Optional GitHub / GitLab issues"], action: "Hear about the launch", href: "#premium" },
     ],
     comparisonTitle: "What changes with each plan",
     comparisonLead: "Premium features below are planned for launch. They are not available today.",
@@ -79,6 +88,7 @@ export const pricingCopy = {
       ["CI analysis budget", "Not included", "Not included", "30 / month / integration"],
       ["Verified CI domains", "Not included", "Not included", "Unlimited"],
       ["CI concurrency", "Not included", "Not included", "1 audit / account"],
+      ["Analysis queue priority", "Standard order", "Standard order", "Planned for launch"],
       ["GitHub / GitLab issue creation", "Not included", "Not included", "Optional, at launch"],
     ],
     quotaTitle: "One analysis is one published measurement",
@@ -91,12 +101,13 @@ export const pricingCopy = {
     manage: "View my account billing", faq: "Your questions about plans",
     questions: [
       ["Will the free audit go away?", "No. Manual analysis of a public page remains available without an account. A free account adds a personal workspace and detailed access after email verification."],
-      ["How much will Premium cost?", "Monthly pricing, annual pricing and the annual discount have not been decided. Prices will be published in euros excluding tax, with the applicable tax-inclusive total before payment. No paid subscription is offered yet."],
+      ["How much does Premium cost?", `${enPrice.monthly}/month or ${enPrice.annual}/year excluding tax, paid upfront for the year. Annual billing saves ${enPrice.saving} (${enPrice.discount}) compared to 12 monthly payments. With 20% VAT, this is ${enPrice.monthlyTtc}/month or ${enPrice.annualTtc}/year including tax; the applicable total depends on your tax situation. Subscriptions remain closed until full acceptance.`],
       ["Do the 3 keys share the same 30 analyses?", "No. Each integration has a budget of 30 analyses per calendar month. Replacing or rotating its key preserves that integration and its usage. Unused credits cannot be moved between integrations."],
       ["Why does a confirmed check use two analyses?", "Two comparable measurements confirm findings before a CI decision or a proposed issue. Reading results and resuming publication do not create a new analysis."],
       ["Is issue creation required?", "No. It is disabled by default and requires an explicit choice. Publication uses your repository or project permissions and, in this version, a separately prepared private Azure journal. Any associated costs are not an Argos fee."],
       ["Does verifying an account make it a paid account?", "No. Email verification confirms account access; it does not subscribe you to a paid plan. Account status, plan and subscription status are separate."],
-      ["Can I subscribe or enable CI now?", "Not yet. You can read the documentation and ask to hear about launch. Billing and access terms must be approved before opening; no date or discount is guaranteed."],
+      ["How does Premium priority work?", "At launch, queued Premium analyses will receive relative priority during busy periods. Older requests continue to progress and running analyses are not interrupted. Quotas and capacity limits still apply; no start time is guaranteed."],
+      ["Can I subscribe or enable CI now?", "Not yet. Prices have been decided, but payments, CI access and queue priority remain disabled until full acceptance. You can ask to hear about launch; no opening date is guaranteed."],
     ],
   },
 } as const;

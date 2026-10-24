@@ -16,6 +16,7 @@ on:
       - 'apps/console-web/src/components/docs/**'
       - 'apps/console-web/src/components/connected/billing/**'
       - 'apps/console-web/src/lib/billing*'
+      - 'apps/console-web/src/lib/premium-pricing*'
       - 'apps/console-web/src/app/**/docs/**'
       - 'scripts/e2e/developer-docs.mjs'
       - 'scripts/e2e/connected-*.mjs'

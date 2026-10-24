@@ -13,6 +13,7 @@ montés et surcharges de l'hébergement :
 ```hocon
 premium-ci.enabled = false
 billing.enabled = false
+audit.queue.premium-priority-enabled = false
 billing.payments-enabled = false
 billing.prices-approved = false
 billing.launch-approved = false
@@ -103,9 +104,8 @@ Les permissions Write impliquent Read. [Clés restreintes Stripe](https://docs.s
    N'injecter aucun secret dans `NEXT_PUBLIC_*`, les workflows clients ou le navigateur.
 4. Préparer un produit de test et une configuration du portail : consultation des
    factures, moyen de paiement et annulation en fin de période ; changement de prix,
-   quantité ou offre désactivé. Réserver les champs ci-dessous. **Ne pas inventer
-   de montant** : prix mensuel/annuel de sandbox à arrêter séparément avant les essais,
-   sans les présenter comme les futurs tarifs commerciaux. EUR, taxe exclusive,
+   quantité ou offre désactivé. Les montants approuvés à reproduire dans la sandbox
+   sont 19 EUR HT/mois et 199 EUR HT/an (1900 et 19900 centimes). EUR, taxe exclusive,
    quantité 1, mois/an, deux IDs distincts ; annuel inférieur à douze mensualités.
 5. Après choix de l'origine isolée, préparer la destination webhook à
    `<origine-Argos-isolée>/api/billing/stripe/webhook`, événements snapshot v1,
@@ -120,7 +120,7 @@ Les permissions Write impliquent Read. [Clés restreintes Stripe](https://docs.s
 | --- | --- |
 | `billing.account-id`, `product-id` | IDs non secrets de cette sandbox |
 | `billing.monthly-price-id`, `annual-price-id` | IDs des prix de test lorsqu'ils seront arrêtés |
-| `billing.monthly-amount-ht-cents`, `annual-amount-ht-cents` | Montants de test en centimes entiers, concordant avec Stripe |
+| `billing.monthly-amount-ht-cents`, `annual-amount-ht-cents` | 1900 et 19900, concordant avec les deux prix EUR HT créés dans la sandbox Stripe |
 | `billing.portal-config-id` | Configuration portail de la sandbox |
 | `billing.api-key` | Secret serveur dans le coffre, clé restreinte test |
 | `billing.webhook-secret` | Autre secret serveur, lié au webhook exact |

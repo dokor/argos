@@ -259,11 +259,11 @@ jobs:
       - name: Run MariaDB integration tests
         run: >-
           mvn --batch-mode -P mariadb-integration
-          -Dit.test=PremiumCiJourneyIT,BillingIT,AdminStatisticsIT,ProblemStatisticsIT,PremiumWaitlistIT,CiEntitlementIT,CiTargetsIT,CiKeysIT,CiQuotaIT,CiAdmissionIT,AuditScopeIT,NotificationsIT,ReportSharingMigrationIT,ClarteFreshStartMigrationIT,ConnectedModelIT,AccountLifecycleIT,AccountSessionSecurityIT,AccountSecurityMigrationIT,ReportCredentialMigrationIT,AuditPublicationIT,AccountJourneyIT,ProductAnalyticsIT,ReportRetentionIT,AuditClaimIT,NewsletterPrivacyIT,AuditRunProgressIT,DomainAnalysisConcurrencyIT,AuditAdmissionIT,UsageIT,UsageTimelineIT,DiscoveryIT,BatchIT,DiagnosticMigrationIT,CanonicalCountsMigrationIT,OverviewIT
+          -Dit.test=PremiumQueueIT,PremiumCiJourneyIT,BillingIT,AdminStatisticsIT,ProblemStatisticsIT,PremiumWaitlistIT,CiEntitlementIT,CiTargetsIT,CiKeysIT,CiQuotaIT,CiAdmissionIT,AuditScopeIT,NotificationsIT,ReportSharingMigrationIT,ClarteFreshStartMigrationIT,ConnectedModelIT,AccountLifecycleIT,AccountSessionSecurityIT,AccountSecurityMigrationIT,ReportCredentialMigrationIT,AuditPublicationIT,AccountJourneyIT,ProductAnalyticsIT,ReportRetentionIT,AuditClaimIT,NewsletterPrivacyIT,AuditRunProgressIT,DomainAnalysisConcurrencyIT,AuditAdmissionIT,UsageIT,UsageTimelineIT,DiscoveryIT,BatchIT,DiagnosticMigrationIT,CanonicalCountsMigrationIT,OverviewIT
           verify
-      - name: Verify closed Premium CI and Billing defaults
-        # The integration profile intentionally skips Surefire; generate these two proofs explicitly.
-        run: mvn --batch-mode -Dtest=CiPolicyTest,BillingSettingsTest test
+      - name: Verify closed Premium CI, Billing and priority defaults
+        # The integration profile intentionally skips Surefire; generate these proofs explicitly.
+        run: mvn --batch-mode -Dtest=CiPolicyTest,BillingSettingsTest,AuditQueuePolicyTest test
       - name: Verify and collect controlled Premium CI acceptance (launch remains NO_GO)
         working-directory: ${{ github.workspace }}
         run: |
@@ -283,6 +283,7 @@ jobs:
             outputs/premium-ci-acceptance.json
             apps/api-backend/target/surefire-reports/TEST-com.dokor.argos.services.ci.CiPolicyTest.xml
             apps/api-backend/target/surefire-reports/TEST-com.dokor.argos.services.billing.BillingSettingsTest.xml
+            apps/api-backend/target/surefire-reports/TEST-com.dokor.argos.services.scheduler.AuditQueuePolicyTest.xml
             apps/api-backend/target/failsafe-reports/
             apps/api-backend/target/querydsl-startup.log
             apps/api-backend/target/querydsl-monitoring.json

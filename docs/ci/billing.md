@@ -1,8 +1,11 @@
 # Premium : Stripe Checkout et Billing (#733)
 
 Ce lot prépare le parcours autonome FR/EN `/account/billing` et `/en/account/billing`.
-Il ne lance aucune offre commerciale. Les montants et la réduction annuelle restent à
-arrêter ; aucun produit, tarif, abonnement ou paiement Stripe réel n'est créé par cette PR.
+Il ne lance aucune offre commerciale. Les tarifs approuvés sont 19 EUR HT/mois et
+199 EUR HT/an (paiement annuel en une fois), soit 29 EUR / 12,7 % d'économie.
+Avec une TVA de 20 % uniquement à titre d'exemple : 22,80 EUR et 238,80 EUR TTC.
+Le TTC applicable reste déterminé selon la situation fiscale du client. Aucun produit,
+prix, abonnement ou paiement Stripe réel n'est créé par cette configuration.
 
 ## Verrous de lancement
 
@@ -10,8 +13,12 @@ Les valeurs de référence restent `billing.enabled=false`,
 `billing.payments-enabled=false`, `billing.prices-approved=false`,
 `billing.launch-approved=false`, `billing.tax-ready=false` et
 `premium-ci.enabled=false`. Le scheduler de facturation ne fait alors aucun accès
-Stripe. Le GET de compte reste une lecture locale sans provisionnement ni droits.
-La recette globale #467, les tarifs et les règles commerciales/fiscales doivent être
+Stripe. Le GET de compte reste une lecture locale sans provisionnement ni droits ;
+il peut présenter les montants configurés même avec `prices-approved=false`.
+Ce flag conserve son rôle de verrou opérationnel de lancement, distinct de
+l'approbation commerciale des montants. La priorité de file est également fermée
+(`audit.queue.premium-priority-enabled=false`).
+La recette globale #467, la concordance des prix Stripe et les règles commerciales/fiscales doivent être
 validés avant toute activation. Ne pas confondre activation des paiements et activation CI.
 
 Après ces validations seulement, fournir via la configuration serveur montée en secret :
@@ -20,7 +27,7 @@ Après ces validations seulement, fournir via la configuration serveur montée e
 | --- | --- |
 | `account-id`, `product-id` | Marchand et produit Stripe attendus |
 | `monthly-price-id`, `annual-price-id` | Deux prix récurrents distincts, EUR, taxe exclusive, quantité 1, mois/an |
-| `monthly-amount-ht-cents`, `annual-amount-ht-cents` | Montants entiers approuvés en centimes ; annuel inférieur à 12 mensualités |
+| `monthly-amount-ht-cents`, `annual-amount-ht-cents` | 1900 et 19900 ; mêmes montants dans les deux prix Stripe de recette, EUR et taxe exclusive |
 | `portal-config-id` | Configuration active : factures, moyen de paiement et annulation en fin de période ; changement d'offre désactivé |
 | `api-key`, `webhook-secret` | Secrets serveur distincts test/live, jamais dans Next public, logs ou navigateur |
 | `live-mode` | Environnement explicitement choisi, cohérent avec les clés/objets |
@@ -37,7 +44,10 @@ d'abonnement. Le portail n'autorise pas de changement de prix/quantité.
 Stripe Tax et les inscriptions fiscales du marchand doivent être validés séparément.
 L'interface affiche l'EUR HT en principal, et précise que le TTC applicable est présenté
 avant paiement par Stripe selon la situation du client. Aucun taux de TVA universel
-n'est supposé. Les valeurs présentes dans les tests sont exclusivement fictives.
+n'est supposé. Les exemples TTC à 20 % de l'interface ne sont jamais transmis comme
+règle fiscale à Stripe. Les quotas restent mensuels même pour l'annuel. Les objets
+fournisseur des tests sont exclusivement synthétiques ; les prix des fixtures de
+lancement reprennent le catalogue, d'autres scénarios gardent des prix fictifs distincts.
 
 ## Attribution et sécurité
 

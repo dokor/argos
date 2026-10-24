@@ -13,11 +13,13 @@ import xml.etree.ElementTree as ET
 SUITES = {
     "closed-ci-defaults": ("surefire", "ci.CiPolicyTest"),
     "closed-billing-defaults": ("surefire", "billing.BillingSettingsTest"),
+    "closed-priority-defaults": ("surefire", "scheduler.AuditQueuePolicyTest"),
     **{name: ("failsafe", "domain.report." + suite) for name, suite in {
         "joined-journey": "PremiumCiJourneyIT", "billing": "BillingIT",
         "entitlements": "CiEntitlementIT", "targets": "CiTargetsIT", "keys": "CiKeysIT",
         "quotas": "CiQuotaIT", "admission-private-verdict": "CiAdmissionIT",
         "publication-atomicity": "AuditPublicationIT", "retention": "ReportRetentionIT",
+        "premium-queue-priority": "PremiumQueueIT",
     }.items()},
 }
 # No fixture or successful JUnit file can clear these. Record real acceptance in #467 first.
