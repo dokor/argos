@@ -9,7 +9,7 @@ const modules = [
   ['verdictContract', 'apps/console-web/src/lib/ci-verdict-contract.mjs'],
   ['errorsProtocol', 'scripts/ci/ci-errors.mjs'],
   ['pipeline', 'scripts/ci/ci-verdict.mjs'],
-  ...['contracts', 'diagnostics', 'transport', 'evidence', 'config', 'providers', 'publication-policy', 'publication-sync', 'client'].map(n => [n, `clients/ci/src/${n}.mjs`]),
+  ...['contracts', 'diagnostics', 'transport', 'evidence', 'config', 'providers', 'publication-policy', 'publication-sync', 'github-publication', 'azure-journal', 'private-transfer', 'client'].map(n => [n, `clients/ci/src/${n}.mjs`]),
 ];
 const names = new Map(modules.map(([name, path]) => [new URL(path, root).href, 'module_' + name.replaceAll('-', '_')]));
 const builtins = new Set();

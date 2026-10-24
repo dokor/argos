@@ -3,6 +3,16 @@
 name: Argos Premium CI
 on:
   workflow_dispatch:
+    inputs:
+      operation:
+        description: Audit, or read-only refresh of an existing intention
+        type: choice
+        options: [audit, resume]
+        default: audit
+      original_intent:
+        description: Original intention UUID, required for resume (never creates an analysis)
+        type: string
+        required: false
   push:
     branches: [main]
 
@@ -27,7 +37,10 @@ jobs:
     outputs:
       audit_outcome: ${{ steps.control.outputs.audit_outcome }}
       evidence_sha256: ${{ steps.control.outputs.evidence_sha256 }}
+      evidence_invocation: ${{ steps.control.outputs.evidence_invocation }}
       artifact_id: ${{ steps.upload.outputs.artifact-id }}
+      cipher_sha256: ${{ steps.seal.outputs.cipher_sha256 }}
+      encrypted_artifact_id: ${{ steps.encrypted_upload.outputs.artifact-id }}
     steps:
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
@@ -35,14 +48,19 @@ jobs:
       - name: Download the reviewed standalone client (no project checkout)
         run: |
           curl --proto '=https' --tlsv1.2 --fail --silent --show-error --max-time 30 --max-redirs 0 --max-filesize 1048576 \
-            --output argos-ci.mjs https://raw.githubusercontent.com/dokor/argos/d809f64599b8b4bf470262169615cae18bef3de2/clients/ci/dist/argos-ci.mjs
-          echo 'f3cc2f7af72dad85174f9b42412c8d62f00fdd1e55db77d1da26f54c3857b16a  argos-ci.mjs' | sha256sum --check --strict
+            --output argos-ci.mjs https://raw.githubusercontent.com/dokor/argos/75d2c3d0ebf24f049642d255dc5b8c2b92a2dcfc/clients/ci/dist/argos-ci.mjs
+          echo '10fa531c35405ea934213b7d163ac39e1f8a2c63e1c54c7f8de1cb7bec940015  argos-ci.mjs' | sha256sum --check --strict
       - name: Admit two samples and consume the confirmed server verdict
         id: control
         shell: bash
         run: |
+          case "$ARGOS_CI_OPERATION" in
+            audit) test -z "$ARGOS_ORIGINAL_INTENT" || exit 2 ;;
+            resume) export ARGOS_IDEMPOTENCY_KEY="$ARGOS_ORIGINAL_INTENT" ;;
+            *) exit 2 ;;
+          esac
           set +e
-          node argos-ci.mjs audit > control-result.json
+          node argos-ci.mjs "$ARGOS_CI_OPERATION" > control-result.json
           status=$?
           set -e
           node --input-type=module -e '
@@ -50,13 +68,49 @@ jobs:
             const r=JSON.parse(fs.readFileSync("control-result.json","utf8"));
             if(!["GO","SITE_NO_GO","CONTROL_FAILED"].includes(r.auditOutcome))process.exit(2);
             const digest=/^[a-f0-9]{64}$/.test(r.evidenceSha256??"")?r.evidenceSha256:"";
-            fs.appendFileSync(process.env.GITHUB_OUTPUT,"audit_outcome="+r.auditOutcome+"\nevidence_sha256="+digest+"\n");
+            const invocation=process.env.GITHUB_RUN_ID+":"+process.env.GITHUB_RUN_ATTEMPT;
+            if(!/^[1-9][0-9]{0,19}:[1-9][0-9]{0,5}$/.test(invocation))process.exit(2);
+            fs.appendFileSync(process.env.GITHUB_OUTPUT,"audit_outcome="+r.auditOutcome+"\nevidence_sha256="+digest+"\nevidence_invocation="+invocation+"\n");
             console.log(JSON.stringify(r));'
           exit "$status"
         env:
           ARGOS_API_KEY: ${{ secrets.ARGOS_API_KEY }}
+          ARGOS_CI_OPERATION: ${{ inputs.operation || 'audit' }}
+          ARGOS_ORIGINAL_INTENT: ${{ inputs.original_intent || '' }}
           ARGOS_TARGET_URL: ${{ vars.ARGOS_TARGET_URL }}
-          ARGOS_EXPORT_PRIVATE: ${{ (vars.ARGOS_PRIVATE_ARTIFACTS == 'true' || vars.ARGOS_PUBLICATION_PREVIEW == 'true') && '1' || '' }}
+          ARGOS_EXPORT_PRIVATE: ${{ (vars.ARGOS_PRIVATE_ARTIFACTS == 'true' || vars.ARGOS_PUBLICATION_PREVIEW == 'true' || vars.ARGOS_GITHUB_PUBLISH == 'true') && '1' || '' }}
+      - name: Seal publication evidence with the private registry key (no Git write permission)
+        id: seal
+        if: ${{ always() && vars.ARGOS_GITHUB_PUBLISH == 'true' && (steps.control.outputs.audit_outcome == 'GO' || steps.control.outputs.audit_outcome == 'SITE_NO_GO') && steps.control.outputs.evidence_sha256 != '' }}
+        shell: bash
+        run: |
+          set +e
+          node argos-ci.mjs publication-stage > seal-result.json
+          status=$?
+          set -e
+          node --input-type=module -e '
+            import fs from "node:fs";
+            const r=JSON.parse(fs.readFileSync("seal-result.json","utf8"));
+            if(r.proofStaged===true && /^[a-f0-9]{64}$/.test(r.cipherSha256??""))
+              fs.appendFileSync(process.env.GITHUB_OUTPUT,"cipher_sha256="+r.cipherSha256+"\n");
+            console.log(JSON.stringify(r));'
+          exit "$status"
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          ARGOS_GITHUB_JOURNAL_READ_SAS_URL: ${{ secrets.ARGOS_GITHUB_JOURNAL_READ_SAS_URL }}
+          ARGOS_PUBLICATION_CONFIG: ${{ vars.ARGOS_PUBLICATION_CONFIG }}
+          ARGOS_EVIDENCE_SHA256: ${{ steps.control.outputs.evidence_sha256 }}
+          ARGOS_EVIDENCE_PRODUCER: argos_control
+      - name: Transfer encrypted evidence only (also safe for a public repository)
+        id: encrypted_upload
+        if: ${{ always() && steps.seal.outputs.cipher_sha256 != '' }}
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: argos-encrypted-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .argos-ci/evidence.enc.json
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
       - name: Verify private destination immediately before upload
         id: destination
         if: ${{ always() && (vars.ARGOS_PRIVATE_ARTIFACTS == 'true' || vars.ARGOS_PUBLICATION_PREVIEW == 'true') && (steps.control.outputs.audit_outcome == 'GO' || steps.control.outputs.audit_outcome == 'SITE_NO_GO') && steps.control.outputs.evidence_sha256 != '' }}
@@ -75,7 +129,7 @@ jobs:
           retention-days: 7
 
   argos_preview:
-    # Preview only. Real, optional publishers follow in #739; no issues:write here.
+    # Read-only preview remains independently optional.
     needs: argos_control
     if: ${{ always() && vars.ARGOS_PUBLICATION_PREVIEW == 'true' && github.event.repository.fork == false && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && (needs.argos_control.outputs.audit_outcome == 'GO' || needs.argos_control.outputs.audit_outcome == 'SITE_NO_GO') && needs.argos_control.outputs.artifact_id != '' && needs.argos_control.outputs.evidence_sha256 != '' }}
     runs-on: ubuntu-24.04
@@ -90,8 +144,8 @@ jobs:
       - name: Download the same reviewed client
         run: |
           curl --proto '=https' --tlsv1.2 --fail --silent --show-error --max-time 30 --max-redirs 0 --max-filesize 1048576 \
-            --output argos-ci.mjs https://raw.githubusercontent.com/dokor/argos/d809f64599b8b4bf470262169615cae18bef3de2/clients/ci/dist/argos-ci.mjs
-          echo 'f3cc2f7af72dad85174f9b42412c8d62f00fdd1e55db77d1da26f54c3857b16a  argos-ci.mjs' | sha256sum --check --strict
+            --output argos-ci.mjs https://raw.githubusercontent.com/dokor/argos/75d2c3d0ebf24f049642d255dc5b8c2b92a2dcfc/clients/ci/dist/argos-ci.mjs
+          echo '10fa531c35405ea934213b7d163ac39e1f8a2c63e1c54c7f8de1cb7bec940015  argos-ci.mjs' | sha256sum --check --strict
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
           artifact-ids: ${{ needs.argos_control.outputs.artifact_id }}
@@ -101,3 +155,41 @@ jobs:
         env:
           ARGOS_EVIDENCE_SHA256: ${{ needs.argos_control.outputs.evidence_sha256 }}
           ARGOS_EVIDENCE_PRODUCER: argos_control
+
+  argos_publish:
+    needs: argos_control
+    if: ${{ always() && vars.ARGOS_GITHUB_PUBLISH == 'true' && github.event.repository.fork == false && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && (needs.argos_control.outputs.audit_outcome == 'GO' || needs.argos_control.outputs.audit_outcome == 'SITE_NO_GO') && needs.argos_control.outputs.encrypted_artifact_id != '' && needs.argos_control.outputs.cipher_sha256 != '' && needs.argos_control.outputs.evidence_sha256 != '' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment: argos-publisher
+    # Same group across all publisher workflows, refs, environments and run attempts.
+    # The blob lease + ETag remains authoritative across repositories/runners and cancellation.
+    concurrency:
+      group: argos-github-issues-${{ github.repository_id }}
+      cancel-in-progress: false
+    permissions:
+      actions: read
+      issues: write
+    steps:
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24.21.0'
+      - name: Download the same reviewed client
+        run: |
+          curl --proto '=https' --tlsv1.2 --fail --silent --show-error --max-time 30 --max-redirs 0 --max-filesize 1048576 \
+            --output argos-ci.mjs https://raw.githubusercontent.com/dokor/argos/75d2c3d0ebf24f049642d255dc5b8c2b92a2dcfc/clients/ci/dist/argos-ci.mjs
+          echo '10fa531c35405ea934213b7d163ac39e1f8a2c63e1c54c7f8de1cb7bec940015  argos-ci.mjs' | sha256sum --check --strict
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          artifact-ids: ${{ needs.argos_control.outputs.encrypted_artifact_id }}
+          path: .argos-ci
+      - name: Publish confirmed findings with the job token
+        run: node argos-ci.mjs publish-github
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          ARGOS_GITHUB_JOURNAL_SAS_URL: ${{ secrets.ARGOS_GITHUB_JOURNAL_SAS_URL }}
+          ARGOS_PUBLICATION_CONFIG: ${{ vars.ARGOS_PUBLICATION_CONFIG }}
+          ARGOS_EVIDENCE_SHA256: ${{ needs.argos_control.outputs.evidence_sha256 }}
+          ARGOS_CIPHER_SHA256: ${{ needs.argos_control.outputs.cipher_sha256 }}
+          ARGOS_EVIDENCE_PRODUCER: argos_control
+          ARGOS_EVIDENCE_INVOCATION: ${{ needs.argos_control.outputs.evidence_invocation }}
