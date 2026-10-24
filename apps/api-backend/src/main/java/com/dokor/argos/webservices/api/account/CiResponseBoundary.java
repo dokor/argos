@@ -8,8 +8,14 @@ import java.util.Map;
 /** Also normalizes failures raised before a resource (permissions, CSRF, parsing, unknown route). */
 @Provider
 public class CiResponseBoundary implements ContainerResponseFilter {
+    private static final org.slf4j.Logger logger=org.slf4j.LoggerFactory.getLogger(CiResponseBoundary.class);
+    /** Jersey matches resource paths without matrix parameters; authentication must do the same. */
+    static String normalizedPath(String path) {
+        return path.replaceAll(";[^/]*","").replaceAll("^/+|/+$","");
+    }
     public static boolean applies(String path) {
-        return path.equals("account/ci") || path.startsWith("account/ci/") || path.equals("ci/v1") || path.startsWith("ci/v1/");
+        path=normalizedPath(path);
+        return path.equals("account/ci") || path.startsWith("account/ci/") || path.equals("ci") || path.startsWith("ci/");
     }
     @Override public void filter(ContainerRequestContext request,ContainerResponseContext response) {
         if(!applies(request.getUriInfo().getPath())) return;
@@ -24,7 +30,10 @@ public class CiResponseBoundary implements ContainerResponseFilter {
             : response.getStatus()==429 ? CiErrorCode.RATE_LIMITED
             : response.getStatus()<500 ? CiErrorCode.CONFIG_INVALID : CiErrorCode.INTERNAL_ERROR;
         response.getHeaders().remove("Retry-After");
-        response.setStatus(code.httpStatus()); response.setEntity(CiErrors.create(code,null));
+        response.getHeaders().remove("Content-Length");
+        var envelope=CiErrors.create(code,null);
+        if(code==CiErrorCode.INTERNAL_ERROR) logger.error("ci_http_failed requestId={} category=internal",envelope.requestId());
+        response.setStatus(code.httpStatus()); response.setEntity(envelope);
         response.getHeaders().putSingle("Content-Type","application/json");
     }
 }

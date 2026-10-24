@@ -46,8 +46,38 @@ function target(v: unknown): boolean {
     && ["PENDING","VERIFIED","REVOKED","EXPIRED"].includes(String(v.state))
     && [v.verifiedAt,v.validUntil,v.nextCheckAt,v.challengeExpiresAt].every(time);
 }
+const scopes=["audits:write","results:read","usage:read"];
+const grant=(v:unknown)=>object(v) && exact(v,["id","origin","authorizationEpoch"]) && typeof v.id==="string" && uuid.test(v.id)
+  && validCiOrigin(v.origin) && typeof v.authorizationEpoch==="number" && Number.isSafeInteger(v.authorizationEpoch) && v.authorizationEpoch>0;
+function key(v: unknown): boolean {
+  return object(v) && exact(v,["id","integrationId","slot","name","scopes","targets","createdAt","expiresAt","lastUsedAt","revokedAt","overlapUntil"])
+    && typeof v.id==="string" && /^[a-f0-9]{32}$/.test(v.id) && typeof v.integrationId==="string" && uuid.test(v.integrationId)
+    && typeof v.slot==="number" && Number.isSafeInteger(v.slot) && v.slot>0
+    && typeof v.name==="string" && v.name.trim().length>0 && v.name.length<=80 && !/[\x00-\x1f\x7f]/.test(v.name)
+    && Array.isArray(v.scopes) && v.scopes.length>0 && v.scopes.length<=3 && new Set(v.scopes).size===v.scopes.length && v.scopes.every(s=>scopes.includes(s))
+    && Array.isArray(v.targets) && v.targets.length>0 && v.targets.length<=100 && v.targets.every(grant)
+    && [v.createdAt,v.expiresAt,v.lastUsedAt,v.revokedAt,v.overlapUntil].every(time) && v.createdAt!==null && v.expiresAt!==null;
+}
+function keyInput(v: Record<string,unknown>): boolean {
+  return Object.keys(v).every(k=>["name","scopes","targetIds","integrationId","expiresAt"].includes(k))
+    && typeof v.name==="string" && v.name.trim().length>0 && v.name.length<=80 && !/[\x00-\x1f\x7f]/.test(v.name)
+    && Array.isArray(v.scopes) && v.scopes.length>0 && v.scopes.length<=3 && new Set(v.scopes).size===v.scopes.length && v.scopes.every(s=>typeof s==="string" && scopes.includes(s))
+    && Array.isArray(v.targetIds) && v.targetIds.length>0 && v.targetIds.length<=100 && new Set(v.targetIds).size===v.targetIds.length && v.targetIds.every(t=>typeof t==="string" && uuid.test(t))
+    && (v.integrationId===undefined || v.integrationId===null || typeof v.integrationId==="string" && uuid.test(v.integrationId))
+    && (v.expiresAt===undefined || time(v.expiresAt));
+}
+function keySuccess(data:Record<string,unknown>,method:string): boolean {
+  if(method==="GET") return exact(data,["items","integrations","nextCursor"]) && Array.isArray(data.items) && data.items.length<=5 && data.items.every(key)
+    && Array.isArray(data.integrations) && data.integrations.length<=100 && data.integrations.every(v=>object(v) && exact(v,["id","slot","canReplace"])
+      && typeof v.id==="string" && uuid.test(v.id) && typeof v.slot==="number" && Number.isSafeInteger(v.slot) && v.slot>0 && typeof v.canReplace==="boolean")
+    && (data.nextCursor===null || typeof data.nextCursor==="string" && /^[1-9][0-9]{0,18}$/.test(data.nextCursor));
+  if(method==="POST") return exact(data,["key","credential"]) && key(data.key) && object(data.key) && typeof data.credential==="string"
+    && new RegExp(`^argos_ci_${data.key.id}\\.[A-Za-z0-9_-]{43}$`).test(data.credential);
+  return key(data);
+}
 function success(data: unknown,method: string,path: string): boolean {
   if(!object(data)) return false;
+  if(path.startsWith("keys")) return keySuccess(data,method);
   if(method==="GET") return exact(data,["items","nextCursor"]) && Array.isArray(data.items) && data.items.length<=100
     && data.items.every(target) && (data.nextCursor===null || typeof data.nextCursor==="string" && /^[1-9][0-9]{0,18}$/.test(data.nextCursor));
   if(method==="POST" && (path==="targets" || path.endsWith("/renew"))) return exact(data,["target","path","content"])
@@ -57,12 +87,13 @@ function success(data: unknown,method: string,path: string): boolean {
 }
 export async function ciManagementProxy(request: NextRequest,parts: string[],getHeaders:()=>Headers|NextResponse): Promise<NextResponse> {
   const path=parts.join("/"), id="[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}";
-  const allowed=request.method==="GET" ? path==="targets" : request.method==="POST" ? new RegExp(`^targets(?:/${id}/(?:renew|verify))?$`).test(path)
-    : request.method==="DELETE" && new RegExp(`^targets/${id}$`).test(path);
+  const allowed=request.method==="GET" ? ["targets","keys"].includes(path) : request.method==="POST" ? new RegExp(`^(?:targets(?:/${id}/(?:renew|verify))?|keys(?:/[a-f0-9]{32}/rotate)?)$`).test(path)
+    : request.method==="DELETE" && new RegExp(`^(?:targets/${id}|keys/[a-f0-9]{32})$`).test(path);
   if(!allowed) return ciFailure("RESOURCE_NOT_AVAILABLE");
   const forwarded=getHeaders();
   if(forwarded instanceof NextResponse) return ciFailure(forwarded.status===401?"AUTHENTICATION_FAILED":"REQUEST_REJECTED");
   if(!forwarded.has("Authorization")) return ciFailure("AUTHENTICATION_FAILED");
+  forwarded.delete("X-Argos-Measurement");forwarded.delete("X-Argos-Captcha");
   const params=request.nextUrl.searchParams;
   if([...params.keys()].some(k=>k!=="after" || request.method!=="GET" || params.getAll(k).length!==1)) return ciFailure("CONFIG_INVALID");
   const after=params.get("after");
@@ -71,7 +102,7 @@ export async function ciManagementProxy(request: NextRequest,parts: string[],get
   if(request.method!=="GET") {
     try {
       const input=request.body ? await boundedJson(request) : {};
-      if(!object(input) || (path==="targets" ? !exact(input,["origin"]) || !validCiOrigin(input.origin) : Object.keys(input).length!==0))
+      if(!object(input) || (path==="keys" ? !keyInput(input) : path==="targets" ? !exact(input,["origin"]) || !validCiOrigin(input.origin) : Object.keys(input).length!==0))
         return ciFailure("CONFIG_INVALID");
       if(request.method!=="DELETE") body=JSON.stringify(input);
     } catch { return ciFailure("CONFIG_INVALID"); }

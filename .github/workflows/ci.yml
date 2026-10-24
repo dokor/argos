@@ -236,7 +236,7 @@ jobs:
       - name: Run MariaDB integration tests
         run: >-
           mvn --batch-mode -P mariadb-integration
-          -Dit.test=AdminStatisticsIT,ProblemStatisticsIT,PremiumWaitlistIT,CiEntitlementIT,CiTargetsIT,AuditScopeIT,NotificationsIT,ReportSharingMigrationIT,ClarteFreshStartMigrationIT,ConnectedModelIT,AccountLifecycleIT,AccountSessionSecurityIT,AccountSecurityMigrationIT,ReportCredentialMigrationIT,AuditPublicationIT,AccountJourneyIT,ProductAnalyticsIT,ReportRetentionIT,AuditClaimIT,NewsletterPrivacyIT,AuditRunProgressIT,DomainAnalysisConcurrencyIT,AuditAdmissionIT,UsageIT,UsageTimelineIT,DiscoveryIT,BatchIT,DiagnosticMigrationIT,CanonicalCountsMigrationIT,OverviewIT
+          -Dit.test=AdminStatisticsIT,ProblemStatisticsIT,PremiumWaitlistIT,CiEntitlementIT,CiTargetsIT,CiKeysIT,AuditScopeIT,NotificationsIT,ReportSharingMigrationIT,ClarteFreshStartMigrationIT,ConnectedModelIT,AccountLifecycleIT,AccountSessionSecurityIT,AccountSecurityMigrationIT,ReportCredentialMigrationIT,AuditPublicationIT,AccountJourneyIT,ProductAnalyticsIT,ReportRetentionIT,AuditClaimIT,NewsletterPrivacyIT,AuditRunProgressIT,DomainAnalysisConcurrencyIT,AuditAdmissionIT,UsageIT,UsageTimelineIT,DiscoveryIT,BatchIT,DiagnosticMigrationIT,CanonicalCountsMigrationIT,OverviewIT
           verify
       - name: Verify packaged startup and explicit QueryDSL preview
         env:
