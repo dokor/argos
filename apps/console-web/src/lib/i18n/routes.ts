@@ -28,6 +28,7 @@ export const accountRoutes: Record<string, string> = {
   "/account/reset": "/en/account/reset",
 };
 export const languageRoutes: Record<string, string> = {
+  "/tarifs": "/en/pricing",
   "/guides/checklist-audit-ecommerce": "/en/guides/ecommerce-audit-checklist",
   "/docs": "/en/docs",
   ...Object.fromEntries(["auth","domains","github","gitlab","issues","api","errors","usage","changelog"].map(topic=>["/docs/"+topic,"/en/docs/"+topic])),
