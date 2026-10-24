@@ -1,0 +1,77 @@
+# GitLab.com: dedicated protected Linux shell runner tagged argos-ci, Node 24.21.0 + curl.
+# No deployment, project checkout, cache or project scripts. Server closed until #467.
+stages: [argos_control, argos_preview]
+default:
+  tags: [argos-ci]
+  before_script: []
+  after_script: []
+  cache: []
+variables:
+  GIT_STRATEGY: empty
+  NODE_OPTIONS: ''
+  NODE_TLS_REJECT_UNAUTHORIZED: '1'
+  ARGOS_ENVIRONMENT: production
+  ARGOS_LANG: fr
+  ARGOS_PRIVATE_ARTIFACTS: 'false'
+  ARGOS_PUBLICATION_PREVIEW: 'false'
+
+.argos_rules:
+  rules:
+    - if: '$CI_SERVER_URL == "https://gitlab.com" && $CI_COMMIT_REF_PROTECTED == "true" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && ($CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "schedule")'
+    - when: never
+
+.argos_download:
+  script:
+    - test "$(node --version)" = 'v24.21.0'
+    - >-
+      curl --proto '=https' --tlsv1.2 --fail --silent --show-error --max-time 30 --max-redirs 0
+      --output argos-ci.mjs https://raw.githubusercontent.com/dokor/argos/efe5fb4f002d75bcf76cd698d71d82c4a39d7ab8/clients/ci/dist/argos-ci.mjs
+    - echo '8929a521e0085b2a1a7172c44daa94587b4bf05270ad66484d9d2f3c43017340  argos-ci.mjs' | sha256sum --check --strict
+
+argos_control:
+  extends: .argos_rules
+  stage: argos_control
+  timeout: 25 minutes
+  environment:
+    name: argos-ci
+  script:
+    - !reference [.argos_download, script]
+    - |
+      unset ARGOS_EXPORT_PRIVATE
+      if [ "$ARGOS_PRIVATE_ARTIFACTS" = true ] || [ "$ARGOS_PUBLICATION_PREVIEW" = true ]; then
+        env -u ARGOS_API_KEY node argos-ci.mjs artifact-check || exit 2
+        export ARGOS_EXPORT_PRIVATE=1
+      fi
+      set +e
+      env -u ARGOS_GITLAB_READ_TOKEN node argos-ci.mjs audit
+      status=$?
+      set -e
+      if [ "${ARGOS_EXPORT_PRIVATE:-}" = 1 ] && [ "$status" -le 1 ]; then
+        # Recheck confidentiality/keep_latest_artifact right before provider upload.
+        if ! env -u ARGOS_API_KEY node argos-ci.mjs artifact-check; then
+          node --input-type=module -e 'import fs from "node:fs"; fs.unlinkSync(".argos-ci/evidence.json")'
+          exit 2
+        fi
+      fi
+      exit "$status"
+  artifacts:
+    when: always
+    access: maintainer
+    expire_in: 7 days
+    paths: [.argos-ci/evidence.json]
+
+argos_preview:
+  # Preview only: no key Argos, no write token, no tickets until #738/#740.
+  stage: argos_preview
+  timeout: 5 minutes
+  environment:
+    name: argos-publication-preview
+  dependencies: [argos_control]
+  rules:
+    - if: '$ARGOS_PUBLICATION_PREVIEW == "true" && $CI_PROJECT_VISIBILITY == "private" && $CI_SERVER_URL == "https://gitlab.com" && $CI_COMMIT_REF_PROTECTED == "true" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && ($CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "schedule")'
+      when: always
+    - when: never
+  script:
+    - !reference [.argos_download, script]
+    # API: select the exact current-pipeline producer and obtain its digest OUTSIDE the artifact.
+    - env -u ARGOS_API_KEY node argos-ci.mjs publication-preview

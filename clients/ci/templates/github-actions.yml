@@ -1,0 +1,103 @@
+# Premium CI preview. Server access stays disabled until #467.
+# Copy to .github/workflows/argos-ci.yml; configure the protected argos-ci environment.
+name: Argos Premium CI
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+concurrency:
+  group: argos-ci-${{ github.repository }}-${{ github.ref }}
+  cancel-in-progress: false
+env:
+  NODE_OPTIONS: ''
+  NODE_TLS_REJECT_UNAUTHORIZED: '1'
+  ARGOS_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+  ARGOS_ENVIRONMENT: production
+  ARGOS_LANG: fr
+
+jobs:
+  argos_control:
+    if: ${{ github.event.repository.fork == false && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    environment: argos-ci
+    outputs:
+      audit_outcome: ${{ steps.control.outputs.audit_outcome }}
+      evidence_sha256: ${{ steps.control.outputs.evidence_sha256 }}
+      artifact_id: ${{ steps.upload.outputs.artifact-id }}
+    steps:
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24.21.0'
+      - name: Download the reviewed standalone client (no project checkout)
+        run: |
+          curl --proto '=https' --tlsv1.2 --fail --silent --show-error --max-time 30 --max-redirs 0 \
+            --output argos-ci.mjs https://raw.githubusercontent.com/dokor/argos/efe5fb4f002d75bcf76cd698d71d82c4a39d7ab8/clients/ci/dist/argos-ci.mjs
+          echo '8929a521e0085b2a1a7172c44daa94587b4bf05270ad66484d9d2f3c43017340  argos-ci.mjs' | sha256sum --check --strict
+      - name: Admit two samples and consume the confirmed server verdict
+        id: control
+        shell: bash
+        run: |
+          set +e
+          node argos-ci.mjs audit > control-result.json
+          status=$?
+          set -e
+          node --input-type=module -e '
+            import fs from "node:fs";
+            const r=JSON.parse(fs.readFileSync("control-result.json","utf8"));
+            if(!["GO","SITE_NO_GO","CONTROL_FAILED"].includes(r.auditOutcome))process.exit(2);
+            const digest=/^[a-f0-9]{64}$/.test(r.evidenceSha256??"")?r.evidenceSha256:"";
+            fs.appendFileSync(process.env.GITHUB_OUTPUT,"audit_outcome="+r.auditOutcome+"\nevidence_sha256="+digest+"\n");
+            console.log(JSON.stringify(r));'
+          exit "$status"
+        env:
+          ARGOS_API_KEY: ${{ secrets.ARGOS_API_KEY }}
+          ARGOS_TARGET_URL: ${{ vars.ARGOS_TARGET_URL }}
+          ARGOS_EXPORT_PRIVATE: ${{ (vars.ARGOS_PRIVATE_ARTIFACTS == 'true' || vars.ARGOS_PUBLICATION_PREVIEW == 'true') && '1' || '' }}
+      - name: Verify private destination immediately before upload
+        id: destination
+        if: ${{ always() && (vars.ARGOS_PRIVATE_ARTIFACTS == 'true' || vars.ARGOS_PUBLICATION_PREVIEW == 'true') && (steps.control.outputs.audit_outcome == 'GO' || steps.control.outputs.audit_outcome == 'SITE_NO_GO') && steps.control.outputs.evidence_sha256 != '' }}
+        run: node argos-ci.mjs artifact-check
+        env:
+          ARGOS_GITHUB_READ_TOKEN: ${{ github.token }}
+      - name: Opt-in private evidence (never raw reports or diagnostics)
+        id: upload
+        if: ${{ always() && steps.destination.outcome == 'success' && steps.control.outputs.evidence_sha256 != '' }}
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: argos-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .argos-ci/evidence.json
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+
+  argos_preview:
+    # Preview only. Real, optional publishers follow in #738/#739; no issues:write here.
+    needs: argos_control
+    if: ${{ always() && vars.ARGOS_PUBLICATION_PREVIEW == 'true' && github.event.repository.fork == false && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && (needs.argos_control.outputs.audit_outcome == 'GO' || needs.argos_control.outputs.audit_outcome == 'SITE_NO_GO') && needs.argos_control.outputs.artifact_id != '' && needs.argos_control.outputs.evidence_sha256 != '' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24.21.0'
+      - name: Download the same reviewed client
+        run: |
+          curl --proto '=https' --tlsv1.2 --fail --silent --show-error --max-time 30 --max-redirs 0 \
+            --output argos-ci.mjs https://raw.githubusercontent.com/dokor/argos/efe5fb4f002d75bcf76cd698d71d82c4a39d7ab8/clients/ci/dist/argos-ci.mjs
+          echo '8929a521e0085b2a1a7172c44daa94587b4bf05270ad66484d9d2f3c43017340  argos-ci.mjs' | sha256sum --check --strict
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          artifact-ids: ${{ needs.argos_control.outputs.artifact_id }}
+          path: .argos-ci
+      - name: Verify producer, digest, schema and preview eligible findings
+        run: node argos-ci.mjs publication-preview
+        env:
+          ARGOS_EVIDENCE_SHA256: ${{ needs.argos_control.outputs.evidence_sha256 }}
+          ARGOS_EVIDENCE_PRODUCER: argos_control

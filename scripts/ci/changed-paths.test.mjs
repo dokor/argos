@@ -10,6 +10,7 @@ import { classify } from './changed-paths.mjs';
 const enabled = paths => Object.entries(classify(paths)).filter(([,run]) => run).map(([name]) => name).sort();
 const all = Object.keys(classify(null)).sort();
 const cases = [
+  ['portable client, bundle or provider template', ['clients/ci/src/client.mjs'], all],
   ['documentation only', ['README.md','docs/testing/ci.md','apps/api-backend/README.md'], []],
   ['frontend code', ['apps/console-web/src/app/page.tsx'], ['frontend','e2e','auth']],
   ['frontend unit tests', ['apps/console-web/src/components/AuditForm.dom.test.tsx'], ['frontend']],
