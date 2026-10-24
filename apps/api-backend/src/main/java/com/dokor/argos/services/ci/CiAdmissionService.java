@@ -5,6 +5,7 @@ import com.dokor.argos.db.generated.*;
 import com.dokor.argos.services.ci.errors.*;
 import com.dokor.argos.services.connected.discovery.*;
 import com.dokor.argos.services.domain.audit.*;
+import com.dokor.argos.services.domain.report.ReportRetentionPolicy;
 import com.dokor.argos.services.token.TokenService;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -28,13 +29,22 @@ public class CiAdmissionService {
     @JsonInclude(JsonInclude.Include.ALWAYS)
     public record Report(int apiVersion,String kind,String runId,Integer globalScore,Integer scoringVersion,Integer criticalCount,Integer importantCount,
                          String completeness,String generatedAt,String expiresAt) {}
+    public record ArtifactPolicy(String visibility,int retentionDays,int diagnosticRetentionDays,boolean automaticUpload) {}
+    public record PublicIssue(String title,String body) {}
+    public record Export(int apiVersion,String kind,Report summary,String reportPath,CiExportProjection details,ArtifactPolicy artifactPolicy,PublicIssue publicIssue) {}
+    public record Deletion(int apiVersion,String runId,boolean deleted) {}
+    public static final ArtifactPolicy ARTIFACT_POLICY=new ArtifactPolicy("private",7,1,false);
+    public static final PublicIssue PUBLIC_ISSUE=new PublicIssue("Argos audit: review required",
+        "An Argos CI audit requires an authenticated review. Open Argos with your own account. Findings are available only through authenticated access.");
+    private final ReportRetentionPolicy retention;
     private final CiKeysService keys;private final CiTargetsService targets;private final CiEntitlementService entitlement;
     private final CiQuotaService quotas;private final CiRequestDao requests;private final AuditRunService runs;
     private final AccountDao dao;private final DiscoveryTransport transport;private final ObjectMapper mapper;private final TokenService tokens;private final Clock clock;
     @Inject public CiAdmissionService(CiKeysService keys,CiTargetsService targets,CiEntitlementService entitlement,CiQuotaService quotas,
-            CiRequestDao requests,AuditRunService runs,AccountDao dao,DiscoveryTransport transport,ObjectMapper mapper,TokenService tokens,Clock clock) {
+            CiRequestDao requests,AuditRunService runs,AccountDao dao,DiscoveryTransport transport,ObjectMapper mapper,TokenService tokens,Clock clock,ReportRetentionPolicy retention) {
         this.keys=keys;this.targets=targets;this.entitlement=entitlement;this.quotas=quotas;this.requests=requests;this.runs=runs;
         this.dao=dao;this.transport=transport;this.mapper=mapper;this.tokens=tokens;this.clock=clock;
+        this.retention=retention;
     }
     public static Input input(JsonNode json) {
         if(json==null || !json.isObject() || json.size()!=3 || !json.path("url").isTextual() || !json.path("samples").isInt()
@@ -102,17 +112,48 @@ public class CiAdmissionService {
     });}
     public Report report(String auth,String peer,long id){return keys.withCredential(auth,peer,"results:read",(identity,c)->{
         var row=requests.forRun(identity,id,c);visible(identity,row);
+        return report(id,c);
+    });}
+    private Report report(long id,Connection c) {
         var q=QAuditReport.auditReport;
+        var r=QAuditRun.auditRun;
         var result=dao.transactions.selectQuery(c).select(q.globalScore,q.scoringVersion,q.criticalCount,q.importantCount,q.measurementCompleteness,q.createdAt,q.expiresAt)
-            .from(q).where(q.runId.eq(id)).fetchOne();
-        if(result==null || result.get(q.expiresAt)!=null && !result.get(q.expiresAt).isAfter(clock.instant()))throw fail(CiErrorCode.RESOURCE_NOT_AVAILABLE);
+            .from(q).join(r).on(r.id.eq(q.runId)).where(q.runId.eq(id),r.status.eq("COMPLETED"),r.ciNavigationOrigins.isNotNull()).fetchOne();
+        if(result==null || retention.ciExpired(result.get(q.createdAt),result.get(q.expiresAt),clock.instant()))throw fail(CiErrorCode.RESOURCE_NOT_AVAILABLE);
         String completeness=result.get(q.measurementCompleteness);
         if(!Set.of("FULL","PARTIAL","UNKNOWN").contains(completeness))throw fail(CiErrorCode.INTERNAL_ERROR);
         var score=result.get(q.globalScore);
         if(score!=null && (score<0 || score>100) || java.util.stream.Stream.of(result.get(q.scoringVersion),result.get(q.criticalCount),result.get(q.importantCount)).anyMatch(value->value!=null && value<0))
             throw fail(CiErrorCode.INTERNAL_ERROR);
         return new Report(1,"summary-v1",Long.toString(id),result.get(q.globalScore),result.get(q.scoringVersion),result.get(q.criticalCount),result.get(q.importantCount),
-            completeness,iso(result.get(q.createdAt)),iso(result.get(q.expiresAt)));
+            completeness,iso(result.get(q.createdAt)),iso(result.get(q.expiresAt)==null || retention.ciExpiresAt(result.get(q.createdAt)).isBefore(result.get(q.expiresAt))
+                ?retention.ciExpiresAt(result.get(q.createdAt)):result.get(q.expiresAt)));
+    }
+    public Export export(String auth,String peer,long id){return keys.withCredential(auth,peer,"results:read",(identity,c)->{
+        visible(identity,requests.forRun(identity,id,c));var summary=report(id,c);
+        var q=QAuditReport.auditReport;
+        var json=dao.transactions.selectQuery(c).select(q.ciExportJson).from(q).where(q.runId.eq(id),
+            com.querydsl.core.types.dsl.Expressions.numberTemplate(Integer.class,"OCTET_LENGTH({0})",q.ciExportJson).loe(CiExportProjection.MAX_BYTES)).fetchOne();
+        // No fallback to report_json or result_json, including legacy/missing snapshots.
+        if(json==null)throw fail(CiErrorCode.RESOURCE_NOT_AVAILABLE);
+        try {
+            var details=CiExportProjection.read(json,mapper);
+            var value=new Export(1,"details-v1",summary,"/api/ci/v1/runs/"+id+"/report",details,ARTIFACT_POLICY,PUBLIC_ISSUE);
+            if(mapper.writeValueAsBytes(value).length>65536)throw new IllegalArgumentException();
+            return value;
+        }catch(Exception invalid){throw fail(CiErrorCode.INTERNAL_ERROR);}
+    });}
+    /** Idempotent deletion keeps the run/intention and accounting ledger, never launches a rerun. */
+    public Deletion deleteReport(String auth,String peer,long id){return keys.withCredential(auth,peer,"audits:write",(identity,c)->{
+        if(!identity.scopes().contains("results:read"))throw fail(CiErrorCode.PERMISSION_DENIED);
+        visible(identity,requests.forRun(identity,id,c));
+        var r=QAuditRun.auditRun;var q=QAuditReport.auditReport;
+        String status=dao.transactions.selectQuery(c).select(r.status).from(r).where(r.id.eq(id),r.ciNavigationOrigins.isNotNull()).forUpdate().fetchOne();
+        if(status==null || !Set.of("COMPLETED","FAILED","CANCELED").contains(status))throw fail(CiErrorCode.RESOURCE_NOT_AVAILABLE);
+        dao.transactions.delete(q,c).where(q.runId.eq(id)).execute();
+        dao.transactions.update(r,c).set(r.resultJson,(String)null).set(r.lastError,(String)null).set(r.moduleStatuses,(String)null)
+            .set(r.claimToken,(String)null).set(r.reportTokenHash,(byte[])null).where(r.id.eq(id)).execute();
+        return new Deletion(1,Long.toString(id),true);
     });}
     public Usage usage(String auth,String peer){return keys.withCredential(auth,peer,"usage:read",(identity,c)->new Usage(1,quotas.snapshot(identity,c)));}
     public Preflight preflight(String auth,String peer){return keys.withCredential(auth,peer,"usage:read",(identity,c)->{

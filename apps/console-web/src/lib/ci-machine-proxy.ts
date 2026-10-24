@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { boundedJson } from "./bounded-request";
 import { ciFailure, ciUpstreamError, validCiOrigin } from "./ci-management-proxy";
 import { ssrfError } from "./audit-url-validation";
+import exportCatalogue from "./ci-export-catalog-v1.json";
 
-const headers={"Cache-Control":"private, no-store","X-Content-Type-Options":"nosniff"};
+const headers={"Cache-Control":"private, no-store","X-Content-Type-Options":"nosniff","Referrer-Policy":"no-referrer","X-Robots-Tag":"noindex, nofollow, noarchive","Vary":"Authorization"};
+const publicIssue={title:"Argos audit: review required",body:"An Argos CI audit requires an authenticated review. Open Argos with your own account. Findings are available only through authenticated access."};
 const uuid="[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}";
 const isUuid=(v:unknown)=>typeof v==="string" && new RegExp(`^${uuid}$`).test(v);
 const object=(v:unknown):v is Record<string,unknown>=>!!v && typeof v==="object" && !Array.isArray(v);
@@ -27,8 +29,29 @@ function usage(v:unknown):boolean {
     && timestamp(v.startsAt) && timestamp(v.resetsAt) && [v.used,v.reserved,v.limit,v.available].every(integer)
     && v.available===Math.max(0,Number(v.limit)-Number(v.used)-Number(v.reserved));
 }
+function details(v:unknown):boolean {
+  if(!object(v) || !exact(v,["version","categories","checks","findings","omittedFindings"]) || v.version!==1 || !integer(v.omittedFindings))return false;
+  const domains=["performance","security","seo","a11y"];
+  if(!Array.isArray(v.categories) || v.categories.length>4 || !v.categories.every(c=>object(c) && exact(c,["key","score"]) && domains.includes(String(c.key))
+    && nullableInteger(c.score) && Number(c.score)<=100) || new Set(v.categories.map(c=>c.key)).size!==v.categories.length)return false;
+  const catalogue:Record<string,string>=exportCatalogue;
+  for(const field of ["checks","findings"] as const) {
+    const rows=v[field];if(!Array.isArray(rows) || rows.length>(field==="checks"?256:128))return false;
+    if(!rows.every(r=>object(r) && exact(r,field==="checks"?["key","category","state"]:["key","category","severity"])
+      && typeof r.key==="string" && Object.hasOwn(catalogue,r.key) && r.category===catalogue[r.key]
+      && (field==="checks"?["MEASURED","UNAVAILABLE","BLOCKED_BY_ANTIBOT","NOT_APPLICABLE"].includes(String(r.state)):["critical","important","info"].includes(String(r.severity)))))return false;
+    if(new Set(rows.map(r=>r.key)).size!==rows.length)return false;
+  }
+  return true;
+}
 function success(path:string,v:unknown):boolean {
   if(!object(v))return false;
+  if(path.endsWith("/export"))return exact(v,["apiVersion","kind","summary","reportPath","details","artifactPolicy","publicIssue"]) && v.apiVersion===1 && v.kind==="details-v1"
+    && success(path.replace(/export$/,"report"),v.summary) && object(v.summary) && v.reportPath===`/api/ci/v1/runs/${v.summary.runId}/report` && details(v.details)
+    && object(v.artifactPolicy) && exact(v.artifactPolicy,["visibility","retentionDays","diagnosticRetentionDays","automaticUpload"])
+    && v.artifactPolicy.visibility==="private" && v.artifactPolicy.retentionDays===7 && v.artifactPolicy.diagnosticRetentionDays===1 && v.artifactPolicy.automaticUpload===false
+    && object(v.publicIssue) && exact(v.publicIssue,["title","body"]) && v.publicIssue.title===publicIssue.title && v.publicIssue.body===publicIssue.body;
+  if(v.deleted===true)return exact(v,["apiVersion","runId","deleted"]) && v.apiVersion===1 && runId(v.runId);
   if(path==="v1/identity")return exact(v,["apiVersion","integrationId","keyId","scopes","origins"]) && v.apiVersion===1
     && isUuid(v.integrationId) && typeof v.keyId==="string" && /^[a-f0-9]{32}$/.test(v.keyId) && scopeList(v.scopes)
     && Array.isArray(v.origins) && v.origins.length>0 && v.origins.length<=100 && v.origins.every(validCiOrigin);
@@ -59,9 +82,10 @@ export async function ciMachineProxy(request:NextRequest,parts:string[]):Promise
   if(!authorization || !/^Bearer argos_ci_[a-f0-9]{32}\.[A-Za-z0-9_-]{43}$/.test(authorization))return ciFailure("AUTHENTICATION_FAILED");
   if([...request.nextUrl.searchParams.keys()].length)return ciFailure("CONFIG_INVALID");
   const path=parts.join("/");
-  const get=request.method==="GET" && new RegExp(`^v1/(?:identity|usage|preflight|admissions/(?:${uuid}|by-key/${uuid})|runs/[1-9][0-9]{0,18}(?:/report)?)$`).test(path);
+  const get=request.method==="GET" && new RegExp(`^v1/(?:identity|usage|preflight|admissions/(?:${uuid}|by-key/${uuid})|runs/[1-9][0-9]{0,18}(?:/report|/export)?)$`).test(path);
   const post=request.method==="POST" && path==="v1/analyses";
-  const unknown=!get && !post;
+  const deletion=request.method==="DELETE" && /^v1\/runs\/[1-9][0-9]{0,18}\/report$/.test(path);
+  const unknown=!get && !post && !deletion;
   const forwarded=new Headers({Accept:"application/json","Content-Type":"application/json",Authorization:authorization});
   let body:string|undefined;
   if(post) {
@@ -83,8 +107,9 @@ export async function ciMachineProxy(request:NextRequest,parts:string[]):Promise
     if(!response.ok)return ciUpstreamError(data,response.status);
     if(!success(upstreamPath,data) || ![200,...(post?[201]:[])].includes(response.status))return ciFailure("TRANSPORT_FAILED");
     if(unknown)return ciFailure("RESOURCE_NOT_AVAILABLE");
-    if(object(data) && (path.startsWith("v1/runs/") && (path.endsWith("/report")?data.runId:data.id)!==path.split("/")[2]
+    if(deletion && (!object(data) || data.deleted!==true) || !deletion && object(data) && data.deleted===true)return ciFailure("TRANSPORT_FAILED");
+    if(object(data) && (path.startsWith("v1/runs/") && (path.endsWith("/export") && object(data.summary)?data.summary.runId:path.endsWith("/report")?data.runId:data.id)!==path.split("/")[2]
       || new RegExp(`^v1/admissions/${uuid}$`).test(path) && data.id!==path.split("/")[2]))return ciFailure("TRANSPORT_FAILED");
-    return NextResponse.json(data,{status:response.status,headers});
+    return NextResponse.json(data,{status:response.status,headers:{...headers,...(path.endsWith("/export")?{"Content-Disposition":`attachment; filename="argos-ci-run-${path.split("/")[2]}.json"`}:{})}});
   }catch{return ciFailure("TRANSPORT_FAILED");}
 }

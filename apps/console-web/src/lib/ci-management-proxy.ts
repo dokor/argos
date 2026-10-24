@@ -6,7 +6,7 @@ import { ssrfError } from "./audit-url-validation";
 
 type Code = keyof typeof catalog.errors;
 const errors = catalog.errors;
-const headers = { "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" };
+const headers = { "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff", "Referrer-Policy": "no-referrer", "X-Robots-Tag": "noindex, nofollow, noarchive", "Vary": "Authorization" };
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 const time = (v: unknown) => v === null || typeof v === "string" && /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d{1,9})?Z$/.test(v) && Number.isFinite(Date.parse(v));
 const object = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);

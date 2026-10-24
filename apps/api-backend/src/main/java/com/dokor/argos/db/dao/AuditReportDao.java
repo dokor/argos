@@ -24,7 +24,8 @@ public class AuditReportDao extends CrudDaoQuerydsl<AuditReport> {
             transactionManager.selectQuery()
                 .select(REPORT)
                 .from(REPORT)
-                .where(REPORT.tokenHash.eq(tokenHash))
+                .join(com.dokor.argos.db.generated.QAuditRun.auditRun).on(com.dokor.argos.db.generated.QAuditRun.auditRun.id.eq(REPORT.runId))
+                .where(REPORT.tokenHash.eq(tokenHash),com.dokor.argos.db.generated.QAuditRun.auditRun.ciNavigationOrigins.isNull())
                 .fetchOne()
         );
     }

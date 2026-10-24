@@ -87,7 +87,7 @@ public class ReportReadService {
             }
             return Optional.of(report.withIntroduction(note));
         } catch (Exception e) {
-            logger.warn("Invalid report_json reportId={}", entity.getId(), e);
+            logger.warn("Invalid report_json reportId={}", entity.getId());
             // sécurité : 404 plutôt que 500 (évite leak)
             return Optional.empty();
         }
