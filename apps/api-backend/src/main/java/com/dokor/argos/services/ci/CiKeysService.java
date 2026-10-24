@@ -107,14 +107,22 @@ public class CiKeysService {
     /** Common machine gate. Admission handlers must additionally recheck entitlement and target grants on c. */
     public <T> T withCredential(String authorization,String peer,String requiredScope,BiFunction<Context,Connection,T> work) {
         return CiAccountOperations.boundary(()->{
-            if(!enabled() || limiter.blocked(peer)) throw fail(CiErrorCode.AUTHENTICATION_FAILED);
+            if(!enabled()) throw fail(CiErrorCode.AUTHENTICATION_FAILED);
             String credential=CiKeyMaterial.credential(authorization);
+            // A malicious caller behind a shared proxy must not lock out a valid credential.
+            // Ingress and authenticated budgets separately bound storage/traffic costs.
+            if(credential==null && limiter.blocked(peer)) throw fail(CiErrorCode.AUTHENTICATION_FAILED);
             try {
                 return dao.transaction(c->{
                     var q=QCiApiKey.table;var i=QCiIntegration.table;
                     String id=credential==null?"":credential.substring(9,41);
-                    Long owner=credential==null?null:dao.transactions.selectQuery(c).select(i.ownerUserId).from(q).join(i).on(i.id.eq(q.integrationId)).where(q.publicId.eq(id)).fetchOne();
-                    if(owner==null) {CiKeyMaterial.matches(tokens,credential,null);throw new InvalidCredential();}
+                    var candidate=credential==null?null:dao.transactions.selectQuery(c).select(i.ownerUserId,q.secretHash,q.expiresAt,q.overlapUntil,q.revokedAt).from(q).join(i).on(i.id.eq(q.integrationId)).where(q.publicId.eq(id)).fetchOne();
+                    // Reject a wrong secret before taking any account/key lock. The same values
+                    // are rechecked below under lock, so revocation cannot race this preliminary read.
+                    if(!CiKeyMaterial.matches(tokens,credential,candidate==null?null:candidate.get(q.secretHash))
+                        || candidate.get(q.revokedAt)!=null || !candidate.get(q.expiresAt).isAfter(clock.instant())
+                        || candidate.get(q.overlapUntil)!=null && !candidate.get(q.overlapUntil).isAfter(clock.instant()))throw new InvalidCredential();
+                    Long owner=candidate.get(i.ownerUserId);
                     var user=dao.user(owner,c,true);
                     var key=dao.transactions.selectQuery(c).select(q).from(q).where(q.publicId.eq(id)).forUpdate().fetchOne();
                     boolean secretMatches=CiKeyMaterial.matches(tokens,credential,key==null?null:key.getSecretHash());
@@ -126,7 +134,7 @@ public class CiKeysService {
                     var result=work.apply(context,c);
                     key.setLastUsedAt(now());dao.save(key,QCiApiKey.table,c);return result;
                 });
-            } catch(InvalidCredential rejected) {limiter.failed(peer);throw fail(CiErrorCode.AUTHENTICATION_FAILED);}
+            } catch(InvalidCredential rejected) {if(!limiter.blocked(peer))limiter.failed(peer);throw fail(CiErrorCode.AUTHENTICATION_FAILED);}
         });
     }
     private Issued issue(CiIntegration integration,String name,List<String> scopes,List<CiTargetsService.Grant> grants,Instant expires,Connection c) {

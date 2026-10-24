@@ -154,7 +154,9 @@ class CiKeysIT extends MariaDbReportFixture {
             for(var failure:failures) failure.get(15,TimeUnit.SECONDS);
         }
         for(int n=0;n<48;n++) unauthorized(()->keys.withCredential(null,"brute",null,(ctx,c)->ctx));
-        unauthorized(()->keys.withCredential("Bearer "+issued.credential(),"brute",null,(ctx,c)->ctx));
+        // An invalid caller sharing the proxy/runner peer cannot lock out this valid key.
+        keys.withCredential("Bearer "+issued.credential(),"brute",null,(ctx,c)->ctx);
+        unauthorized(()->keys.withCredential(null,"brute",null,(ctx,c)->ctx));
         clock.now=clock.instant().plusSeconds(900);
         keys.withCredential("Bearer "+issued.credential(),"brute",null,(ctx,c)->ctx);
         var closed=service(new CiPolicy(ConfigFactory.empty()));
@@ -195,5 +197,23 @@ class CiKeysIT extends MariaDbReportFixture {
             var revoked=client.send(HttpRequest.newBuilder(URI.create(base+"/ci/v1/identity")).header("Authorization","Bearer "+issued.credential()).GET().build(),HttpResponse.BodyHandlers.ofString());
             assertEquals(401,revoked.statusCode());assertEquals("private, no-store",revoked.headers().firstValue("cache-control").orElseThrow());
         } finally {server.shutdownNow();}
+    }
+    @Test void incorrectSecretCannotWaitOnOrHoldTheVictimsAccountLock() throws Exception {
+        var issued=issue();String wrong="Bearer argos_ci_"+issued.key().id()+"."+"z".repeat(43);
+        var expired=keys.create(auth,CSRF,new CiKeysService.Input("Short fixture",List.of("usage:read"),List.of(targetId),null,clock.instant().plusSeconds(1).toString()),"fixture");
+        keys.revoke(auth,CSRF,issued.key().id(),"fixture");clock.now=clock.instant().plusSeconds(1);
+        try(var c=source.getConnection();var pool=Executors.newSingleThreadExecutor()) {
+            c.setAutoCommit(false);
+            try(var s=c.prepareStatement("SELECT id FROM ARG_ACCOUNT_USER WHERE id=? FOR UPDATE")) {
+                s.setLong(1,owner.getId());try(var r=s.executeQuery()){assertTrue(r.next());}
+            }
+            try {
+                for(String invalid:List.of(wrong,"Bearer "+issued.credential(),"Bearer "+expired.credential())) {
+                    var rejected=pool.submit(()->{try{keys.withCredential(invalid,"attacker",null,(ctx,connection)->ctx);return null;}
+                        catch(WebApplicationException denied){return code(denied);}});
+                    assertEquals(CiErrorCode.AUTHENTICATION_FAILED,rejected.get(5,TimeUnit.SECONDS));
+                }
+            }finally{c.rollback();}
+        }
     }
 }

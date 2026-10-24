@@ -12,6 +12,22 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 class CiKeyFilterTest {
+    @Test void authenticatedChunkedBodiesAreBoundedAndTrafficIsChargedBeforeParsing() throws Exception {
+        var keys=mock(CiKeysService.class);var rates=mock(CiRateService.class);
+        var identity=new CiKeysService.Context(10,20,"integration","key",java.util.Set.of(),List.of());
+        when(keys.enabled()).thenReturn(true);
+        when(keys.<CiKeysService.Context>withCredential(any(),any(),any(),any())).thenReturn(identity);
+        var request=mock(ContainerRequestContext.class);var uri=mock(UriInfo.class);
+        when(request.getUriInfo()).thenReturn(uri);when(uri.getPath()).thenReturn("ci/v1/analyses");
+        when(request.getMethod()).thenReturn("POST");when(request.hasEntity()).thenReturn(true);
+        when(request.getLength()).thenReturn(-1);
+        when(request.getEntityStream()).thenReturn(new java.io.ByteArrayInputStream(new byte[8193]));
+        new CiKeyFilter(keys,rates).filter(request);
+        verify(rates).ingress("direct");verify(rates).traffic(identity,true);
+        var bounded=org.mockito.ArgumentCaptor.forClass(java.io.InputStream.class);
+        verify(request).setEntityStream(bounded.capture());
+        assertThrows(java.io.IOException.class,()->bounded.getValue().readAllBytes());
+    }
     @Test void matrixParametersCannotBypassMachineNamespaceAuthentication() {
         var keys=mock(CiKeysService.class);
         when(keys.withCredential(isNull(),eq("direct"),isNull(),any()))

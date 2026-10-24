@@ -129,8 +129,8 @@ class UsageIT extends MariaDbReportFixture {
         org.flywaydb.core.Flyway.configure().dataSource(source).target("26").load().migrate();
         assertEquals(2,count("ARG_USAGE_RUN WHERE user_id=10 AND state='COUNTED' AND period='2026-09'"));
         assertEquals(1,count("ARG_USAGE_RUN WHERE user_id=10 AND state='RESERVED'"));assertEquals(3,count("ARG_USAGE_RUN"));
-        // The QueryDSL companions project every persisted field.
-        var q=QUsageRun.table;assertEquals(3,tx.selectQuery().select(q).from(q).fetch().size());
+        // V26 has no CI attribution: project only the fields present at this historical target.
+        var q=QUsageRun.table;assertEquals(3,tx.selectQuery().select(q.id,q.userId,q.period,q.state,q.createdAt,q.countedAt,q.releasedAt).from(q).fetch().size());
         assertEquals(1,tx.selectQuery().select(QUsageAccount.table).from(QUsageAccount.table).fetch().size());
     }
     private List<AuditRun> reserveMany(long owner,int count) {

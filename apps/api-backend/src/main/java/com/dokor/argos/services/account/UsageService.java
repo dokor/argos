@@ -96,6 +96,29 @@ public class UsageService {
         lock(run.getOwnerUserId(),c);
         execute(c,"UPDATE ARG_USAGE_RUN SET state='RELEASED',released_at=? WHERE id=? AND state='RESERVED'",Timestamp.from(clock.instant()),run.getId());
     }
+    /** Run -> global queue -> usage. Never acquire another run/account/key from this guard. */
+    public boolean startCi(AuditRun run,Instant now,Connection c) {
+        lock(run.getOwnerUserId(),c);
+        try {
+            String intent;int sample;
+            try(var s=c.prepareStatement("SELECT ci_intent_id,ci_sample FROM ARG_USAGE_RUN WHERE id=? AND user_id=? AND ci_integration_id IS NOT NULL AND state='RESERVED' FOR UPDATE")) {
+                s.setLong(1,run.getId());s.setLong(2,run.getOwnerUserId());try(var r=s.executeQuery()) {
+                    if(!r.next())return false;intent=r.getString(1);sample=r.getInt(2);
+                }
+            }
+            try(var s=c.prepareStatement("SELECT id FROM ARG_USAGE_RUN WHERE user_id=? AND state='RESERVED' AND ci_integration_id IS NOT NULL AND (ci_started_at IS NOT NULL OR (ci_intent_id=? AND ci_sample<?)) LIMIT 1 FOR UPDATE")) {
+                s.setLong(1,run.getOwnerUserId());s.setString(2,intent);s.setInt(3,sample);
+                try(var r=s.executeQuery()){if(r.next())return false;}
+            }
+            execute(c,"UPDATE ARG_USAGE_RUN SET ci_started_at=? WHERE id=?",Timestamp.from(now),run.getId());return true;
+        }catch(SQLException failed){throw new IllegalStateException("CI execution lease unavailable");}
+    }
+    /** Requeue retains quota and hourly cost; only execution occupancy is released. */
+    public void requeuedCi(AuditRun run,Connection c) {
+        if(run.getCiNavigationOrigins()==null)return;
+        lock(run.getOwnerUserId(),c);
+        execute(c,"UPDATE ARG_USAGE_RUN SET ci_started_at=NULL WHERE id=? AND state='RESERVED'",run.getId());
+    }
     /** Completed anonymous reports are counted at their original publication, without a new launch. */
     public void claimed(AuditRun run, Instant publishedAt, Connection c) {
         if(publishedAt!=null) published(run,publishedAt,c);

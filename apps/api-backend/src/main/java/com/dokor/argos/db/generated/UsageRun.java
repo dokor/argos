@@ -13,5 +13,10 @@ public class UsageRun extends CrudEntityQuerydsl {
     @Column("created_at") private Instant createdAt;
     @Column("released_at") private Instant releasedAt;
     @Column("counted_at") private Instant countedAt;
+    @Column("ci_integration_id") private Long ciIntegrationId;
+    @Column("ci_target_hash") private byte[] ciTargetHash;
+    @Column("ci_intent_id") private String ciIntentId;
+    @Column("ci_sample") private Integer ciSample;
+    @Column("ci_started_at") private Instant ciStartedAt;
     @Override public String toString() { return "UsageRun#"+id; }
 }
