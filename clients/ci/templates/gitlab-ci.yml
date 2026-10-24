@@ -25,8 +25,8 @@ variables:
     - test "$(node --version)" = 'v24.21.0'
     - >-
       curl --proto '=https' --tlsv1.2 --fail --silent --show-error --max-time 30 --max-redirs 0 --max-filesize 1048576
-      --output argos-ci.mjs https://raw.githubusercontent.com/dokor/argos/75d2c3d0ebf24f049642d255dc5b8c2b92a2dcfc/clients/ci/dist/argos-ci.mjs
-    - echo '10fa531c35405ea934213b7d163ac39e1f8a2c63e1c54c7f8de1cb7bec940015  argos-ci.mjs' | sha256sum --check --strict
+      --output argos-ci.mjs https://raw.githubusercontent.com/dokor/argos/e3303d9aafcf9924b3e578aceb22ad98383dca3c/clients/ci/dist/argos-ci.mjs
+    - echo '283b74c313ffe25ebe736ac77bc9ab05742d23f4787298544d5f69bb2a75f03b  argos-ci.mjs' | sha256sum --check --strict
 
 argos_control:
   extends: .argos_rules
@@ -61,7 +61,7 @@ argos_control:
     paths: [.argos-ci/evidence.json]
 
 argos_preview:
-  # Preview only: no key Argos, no write token, no tickets until #740.
+  # Read-only preview. For optional issue publishing use gitlab-publication.yml instead.
   stage: argos_preview
   timeout: 5 minutes
   environment:
