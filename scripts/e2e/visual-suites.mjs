@@ -9,6 +9,7 @@ export const groups = {
   integrations: ['connected-ci-integrations'],
   domains: ['connected-domains'],
   docs: ['developer-docs'],
+  billing: ['connected-billing'],
 };
 
 export function runGroup(name, run = spawnSync) {
