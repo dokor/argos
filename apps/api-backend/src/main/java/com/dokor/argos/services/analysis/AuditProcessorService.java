@@ -318,6 +318,7 @@ public class AuditProcessorService {
                 meta.put("partialScope",String.valueOf(executionScope.partial()));
                 meta.put("generator", "argos-api-backend");
                 meta.put("measurementFingerprint", MeasurementContract.fingerprint(run.getProfileSnapshot()));
+                meta.put("measurementContractVersion", MeasurementContract.VERSION);
                 String scopeFingerprint = MeasurementContract.scope(context.normalizedUrl(), context.finalUrl(), executionScope);
                 if (scopeFingerprint != null) meta.put("scopeFingerprint", scopeFingerprint);
                 meta.put("schemaVersion", String.valueOf(REPORT_SCHEMA_VERSION));

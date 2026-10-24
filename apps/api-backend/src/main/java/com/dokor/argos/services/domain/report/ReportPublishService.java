@@ -96,6 +96,11 @@ public class ReportPublishService {
                 if(projection.getBytes(java.nio.charset.StandardCharsets.UTF_8).length>com.dokor.argos.services.ci.CiExportProjection.MAX_BYTES)
                     throw new IllegalArgumentException();
                 entity.setCiExportJson(projection);
+                var verdict=com.dokor.argos.services.ci.CiVerdictEngine.from(publishedReport,
+                    internal.meta()==null?null:internal.meta().get("measurementContractVersion"));
+                String verdictJson=mapper.writeValueAsString(verdict);
+                if(verdictJson.getBytes(java.nio.charset.StandardCharsets.UTF_8).length>com.dokor.argos.services.ci.CiVerdictEngine.MAX_BYTES)throw new IllegalArgumentException();
+                entity.setCiVerdictJson(verdictJson);
                 entity.setDiagnosticJson(null);
                 // No raw report/collector evidence retained for a CI run.
                 entity.setReportJson("{}");
