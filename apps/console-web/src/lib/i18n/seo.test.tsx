@@ -34,6 +34,13 @@ describe("server-rendered language routes", () => {
     expect(localizedMetadata("/unpublished-page", "fr", "Titre", "Description").alternates?.languages).toEqual({ fr: siteUrl + "/unpublished-page", "x-default": siteUrl + "/unpublished-page" });
   });
 
+  it("lists each canonical URL only once in the sitemap", () => {
+    const urls = sitemap().map(entry => entry.url);
+    expect(new Set(urls).size).toBe(urls.length);
+    expect(urls.filter(url => url === siteUrl + "/exemple-rapport")).toHaveLength(1);
+    expect(urls.filter(url => url === siteUrl + "/en/example-report")).toHaveLength(1);
+  });
+
   it("advertises reciprocal languages and self canonicals for every translated page", () => {
     const entries = sitemap();
     for (const [fr, en] of Object.entries(languageRoutes)) {

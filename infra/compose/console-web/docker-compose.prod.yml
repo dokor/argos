@@ -97,11 +97,14 @@ services:
       - traefik.http.routers.console-web.tls.certresolver=le
       - traefik.http.routers.console-web.tls.options=modern@file
 
+      # Redirect at the edge, independently of the application backend.
+      # Middleware names are shared by all containers in the Docker provider.
       - traefik.http.routers.console-web-http.rule=Host(`argos.lelouet.fr`)
       - traefik.http.routers.console-web-http.entrypoints=web
-      - traefik.http.routers.console-web-http.middlewares=redirect-to-https
-      - traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https
-      - traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true
+      - traefik.http.routers.console-web-http.service=noop@internal
+      - traefik.http.routers.console-web-http.middlewares=argos-console-https-redirect
+      - traefik.http.middlewares.argos-console-https-redirect.redirectscheme.scheme=https
+      - traefik.http.middlewares.argos-console-https-redirect.redirectscheme.permanent=true
 
 networks:
   proxy:
