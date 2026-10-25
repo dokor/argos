@@ -1,3 +1,4 @@
+import { wordpressAuditContent } from "./wordpressAuditContent";
 import type { Lang } from "@/lib/i18n/routes";
 
 export const diagnosticRoutes = {
@@ -7,7 +8,8 @@ export const diagnosticRoutes = {
 } as const;
 
 export type DiagnosticTopic = keyof typeof diagnosticRoutes;
-type Check = { title: string; text: string; next: string };
+type ContentLink = { href: string; label: string };
+type Check = { title: string; text: string; next: string; link?: ContentLink };
 export type DiagnosticContent = {
   metaTitle: string;
   description: string;
@@ -18,66 +20,15 @@ export type DiagnosticContent = {
   cta: string;
   checksTitle: string;
   checks: Check[];
-  example: { title: string; evidence: string; action: string; verify: string };
+  example: { title: string; evidence: string; action: string; after?: string; verify: string };
   manualTitle: string;
-  manual: { title: string; text: string }[];
+  manual: { title: string; text: string; link?: ContentLink }[];
   limits: string[];
   sources: { href: string; label: string }[];
 };
 
 export const diagnosticPages: Record<DiagnosticTopic, Record<Lang, DiagnosticContent>> = {
-  wordpress: {
-    fr: {
-      metaTitle: "Audit WordPress : performance, sécurité et SEO",
-      description: "Analysez une page WordPress publique : chargement, signaux SEO et sécurité HTTP. Des preuves et des limites claires, sans accès à votre administration.",
-      eyebrow: "Diagnostic WordPress",
-      title: "Que révèle un audit public de votre site WordPress ?",
-      lead: "Un thème, des extensions et des contenus contribuent à la page livrée au visiteur. Partez de ce résultat visible pour choisir les vérifications à mener dans WordPress.",
-      scope: "Argos analyse une URL publique, sans compte administrateur ni extension à installer. La détection de WordPress, lorsqu’elle est disponible, reste un indice probable fondé sur des traces publiques.",
-      cta: "Analyser ma page WordPress",
-      checksTitle: "Du constat public à la vérification WordPress",
-      checks: [
-        { title: "Chargement et ressources", text: "Les mesures de laboratoire, le poids chargé et les erreurs observées peuvent signaler une page coûteuse. Ils ne désignent pas à eux seuls l’extension ou le thème responsable.", next: "Examinez les images, les scripts ajoutés par le thème et les extensions, puis comparez la même URL après une modification contrôlée." },
-        { title: "Titres et signaux SEO", text: "Le HTML permet de contrôler notamment le titre, la meta description et les indications d’indexation. Un réglage dans une extension SEO ne prouve pas que le HTML publié est correct.", next: "Vérifiez le contenu réellement livré, les réglages du thème et ceux de l’extension SEO avant de corriger les balises concernées." },
-        { title: "Sécurité HTTP", text: "HTTPS et les en-têtes de protection sont observables depuis la page publique, selon les contrôles disponibles. Leur présence ne démontre pas l’absence de vulnérabilité.", next: "Transmettez les preuves à votre hébergeur ou prestataire pour adapter la configuration, en vérifiant la compatibilité avec les ressources du site." },
-        { title: "Accessibilité du contenu", text: "Les contrôles automatiques peuvent relever des images sans alternative ou des champs sans nom accessible. Ils ne valident pas l’ensemble du parcours.", next: "Corrigez dans les médias, les blocs ou le thème, puis testez la navigation au clavier et la pertinence des textes alternatifs." },
-      ],
-      example: { title: "Une image de bannière à examiner", evidence: "Illustration fictive, sans mesure client\nPage : une page de service WordPress\nConstat : une image informative n’a pas d’attribut alt", action: "Renseignez une alternative pertinente dans la médiathèque ou le bloc qui affiche l’image. Une image décorative appelle un attribut alt vide ; ne décrivez pas automatiquement toutes les images.", verify: "Vérifiez l’élément rendu sur la page publiée, puis relancez cette URL. Une valeur enregistrée en médiathèque peut ne pas être utilisée par le thème." },
-      manualTitle: "Ce qui se vérifie dans votre environnement WordPress",
-      manual: [
-        { title: "Extensions et thème", text: "Avec votre prestataire, faites l’inventaire des composants et testez les changements sur une préproduction. Un script visible n’est pas un inventaire fiable des extensions installées." },
-        { title: "Cache et hébergement", text: "Examinez la configuration de cache et comparez plusieurs chargements dans des conditions comparables. Une mesure isolée ne suffit pas à attribuer une lenteur à l’hébergement." },
-        { title: "Maintenance", text: "Contrôlez les mises à jour, les sauvegardes et leur restauration avec les accès appropriés. L’audit public ne vérifie ni leur disponibilité ni leur bon fonctionnement." },
-      ],
-      limits: ["Pas de scan exhaustif des plugins, des versions ou des failles ; pas d’analyse de la base de données ni de wp-admin.", "Une seule URL, à un instant donné. Les modules indisponibles restent signalés ; une absence de résultat n’est pas une réussite.", "Les pistes de correction nécessitent une validation humaine. Aucun classement SEO ni gain commercial n’est garanti."],
-      sources: [{ href: "https://developer.wordpress.org/advanced-administration/performance/optimization/", label: "WordPress — optimisation et facteurs de performance" }],
-    },
-    en: {
-      metaTitle: "WordPress audit: performance, security and SEO",
-      description: "Analyse a public WordPress page for loading, SEO signals and HTTP security. Get evidence and clear limits without access to your admin area.",
-      eyebrow: "WordPress diagnosis",
-      title: "What can a public audit of your WordPress site reveal?",
-      lead: "A theme, plugins and content contribute to the page visitors receive. Start with that visible result to decide what to investigate in WordPress.",
-      scope: "Argos analyses one public URL, with no administrator account or plugin to install. WordPress detection, when available, remains a probable indication based on public traces.",
-      cta: "Analyse my WordPress page",
-      checksTitle: "From public evidence to WordPress checks",
-      checks: [
-        { title: "Loading and resources", text: "Lab measurements, loaded page weight and observed errors can flag a costly page. They do not identify the responsible plugin or theme on their own.", next: "Review images and scripts added by your theme and plugins, then compare the same URL after a controlled change." },
-        { title: "Titles and SEO signals", text: "HTML exposes signals such as the title, meta description and indexing instructions. A setting in an SEO plugin does not prove the published HTML is correct.", next: "Check the delivered content and the theme and SEO plugin settings before correcting the relevant tags." },
-        { title: "HTTP security", text: "HTTPS and protective headers can be observed on the public page, depending on available checks. Their presence does not prove there are no vulnerabilities.", next: "Share the evidence with your host or developer to adapt the configuration and check compatibility with site resources." },
-        { title: "Content accessibility", text: "Automated checks can flag images without alternatives or fields without accessible names. They do not validate the entire journey.", next: "Correct the media, blocks or theme, then check keyboard navigation and whether alternative text makes sense." },
-      ],
-      example: { title: "A banner image to investigate", evidence: "Fictional illustration, no customer measurement\nPage: a WordPress service page\nFinding: an informative image has no alt attribute", action: "Add a meaningful alternative in the media library or the block displaying the image. A decorative image needs an empty alt attribute; do not automatically describe every image.", verify: "Inspect the rendered element on the published page, then rerun that URL. A value saved in the media library may not be used by the theme." },
-      manualTitle: "What to check in your WordPress environment",
-      manual: [
-        { title: "Plugins and theme", text: "Inventory components with your developer and test changes in staging. A visible script is not a reliable inventory of installed plugins." },
-        { title: "Caching and hosting", text: "Review cache configuration and compare several loads under comparable conditions. One measurement cannot attribute slow loading to your host." },
-        { title: "Maintenance", text: "Check updates, backups and restoration with the appropriate access. The public audit does not verify their availability or operation." },
-      ],
-      limits: ["No exhaustive scan of plugins, versions or vulnerabilities; no analysis of the database or wp-admin.", "One URL at one point in time. Unavailable modules remain visible; missing results do not mean a pass.", "Suggested corrections require human review. No SEO ranking or business improvement is guaranteed."],
-      sources: [{ href: "https://developer.wordpress.org/advanced-administration/performance/optimization/", label: "WordPress — optimisation and performance factors" }],
-    },
-  },
+  wordpress: wordpressAuditContent,
   shopify: {
     fr: {
       metaTitle: "Audit Shopify : performance et SEO de votre boutique",

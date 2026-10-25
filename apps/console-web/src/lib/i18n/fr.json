@@ -938,11 +938,11 @@
     },
     "ecommerce": {
       "meta": {
-        "title": "Audit site e-commerce : SEO, vitesse et confiance",
+        "title": "Analyse technique gratuite d’une page e-commerce",
         "description": "Auditez une page publique de boutique : SEO, performance, sécurité et accessibilité. Comprenez les limites : panier, commande et paiement ne sont pas testés."
       },
       "eyebrow": "Pour les sites e-commerce",
-      "title": "Analysez une page clé de votre boutique avant le parcours d'achat",
+      "title": "Analyse technique d’une fiche produit ou d’une catégorie",
       "lead": "Une fiche produit, une catégorie ou l'accueil peut révéler des problèmes de visibilité, de chargement et de confiance. Argos mesure ce qui est accessible sur l'URL fournie et aide à prioriser les corrections.",
       "heroNote": "Le panier, la commande et le paiement ne sont pas parcourus.",
       "measures": [

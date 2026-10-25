@@ -101,6 +101,7 @@
 }
 
 .step {
+  > p { margin-top: t.$space-6; }
   scroll-margin-top: t.$space-8;
   padding: t.$space-10 0;
   border-top: 1px solid t.$border;

@@ -1,0 +1,25 @@
+@use "../../styles/tokens" as t;
+@use "../../styles/controls" as controls;
+
+.demo {
+  margin-block: t.$space-6;
+  padding: t.$panel-space;
+  border-left: 3px solid t.$brand;
+  background: t.$canvas;
+  p + p { margin-top: t.$space-3; }
+  fieldset { margin: t.$space-6 0; padding: 0; border: 0; }
+  legend { font-weight: 650; margin-bottom: t.$space-3; }
+  fieldset label { display: inline-flex; align-items: center; gap: t.$space-2; min-height: 44px; margin-right: t.$space-6; }
+  input { width: 18px; height: 18px; accent-color: t.$brand; }
+  select { display: block; min-height: 44px; min-width: 100px; padding: t.$space-2 t.$space-3; background: t.$bg; border: 1px solid t.$border; border-radius: t.$radius-sm; }
+  button { @include controls.cta-geometry; background: var(--argos-action-bg); color: var(--argos-action-text); }
+  button:hover { background: var(--argos-action-hover); }
+  button, input, select { &:focus-visible { outline: 3px solid t.$brand; outline-offset: 4px; } }
+}
+.controls { display: flex; align-items: end; flex-wrap: wrap; gap: t.$space-4; }
+.result { padding-block: t.$space-6; min-height: 150px; }
+@media (max-width: 680px) {
+  .demo { padding: t.$panel-space-mobile; }
+  .controls { align-items: stretch; flex-direction: column; }
+  .controls button { width: 100%; }
+}
