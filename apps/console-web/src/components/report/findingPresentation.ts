@@ -24,6 +24,20 @@ const subjects: Record<string, [string, string]> = {
 };
 export function describeObservation(issue: Issue, title: string, lang: Lang) {
   const fr = lang === "fr";
+  const observed = issue.structuredEvidence?.observed;
+  if (observed?.source === "lighthouse" && observed.items.length) {
+    const resourceCount = new Set(observed.items.filter(item => item.kind === "resource").map(item => `${item.origin}:${item.resourceRef}`)).size;
+    const elementCount = new Set(observed.items.filter(item => item.kind === "element").map(item => item.nodePath ?? item.selector)).size;
+    if (issue.id === "lighthouse.audit.font-display-insight" && resourceCount) return fr
+      ? `Lighthouse signale ${resourceCount} fichier(s) de police dont le chargement peut masquer temporairement le texte. Les ressources conservées dans cet échantillon sont listées ci-dessous.`
+      : `Lighthouse flags ${resourceCount} font file(s) whose loading may temporarily hide text. The resources retained in this sample are listed below.`;
+    if (issue.id === "lighthouse.audit.image-delivery-insight" && resourceCount) return fr
+      ? `Lighthouse signale ${resourceCount} image(s) dont le poids pourrait être réduit. Comparez le poids téléchargé et l’économie estimée pour chaque fichier ci-dessous.`
+      : `Lighthouse flags ${resourceCount} image(s) whose size could be reduced. Compare the downloaded size and estimated savings for each file below.`;
+    if (issue.id === "lighthouse.audit.image-alt" && elementCount) return fr
+      ? `Lighthouse signale ${elementCount} élément(s) image sans alternative accessible. Retrouvez-les avec les sélecteurs ci-dessous et vérifiez leur fonction dans la page.`
+      : `Lighthouse flags ${elementCount} image element(s) without an accessible alternative. Locate them using the selectors below and check their purpose on the page.`;
+  }
   const details = issue.structuredEvidence?.details ?? [];
   const detail = (key: string) => details.find(d => d.key === key)?.text;
   const count = (key: string) => { const text = detail(key); return text !== undefined && /^\d+$/.test(text) && Number.isSafeInteger(Number(text)) ? Number(text) : undefined; };

@@ -10,6 +10,10 @@ type Explanation = Playbook & { methodNote: string; title?: string; observation?
 
 /** Counts and header states are facts too; absence of a scalar is not missing evidence. */
 export function expectsScalarMeasurement(issue: Issue): boolean {
+  if (issue.id?.startsWith('lighthouse.audit.')) return new Set([
+    'largest-contentful-paint', 'first-contentful-paint', 'speed-index', 'total-blocking-time',
+    'interactive', 'cumulative-layout-shift', 'interaction-to-next-paint',
+  ]).has(issue.id.slice('lighthouse.audit.'.length));
   return !(pilotFindingKeys as readonly (string | null | undefined)[]).includes(issue.id)
     || issue.id === 'lighthouse.audit.largest-contentful-paint';
 }

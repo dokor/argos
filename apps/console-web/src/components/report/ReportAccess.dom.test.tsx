@@ -17,6 +17,8 @@ beforeEach(()=>{window.history.replaceState(null,"","/share/"+token);vi.mocked(a
 afterEach(()=>vi.unstubAllGlobals());
 it("keeps public and shared details gated and only offers summary PDF",()=>{
  render(<LangProvider><ReportPage params={{report:summary}} shared/></LangProvider>);
+ expect(screen.getAllByRole("term")[0]).not.toBeVisible();
+ fireEvent.click(screen.getByText("Mesures de chargement, ressources et erreurs"));
  expect(screen.getAllByRole("term")).toHaveLength(13);
  expect(screen.getByRole("link",{name:"English"})).toHaveAttribute("href","/en/share/"+token);
  expect(screen.getByRole("link",{name:"Créer mon compte"})).toHaveAttribute("href","/account/register?returnTo="+encodeURIComponent("/share/"+token));

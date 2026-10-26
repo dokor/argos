@@ -1,6 +1,27 @@
 import { createHash } from 'node:crypto';
 
 export const EVIDENCE_LIMIT = 10;
+// Actionable locations are an additive, bounded allowlist. Never retain query strings,
+// credentials, attribute selectors or page text. Old origin/ref-only reports remain valid.
+export function safeResourcePath(path) {
+  if (typeof path !== 'string' || path.length > 1024 || !path.startsWith('/') || path.startsWith('//')) return null;
+  let decoded; try { decoded = decodeURIComponent(path); } catch { return null; }
+  if (!/^\/[a-zA-Z0-9/_.~!$&()+,;=% -]+$/.test(path) || /[\\\\%?#@<>\u0000-\u001f\u007f]/.test(decoded)
+      || /(?:token|secret|password|passwd|session|authorization|api[_-]?key|private|customer|email)/i.test(decoded)
+      || decoded.split('/').some(segment => segment === '..' || segment === '.' || segment.length > 100 || /\d{7,}/.test(segment))) return null;
+  // Static file paths only: application routes and user identifiers stay hidden.
+  return /\.(?:js|mjs|css|woff2?|ttf|otf|png|jpe?g|webp|avif|gif|svg|ico)(?:;[^/]*)?$/i.test(decoded) ? path : null;
+}
+export function safeSelector(value) {
+  if (typeof value !== 'string' || value.length > 512
+      || /(?:token|secret|password|session|customer|email|private|\d{7,})/i.test(value)) return null;
+  return /^(?:[a-zA-Z][a-zA-Z0-9-]*(?:[.#][a-zA-Z_][a-zA-Z0-9_-]{0,63})*(?::nth-(?:child|of-type)\([1-9][0-9]{0,4}\))?)(?:\s*>\s*(?:[a-zA-Z][a-zA-Z0-9-]*(?:[.#][a-zA-Z_][a-zA-Z0-9_-]{0,63})*(?::nth-(?:child|of-type)\([1-9][0-9]{0,4}\))?))*$/.test(value) ? value : null;
+}
+export const METRIC_KEYS = ['totalBytes', 'wastedBytes', 'wastedMs', 'transferSize', 'resourceSize', 'duration', 'width', 'height'];
+function metrics(value) {
+  return Object.fromEntries(METRIC_KEYS.filter(key => typeof value?.[key] === 'number'
+    && Number.isFinite(value[key]) && value[key] >= 0 && value[key] <= 1e12).map(key => [key, value[key]]));
+}
 // No path, credentials, query, fragment, HTML, attribute value or arbitrary error text
 // crosses this boundary. The reference distinguishes resources without exposing paths.
 export function resourceEvidence(value) {
@@ -15,7 +36,7 @@ export function resourceEvidence(value) {
 export function nodeEvidence(node) {
   const path = node?.path;
   // Lighthouse's observed DOM path contains only sibling indexes and tag names.
-  // IDs, classes, selectors and snippets can contain private data: never retain them.
+  // The structural path is separate from the allowlisted selector used for navigation.
   return typeof path === 'string' && path.length <= 512 && /^(?:[0-9]{1,5},[A-Z][A-Z0-9-]{0,31})(?:,[0-9]{1,5},[A-Z][A-Z0-9-]{0,31})*$/.test(path)
     ? {kind:'element', nodePath:path} : null;
 }
@@ -35,8 +56,19 @@ export function lighthouseEvidence(audit) {
     if(depth>6 || inspected>=400) { truncated=true; return; }
     inspected++;
     if(!value || typeof value!=='object') return;
-    if(value.type==='node') retain(nodeEvidence(value));
-    if(typeof value.url==='string') retain(resourceEvidence(value.url));
+    if(value.type==='node') {
+      const node = nodeEvidence(value);
+      const selector = safeSelector(value.selector);
+      if (node || selector) retain({...node, kind:'element', ...(selector ? {selector} : {})});
+    }
+    const url = typeof value.url==='string' ? value.url : value.type==='url' && typeof value.value==='string' ? value.value : null;
+    if(url) {
+      const resource = resourceEvidence(url);
+      const path = resource && safeResourcePath(new URL(url).pathname);
+      const measured = metrics(value);
+      if (resource) retain({...resource, ...(path ? {resourcePath:path} : {}),
+        ...(Object.keys(measured).length ? {metrics:measured} : {})});
+    }
     // Only known detail containers, never arbitrary audit strings or screenshot data.
     if(Array.isArray(value)) { for(const item of value) { visit(item,depth+1); if(inspected>=400) {truncated=true;break;} } }
     else for(const key of ['items','node','subItems','value','source','location']) if(Object.hasOwn(value,key)) visit(value[key],depth+1);

@@ -1,4 +1,10 @@
 export type Report = {
+  diagnostics?: {
+    version: "report-diagnostics-v1";
+    scope: { kind: "page"; inspectedPages: number; entireDomain: boolean };
+    checks: Array<{ key: string; domain: string; source: string; title?: string | null;
+      state: "PASSED" | "FINDING" | "UNAVAILABLE" | "NOT_APPLICABLE" | "INFORMATION"; findingKey?: string | null }>;
+  } | null;
   access?: "summary" | "full" | null;
   measurements?: Partial<Record<"lcpMs" | "fcpMs" | "responseMs" | "loadMs" | "transferredBytes" | "requests" | "htmlBytes" | "scripts" | "jsErrors" | "consoleErrors" | "failedRequests" | "http4xx" | "http5xx", number | null>> | null;
   pageIdentity?: { requested: string | null; destination: string | null; redacted: boolean; redirected: boolean } | null;
@@ -156,6 +162,8 @@ export type ObservedEvidence = {
   state: "AVAILABLE" | "UNAVAILABLE";
   inspected: number; truncated: boolean; redacted: boolean;
   items: Array<{kind:"resource"|"element";origin?:string;resourceRef?:string;nodePath?:string;
+    resourcePath?:string|null;selector?:string|null;
+    metrics?:Partial<Record<"totalBytes"|"wastedBytes"|"wastedMs"|"transferSize"|"resourceSize"|"duration"|"width"|"height",number>>|null;
     status?:number;reason?:string;resourceType?:string;ownership?:"FIRST_PARTY"|"THIRD_PARTY"}>;
 };
 

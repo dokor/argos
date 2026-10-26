@@ -10,6 +10,36 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ReportEvidenceTest {
+    @Test void lighthouseLocationsAndRowMetricsSurviveSanitisedStorageAndTheReportDto() throws Exception {
+        var mapper = new ObjectMapper();
+        var raw = mapper.readTree("""
+            {"version":"observed-evidence-v1","source":"lighthouse","items":[
+             {"kind":"resource","origin":"https://cdn.example","resourceRef":"0123456789abcdef",
+              "resourcePath":"/fonts/inter.woff2","metrics":{"wastedMs":180,"totalBytes":24000,"private":42}},
+             {"kind":"element","selector":"main > img.hero","nodePath":"1,HTML,1,BODY,2,IMG"},
+             {"kind":"resource","origin":"https://cdn.example","resourceRef":"fedcba9876543210",
+              "resourcePath":"/private/avatar.jpg","metrics":{"totalBytes":-1}}],"inspected":6}
+            """);
+        var c = check("lighthouse.audit.font-display-insight", .1, Map.of("observed", raw));
+        var restored = mapper.treeToValue(com.dokor.argos.services.analysis.AuditOutputSanitizer.tree(c, mapper), AuditCheckResult.class);
+        var dto = ReportEvidence.from("lighthouse", restored);
+        var evidence = mapper.readValue(mapper.writeValueAsString(dto), ReportDto.StructuredEvidence.class).observed();
+        assertEquals("/fonts/inter.woff2", evidence.items().getFirst().resourcePath());
+        assertEquals(Map.of("wastedMs", 180.0, "totalBytes", 24000.0), evidence.items().getFirst().metrics());
+        assertEquals("main > img.hero", evidence.items().get(1).selector());
+        assertNull(evidence.items().get(2).resourcePath());
+        assertNull(evidence.items().get(2).metrics());
+        assertFalse(mapper.writeValueAsString(dto).contains("private"));
+    }
+
+    @Test void revalidatesActionableLocationsAtTheJavaBoundary() {
+        for (String path : List.of("/account/profile", "/a.js?token=x", "/%2574oken.js", "/private/avatar.jpg", "/../a.js", "//outside/a.js"))
+            assertNull(com.dokor.argos.services.analysis.model.ObservedEvidence.safeResourcePath(path), path);
+        assertEquals("/assets/image.webp", com.dokor.argos.services.analysis.model.ObservedEvidence.safeResourcePath("/assets/image.webp"));
+        assertNull(com.dokor.argos.services.analysis.model.ObservedEvidence.safeSelector("img[alt='private']"));
+        assertEquals("main > img.hero", com.dokor.argos.services.analysis.model.ObservedEvidence.safeSelector("main > img.hero"));
+    }
+
     @Test void detectionSnapshotSurvivesSanitisedPersistenceAndRemainsSeparateFromLegacyText() throws Exception {
         var mapper = new ObjectMapper();
         var detection = com.dokor.argos.services.analysis.model.FindingDetection.create("html.title","html-title-v1",

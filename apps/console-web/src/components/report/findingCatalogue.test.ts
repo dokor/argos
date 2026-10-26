@@ -58,7 +58,7 @@ describe("versioned bilingual content", () => {
   });
   it("has readable legacy/unknown fallbacks and confirms unknown confidence before prescribing", () => {
     const unknown = findingContent({ ...issue, id: "future.check", confidence: "UNKNOWN" }, "en");
-    expect(unknown.title).toBe("Technical check to review");
+    expect(unknown.title).toBe(issue.title);
     expect(unknown.recommendation).toContain("Confirm the signal");
     expect(findingContent({ ...issue, confidence: "HIGH" }, "en").recommendation).not.toContain("Confirm the signal");
   });
@@ -77,7 +77,7 @@ for (const lang of ["fr", "en"] as const) it(`keeps unknown editorial text in ${
   const source = { ...issue, id: "future.check", title: "Titre français source", recommendation: "Corriger le problème source.", evidence: "preuve originale" };
   const before = structuredClone(source);
   const copy = findingContent(source, lang);
-  expect(copy.title).not.toContain("Titre français");
+  expect(copy.title).toBe("Titre français source");
   expect(copy.recommendation).not.toContain("problème source");
   expect(source).toEqual(before);
   expect(findingContent({ ...issue, id: "lighthouse.audit.is-crawlable" }, "en").title).toBe("Review whether page indexing is intended");

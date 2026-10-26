@@ -250,7 +250,7 @@ export function findingContent(issue: Issue, lang: Lang): FindingContent {
   const uncertain = issue.confidence !== "HIGH" && issue.confidence !== "MEDIUM";
   const confirm = lang === "fr" ? "Confirmer le signal et son périmètre avant toute correction. " : "Confirm the signal and its scope before making changes. ";
   const recommendation = explanation.summary ?? explanation.steps.join(" ");
-  const title = explanation.title ?? copy.title;
+  const title = explanation.title ?? (issue.id && catalogue[issue.id] ? copy.title : cleanEvidence(issue.title) || copy.title);
   return {
     title,
     observation: explanation.observation ?? describeObservation(issue, title, lang),

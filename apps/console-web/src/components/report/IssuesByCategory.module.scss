@@ -198,6 +198,9 @@
 }
 .noIssues { font-size: t.$text-base; color: t.$text-subtle; padding: t.$space-3 0; }
 .severityFilters { display: flex; flex-wrap: wrap; gap: t.$space-2; min-width: 0; }
+.search {display:grid;gap:6px;flex-basis:100%;min-width:0;font-size:14px;
+  input{min-height:44px;width:100%;padding:8px 12px;border:1px solid t.$border;border-radius:6px;background:t.$surface;color:t.$text;}
+  input:focus-visible{outline:3px solid t.$brand;outline-offset:2px;}}
 .domainFilter { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .catHeader > div:last-child { display: flex; flex-wrap: wrap; min-width: 0; max-width: 100%; }
 .section { border-radius: 8px; box-shadow: none; }
@@ -217,3 +220,4 @@
   .issueFooter { padding-inline: 16px; }
 }
 @media (max-width: 320px) { .filterBar { top: 96px; } }
+.issueRow[open] > .issueSummary .issueImpact { display: none; }
