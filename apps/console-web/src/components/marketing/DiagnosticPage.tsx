@@ -13,6 +13,7 @@ export default function DiagnosticPage({ topic, lang }: { topic: DiagnosticTopic
   const c = diagnosticPages[topic][lang];
   const fr = lang === "fr";
   const route = diagnosticRoutes[topic];
+  const linkPath = (href: string) => href.startsWith("#") ? href : localizedPath(href, lang);
   const related = (Object.keys(diagnosticRoutes) as DiagnosticTopic[]).filter(key => key !== topic);
 
   return (
@@ -37,7 +38,9 @@ export default function DiagnosticPage({ topic, lang }: { topic: DiagnosticTopic
               {c.checks.map(check => (
                 <article className={s.check} key={check.title}>
                   <h3>{check.title}</h3>
-                  <div><p>{check.text}</p><p><strong>{fr ? "À vérifier : " : "Next check: "}</strong>{check.next}</p></div>
+                  <div><p>{check.text}</p><p><strong>{fr ? "À vérifier : " : "Next check: "}</strong>{check.next}</p>
+                    {check.link && <p><Link href={linkPath(check.link.href)}>{check.link.label}</Link></p>}
+                  </div>
                 </article>
               ))}
             </div>
@@ -48,13 +51,15 @@ export default function DiagnosticPage({ topic, lang }: { topic: DiagnosticTopic
             <h2 id="example-title">{c.example.title}</h2>
             <pre className={s.evidence}><code>{c.example.evidence}</code></pre>
             <p><strong>{fr ? "Piste de correction : " : "Suggested correction: "}</strong>{c.example.action}</p>
+            {c.example.after && <pre className={s.evidence}><code>{c.example.after}</code></pre>}
             <p><strong>{fr ? "Vérifier ensuite : " : "Verify afterwards: "}</strong>{c.example.verify}</p>
             <Link href={localizedPath("/exemple-rapport", lang)}>{fr ? "Lire l’exemple de rapport public et ses preuves" : "Read the public example report and its evidence"}</Link>
           </section>
 
           <section className={s.section} aria-labelledby="manual-title">
             <h2 id="manual-title">{c.manualTitle}</h2>
-            <ol className={s.steps}>{c.manual.map(step => <li key={step.title}><h3>{step.title}</h3><p>{step.text}</p></li>)}</ol>
+            <ol className={s.steps}>{c.manual.map(step => <li key={step.title}><h3>{step.title}</h3><p>{step.text}</p>{step.link && <p><Link href={localizedPath(step.link.href, lang)}>{step.link.label}</Link></p>}</li>)}</ol>
+            {(topic === "shopify" || topic === "conversion") && <p className={s.contextLink}><Link href={localizedPath("/guides/checklist-audit-ecommerce#panier", lang)}>{fr ? "Pour une boutique, tester les variantes, le panier et le paiement avec la checklist e-commerce" : "For a store, test variants, cart and checkout with the ecommerce checklist"}</Link></p>}
           </section>
 
           <section id="limits" className={s.section} aria-labelledby="limits-title">

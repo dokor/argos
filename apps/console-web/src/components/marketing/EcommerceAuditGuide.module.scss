@@ -32,6 +32,17 @@
 .section > p + p, .section > ol + p, .section > p + ol { margin-top: t.$space-5; }
 .cta { margin-block: t.$space-10 t.$space-16; padding: t.$space-8; background: t.$canvas; border: 1px solid t.$border; border-radius: t.$radius-lg; }
 .cta > p { max-width: 65ch; margin-bottom: t.$space-6; }
+.contextLink, .contents > p { margin-top: t.$space-6; }
+.table {
+  max-width: 100%;
+  overflow-x: auto;
+  margin-block: t.$space-6;
+  &:focus-visible { outline: 3px solid t.$brand; outline-offset: 3px; }
+  table { width: 100%; min-width: 760px; border-collapse: collapse; text-align: left; line-height: 1.6; }
+  caption { text-align: left; margin-bottom: t.$space-4; color: t.$text-muted; }
+  th, td { padding: t.$space-3; border-bottom: 1px solid t.$border; vertical-align: top; }
+  th { font-weight: 650; }
+}
 
 @include editorial.intro;
 

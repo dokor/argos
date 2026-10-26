@@ -1,0 +1,7 @@
+﻿"URL or scenario","Device and session","Date and cache","Expected result","Actual result","Evidence","Priority","Owner","Deadline","Acceptance check"
+"Category → product","","","Access from the menu; expected URL and product","","","","","",""
+"Variant selection → cart","","","Same variant identifier on the product page and in the cart","","","","","",""
+"Quantity and discount","","","Stock respected and total recalculated","","","","","",""
+"Form error","","","Understandable message associated with field; input preserved","","","","","",""
+"Declined payment in staging","","","Cart preserved; retry possible","","","","","",""
+"Successful payment in staging","","","One order and a matching confirmation","","","","","",""

@@ -41,6 +41,14 @@ describe("public diagnostic pages", () => {
     expect(html).toContain('href="#audit"');
     expect(html).toContain('id="audit"');
     expect(html).toContain('id="references"');
+    const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]);
+    for (const match of html.matchAll(/href="#([^"]+)"/g)) expect(ids).toContain(match[1]);
+    if (topic === "wordpress") {
+      expect(html).toContain('href="#example-title"');
+      expect(html).not.toContain('href="/en#example-title"');
+      expect(html).not.toContain('href="/#example-title"');
+      expect(html).toContain(`href="${localizedPath("/guides/lcp-lent#diagnostic", lang)}"`);
+    }
     expect(html).toContain(`href="${localizedPath("/exemple-rapport", lang)}"`);
     expect(html).not.toMatch(/href="\/(?:en\/)?report\//);
     expect(metadata.title).toBe(content.metaTitle);

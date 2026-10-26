@@ -181,6 +181,7 @@ export default function ChecklistAuditPage() {
                     <div><dt>{c.labels.fix}</dt><dd>{step.fix}</dd></div>
                     <div><dt>{c.labels.argos}</dt><dd>{step.argos}</dd></div>
                   </dl>
+                  {step.id === "indexabilite" && <p><Link href="/ressources/audit-wordpress">{lang === "fr" ? "Sur WordPress : remonter du HTML aux réglages d’indexation et de cache" : "On WordPress: trace HTML back to indexing and cache settings"}</Link></p>}
                 </li>
               ))}
             </ol>

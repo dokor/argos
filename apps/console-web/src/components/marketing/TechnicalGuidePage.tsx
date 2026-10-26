@@ -21,6 +21,7 @@ export default function TechnicalGuidePage({ guide, lang }: { guide: keyof typeo
         {c.sections.map(section => <section className={s.section} id={section.id} key={section.id} aria-labelledby={`${section.id}-title`}>
           <h2 id={`${section.id}-title`}>{section.title}</h2>
           {section.paragraphs.map(p => <p key={p}>{p}</p>)}
+          {guide === "lcp" && section.id === "diagnostic" && <p><Link href={localizedPath("/ressources/audit-wordpress", lang)}>{fr ? "Sur WordPress, retrouver le bloc, le thème ou le cache à vérifier" : "On WordPress, find the block, theme or cache to check"}</Link></p>}
           {section.code && <pre tabIndex={0} aria-label={fr ? "Exemple à adapter" : "Example to adapt"}><code>{section.code}</code></pre>}
           {section.steps && <ol>{section.steps.map(step => <li key={step}>{step}</li>)}</ol>}
         </section>)}

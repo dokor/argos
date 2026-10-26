@@ -1,0 +1,7 @@
+﻿"URL ou scénario","Appareil et session","Date et cache","Résultat attendu","Résultat obtenu","Preuve","Priorité","Responsable","Échéance","Validation"
+"Catégorie → fiche produit","","","Accès depuis le menu ; URL et produit attendus","","","","","",""
+"Sélection de variante → panier","","","Même identifiant de variante dans la fiche et le panier","","","","","",""
+"Quantité et promotion","","","Stock respecté et total recalculé","","","","","",""
+"Erreur de formulaire","","","Message compréhensible relié au champ ; saisie conservée","","","","","",""
+"Paiement refusé en préproduction","","","Panier conservé ; nouvelle tentative possible","","","","","",""
+"Paiement réussi en préproduction","","","Une seule commande et une confirmation cohérente","","","","","",""

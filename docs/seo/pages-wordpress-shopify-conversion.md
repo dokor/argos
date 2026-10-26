@@ -67,3 +67,31 @@ Interactions vérifiées : passage FR → EN sur la bonne route, ancres du formu
 Captures locales conservées dans `outputs/ui-review/cms-conversion-pages/` du checkout principal, notamment les trois introductions FR desktop, WordPress/Shopify EN desktop sombre, les trois introductions EN mobile sombre et la validation du formulaire conversion EN à 320 px. Ce répertoire de preuves locales est ignoré par Git.
 
 Cette revue par l’agent ne constitue ni une recette éditoriale humaine ni une évaluation complète WCAG. Les issues #67 et #68 demandent une relecture humaine avant publication ; celle-ci reste à effectuer au cours de la revue de PR.
+
+## Révision WordPress du 25 octobre 2026
+
+Les contenus FR/EN de WordPress deviennent un guide de passage du constat
+public à la vérification dans le CMS : noindex, description périmée, élément
+LCP et conflit supposé de composant. Les étapes distinguent HTML reçu,
+configuration enregistrée, couches de cache et vérification anonyme. Le mode
+dépannage Health Check reste limité à la session connectée ; l’analyse publique
+ne doit pas être présentée comme observant cette même configuration.
+
+L’ancien exemple alt générique est remplacé par un scénario HTML avant/après
+de description périmée. Il est explicitement fictif, sans installation WordPress
+ni mesure client. Les explications demandent d’écarter URL, langue et producteur
+de balise avant d’attribuer le décalage au cache. Les références WordPress de
+Réglages → Lecture, du dépannage et de l’optimisation ont été consultées.
+
+Des liens contextuels partent de la checklist générale, des diagnostics SEO
+et vitesse et du guide LCP vers WordPress ; WordPress renvoie vers leurs
+procédures pertinentes. Le hub de ressources décrit ce rôle spécifique. Les
+titres et descriptions FR/EN sont alignés, sans changer routes ou canoniques.
+Les dates initiales sont conservées ; seule la révision substantielle est datée
+dans le registre éditorial, avec une durée de lecture estimée adaptée.
+
+Vérifications communes à cette révision et au guide e-commerce : lint, contrôle
+éditorial, 69 tests ciblés et build réussis. Les tests des six pages diagnostic
+continuent à couvrir métadonnées, liens localisés et formulaire réel. Le test
+serveur WordPress vérifie aussi l’ancre de l’exemple, qui doit rester sur la
+page courante au lieu de pointer vers l’accueil.

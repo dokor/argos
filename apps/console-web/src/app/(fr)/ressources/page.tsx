@@ -16,7 +16,7 @@ const copy = {
     guidesTitle: "Comprendre les mesures",
     audiencesTitle: "Choisir votre contexte",
     guides: [
-      { href: "/guides/checklist-audit-ecommerce", title: "Checklist d’audit e-commerce", description: "Sept étapes pour vérifier le catalogue, les fiches produit, le panier et le paiement, puis prioriser les corrections." },
+      { href: "/guides/checklist-audit-ecommerce", title: "Checklist d’audit e-commerce", description: "Sept étapes, une simulation de variante incorrecte et une grille CSV pour vérifier catalogue, panier et paiement." },
       { href: "/ressources/pourquoi-mon-site-ne-convertit-pas", title: "Pourquoi mon site ne convertit pas ?", description: "Distinguer obstacles techniques, offre et mesure de conversion, puis choisir les vérifications utiles." },
       { href: "/test-accessibilite-site-web", title: "Test automatique d’accessibilité", description: "Repérer des problèmes détectables et préparer les essais humains." },
       { href: "/verifier-entetes-securite", title: "Vérifier les en-têtes de sécurité", description: "Lire CSP, HSTS et les protections HTTP sans les confondre avec un pentest." },
@@ -29,7 +29,7 @@ const copy = {
       { href: "/ressources/accessibilite-numerique", title: "Accessibilité numérique", description: "Comprendre le RGAA, l’EAA, les obligations et ce qui nécessite une vérification humaine." },
     ],
     audiences: [
-      { href: "/ressources/audit-wordpress", title: "Audit WordPress", description: "Examiner une page publique et préparer les vérifications du thème, des extensions et de la maintenance." },
+      { href: "/ressources/audit-wordpress", title: "Audit WordPress", description: "Relier un noindex, un cache périmé ou un LCP lent aux vérifications dans WordPress." },
       { href: "/ressources/audit-shopify", title: "Audit Shopify", description: "Analyser une fiche produit ou une collection, avec des limites claires sur les apps et le paiement." },
       { href: "/ressources/audit-site-pme", title: "Audit de site PME", description: "Repérez les constats techniques utiles pour prioriser le travail sur une page clé de votre activité." },
       { href: "/ressources/audit-site-ecommerce", title: "Audit de site e-commerce", description: "Analysez une page publique de boutique, avec des limites claires sur le panier et le paiement." },
@@ -43,7 +43,7 @@ const copy = {
     guidesTitle: "Understand the measurements",
     audiencesTitle: "Choose your context",
     guides: [
-      { href: "/guides/checklist-audit-ecommerce", title: "Ecommerce audit checklist", description: "Seven steps to check your catalogue, product pages, cart and checkout, then prioritise fixes." },
+      { href: "/guides/checklist-audit-ecommerce", title: "Ecommerce audit checklist", description: "Seven steps, a wrong-variant simulation and a CSV worksheet to check catalogue, cart and checkout." },
       { href: "/ressources/pourquoi-mon-site-ne-convertit-pas", title: "Why is my website not converting?", description: "Separate technical obstacles, your offer and conversion measurement, then choose useful checks." },
       { href: "/test-accessibilite-site-web", title: "Automated accessibility test", description: "Identify detectable problems and prepare human checks." },
       { href: "/verifier-entetes-securite", title: "Check security headers", description: "Read CSP, HSTS and HTTP protections without confusing them with a penetration test." },
@@ -56,7 +56,7 @@ const copy = {
       { href: "/ressources/accessibilite-numerique", title: "Digital accessibility", description: "Understand the RGAA, EAA, obligations and what requires human review." },
     ],
     audiences: [
-      { href: "/ressources/audit-wordpress", title: "WordPress audit", description: "Examine a public page and prepare checks of your theme, plugins and maintenance." },
+      { href: "/ressources/audit-wordpress", title: "WordPress audit", description: "Trace noindex, stale cache or slow LCP findings to checks inside WordPress." },
       { href: "/ressources/audit-shopify", title: "Shopify audit", description: "Analyse a product or collection page, with clear limits around apps and checkout." },
       { href: "/ressources/audit-site-pme", title: "Small business site audit", description: "Find technical issues that can help prioritize work on an important business page." },
       { href: "/ressources/audit-site-ecommerce", title: "E-commerce site audit", description: "Examine a public store page, with clear limits around carts and payments." },
@@ -69,7 +69,7 @@ export default function ResourcesPage() {
   const { lang } = useLang();
   const c = copy[lang];
   const fr = lang === "fr";
-  const times: Record<string, number> = { "/guides/checklist-audit-ecommerce": 9, "/exemple-rapport": 7, "/guides/checklist-audit-site-web": 9, "/methodologie-score": 6, "/ressources/audit-technique-gratuit": 8, "/ressources/accessibilite-numerique": 10 };
+  const times: Record<string, number> = { "/guides/checklist-audit-ecommerce": 12, "/ressources/audit-wordpress": 8, "/exemple-rapport": 7, "/guides/checklist-audit-site-web": 9, "/methodologie-score": 6, "/ressources/audit-technique-gratuit": 8, "/ressources/accessibilite-numerique": 10 };
   const languageLabel = (href: string) => !fr && !languageRoutes[href] ? " · French" : "";
   const cardMeta = (href: string) => (fr ? "Débutant · " : "Beginner · ") + (href.includes("accessibilite") ? fr ? "Accessibilité" : "Accessibility" : href.includes("score") ? fr ? "Mesures" : "Measurements" : fr ? "Diagnostic" : "Diagnosis") + (fr ? " · Lecture estimée : " : " · Estimated reading: ") + (times[href] ?? 4) + " min" + languageLabel(href);
 

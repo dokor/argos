@@ -938,11 +938,11 @@
     },
     "ecommerce": {
       "meta": {
-        "title": "E-commerce site audit: SEO, speed, and trust",
+        "title": "Free technical analysis of an ecommerce page",
         "description": "Audit a public store page for SEO, performance, security, and accessibility. Know the limits: cart, ordering, and payment are not tested."
       },
       "eyebrow": "For e-commerce sites",
-      "title": "Check a key store page before the purchase journey",
+      "title": "Technical analysis of a product or category page",
       "lead": "A product, category, or home page can reveal visibility, loading, and trust issues. Argos measures what it can access on the submitted URL and helps prioritize fixes.",
       "heroNote": "Cart, ordering, and payment steps are not traversed.",
       "measures": [

@@ -5,9 +5,9 @@ export type EditorialRecord = { firstVersion: string; revised: string; translate
 export const editorialPages: Record<string, EditorialRecord> = {
   "/guides/checklist-audit-ecommerce": {
     firstVersion: "2026-10-19",
-    revised: "2026-10-19",
+    revised: "2026-10-25",
     translatedAt: "2026-10-19",
-    minutes: 9,
+    minutes: 12,
     sourcesAnchor: "#references",
     sourceUrls: [
       "https://developers.google.com/search/docs/specialty/ecommerce/help-google-understand-your-ecommerce-site-structure",
@@ -22,9 +22,9 @@ export const editorialPages: Record<string, EditorialRecord> = {
     minutes: 6, sourcesAnchor: "#references", sourceUrls: guide.sources.map(source => source.href),
   }])),
   "/ressources/audit-wordpress": {
-    firstVersion: "2026-10-16", revised: "2026-10-16", translatedAt: "2026-10-16", minutes: 4,
+    firstVersion: "2026-10-16", revised: "2026-10-25", translatedAt: "2026-10-16", minutes: 8,
     sourcesAnchor: "#references",
-    sourceUrls: ["https://developer.wordpress.org/advanced-administration/performance/optimization/"],
+    sourceUrls: ["https://wordpress.org/documentation/article/settings-reading-screen/", "https://learn.wordpress.org/lesson/troubleshooting-your-site-plugin-and-theme-conflicts/", "https://developer.wordpress.org/advanced-administration/performance/optimization/"],
   },
   "/ressources/audit-shopify": {
     firstVersion: "2026-10-16", revised: "2026-10-16", translatedAt: "2026-10-16", minutes: 4,
