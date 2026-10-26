@@ -7,6 +7,21 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class ObservatoryClientTest {
+    @Test void detailedTestsMustBelongToTheMeasuredScanAndUseTheValidatedHost() throws Exception {
+        var transport=mock(ExternalHttpClient.class); var config=mock(ConfigurationService.class);
+        when(config.externalScansEnabled()).thenReturn(true);
+        when(config.observatoryApiUrl()).thenReturn("https://observatory-api.mdn.mozilla.net/api/v2");
+        var mapper=new com.fasterxml.jackson.databind.ObjectMapper();
+        try(var policy=mockStatic(com.dokor.argos.services.analysis.RemoteScanPolicy.class)) {
+            policy.when(()->com.dokor.argos.services.analysis.RemoteScanPolicy.requireAllowed("EXAMPLE.COM",true)).thenReturn("example.com");
+            when(transport.getJson(any(),any(),any(),anyLong(),anyMap())).thenReturn(mapper.readTree("{\"scan\":{\"id\":42},\"tests\":{\"redirection\":{\"pass\":false}}}"));
+            var client=new ObservatoryClient(transport,config);
+            assertFalse(client.tests("EXAMPLE.COM",42).path("redirection").path("pass").asBoolean());
+            verify(transport).getJson(java.net.URI.create("https://observatory-api.mdn.mozilla.net/api/v2/analyze?host=example.com"),
+                java.time.Duration.ofSeconds(15),java.time.Duration.ofSeconds(10),com.dokor.argos.services.analysis.BoundedBodyHandlers.MAX_PAGE_BYTES,java.util.Map.of());
+            assertThrows(IllegalStateException.class,()->client.tests("EXAMPLE.COM",43));
+        }
+    }
     @Test void removedV1DetailsEndpointIsNeverRequested() throws Exception {
         var transport = mock(ExternalHttpClient.class); var config = mock(ConfigurationService.class);
         when(config.observatoryApiUrl()).thenReturn("https://observatory-api.mdn.mozilla.net/api/v2");
@@ -49,6 +64,7 @@ class ObservatoryClientTest {
         var client = new ObservatoryClient(transport, config);
         for (String host : new String[]{"localhost", "127.0.0.1", "example.com:443", "example.com?secret=x"}) {
             assertThrows(IllegalArgumentException.class, () -> client.scan(host));
+            assertThrows(IllegalArgumentException.class, () -> client.tests(host,123));
         }
         verifyNoInteractions(transport);
     }}

@@ -41,8 +41,18 @@ class ReportPriorityServiceTest {
         assertEquals(0.5, first.globalScoreGain());
         assertEquals("MODELLED_SCORE_GAIN", first.rankReason());
         assertEquals(1, first.rank());
-        assertEquals("priority-risk-v2", first.rankingVersion());
+        assertEquals("priority-actions-v3", first.rankingVersion());
         assertEquals("security-small", dto.issues().getFirst().id()); // Hero source stays severity-sorted
+    }
+
+    @Test void concreteLighthouseDiagnosesTakeTheActionSlotsInsteadOfCategoryScores() {
+        var dto = compose(List.of(module("lighthouse",
+            fail("lighthouse.score.performance", 10, "performance"),
+            fail("lighthouse.audit.font-display-insight", 0, "performance"))));
+        assertEquals(2, dto.issues().size());
+        assertEquals(1, dto.summary().priorities().size());
+        assertEquals("lighthouse.audit.font-display-insight", dto.summary().priorities().getFirst().findingKey());
+        assertEquals(0, dto.scores().global());
     }
 
     @Test void gainUsesPersistedContinuousRatioAndEffectiveDomainWeights() {

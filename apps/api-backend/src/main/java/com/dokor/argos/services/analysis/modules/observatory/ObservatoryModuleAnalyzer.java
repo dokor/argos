@@ -98,7 +98,7 @@ public class ObservatoryModuleAnalyzer {
             int scanId = JsonNodes.firstInt(result, -1, "scan_id", "id");
             if (scanId >= 0) {
                 try {
-                    failedTests = parseFailedTests(client.tests(scanId));
+                    failedTests = parseFailedTests(client.tests(hostname, scanId));
                 } catch (Exception e) {
                     logger.warn("Observatory module: tests detail unavailable scanId={} error={}", scanId, e.getClass().getSimpleName());
                 }
@@ -106,9 +106,12 @@ public class ObservatoryModuleAnalyzer {
         }
 
         Map<String, Object> scoreDetails = new LinkedHashMap<>();
+        scoreDetails.put("hostname", hostname);
+        scoreDetails.put("scope", "HOST_ROOT");
         if (score >= 0) scoreDetails.put("score", score);
         if (!failedTests.isEmpty()) {
             scoreDetails.put("failedPolicies", failedTests.stream().map(FailedTest::name).toList());
+            scoreDetails.put("failedPolicyReasons", failedTests.stream().map(t -> t.name() + ": " + t.description()).toList());
         }
         if (detailsUrl != null) scoreDetails.put("detailsUrl", detailsUrl);
 
@@ -240,13 +243,14 @@ public class ObservatoryModuleAnalyzer {
         if (test == null || !test.isObject()) return;
         JsonNode passNode = test.get("pass");
         // Champ pass absent/null => on ne présume pas l'échec (prudence).
-        boolean failed = passNode != null && !passNode.isNull() && !passNode.asBoolean(true);
+        boolean failed = passNode != null && passNode.isBoolean() && !passNode.booleanValue();
         if (!failed) return;
         String name = JsonNodes.firstText(test, "name");
         if (name == null) name = keyName;
-        if (name == null) name = "test";
+        if (name == null || !name.matches("[a-z][a-z-]{0,79}") || out.size() >= 20) return;
         String desc = JsonNodes.firstText(test, "score_description", "description", "result");
         if (desc == null) desc = name;
+        desc = com.dokor.argos.services.analysis.AuditOutputSanitizer.text(org.jsoup.Jsoup.parse(desc).text());
         out.add(new FailedTest(name, desc));
     }
 

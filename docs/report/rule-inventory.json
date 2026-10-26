@@ -2,7 +2,7 @@
   {
     "key": "html.analysis.duration_ms",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:178"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:179"
     ],
     "scorable": true,
     "weight": 1,
@@ -21,8 +21,8 @@
   {
     "key": "html.anchors.href_coverage",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:554",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:593"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:573",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:612"
     ],
     "scorable": true,
     "weight": 2,
@@ -55,7 +55,7 @@
   {
     "key": "html.doctype.html5",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:409"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:410"
     ],
     "scorable": true,
     "weight": 1,
@@ -74,7 +74,7 @@
   {
     "key": "html.h1.count",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:358"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:359"
     ],
     "scorable": true,
     "weight": 3,
@@ -93,9 +93,9 @@
   {
     "key": "html.images.alt_coverage",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:495",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:534",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:545"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:514",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:553",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:564"
     ],
     "scorable": true,
     "weight": 4,
@@ -114,7 +114,7 @@
   {
     "key": "html.lang",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:376"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:377"
     ],
     "scorable": true,
     "weight": 2,
@@ -133,7 +133,7 @@
   {
     "key": "html.link.canonical.present",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:317"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:318"
     ],
     "scorable": true,
     "weight": 2,
@@ -152,7 +152,7 @@
   {
     "key": "html.meta.charset.present",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:425"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:426"
     ],
     "scorable": true,
     "weight": 2,
@@ -171,7 +171,7 @@
   {
     "key": "html.meta.description.present",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:300"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:301"
     ],
     "scorable": true,
     "weight": 3,
@@ -190,7 +190,7 @@
   {
     "key": "html.meta.robots.present",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:124"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:125"
     ],
     "scorable": true,
     "weight": 2,
@@ -209,7 +209,7 @@
   {
     "key": "html.meta.viewport.present",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:393"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:394"
     ],
     "scorable": true,
     "weight": 2,
@@ -228,7 +228,7 @@
   {
     "key": "html.scripts.count",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:148"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:149"
     ],
     "scorable": true,
     "weight": 1,
@@ -247,7 +247,7 @@
   {
     "key": "html.size.bytes",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:163"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:164"
     ],
     "scorable": true,
     "weight": 1,
@@ -266,7 +266,7 @@
   {
     "key": "html.social.meta",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:468"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:469"
     ],
     "scorable": true,
     "weight": 1,
@@ -285,8 +285,8 @@
   {
     "key": "html.title",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:280",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:291"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:281",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:292"
     ],
     "scorable": true,
     "weight": 4,
@@ -376,7 +376,7 @@
   {
     "key": "http.headers.caching",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:814"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:817"
     ],
     "scorable": true,
     "weight": 2,
@@ -395,7 +395,7 @@
   {
     "key": "http.headers.compression",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:788"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:791"
     ],
     "scorable": true,
     "weight": 2,
@@ -433,7 +433,7 @@
   {
     "key": "http.headers.server",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:831"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:834"
     ],
     "scorable": true,
     "weight": 2,
@@ -452,8 +452,8 @@
   {
     "key": "http.protocol.http2",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:759",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:771"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:762",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:774"
     ],
     "scorable": true,
     "weight": 2,
@@ -549,7 +549,7 @@
     "key": "http.security.cookie_flags",
     "sources": [
       "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:686",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:713"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:716"
     ],
     "scorable": true,
     "weight": 6,
@@ -569,8 +569,8 @@
     "key": "http.security.csp",
     "sources": [
       "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:625",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:873",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/zap/ZapModuleAnalyzer.java:25"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:876",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/zap/ZapModuleAnalyzer.java:26"
     ],
     "scorable": true,
     "weight": 10,
@@ -590,10 +590,10 @@
     "key": "http.security.hsts",
     "sources": [
       "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:616",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:106",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:377",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:389",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/zap/ZapModuleAnalyzer.java:26"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:107",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:399",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:411",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/zap/ZapModuleAnalyzer.java:27"
     ],
     "scorable": true,
     "weight": 8,
@@ -651,7 +651,7 @@
     "key": "http.security.x_content_type_options",
     "sources": [
       "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:634",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/zap/ZapModuleAnalyzer.java:27"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/zap/ZapModuleAnalyzer.java:28"
     ],
     "scorable": true,
     "weight": 4,
@@ -671,7 +671,7 @@
     "key": "http.security.x_frame_options",
     "sources": [
       "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:643",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/zap/ZapModuleAnalyzer.java:28"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/zap/ZapModuleAnalyzer.java:29"
     ],
     "scorable": true,
     "weight": 6,
@@ -690,7 +690,7 @@
   {
     "key": "http.seo.robots_txt",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:901"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:904"
     ],
     "scorable": true,
     "weight": 2,
@@ -709,7 +709,7 @@
   {
     "key": "http.seo.sitemap",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:908"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:911"
     ],
     "scorable": true,
     "weight": 3,
@@ -852,7 +852,7 @@
   {
     "key": "observatory.grade",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/observatory/ObservatoryModuleAnalyzer.java:137"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/observatory/ObservatoryModuleAnalyzer.java:140"
     ],
     "scorable": false,
     "weight": 0,
@@ -868,7 +868,7 @@
   {
     "key": "observatory.score",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/observatory/ObservatoryModuleAnalyzer.java:116"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/observatory/ObservatoryModuleAnalyzer.java:119"
     ],
     "scorable": true,
     "weight": 8,
@@ -887,7 +887,7 @@
   {
     "key": "observatory.tests.passed",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/observatory/ObservatoryModuleAnalyzer.java:159"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/observatory/ObservatoryModuleAnalyzer.java:162"
     ],
     "scorable": false,
     "weight": 0,
@@ -903,7 +903,7 @@
   {
     "key": "runtime.analysis.duration_ms",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:191"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:194"
     ],
     "scorable": true,
     "weight": 4,
@@ -937,8 +937,8 @@
     "key": "runtime.console.errors",
     "sources": [
       "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:20",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:96",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:204"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:99",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:207"
     ],
     "scorable": true,
     "weight": 5,
@@ -957,8 +957,8 @@
   {
     "key": "runtime.js.errors",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:109",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:205"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:112",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:208"
     ],
     "scorable": true,
     "weight": 6,
@@ -977,8 +977,8 @@
   {
     "key": "runtime.network.5xx",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:122",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:206"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:125",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:209"
     ],
     "scorable": true,
     "weight": 8,
@@ -997,8 +997,8 @@
   {
     "key": "runtime.network.bytes_estimated",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:178",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:209"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:181",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:212"
     ],
     "scorable": true,
     "weight": 4,
@@ -1017,8 +1017,8 @@
   {
     "key": "runtime.network.failed_requests",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:135",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:207"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:138",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:210"
     ],
     "scorable": true,
     "weight": 4,
@@ -1037,8 +1037,8 @@
   {
     "key": "runtime.network.request_count",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:165",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:208"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:168",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:211"
     ],
     "scorable": true,
     "weight": 4,
@@ -1057,8 +1057,8 @@
   {
     "key": "runtime.network.third_party_errors",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:150",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:210"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:153",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:213"
     ],
     "scorable": true,
     "weight": 0,
@@ -1077,9 +1077,9 @@
   {
     "key": "ssl.certificate.expiry_days",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:250",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:267",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:470"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:272",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:289",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:492"
     ],
     "scorable": true,
     "weight": 3,
@@ -1089,8 +1089,8 @@
     "availableFacts": "Note, certificat, jours avant expiration ou protocoles par points de terminaison selon la clé ; couverture des points de terminaison éventuellement partielle.",
     "content": "specific-fr-en",
     "detection": {
-      "fr": "SSL Labs examine des points de terminaison TLS. La note, la validité du certificat, son expiration et les protocoles sont des observations distinctes ; la couverture peut être partielle.",
-      "en": "SSL Labs examines TLS endpoints. Grade, certificate validity, expiry and protocols are separate observations; coverage can be partial."
+      "fr": "SSL Labs signale ce contrôle comme à examiner. Un renouvellement manqué peut provoquer une interruption HTTPS à l’expiration.",
+      "en": "SSL Labs flags this check for review. A missed renewal can interrupt HTTPS when the certificate expires."
     },
     "missingCollection": "La version exacte de la règle et des emplacements peuvent manquer dans un rapport historique.",
     "reference": "https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Transport_Layer_Security"
@@ -1098,8 +1098,8 @@
   {
     "key": "ssl.certificate.valid",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:104",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:218"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:105",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:240"
     ],
     "scorable": true,
     "weight": 6,
@@ -1109,8 +1109,8 @@
     "availableFacts": "Note, certificat, jours avant expiration ou protocoles par points de terminaison selon la clé ; couverture des points de terminaison éventuellement partielle.",
     "content": "specific-fr-en",
     "detection": {
-      "fr": "SSL Labs examine des points de terminaison TLS. La note, la validité du certificat, son expiration et les protocoles sont des observations distinctes ; la couverture peut être partielle.",
-      "en": "SSL Labs examines TLS endpoints. Grade, certificate validity, expiry and protocols are separate observations; coverage can be partial."
+      "fr": "SSL Labs signale ce contrôle comme à examiner. Un certificat expiré, non approuvé ou ne couvrant pas le nom demandé peut bloquer la connexion.",
+      "en": "SSL Labs flags this check for review. An expired, untrusted or mismatched certificate can block the connection."
     },
     "missingCollection": "La version exacte de la règle et des emplacements peuvent manquer dans un rapport historique.",
     "reference": "https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Transport_Layer_Security"
@@ -1132,9 +1132,9 @@
   {
     "key": "ssl.grade",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:99",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:185",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:472"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:100",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:197",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:494"
     ],
     "scorable": true,
     "weight": 10,
@@ -1153,8 +1153,8 @@
   {
     "key": "ssl.protocols.legacy_disabled",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:102",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:353"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:103",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:375"
     ],
     "scorable": true,
     "weight": 3,
@@ -1164,8 +1164,8 @@
     "availableFacts": "Note, certificat, jours avant expiration ou protocoles par points de terminaison selon la clé ; couverture des points de terminaison éventuellement partielle.",
     "content": "specific-fr-en",
     "detection": {
-      "fr": "SSL Labs examine des points de terminaison TLS. La note, la validité du certificat, son expiration et les protocoles sont des observations distinctes ; la couverture peut être partielle.",
-      "en": "SSL Labs examines TLS endpoints. Grade, certificate validity, expiry and protocols are separate observations; coverage can be partial."
+      "fr": "SSL Labs signale ce contrôle comme à examiner. Des protocoles obsolètes peuvent permettre des connexions avec des protections insuffisantes.",
+      "en": "SSL Labs flags this check for review. Obsolete protocols can allow connections with inadequate protections."
     },
     "missingCollection": "La version exacte de la règle et des emplacements peuvent manquer dans un rapport historique.",
     "reference": "https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Transport_Layer_Security"
@@ -1173,9 +1173,9 @@
   {
     "key": "ssl.protocols.tls12",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:101",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:324",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:337"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:102",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:346",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:359"
     ],
     "scorable": true,
     "weight": 2,
@@ -1185,8 +1185,8 @@
     "availableFacts": "Note, certificat, jours avant expiration ou protocoles par points de terminaison selon la clé ; couverture des points de terminaison éventuellement partielle.",
     "content": "specific-fr-en",
     "detection": {
-      "fr": "SSL Labs examine des points de terminaison TLS. La note, la validité du certificat, son expiration et les protocoles sont des observations distinctes ; la couverture peut être partielle.",
-      "en": "SSL Labs examines TLS endpoints. Grade, certificate validity, expiry and protocols are separate observations; coverage can be partial."
+      "fr": "SSL Labs signale ce contrôle comme à examiner. L’absence d’une version TLS peut limiter la compatibilité ou l’usage des protocoles récents.",
+      "en": "SSL Labs flags this check for review. A missing TLS version can limit compatibility or use of newer protocols."
     },
     "missingCollection": "La version exacte de la règle et des emplacements peuvent manquer dans un rapport historique.",
     "reference": "https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Transport_Layer_Security"
@@ -1194,9 +1194,9 @@
   {
     "key": "ssl.protocols.tls13",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:100",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:308",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:321"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:101",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:330",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:343"
     ],
     "scorable": true,
     "weight": 2,
@@ -1206,8 +1206,8 @@
     "availableFacts": "Note, certificat, jours avant expiration ou protocoles par points de terminaison selon la clé ; couverture des points de terminaison éventuellement partielle.",
     "content": "specific-fr-en",
     "detection": {
-      "fr": "SSL Labs examine des points de terminaison TLS. La note, la validité du certificat, son expiration et les protocoles sont des observations distinctes ; la couverture peut être partielle.",
-      "en": "SSL Labs examines TLS endpoints. Grade, certificate validity, expiry and protocols are separate observations; coverage can be partial."
+      "fr": "SSL Labs signale ce contrôle comme à examiner. L’absence d’une version TLS peut limiter la compatibilité ou l’usage des protocoles récents.",
+      "en": "SSL Labs flags this check for review. A missing TLS version can limit compatibility or use of newer protocols."
     },
     "missingCollection": "La version exacte de la règle et des emplacements peuvent manquer dans un rapport historique.",
     "reference": "https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Transport_Layer_Security"
@@ -1374,7 +1374,7 @@
   {
     "key": "zap.scan.result",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/zap/ZapModuleAnalyzer.java:104"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/zap/ZapModuleAnalyzer.java:114"
     ],
     "scorable": false,
     "weight": 0,

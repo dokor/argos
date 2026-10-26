@@ -30,6 +30,8 @@ try {
     async function reportReady() {
         await page.getByRole('heading',{name:'atelier.example',level:1,exact:true}).waitFor();
         await page.getByRole('button',{name:lang==='fr' ? 'Constats techniques':'Technical findings',exact:true}).waitFor();
+        const measurements=page.locator('details').filter({has:page.locator('summary').filter({hasText:lang==='fr' ? /^Mesures de chargement, ressources et erreurs$/ : /^Loading, resource and error measurements$/})});
+        if(!await measurements.evaluate(element=>element.open)) await measurements.locator('summary').click();
         await page.getByRole('heading',{name:lang==='fr' ? 'Mesures observées':'Observed measurements',exact:true}).waitFor();
         const contextPanel=page.locator('details').filter({has:page.locator('summary').filter({hasText:lang==='fr' ? /^Contexte de la mesure$/ : /^Measurement context$/})});
         if(!await contextPanel.evaluate(element=>element.open)) await contextPanel.locator('summary').first().click();

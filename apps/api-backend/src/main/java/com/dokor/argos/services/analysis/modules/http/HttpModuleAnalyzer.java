@@ -709,6 +709,9 @@ public class HttpModuleAnalyzer {
         if (missingSecure > 0) missing.add("Secure");
         if (missingHttpOnly > 0) missing.add("HttpOnly");
         boolean ok = missing.isEmpty();
+        String cookieIssues = observations.stream().filter(o -> !Boolean.TRUE.equals(o.get("secure")) || !Boolean.TRUE.equals(o.get("httpOnly")))
+            .limit(10).map(o -> o.get("index") + ":" + (!Boolean.TRUE.equals(o.get("secure")) ? "Secure" : "")
+                + (!Boolean.TRUE.equals(o.get("httpOnly")) ? " HttpOnly" : "")).collect(java.util.stream.Collectors.joining(";"));
         return AuditCheckResult.of(
             "http.security.cookie_flags",
             "Attributs de sécurité des cookies",
@@ -719,7 +722,7 @@ public class HttpModuleAnalyzer {
             Map.of("secure", missingSecure == 0, "httpOnly", missingHttpOnly == 0,
                 "cookieCount", cookies.size(), "missingSecureCount", missingSecure,
                 "missingHttpOnlyCount", missingHttpOnly, "cookies", observations,
-                "httpOnlyPolicy", "REQUIRE_ALL_REVIEW_JAVASCRIPT_EXCEPTIONS"),
+                "httpOnlyPolicy", "REQUIRE_ALL_REVIEW_JAVASCRIPT_EXCEPTIONS", "cookieIssues", cookieIssues),
             ok ? "Les cookies portent les attributs Secure et HttpOnly."
                : "Attribut(s) manquant(s) sur au moins un cookie : " + String.join(", ", missing) + ".",
             ok ? null : "Ajoutez Secure à chaque cookie et HttpOnly aux cookies de session ou sensibles. "
@@ -865,7 +868,7 @@ public class HttpModuleAnalyzer {
             0.0,            // weight filled later
             List.of(),      // tags filled later
             value,
-            present ? Map.of(headerKeyLowerCase, value) : Map.of(),
+            present ? Map.of(headerKeyLowerCase, value, "present", true) : Map.of("present", false),
             effective ? (label + " : configuration restrictive reconnue (ou équivalent CSP).")
                 : present ? (label + " : configuration restrictive non établie ; à vérifier.") : (label + " est absent."),
             effective ? null : recommendationIfMissing
@@ -920,6 +923,12 @@ public class HttpModuleAnalyzer {
         boolean unavailable = state == SeoResourceProbe.State.UNAVAILABLE;
         boolean present = state == SeoResourceProbe.State.RECOGNIZED;
         Map<String, Object> details = new LinkedHashMap<>(resource.diagnostics());
+        var identity = com.dokor.argos.services.domain.report.ReportPageIdentity.from(resource.url(), resource.url());
+        if (identity.requested() != null && !identity.redacted()) {
+            URI probe = URI.create(identity.requested());
+            details.put("probeOrigin", probe.getScheme() + "://" + probe.getRawAuthority());
+            details.put("probePath", probe.getRawPath());
+        }
         details.putAll(extra);
         details.put("present", resource.present());
         details.put("verified", present);
@@ -953,9 +962,11 @@ public class HttpModuleAnalyzer {
             List<String> safeValues = k.equalsIgnoreCase("set-cookie")
                 ? v.stream().map(cookie -> {
                     int equals = cookie.indexOf('=');
-                    return equals > 0 ? cookie.substring(0, equals) + "=[redacted]" : "[redacted]";
+                    if (equals <= 0) return "[redacted]";
+                    var flags = cookieAttributes(cookie).stream().filter(a -> Set.of("secure", "httponly", "samesite=lax", "samesite=strict", "samesite=none").contains(a)).sorted().toList();
+                    return cookie.substring(0, equals) + "=[redacted]" + (flags.isEmpty() ? "" : "; " + String.join("; ", flags));
                 }).toList() : v;
-            out.put(k.toLowerCase(Locale.ROOT), String.join(", ", safeValues));
+            out.put(k.toLowerCase(Locale.ROOT), String.join(k.equalsIgnoreCase("set-cookie") ? "\n" : ", ", safeValues));
         });
         return out;
     }

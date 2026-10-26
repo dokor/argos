@@ -48,7 +48,17 @@ public class ObservatoryClient {
 
     /** Compatibility seam for historical analyzer fixtures; MDN v2 has no tests endpoint. */
     public JsonNode tests(int scanId) throws Exception {
-        // MDN v2 exposes aggregate scan measurements only. The retired v1 /tests route is not supported.
+        // An ID alone cannot address v2 details; the retired v1 /tests route is not supported.
         return com.fasterxml.jackson.databind.node.JsonNodeFactory.instance.objectNode();
+    }
+
+    /** Detailed v2 endpoint used by MDN itself. Never mix tests from another cached scan. */
+    public JsonNode tests(String hostname, int scanId) throws Exception {
+        String target = com.dokor.argos.services.analysis.RemoteScanPolicy.requireAllowed(hostname, externalScansEnabled);
+        JsonNode response = http.getJson(URI.create(apiBase + "/analyze?host=" + URLEncoder.encode(target, StandardCharsets.UTF_8)),
+            Duration.ofSeconds(15), Duration.ofSeconds(10), BoundedBodyHandlers.MAX_PAGE_BYTES, Map.of());
+        if (response == null || response.path("scan").path("id").asInt(-1) != scanId || !response.path("tests").isObject())
+            throw new IllegalStateException("Observatory detail does not match the measured scan");
+        return response.path("tests");
     }
 }

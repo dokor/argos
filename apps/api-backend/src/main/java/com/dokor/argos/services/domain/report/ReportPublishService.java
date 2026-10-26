@@ -64,7 +64,7 @@ public class ReportPublishService {
         ReportDto dto = new ReportDto(composed.generatedAt(), composed.domain(), composed.url(),
             new ReportDto.Site(site == null ? null : site.title(), site == null ? null : site.logoUrl(), rating),
             composed.scores(), composed.summary(), composed.issues(), composed.tech(), composed.antiBot(),
-            composed.accessibilityEvidence(), composed.accessibilityCompliance()).withPageIdentity(composed.pageIdentity()).withMeasurements(composed.measurements());
+            composed.accessibilityEvidence(), composed.accessibilityCompliance()).withPageIdentity(composed.pageIdentity()).withMeasurements(composed.measurements()).withDiagnostics(composed.diagnostics());
         Integer globalScore = publishedGlobalScore(internal, dto);
         AuditReport entity = new AuditReport();
         entity.setAuditId(audit.getId()); entity.setRunId(runId);

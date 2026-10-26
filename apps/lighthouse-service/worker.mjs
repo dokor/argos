@@ -5,6 +5,7 @@ import { chromium } from 'playwright';
 import puppeteer from 'puppeteer-core';
 import { createLighthouseCollector, lighthouseChromeFlags } from './collector.mjs';
 import { MAX_RESULT_BYTES } from './supervisor.mjs';
+import { attachLinkNodes } from './evidence.mjs';
 
 process.once('message', async ({ url, timeoutMs }) => {
   const collect = createLighthouseCollector({
@@ -19,6 +20,7 @@ process.once('message', async ({ url, timeoutMs }) => {
     },
     lighthouse: async (...args) => {
       const result = await lighthouse(...args);
+      attachLinkNodes(result);
       const json = JSON.stringify(result?.lhr);
       if (!json || Buffer.byteLength(json, 'utf8') > MAX_RESULT_BYTES) process.exit(1);
       // Exit after IPC delivery; the supervisor kills Chrome and removes scratch
