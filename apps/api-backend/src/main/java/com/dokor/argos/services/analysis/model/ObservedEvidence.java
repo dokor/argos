@@ -43,17 +43,18 @@ public record ObservedEvidence(
             String resourcePath,
             String selector,
             Map<String, Double> metrics,
-            String locationScope) {
+            String locationScope,
+            List<String> attributes) {
         public Item(String kind, String origin, String resourceRef, String nodePath, Integer status,
                     String reason, String resourceType, String ownership) {
-            this(kind,origin,resourceRef,nodePath,status,reason,resourceType,ownership,null,null,null,null);
+            this(kind,origin,resourceRef,nodePath,status,reason,resourceType,ownership,null,null,null,null,null);
         }
     }
 
     private static final Set<String> METRICS = Set.of("totalBytes", "wastedBytes", "wastedMs",
-        "transferSize", "resourceSize", "duration", "width", "height", "navStartToEndTime", "startTime", "sourceLine", "sourceColumn");
+        "transferSize", "resourceSize", "duration", "width", "height", "navStartToEndTime", "startTime", "sourceLine", "sourceColumn", "reflowTime", "mainThreadTime", "layoutShiftScore", "navigationStep");
     public static String safeResourcePath(String path) {
-        if ("/".equals(path)) return path;
+        if ("/".equals(path) || "/robots.txt".equals(path)) return path;
         if (path == null || path.length() > 1024 || !path.startsWith("/") || path.startsWith("//")
             || !path.matches("/[a-zA-Z0-9/_.~!$&()+,;=% -]+")) return null;
         try {
@@ -79,6 +80,18 @@ public record ObservedEvidence(
                 values.put(key, value.asDouble());
         }
         return values.isEmpty() ? null : Map.copyOf(values);
+    }
+
+    private static List<String> attributes(JsonNode raw) {
+        if (!raw.isArray()) return null;
+        var names = new LinkedHashSet<String>();
+        int visited=0;
+        for (var value : raw) {
+            if (visited++ >= 10) break;
+            String name=value.asText();
+            if (name.matches("aria-[a-z-]{1,32}") && !name.matches(".*(secret|token|password|private|customer|email).*")) names.add(name);
+        }
+        return names.isEmpty() ? null : List.copyOf(names);
     }
 
     public static ObservedEvidence from(Object value) {
@@ -119,7 +132,7 @@ public record ObservedEvidence(
                 path = raw.path("nodePath").asText();
                 if (path.length() > 512
                         || !path.matches(
-                                "(?:[0-9]{1,5},[A-Z][A-Z0-9-]{0,31})(?:,[0-9]{1,5},[A-Z][A-Z0-9-]{0,31})*"))
+                                "(?:[0-9]{1,5},[A-Za-z][A-Za-z0-9-]{0,31})(?:,[0-9]{1,5},[A-Za-z][A-Za-z0-9-]{0,31})*"))
                     path = null;
                 if (path == null && (!Set.of("lighthouse", "zap", "html").contains(n.path("source").asText()) || safeSelector(raw.path("selector").asText()) == null)) continue;
             } else continue;
@@ -141,7 +154,8 @@ public record ObservedEvidence(
                             Set.of("lighthouse", "zap", "html").contains(n.path("source").asText()) && "element".equals(kind) ? safeSelector(raw.path("selector").asText()) : null,
                             Set.of("lighthouse", "runtime").contains(n.path("source").asText()) ? metrics(raw.path("metrics")) : null,
                             Set.of("lighthouse", "runtime").contains(n.path("source").asText()) && "resource".equals(kind) && "document".equals(type)
-                                && "ANALYSED_DOCUMENT".equals(raw.path("locationScope").asText()) ? "ANALYSED_DOCUMENT" : null));
+                                && "ANALYSED_DOCUMENT".equals(raw.path("locationScope").asText()) ? "ANALYSED_DOCUMENT" : null,
+                            "lighthouse".equals(n.path("source").asText()) && "element".equals(kind) ? attributes(raw.path("attributes")) : null));
         }
         int inspected = Math.max(0, Math.min(1000000, n.path("inspected").asInt()));
         return new ObservedEvidence(

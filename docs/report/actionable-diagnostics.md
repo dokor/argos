@@ -196,6 +196,15 @@ entier. Les diagnostics Lighthouse sélectionnés et les timings varient entre p
 Les rapports historiques ne retrouvent pas rétroactivement une donnée supprimée.
 PDF différé. La documentation des méthodes et limites reste visible.
 
+## Cas ciblés complémentaires
+
+La [recette ciblée](../testing/targeted-report-rules.md) complète les pages réelles
+avec 56 réparations DOM axe et 37 rejeux Lighthouse. La
+[matrice de couverture](targeted-rule-coverage.json) distingue les 115 candidats
+Lighthouse, les 75 clés internes, les preuves réelles et les contrats contrôlés.
+Elle documente les corrections de conservation des cibles, les motifs précis et
+les critères de vérification, sans revendiquer des gains de performance mesurés.
+
 ## Reproduction locale des fixtures
 
 Depuis la racine, lancer `.agents/skills/argos-visual-review/scripts/preview-backend.mjs`

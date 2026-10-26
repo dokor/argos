@@ -9,7 +9,7 @@ import { CATALOGUE_VERSION, cleanEvidence, findingContent } from "./findingCatal
 import { expectsScalarMeasurement, findingExplanation } from "./findingExplanation";
 import { reportReadingCopy } from "./reportReadingCopy";
 import type { Finding } from "./reportModel";
-import {documentTargets,headerTargets,isPageTiming} from './findingTargets';
+import {documentTargets,headerTargets,pageTargets,isPageTiming} from './findingTargets';
 import s from "./FindingDetails.module.scss";
 
 export default function FindingDetails({ finding, pageUrl }: { finding: Finding; pageUrl?: string }) {
@@ -23,7 +23,7 @@ export default function FindingDetails({ finding, pageUrl }: { finding: Finding;
   const confidence=issue.confidence&&Object.hasOwn(t.report.priorityCards.confidence,issue.confidence)
     ? t.report.priorityCards.confidence[issue.confidence] : copy.unknownConfidence;
   const observed=evidence?.observed?.version==="observed-evidence-v1"?evidence.observed:undefined;
-  const implicitLocation=Object.hasOwn(documentTargets,issue.id??'')||Object.hasOwn(headerTargets,issue.id??'')||isPageTiming(issue.id);
+  const implicitLocation=Object.hasOwn(documentTargets,issue.id??'')||Object.hasOwn(headerTargets,issue.id??'')||Object.hasOwn(pageTargets,issue.id??'')||issue.id==='lighthouse.audit.robots-txt'||isPageTiming(issue.id);
   return <div className={s.details}>
     <div className={s.questions}>
       <section className={s.question} aria-label={questions.observation}>

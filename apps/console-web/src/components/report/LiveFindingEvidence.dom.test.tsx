@@ -29,6 +29,17 @@ it('groups source coordinates under their actual file without losing a position 
  expect(screen.getByText('13 kB')).toBeVisible();
 });
 
+it('keeps distinct reflow costs attached to their own source positions',()=>{
+ const evidence:Evidence={version:'observed-evidence-v1',source:'lighthouse',state:'AVAILABLE',redacted:true,truncated:false,inspected:2,items:[
+  {kind:'resource',origin:'https://example.com',resourceRef:'0123456789abcdef',resourcePath:'/app.js',metrics:{sourceLine:3,sourceColumn:5,reflowTime:350}},
+  {kind:'resource',origin:'https://example.com',resourceRef:'0123456789abcdef',resourcePath:'/app.js',metrics:{sourceLine:8,sourceColumn:2,reflowTime:20}},
+ ]};
+ const {container}=render(<ObservedEvidence evidence={evidence} lang="en"/>);
+ const items=container.querySelectorAll('li');expect(items).toHaveLength(2);
+ expect(items[0].textContent).toContain('350 ms');expect(items[0].textContent).toContain('3:5');
+ expect(items[1].textContent).toContain('20 ms');expect(items[1].textContent).toContain('8:2');
+});
+
 it('uses the recorded cache reason and preserves private-response protections',()=>{
  const issue:Issue={id:'lighthouse.audit.bf-cache',title:'Cache',impact:'',recommendation:'',severity:'important',structuredEvidence:{source:'lighthouse',details:[{key:'bfCacheReasons',text:'MainResourceHasCacheControlNoStore,JsNetworkRequestReceivedCacheControlNoStoreResource'}]}};
  expect(findingExplanation(issue,'fr').observation).toContain('Cache-Control: no-store');

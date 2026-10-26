@@ -153,7 +153,7 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
         }
 
         const request = response.request();
-        transfers.set(request, { url: safeOrigin(url), bytes: null, type: request.resourceType(), status });
+        transfers.set(request, { url: safeOrigin(url), bytes: null, type: request.resourceType(), status, observedEvidence:resourceEvidence(url) });
       });
       page.on('requestfinished', request => {
         if (!collecting) return;
@@ -210,7 +210,8 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
       const bytesComplete = observedTransfers.length > 0 && observedTransfers.every(item => item.bytes !== null)
         && Number.isSafeInteger(totalBytesEstimated);
       const topLargest = observedTransfers.filter(item => item.bytes > 0)
-        .sort((a, b) => b.bytes - a.bytes).slice(0, 10);
+        .sort((a, b) => b.bytes - a.bytes).slice(0, 10)
+        .map(item=>({...item,observedEvidence:item.observedEvidence?{...item.observedEvidence,resourceType:item.type,status:item.status,metrics:{transferSize:item.bytes}}:null}));
       const networkOwnership = partitionNetworkErrors({ failedRequestUrls, status5xxUrls }, finalUrl);
       const consoleErrorsFirstParty = consoleOriginsComplete
         ? [...consoleErrorOrigins].reduce((count, [origin, occurrences]) =>

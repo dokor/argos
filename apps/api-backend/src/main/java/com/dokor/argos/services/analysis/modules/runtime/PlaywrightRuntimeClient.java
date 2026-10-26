@@ -178,7 +178,9 @@ public class PlaywrightRuntimeClient {
         String url,
         Long bytes,
         String type,
-        Integer status
+        Integer status,
+        JsonNode observedEvidence
     ) {
+        public LargestResource(String url, Long bytes, String type, Integer status) { this(url,bytes,type,status,null); }
     }
 }

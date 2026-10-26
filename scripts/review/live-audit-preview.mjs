@@ -6,6 +6,13 @@ createServer(async (req,res) => {
   res.setHeader('Cache-Control','no-store');
   try {
     const path = new URL(req.url, 'http://127.0.0.1').pathname;
+    const targeted=path.match(/^\/api\/reports\/review-targeted-([a-z0-9-]+)$/);
+    if(targeted) {
+      const cases=JSON.parse(await readFile('outputs/targeted-rules/report-cases.json','utf8'));
+      const item=cases.find(c=>c.id===targeted[1]);
+      if(!item){res.writeHead(404).end('{}');return;}
+      res.end(JSON.stringify(item.report));return;
+    }
     if (path === '/api/reports/review-real-argos') {
       res.end(await readFile('outputs/live-audit/report.json','utf8')); return;
     }

@@ -207,11 +207,21 @@ public class LighthouseModuleAnalyzer {
             details.put("score", c.score());
             details.put("weight", c.weight());
             JsonNode raw = audits.path(c.id());
+            if (raw.path("explanation").isTextual()) {
+                String explanation = com.dokor.argos.services.analysis.AuditOutputSanitizer.text(raw.path("explanation").asText());
+                if (!explanation.isBlank()) details.put("diagnosticExplanation", explanation.substring(0, Math.min(1000, explanation.length())));
+            }
+            if ("http-status-code".equals(c.id()) && raw.path("displayValue").asText().matches("[1-5][0-9]{2}"))
+                details.put("statusCode", Integer.parseInt(raw.path("displayValue").asText()));
             var observed = ObservedEvidence.from(raw.path("observedEvidence"));
             if (observed == null || observed.items().isEmpty()) {
                 String related = switch (c.id()) {
                     case "largest-contentful-paint" -> "lcp-breakdown-insight";
                     case "total-blocking-time", "max-potential-fid" -> "long-tasks";
+                    case "cumulative-layout-shift" -> "cls-culprits-insight";
+                    case "interaction-to-next-paint" -> "inp-breakdown-insight";
+                    case "interactive" -> "long-tasks";
+                    case "mainthread-work-breakdown" -> "bootup-time";
                     default -> null;
                 };
                 if (related != null) {
@@ -223,6 +233,18 @@ public class LighthouseModuleAnalyzer {
                 }
             }
             if (observed != null && "lighthouse".equals(observed.source())) details.put("observed", observed);
+            if ("document-latency-insight".equals(c.id())) {
+                // Checklist keys are stable producer data, unlike translated labels.
+                for (String name : List.of("serverResponseIsFast", "noRedirects", "usesCompression")) {
+                    var item = raw.path("details").path("items").path(name);
+                    if (item.path("value").isBoolean()) details.put("documentCheck." + name, item.path("value").asBoolean());
+                }
+                for (String name : List.of("redirectDuration", "serverResponseTime", "uncompressedResponseBytes")) {
+                    var value = raw.path("details").path("debugData").path(name);
+                    if (value.isNumber() && Double.isFinite(value.asDouble()) && value.asDouble() >= 0 && value.asDouble() <= 1e12)
+                        details.put("documentMetric." + name, value.asDouble());
+                }
+            }
             if ("inspector-issues".equals(c.id())) {
                 // Stable allowlist; never persist arbitrary browser issue text.
                 var types = new LinkedHashSet<String>();

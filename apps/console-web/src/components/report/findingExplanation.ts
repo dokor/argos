@@ -2,6 +2,7 @@ import type { Lang } from '@/lib/i18n/routes';
 import type { FindingDetection, Issue } from './types';
 import { findingPlaybook, type Playbook } from './findingPlaybooks';
 import { cleanEvidence } from './findingText';
+import {certificateProblems} from './certificateProblems';
 
 export const pilotFindingKeys = ['html.title', 'html.images.alt_coverage', 'http.security.csp',
   'lighthouse.audit.largest-contentful-paint', 'lighthouse.audit.lcp-discovery-insight',
@@ -57,6 +58,33 @@ export function findingExplanation(issue: Issue, lang: Lang): Explanation {
   const current = fr
     ? 'Référentiel des collecteurs actuels. La version exacte de cette règle n’est pas conservée dans la fiche ; un rapport historique peut utiliser une autre méthode.'
     : 'Current collector reference. The exact version of this rule is not retained in the finding; a historical report may use another method.';
+  // WAI-ARIA 1.2: values depend on state and role; never copy the observed invalid
+  // value or infer one from severity. Apply only to the attribute rule itself.
+  if(['lighthouse.audit.aria-valid-attr-value','lighthouse.audit.aria-required-attr','lighthouse.audit.aria-valid-attr'].includes(issue.id??'')) {
+    const attrs=new Set(issue.structuredEvidence?.observed?.items.flatMap(item=>item.attributes??[])??[]);
+    const specific=[
+      ['aria-expanded',fr?'aria-expanded : utiliser "false" lorsque la zone est repliée, "true" lorsqu’elle est dépliée. Synchroniser la valeur avec son ouverture réelle.':'aria-expanded: use "false" when collapsed and "true" when expanded. Keep it synchronized with actual visibility.'],
+      ['aria-valuenow',fr?'aria-valuenow : fournir la valeur numérique actuelle, entre aria-valuemin et aria-valuemax. Ne pas inventer une progression ; une progression indéterminée peut omettre cette valeur.':'aria-valuenow: supply the current numeric value within aria-valuemin and aria-valuemax. Do not invent progress; indeterminate progress may omit this value.'],
+      ['aria-labl',fr?'aria-labl n’existe pas : corriger en aria-label si ce rôle accepte un nom accessible, avec un libellé décrivant l’action.':'aria-labl does not exist: correct it to aria-label if the role accepts an accessible name, with a label describing the action.'],
+    ].filter(([name])=>attrs.has(name)).map(([,instruction])=>instruction);
+    if(specific.length)return {...p,methodNote:current,steps:[p.steps[0],...specific],expected:fr?'Actionner le composant au clavier, puis vérifier son nom et son état calculés dans Accessibilité à chaque changement. Relancer la même règle : l’erreur disparaît et l’action fonctionne.':'Operate the component with the keyboard, then check its computed name and state in Accessibility after each change. Rerun the same rule: the error disappears and the action works.'};
+  }
+  if(issue.id==='lighthouse.audit.document-latency-insight') {
+    const detail=(key:string)=>issue.structuredEvidence?.details?.find(d=>d.key===key)?.text;
+    const causes = [
+      ['serverResponseIsFast',fr?'Attente de réponse du serveur':'Server response waiting',fr?'Sur la route du document principal, mesurer le traitement et les appels amont ; optimiser le poste lent ou son cache compatible avec les données privées.':'On the main document route, measure processing and upstream calls; optimise the slow work or its cache while protecting private data.'],
+      ['noRedirects',fr?'Détours de redirection':'Redirect detours',fr?'Conserver le journal Réseau et faire pointer les redirections intermédiaires vers la destination finale équivalente, en préservant HTTPS et le contenu attendu.':'Preserve the Network log and point intermediate redirects at the equivalent final destination, preserving HTTPS and the intended content.'],
+      ['usesCompression',fr?'Document transféré sans compression suffisante':'Document transferred without sufficient compression',fr?'Vérifier Content-Encoding sur la réponse du document et activer gzip ou Brotli au serveur ou CDN qui la sert ; comparer les octets transférés.':'Check Content-Encoding on the document response and enable gzip or Brotli at the serving server or CDN; compare transferred bytes.'],
+    ].filter(([key])=>detail(`documentCheck.${key}`)==='false');
+    if(causes.length) return {...p,methodNote:current,
+      observation:(fr?'Causes relevées sur le document principal : ':'Recorded causes on the main document: ')+causes.map(c=>c[1]).join(' ; '),
+      steps:causes.map(c=>c[2]),expected:fr?'Recharger la même URL au même profil, comparer la phase ciblée dans Réseau et relancer Lighthouse : chaque contrôle indiqué doit réussir. Vérifier aussi les contenus connectés et anonymes.':'Reload the same URL with the same profile, compare the targeted phase in Network and rerun Lighthouse: each listed check should pass. Also verify signed-in and anonymous content.'};
+  }
+  if(issue.id==='ssl.certificate.valid') {
+    const problems=certificateProblems(issue.structuredEvidence?.details?.find(d=>d.key==='certificateProblems')?.text,lang);
+    if(problems.length) return {...p,methodNote:current,
+      observation:problems.map(p=>p.problem).join(' ; '),steps:problems.map(p=>`${p.problem} : ${p.change}`),expected:problems.map(p=>p.verify).join(' ')};
+  }
   if (['runtime.console.errors','lighthouse.audit.errors-in-console'].includes(issue.id??'')) return {...p,methodNote:current,
     title:fr?'Des erreurs sont relevées dans la console':'Errors were recorded in the console',
     steps:[fr?'Ouvrir les ressources indiquées dans Réseau et la Console. Un message de chargement échoué concerne la requête ; une exception concerne le code à la ligne indiquée.':'Open the listed resources in Network and Console. A failed-load message concerns the request; an exception concerns code at the reported line.',
@@ -74,6 +102,11 @@ export function findingExplanation(issue: Issue, lang: Lang): Explanation {
   if (issue.id === 'lighthouse.audit.bf-cache') {
     const codes = (issue.structuredEvidence?.details?.find(d => d.key === 'bfCacheReasons')?.text ?? '').split(',').filter(code => /^[A-Za-z][A-Za-z0-9]{0,119}$/.test(code));
     const noStore = codes.some(code => ['MainResourceHasCacheControlNoStore', 'JsNetworkRequestReceivedCacheControlNoStoreResource'].includes(code));
+    if(codes.includes('UnloadHandlerExistsInMainFrame')&&!noStore) return {...p,methodNote:current,
+      observation:fr?'Un gestionnaire unload du document principal empêche sa restauration depuis le cache retour/avance.':'An unload handler in the main document prevents restoration from the back/forward cache.',
+      steps:[fr?'Sur la page analysée, dans la Console Chrome, exécuter getEventListeners(window).unload et ouvrir les fonctions listées pour retrouver leur fichier source. Vérifier également window.onunload.':'On the analysed page, run getEventListeners(window).unload in the Chrome Console and open the listed functions to locate their source file. Also check window.onunload.',
+        fr?'Retirer la dépendance à unload ; déplacer la sauvegarde d’état vers visibilitychange et adapter les nettoyages à pagehide/pageshow selon le cycle de vie requis. Tester l’intégration qui installait le gestionnaire.':'Remove the dependency on unload; move state saving to visibilitychange and adapt cleanup to pagehide/pageshow according to the required lifecycle. Test the integration that installed the handler.'],
+      expected:fr?'Dans Application → Cache arrière/avant, relancer le test : ce motif disparaît. Naviguer ailleurs puis revenir, vérifier la restauration et la conservation des données attendues ; traiter séparément tout autre motif encore signalé.':'Rerun Application → Back/forward cache: this reason disappears. Navigate away and back, verify restoration and expected state; handle any other remaining reason separately.'};
     if (noStore) return { ...p, methodNote: current,
       observation: fr ? 'Lighthouse a relevé Cache-Control: no-store sur le document ou une réponse chargée par JavaScript pendant le test arrière/avant.' : 'Lighthouse detected Cache-Control: no-store on the document or a response loaded by JavaScript during the back/forward test.',
       steps: [fr ? 'Dans Réseau, ouvrir la requête du document de la page analysée et vérifier son en-tête Cache-Control. Examiner aussi les réponses fetch/XHR marquées no-store ; le rapport ne conserve pas leur URL exacte.' : 'In Network, open the analysed page’s document request and check its Cache-Control header. Also inspect fetch/XHR responses marked no-store; their exact URLs are not retained in this report.',

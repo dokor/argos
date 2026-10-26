@@ -3,6 +3,28 @@ import assert from 'node:assert/strict';
 import {attachLinkNodes,lighthouseEvidence,resourceEvidence,safeResourcePath,safeSelector} from './evidence.mjs';
 import {resourceEvidence as runtimeResource} from '../playwright-service/evidence.mjs';
 
+test('SVG structural paths preserve case and remain usable without copying markup',()=>{
+ const evidence=lighthouseEvidence({details:{items:[{node:{type:'node',path:'1,HTML,1,BODY,0,svg,0,foreignObject',snippet:'private'}}]}});
+ assert.equal(evidence.items[0].nodePath,'1,HTML,1,BODY,0,svg,0,foreignObject');
+ assert.doesNotMatch(JSON.stringify(evidence),/private/);
+});
+
+test('retains failing ARIA attributes and related nodes without leaking values or explanation text',()=>{
+ const evidence=lighthouseEvidence({details:{items:[{node:{type:'node',selector:'main > button',explanation:'aria-expanded="private-value" aria-not-real="secret" aria-token="hidden"',
+  },subItems:{items:[{relatedNode:{type:'node',selector:'main > label'}}]}}]}});
+ assert.deepEqual(evidence.items[0].attributes,['aria-expanded','aria-not-real']);
+ assert.equal(evidence.items[1].selector,'main > label');
+ assert.doesNotMatch(JSON.stringify(evidence),/private-value|secret|hidden|aria-token/);
+});
+test('source-map failures exclude healthy scripts and documentation links',()=>{
+ const evidence=lighthouseEvidence({details:{headings:[{key:'scriptUrl',valueType:'url'}],items:[
+  {scriptUrl:'https://example.com/bad.js',subItems:{items:[{error:'missing'}]}},
+  {scriptUrl:'https://example.com/good.js',subItems:{items:[]}},
+  {type:'link',url:'https://docs.example/howto.js'},
+ ]}},'https://example.com/','valid-source-maps');
+ assert.deepEqual(evidence.items.map(i=>i.resourcePath),['/bad.js']);
+});
+
 test('console sourceLocation resolves to the actual audited document, with one-based coordinates',()=>{
  const audit={details:{items:[{sourceLocation:{type:'source-location',url:'https://example.com/javascript_error?token=x',line:7,column:51}}]}};
  const evidence=lighthouseEvidence(audit,'https://example.com/javascript_error?token=x');

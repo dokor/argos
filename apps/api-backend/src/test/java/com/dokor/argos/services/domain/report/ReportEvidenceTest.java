@@ -10,6 +10,21 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ReportEvidenceTest {
+    @Test void targetedAttributesAndDiagnosticMetricsSurviveStorageButArbitraryValuesDoNot() throws Exception {
+        var mapper=new ObjectMapper();
+        var raw=mapper.readTree("""
+          {"version":"observed-evidence-v1","source":"lighthouse","items":[
+          {"kind":"element","selector":"main > button","attributes":["aria-expanded","aria-secret","private-value"],"metrics":{"layoutShiftScore":0.6}},
+          {"kind":"resource","origin":"https://example.com","resourceRef":"0123456789abcdef","resourcePath":"/robots.txt","metrics":{"sourceLine":2,"navigationStep":3,"reflowTime":350,"mainThreadTime":400}}]}
+          """);
+        var stored=mapper.treeToValue(com.dokor.argos.services.analysis.AuditOutputSanitizer.tree(check("lighthouse.audit.aria-valid-attr-value",0,Map.of("observed",raw)),mapper),AuditCheckResult.class);
+        var evidence=ReportEvidence.from("lighthouse",stored).observed();
+        assertEquals(List.of("aria-expanded"),evidence.items().getFirst().attributes());
+        assertEquals(0.6,evidence.items().getFirst().metrics().get("layoutShiftScore"));
+        assertEquals("/robots.txt",evidence.items().get(1).resourcePath());
+        assertEquals(Map.of("sourceLine",2.0,"navigationStep",3.0,"reflowTime",350.0,"mainThreadTime",400.0),evidence.items().get(1).metrics());
+        assertFalse(mapper.writeValueAsString(evidence).contains("private-value"));
+    }
     @Test void lighthouseLocationsAndRowMetricsSurviveSanitisedStorageAndTheReportDto() throws Exception {
         var mapper = new ObjectMapper();
         var raw = mapper.readTree("""

@@ -184,7 +184,7 @@ public class RuntimeModuleAnalyzer {
             AuditSeverity.LOW,
             false, 0.0, List.of("runtime"),
             bytes,
-            nullableMap("topLargest", r.network() != null ? r.network().topLargest() : null),
+            transferEvidence(r),
             "Transfert estimé : ~" + humanBytes(bytes),
             bytes <= 3_000_000 ? null : "Optimiser poids page (images, fonts, scripts), compression, cache."
         ));
@@ -304,6 +304,15 @@ public class RuntimeModuleAnalyzer {
             : "FIRST_PARTY".equals(item.ownership()) && ("server".equals(kind)
                 ? item.status()!=null && item.status()>=500 : item.status()==null));
         return Map.of("observed",selected);
+    }
+
+    private static Map<String,Object> transferEvidence(PlaywrightRuntimeClient.RuntimeAnalyzeResponse response) {
+        var resources=response.network()==null?null:response.network().topLargest();
+        if (resources==null) return Map.of();
+        var items=resources.stream().filter(java.util.Objects::nonNull).map(PlaywrightRuntimeClient.LargestResource::observedEvidence)
+            .filter(java.util.Objects::nonNull).limit(10).toList();
+        return Map.of("topLargest",resources,"observed",ObservedEvidence.from(Map.of("version","observed-evidence-v1","source","runtime",
+            "items",items,"inspected",resources.size(),"truncated",response.network().requests()!=null&&response.network().requests()>items.size())));
     }
 
     private static Map<String,Object> scriptErrorEvidence(PlaywrightRuntimeClient.RuntimeAnalyzeResponse response) {

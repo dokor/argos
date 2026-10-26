@@ -1,7 +1,7 @@
 import type { Issue } from './types';
 import type { Lang } from '@/lib/i18n/routes';
 import { cleanEvidence } from './findingText';
-import { headerTargets, documentTargets, isPageTiming } from './findingTargets';
+import { headerTargets, documentTargets, pageTargets, isPageTiming } from './findingTargets';
 
 /** Put the measured target beside the finding, including hostname-scoped TLS checks. */
 export default function FindingLocation({ issue, pageUrl, lang }: { issue: Issue; pageUrl?: string; lang: Lang }) {
@@ -14,6 +14,8 @@ export default function FindingLocation({ issue, pageUrl, lang }: { issue: Issue
   const cookieIssues = (detail('cookieIssues')??'').split(';').filter(part=>/^\d{1,5}:(?:Secure)?(?: HttpOnly)?$/.test(part));
   const cookieIndexes = (detail('cookieIndexes')??'').match(/\b[1-9][0-9]{0,4}\b/g)??[];
   const weakSuites = (detail('weakCipherSuites')??'').match(/\bTLS_[A-Z0-9_]{1,100}\b/g)??[];
+  const responseLocations=(detail('responseBodyLocations')??'').split(',').filter(value=>/^[1-9][0-9]{0,7}:[1-9][0-9]{0,7}$/.test(value)).slice(0,10);
+  const responseHeaders=(detail('responseHeaders')??'').split(',').filter(value=>/^[a-zA-Z][a-zA-Z0-9-]{0,79}$/.test(value)).slice(0,10);
   const legacyProtocols = issue.id==='ssl.protocols.legacy_disabled' ? (detail('protocols')??'').match(/\b(?:TLS 1\.[01]|SSL [23]\.0)\b/g)??[] : [];
   const policyFindings = detail('policyFindings') ?? '';
   const directives = [...new Set(policyFindings.match(/\b(?:default-src|script-src(?:-elem|-attr)?|style-src(?:-elem|-attr)?|img-src|font-src|connect-src|frame-src|frame-ancestors|object-src|base-uri|form-action|media-src|worker-src)\b/g) ?? [])];
@@ -34,8 +36,14 @@ export default function FindingLocation({ issue, pageUrl, lang }: { issue: Issue
     return value !== undefined && Number.isFinite(Number(value)) && Number(value) >= 0 ? [{label,value:Number(value)}] : [];
   });
   return <div data-finding-location>
+    {detail('diagnosticExplanation')&&<p><strong>{fr?'Motif donné par Lighthouse (langue de collecte)':'Lighthouse reason (collection language)'} :</strong> {cleanEvidence(detail('diagnosticExplanation'))}</p>}
+    {/^[1-5][0-9]{2}$/.test(detail('statusCode')??'')&&<p><strong>{fr?'Statut HTTP observé':'Observed HTTP status'} :</strong> <code>{detail('statusCode')}</code>.</p>}
+    {pageTargets[issue.id??'']&&<p><strong>{fr?'Où intervenir':'Where to make the change'} :</strong> {pageTargets[issue.id!][fr?0:1]}. {fr?'Ce contrôle porte sur cette page ou sa navigation ; il ne désigne pas à lui seul un fichier source unique.':'This check concerns this page or its navigation; it does not by itself identify a single source file.'}</p>}
+    {issue.id==='lighthouse.audit.robots-txt'&&host&&<p><strong>{fr?'Fichier à examiner':'File to inspect'} :</strong> <code>{new URL('/robots.txt',pageUrl).href}</code>. {fr?'Les numéros de ligne ci-dessous concernent ce fichier, pas le HTML de la page.':'The line numbers below refer to this file, not the page HTML.'}</p>}
     {isPageTiming(issue.id)&&<p>{fr?'Cette durée décrit l’affichage de la page entière. Elle n’identifie pas une cause unique : examiner les constats de ressources bloquantes, de chaîne réseau et de LCP de ce même rapport avant de modifier le chargement.':'This duration describes the whole page’s rendering. It identifies no single cause: inspect this report’s blocking-resource, network-chain and LCP findings before changing loading behaviour.'}</p>}
     {header && <p><strong>{fr?'En-tête concerné':'Affected header'} :</strong> <code>{header}</code> — {fr?'réponse du document dans Réseau':'document response in Network'}.</p>}
+    {responseHeaders.length>1&&<p>{fr?'En-têtes signalés':'Flagged headers'} : <code>{responseHeaders.join(', ')}</code>.</p>}
+    {responseLocations.length>1&&<p>{fr?'Positions signalées dans la réponse HTML (ligne:colonne)':'Reported HTML response positions (line:column)'} : <code>{responseLocations.join(', ')}</code>. {fr?'Examiner chaque occurrence dans la réponse originale ; dix emplacements au plus sont conservés.':'Inspect each occurrence in the original response; at most ten locations are retained.'}</p>}
     {documentTarget && <p><strong>{fr?'Emplacement dans le document':'Document location'} :</strong> <code>{documentTarget}</code>. {fr?'Examiner le HTML reçu ; si la balise manque, la correction se fait dans le modèle qui génère cette page.':'Inspect the received HTML; if the element is absent, change the template generating this page.'}</p>}
     {!!cookieIssues.length && <ul>{cookieIssues.map(value=><li key={value}><code>Set-Cookie #{value.split(':')[0]}</code> : {fr?'attributs absents':'missing attributes'} <code>{value.split(':')[1].trim()}</code></li>)}</ul>}
     {!!cookieIndexes.length && <p>{fr?'Occurrences dans les en-têtes de la réponse collectée':'Entries in the collected response headers'} : {cookieIndexes.map(index=>`Set-Cookie #${index}`).join(', ')}.</p>}
@@ -61,5 +69,8 @@ export default function FindingLocation({ issue, pageUrl, lang }: { issue: Issue
     {detail('relatedAudit') === 'lcp-breakdown-insight' && <p>{fr ? 'L’élément ci-dessous provient de la décomposition LCP du même passage Lighthouse.' : 'The element below comes from the LCP breakdown in the same Lighthouse run.'}</p>}
     {!!phases.length && <><p><strong>{fr ? 'Phases LCP observées' : 'Observed LCP phases'}</strong> — {fr ? 'Chronologie observée, distincte de la durée simulée ci-dessus.' : 'Observed timeline, separate from the simulated duration above.'}</p><ul>{phases.map(phase=><li key={phase.label}>{phase.label} : {phase.value.toLocaleString(lang,{maximumFractionDigits:1})} ms</li>)}</ul></>}
     {detail('relatedAudit') === 'long-tasks' && <p>{fr ? 'Les ressources ci-dessous sont associées aux tâches longues du même passage Lighthouse. Leurs durées ne sont pas des économies garanties.' : 'The resources below are associated with long tasks from the same Lighthouse run. Their durations are not guaranteed savings.'}</p>}
+    {detail('relatedAudit') === 'cls-culprits-insight' && <p>{fr ? 'Ces éléments et ressources proviennent du diagnostic des déplacements du même passage Lighthouse. Un élément déplacé n’est pas nécessairement la cause : vérifier aussi les insertions, images et polices qui le précèdent.' : 'These elements and resources come from the layout-shift diagnosis in the same Lighthouse run. A shifted element is not necessarily the cause: also check preceding insertions, images and fonts.'}</p>}
+    {detail('relatedAudit') === 'inp-breakdown-insight' && <p>{fr ? 'Cet élément provient de la décomposition de l’interaction du même passage Lighthouse. Rejouer cette interaction dans Performance pour retrouver son gestionnaire.' : 'This element comes from the interaction breakdown in the same Lighthouse run. Repeat that interaction in Performance to locate its handler.'}</p>}
+    {detail('relatedAudit') === 'bootup-time' && <p>{fr ? 'Ces scripts et durées proviennent du diagnostic d’exécution du même passage Lighthouse. Ils expliquent le travail JavaScript, pas nécessairement les autres postes du thread principal.' : 'These scripts and durations come from the execution diagnosis in the same Lighthouse run. They describe JavaScript work, not necessarily other main-thread work.'}</p>}
   </div>;
 }

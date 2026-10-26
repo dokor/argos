@@ -23,6 +23,27 @@ import static org.mockito.Mockito.when;
  * « indisponible/inconnu » (INFO, non scoré) vs « médiocre » (WARN/FAIL) - issue #100.
  */
 class SslLabsModuleAnalyzerTest {
+    @Test void missingTls12NamesTheEndpointAndPassesAfterEnablingIt() throws Exception {
+        for(boolean fixed:new boolean[]{false,true}) {
+            var finding=check(analyze("{\"endpoints\":[{\"ipAddress\":\"192.0.2.10\",\"grade\":\"A\",\"details\":{\"protocols\":[{\"name\":\"TLS\",\"version\":\"1.3\"}"+(fixed?",{\"name\":\"TLS\",\"version\":\"1.2\"}":"")+"]}}]}"),"ssl.protocols.tls12");
+            assertEquals(fixed?AuditStatus.PASS:AuditStatus.FAIL,finding.status());
+            assertEquals("192.0.2.10",finding.details().get("selectedEndpoint"));
+        }
+    }
+    @ParameterizedTest
+    @CsvSource({"1,UNTRUSTED","2,NOT_YET_VALID","4,EXPIRED","8,HOSTNAME_MISMATCH","16,REVOKED","32,BAD_COMMON_NAME","64,SELF_SIGNED","128,BLACKLISTED","256,INSECURE_SIGNATURE","512,INSECURE_KEY","1024,UNKNOWN_FLAG"})
+    void certificateFlagsNameTheActualRepairInsteadOfCountingTheBitmask(int flag, String problem) throws Exception {
+        var result=analyze("{\"endpoints\":[{\"grade\":\"T\",\"details\":{\"cert\":{\"issues\":"+flag+"}}}]}");
+        var finding=check(result,"ssl.certificate.valid");
+        assertEquals(AuditStatus.FAIL,finding.status());
+        assertEquals(problem,finding.details().get("certificateProblems"));
+    }
+    @Test void expiredAndWrongHostAreTwoSeparateProblemsAndRepairRemovesBoth() throws Exception {
+        var bad=check(analyze("{\"endpoints\":[{\"grade\":\"T\",\"details\":{\"cert\":{\"issues\":12}}}]}"),"ssl.certificate.valid");
+        assertEquals("EXPIRED,HOSTNAME_MISMATCH",bad.details().get("certificateProblems"));
+        org.junit.jupiter.api.Assertions.assertFalse(bad.message().contains("12 problème"));
+        assertEquals(AuditStatus.PASS,check(analyze("{\"endpoints\":[{\"grade\":\"A\",\"details\":{\"cert\":{\"issues\":0}}}]}"),"ssl.certificate.valid").status());
+    }
     @Test void gradeRetainsOnlyExplicitlyWeakSuitesOfTheSelectedEndpoint() throws Exception {
         var grade=check(analyze("""
           {"status":"READY","endpoints":[{"ipAddress":"192.0.2.1","grade":"B","statusMessage":"Ready","details":{"suites":[{"list":[

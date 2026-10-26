@@ -40,6 +40,39 @@ import static org.mockito.Mockito.when;
  * du résultat HTTP vers l'{@link AuditContext}.
  */
 class HttpModuleAnalyzerTest {
+    @Test void targetedNavigationRepairsRemoveOnlyTheirOwnFindings() throws Exception {
+        for (boolean fixed : new boolean[]{false,true}) {
+            var client=mock(HttpClient.class);
+            var visited=new java.util.ArrayList<String>();
+            when(client.<String>send(any(HttpRequest.class),any())).thenAnswer(inv->{
+                HttpRequest request=inv.getArgument(0);var uri=request.uri();visited.add(uri.toString());
+                if(uri.getPath().equals("/robots.txt"))return resp(200,"User-agent: *\nDisallow: /draft/");
+                if(uri.getPath().equals("/sitemap.xml"))return resp(404,"");
+                int step=Integer.parseInt(uri.getPath().substring(1));
+                if(step<4)return resp(301,"",Map.of("location",List.of((fixed?"https://example.com/4":"http://example.com/"+(step+1)))),HttpClient.Version.HTTP_2);
+                return resp(fixed?200:503,"<html><title>Demo title</title></html>",fixed?Map.of("content-type",List.of("text/html; charset=utf-8")):Map.of(),HttpClient.Version.HTTP_2);
+            });
+            var result=new HttpModuleAnalyzer(client).analyze(new AuditContext("http://example.com/0","http://example.com/0",1),LoggerFactory.getLogger("test"));
+            for(String key:List.of("http.redirect.count","http.final_url.https","http.redirect.to_https","http.headers.content_type","http.status_code")) {
+                var check=checkByKey(result,key);
+                assertEquals(fixed?AuditStatus.PASS:key.equals("http.status_code")?AuditStatus.FAIL:AuditStatus.WARN,check.status(),key);
+            }
+            assertEquals(fixed?"https://example.com/4":"http://example.com/4",result.data().get("finalUrl"));
+            assertEquals(visited.stream().filter(u->u.matches("https?://example.com/[0-4]")).toList(),checkByKey(result,"http.redirect.count").details().get("redirectChain"));
+            assertEquals(fixed?200:503,checkByKey(result,"http.status_code").details().get("statusCode"));
+        }
+    }
+    @Test void targetedRobotsRepairKeepsTheExactProbedPathAndStatus() throws Exception {
+        for(boolean fixed:new boolean[]{false,true}) {
+            var result=new HttpModuleAnalyzer(stubClient(resp(200,"<html></html>"),resp(fixed?200:404,fixed?"User-agent: *\nDisallow: /draft/":"missing"),resp(404,"missing")))
+                .analyze(new AuditContext("https://example.com/catalogue","https://example.com/catalogue",1),LoggerFactory.getLogger("test"));
+            var check=checkByKey(result,"http.seo.robots_txt");
+            assertEquals(fixed?AuditStatus.PASS:AuditStatus.WARN,check.status());
+            assertEquals("/robots.txt",check.details().get("probePath"));
+            assertEquals("https://example.com",check.details().get("probeOrigin"));
+            assertEquals(fixed?200:404,check.details().get("status"));
+        }
+    }
     @Test void snapshotForPassiveAnalysisPreservesCookieFlagsAndSeparateOccurrencesButNotValues() throws Exception {
         var result=fixtureAnalysis(200,"<html></html>",Map.of("set-cookie",List.of(
             "session=private-one; Secure; HttpOnly; SameSite=Lax; Path=/private",

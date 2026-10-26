@@ -226,6 +226,16 @@ public class SslLabsModuleAnalyzer {
             certValidStatus = certIssues == 0 ? AuditStatus.PASS : AuditStatus.FAIL;
         }
 
+        var certificateDetails = new LinkedHashMap<String,Object>();
+        if (certIssues >= 0) {
+            certificateDetails.put("issues",certIssues);
+            String[] codes={"UNTRUSTED","NOT_YET_VALID","EXPIRED","HOSTNAME_MISMATCH","REVOKED","BAD_COMMON_NAME","SELF_SIGNED","BLACKLISTED","INSECURE_SIGNATURE","INSECURE_KEY"};
+            var problems=new ArrayList<String>();
+            for(int bit=0;bit<codes.length;bit++) if((certIssues & (1<<bit))!=0) problems.add(codes[bit]);
+            if ((certIssues & ~1023)!=0) problems.add("UNKNOWN_FLAG");
+            if (!problems.isEmpty()) certificateDetails.put("certificateProblems",String.join(",",problems));
+        }
+        if (notAfterMs>0) certificateDetails.put("notAfterMs",notAfterMs);
         checks.add(AuditCheckResult.of(
             "ssl.certificate.valid",
             "Validité du certificat SSL",
@@ -235,10 +245,10 @@ public class SslLabsModuleAnalyzer {
             0.0,
             List.of(),
             certIssues >= 0 ? certIssues == 0 : null,
-            certIssues >= 0 ? Map.of("issues", certIssues) : Map.of(),
+            certificateDetails,
             certIssues < 0 ? "Validité du certificat indéterminée."
                 : certIssues == 0 ? "Le certificat SSL ne présente aucun problème."
-                : "Le certificat SSL présente " + certIssues + " problème(s).",
+                : "SSL Labs signale un défaut du certificat : " + certificateDetails.get("certificateProblems") + ".",
             certIssues > 0 ? "Corrigez les problèmes du certificat SSL (chaîne, révocation, expiration)." : null
         ));
 

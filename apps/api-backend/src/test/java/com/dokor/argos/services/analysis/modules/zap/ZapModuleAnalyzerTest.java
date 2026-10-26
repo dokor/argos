@@ -21,6 +21,25 @@ import static org.mockito.Mockito.when;
  * des faux positifs (confidence=0) et conservation de la gravité maximale (issue #157).
  */
 class ZapModuleAnalyzerTest {
+    @Test void preservesEveryMatchingBodyLocationAndPeerHeaderWithoutPublishingTheirContent() throws Exception {
+        var client=mock(ZapClient.class);
+        when(client.analyze(org.mockito.ArgumentMatchers.any(AuditContext.class))).thenReturn(MAPPER.readTree("""
+          {"alerts":[{"pluginId":"90099","risk":"Low","evidence":"private-value"},
+          {"pluginId":"90098","risk":"Low","evidence":"server-version"},
+          {"pluginId":"90098","risk":"Low","evidence":"engine-version"}]}
+          """));
+        String body="<html>\n<p>private-value</p>\n<p>private-value</p></html>";
+        var context=ctx().withHttpResult("https://example.com/",200,1,java.util.List.of(),java.util.Map.of("server","server-version","x-powered-by","engine-version"),body);
+        var result=new ZapModuleAnalyzer(client).analyze(context,LoggerFactory.getLogger("test"));
+        var details=check(result,"zap.alert.90099").orElseThrow().details();
+        assertEquals("2:4,3:4",details.get("responseBodyLocations"));
+        for(String coordinate:details.get("responseBodyLocations").toString().split(",")) {
+            var parts=coordinate.split(":");
+            assertTrue(body.split("\n")[Integer.parseInt(parts[0])-1].substring(Integer.parseInt(parts[1])-1).startsWith("private-value"));
+        }
+        assertEquals("server,x-powered-by",check(result,"zap.alert.90098").orElseThrow().details().get("responseHeaders"));
+        assertFalse(MAPPER.writeValueAsString(details).contains("private-value"));
+    }
     @Test void alertEvidenceLocatesTheRealResponseWithoutPublishingCookieNamesOrBodyValues() throws Exception {
         var client=mock(ZapClient.class);
         when(client.analyze(org.mockito.ArgumentMatchers.any(AuditContext.class))).thenReturn(MAPPER.readTree("""

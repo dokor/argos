@@ -1,6 +1,6 @@
 import type { Issue } from "./types";
 import type { Lang } from "@/lib/i18n/routes";
-import { headerTargets, documentTargets } from './findingTargets';
+import { headerTargets, documentTargets, pageTargets, isPageTiming } from './findingTargets';
 
 export function isAggregateFinding(key?: string | null) {
   return !!key && (key.startsWith("lighthouse.score.") || key === "ssl.grade" || key === "observatory.score");
@@ -79,7 +79,7 @@ export function missingLocation(issue: Issue, lang: Lang) {
   if (issue.id?.startsWith('lighthouse.score.')) return lang === 'fr'
     ? 'Ce score résume plusieurs contrôles de cette page. Traiter les constats Lighthouse détaillés du même domaine ; le score seul ne désigne aucun élément à modifier.'
     : 'This score summarises several checks on this page. Address the detailed Lighthouse findings in the same category; the score alone identifies no element to change.';
-  if (Object.hasOwn(headerTargets,issue.id??'') || Object.hasOwn(documentTargets,issue.id??'')) return '';
+  if (Object.hasOwn(headerTargets,issue.id??'') || Object.hasOwn(documentTargets,issue.id??'') || Object.hasOwn(pageTargets,issue.id??'') || isPageTiming(issue.id) || issue.id==='lighthouse.audit.robots-txt') return '';
   if (issue.structuredEvidence?.details?.some(d=>['responseHeader','responseBodyLine','probePath','exposed'].includes(d.key)&&d.text)) return '';
   if (['zap.alert.10055','zap.alert.10037'].includes(issue.id ?? '')) return '';
   if (issue.id?.startsWith('ssl.') && issue.structuredEvidence?.details?.some(d => d.key === 'selectedEndpoint' && d.text)) return '';

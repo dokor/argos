@@ -161,6 +161,8 @@ public class ZapModuleAnalyzer {
         private final List<Map<String,String>> elements = new ArrayList<>();
         private final java.util.Set<Integer> cookieIndexes = new java.util.LinkedHashSet<>();
         private final Map<String,Object> responseLocation = new LinkedHashMap<>();
+        private final java.util.Set<String> responseLocations = new java.util.LinkedHashSet<>();
+        private final java.util.Set<String> responseHeaders = new java.util.LinkedHashSet<>();
 
         ZapFinding(String key, String pluginId) {
             this.key = key;
@@ -199,6 +201,8 @@ public class ZapModuleAnalyzer {
             details.put("measurementConfidence", switch (confidenceLevel) { case 1 -> "LOW"; case 2 -> "MEDIUM"; case 3 -> "HIGH"; default -> "UNKNOWN"; });
             details.put("instances", instances);
             details.putAll(responseLocation);
+            if (!responseLocations.isEmpty()) details.put("responseBodyLocations",String.join(",",responseLocations));
+            if (!responseHeaders.isEmpty()) details.put("responseHeaders",String.join(",",responseHeaders));
             if (!cookieIndexes.isEmpty()) details.put("cookieIndexes", cookieIndexes);
             details.put("urls", urls.isEmpty() ? List.of(fallbackUrl) : urls);
             if (!description.isBlank()) details.put("description", description);
@@ -255,18 +259,24 @@ public class ZapModuleAnalyzer {
             return;
         }
         String evidence = alert.path("evidence").asText();
-        if (evidence.isBlank() || evidence.length()>512 || !finding.responseLocation.isEmpty()) return;
+        if (evidence.isBlank() || evidence.length()>512) return;
         for (var header : context.headers().entrySet()) {
             if (header.getKey().matches("[a-zA-Z][a-zA-Z0-9-]{0,79}") && header.getValue().contains(evidence)) {
-                finding.responseLocation.put("responseHeader", header.getKey());
+                finding.responseLocation.putIfAbsent("responseHeader", header.getKey());
+                if(finding.responseHeaders.size()<10)finding.responseHeaders.add(header.getKey());
                 return;
             }
         }
         String body = context.body();
         int offset = body == null ? -1 : body.indexOf(evidence);
-        if (offset >= 0) {
-            finding.responseLocation.put("responseBodyLine", 1 + body.substring(0,offset).chars().filter(c -> c=='\n').count());
-            finding.responseLocation.put("responseBodyColumn", offset-body.lastIndexOf('\n',offset));
+        int occurrences = 0;
+        while (offset >= 0 && finding.responseLocations.size()<10 && occurrences++<10) {
+            long line=1 + body.substring(0,offset).chars().filter(c -> c=='\n').count();
+            int column=offset-body.lastIndexOf('\n',offset);
+            finding.responseLocation.putIfAbsent("responseBodyLine",line);
+            finding.responseLocation.putIfAbsent("responseBodyColumn",column);
+            finding.responseLocations.add(line+":"+column);
+            offset=body.indexOf(evidence,offset+evidence.length());
         }
     }
 
