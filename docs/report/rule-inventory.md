@@ -80,4 +80,4 @@ Les littéraux sont inventoriés de manière conservatrice, y compris contrôles
 | tech.http.server_header | tech | 0 | explicit-fallback-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:264 |
 | tech.security.version_disclosure | tech | 3 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:285 |
 | zap.collect | zap | 0 | explicit-fallback-fr-en | Availability stub from orchestrator |
-| zap.scan.result | zap | 0 | explicit-fallback-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/zap/ZapModuleAnalyzer.java:105 |
+| zap.scan.result | zap | 0 | explicit-fallback-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/zap/ZapModuleAnalyzer.java:113 |

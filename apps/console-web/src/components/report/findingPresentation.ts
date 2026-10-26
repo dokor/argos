@@ -69,6 +69,8 @@ export function describeObservation(issue: Issue, title: string, lang: Lang) {
     : (fr ? "mesure détaillée non conservée." : "detailed measurement not retained."))}`;
 }
 export function missingLocation(issue: Issue, lang: Lang) {
+  if (['zap.alert.10055','zap.alert.10037'].includes(issue.id ?? '')) return '';
+  if (issue.id?.startsWith('ssl.') && issue.structuredEvidence?.details?.some(d => d.key === 'selectedEndpoint' && d.text)) return '';
   if (issue.id?.startsWith('ssl.')) return lang === 'fr'
     ? 'À examiner : le certificat et la configuration TLS des serveurs ou du CDN qui répondent pour le domaine audité. Retrouver la terminaison concernée dans le diagnostic SSL Labs.'
     : 'Inspect the certificate and TLS configuration of the servers or CDN responding for the audited domain. Locate the affected endpoint in the SSL Labs diagnosis.';

@@ -208,13 +208,53 @@ public class LighthouseModuleAnalyzer {
             details.put("weight", c.weight());
             JsonNode raw = audits.path(c.id());
             var observed = ObservedEvidence.from(raw.path("observedEvidence"));
+            if (observed == null || observed.items().isEmpty()) {
+                String related = switch (c.id()) {
+                    case "largest-contentful-paint" -> "lcp-breakdown-insight";
+                    case "total-blocking-time", "max-potential-fid" -> "long-tasks";
+                    default -> null;
+                };
+                if (related != null) {
+                    var relatedEvidence = ObservedEvidence.from(audits.path(related).path("observedEvidence"));
+                    if (relatedEvidence != null && !relatedEvidence.items().isEmpty()) {
+                        observed = relatedEvidence;
+                        details.put("relatedAudit", related);
+                    }
+                }
+            }
             if (observed != null && "lighthouse".equals(observed.source())) details.put("observed", observed);
+            if ("bf-cache".equals(c.id())) {
+                var reasons = new LinkedHashSet<String>();
+                boolean onlyNonActionable = raw.path("details").path("items").isArray() && !raw.path("details").path("items").isEmpty();
+                for (JsonNode item : raw.path("details").path("items")) {
+                    String reason = item.path("protocolReason").asText();
+                    if (reason.matches("[A-Za-z][A-Za-z0-9]{0,119}") && reasons.size() < 10) reasons.add(reason);
+                    // Lighthouse runs in French; accept the original English label too.
+                    // Unknown labels remain findings, never silently classified as harmless.
+                    onlyNonActionable &= Set.of("Aucune action possible", "Not actionable").contains(item.path("failureType").asText());
+                }
+                if (!reasons.isEmpty()) details.put("bfCacheReasons", String.join(",", reasons));
+                if (onlyNonActionable) {
+                    status = AuditStatus.INFO;
+                    severity = AuditSeverity.LOW;
+                    details.put("actionability", "NOT_ACTIONABLE");
+                }
+            }
             if (raw.path("numericValue").isNumber() && Double.isFinite(raw.path("numericValue").asDouble())) {
                 details.put("numericValue", raw.path("numericValue").asDouble());
+                if ("metricSavings".equals(raw.path("scoreDisplayMode").asText())) details.put("measurementKind", "estimatedSavings");
                 String unit = JsonNodes.nonBlankText(raw.path("numericUnit"));
                 if (unit != null) details.put("numericUnit", unit);
             }
             if (Set.of("largest-contentful-paint", "lcp-discovery-insight", "lcp-breakdown-insight").contains(c.id())) {
+                for (JsonNode section : audits.path("lcp-breakdown-insight").path("details").path("items")) {
+                    for (JsonNode part : section.path("items")) {
+                        String name = part.path("subpart").asText();
+                        double duration = part.path("duration").asDouble(-1);
+                        if (Set.of("timeToFirstByte", "resourceLoadDelay", "resourceLoadDuration", "elementRenderDelay").contains(name)
+                            && Double.isFinite(duration) && duration >= 0 && duration <= 1e9) details.put("lcpPhase." + name, duration);
+                    }
+                }
                 details.put(FindingDetection.DETAIL_KEY, FindingDetection.create("lighthouse.audit." + c.id(),
                     "lighthouse-audit-selection-v1", "lighthouse", JsonNodes.nonBlankText(lhr.path("lighthouseVersion")),
                     "LIGHTHOUSE_NAVIGATION", "SCORE_BELOW_THRESHOLD", Map.of("score", c.score(),

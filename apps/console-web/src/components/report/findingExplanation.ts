@@ -57,6 +57,18 @@ export function findingExplanation(issue: Issue, lang: Lang): Explanation {
   const current = fr
     ? 'Référentiel des collecteurs actuels. La version exacte de cette règle n’est pas conservée dans la fiche ; un rapport historique peut utiliser une autre méthode.'
     : 'Current collector reference. The exact version of this rule is not retained in the finding; a historical report may use another method.';
+  if (issue.id === 'lighthouse.audit.bf-cache') {
+    const codes = (issue.structuredEvidence?.details?.find(d => d.key === 'bfCacheReasons')?.text ?? '').split(',').filter(code => /^[A-Za-z][A-Za-z0-9]{0,119}$/.test(code));
+    const noStore = codes.some(code => ['MainResourceHasCacheControlNoStore', 'JsNetworkRequestReceivedCacheControlNoStoreResource'].includes(code));
+    if (noStore) return { ...p, methodNote: current,
+      observation: fr ? 'Lighthouse a relevé Cache-Control: no-store sur le document ou une réponse chargée par JavaScript pendant le test arrière/avant.' : 'Lighthouse detected Cache-Control: no-store on the document or a response loaded by JavaScript during the back/forward test.',
+      steps: [fr ? 'Dans Réseau, ouvrir la requête du document de la page analysée et vérifier son en-tête Cache-Control. Examiner aussi les réponses fetch/XHR marquées no-store ; le rapport ne conserve pas leur URL exacte.' : 'In Network, open the analysed page’s document request and check its Cache-Control header. Also inspect fetch/XHR responses marked no-store; their exact URLs are not retained in this report.',
+        fr ? 'Si no-store protège une session ou des données personnelles, le conserver. Pour une réponse publique, examiner la règle de cache de cette route dans le serveur, le reverse proxy ou le CDN avant de la modifier.' : 'Keep no-store when it protects a session or personal data. For a public response, review that route’s cache rule in the server, reverse proxy or CDN before changing it.',
+        fr ? 'Dans Application → Cache arrière/avant, rejouer le test et lire le motif courant. Si Chrome indique une condition sans action possible, aucune suppression automatique de no-store n’est justifiée.' : 'In Application → Back/forward cache, repeat the test and read the current reason. If Chrome reports a non-actionable condition, automatically removing no-store is not justified.'],
+      expected: fr ? 'Rejouer une navigation arrière/avant dans le navigateur cible et vérifier le motif de non-restauration. Confirmer que les données privées ne sont jamais réaffichées après déconnexion.' : 'Repeat back/forward navigation in the target browser and check the not-restored reason. Confirm private data never reappears after logout.',
+      missingInformation: fr ? `Motifs enregistrés : ${codes.join(', ')}. Le détail des requêtes JavaScript et des frames reste à confirmer dans le navigateur.` : `Recorded reasons: ${codes.join(', ')}. JavaScript requests and frame details still need confirmation in the browser.`,
+    };
+  }
   if (issue.id?.startsWith('zap.alert.')) {
     const detail = (key: string) => cleanEvidence(issue.structuredEvidence?.details?.find(d => d.key === key)?.text).trim();
     const description = detail('description');
@@ -64,12 +76,16 @@ export function findingExplanation(issue: Issue, lang: Lang): Explanation {
     const solution = /^(Examinez et corrigez ce problème|Corriger selon les bonnes pratiques)/i.test(retained) ? '' : retained;
     const plugin = issue.id.slice('zap.alert.'.length);
     const sourceLabel = fr ? 'ZAP, texte source (langue d’origine)' : 'ZAP source text (original language)';
+    const contextualGuide = ['10055','10202','10037'].includes(plugin);
     return { ...p, specific: p.specific || !!solution, methodNote: current,
       reference: /^\d{1,8}$/.test(plugin) ? `https://www.zaproxy.org/docs/alerts/${plugin}/` : p.reference,
-      ...(description ? { observation: `${sourceLabel} : ${description}`,
+      ...(description ? { observation: contextualGuide ? (plugin === '10202'
+        ? (fr ? 'ZAP n’a pas reconnu de jeton anti-CSRF dans les formulaires signalés du HTML reçu. La protection effective côté serveur reste à vérifier.' : 'ZAP did not recognise an anti-CSRF token in the flagged forms in received HTML. Effective server-side protection still needs verification.')
+        : plugin === '10037' ? (fr ? 'La réponse de cette page expose le logiciel serveur dans X-Powered-By.' : 'This page’s response exposes server software in X-Powered-By.')
+        : (fr ? 'ZAP signale les directives CSP détaillées ci-dessous sur la réponse de cette page.' : 'ZAP flags the CSP directives detailed below on this page’s response.')) : `${sourceLabel} : ${description}`,
         impact: p.impact ?? (fr ? 'Le risque décrit par ZAP ci-dessus concerne les réponses observées. Confirmer les conditions et les utilisateurs concernés avant de choisir la priorité.' : 'The risk described by ZAP above concerns observed responses. Confirm the conditions and affected users before choosing priority.') } : {}),
       summary: p.summary ?? (solution ? `${sourceLabel} : ${solution}` : (fr ? 'La solution de cette règle ZAP n’a pas été conservée. Ouvrir sa documentation avant de choisir une modification.' : 'This ZAP rule’s solution was not retained. Open its documentation before choosing a change.')),
-      steps: p.specific ? [...p.steps, ...(solution ? [`${sourceLabel} : ${solution}`] : [])] : [fr ? 'Retrouver la réponse concernée dans Réseau et comparer le motif de la règle ZAP avec les en-têtes ou le contenu reçus.' : 'Locate the affected response in Network and compare the ZAP rule’s reason with received headers or content.',
+      steps: p.specific ? [...p.steps, ...(solution && !contextualGuide ? [`${sourceLabel} : ${solution}`] : [])] : [fr ? 'Retrouver la réponse concernée dans Réseau et comparer le motif de la règle ZAP avec les en-têtes ou le contenu reçus.' : 'Locate the affected response in Network and compare the ZAP rule’s reason with received headers or content.',
         solution ? `${sourceLabel} : ${solution}` : (fr ? 'Solution spécifique indisponible dans ce rapport : consulter la règle de référence ou relancer la collecte. Aucun changement de configuration ne peut être déduit de la seule gravité.' : 'Specific solution unavailable in this report: consult the reference rule or repeat collection. Severity alone cannot determine a configuration change.')],
       expected: p.specific ? p.expected : (fr ? `Rejouer la même requête après correction et vérifier le comportement décrit par la règle ${plugin}. Relancer l’analyse passive : le signal ciblé doit disparaître sans casser le parcours légitime.` : `Repeat the same request after the fix and verify the behaviour described by rule ${plugin}. Rerun passive analysis: the targeted signal should disappear without breaking the legitimate journey.`),
     };

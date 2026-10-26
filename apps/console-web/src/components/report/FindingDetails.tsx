@@ -2,6 +2,7 @@
 import Link from "@/components/PageLink";
 import ObservedEvidence from "./ObservedEvidence";
 import FindingGuide from "./FindingGuide";
+import FindingLocation from "./FindingLocation";
 import { correctionGuide } from "@/lib/correctionGuides";
 import { useLang } from "@/lib/i18n/LangContext";
 import { CATALOGUE_VERSION, cleanEvidence, findingContent } from "./findingCatalogue";
@@ -10,7 +11,7 @@ import { reportReadingCopy } from "./reportReadingCopy";
 import type { Finding } from "./reportModel";
 import s from "./FindingDetails.module.scss";
 
-export default function FindingDetails({ finding }: { finding: Finding }) {
+export default function FindingDetails({ finding, pageUrl }: { finding: Finding; pageUrl?: string }) {
   const { t, lang } = useLang(), fr=lang==="fr";
   const copy=reportReadingCopy[lang], questions=copy.findingQuestions;
   const issue=finding.issue, guide=correctionGuide(issue.id,lang);
@@ -26,9 +27,10 @@ export default function FindingDetails({ finding }: { finding: Finding }) {
       <section className={s.question} aria-label={questions.observation}>
         <h3>{questions.observation}</h3>
         <p>{content.observation}</p>
-        {validMeasure&&<p className={s.measurement}>{measure.value.toLocaleString(lang,{maximumSignificantDigits:6})} {copy.units[measure.unit]}</p>}
+        {validMeasure&&<p className={s.measurement}>{evidence?.details?.some(d=>d.key==='measurementKind'&&d.text==='estimatedSavings')&&(fr?'Économie estimée : ':'Estimated savings: ')}{measure.value.toLocaleString(lang,{maximumSignificantDigits:6})} {copy.units[measure.unit]}</p>}
         {!validMeasure&&expectsScalarMeasurement(issue)&&<p className={s.context}>{copy.missingMeasure}</p>}
-        {issue.evidence&&<p className={s.sourceObservation}>{cleanEvidence(issue.evidence)}</p>}
+        <FindingLocation issue={issue} pageUrl={pageUrl} lang={lang}/>
+        {issue.evidence&&!evidence&&<p className={s.sourceObservation}>{cleanEvidence(issue.evidence)}</p>}
         <ObservedEvidence evidence={observed} lang={lang}/>
         {!observed?.items.length&&content.missingInformation&&<p className={s.context}>{content.missingInformation}</p>}
       </section>
@@ -58,6 +60,7 @@ export default function FindingDetails({ finding }: { finding: Finding }) {
           <p>{copy.technicalTitle}: {cleanEvidence(issue.title)}</p>
           {issue.impact&&<p>{copy.originalObservation}: {cleanEvidence(issue.impact)}</p>}
           {issue.id&&<p>{copy.technicalId}: <code>{cleanEvidence(issue.id)}</code></p>}
+          {issue.evidence&&evidence&&<p className={s.sourceObservation}>{cleanEvidence(issue.evidence)}</p>}
           <p>{copy.catalogueVersion}: {CATALOGUE_VERSION}</p>
           {!!evidence?.details?.length&&<dl className={s.rawFacts}>{evidence.details.map((detail,index)=>
             <div key={index}><dt><code>{detail.key==="score"&&issue.id?.startsWith("lighthouse.audit.")?copy.lighthouseRatio:cleanEvidence(detail.key)}</code></dt><dd>{cleanEvidence(detail.text)}</dd></div>)}</dl>}

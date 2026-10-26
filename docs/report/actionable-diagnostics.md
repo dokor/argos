@@ -79,6 +79,36 @@ la solution de leur source avec sa langue d’origine explicitement indiquée. U
 sans solution ne reçoit plus une fausse recommandation « corriger selon les bonnes pratiques ».
 Les alias ZAP vers les en-têtes HTTP conservent les procédures dédiées existantes.
 
+### Emplacements conservés pendant une collecte réelle
+
+L'extracteur Lighthouse conserve les fichiers des arbres `chains`/`children`, les
+positions ligne/colonne des localisations de code et les durées de tâches longues.
+Un résultat LCP sans élément propre utilise uniquement la décomposition LCP du
+même passage ; TBT et Max Potential FID utilisent les tâches longues de ce passage.
+La fiche affiche leur provenance et distingue durée, phases observées et économies
+estimées. Plusieurs positions d'un même fichier sont regroupées sans les perdre.
+Le document racine `/` peut être désigné sans exposer un chemin privé.
+
+Les échecs bfcache conservent leurs motifs. Un ensemble explicitement classé
+« Aucune action possible » / « Not actionable » par Lighthouse reste informatif.
+Un ensemble mixte ou un libellé inconnu conserve le traitement habituel ; aucun
+motif inconnu n'est déclaré inoffensif. La fiche n'incite pas à supprimer
+`Cache-Control: no-store` des réponses privées.
+
+ZAP accepte les niveaux numériques des exports et les libellés de son API réelle.
+Un risque inconnu rend le module indisponible plutôt que de produire un faux
+résultat sain. La confiance de la source est conservée. Les sous-alertes CSP du
+même plugin gardent leurs motifs, directives et procédures spécifiques. Pour
+l'absence de jeton CSRF, le numéro de formulaire signalé et sa balise sont vérifiés
+contre le HTML collecté avant de produire un sélecteur structurel ; aucune valeur
+de champ ni balise brute n'est publiée. Le signal impose de vérifier la protection
+serveur et ne suffit pas à conclure à une faille exploitable.
+
+La fiche TLS expose l'hôte, le serveur retenu et la date d'expiration auprès de la
+correction. Les fichiers, sélecteurs et cibles restent visibles sans ouvrir les
+détails de méthode. La [recette réelle](../testing/report.md#vérifier-les-emplacements-sur-une-collecte-réelle)
+décrit comment vérifier ces cibles au-delà de la présence des textes.
+
 `findingCoverage.test.ts` contrôle les clés des analyseurs et le catalogue Lighthouse.
 `apps/lighthouse-service/reportable-audits.test.mjs` confronte ce catalogue à la configuration
 et aux métadonnées du paquet installé ; une évolution de Lighthouse ne peut pas passer silencieusement.

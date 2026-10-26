@@ -60,3 +60,50 @@ conserve ses captures et ses limites. Le contrôle automatisé ne remplace pas u
 ## Progression et réussite des modules (#588)
 
 `scores.completeness` reste le pourcentage de collectes entièrement réussies. `scores.moduleExecution`, optionnel pour les rapports historiques, expose les comptes total/completed/partial/failed/skipped/pending/running et terminalPercent. Les états internes PARTIAL, FAILED, UNAVAILABLE, TIMEOUT et SKIPPED terminent la progression sans devenir des réussites. Méthode et limites et les deux formats d’export partagent les mêmes libellés FR/EN. Le cas 6 COMPLETED + 2 erreurs donne 75 % de réussite et 100 % de progression terminale, sans modifier la couverture pondérée.
+
+## Vérifier les emplacements sur une collecte réelle
+
+La couverture des textes ne prouve pas qu'un développeur retrouve la cible. Pour une
+recette réelle, contrôler chaque constat émis dans le navigateur et sur le serveur :
+URL effective, fichier réellement servi, sélecteur correspondant au bon élément,
+en-tête et directive, ou certificat présenté avec le nom d'hôte. Relier ensuite
+chaque preuve à une modification concrète et à une vérification après correction.
+Ne pas présenter un signal passif comme une vulnérabilité confirmée.
+
+`scripts/review/LiveAudit.java` est un lanceur manuel fixé à la page publique Argos.
+Il appelle les huit analyseurs, la fusion, le score, le compositeur et l'assainissement
+de production. Il ne teste ni la file, ni la base, ni les comptes, ni la transaction
+de publication. Aucun résultat d'outil n'est simulé ; les services indisponibles
+restent indisponibles dans le rapport. L'exécution demande explicitement
+`--run-public-argos` et effectue de vraies requêtes réseau, y compris SSL Labs et
+Observatory. ZAP utilise l'import du snapshot HTTP pour son analyse passive.
+
+Préparer Java 21, le backend compilé, Playwright sur 3016, Lighthouse sur 3017 et
+un démon ZAP local sur 8080 avec l'extension Import/Export compatible avec
+`importHarData`. Configurer `AUDIT_EGRESS_PROXY`, `ARGOS_EXTERNAL_SCANS_ENABLED`
+et `ZAP_API_KEY` selon les contrats des services. Depuis `apps/api-backend`, créer
+le classpath avec `mvn dependency:build-classpath -Dmdep.outputFile=target/review-classpath.txt`.
+Depuis la racine, sous PowerShell :
+
+```powershell
+$reviewClasspath = (Get-Content apps/api-backend/target/review-classpath.txt -Raw).Trim() + ';apps/api-backend/target/classes'
+java --class-path $reviewClasspath scripts/review/LiveAudit.java --run-public-argos
+node scripts/review/verify-live-target.mjs
+```
+
+Les sorties assainies vont dans `outputs/live-audit/` (ignoré par Git). Le second
+script vérifie la réponse et le type des fichiers CSS/JS signalés, leurs positions
+ligne/colonne et le certificat TLS. Il ne prouve pas à lui seul que le code à cette
+position est la cause du problème : lire aussi l'audit et la procédure proposée.
+
+Pour afficher ce résultat, lancer le backend d'aperçu habituel sur 3018, puis
+`node scripts/review/live-audit-preview.mjs` sur 3019 et Next avec
+`API_BASE=http://127.0.0.1:3019`. Ouvrir `/report/review-real-argos?view=technical`.
+Seul ce rapport provient de la collecte réelle ; les autres réponses de l'aperçu
+restent fictives, en particulier les comptes. Le lecteur est limité à GET et à la
+boucle locale. Ne pas l'utiliser comme serveur de publication.
+
+Consigner dans `outputs/` la date, les états des huit collecteurs, les constats
+effectivement émis, leurs cibles vérifiées et les captures FR/EN sur ordinateur
+et mobile. Le bilan et ses limites accompagnent la PR. Un seul site ne valide pas
+toutes les règles possibles, les sites authentifiés, les domaines entiers ou le PDF.

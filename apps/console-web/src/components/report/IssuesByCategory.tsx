@@ -171,7 +171,7 @@ export default function IssuesByCategory({ report, model = buildReportModel(repo
                         <span className={s.chevron} aria-hidden="true">▾</span>
                       </summary>
 
-                      <FindingDetails finding={finding} />
+                      <FindingDetails finding={finding} pageUrl={report.pageIdentity?.destination || report.pageIdentity?.requested || report.url} />
                       <div className={s.issueFooter}>
                         <span>{copy.findingQuestions.severityProvenance}</span>
                         {issue.id && <ReportFeedback findingKey={issue.id} />}

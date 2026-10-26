@@ -570,7 +570,7 @@
     "sources": [
       "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:625",
       "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:873",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/zap/ZapModuleAnalyzer.java:25"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/zap/ZapModuleAnalyzer.java:26"
     ],
     "scorable": true,
     "weight": 10,
@@ -593,7 +593,7 @@
       "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:106",
       "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:377",
       "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:389",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/zap/ZapModuleAnalyzer.java:26"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/zap/ZapModuleAnalyzer.java:27"
     ],
     "scorable": true,
     "weight": 8,
@@ -651,7 +651,7 @@
     "key": "http.security.x_content_type_options",
     "sources": [
       "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:634",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/zap/ZapModuleAnalyzer.java:27"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/zap/ZapModuleAnalyzer.java:28"
     ],
     "scorable": true,
     "weight": 4,
@@ -671,7 +671,7 @@
     "key": "http.security.x_frame_options",
     "sources": [
       "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:643",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/zap/ZapModuleAnalyzer.java:28"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/zap/ZapModuleAnalyzer.java:29"
     ],
     "scorable": true,
     "weight": 6,
@@ -1374,7 +1374,7 @@
   {
     "key": "zap.scan.result",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/zap/ZapModuleAnalyzer.java:105"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/zap/ZapModuleAnalyzer.java:113"
     ],
     "scorable": false,
     "weight": 0,

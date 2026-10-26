@@ -3,6 +3,16 @@ import assert from 'node:assert/strict';
 import {lighthouseEvidence,resourceEvidence,safeResourcePath,safeSelector} from './evidence.mjs';
 import {resourceEvidence as runtimeResource} from '../playwright-service/evidence.mjs';
 
+test('real Lighthouse network-tree and source-location shapes retain usable targets', () => {
+ const tree=lighthouseEvidence({details:{type:'list',items:[{type:'list-section',value:{type:'network-tree',chains:{request:{url:'https://site.example/',children:{css:{url:'https://site.example/_next/static/chunks/main.css?token=hidden',navStartToEndTime:324,transferSize:15690,children:{font:{url:'https://site.example/assets/inter.woff2',navStartToEndTime:470}}}}}}}}]}});
+ assert.equal(tree.items[1].resourcePath,'/_next/static/chunks/main.css');
+ assert.equal(tree.items[1].metrics.navStartToEndTime,324);
+ assert.equal(tree.items[2].resourcePath,'/assets/inter.woff2');
+ assert.doesNotMatch(JSON.stringify(tree),/hidden|token=/);
+ const source=lighthouseEvidence({details:{items:[{url:'https://site.example/app.js',subItems:{items:[{location:{type:'source-location',url:'https://site.example/app.js',line:30,column:11592}}]}}]}});
+ assert.deepEqual(source.items[1].metrics,{sourceLine:31,sourceColumn:11593});
+});
+
 test('resource identities exclude credentials, query, fragment and raw path in both collectors',()=>{
  const input='https://user:password@site.example/private-person/secret-token.js?token=credential#fragment';
  const expected=resourceEvidence(input);

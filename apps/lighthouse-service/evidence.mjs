@@ -4,6 +4,7 @@ export const EVIDENCE_LIMIT = 10;
 // Actionable locations are an additive, bounded allowlist. Never retain query strings,
 // credentials, attribute selectors or page text. Old origin/ref-only reports remain valid.
 export function safeResourcePath(path) {
+  if (path === '/') return path; // The origin document has no private route segment.
   if (typeof path !== 'string' || path.length > 1024 || !path.startsWith('/') || path.startsWith('//')) return null;
   let decoded; try { decoded = decodeURIComponent(path); } catch { return null; }
   if (!/^\/[a-zA-Z0-9/_.~!$&()+,;=% -]+$/.test(path) || /[\\\\%?#@<>\u0000-\u001f\u007f]/.test(decoded)
@@ -17,7 +18,7 @@ export function safeSelector(value) {
       || /(?:token|secret|password|session|customer|email|private|\d{7,})/i.test(value)) return null;
   return /^(?:[a-zA-Z][a-zA-Z0-9-]*(?:[.#][a-zA-Z_][a-zA-Z0-9_-]{0,63})*(?::nth-(?:child|of-type)\([1-9][0-9]{0,4}\))?)(?:\s*>\s*(?:[a-zA-Z][a-zA-Z0-9-]*(?:[.#][a-zA-Z_][a-zA-Z0-9_-]{0,63})*(?::nth-(?:child|of-type)\([1-9][0-9]{0,4}\))?))*$/.test(value) ? value : null;
 }
-export const METRIC_KEYS = ['totalBytes', 'wastedBytes', 'wastedMs', 'transferSize', 'resourceSize', 'duration', 'width', 'height'];
+export const METRIC_KEYS = ['totalBytes', 'wastedBytes', 'wastedMs', 'transferSize', 'resourceSize', 'duration', 'width', 'height', 'navStartToEndTime', 'startTime'];
 function metrics(value) {
   return Object.fromEntries(METRIC_KEYS.filter(key => typeof value?.[key] === 'number'
     && Number.isFinite(value[key]) && value[key] >= 0 && value[key] <= 1e12).map(key => [key, value[key]]));
@@ -53,7 +54,7 @@ export function lighthouseEvidence(audit) {
     if(items.length<EVIDENCE_LIMIT) items.push(item); else truncated=true;
   }
   function visit(value, depth=0) {
-    if(depth>6 || inspected>=400) { truncated=true; return; }
+    if(depth>12 || inspected>=400) { truncated=true; return; }
     inspected++;
     if(!value || typeof value!=='object') return;
     if(value.type==='node') {
@@ -66,12 +67,26 @@ export function lighthouseEvidence(audit) {
       const resource = resourceEvidence(url);
       const path = resource && safeResourcePath(new URL(url).pathname);
       const measured = metrics(value);
+      // Lighthouse source-location coordinates are zero-based; display coordinates are one-based.
+      if (value.type === 'source-location') for (const key of ['line', 'column']) {
+        if (Number.isSafeInteger(value[key]) && value[key] >= 0 && value[key] < 1e7)
+          measured[key === 'line' ? 'sourceLine' : 'sourceColumn'] = value[key] + 1;
+      }
       if (resource) retain({...resource, ...(path ? {resourcePath:path} : {}),
         ...(Object.keys(measured).length ? {metrics:measured} : {})});
     }
     // Only known detail containers, never arbitrary audit strings or screenshot data.
     if(Array.isArray(value)) { for(const item of value) { visit(item,depth+1); if(inspected>=400) {truncated=true;break;} } }
-    else for(const key of ['items','node','subItems','value','source','location']) if(Object.hasOwn(value,key)) visit(value[key],depth+1);
+    else {
+      for(const key of ['items','node','subItems','value','source','location']) if(Object.hasOwn(value,key)) visit(value[key],depth+1);
+      // Network trees use request-id keyed dictionaries, not the table's `items` array.
+      for (const key of ['chains', 'children']) if (value[key] && typeof value[key] === 'object') {
+        for (const child of Object.values(value[key])) {
+          visit(child, depth + 1);
+          if (inspected >= 400) { truncated = true; break; }
+        }
+      }
+    }
   }
   visit(audit?.details);
   return evidenceEnvelope('lighthouse',items,inspected,truncated);

@@ -21,6 +21,41 @@ import static org.mockito.Mockito.when;
  * des faux positifs (confidence=0) et conservation de la gravité maximale (issue #157).
  */
 class ZapModuleAnalyzerTest {
+    @Test void acceptsRealCoreApiRiskLabelsAndRetainsEachCspReason() throws Exception {
+        var result = analyze("""
+          {"alerts":[{"pluginId":"10055","alert":"CSP: Wildcard Directive","risk":"Medium","confidence":"High","other":"script-src-elem is missing."},
+          {"pluginId":"10055","alert":"CSP: style-src unsafe-inline","risk":"Medium","confidence":"High","other":"style-src includes unsafe-inline."},
+          {"pluginId":"10037","risk":"Low","confidence":"Medium"},
+          {"pluginId":"90001","risk":"High","confidence":"False Positive"}]}
+          """);
+        var csp = check(result,"zap.alert.10055").orElseThrow();
+        assertEquals(AuditStatus.WARN,csp.status());
+        assertEquals("HIGH",csp.details().get("measurementConfidence"));
+        assertTrue(csp.details().get("policyFindings").toString().contains("script-src-elem"));
+        assertTrue(csp.details().get("policyFindings").toString().contains("unsafe-inline"));
+        assertEquals(AuditStatus.WARN,check(result,"zap.alert.10037").orElseThrow().status());
+        assertTrue(check(result,"zap.alert.90001").isEmpty());
+        assertThrows(ModuleUnavailableException.class,()->analyze("{\"alerts\":[{\"pluginId\":\"1\",\"risk\":\"unexpected\"}]}"));
+    }
+
+    @Test void resolvesTheActualReportedFormWithoutRetainingItsInputValues() throws Exception {
+        var client = mock(ZapClient.class);
+        when(client.analyze(org.mockito.ArgumentMatchers.any(AuditContext.class))).thenReturn(MAPPER.readTree("""
+          {"alerts":[{"pluginId":"10202","risk":"Medium","confidence":"Low","evidence":"<form method='post'>","other":"No known token in [Form 2: secret-name]"}]}
+          """));
+        var context=ctx().withHttpResult("https://example.com/",200,1,java.util.List.of(),java.util.Map.of(),
+            "<html><body><main><form method='get'></form><form method='post'><input value='private-value'></form></main></body></html>");
+        var result=new ZapModuleAnalyzer(client).analyze(context,LoggerFactory.getLogger("test"));
+        var check=check(result,"zap.alert.10202").orElseThrow();
+        var evidence=(com.dokor.argos.services.analysis.model.ObservedEvidence)check.details().get("observed");
+        String selector=evidence.items().getFirst().selector();
+        var selected=org.jsoup.Jsoup.parse(context.body()).select(selector);
+        assertEquals(1,selected.size());
+        assertEquals("post",selected.first().attr("method"));
+        assertFalse(MAPPER.writeValueAsString(evidence).contains("private-value"));
+        assertFalse(MAPPER.writeValueAsString(evidence).contains("secret-name"));
+    }
+
     @Test void retainsTheExplanationAndSolutionAsSafePlainText() throws Exception {
         var result = analyze("""
             {"alerts":[{"pluginId":"10098","alert":"CORS","riskcode":"2","confidence":"2",

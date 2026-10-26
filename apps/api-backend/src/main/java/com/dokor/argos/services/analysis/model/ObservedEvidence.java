@@ -50,8 +50,9 @@ public record ObservedEvidence(
     }
 
     private static final Set<String> METRICS = Set.of("totalBytes", "wastedBytes", "wastedMs",
-        "transferSize", "resourceSize", "duration", "width", "height");
+        "transferSize", "resourceSize", "duration", "width", "height", "navStartToEndTime", "startTime", "sourceLine", "sourceColumn");
     public static String safeResourcePath(String path) {
+        if ("/".equals(path)) return path;
         if (path == null || path.length() > 1024 || !path.startsWith("/") || path.startsWith("//")
             || !path.matches("/[a-zA-Z0-9/_.~!$&()+,;=% -]+")) return null;
         try {
@@ -83,7 +84,7 @@ public record ObservedEvidence(
         if (value == null) return null; // Historical reports have no new collection metadata.
         JsonNode n = value instanceof JsonNode j ? j : MAPPER.valueToTree(value);
         if (!"observed-evidence-v1".equals(n.path("version").asText())
-                || !Set.of("lighthouse", "runtime").contains(n.path("source").asText())
+                || !Set.of("lighthouse", "runtime", "zap").contains(n.path("source").asText())
                 || !n.path("items").isArray()) return null;
         List<Item> items = new ArrayList<>();
         boolean truncated = n.path("truncated").asBoolean() || n.path("items").size() > 10;
@@ -119,7 +120,7 @@ public record ObservedEvidence(
                         || !path.matches(
                                 "(?:[0-9]{1,5},[A-Z][A-Z0-9-]{0,31})(?:,[0-9]{1,5},[A-Z][A-Z0-9-]{0,31})*"))
                     path = null;
-                if (path == null && (!"lighthouse".equals(n.path("source").asText()) || safeSelector(raw.path("selector").asText()) == null)) continue;
+                if (path == null && (!Set.of("lighthouse", "zap").contains(n.path("source").asText()) || safeSelector(raw.path("selector").asText()) == null)) continue;
             } else continue;
             int code = raw.path("status").isIntegralNumber() ? raw.path("status").asInt(-1) : -1;
             String reason = raw.path("reason").asText(),
@@ -136,7 +137,7 @@ public record ObservedEvidence(
                             TYPES.contains(type) ? type : null,
                             Set.of("FIRST_PARTY", "THIRD_PARTY").contains(owner) ? owner : null,
                             "lighthouse".equals(n.path("source").asText()) && "resource".equals(kind) ? safeResourcePath(raw.path("resourcePath").asText()) : null,
-                            "lighthouse".equals(n.path("source").asText()) && "element".equals(kind) ? safeSelector(raw.path("selector").asText()) : null,
+                            Set.of("lighthouse", "zap").contains(n.path("source").asText()) && "element".equals(kind) ? safeSelector(raw.path("selector").asText()) : null,
                             "lighthouse".equals(n.path("source").asText()) ? metrics(raw.path("metrics")) : null));
         }
         int inspected = Math.max(0, Math.min(1000000, n.path("inspected").asInt()));
