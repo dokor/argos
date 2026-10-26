@@ -69,7 +69,11 @@ try {
     assert.ok(await dom.evaluate(el=>el.open));
     await openEvidence(dom,page,lang);
     await dom.locator('[data-observed-evidence]').waitFor();
-    assert.ok((await dom.locator('[data-observed-evidence]').textContent()).includes('1,HTML,1,BODY,2,MAIN,4,IMG'));
+    const locate=dom.getByText(lang==='fr'?'Retrouver précisément cet élément':'Locate this exact element',{exact:true});
+    await locate.focus();await page.keyboard.press('Enter');
+    const command=locate.locator('..').locator('code');
+    assert.ok(await command.isVisible(),'Exact DOM location must be accessible with the keyboard');
+    assert.equal(await command.textContent(),"inspect([1,1,2,4].reduce((n,i)=>[...n.childNodes].filter(c=>c.nodeType!==3||c.textContent.trim())[i],document))",'The actionable command must retain every index from the recorded DOM path');
     await dom.locator('[data-observed-evidence]').screenshot({path:`${output}/dom-${lang}-${colorScheme}-${width}.png`});
     if(width===390 && lang==='en' && colorScheme==='dark') for(const edge of [320,768]) {
       await page.setViewportSize({width:edge,height:900});

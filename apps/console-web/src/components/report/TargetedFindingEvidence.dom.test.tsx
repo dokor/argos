@@ -1,14 +1,23 @@
 // @vitest-environment jsdom
 import {render,screen,cleanup,within} from '@testing-library/react';
 import {afterEach,expect,it} from 'vitest';
-import corpus from '../../../../api-backend/src/test/resources/targeted-rules/lighthouse-cases.json';
-import coverage from '../../../../../docs/report/targeted-rule-coverage.json';
+import {readFileSync} from 'node:fs';
+import {URL as NodeURL} from 'node:url';
 import catalogue from './lighthouseAuditCatalogue.json';
 import {LangProvider} from '@/lib/i18n/LangContext';
 import FindingDetails from './FindingDetails';
 import {findingExplanation} from './findingExplanation';
 import {documentTargets,pageTargets} from './findingTargets';
 import type {Issue,ObservedEvidence} from './types';
+
+// Shared repository fixtures are test inputs, not frontend build dependencies.
+// Read them at test runtime so the standalone Docker context can still type-check.
+const corpus=JSON.parse(readFileSync(new NodeURL('../../../../api-backend/src/test/resources/targeted-rules/lighthouse-cases.json',import.meta.url),'utf8')) as Array<{
+ id:string; expectedTargets?:string[]; semanticTarget?:boolean; before:{observedEvidence:ObservedEvidence};
+}>;
+const coverage=JSON.parse(readFileSync(new NodeURL('../../../../../docs/report/targeted-rule-coverage.json',import.meta.url),'utf8')) as {
+ lighthouse:Array<{id:string;realSites:string[]}>;
+};
 afterEach(cleanup);
 const show=(issue:Issue,lang:'fr'|'en')=>render(<LangProvider initialLang={lang}><FindingDetails pageUrl="https://targeted.example/catalogue" finding={{key:issue.id!,anchor:issue.id!,domain:'performance',sources:[issue.structuredEvidence?.source??'lighthouse'],issue}}/></LangProvider>);
 it('accounts for every installed publishable candidate with a targeted case or a named real-site observation',()=>{
