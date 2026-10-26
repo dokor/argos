@@ -82,12 +82,13 @@ public class ZapModuleAnalyzer {
             String pluginId = textOrDefault(alert.path("pluginId"), "");
             String alertName = textOrDefault(alert.path("alert"), "Alerte inconnue");
             int risk = parseRisk(textOrDefault(alert.path("riskcode"), "0"));
-            String description = textOrDefault(alert.path("description"), "");
+            String description = plainGuidance(textOrDefault(alert.path("description"), ""));
+            String solution = plainGuidance(textOrDefault(alert.path("solution"), ""));
             String alertUrl = textOrDefault(alert.path("url"), url);
             String checkKey = PLUGIN_KEY_MAP.getOrDefault(pluginId, "zap.alert." + pluginId);
 
             byKey.computeIfAbsent(checkKey, k -> new ZapFinding(k, pluginId))
-                .addInstance(risk, alertName, description, alertUrl);
+                .addInstance(risk, alertName, description, solution, alertUrl);
         }
 
         logger.info("ZAP module: {} alertes brutes, {} faux positifs écartés, {} findings distincts",
@@ -142,6 +143,7 @@ public class ZapModuleAnalyzer {
         private final String pluginId;
         private String name = "Alerte inconnue";
         private String description = "";
+        private String solution = "";
         private int maxRisk = -1;
         private int instances = 0;
         private final List<String> urls = new ArrayList<>();
@@ -151,13 +153,17 @@ public class ZapModuleAnalyzer {
             this.pluginId = pluginId;
         }
 
-        void addInstance(int risk, String name, String description, String url) {
+        void addInstance(int risk, String name, String description, String solution, String url) {
             instances++;
             // On garde le libellé/description de l'occurrence la plus grave.
             if (risk > maxRisk) {
                 this.maxRisk = risk;
                 this.name = name;
                 this.description = description;
+                this.solution = solution;
+            } else if (risk == maxRisk) {
+                if (this.description.isBlank()) this.description = description;
+                if (this.solution.isBlank()) this.solution = solution;
             }
             if (url != null && !url.isBlank() && !urls.contains(url) && urls.size() < MAX_URLS_PER_FINDING) {
                 urls.add(url);
@@ -171,6 +177,7 @@ public class ZapModuleAnalyzer {
             details.put("instances", instances);
             details.put("urls", urls.isEmpty() ? List.of(fallbackUrl) : urls);
             if (!description.isBlank()) details.put("description", description);
+            if (!solution.isBlank()) details.put("solution", solution);
 
             String message = name + " détecté par l'analyse passive ZAP"
                 + (instances > 1 ? " (" + instances + " occurrences)." : ".");
@@ -186,9 +193,15 @@ public class ZapModuleAnalyzer {
                 String.valueOf(maxRisk),
                 details,
                 message,
-                "Examinez et corrigez ce problème de sécurité : " + name
+                solution.isBlank() ? null : solution
             );
         }
+    }
+
+    /** ZAP supplies HTML prose. Keep bounded plain text, never executable markup or credentials. */
+    private static String plainGuidance(String value) {
+        String bounded = value.substring(0, Math.min(value.length(), 16000));
+        return com.dokor.argos.services.analysis.AuditOutputSanitizer.text(org.jsoup.Jsoup.parse(bounded).text());
     }
 
     private static int parseRisk(String riskcode) {

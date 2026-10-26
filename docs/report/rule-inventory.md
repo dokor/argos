@@ -2,7 +2,7 @@
 
 Généré par node scripts/report-rule-inventory.mjs depuis les analyseurs et la policy. Ne pas modifier manuellement. La clé renvoie aux textes FR/EN versionnés ; specific décrit une fiche détaillée, explicit-fallback indique que la méthode versionnée ou les éléments concernés restent à demander. Cela ne signifie pas une validation humaine.
 
-Les littéraux sont inventoriés de manière conservatrice, y compris contrôles informatifs et stubs non publiés. La condition exacte de déclenchement et les détails disponibles sont dans la source référencée et les fiches findingPlaybooks.ts. Les ensembles ouverts lighthouse.audit.<id> (modes binary/numeric/metricSavings, score < 0,9, plafond 12) et zap.alert.<pluginId> sont traités par repli explicite. Leurs identifiants ne peuvent pas être énumérés à partir des seuls littéraux Java.
+Les littéraux sont inventoriés de manière conservatrice, y compris contrôles informatifs et stubs non publiés. La condition exacte de déclenchement et les détails disponibles sont dans la source référencée et les fiches findingPlaybooks.ts et findingRuleGuidance.ts. Les clés dynamiques Lighthouse ont un inventaire séparé issu de la version installée : lighthouseAuditCatalogue.json couvre les modes publiables, lighthouse-rule-inventory.json inclut aussi les candidats manuels et informatifs. ZAP conserve la description et la solution de la règle source ; une solution absente reste explicitement indisponible. Ces identifiants dynamiques ne peuvent pas être énumérés à partir des seuls littéraux Java.
 
 | Clé | Propriétaire | Poids catalogue | Fiche | Source et ligne |
 | --- | --- | ---: | --- | --- |
@@ -80,4 +80,4 @@ Les littéraux sont inventoriés de manière conservatrice, y compris contrôles
 | tech.http.server_header | tech | 0 | explicit-fallback-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:264 |
 | tech.security.version_disclosure | tech | 3 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:285 |
 | zap.collect | zap | 0 | explicit-fallback-fr-en | Availability stub from orchestrator |
-| zap.scan.result | zap | 0 | explicit-fallback-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/zap/ZapModuleAnalyzer.java:104 |
+| zap.scan.result | zap | 0 | explicit-fallback-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/zap/ZapModuleAnalyzer.java:105 |

@@ -16,8 +16,8 @@ async function openEvidence(details,page,lang) {
  await summary.waitFor();
  const panel=summary.locator('..');
  assert.equal(await panel.evaluate(el=>el.open),false,'Technical evidence starts collapsed');
- const block=panel.locator('[data-observed-evidence]');
- if(await block.count()) assert.equal(await block.isVisible(),false,'The finding alone does not open its evidence');
+ const block=details.locator('[data-observed-evidence]');
+ if(await block.count()) assert.equal(await block.isVisible(),true,'Observed locations are visible as soon as the finding opens');
  await summary.focus();await page.keyboard.press('Enter');
  assert.ok(await panel.evaluate(el=>el.open),'Evidence opens with the keyboard');
  assert.ok(await summary.evaluate(el=>el===document.activeElement),'Evidence toggle retains focus');
@@ -80,7 +80,7 @@ try {
    }
    await proofToggle.focus();await page.keyboard.press('Enter');
    assert.equal(await proof.evaluate(el=>el.open),false,'Evidence closes with the keyboard');
-   if(state!=='historical') assert.equal(await proof.locator('[data-observed-evidence]').isVisible(),false);
+   if(state!=='historical') assert.equal(await details.locator('[data-observed-evidence]').isVisible(),true,'Closing methodology keeps observed locations visible');
    await summary.focus();await page.keyboard.press('Enter');assert.equal(await details.evaluate(el=>el.open),false);
   }
   assert.deepEqual(errors,[]);await context.close();

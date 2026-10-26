@@ -21,6 +21,41 @@ import static org.mockito.Mockito.when;
  * des faux positifs (confidence=0) et conservation de la gravité maximale (issue #157).
  */
 class ZapModuleAnalyzerTest {
+    @Test void retainsTheExplanationAndSolutionAsSafePlainText() throws Exception {
+        var result = analyze("""
+            {"alerts":[{"pluginId":"10098","alert":"CORS","riskcode":"2","confidence":"2",
+              "description":"<p>Unintended readers can access the response.</p>",
+              "solution":"<p>Restrict <code>Access-Control-Allow-Origin</code>.</p><script>secret</script> token=private https://user:secret@example.com/private?token=hidden"}]}
+            """);
+        var finding = check(result, "zap.alert.10098").orElseThrow();
+        assertEquals("Unintended readers can access the response.", finding.details().get("description"));
+        assertEquals(finding.recommendation(), finding.details().get("solution"));
+        assertTrue(finding.recommendation().contains("Restrict Access-Control-Allow-Origin."));
+        assertFalse(finding.recommendation().contains("<"));
+        assertFalse(finding.recommendation().contains("private"));
+        assertFalse(finding.recommendation().contains("secret"));
+    }
+
+    @Test void keepsSolutionFromTheMostSevereInstanceAndFillsMissingPeerGuidance() throws Exception {
+        var result = analyze("""
+            {"alerts":[
+              {"pluginId":"90003","riskcode":"1","solution":"Low-risk correction"},
+              {"pluginId":"90003","riskcode":"3","description":"High-risk explanation"},
+              {"pluginId":"90003","riskcode":"3","solution":"High-risk correction"},
+              {"pluginId":"90003","riskcode":"1","solution":"Unrelated low-risk correction"}]}
+            """);
+        var finding = check(result, "zap.alert.90003").orElseThrow();
+        assertEquals("High-risk correction", finding.recommendation());
+        assertEquals("High-risk explanation", finding.details().get("description"));
+    }
+
+    @Test void doesNotManufactureASolutionWhenTheSourceOmitsIt() throws Exception {
+        var finding = check(analyze("""
+            {"alerts":[{"pluginId":"90003","riskcode":"2","description":"A source description"}]}
+            """), "zap.alert.90003").orElseThrow();
+        assertNull(finding.recommendation());
+        assertFalse(finding.details().containsKey("solution"));
+    }
     @Test void corsMisconfigurationCannotOverwriteTheCspFinding() throws Exception {
         var result = analyze("""
             {"alerts":[{"pluginId":"10098","alert":"Cross-Domain Misconfiguration","riskcode":"2","confidence":"2"},

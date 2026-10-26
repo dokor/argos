@@ -59,6 +59,42 @@ de terrain, leur index, ni leur profondeur d’exploration.
 
 ## Compatibilité et limites
 
+### Couverture des explications et corrections
+
+Le catalogue `report-content-v9` confronte les fiches aux clés réellement produites par les huit
+modules. Les 115 audits de la configuration Lighthouse 13.5.0 susceptibles de produire un résultat
+`binary`, `numeric` ou `metricSavings` disposent de textes FR/EN : problème et effet, emplacement
+à examiner, modification concrète et résultat attendu. Cela couvre des candidats, pas 115 problèmes
+présents sur chaque page : l’émission dépend aussi du score, du mode effectif et du plafond de 12.
+Les audits manuels et informatifs sont exclus de cette promesse et restent dans l’inventaire complet.
+
+Les corrections TLS distinguent certificat invalide, renouvellement, activation de TLS 1.2/1.3
+et retrait des anciens protocoles. Observatory expose les politiques effectivement échouées et
+réutilise les procédures des en-têtes reconnus. Ses détails absents ne sont pas reconstitués.
+
+ZAP constitue un ensemble ouvert de règles. Le backend conserve désormais `description` et
+`solution` en texte simple, borné et assaini, en gardant la gravité maximale lors de la déduplication.
+Les règles CORS et X-Powered-By ont aussi une fiche FR/EN ; les autres alertes dynamiques affichent
+la solution de leur source avec sa langue d’origine explicitement indiquée. Une ancienne alerte
+sans solution ne reçoit plus une fausse recommandation « corriger selon les bonnes pratiques ».
+Les alias ZAP vers les en-têtes HTTP conservent les procédures dédiées existantes.
+
+`findingCoverage.test.ts` contrôle les clés des analyseurs et le catalogue Lighthouse.
+`apps/lighthouse-service/reportable-audits.test.mjs` confronte ce catalogue à la configuration
+et aux métadonnées du paquet installé ; une évolution de Lighthouse ne peut pas passer silencieusement.
+Les deux inventaires documentaires sont régénérés par `scripts/report-rule-inventory.mjs` et
+`scripts/report-lighthouse-inventory.mjs` (Node 22.19+). Pour mettre à jour le catalogue Lighthouse,
+exécuter `reportableAudits()` depuis `apps/lighthouse-service/reportable-audits.mjs`, conserver son
+résultat JSON dans `lighthouseAuditCatalogue.json`, puis rédiger les fiches manquantes avant validation.
+
+Références de rédaction : métadonnées du paquet Lighthouse installé et liens officiels par règle,
+[audits d’accessibilité Lighthouse](https://developer.chrome.com/docs/lighthouse/accessibility/scoring),
+[diagnostics de performance](https://developer.chrome.com/docs/performance/insights),
+[TLS](https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Transport_Layer_Security),
+[Observatory](https://developer.mozilla.org/en-US/observatory/docs/tests_and_scoring),
+[ZAP CORS](https://www.zaproxy.org/docs/alerts/10098/) et
+[ZAP X-Powered-By](https://www.zaproxy.org/docs/alerts/10037/).
+
 Les nouveaux emplacements nécessitent une nouvelle collecte : les rapports déjà enregistrés
 ne contiennent pas les fichiers supprimés précédemment. L’interface dit alors que le chemin
 n’est pas disponible et explique comment le retrouver. Un ancien rapport sans inventaire ne
@@ -77,9 +113,30 @@ sur 3018, puis `node scripts/e2e/report-actionable-fixture.mjs` sur 3019.
 Lancer le frontend avec `API_BASE=http://127.0.0.1:3019` et le port 3020.
 La route `/report/review-actionable-fixture` présente trois cas fictifs : police, image lourde,
 image sans alternative accessible. `/report/review-questions?view=technical` montre le contrat ancien.
+`/report/review-guidance-fixture?view=technical` rassemble les huit collecteurs, une règle ARIA,
+un certificat proche du renouvellement, une règle ZAP avec solution et une ancienne règle sans solution.
 Les fixtures sont en lecture seule, liées à la boucle locale et n’utilisent aucune donnée de production.
 
-## Validation
+## Validation de la couverture éditoriale (26 octobre 2026)
+
+- Maven : 1 041 tests, aucun échec, une intégration ZAP ignorée faute de démon local ; cette
+  intégration est exécutée dans la CI avec son conteneur dédié.
+- Lighthouse : 23 tests réussis, dont comparaison du catalogue avec le paquet installé.
+- Frontend : 146 fichiers / 1 284 tests réussis, plus les contrôles éditoriaux. Les inventaires
+  obsolètes ont été régénérés après l’ajout des fiches ; leur dérive provoque bien un échec.
+- TypeScript, ESLint des composants modifiés et build Next de production vérifiés.
+- Navigateur : règle ARIA et ZAP en FR sombre sur ordinateur, ARIA en EN clair à 390 × 844,
+  Observatory en FR sombre à 390 × 844, ouverture clavier, expiration TLS, alerte historique
+  sans solution. Aucun débordement horizontal dans les variantes mobiles observées.
+- La CI de la première révision attendait des mesures visibles avant l’ouverture de leur
+  nouvelle section repliée. Les parcours E2E sont adaptés pour ouvrir cette section et
+  vérifier les mêmes données ; le contrôle des emplacements vérifie maintenant qu’ils restent
+  visibles lorsque seule la méthode est refermée.
+- Les nouvelles captures locales portent le préfixe `guidance-` dans le même dossier de revue.
+  Elles ne remplacent pas un test utilisateur ni une vérification manuelle des 115 fiches dans
+  des sites réels. Les tests de couverture portent sur les collecteurs et la version installés.
+
+## Validation de la première refonte
 
 - Backend : 1 014 tests dans la suite Maven, aucun échec.
 - Lighthouse : 22 tests, dont extraction des fichiers/sélecteurs, métriques par ressource,

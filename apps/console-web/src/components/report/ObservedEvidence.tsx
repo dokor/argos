@@ -46,6 +46,8 @@ export default function ObservedEvidence({ evidence, lang }: {evidence?:Evidence
       </li>;
     })}</ul>
     {evidence.truncated && <p><strong>{fr?"Échantillon limité : d’autres éléments peuvent être concernés.":"Limited sample: other elements may be affected."}</strong></p>}
-    <p>{fr?"Emplacements observés lors de cette analyse. Les paramètres URL et contenus sensibles sont masqués. Les économies sont des estimations Lighthouse, pas une promesse de gain.":"Locations observed during this analysis. URL parameters and sensitive content are hidden. Savings are Lighthouse estimates, not guaranteed improvements."}</p>
+    <p>{fr?"Emplacements observés lors de cette analyse. Les paramètres URL et contenus sensibles sont masqués.":"Locations observed during this analysis. URL parameters and sensitive content are hidden."}
+      {evidence.items.some(item=>item.metrics?.wastedBytes!==undefined||item.metrics?.wastedMs!==undefined)
+        && (fr?" Les économies sont des estimations Lighthouse, pas une promesse de gain.":" Savings are Lighthouse estimates, not guaranteed improvements.")}</p>
   </div>;
 }

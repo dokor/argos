@@ -58,6 +58,7 @@ try {
     assert.equal(report.access,'summary');
     assert.ok(report.issues.every(issue=>!issue.structuredEvidence&&!issue.evidence&&!issue.recommendation),'Anonymous report must omit technical proofs and corrections');
     assert.equal(await page.locator('#report-method').count(),0,'Retired methodology block must remain absent');
+    await page.locator('summary').filter({hasText:/^Mesures de chargement, ressources et erreurs$/}).click();
     const measures=page.getByRole('region',{name:'Mesures observ\u00e9es',exact:true});
     await measures.waitFor();
     for(const family of ['Chargement','Ressources','Erreurs']) await measures.getByRole('heading',{name:family,exact:true}).waitFor();

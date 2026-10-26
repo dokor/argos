@@ -37,6 +37,11 @@ export function describeObservation(issue: Issue, title: string, lang: Lang) {
     if (issue.id === "lighthouse.audit.image-alt" && elementCount) return fr
       ? `Lighthouse signale ${elementCount} élément(s) image sans alternative accessible. Retrouvez-les avec les sélecteurs ci-dessous et vérifiez leur fonction dans la page.`
       : `Lighthouse flags ${elementCount} image element(s) without an accessible alternative. Locate them using the selectors below and check their purpose on the page.`;
+    if (elementCount || resourceCount) {
+      const sample = [elementCount ? `${elementCount} ${fr ? 'élément(s)' : 'element(s)'}` : '', resourceCount ? `${resourceCount} ${fr ? 'ressource(s)' : 'resource(s)'}` : ''].filter(Boolean).join(fr ? ' et ' : ' and ');
+      return fr ? `Lighthouse associe ce signal à ${sample} dans l’échantillon conservé. Les emplacements observés sont détaillés ci-dessous.`
+        : `Lighthouse associates this signal with ${sample} in the retained sample. Observed locations are detailed below.`;
+    }
   }
   const details = issue.structuredEvidence?.details ?? [];
   const detail = (key: string) => details.find(d => d.key === key)?.text;
@@ -64,6 +69,18 @@ export function describeObservation(issue: Issue, title: string, lang: Lang) {
     : (fr ? "mesure détaillée non conservée." : "detailed measurement not retained."))}`;
 }
 export function missingLocation(issue: Issue, lang: Lang) {
+  if (issue.id?.startsWith('ssl.')) return lang === 'fr'
+    ? 'À examiner : le certificat et la configuration TLS des serveurs ou du CDN qui répondent pour le domaine audité. Retrouver la terminaison concernée dans le diagnostic SSL Labs.'
+    : 'Inspect the certificate and TLS configuration of the servers or CDN responding for the audited domain. Locate the affected endpoint in the SSL Labs diagnosis.';
+  if (issue.id === 'observatory.score') return lang === 'fr'
+    ? 'À examiner : les en-têtes et politiques de la réponse HTTP analysée par Observatory. Vérifier l’adresse et la date du diagnostic source avant de comparer les réponses.'
+    : 'Inspect the headers and policies of the HTTP response analysed by Observatory. Check the source diagnosis address and date before comparing responses.';
+  if (issue.id?.startsWith('zap.alert.')) return lang === 'fr'
+    ? 'À examiner : les en-têtes ou le contenu de la réponse HTTP collectée par ZAP. Si son adresse précise manque, retrouver l’alerte dans le diagnostic source ; l’analyse passive ne couvre pas tout le site.'
+    : 'Inspect the headers or content of the HTTP response collected by ZAP. If its exact address is missing, locate the alert in the source diagnosis; passive analysis does not cover the whole site.';
+  if (issue.id === 'tech.security.version_disclosure') return lang === 'fr'
+    ? 'À examiner : les bannières de la réponse HTTP et les mentions de version dans le HTML reçu. Le composant réellement installé doit être vérifié dans son administration.'
+    : 'Inspect HTTP response banners and version mentions in received HTML. Verify the actually installed component in its administration interface.';
   if (issue.id === "html.title" || issue.id === "html.meta.description.present" || issue.id === "html.social.meta")
     return lang === "fr" ? "Emplacement : <head> de la page mesurée. Utiliser le HTML reçu pour retrouver la balise et sa valeur exacte." : "Location: <head> of the measured page. Use the received HTML to locate the tag and its exact value.";
   if (issue.structuredEvidence?.observed?.version === "observed-evidence-v1") return ""; // Collection metadata explains its own availability and limits.

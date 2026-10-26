@@ -1089,8 +1089,8 @@
     "availableFacts": "Note, certificat, jours avant expiration ou protocoles par points de terminaison selon la clé ; couverture des points de terminaison éventuellement partielle.",
     "content": "specific-fr-en",
     "detection": {
-      "fr": "SSL Labs examine des points de terminaison TLS. La note, la validité du certificat, son expiration et les protocoles sont des observations distinctes ; la couverture peut être partielle.",
-      "en": "SSL Labs examines TLS endpoints. Grade, certificate validity, expiry and protocols are separate observations; coverage can be partial."
+      "fr": "SSL Labs signale ce contrôle comme à examiner. Un renouvellement manqué peut provoquer une interruption HTTPS à l’expiration.",
+      "en": "SSL Labs flags this check for review. A missed renewal can interrupt HTTPS when the certificate expires."
     },
     "missingCollection": "La version exacte de la règle et des emplacements peuvent manquer dans un rapport historique.",
     "reference": "https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Transport_Layer_Security"
@@ -1109,8 +1109,8 @@
     "availableFacts": "Note, certificat, jours avant expiration ou protocoles par points de terminaison selon la clé ; couverture des points de terminaison éventuellement partielle.",
     "content": "specific-fr-en",
     "detection": {
-      "fr": "SSL Labs examine des points de terminaison TLS. La note, la validité du certificat, son expiration et les protocoles sont des observations distinctes ; la couverture peut être partielle.",
-      "en": "SSL Labs examines TLS endpoints. Grade, certificate validity, expiry and protocols are separate observations; coverage can be partial."
+      "fr": "SSL Labs signale ce contrôle comme à examiner. Un certificat expiré, non approuvé ou ne couvrant pas le nom demandé peut bloquer la connexion.",
+      "en": "SSL Labs flags this check for review. An expired, untrusted or mismatched certificate can block the connection."
     },
     "missingCollection": "La version exacte de la règle et des emplacements peuvent manquer dans un rapport historique.",
     "reference": "https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Transport_Layer_Security"
@@ -1164,8 +1164,8 @@
     "availableFacts": "Note, certificat, jours avant expiration ou protocoles par points de terminaison selon la clé ; couverture des points de terminaison éventuellement partielle.",
     "content": "specific-fr-en",
     "detection": {
-      "fr": "SSL Labs examine des points de terminaison TLS. La note, la validité du certificat, son expiration et les protocoles sont des observations distinctes ; la couverture peut être partielle.",
-      "en": "SSL Labs examines TLS endpoints. Grade, certificate validity, expiry and protocols are separate observations; coverage can be partial."
+      "fr": "SSL Labs signale ce contrôle comme à examiner. Des protocoles obsolètes peuvent permettre des connexions avec des protections insuffisantes.",
+      "en": "SSL Labs flags this check for review. Obsolete protocols can allow connections with inadequate protections."
     },
     "missingCollection": "La version exacte de la règle et des emplacements peuvent manquer dans un rapport historique.",
     "reference": "https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Transport_Layer_Security"
@@ -1185,8 +1185,8 @@
     "availableFacts": "Note, certificat, jours avant expiration ou protocoles par points de terminaison selon la clé ; couverture des points de terminaison éventuellement partielle.",
     "content": "specific-fr-en",
     "detection": {
-      "fr": "SSL Labs examine des points de terminaison TLS. La note, la validité du certificat, son expiration et les protocoles sont des observations distinctes ; la couverture peut être partielle.",
-      "en": "SSL Labs examines TLS endpoints. Grade, certificate validity, expiry and protocols are separate observations; coverage can be partial."
+      "fr": "SSL Labs signale ce contrôle comme à examiner. L’absence d’une version TLS peut limiter la compatibilité ou l’usage des protocoles récents.",
+      "en": "SSL Labs flags this check for review. A missing TLS version can limit compatibility or use of newer protocols."
     },
     "missingCollection": "La version exacte de la règle et des emplacements peuvent manquer dans un rapport historique.",
     "reference": "https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Transport_Layer_Security"
@@ -1206,8 +1206,8 @@
     "availableFacts": "Note, certificat, jours avant expiration ou protocoles par points de terminaison selon la clé ; couverture des points de terminaison éventuellement partielle.",
     "content": "specific-fr-en",
     "detection": {
-      "fr": "SSL Labs examine des points de terminaison TLS. La note, la validité du certificat, son expiration et les protocoles sont des observations distinctes ; la couverture peut être partielle.",
-      "en": "SSL Labs examines TLS endpoints. Grade, certificate validity, expiry and protocols are separate observations; coverage can be partial."
+      "fr": "SSL Labs signale ce contrôle comme à examiner. L’absence d’une version TLS peut limiter la compatibilité ou l’usage des protocoles récents.",
+      "en": "SSL Labs flags this check for review. A missing TLS version can limit compatibility or use of newer protocols."
     },
     "missingCollection": "La version exacte de la règle et des emplacements peuvent manquer dans un rapport historique.",
     "reference": "https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Transport_Layer_Security"
@@ -1374,7 +1374,7 @@
   {
     "key": "zap.scan.result",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/zap/ZapModuleAnalyzer.java:104"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/zap/ZapModuleAnalyzer.java:105"
     ],
     "scorable": false,
     "weight": 0,

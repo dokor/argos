@@ -179,7 +179,7 @@ public class PublicReportComposer {
                     check.title() != null ? check.title() : check.key(),
                     check.message() != null ? check.message() : "Point à améliorer détecté.",
                     evidenceFrom(check),
-                    check.recommendation() != null ? check.recommendation() : "Corriger selon les bonnes pratiques.",
+                    check.recommendation() != null ? check.recommendation() : "",
                     ReportPriorityService.explicitEffort(check),
                     ReportPriorityService.explicitConfidence(check),
                     ReportEvidence.from(module.id(), check)

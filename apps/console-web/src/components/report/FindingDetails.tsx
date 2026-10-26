@@ -39,7 +39,7 @@ export default function FindingDetails({ finding }: { finding: Finding }) {
         <h3>{fr?"Que modifier ?":"What should I change?"}</h3>
         {explanation.specific ? <FindingGuide issue={issue} lang={lang} parts={["correction"]} showHeadings={false}/>
           : <><p>{fr?"Aucune procédure spécifique n’est disponible pour ce contrôle.":"No specific procedure is available for this check."}</p>
-            {issue.recommendation&&<p>{fr?"Indication de l’outil source":"Source tool guidance"} : {cleanEvidence(issue.recommendation)}</p>}
+            {issue.recommendation&&!issue.id?.startsWith('zap.alert.')&&<p>{fr?"Indication de l’outil source":"Source tool guidance"} : {cleanEvidence(issue.recommendation)}</p>}
             <FindingGuide issue={issue} lang={lang} parts={["correction"]} showHeadings={false}/></>}
         {guide&&<p><Link href={guide.href}>{fr?"Guide de correction":"Correction guide"} : {guide.label}</Link></p>}
       </section>

@@ -1,6 +1,7 @@
 import type { Lang } from '@/lib/i18n/routes';
 import type { FindingDetection, Issue } from './types';
 import { findingPlaybook, type Playbook } from './findingPlaybooks';
+import { cleanEvidence } from './findingText';
 
 export const pilotFindingKeys = ['html.title', 'html.images.alt_coverage', 'http.security.csp',
   'lighthouse.audit.largest-contentful-paint', 'lighthouse.audit.lcp-discovery-insight',
@@ -12,10 +13,14 @@ type Explanation = Playbook & { methodNote: string; title?: string; observation?
 export function expectsScalarMeasurement(issue: Issue): boolean {
   if (issue.id?.startsWith('lighthouse.audit.')) return new Set([
     'largest-contentful-paint', 'first-contentful-paint', 'speed-index', 'total-blocking-time',
-    'interactive', 'cumulative-layout-shift', 'interaction-to-next-paint',
+    'interactive', 'cumulative-layout-shift', 'interaction-to-next-paint', 'max-potential-fid',
   ]).has(issue.id.slice('lighthouse.audit.'.length));
-  return !(pilotFindingKeys as readonly (string | null | undefined)[]).includes(issue.id)
-    || issue.id === 'lighthouse.audit.largest-contentful-paint';
+  return !!issue.id && (issue.id.startsWith('lighthouse.score.') || new Set([
+    'http.response_time_ms', 'http.redirect.count', 'html.h1.count', 'html.scripts.count', 'html.size.bytes',
+    'html.analysis.duration_ms', 'runtime.console.errors', 'runtime.js.errors', 'runtime.network.5xx',
+    'runtime.network.failed_requests', 'runtime.network.third_party_errors', 'runtime.network.request_count',
+    'runtime.network.bytes_estimated', 'runtime.analysis.duration_ms', 'ssl.certificate.expiry_days', 'observatory.score',
+  ]).has(issue.id));
 }
 
 /** Only a known revision and matching producer may explain a historical detection as a fact. */
@@ -52,6 +57,44 @@ export function findingExplanation(issue: Issue, lang: Lang): Explanation {
   const current = fr
     ? 'Référentiel des collecteurs actuels. La version exacte de cette règle n’est pas conservée dans la fiche ; un rapport historique peut utiliser une autre méthode.'
     : 'Current collector reference. The exact version of this rule is not retained in the finding; a historical report may use another method.';
+  if (issue.id?.startsWith('zap.alert.')) {
+    const detail = (key: string) => cleanEvidence(issue.structuredEvidence?.details?.find(d => d.key === key)?.text).trim();
+    const description = detail('description');
+    const retained = detail('solution') || cleanEvidence(issue.recommendation).trim();
+    const solution = /^(Examinez et corrigez ce problème|Corriger selon les bonnes pratiques)/i.test(retained) ? '' : retained;
+    const plugin = issue.id.slice('zap.alert.'.length);
+    const sourceLabel = fr ? 'ZAP, texte source (langue d’origine)' : 'ZAP source text (original language)';
+    return { ...p, specific: p.specific || !!solution, methodNote: current,
+      reference: /^\d{1,8}$/.test(plugin) ? `https://www.zaproxy.org/docs/alerts/${plugin}/` : p.reference,
+      ...(description ? { observation: `${sourceLabel} : ${description}`,
+        impact: p.impact ?? (fr ? 'Le risque décrit par ZAP ci-dessus concerne les réponses observées. Confirmer les conditions et les utilisateurs concernés avant de choisir la priorité.' : 'The risk described by ZAP above concerns observed responses. Confirm the conditions and affected users before choosing priority.') } : {}),
+      summary: p.summary ?? (solution ? `${sourceLabel} : ${solution}` : (fr ? 'La solution de cette règle ZAP n’a pas été conservée. Ouvrir sa documentation avant de choisir une modification.' : 'This ZAP rule’s solution was not retained. Open its documentation before choosing a change.')),
+      steps: p.specific ? [...p.steps, ...(solution ? [`${sourceLabel} : ${solution}`] : [])] : [fr ? 'Retrouver la réponse concernée dans Réseau et comparer le motif de la règle ZAP avec les en-têtes ou le contenu reçus.' : 'Locate the affected response in Network and compare the ZAP rule’s reason with received headers or content.',
+        solution ? `${sourceLabel} : ${solution}` : (fr ? 'Solution spécifique indisponible dans ce rapport : consulter la règle de référence ou relancer la collecte. Aucun changement de configuration ne peut être déduit de la seule gravité.' : 'Specific solution unavailable in this report: consult the reference rule or repeat collection. Severity alone cannot determine a configuration change.')],
+      expected: p.specific ? p.expected : (fr ? `Rejouer la même requête après correction et vérifier le comportement décrit par la règle ${plugin}. Relancer l’analyse passive : le signal ciblé doit disparaître sans casser le parcours légitime.` : `Repeat the same request after the fix and verify the behaviour described by rule ${plugin}. Rerun passive analysis: the targeted signal should disappear without breaking the legitimate journey.`),
+    };
+  }
+  if (issue.id === 'observatory.score') {
+    const failed = cleanEvidence(issue.structuredEvidence?.details?.find(d => d.key === 'failedPolicies')?.text);
+    const guidance = cleanEvidence(issue.recommendation);
+    const policies: Record<string, string> = {
+      'content-security-policy': 'http.security.csp', 'strict-transport-security': 'http.security.hsts',
+      'x-content-type-options': 'http.security.x_content_type_options', 'x-frame-options': 'http.security.x_frame_options',
+      'referrer-policy': 'http.security.referrer_policy', cookies: 'http.security.cookie_flags',
+      redirection: 'http.redirect.to_https',
+    };
+    const names = [...new Set((failed.match(/[a-z][a-z-]+/g) ?? []))];
+    const remedies = names.filter(name => Object.hasOwn(policies, name)).map(name => ({ name, book: findingPlaybook(policies[name], lang) }));
+    return { ...p, methodNote: current,
+      ...(failed ? { observation: fr ? `Observatory signale les politiques suivantes : ${failed}. La note est un résumé de ces contrôles.` : `Observatory flags these policies: ${failed}. The score summarises these checks.` } : {}),
+      steps: failed ? [
+        ...(guidance ? [`${fr ? 'Détail Observatory conservé (langue d’origine)' : 'Retained Observatory detail (original language)'} : ${guidance}`] : []),
+        ...remedies.flatMap(({ name, book }) => book.steps.filter(step => !/validateur Argos|Argos validator/.test(step)).map(step => `${name} : ${step}`)),
+        ...(remedies.length < names.length || !remedies.length ? p.steps : []),
+      ] : p.steps,
+      expected: remedies.length ? remedies.map(({ name, book }) => `${name} : ${book.expected}`).join(' ') : p.expected,
+    };
+  }
   if (!(pilotFindingKeys as readonly (string | null | undefined)[]).includes(issue.id)) return { ...p, methodNote: current };
   const d = recordedPilotDetection(issue);
   const source = issue.structuredEvidence?.source;

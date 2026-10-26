@@ -3,8 +3,11 @@ import type { Lang } from "@/lib/i18n/routes";
 import { describeObservation, findingQualification, missingLocation } from "./findingPresentation";
 import { findingPlaybook } from "./findingPlaybooks";
 import { findingExplanation } from "./findingExplanation";
+import { detailedRuleGuidance } from "./findingRuleGuidance";
+import { cleanEvidence } from './findingText';
+export { cleanEvidence } from './findingText';
 
-export const CATALOGUE_VERSION = "report-content-v8";
+export const CATALOGUE_VERSION = "report-content-v9";
 export type FindingContent = { title: string; observation: string; impact: string; recommendation: string; verification: string; qualification: string; missingInformation: string };
 type Copy = [title: string, impact: string];
 const catalogue: Record<string, Record<Lang, Copy>> = {};
@@ -225,16 +228,11 @@ add(["lighthouse.audit.image-delivery-insight"],
 add(["lighthouse.audit.cache-insight"],
   ["La réutilisation des ressources en cache est à vérifier", "Télécharger à nouveau des fichiers inchangés peut augmenter le transfert lors des visites suivantes."],
   ["Review cached resource reuse", "Downloading unchanged files again can increase transfer on subsequent visits."]);
-export const supportedFindingKeys = Object.keys(catalogue);
-export function cleanEvidence(text?: string | null): string {
-  return (text ?? "").replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f\u202a-\u202e\u2066-\u2069]/g, "")
-    .replace(/https?:\/\/[^\s<>"}\]]+/g, value => {
-      try { const url = new URL(value); url.username = ""; url.password = ""; url.search = ""; url.hash = ""; return url.toString(); }
-      catch { return "[URL]"; }
-    }).replace(/\/(report|share)\/[A-Za-z0-9_-]{20,512}/g, '/$1/[redacted]')
-    .replace(/\b(authorization|proxy-authorization|cookie|set-cookie)\s*[:=][^\r\n]*/gi, '$1=[redacted]')
-    .replace(/\b(password|secret|token|api[_-]?key)["']?\s*[:=]\s*(?:"[^"]*"|'[^']*'|[^\s,;<>]+)/gi, '$1=[redacted]').slice(0, 4000);
+for (const entry of detailedRuleGuidance) {
+  if (entry.fr.title && entry.fr.impact && entry.en.title && entry.en.impact)
+    add(entry.keys, [entry.fr.title, entry.fr.impact], [entry.en.title, entry.en.impact]);
 }
+export const supportedFindingKeys = Object.keys(catalogue);
 export function findingEditorial(key: string | null | undefined, lang: Lang) {
   const copy = key ? catalogue[key]?.[lang] : undefined;
   const fallback: Copy = lang === "fr"
@@ -254,7 +252,7 @@ export function findingContent(issue: Issue, lang: Lang): FindingContent {
   return {
     title,
     observation: explanation.observation ?? describeObservation(issue, title, lang),
-    impact: copy.impact,
+    impact: explanation.impact ?? copy.impact,
     recommendation: recommendation ? (uncertain ? confirm : "") + recommendation : confirm.trim(),
     verification: explanation.expected,
     qualification: findingQualification(issue, lang), missingInformation: explanation.missingInformation ?? missingLocation(issue, lang),

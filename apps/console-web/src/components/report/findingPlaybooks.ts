@@ -1,5 +1,6 @@
 import type { Lang } from '@/lib/i18n/routes';
-export type PlaybookCopy = { detection: string; summary?: string; steps: string[]; expected: string; example: string; limits: string };
+import { detailedRuleGuidance } from './findingRuleGuidance';
+export type PlaybookCopy = { title?: string; impact?: string; detection: string; summary?: string; steps: string[]; expected: string; example: string; limits: string };
 export type Playbook = { reference?: string; verifiedAt?: string; specific: boolean } & PlaybookCopy;
 export const playbookGroups: Array<{keys: string[]; reference: string; verifiedAt: string; fr: PlaybookCopy; en: PlaybookCopy}> = [
   {
@@ -1549,7 +1550,7 @@ export const playbookGroups: Array<{keys: string[]; reference: string; verifiedA
   }
 ];
 
-export const rulePlaybooks = Object.fromEntries(playbookGroups.flatMap(({keys, ...entry}) => keys.map(key => [key, entry])));
+export const rulePlaybooks = Object.fromEntries([...playbookGroups, ...detailedRuleGuidance].flatMap(({keys, ...entry}) => keys.map(key => [key, entry])));
 
 export function findingPlaybook(key: string | null | undefined, lang: Lang): Playbook {
   const entry = key && Object.hasOwn(rulePlaybooks, key) ? rulePlaybooks[key] : undefined;
