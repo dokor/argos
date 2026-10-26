@@ -1,5 +1,5 @@
 import express from 'express';
-import { resourceEvidence, evidenceEnvelope, EVIDENCE_LIMIT } from './evidence.mjs';
+import { resourceEvidence, scriptEvidence, exceptionEvidence, evidenceEnvelope, EVIDENCE_LIMIT } from './evidence.mjs';
 import { analysisUrl } from './policy.mjs';
 import { proxyEndpoint, browserFlags, protectContext, safeOrigin } from './browser-policy.mjs';
 import { partitionNetworkErrors, isFirstPartyUrl } from './domain.mjs';
@@ -61,6 +61,7 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
       let collecting = true;
 
       const consoleSamples = [];
+      const consoleLocations = [], exceptionLocations = [];
       let consoleErrors = 0;
       const consoleErrorOrigins = new Map();
       let consoleOriginsComplete = true;
@@ -72,6 +73,10 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
         const loc = msg.location?.();
         if (type === 'error') {
           consoleErrors++;
+          if (consoleLocations.length < EVIDENCE_LIMIT) {
+            const item = scriptEvidence(loc?.url, loc?.lineNumber, loc?.columnNumber, page.url());
+            if (item) consoleLocations.push(item);
+          }
           // Sans URL de localisation (script inline / eval) : attribué au site.
           const origin = loc?.url ? safeOrigin(loc.url) : '';
           if (consoleErrorOrigins.has(origin) || consoleErrorOrigins.size < 300)
@@ -94,6 +99,10 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
       page.on('pageerror', (err) => {
         if (!collecting) return;
         jsErrorCount++;
+        if (exceptionLocations.length < EVIDENCE_LIMIT) {
+          const item = exceptionEvidence(err, page.url());
+          if (item) exceptionLocations.push(item);
+        }
         if (jsErrorSamples.length < 10) {
           jsErrorSamples.push({ message: '[site message redacted]' });
         }
@@ -225,9 +234,12 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
           errors: consoleOriginsComplete ? consoleErrors : null,
           errorsFirstParty: consoleErrorsFirstParty,
           warnings: consoleWarnings,
-          samples: consoleSamples
+          samples: consoleSamples,
+          observedEvidence: evidenceEnvelope('runtime', consoleLocations.map(item=>({...item,
+            ownership:isFirstPartyUrl(item.origin,finalUrl)?'FIRST_PARTY':'THIRD_PARTY'})), consoleErrors, consoleErrors>consoleLocations.length)
         },
-        jsErrors: { count: jsErrorCount, samples: jsErrorSamples },
+        jsErrors: { count: jsErrorCount, samples: jsErrorSamples,
+          observedEvidence: evidenceEnvelope('runtime', exceptionLocations, jsErrorCount, jsErrorCount>exceptionLocations.length) },
         network: {
           requests: Object.values(byType).length
             ? Object.values(byType).reduce((a, b) => a + b, 0)

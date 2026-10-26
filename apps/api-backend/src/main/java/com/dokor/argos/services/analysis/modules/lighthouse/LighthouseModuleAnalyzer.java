@@ -223,6 +223,13 @@ public class LighthouseModuleAnalyzer {
                 }
             }
             if (observed != null && "lighthouse".equals(observed.source())) details.put("observed", observed);
+            if ("inspector-issues".equals(c.id())) {
+                // Stable allowlist; never persist arbitrary browser issue text.
+                var types = new LinkedHashSet<String>();
+                for (JsonNode item : raw.path("details").path("items"))
+                    if ("Mixed content".equals(item.path("issueType").asText())) types.add("MIXED_CONTENT");
+                if (!types.isEmpty()) details.put("browserIssueTypes", types);
+            }
             if ("bf-cache".equals(c.id())) {
                 var reasons = new LinkedHashSet<String>();
                 boolean onlyNonActionable = raw.path("details").path("items").isArray() && !raw.path("details").path("items").isEmpty();

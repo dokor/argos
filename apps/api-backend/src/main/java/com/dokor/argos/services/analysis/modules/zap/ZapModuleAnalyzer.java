@@ -91,6 +91,7 @@ public class ZapModuleAnalyzer {
 
             var finding = byKey.computeIfAbsent(checkKey, k -> new ZapFinding(k, pluginId));
             finding.addInstance(risk, alertName, description, solution, alertUrl, confidence);
+            locateResponse(finding, context, alert);
             if ("10055".equals(pluginId) && finding.policyFindings.size() < 10)
                 finding.policyFindings.add(plainGuidance(alertName + ": " + textOrDefault(alert.path("other"), "")));
             if ("10202".equals(pluginId) && finding.elements.size() < 10) {
@@ -158,6 +159,8 @@ public class ZapModuleAnalyzer {
         private final List<String> urls = new ArrayList<>();
         private final java.util.Set<String> policyFindings = new java.util.LinkedHashSet<>();
         private final List<Map<String,String>> elements = new ArrayList<>();
+        private final java.util.Set<Integer> cookieIndexes = new java.util.LinkedHashSet<>();
+        private final Map<String,Object> responseLocation = new LinkedHashMap<>();
 
         ZapFinding(String key, String pluginId) {
             this.key = key;
@@ -195,6 +198,8 @@ public class ZapModuleAnalyzer {
             details.put("riskcode", String.valueOf(maxRisk));
             details.put("measurementConfidence", switch (confidenceLevel) { case 1 -> "LOW"; case 2 -> "MEDIUM"; case 3 -> "HIGH"; default -> "UNKNOWN"; });
             details.put("instances", instances);
+            details.putAll(responseLocation);
+            if (!cookieIndexes.isEmpty()) details.put("cookieIndexes", cookieIndexes);
             details.put("urls", urls.isEmpty() ? List.of(fallbackUrl) : urls);
             if (!description.isBlank()) details.put("description", description);
             if (!solution.isBlank()) details.put("solution", solution);
@@ -236,6 +241,33 @@ public class ZapModuleAnalyzer {
             case "3", "high" -> 3;
             default -> -1;
         };
+    }
+
+    /** Locate retained source evidence without retaining its contents, cookie names or values. */
+    private static void locateResponse(ZapFinding finding, AuditContext context, JsonNode alert) {
+        if (java.util.Set.of("10010", "10011", "10054").contains(finding.pluginId)) {
+            String param = alert.path("param").asText();
+            String[] cookies = context.headers().getOrDefault("set-cookie", "").split("\n");
+            for (int i=0; i<cookies.length && finding.cookieIndexes.size()<10; i++) {
+                int equals = cookies[i].indexOf('=');
+                if (equals > 0 && cookies[i].substring(0,equals).trim().equals(param)) finding.cookieIndexes.add(i+1);
+            }
+            return;
+        }
+        String evidence = alert.path("evidence").asText();
+        if (evidence.isBlank() || evidence.length()>512 || !finding.responseLocation.isEmpty()) return;
+        for (var header : context.headers().entrySet()) {
+            if (header.getKey().matches("[a-zA-Z][a-zA-Z0-9-]{0,79}") && header.getValue().contains(evidence)) {
+                finding.responseLocation.put("responseHeader", header.getKey());
+                return;
+            }
+        }
+        String body = context.body();
+        int offset = body == null ? -1 : body.indexOf(evidence);
+        if (offset >= 0) {
+            finding.responseLocation.put("responseBodyLine", 1 + body.substring(0,offset).chars().filter(c -> c=='\n').count());
+            finding.responseLocation.put("responseBodyColumn", offset-body.lastIndexOf('\n',offset));
+        }
     }
 
     /** ZAP 10202 reports a one-based form ordinal. Verify its opening tag against the

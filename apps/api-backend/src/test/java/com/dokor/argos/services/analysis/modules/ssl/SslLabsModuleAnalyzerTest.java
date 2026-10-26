@@ -23,6 +23,17 @@ import static org.mockito.Mockito.when;
  * « indisponible/inconnu » (INFO, non scoré) vs « médiocre » (WARN/FAIL) - issue #100.
  */
 class SslLabsModuleAnalyzerTest {
+    @Test void gradeRetainsOnlyExplicitlyWeakSuitesOfTheSelectedEndpoint() throws Exception {
+        var grade=check(analyze("""
+          {"status":"READY","endpoints":[{"ipAddress":"192.0.2.1","grade":"B","statusMessage":"Ready","details":{"suites":[{"list":[
+            {"name":"TLS_RSA_WITH_AES_128_GCM_SHA256","q":1},
+            {"name":"TLS_AES_128_GCM_SHA256","q":2},
+            {"name":"TLS_UNKNOWN"},{"name":"private text","q":0}
+          ]}]}}]}
+          """),"ssl.grade");
+        assertEquals(java.util.Set.of("TLS_RSA_WITH_AES_128_GCM_SHA256"),grade.details().get("weakCipherSuites"));
+        assertEquals("192.0.2.1",grade.details().get("selectedEndpoint"));
+    }
     @ParameterizedTest
     @CsvSource({"90,PASS", "61,PASS", "60,PASS", "39,PASS", "31,PASS", "30,WARN", "15,WARN", "14,FAIL", "0,FAIL", "-1,FAIL"})
     void expiryWarningsStartInTheRenewalWindow(long days, AuditStatus expected) throws Exception {

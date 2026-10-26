@@ -21,6 +21,25 @@ import static org.mockito.Mockito.when;
  * des faux positifs (confidence=0) et conservation de la gravité maximale (issue #157).
  */
 class ZapModuleAnalyzerTest {
+    @Test void alertEvidenceLocatesTheRealResponseWithoutPublishingCookieNamesOrBodyValues() throws Exception {
+        var client=mock(ZapClient.class);
+        when(client.analyze(org.mockito.ArgumentMatchers.any(AuditContext.class))).thenReturn(MAPPER.readTree("""
+          {"alerts":[{"pluginId":"10011","risk":"Low","param":"private-session"},
+           {"pluginId":"10096","risk":"Low","evidence":"1723456789"},
+           {"pluginId":"10036","risk":"Low","evidence":"nginx/1.0"}]}
+          """));
+        var context=ctx().withHttpResult("https://example.com/",200,1,java.util.List.of(),
+            java.util.Map.of("set-cookie","prefs=[redacted]; secure\nprivate-session=[redacted]; httponly","server","nginx/1.0"),
+            "<html>\n<body>1723456789</body></html>");
+        var result=new ZapModuleAnalyzer(client).analyze(context,LoggerFactory.getLogger("test"));
+        assertEquals(java.util.Set.of(2),check(result,"zap.alert.10011").orElseThrow().details().get("cookieIndexes"));
+        var timestamp=check(result,"zap.alert.10096").orElseThrow();
+        assertEquals(2L,timestamp.details().get("responseBodyLine"));
+        assertEquals(7,timestamp.details().get("responseBodyColumn"));
+        assertEquals("server",check(result,"zap.alert.10036").orElseThrow().details().get("responseHeader"));
+        assertFalse(MAPPER.writeValueAsString(timestamp.details()).contains("1723456789"));
+        assertFalse(MAPPER.writeValueAsString(check(result,"zap.alert.10011").orElseThrow().details()).contains("private-session"));
+    }
     @Test void acceptsRealCoreApiRiskLabelsAndRetainsEachCspReason() throws Exception {
         var result = analyze("""
           {"alerts":[{"pluginId":"10055","alert":"CSP: Wildcard Directive","risk":"Medium","confidence":"High","other":"script-src-elem is missing."},

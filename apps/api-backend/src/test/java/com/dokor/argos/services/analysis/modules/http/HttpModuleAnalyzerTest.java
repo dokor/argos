@@ -40,6 +40,19 @@ import static org.mockito.Mockito.when;
  * du résultat HTTP vers l'{@link AuditContext}.
  */
 class HttpModuleAnalyzerTest {
+    @Test void snapshotForPassiveAnalysisPreservesCookieFlagsAndSeparateOccurrencesButNotValues() throws Exception {
+        var result=fixtureAnalysis(200,"<html></html>",Map.of("set-cookie",List.of(
+            "session=private-one; Secure; HttpOnly; SameSite=Lax; Path=/private",
+            "preferences=private-two; SameSite=None; Secure")));
+        var context=HttpModuleAnalyzer.enrichContext(new AuditContext("https://example.com","https://example.com",1),result);
+        String cookies=context.headers().get("set-cookie");
+        assertEquals(2,cookies.split("\\n").length);
+        assertTrue(cookies.contains("secure"));
+        assertTrue(cookies.contains("httponly"));
+        assertTrue(cookies.contains("samesite=lax"));
+        assertFalse(cookies.contains("private"));
+        assertEquals("2: HttpOnly",checkByKey(result,"http.security.cookie_flags").details().get("cookieIssues"));
+    }
     @Test void distinguishesAbsentEmptyAndUnrecognisedCspWithoutPublishingItsRawPolicy() {
         for (String policy : List.of("ABSENT", "", "default-src *", "script-src 'self'")) {
             var headers = policy.equals("ABSENT") ? Map.<String,String>of()
@@ -746,12 +759,12 @@ class HttpModuleAnalyzerTest {
         var result = analyzeWith(client);
         assertFalse(result.toString().contains("redirect-secret"));
         var last = (Map<String, Object>) result.data().get("lastResponse");
-        assertEquals("JSESSIONID=[redacted]", ((Map<?, ?>) last.get("headers")).get("set-cookie"));
+        assertEquals("JSESSIONID=[redacted]; httponly; secure", ((Map<?, ?>) last.get("headers")).get("set-cookie"));
         assertEquals(false, checkByKey(result, "http.security.cookie_flags").value());
 
         var terminal = analyzeCookies(List.of("JSESSIONID=terminal-secret; Secure; HttpOnly"));
         var context = HttpModuleAnalyzer.enrichContext(new AuditContext("https://example.com", "https://example.com", 0L), terminal);
-        assertEquals("JSESSIONID=[redacted]", context.headers().get("set-cookie"));
+        assertEquals("JSESSIONID=[redacted]; httponly; secure", context.headers().get("set-cookie"));
         assertFalse(context.headers().toString().contains("terminal-secret"));
     }
 

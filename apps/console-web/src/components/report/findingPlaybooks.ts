@@ -327,7 +327,7 @@ export const playbookGroups: Array<{keys: string[]; reference: string; verifiedA
       "detection": "Argos HTML compte les éléments a dépourvus d’attribut href ; il ne vérifie pas leur destination ni leur nom accessible.",
       "steps": [
         "Retrouver les a sans href dans le HTML reçu.",
-        "Pour une navigation, ajouter la destination réelle dans href ; pour une action sur la page, utiliser un bouton et son événement.",
+        "Pour une navigation, ajouter la destination réelle dans href ; pour une action sur la page, utiliser un bouton et son événement. Si cet élément sert seulement de repère de fragment (id ou name), conserver la cible : ne pas lui inventer une navigation.",
         "Activer chaque contrôle au clavier, puis vérifier la destination ou l’action."
       ],
       "expected": "La navigation est un lien utilisable et l’action est un bouton utilisable.",
@@ -338,7 +338,7 @@ export const playbookGroups: Array<{keys: string[]; reference: string; verifiedA
       "detection": "Argos HTML counts a elements lacking an href attribute; it does not validate their destination or accessible name.",
       "steps": [
         "Locate a elements without href in received HTML.",
-        "For navigation, add the real destination to href; for an in-page action, use a button and its handler.",
+        "For navigation, add the real destination to href; for an in-page action, use a button and its handler. If this element is only a fragment target (id or name), preserve the target: do not invent navigation.",
         "Activate each control with the keyboard, then verify the destination or action."
       ],
       "expected": "Navigation is a usable link and an action is a usable button.",

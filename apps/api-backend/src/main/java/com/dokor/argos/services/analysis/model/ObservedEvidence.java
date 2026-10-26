@@ -42,10 +42,11 @@ public record ObservedEvidence(
             String ownership,
             String resourcePath,
             String selector,
-            Map<String, Double> metrics) {
+            Map<String, Double> metrics,
+            String locationScope) {
         public Item(String kind, String origin, String resourceRef, String nodePath, Integer status,
                     String reason, String resourceType, String ownership) {
-            this(kind,origin,resourceRef,nodePath,status,reason,resourceType,ownership,null,null,null);
+            this(kind,origin,resourceRef,nodePath,status,reason,resourceType,ownership,null,null,null,null);
         }
     }
 
@@ -84,7 +85,7 @@ public record ObservedEvidence(
         if (value == null) return null; // Historical reports have no new collection metadata.
         JsonNode n = value instanceof JsonNode j ? j : MAPPER.valueToTree(value);
         if (!"observed-evidence-v1".equals(n.path("version").asText())
-                || !Set.of("lighthouse", "runtime", "zap").contains(n.path("source").asText())
+                || !Set.of("lighthouse", "runtime", "zap", "html").contains(n.path("source").asText())
                 || !n.path("items").isArray()) return null;
         List<Item> items = new ArrayList<>();
         boolean truncated = n.path("truncated").asBoolean() || n.path("items").size() > 10;
@@ -120,7 +121,7 @@ public record ObservedEvidence(
                         || !path.matches(
                                 "(?:[0-9]{1,5},[A-Z][A-Z0-9-]{0,31})(?:,[0-9]{1,5},[A-Z][A-Z0-9-]{0,31})*"))
                     path = null;
-                if (path == null && (!Set.of("lighthouse", "zap").contains(n.path("source").asText()) || safeSelector(raw.path("selector").asText()) == null)) continue;
+                if (path == null && (!Set.of("lighthouse", "zap", "html").contains(n.path("source").asText()) || safeSelector(raw.path("selector").asText()) == null)) continue;
             } else continue;
             int code = raw.path("status").isIntegralNumber() ? raw.path("status").asInt(-1) : -1;
             String reason = raw.path("reason").asText(),
@@ -136,9 +137,11 @@ public record ObservedEvidence(
                             reason.matches("net::ERR_[A-Z_]{1,60}") ? reason : null,
                             TYPES.contains(type) ? type : null,
                             Set.of("FIRST_PARTY", "THIRD_PARTY").contains(owner) ? owner : null,
-                            "lighthouse".equals(n.path("source").asText()) && "resource".equals(kind) ? safeResourcePath(raw.path("resourcePath").asText()) : null,
-                            Set.of("lighthouse", "zap").contains(n.path("source").asText()) && "element".equals(kind) ? safeSelector(raw.path("selector").asText()) : null,
-                            "lighthouse".equals(n.path("source").asText()) ? metrics(raw.path("metrics")) : null));
+                            Set.of("lighthouse", "runtime").contains(n.path("source").asText()) && "resource".equals(kind) ? safeResourcePath(raw.path("resourcePath").asText()) : null,
+                            Set.of("lighthouse", "zap", "html").contains(n.path("source").asText()) && "element".equals(kind) ? safeSelector(raw.path("selector").asText()) : null,
+                            Set.of("lighthouse", "runtime").contains(n.path("source").asText()) ? metrics(raw.path("metrics")) : null,
+                            Set.of("lighthouse", "runtime").contains(n.path("source").asText()) && "resource".equals(kind) && "document".equals(type)
+                                && "ANALYSED_DOCUMENT".equals(raw.path("locationScope").asText()) ? "ANALYSED_DOCUMENT" : null));
         }
         int inspected = Math.max(0, Math.min(1000000, n.path("inspected").asInt()));
         return new ObservedEvidence(

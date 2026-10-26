@@ -1,7 +1,29 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {lighthouseEvidence,resourceEvidence,safeResourcePath,safeSelector} from './evidence.mjs';
+import {attachLinkNodes,lighthouseEvidence,resourceEvidence,safeResourcePath,safeSelector} from './evidence.mjs';
 import {resourceEvidence as runtimeResource} from '../playwright-service/evidence.mjs';
+
+test('console sourceLocation resolves to the actual audited document, with one-based coordinates',()=>{
+ const audit={details:{items:[{sourceLocation:{type:'source-location',url:'https://example.com/javascript_error?token=x',line:7,column:51}}]}};
+ const evidence=lighthouseEvidence(audit,'https://example.com/javascript_error?token=x');
+ assert.equal(evidence.items[0].locationScope,'ANALYSED_DOCUMENT');
+ assert.deepEqual(evidence.items[0].metrics,{sourceLine:8,sourceColumn:52});
+ assert.doesNotMatch(JSON.stringify(evidence),/javascript_error|token=x/);
+ assert.equal(lighthouseEvidence(audit,'https://example.com/javascript_error?token=other').items[0].locationScope,undefined);
+});
+
+test('ambiguous link labels retain distinct nodes from the same Lighthouse gather',()=>{
+ const node=i=>({path:`1,HTML,1,BODY,${i},A`,selector:'body > a',snippet:'private'});
+ const result={lhr:{audits:{'link-text':{details:{items:[{href:'https://example.com/a',text:'click here'},{href:'https://example.com/a',text:'click here'}]}}}},artifacts:{AnchorElements:[
+  {href:'https://example.com/a',text:'different',node:node(0)},
+  {href:'https://example.com/a',text:' click here ',node:node(1)},
+  {href:'https://example.com/a',text:'click here',node:node(2)},
+ ]}};
+ attachLinkNodes(result);
+ const evidence=lighthouseEvidence(result.lhr.audits['link-text']);
+ assert.deepEqual(evidence.items.map(i=>i.nodePath),['1,HTML,1,BODY,1,A','1,HTML,1,BODY,2,A']);
+ assert.doesNotMatch(JSON.stringify(evidence),/private|click here/);
+});
 
 test('real Lighthouse network-tree and source-location shapes retain usable targets', () => {
  const tree=lighthouseEvidence({details:{type:'list',items:[{type:'list-section',value:{type:'network-tree',chains:{request:{url:'https://site.example/',children:{css:{url:'https://site.example/_next/static/chunks/main.css?token=hidden',navStartToEndTime:324,transferSize:15690,children:{font:{url:'https://site.example/assets/inter.woff2',navStartToEndTime:470}}}}}}}}]}});

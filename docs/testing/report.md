@@ -70,7 +70,7 @@ en-tête et directive, ou certificat présenté avec le nom d'hôte. Relier ensu
 chaque preuve à une modification concrète et à une vérification après correction.
 Ne pas présenter un signal passif comme une vulnérabilité confirmée.
 
-`scripts/review/LiveAudit.java` est un lanceur manuel fixé à la page publique Argos.
+`scripts/review/LiveAudit.java` est un lanceur manuel avec une liste fermée de cibles publiques.
 Il appelle les huit analyseurs, la fusion, le score, le compositeur et l'assainissement
 de production. Il ne teste ni la file, ni la base, ni les comptes, ni la transaction
 de publication. Aucun résultat d'outil n'est simulé ; les services indisponibles
@@ -89,6 +89,12 @@ Depuis la racine, sous PowerShell :
 $reviewClasspath = (Get-Content apps/api-backend/target/review-classpath.txt -Raw).Trim() + ';apps/api-backend/target/classes'
 java --class-path $reviewClasspath scripts/review/LiveAudit.java --run-public-argos
 node scripts/review/verify-live-target.mjs
+# Autres sites : pages publiques de démonstration, jamais de cible fournie arbitrairement.
+java --class-path $reviewClasspath scripts/review/LiveAudit.java --run-public-demo js-error
+java --class-path $reviewClasspath scripts/review/LiveAudit.java --run-public-demo broken-images
+java --class-path $reviewClasspath scripts/review/LiveAudit.java --run-public-demo w3c-bad
+java --class-path $reviewClasspath scripts/review/LiveAudit.java --run-public-demo mixed-content
+node scripts/review/verify-demo-targets.mjs
 ```
 
 Les sorties assainies vont dans `outputs/live-audit/` (ignoré par Git). Le second
@@ -99,7 +105,15 @@ position est la cause du problème : lire aussi l'audit et la procédure propos�
 Pour afficher ce résultat, lancer le backend d'aperçu habituel sur 3018, puis
 `node scripts/review/live-audit-preview.mjs` sur 3019 et Next avec
 `API_BASE=http://127.0.0.1:3019`. Ouvrir `/report/review-real-argos?view=technical`.
-Seul ce rapport provient de la collecte réelle ; les autres réponses de l'aperçu
+Les variantes `review-real-js-error`, `review-real-broken-images`, `review-real-w3c-bad`
+et `review-real-mixed-content` lisent les sorties de chaque démonstration dans
+`outputs/live-audit/<cas>/`. Le vérificateur compare les vraies réponses : coordonnées
+de l'exception, images en 404, URL HTTP du contenu mixte, en-têtes absents, attributs
+des cookies et fichiers statiques cités. La résolution des sélecteurs et chemins DOM
+est vérifiée séparément dans le navigateur. Ne pas compiler dans `target/classes`
+pendant une collecte qui utilise ce classpath ; attendre ou en utiliser une copie.
+
+Seuls ces rapports proviennent de collectes réelles ; les autres réponses de l'aperçu
 restent fictives, en particulier les comptes. Le lecteur est limité à GET et à la
 boucle locale. Ne pas l'utiliser comme serveur de publication.
 

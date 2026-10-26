@@ -6,6 +6,7 @@ import com.dokor.argos.services.analysis.model.AuditCheckResult;
 import com.dokor.argos.services.analysis.model.FindingDetection;
 import com.dokor.argos.services.analysis.model.AuditContext;
 import com.dokor.argos.services.analysis.model.AuditModuleResult;
+import com.dokor.argos.services.analysis.model.ObservedEvidence;
 import com.dokor.argos.services.analysis.model.enums.AuditSeverity;
 import com.dokor.argos.services.analysis.model.enums.AuditStatus;
 import com.dokor.argos.services.domain.audit.UrlNormalizer;
@@ -105,7 +106,7 @@ public class HtmlModuleAnalyzer {
         checks.add(checkCanonical(canonical));
 
         // 4) H1 presence and count
-        checks.add(checkH1Count(h1Count, firstH1));
+        checks.add(withElements(checkH1Count(h1Count, firstH1), headings));
 
         // 5) <html lang="">
         checks.add(checkHtmlLang(lang));
@@ -138,10 +139,10 @@ public class HtmlModuleAnalyzer {
         checks.add(checkSocialTags(hasOgTitle, hasOgDesc, hasOgImage, hasTwitterCard));
 
         // 9) Images alt coverage
-        checks.add(checkImagesAlt(imgCount, imgAltMissingCount));
+        checks.add(withElements(checkImagesAlt(imgCount, imgAltMissingCount), images.stream().filter(e -> !e.hasAttr("alt")).toList()));
 
         // 10) Anchors href coverage
-        checks.add(checkAnchorsHref(aCount, aNoHrefCount));
+        checks.add(withElements(checkAnchorsHref(aCount, aNoHrefCount), anchors.stream().filter(e -> !e.hasAttr("href")).toList()));
 
         // 11) Script count (info)
         checks.add(AuditCheckResult.of(
@@ -381,7 +382,7 @@ public class HtmlModuleAnalyzer {
             0.0,            // weight filled later
             List.of(),      // tags filled later
             lang,
-            present ? Map.of("lang", lang) : Map.of(),
+            present ? Map.of("lang", lang, "state", "PRESENT") : Map.of("state", "ATTRIBUTE_MISSING"),
             present ? "L'attribut lang est défini (" + lang + ")." : "Attribut lang absent sur le <html>.",
             present ? null : "Set <html lang=\"...\"> for accessibility and SEO."
         );
@@ -487,6 +488,24 @@ public class HtmlModuleAnalyzer {
             message,
             recommendation
         ).withScoreRatio(Math.min(1.0, presentCount / 3.0));
+    }
+
+    private static AuditCheckResult withElements(AuditCheckResult check, List<Element> elements) {
+        if (elements.isEmpty()) return check;
+        var items = new ArrayList<Map<String,String>>();
+        for (var element : elements.stream().limit(10).toList()) {
+            var segments = new LinkedList<String>();
+            for (var node = element; node != null && !node.tagName().equals("#root"); node = node.parent())
+                segments.addFirst(Set.of("html", "body").contains(node.tagName()) ? node.tagName()
+                    : node.tagName() + ":nth-child(" + (node.elementSiblingIndex() + 1) + ")");
+            String selector = ObservedEvidence.safeSelector(String.join(" > ", segments));
+            if (selector != null) items.add(Map.of("kind", "element", "selector", selector));
+        }
+        var details = new LinkedHashMap<String,Object>(check.details());
+        details.put("observed", ObservedEvidence.from(Map.of("version", "observed-evidence-v1", "source", "html",
+            "items", items, "inspected", elements.size(), "truncated", elements.size() > items.size())));
+        return AuditCheckResult.of(check.key(), check.title(), check.status(), check.severity(), check.scorable(),
+            check.weight(), check.tags(), check.value(), details, check.message(), check.recommendation());
     }
 
     private static AuditCheckResult checkImagesAlt(int imgCount, int imgAltMissingCount) {

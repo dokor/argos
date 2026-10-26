@@ -9,6 +9,7 @@ import { CATALOGUE_VERSION, cleanEvidence, findingContent } from "./findingCatal
 import { expectsScalarMeasurement, findingExplanation } from "./findingExplanation";
 import { reportReadingCopy } from "./reportReadingCopy";
 import type { Finding } from "./reportModel";
+import {documentTargets,headerTargets,isPageTiming} from './findingTargets';
 import s from "./FindingDetails.module.scss";
 
 export default function FindingDetails({ finding, pageUrl }: { finding: Finding; pageUrl?: string }) {
@@ -22,6 +23,7 @@ export default function FindingDetails({ finding, pageUrl }: { finding: Finding;
   const confidence=issue.confidence&&Object.hasOwn(t.report.priorityCards.confidence,issue.confidence)
     ? t.report.priorityCards.confidence[issue.confidence] : copy.unknownConfidence;
   const observed=evidence?.observed?.version==="observed-evidence-v1"?evidence.observed:undefined;
+  const implicitLocation=Object.hasOwn(documentTargets,issue.id??'')||Object.hasOwn(headerTargets,issue.id??'')||isPageTiming(issue.id);
   return <div className={s.details}>
     <div className={s.questions}>
       <section className={s.question} aria-label={questions.observation}>
@@ -31,7 +33,7 @@ export default function FindingDetails({ finding, pageUrl }: { finding: Finding;
         {!validMeasure&&expectsScalarMeasurement(issue)&&<p className={s.context}>{copy.missingMeasure}</p>}
         <FindingLocation issue={issue} pageUrl={pageUrl} lang={lang}/>
         {issue.evidence&&!evidence&&<p className={s.sourceObservation}>{cleanEvidence(issue.evidence)}</p>}
-        <ObservedEvidence evidence={observed} lang={lang}/>
+        {(!implicitLocation||!!observed?.items.length)&&<ObservedEvidence evidence={observed} lang={lang} pageUrl={pageUrl}/>}
         {!observed?.items.length&&content.missingInformation&&<p className={s.context}>{content.missingInformation}</p>}
       </section>
       <section className={s.question} aria-label={questions.impact}>

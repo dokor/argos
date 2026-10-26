@@ -97,7 +97,7 @@ class ObservatoryModuleAnalyzerTest {
     private static AuditModuleResult analyzeWithTests(String scanJson, String testsJson) throws Exception {
         ObservatoryClient client = mock(ObservatoryClient.class);
         when(client.scan(anyString())).thenReturn(MAPPER.readTree(scanJson));
-        when(client.tests(anyInt())).thenReturn(MAPPER.readTree(testsJson));
+        when(client.tests(anyString(), anyInt())).thenReturn(MAPPER.readTree(testsJson));
         return new ObservatoryModuleAnalyzer(client).analyze(ctx(), LoggerFactory.getLogger("test"));
     }
 
@@ -148,7 +148,7 @@ class ObservatoryModuleAnalyzerTest {
     void testsUnavailableFallsBackToGenericRecommendation() throws Exception {
         ObservatoryClient client = mock(ObservatoryClient.class);
         when(client.scan(anyString())).thenReturn(MAPPER.readTree("{\"score\":30,\"grade\":\"F\",\"scan_id\":123}"));
-        when(client.tests(anyInt())).thenThrow(new RuntimeException("tests endpoint down"));
+        when(client.tests(anyString(), anyInt())).thenThrow(new RuntimeException("tests endpoint down"));
 
         AuditModuleResult result = new ObservatoryModuleAnalyzer(client).analyze(ctx(), LoggerFactory.getLogger("test"));
         AuditCheckResult score = check(result, "observatory.score");
@@ -170,6 +170,6 @@ class ObservatoryModuleAnalyzerTest {
         AuditCheckResult score = check(result, "observatory.score");
 
         assertNull(score.recommendation());
-        verify(client, never()).tests(anyInt());
+        verify(client, never()).tests(anyString(), anyInt());
     }
 }

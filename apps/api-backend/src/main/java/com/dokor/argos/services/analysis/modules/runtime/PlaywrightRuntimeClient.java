@@ -121,8 +121,12 @@ public class PlaywrightRuntimeClient {
         java.util.List<ConsoleSample> samples,
         // Erreurs attribuées au site lui-même (même domaine enregistrable) — issue #153.
         // null si le service playwright ne fournit pas la distinction (rétro-compat).
-        Integer errorsFirstParty
+        Integer errorsFirstParty,
+        JsonNode observedEvidence
     ) {
+        public Console(Integer errors, Integer warnings, java.util.List<ConsoleSample> samples, Integer errorsFirstParty) {
+            this(errors, warnings, samples, errorsFirstParty, null);
+        }
     }
 
     public record ConsoleSample(
@@ -134,8 +138,10 @@ public class PlaywrightRuntimeClient {
 
     public record JsErrors(
         Integer count,
-        java.util.List<JsErrorSample> samples
+        java.util.List<JsErrorSample> samples,
+        JsonNode observedEvidence
     ) {
+        public JsErrors(Integer count, java.util.List<JsErrorSample> samples) { this(count, samples, null); }
     }
 
     public record JsErrorSample(

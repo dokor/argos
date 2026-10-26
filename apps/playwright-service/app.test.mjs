@@ -126,7 +126,8 @@ test('runtime contract retains metrics and partitions errors using the final dom
   assert.equal(evidence.items[0].reason,'net::ERR_CONNECTION_RESET');
   assert.equal(evidence.items[1].ownership,'THIRD_PARTY');
   assert.equal(evidence.items[1].status,503);
-  assert.doesNotMatch(JSON.stringify(evidence),/private-secret|script.js|\?token/);
+  assert.doesNotMatch(JSON.stringify(evidence),/private-secret|\?token/);
+  assert.equal(evidence.items[0].resourcePath,'/script.js');
   assert.equal(fake.closed(), 1);
 });
 

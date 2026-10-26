@@ -9,6 +9,11 @@ createServer(async (req,res) => {
     if (path === '/api/reports/review-real-argos') {
       res.end(await readFile('outputs/live-audit/report.json','utf8')); return;
     }
+    for (const demo of ['w3c-bad','js-error','broken-images','mixed-content']) {
+      if (path === `/api/reports/review-real-${demo}` || path === `/api/reports/review-before-${demo}`) {
+        res.end(await readFile(`outputs/live-audit/${demo}/${path.includes('/review-before-')?'before':'report'}.json`,'utf8')); return;
+      }
+    }
     const response = await fetch('http://127.0.0.1:3018' + req.url);
     res.statusCode = response.status; res.end(await response.text());
   } catch { res.writeHead(503).end('{}'); }

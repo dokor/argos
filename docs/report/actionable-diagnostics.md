@@ -61,7 +61,7 @@ de terrain, leur index, ni leur profondeur d’exploration.
 
 ### Couverture des explications et corrections
 
-Le catalogue `report-content-v9` confronte les fiches aux clés réellement produites par les huit
+Le catalogue `report-content-v10` confronte les fiches aux clés réellement produites par les huit
 modules. Les 115 audits de la configuration Lighthouse 13.5.0 susceptibles de produire un résultat
 `binary`, `numeric` ou `metricSavings` disposent de textes FR/EN : problème et effet, emplacement
 à examiner, modification concrète et résultat attendu. Cela couvre des candidats, pas 115 problèmes
@@ -136,7 +136,67 @@ leur périmètre de pages sélectionnées. Cette modification ne crée pas de no
 La refonte du PDF est différée ; les composants éditoriaux partagés continuent d’être testés
 avec son rendu HTML, sans validation de pagination ni nouvel export PDF dans cette tâche.
 
-## Reproduction locale
+## Recette sur plusieurs sites réels — 26 octobre 2026
+
+Quatre collectes supplémentaires ont utilisé les huit analyseurs de production et
+le vrai démon ZAP passif, sans soumettre de formulaire. Les sorties finales vont
+de 21:47:13 à 21:48:52 UTC. Les huit services ont répondu sur chaque cible ; cela
+n'implique pas que chaque contrôle individuel soit mesurable (W3C : couverture 98 %).
+
+| Page publique | Constats finaux | Preuves confrontées au site |
+|---|---:|---|
+| The Internet — `/javascript_error` | 27 | Expression fautive à la ligne 8, colonne 52, dans le document exact ; cookie de réponse ; suites TLS faibles |
+| The Internet — `/broken_images` | 31 | `asdf.jpg` et `hjkl.jpg` répondent 404 ; les cibles alt et ratio retrouvent les images concernées |
+| W3C BAD — `/WAI/demos/bad/before/home.html` | 32 | 41 cibles HTML/Lighthouse résolues dans le DOM réel ; le script piwik signalé répond 404 |
+| badssl — `https://mixed.badssl.com/` | 31 | URL HTTP à la ligne 18, colonne 29 ; image exacte, bannière Server, TLS 1.0/1.1 et terminaison identifiée |
+
+Ces 121 fiches correspondent à 62 règles distinctes. Les fiches rendues ont été
+ouvertes dans le navigateur ; la revue a examiné leurs corrections, pas seulement
+leur présence. Vingt ressources statiques distinctes ont été rechargées : 17 réponses
+200 et les trois 404 attendus. Les pages sont des démonstrations volontairement
+problématiques ; elles ne constituent pas un échantillon représentatif de tous les sites.
+
+Corrections issues de cette recette :
+
+- HTML conserve les sélecteurs structurels des images sans alt, liens sans href et
+  titres h1 concernés. Les absences de balises/en-têtes gardent leur état explicite.
+- Runtime conserve les chemins statiques et coordonnées de source. Les exceptions
+  inline désignent le document analysé, sans exposer de nouveau chemin privé.
+  Une erreur de chargement d'image n'est plus expliquée comme du code JavaScript à réécrire.
+- Lighthouse lit `sourceLocation`, retrouve les nœuds `link-text` dans les artefacts
+  du même passage et conserve le motif contenu mixte de DevTools. Le chemin DOM exact
+  distingue des images partageant un sélecteur qui peut correspondre à 25 nœuds.
+- L'URL masquée d'une ressource peut être retrouvée localement par sa référence dans
+  la chronologie du navigateur. Cette commande ne transmet rien ; si la requête a changé
+  ou n'apparaît pas dans la chronologie, il faut l'examiner dans Réseau. Ce repli n'est
+  pas présenté comme une URL déjà connue du rapport.
+- Observatory lit le détail v2 `/analyze?host=...`, avec correspondance stricte du scan.
+  Son périmètre commence à la racine HTTP de l'hôte, distinct du chemin de la page.
+- L'import HTTP dans ZAP conserve Secure/HttpOnly/SameSite et les occurrences séparées
+  de Set-Cookie tout en masquant les valeurs. Leur suppression créait de fausses alertes
+  (HttpOnly sur The Internet ; Secure et HttpOnly sur W3C). Les fiches indiquent désormais
+  l'occurrence du cookie, l'en-tête ou la ligne de réponse correspondant à la preuve.
+- TLS nomme les protocoles et suites faibles de la terminaison retenue ; Tech nomme
+  l'en-tête et la version observée. Les scores agrégés restent des résumés, pas des causes.
+
+Validation : 1 050 tests Maven, aucun échec, une intégration ignorée par défaut puis
+exécutée avec succès contre le vrai démon ZAP ; 28 tests Runtime et 26 Lighthouse.
+Après stabilisation, la suite frontend complète passe ses 1 291 tests dans 147 fichiers.
+TypeScript, ESLint et build Next de production passent. Le rendu FR sombre/clair et EN
+clair est vérifié sur ordinateur, sans débordement aux dimensions observées. La demande
+de viewport mobile n'a pas été appliquée par l'outil navigateur : aucun succès responsive
+à 390 px n'est revendiqué pour cette recette.
+Les captures et vérifications DOM détaillées sont locales dans
+`outputs/ui-review/multisite-audits/` du checkout principal ; les réponses assainies et
+les vérifications HTTP sont dans `outputs/live-audit/` du worktree.
+
+Limites : pas de file/base/publication testée par le lanceur manuel, pas de preuve de
+correction sur les sites tiers, pas de validation universelle des règles ou d'un domaine
+entier. Les diagnostics Lighthouse sélectionnés et les timings varient entre passages.
+Les rapports historiques ne retrouvent pas rétroactivement une donnée supprimée.
+PDF différé. La documentation des méthodes et limites reste visible.
+
+## Reproduction locale des fixtures
 
 Depuis la racine, lancer `.agents/skills/argos-visual-review/scripts/preview-backend.mjs`
 sur 3018, puis `node scripts/e2e/report-actionable-fixture.mjs` sur 3019.

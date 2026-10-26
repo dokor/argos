@@ -7,7 +7,7 @@ import { detailedRuleGuidance } from "./findingRuleGuidance";
 import { cleanEvidence } from './findingText';
 export { cleanEvidence } from './findingText';
 
-export const CATALOGUE_VERSION = "report-content-v9";
+export const CATALOGUE_VERSION = "report-content-v10";
 export type FindingContent = { title: string; observation: string; impact: string; recommendation: string; verification: string; qualification: string; missingInformation: string };
 type Copy = [title: string, impact: string];
 const catalogue: Record<string, Record<Lang, Copy>> = {};

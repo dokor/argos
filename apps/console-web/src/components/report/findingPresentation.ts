@@ -1,5 +1,6 @@
 import type { Issue } from "./types";
 import type { Lang } from "@/lib/i18n/routes";
+import { headerTargets, documentTargets } from './findingTargets';
 
 export function isAggregateFinding(key?: string | null) {
   return !!key && (key.startsWith("lighthouse.score.") || key === "ssl.grade" || key === "observatory.score");
@@ -46,6 +47,12 @@ export function describeObservation(issue: Issue, title: string, lang: Lang) {
   const details = issue.structuredEvidence?.details ?? [];
   const detail = (key: string) => details.find(d => d.key === key)?.text;
   const count = (key: string) => { const text = detail(key); return text !== undefined && /^\d+$/.test(text) && Number.isSafeInteger(Number(text)) ? Number(text) : undefined; };
+  if (detail('present') === 'false' && headerTargets[issue.id??'']) return fr
+    ? `L’en-tête ${headerTargets[issue.id!]} est absent ou vide dans la réponse examinée.`
+    : `The ${headerTargets[issue.id!]} header is absent or empty in the inspected response.`;
+  if (detail('present') === 'false' && documentTargets[issue.id??'']) return fr
+    ? `La déclaration attendue à cet emplacement est absente : ${documentTargets[issue.id!]}.`
+    : `The expected declaration is absent at this location: ${documentTargets[issue.id!]}.`;
   if (issue.id === "html.title" && count("length") !== undefined)
     return fr ? `Le titre HTML contient ${count("length")} caractères.` : `The HTML title contains ${count("length")} characters.`;
   if (issue.id === "html.h1.count" && count("h1Count") !== undefined)
@@ -69,6 +76,11 @@ export function describeObservation(issue: Issue, title: string, lang: Lang) {
     : (fr ? "mesure détaillée non conservée." : "detailed measurement not retained."))}`;
 }
 export function missingLocation(issue: Issue, lang: Lang) {
+  if (issue.id?.startsWith('lighthouse.score.')) return lang === 'fr'
+    ? 'Ce score résume plusieurs contrôles de cette page. Traiter les constats Lighthouse détaillés du même domaine ; le score seul ne désigne aucun élément à modifier.'
+    : 'This score summarises several checks on this page. Address the detailed Lighthouse findings in the same category; the score alone identifies no element to change.';
+  if (Object.hasOwn(headerTargets,issue.id??'') || Object.hasOwn(documentTargets,issue.id??'')) return '';
+  if (issue.structuredEvidence?.details?.some(d=>['responseHeader','responseBodyLine','probePath','exposed'].includes(d.key)&&d.text)) return '';
   if (['zap.alert.10055','zap.alert.10037'].includes(issue.id ?? '')) return '';
   if (issue.id?.startsWith('ssl.') && issue.structuredEvidence?.details?.some(d => d.key === 'selectedEndpoint' && d.text)) return '';
   if (issue.id?.startsWith('ssl.')) return lang === 'fr'

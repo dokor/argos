@@ -18,6 +18,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -166,6 +167,17 @@ public class SslLabsModuleAnalyzer {
         String grade = endpoint != null ? textField(endpoint, "grade") : null;
         if (grade != null && !Set.of("A+", "A", "A-", "B", "C", "D", "E", "F", "T", "M").contains(grade)) grade = null;
         boolean hasWarnings = endpoint != null && endpoint.path("hasWarnings").asBoolean(false);
+        var gradeDetails = new LinkedHashMap<String,Object>();
+        if (grade != null) { gradeDetails.put("grade", grade); gradeDetails.put("hasWarnings", hasWarnings); }
+        var weakSuites = new LinkedHashSet<String>();
+        if (endpoint != null) for (JsonNode group : endpoint.path("details").path("suites")) {
+            for (JsonNode suite : group.path("list")) {
+                String name = suite.path("name").asText();
+                if (suite.path("q").isIntegralNumber() && Set.of(0,1).contains(suite.path("q").asInt())
+                    && name.matches("TLS_[A-Z0-9_]{1,100}") && weakSuites.size() < 20) weakSuites.add(name);
+            }
+        }
+        if (!weakSuites.isEmpty()) gradeDetails.put("weakCipherSuites", weakSuites);
 
         // Grade indisponible (SSL Labs en cours, endpoint absent, erreur amont) => INFO
         // non scoré : on ne confond plus "inconnu" avec "moyen" (B=WARN). Le score n'est
@@ -191,7 +203,7 @@ public class SslLabsModuleAnalyzer {
             0.0,
             List.of(),
             grade,
-            grade != null ? Map.of("grade", grade, "hasWarnings", hasWarnings) : Map.of(),
+            gradeDetails,
             grade != null ? "Note SSL Labs : " + grade + (hasWarnings ? " (avec avertissements)" : "") : "Note SSL Labs indisponible.",
             gradeStatus != AuditStatus.PASS && gradeStatus != AuditStatus.INFO ? "Corrigez la configuration SSL/TLS signalée par SSL Labs." : null
         ));

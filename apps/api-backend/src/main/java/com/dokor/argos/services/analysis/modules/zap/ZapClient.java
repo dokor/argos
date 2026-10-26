@@ -107,7 +107,8 @@ public class ZapClient {
         var headers = context.headers().entrySet().stream()
             // The snapshot body is already decoded; do not describe it as compressed wire bytes.
             .filter(h -> !h.getKey().equalsIgnoreCase("content-encoding") && !h.getKey().equalsIgnoreCase("content-length"))
-            .map(h -> Map.of("name", h.getKey(), "value", h.getValue())).toList();
+            .flatMap(h -> (h.getKey().equalsIgnoreCase("set-cookie") ? java.util.Arrays.stream(h.getValue().split("\n")) : java.util.stream.Stream.of(h.getValue()))
+                .map(value -> Map.of("name", h.getKey(), "value", value))).toList();
         Map<String, Object> request = Map.of("method", "GET", "url", context.finalUrl(),
             "httpVersion", "HTTP/1.1", "headers", List.of(), "queryString", List.of(),
             "cookies", List.of(), "headersSize", -1, "bodySize", 0);

@@ -92,6 +92,9 @@ public class RuntimeModuleAnalyzer {
         consoleDetails.put("firstParty", firstPartyErrors);
         consoleDetails.put("thirdParty", consoleThirdParty);
         if (sampleConsole(r, "error") != null) consoleDetails.put("samples", sampleConsole(r, "error"));
+        var consoleObserved = ObservedEvidence.from(r.console() == null ? null : r.console().observedEvidence());
+        if (consoleObserved != null && "runtime".equals(consoleObserved.source()))
+            consoleDetails.put("observed", consoleObserved.filter(item -> "FIRST_PARTY".equals(item.ownership())));
         checks.add(AuditCheckResult.of(
             "runtime.console.errors",
             "Erreurs console",
@@ -112,7 +115,7 @@ public class RuntimeModuleAnalyzer {
             jsErrors == 0 ? AuditSeverity.LOW : AuditSeverity.MEDIUM,
             false, 0.0, List.of("runtime"),
             jsErrors,
-            sampleJsErrors(r) != null ? Map.of("samples", sampleJsErrors(r)) : Map.of(),
+            scriptErrorEvidence(r),
             jsErrors == 0 ? "Aucune erreur JS non catch détectée." : (jsErrors + " erreur(s) JS non catch détectée(s)."),
             jsErrors == 0 ? null : "Identifier la source et corriger (souvent des scripts tiers ou erreurs de build)."
         ));
@@ -301,6 +304,14 @@ public class RuntimeModuleAnalyzer {
             : "FIRST_PARTY".equals(item.ownership()) && ("server".equals(kind)
                 ? item.status()!=null && item.status()>=500 : item.status()==null));
         return Map.of("observed",selected);
+    }
+
+    private static Map<String,Object> scriptErrorEvidence(PlaywrightRuntimeClient.RuntimeAnalyzeResponse response) {
+        var details = new LinkedHashMap<String,Object>();
+        if (sampleJsErrors(response) != null) details.put("samples", sampleJsErrors(response));
+        var observed = ObservedEvidence.from(response.jsErrors() == null ? null : response.jsErrors().observedEvidence());
+        if (observed != null && "runtime".equals(observed.source())) details.put("observed", observed);
+        return details;
     }
 
     private static List<Map<String, String>> sampleConsole(PlaywrightRuntimeClient.RuntimeAnalyzeResponse r, String type) {

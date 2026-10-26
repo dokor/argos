@@ -34,8 +34,16 @@ public class LiveAudit {
     }
   }
   public static void main(String[] args) throws Exception {
-    if (args.length != 1 || !args[0].equals("--run-public-argos")) throw new IllegalArgumentException("Explicit --run-public-argos required");
-    String url = "https://argos.lelouet.fr/";
+    var demos = Map.of("w3c-bad", "https://www.w3.org/WAI/demos/bad/before/home.html",
+      "js-error", "https://the-internet.herokuapp.com/javascript_error",
+      "broken-images", "https://the-internet.herokuapp.com/broken_images",
+      "mixed-content", "https://mixed.badssl.com/");
+    boolean argos = args.length == 1 && args[0].equals("--run-public-argos");
+    String demo = args.length == 2 && args[0].equals("--run-public-demo") ? args[1] : null;
+    if (!argos && !demos.containsKey(demo == null ? "" : demo)) throw new IllegalArgumentException("Explicit --run-public-argos or --run-public-demo <known demo> required");
+    String url = argos ? "https://argos.lelouet.fr/" : demos.get(demo);
+    Path dir = argos ? Path.of("outputs/live-audit") : Path.of("outputs/live-audit", demo);
+    Files.createDirectories(dir);
     UrlNormalizer.validatePublicUrl(url);
     var mapper = new ObjectMapper().findAndRegisterModules();
     var config = new ConfigurationService(ConfigFactory.parseString("external.playwright.url=\"http://127.0.0.1:3016\"\nexternal.lighthouse.url=\"http://127.0.0.1:3017\"\nexternal.zap.url=\"http://127.0.0.1:8080\"\nexternal.ssl-labs.timeout=90s"));
@@ -51,8 +59,7 @@ public class LiveAudit {
     collect("lighthouse", () -> new LighthouseModuleAnalyzer(new LighthouseClient(mapper, external, config) {
       public JsonNode analyze(String target) throws Exception {
         var result = super.analyze(target);
-        Files.createDirectories(Path.of("outputs/live-audit"));
-        mapper.writerWithDefaultPrettyPrinter().writeValue(Path.of("outputs/live-audit/lighthouse.json").toFile(), result);
+        mapper.writerWithDefaultPrettyPrinter().writeValue(dir.resolve("lighthouse.json").toFile(), result);
         return result;
       }
     }).analyze(ctx, log));
@@ -69,7 +76,6 @@ public class LiveAudit {
     var internal = new AuditReportJson(1, url, url, Instant.now(), Map.of("review", "real-collectors-no-database",
       "moduleStatuses", mapper.writeValueAsString(states), "completeness", String.valueOf(states.values().stream().filter("COMPLETED"::equals).count()*100/8)), enriched, score);
     var report = new PublicReportComposer().compose(internal);
-    Path dir = Path.of("outputs/live-audit"); Files.createDirectories(dir);
     mapper.writerWithDefaultPrettyPrinter().writeValue(dir.resolve("report.json").toFile(), AuditOutputSanitizer.tree(report, mapper));
     mapper.writerWithDefaultPrettyPrinter().writeValue(dir.resolve("internal.json").toFile(), AuditOutputSanitizer.tree(internal, mapper));
     mapper.writerWithDefaultPrettyPrinter().writeValue(dir.resolve("provenance.json").toFile(), Map.of("target", url, "at", Instant.now().toString(), "unavailable", unavailable, "queueAndDatabase", false));

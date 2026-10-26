@@ -57,6 +57,20 @@ export function findingExplanation(issue: Issue, lang: Lang): Explanation {
   const current = fr
     ? 'Référentiel des collecteurs actuels. La version exacte de cette règle n’est pas conservée dans la fiche ; un rapport historique peut utiliser une autre méthode.'
     : 'Current collector reference. The exact version of this rule is not retained in the finding; a historical report may use another method.';
+  if (['runtime.console.errors','lighthouse.audit.errors-in-console'].includes(issue.id??'')) return {...p,methodNote:current,
+    title:fr?'Des erreurs sont relevées dans la console':'Errors were recorded in the console',
+    steps:[fr?'Ouvrir les ressources indiquées dans Réseau et la Console. Un message de chargement échoué concerne la requête ; une exception concerne le code à la ligne indiquée.':'Open the listed resources in Network and Console. A failed-load message concerns the request; an exception concerns code at the reported line.',
+      fr?'Pour une image ou un fichier introuvable, corriger son URL dans le HTML, le CSS ou son initiateur et vérifier sa publication. Pour une requête refusée, lire le statut et le motif avant de modifier sa configuration.':'For a missing image or file, fix its URL in HTML, CSS or its initiator and check deployment. For a refused request, inspect its status and reason before changing configuration.',
+      fr?'Pour une exception JavaScript, activer l’arrêt sur exception et corriger l’expression ou la condition dans le module source correspondant. Ne pas masquer le message.':'For a JavaScript exception, enable pause on exceptions and fix the expression or condition in the corresponding source module. Do not hide the message.']};
+  if (issue.id==='lighthouse.audit.inspector-issues' && issue.structuredEvidence?.details?.some(d=>d.key==='browserIssueTypes'&&d.text?.includes('MIXED_CONTENT'))) {
+    const mixed=findingPlaybook('lighthouse.audit.is-on-https',lang);
+    return {...mixed,methodNote:current,observation:fr?'DevTools signale du contenu mixte : cette page HTTPS référence les ressources HTTP indiquées ci-dessous.':'DevTools reports mixed content: this HTTPS page references the HTTP resources listed below.'};
+  }
+  if (issue.id === 'ssl.grade' && issue.structuredEvidence?.details?.some(d=>d.key==='weakCipherSuites'&&d.text)) return {...p, methodNote:current,
+    observation:fr?'SSL Labs relève des suites de chiffrement faibles ou non sûres sur la terminaison indiquée. Elles sont listées ci-dessous ; la note peut aussi dépendre d’autres critères.':'SSL Labs flags weak or insecure cipher suites on the listed endpoint. They appear below; other criteria may also affect the grade.',
+    steps:[fr?'Sur la terminaison TLS indiquée, retrouver la liste des suites autorisées dans le serveur, reverse proxy ou CDN. Comparer les noms exacts ci-dessus.':'On the listed TLS endpoint, locate the enabled cipher suites in the server, reverse proxy or CDN. Compare the exact names above.',
+      fr?'Retirer les suites signalées de la configuration en conservant les suites modernes nécessaires aux clients supportés. Tester en préproduction avant rechargement ; modifier la configuration du composant qui termine réellement TLS.':'Remove the flagged suites while retaining modern suites required by supported clients. Test in staging before reloading; change the component that actually terminates TLS.'],
+    expected:fr?'Le nouveau scan du même hôte et de chaque terminaison ne propose plus ces suites ; les clients supportés négocient toujours HTTPS.':'A new scan of the same host and each endpoint no longer offers those suites; supported clients still negotiate HTTPS.'};
   if (issue.id === 'lighthouse.audit.bf-cache') {
     const codes = (issue.structuredEvidence?.details?.find(d => d.key === 'bfCacheReasons')?.text ?? '').split(',').filter(code => /^[A-Za-z][A-Za-z0-9]{0,119}$/.test(code));
     const noStore = codes.some(code => ['MainResourceHasCacheControlNoStore', 'JsNetworkRequestReceivedCacheControlNoStoreResource'].includes(code));
@@ -76,12 +90,15 @@ export function findingExplanation(issue: Issue, lang: Lang): Explanation {
     const solution = /^(Examinez et corrigez ce problème|Corriger selon les bonnes pratiques)/i.test(retained) ? '' : retained;
     const plugin = issue.id.slice('zap.alert.'.length);
     const sourceLabel = fr ? 'ZAP, texte source (langue d’origine)' : 'ZAP source text (original language)';
-    const contextualGuide = ['10055','10202','10037'].includes(plugin);
+    const contextualGuide = ['10055','10202','10037','10036','10040','10010','10011','10054','10096'].includes(plugin);
     return { ...p, specific: p.specific || !!solution, methodNote: current,
       reference: /^\d{1,8}$/.test(plugin) ? `https://www.zaproxy.org/docs/alerts/${plugin}/` : p.reference,
       ...(description ? { observation: contextualGuide ? (plugin === '10202'
         ? (fr ? 'ZAP n’a pas reconnu de jeton anti-CSRF dans les formulaires signalés du HTML reçu. La protection effective côté serveur reste à vérifier.' : 'ZAP did not recognise an anti-CSRF token in the flagged forms in received HTML. Effective server-side protection still needs verification.')
-        : plugin === '10037' ? (fr ? 'La réponse de cette page expose le logiciel serveur dans X-Powered-By.' : 'This page’s response exposes server software in X-Powered-By.')
+        : ['10037','10036'].includes(plugin) ? (fr ? `La réponse de cette page expose le logiciel serveur dans ${plugin==='10036'?'Server':'X-Powered-By'}.` : `This page’s response exposes server software in ${plugin==='10036'?'Server':'X-Powered-By'}.`)
+        : ['10010','10011','10054'].includes(plugin) ? (fr?'ZAP signale un attribut de protection absent sur le cookie de réponse indiqué ci-dessous.':'ZAP flags a missing protection attribute on the response cookie located below.')
+        : plugin === '10096' ? (fr?'ZAP a reconnu une valeur ressemblant à un horodatage à l’emplacement indiqué. Ce signal de faible confiance ne démontre pas une fuite sensible.':'ZAP recognised a value resembling a timestamp at the listed location. This low-confidence signal does not establish a sensitive disclosure.')
+        : plugin === '10040' ? (fr?'Le HTML de cette page HTTPS référence une ressource HTTP à l’emplacement indiqué.':'This HTTPS page’s HTML references an HTTP resource at the listed location.')
         : (fr ? 'ZAP signale les directives CSP détaillées ci-dessous sur la réponse de cette page.' : 'ZAP flags the CSP directives detailed below on this page’s response.')) : `${sourceLabel} : ${description}`,
         impact: p.impact ?? (fr ? 'Le risque décrit par ZAP ci-dessus concerne les réponses observées. Confirmer les conditions et les utilisateurs concernés avant de choisir la priorité.' : 'The risk described by ZAP above concerns observed responses. Confirm the conditions and affected users before choosing priority.') } : {}),
       summary: p.summary ?? (solution ? `${sourceLabel} : ${solution}` : (fr ? 'La solution de cette règle ZAP n’a pas été conservée. Ouvrir sa documentation avant de choisir une modification.' : 'This ZAP rule’s solution was not retained. Open its documentation before choosing a change.')),
@@ -149,7 +166,7 @@ export function findingExplanation(issue: Issue, lang: Lang): Explanation {
       result.observation = fr ? `${n(d.values.missingAlt)} image(s) sans attribut alt parmi ${n(d.values.images)} images observées.`
         : `${n(d.values.missingAlt)} image(s) without an alt attribute among ${n(d.values.images)} observed images.`;
     }
-    result.missingInformation = fr ? 'L’emplacement exact des images n’est pas conservé par ce compteur HTML. Les retrouver dans la réponse reçue ; aucun chemin ou extrait de site n’est déduit de leur nombre.'
+    result.missingInformation = issue.structuredEvidence?.observed?.items.length ? undefined : fr ? 'L’emplacement exact des images n’est pas conservé par ce compteur HTML. Les retrouver dans la réponse reçue ; aucun chemin ou extrait de site n’est déduit de leur nombre.'
       : 'This HTML count does not retain exact image locations. Locate them in the received response; no site path or snippet is inferred from their number.';
   } else if (issue.id === 'http.security.csp') {
     const observations: Record<string, [string, string]> = {

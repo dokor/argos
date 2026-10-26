@@ -158,11 +158,11 @@ export type PriorityItem = {
 
 export type ObservedEvidence = {
   version: "observed-evidence-v1";
-  source: "lighthouse" | "runtime" | "zap";
+  source: "lighthouse" | "runtime" | "zap" | "html";
   state: "AVAILABLE" | "UNAVAILABLE";
   inspected: number; truncated: boolean; redacted: boolean;
   items: Array<{kind:"resource"|"element";origin?:string;resourceRef?:string;nodePath?:string;
-    resourcePath?:string|null;selector?:string|null;
+    resourcePath?:string|null;selector?:string|null;locationScope?:'ANALYSED_DOCUMENT'|null;
     metrics?:Partial<Record<"totalBytes"|"wastedBytes"|"wastedMs"|"transferSize"|"resourceSize"|"duration"|"width"|"height"|"navStartToEndTime"|"startTime"|"sourceLine"|"sourceColumn",number>>|null;
     status?:number;reason?:string;resourceType?:string;ownership?:"FIRST_PARTY"|"THIRD_PARTY"}>;
 };

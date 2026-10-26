@@ -46,7 +46,18 @@ export function evidenceEnvelope(source, items, inspected, truncated=false) {
     items:items.slice(0,EVIDENCE_LIMIT), inspected, truncated:truncated || items.length>EVIDENCE_LIMIT, redacted:true};
 }
 
-export function lighthouseEvidence(audit) {
+export function attachLinkNodes(result) {
+  const rows = result?.lhr?.audits?.['link-text']?.details?.items;
+  const anchors = result?.artifacts?.AnchorElements;
+  if (!Array.isArray(rows) || !Array.isArray(anchors)) return;
+  const used = new Set();
+  for (const row of rows.slice(0,EVIDENCE_LIMIT)) {
+    const index = anchors.findIndex((a,i)=> !used.has(i) && a.href === row.href && typeof a.text === 'string' && a.text.trim() === row.text);
+    if (index >= 0 && anchors[index].node) { row.node = {...anchors[index].node, type:'node'}; used.add(index); }
+  }
+}
+
+export function lighthouseEvidence(audit, pageUrl) {
   const items=[], seen=new Set(); let inspected=0, truncated=false;
   function retain(item) {
     if(!item) return;
@@ -67,18 +78,20 @@ export function lighthouseEvidence(audit) {
       const resource = resourceEvidence(url);
       const path = resource && safeResourcePath(new URL(url).pathname);
       const measured = metrics(value);
+      let locationScope;
+      try { const a = new URL(url), b = new URL(pageUrl); if(a.origin === b.origin && a.pathname === b.pathname && a.search === b.search) locationScope = 'ANALYSED_DOCUMENT'; } catch { /* Not the measured document. */ }
       // Lighthouse source-location coordinates are zero-based; display coordinates are one-based.
       if (value.type === 'source-location') for (const key of ['line', 'column']) {
         if (Number.isSafeInteger(value[key]) && value[key] >= 0 && value[key] < 1e7)
           measured[key === 'line' ? 'sourceLine' : 'sourceColumn'] = value[key] + 1;
       }
-      if (resource) retain({...resource, ...(path ? {resourcePath:path} : {}),
+      if (resource) retain({...resource, ...(path ? {resourcePath:path} : {}), ...(locationScope ? {locationScope,resourceType:'document'} : {}),
         ...(Object.keys(measured).length ? {metrics:measured} : {})});
     }
     // Only known detail containers, never arbitrary audit strings or screenshot data.
     if(Array.isArray(value)) { for(const item of value) { visit(item,depth+1); if(inspected>=400) {truncated=true;break;} } }
     else {
-      for(const key of ['items','node','subItems','value','source','location']) if(Object.hasOwn(value,key)) visit(value[key],depth+1);
+      for(const key of ['items','node','subItems','value','source','location','sourceLocation']) if(Object.hasOwn(value,key)) visit(value[key],depth+1);
       // Network trees use request-id keyed dictionaries, not the table's `items` array.
       for (const key of ['chains', 'children']) if (value[key] && typeof value[key] === 'object') {
         for (const child of Object.values(value[key])) {
