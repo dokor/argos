@@ -14,7 +14,10 @@ async function csrfToken(): Promise<string> {
   return csrf!;
 }
 export async function accountFetch<T>(path: string, method = "GET", body?: unknown, signal?: AbortSignal, idempotencyKey?: string, captcha?: string): Promise<T> {
-  const authenticated = !path.startsWith("auth/") || ["auth/logout", "auth/reauth", "auth/confirm-email"].includes(path);
+  // Public navigation only observes status. Renewing here introduces a mutation
+  // on anonymous page loads and prevents read-only clients from reading the status.
+  const passiveSessionCheck = path === "session" && method === "GET";
+  const authenticated = !passiveSessionCheck && (!path.startsWith("auth/") || ["auth/logout", "auth/reauth", "auth/confirm-email"].includes(path));
   if (authenticated && typeof window !== "undefined") await renewAccountSession();
   signal?.throwIfAborted();
   const headers: Record<string, string> = { "Content-Type": "application/json" };
