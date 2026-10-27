@@ -18,15 +18,12 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Duration;
-import java.time.Instant;
-import java.util.concurrent.ConcurrentHashMap;
 
 /** Optional, non-scorable enrichment of a published report from Ahrefs' free DR API. */
 @Singleton
 public class AhrefsDomainRatingClient {
     private static final Logger logger = LoggerFactory.getLogger(AhrefsDomainRatingClient.class);
     private static final URI ENDPOINT = URI.create("https://api.ahrefs.com/v3/public/domain-rating-free");
-    private static final Duration CACHE_TTL = Duration.ofDays(1);
     private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(4);
 
     private final HttpClient httpClient;
@@ -34,7 +31,6 @@ public class AhrefsDomainRatingClient {
     private final String apiKey;
     private final URI endpoint;
     private final Clock clock;
-    private final ConcurrentHashMap<String, ReportDto.DomainRating> cache = new ConcurrentHashMap<>();
 
     @Inject
     public AhrefsDomainRatingClient(ConfigurationService configuration, ObjectMapper mapper) {
@@ -53,13 +49,7 @@ public class AhrefsDomainRatingClient {
     /** Returns null when unconfigured or unavailable; neither case affects the audit score. */
     public ReportDto.DomainRating get(String domain) {
         if (apiKey.isEmpty() || domain == null || domain.isBlank()) return null;
-        // compute serializes concurrent lookups for this domain and reuses a recent result.
-        return cache.compute(domain.toLowerCase(java.util.Locale.ROOT), (key, cached) -> {
-            if (cached != null && Instant.parse(cached.fetchedAt()).plus(CACHE_TTL).isAfter(clock.instant())) {
-                return cached;
-            }
-            return fetch(key);
-        });
+        return fetch(domain.toLowerCase(java.util.Locale.ROOT));
     }
 
     private ReportDto.DomainRating fetch(String domain) {
