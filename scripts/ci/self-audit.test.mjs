@@ -255,18 +255,20 @@ test('service lists reject empty, duplicated, unknown or malformed deployment in
   assert.equal(parseServices('not-json'), null);
 });
 
-function collectorFixture({ failed, pending = false, reject, change = false, makeReport = report } = {}) {
+function collectorFixture({ failed, pending = false, runDuration = 0, reject, change = false, makeReport = report } = {}) {
   const calls = [];
-  let samples = 0, snapshots = 0, clock = 0;
+  let samples = 0, snapshots = 0, clock = 0, sampleStarted = 0;
   const client = {
     async login() { calls.push('login'); }, async logout() { calls.push('logout'); },
     async request(path, options) {
       calls.push({ path, options });
       if (path === '/api/account/analyses') {
         if (reject) throw new ControlError(reject);
+        sampleStarted = clock;
         return { runId: String(++samples) };
       }
-      if (/\/runs\/\d+$/.test(path)) return { status: failed ? 'FAILED' : pending ? 'QUEUED' : 'COMPLETED' };
+      if (/\/runs\/\d+$/.test(path)) return { status: failed ? 'FAILED' : pending ? 'QUEUED'
+        : clock - sampleStarted < runDuration ? 'RUNNING' : 'COMPLETED' };
       if (path.endsWith('/report')) return makeReport();
       return {};
     },
@@ -284,6 +286,27 @@ test('full control authenticates, checks usage, creates exactly two idempotent p
   const creates = f.calls.filter(c => c.path === '/api/account/analyses');
   assert.equal(creates.length, 2); assert.notEqual(creates[0].options.key, creates[1].options.key);
   assert.equal(creates[0].options.retry, true); assert.ok(!JSON.stringify(result).includes(secret));
+});
+
+test('both fresh sequential samples can finish after the former four-minute polling limit', async () => {
+  const f = collectorFixture({ runDuration: 360000 });
+  const result = await collectAudit(f.options);
+  assert.equal(result.outcome, 'GO');
+  assert.equal(result.collection.length, 2);
+  assert.equal(f.options.now(), 720000);
+  assert.equal(f.calls.filter(call => call.path === '/api/account/analyses').length, 2);
+  assert.equal(f.calls.at(-1), 'logout');
+});
+
+test('queue and processing together remain bounded for a scan that never completes', async () => {
+  const f = collectorFixture({ pending: true });
+  const result = await collectAudit(f.options);
+  assert.equal(result.outcome, 'CONTROL_FAILED');
+  assert.equal(result.reason, 'audit-timeout');
+  assert.equal(f.options.now(), 480000);
+  assert.equal(f.calls.filter(call => call.path === '/api/account/analyses').length, 1);
+  assert.deepEqual(result.findings, []);
+  assert.equal(f.calls.at(-1), 'logout');
 });
 
 test('the collector keeps filtered sample diagnostics on both allowed gaps and technical failures', async () => {

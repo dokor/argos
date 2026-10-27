@@ -19,7 +19,8 @@ jobs:
   control:
     if: github.repository == 'dokor/argos' && github.ref == 'refs/heads/main'
     runs-on: self-hosted
-    timeout-minutes: 15
+    # Two samples with up to 8 minutes each, plus readiness and HTTP overhead.
+    timeout-minutes: 20
     permissions:
       contents: read
     outputs:
