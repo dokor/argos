@@ -40,7 +40,7 @@ it("requires a real report context for false positives and communicates rate-lim
   const view=render(<LangProvider><ReportFeedback findingKey="http.hsts"/></LangProvider>);expect(screen.queryByRole("button")).toBeNull();
   view.rerender(<LangProvider><FeedbackReportContext.Provider value={{reportToken:"t".repeat(43)}}><ReportFeedback findingKey="http.hsts"/></FeedbackReportContext.Provider></LangProvider>);
   HTMLDialogElement.prototype.showModal=function(){this.setAttribute("open","");};HTMLDialogElement.prototype.close=function(){this.removeAttribute("open");};
-  fireEvent.click(screen.getByRole("button",{name:"Signaler un faux positif"}));expect(screen.getByText(/Le score et les preuves restent inchangés/)).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button",{name:"Signaler un faux positif"}));expect(await screen.findByText(/Le score et les preuves restent inchangés/)).toBeInTheDocument();
   fetchMock.mockResolvedValue(new Response('{}',{status:429,headers:{"Retry-After":"30"}}));
   fireEvent.click(screen.getByRole("checkbox"));
   fireEvent.change(screen.getByLabelText("Description"),{target:{value:"Incorrect on fixture"}});fireEvent.click(screen.getByRole("button",{name:"Envoyer le retour"}));

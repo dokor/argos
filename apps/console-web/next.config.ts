@@ -20,10 +20,12 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  poweredByHeader: false,
   // console-web has its own dependencies and lockfile, separate from root ADE tooling.
   // The config directory also resolves to /app in the console-web Docker context.
   turbopack: { root: __dirname },
-  experimental: { globalNotFound: true },
+  // Avoid combining the public shell with styles only used by report pages.
+  experimental: { globalNotFound: true, cssChunking: "graph" },
   reactCompiler: true,
   async redirects() {
     return [

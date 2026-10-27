@@ -17,17 +17,18 @@ beforeEach(() => {
   Object.assign(state.session, { ready: true, denied: false, error: "", profile: { displayName: "Camille", verified: true, admin: false }, usage: { offer: "FREE", limit: 100, used: 32, reserved: 4, available:64 }, usageError: false });
 });
 const content = <main><h1>Private page</h1><p>Private result</p></main>;
-it("offers report attachment from the header only on a saved report and resets it on navigation", () => {
+it("offers report attachment from the header only on a saved report and resets it on navigation", async () => {
   HTMLDialogElement.prototype.showModal=function(){this.setAttribute("open","");};
   HTMLDialogElement.prototype.close=function(){this.removeAttribute("open");};
   state.path="/en/account/runs/401";
   const view=render(<LangProvider initialLang="en"><AccountShell>{content}</AccountShell></LangProvider>);
   fireEvent.click(within(screen.getByRole("banner")).getByRole("button",{name:"Send feedback"}));
-  expect(screen.getByRole("checkbox",{name:"Attach the link to this report to my feedback"})).not.toBeChecked();
+  expect(await screen.findByRole("checkbox",{name:"Attach the link to this report to my feedback"})).not.toBeChecked();
   state.path="/en/account/integrations";
   view.rerender(<LangProvider initialLang="en"><AccountShell>{content}</AccountShell></LangProvider>);
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   fireEvent.click(within(screen.getByRole("banner")).getByRole("button",{name:"Send feedback"}));
+  await screen.findByRole("dialog");
   expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
 });
 it.each(["fr", "en"] as const)("keeps all five localized footer destinations without the brand block in %s", lang => {
