@@ -7,7 +7,11 @@ on:
         description: Service to redeploy
         type: choice
         default: all
-        options: [all, api-backend, console-web, playwright-service, lighthouse-service]
+        options: [all, api-backend, console-web, playwright-service, lighthouse-service, infra-proxy]
+      infra_revision:
+        description: Merged raspberry-infra commit SHA (required for infra-proxy)
+        type: string
+        required: false
   push:
     branches: [main]
     paths:
@@ -33,8 +37,70 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  infra-proxy:
+    # raspberry-infra has no registered runner. Use the existing Raspberry runner
+    # only for an explicit deployment of an immutable, merged infrastructure commit.
+    if: github.repository == 'dokor/argos' && github.event_name == 'workflow_dispatch' && inputs.service == 'infra-proxy'
+    runs-on: [self-hosted, raspberry, argos]
+    timeout-minutes: 15
+    env:
+      INFRA_REVISION: ${{ inputs.infra_revision }}
+      PROXY_DEPLOY_DIR: /srv/infra/raspberry-infra/proxy
+      PROXY_ENV_FILE: /srv/infra/raspberry-infra/env/proxy.env
+      TRAEFIK_ACME_FILE: /srv/infra/raspberry-infra/proxy/acme.json
+      VERIFY_HOST: argos.lelouet.fr
+    steps:
+      - name: Require an immutable infrastructure revision
+        run: '[[ "$INFRA_REVISION" =~ ^[a-f0-9]{40}$ ]]'
+      - uses: actions/checkout@v6
+        with:
+          repository: dokor/raspberry-infra
+          ref: ${{ inputs.infra_revision }}
+          path: proxy-source
+          persist-credentials: false
+      - name: Verify the revision is merged in infrastructure main
+        run: |
+          test "$(git -C proxy-source rev-parse HEAD)" = "$INFRA_REVISION"
+          git -C proxy-source fetch --no-tags origin main
+          git -C proxy-source merge-base --is-ancestor "$INFRA_REVISION" FETCH_HEAD
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24.21.0'
+      - name: Preserve the live ACME account, certificates and proxy environment
+        id: state
+        run: |
+          node --input-type=module <<'NODE'
+          import { appendFileSync } from 'node:fs';
+          import { prepareProxyState } from './proxy-source/scripts/proxy-state.mjs';
+          process.umask(0o077);
+          try {
+            const { project } = prepareProxyState({ workspace: process.env.GITHUB_WORKSPACE,
+              envFile: process.env.PROXY_ENV_FILE, acmeFile: process.env.TRAEFIK_ACME_FILE });
+            appendFileSync(process.env.GITHUB_OUTPUT, `project=${project}\n`);
+            console.log('Persistent proxy state verified; ACME contents remain private.');
+          } catch (error) {
+            const known = ['persistent-proxy-env-required', 'acme-invalid', 'acme-incomplete',
+              'proxy-project-unverified', 'state-not-a-regular-file', 'state-must-be-outside-checkout'];
+            console.error('Proxy state preparation failed:', known.includes(error.message) ? error.message : 'private-state-unavailable');
+            process.exitCode = 1;
+          }
+          NODE
+      - name: Deploy the merged Traefik configuration
+        env:
+          PROXY_PROJECT: ${{ steps.state.outputs.project }}
+        run: |
+          mkdir -p "$PROXY_DEPLOY_DIR/dynamic"
+          install -m 644 proxy-source/infra/proxy/traefik.yml "$PROXY_DEPLOY_DIR/traefik.yml"
+          install -m 644 proxy-source/infra/proxy/docker-compose.yml "$PROXY_DEPLOY_DIR/docker-compose.yml"
+          rsync -a --delete proxy-source/infra/proxy/dynamic/ "$PROXY_DEPLOY_DIR/dynamic/"
+          cd "$PROXY_DEPLOY_DIR"
+          docker compose --project-name "$PROXY_PROJECT" --env-file "$PROXY_ENV_FILE" config --quiet
+          docker compose --project-name "$PROXY_PROJECT" --env-file "$PROXY_ENV_FILE" up -d --no-deps --force-recreate traefik
+      - name: Verify public TLS renewal
+        run: node proxy-source/scripts/check-tls.mjs
+
   changes:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && inputs.service != 'infra-proxy'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     outputs:
