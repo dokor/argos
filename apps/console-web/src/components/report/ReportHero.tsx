@@ -27,6 +27,7 @@ export default function ReportHero({report,model=buildReportModel(report),onActi
    <p className={s.eyebrow}>{fr?"Rapport d’audit":"Audit report"}</p>
    <Title id="report-domain" className={s.siteName}>{report.domain}</Title>
    <p className={s.url}>{url??(fr?"Adresse indisponible":"Address unavailable")}</p>
+   <p className={s.scope}>{fr?"Périmètre : cette URL uniquement. Le domaine entier n’a pas été exploré.":"Scope: this URL only. The whole domain has not been crawled."}</p>
    <p className={s.date}>{Number.isFinite(date.getTime())?<time dateTime={report.generatedAt}>{date.toLocaleString(t.report.hero.locale,{day:"numeric",month:"long",year:"numeric",hour:"2-digit",minute:"2-digit",timeZone:"UTC"})} UTC</time>:copy.dateUnknown} · {fr?"Analyse ponctuelle":"Point-in-time analysis"}</p>
   </div>{actions&&<div className={s.actions}>{actions}</div>}</div>
   {tip&&<div className={s.tip}>{tip}</div>}

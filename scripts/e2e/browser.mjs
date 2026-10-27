@@ -58,6 +58,7 @@ try {
     assert.equal(report.access,'summary');
     assert.ok(report.issues.every(issue=>!issue.structuredEvidence&&!issue.evidence&&!issue.recommendation),'Anonymous report must omit technical proofs and corrections');
     assert.equal(await page.locator('#report-method').count(),0,'Retired methodology block must remain absent');
+    await page.locator('summary').filter({hasText:/^Mesures de chargement, ressources et erreurs$/}).click();
     const measures=page.getByRole('region',{name:'Mesures observ\u00e9es',exact:true});
     await measures.waitFor();
     for(const family of ['Chargement','Ressources','Erreurs']) await measures.getByRole('heading',{name:family,exact:true}).waitFor();
@@ -75,7 +76,13 @@ try {
       assert.ok(process.env.REPORT_FIXTURE_SESSION,'Verified fixture session is supplied in memory');
       const denied=await page.request.get(`${base}/api/account/reports/${token}`);
       assert.equal(denied.status(),401,'Technical details require authentication');
-      await page.context().addCookies([{name:'argos_account',value:process.env.REPORT_FIXTURE_SESSION,url:base,httpOnly:true,sameSite:'Lax'}]);
+      const csrf='c'.repeat(43);
+      await page.context().addCookies([
+        {name:'argos_account',value:process.env.REPORT_FIXTURE_SESSION,url:base,httpOnly:true,sameSite:'Lax'},
+        {name:'argos_account_csrf',value:csrf,url:base,httpOnly:true,sameSite:'Lax'},
+      ]);
+      const renewed=await page.request.post(`${base}/api/account/auth/renew`,{data:{},headers:{Origin:base,'X-Argos-CSRF':csrf}});
+      assert.equal(renewed.status(),200,'Injected fixture session and its CSRF binding must support renewal');
       const detailedResponse=await page.request.get(`${base}/api/account/reports/${token}`);
       assert.equal(detailedResponse.status(),200);
       const detailed=await detailedResponse.json();
@@ -97,7 +104,9 @@ try {
         await page.getByText(lang==='fr'?'Prévisualisation prête.':'Preview ready.',{exact:false}).waitFor();
         const content=await popup.locator('main').textContent();
         assert.ok(content.includes(network.items[0].resourceRef),'Full PDF must retain the same resource reference');
-        assert.ok(content.includes(element.nodePath),'Full PDF must retain the same observed DOM path');
+        const nodeIndexes=element.nodePath.split(',').filter((_,index)=>index%2===0).map(Number);
+        const locateNode=`inspect([${nodeIndexes.join(',')}].reduce((n,i)=>[...n.childNodes].filter(c=>c.nodeType!==3||c.textContent.trim())[i],document))`;
+        assert.ok(content.includes(locateNode),'Full PDF must retain the exact node lookup command from the collected DOM path');
         assert.ok(!content.includes('synthetic-proof-secret'),'PDF must exclude private request parameters');
         await popup.evaluate(()=>document.fonts.ready);await popup.emulateMedia({media:'print'});
         await popup.pdf({path:`outputs/ui-review/clarte-evidence/real-${lang}.pdf`,format:'A4',preferCSSPageSize:true,tagged:true});await popup.close();

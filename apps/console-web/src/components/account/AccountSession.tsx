@@ -23,13 +23,6 @@ export default function AccountSession({ children }: { children: React.ReactNode
     return ()=>{alive=false;window.removeEventListener("argos-account-login",load);window.removeEventListener("argos-account-profile",load);window.removeEventListener("argos-account-invalid",stop);};
   },[invalidate]);
   useEffect(()=>{
-    if(!profile) return;
-    let alive=true, timer:ReturnType<typeof setTimeout>;
-    const renew=async()=>{try {await accountFetch("auth/renew","POST",{});if(alive) timer=setTimeout(renew,600000);}catch(reason){if(alive) invalidate(reason);}};
-    timer=setTimeout(renew,600000);
-    return ()=>{alive=false;clearTimeout(timer);};
-  },[profile,invalidate]);
-  useEffect(()=>{
     let alive=true;const controller=new AbortController();
     if(!profile?.verified || denied) {queueMicrotask(()=>{if(alive){setUsage(null);setUsageError(false);}});return ()=>{alive=false;};}
     void accountFetch<MonthlyUsage>("usage","GET",undefined,controller.signal).then(data=>{if(alive){setUsage(data);setUsageError(false);}}).catch(reason=>{if(alive){setUsage(null);setUsageError(true);invalidate(reason);}});

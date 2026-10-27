@@ -2,6 +2,10 @@
 .page {background:t.$bg;color:t.$text;min-height:100vh;font-size:14px;line-height:1.55;}
 .main {max-width:1120px;margin:0 auto;padding:26px 32px 32px;display:flex;flex-direction:column;gap:24px;min-width:0;}
 .view {display:grid;grid-template-columns:minmax(0,1fr);gap:30px;min-width:0;}
+.supporting{border-top:1px solid t.$border;min-width:0;padding-block:12px;
+  >summary{min-height:44px;align-content:center;cursor:pointer;font-weight:600;}
+  >summary:focus-visible{outline:3px solid t.$brand;outline-offset:3px;}
+  >section{margin-top:16px;}}
 .embedded {min-height:0;}
 .embedded .main {max-width:none;}
 .breadcrumb ol {display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;}

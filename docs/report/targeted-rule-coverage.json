@@ -1,0 +1,1658 @@
+{
+  "version": "targeted-rule-coverage-v1",
+  "lighthouseVersion": "13.5.0",
+  "limits": [
+    "No queue/database/publication end-to-end test",
+    "Performance artifact replays do not measure speed improvements",
+    "115 bounded Lighthouse candidates, not all future rules",
+    "ZAP plugin IDs are open-ended; generic response locations, source guidance and known aliases have regression tests",
+    "No PDF validation"
+  ],
+  "sites": [
+    {
+      "name": "argos",
+      "url": "https://argos.lelouet.fr/",
+      "keys": [
+        "lighthouse.audit.largest-contentful-paint",
+        "lighthouse.audit.legacy-javascript-insight",
+        "lighthouse.audit.max-potential-fid",
+        "lighthouse.audit.network-dependency-tree-insight",
+        "lighthouse.audit.render-blocking-insight",
+        "lighthouse.audit.unused-css-rules",
+        "lighthouse.audit.unused-javascript",
+        "ssl.certificate.expiry_days",
+        "zap.alert.10037",
+        "zap.alert.10055",
+        "zap.alert.10202"
+      ]
+    },
+    {
+      "name": "w3c-bad",
+      "url": "https://www.w3.org/WAI/demos/bad/before/home.html",
+      "keys": [
+        "html.anchors.href_coverage",
+        "html.doctype.html5",
+        "html.images.alt_coverage",
+        "html.lang",
+        "html.link.canonical.present",
+        "html.meta.charset.present",
+        "html.meta.description.present",
+        "html.meta.viewport.present",
+        "html.social.meta",
+        "http.security.csp",
+        "http.security.hsts",
+        "http.security.permissions_policy",
+        "http.security.referrer_policy",
+        "http.seo.sitemap",
+        "lighthouse.audit.color-contrast",
+        "lighthouse.audit.doctype",
+        "lighthouse.audit.errors-in-console",
+        "lighthouse.audit.html-has-lang",
+        "lighthouse.audit.image-alt",
+        "lighthouse.audit.image-size-responsive",
+        "lighthouse.audit.landmark-one-main",
+        "lighthouse.audit.link-name",
+        "lighthouse.audit.link-text",
+        "lighthouse.audit.meta-description",
+        "lighthouse.audit.select-name",
+        "lighthouse.audit.target-size",
+        "lighthouse.score.accessibility",
+        "lighthouse.score.seo",
+        "runtime.console.errors",
+        "runtime.network.failed_requests",
+        "zap.alert.10054",
+        "zap.alert.10055"
+      ]
+    },
+    {
+      "name": "js-error",
+      "url": "https://the-internet.herokuapp.com/javascript_error",
+      "keys": [
+        "html.h1.count",
+        "html.lang",
+        "html.link.canonical.present",
+        "html.meta.charset.present",
+        "html.meta.description.present",
+        "html.meta.viewport.present",
+        "html.social.meta",
+        "http.security.cookie_flags",
+        "http.security.csp",
+        "http.security.hsts",
+        "http.security.permissions_policy",
+        "http.security.referrer_policy",
+        "lighthouse.audit.cache-insight",
+        "lighthouse.audit.errors-in-console",
+        "lighthouse.audit.html-has-lang",
+        "lighthouse.audit.landmark-one-main",
+        "lighthouse.audit.meta-description",
+        "lighthouse.audit.network-dependency-tree-insight",
+        "lighthouse.audit.render-blocking-insight",
+        "lighthouse.audit.viewport-insight",
+        "lighthouse.score.accessibility",
+        "observatory.score",
+        "runtime.js.errors",
+        "ssl.grade",
+        "zap.alert.10011",
+        "zap.alert.10054",
+        "zap.alert.10096"
+      ]
+    },
+    {
+      "name": "broken-images",
+      "url": "https://the-internet.herokuapp.com/broken_images",
+      "keys": [
+        "html.h1.count",
+        "html.images.alt_coverage",
+        "html.link.canonical.present",
+        "html.meta.description.present",
+        "html.social.meta",
+        "http.security.cookie_flags",
+        "http.security.csp",
+        "http.security.hsts",
+        "http.security.permissions_policy",
+        "http.security.referrer_policy",
+        "lighthouse.audit.cache-insight",
+        "lighthouse.audit.errors-in-console",
+        "lighthouse.audit.first-contentful-paint",
+        "lighthouse.audit.image-alt",
+        "lighthouse.audit.image-aspect-ratio",
+        "lighthouse.audit.landmark-one-main",
+        "lighthouse.audit.largest-contentful-paint",
+        "lighthouse.audit.lcp-discovery-insight",
+        "lighthouse.audit.meta-description",
+        "lighthouse.audit.network-dependency-tree-insight",
+        "lighthouse.audit.render-blocking-insight",
+        "lighthouse.audit.speed-index",
+        "lighthouse.score.accessibility",
+        "lighthouse.score.performance",
+        "lighthouse.score.seo",
+        "observatory.score",
+        "runtime.console.errors",
+        "ssl.grade",
+        "zap.alert.10011",
+        "zap.alert.10054",
+        "zap.alert.10096"
+      ]
+    },
+    {
+      "name": "mixed-content",
+      "url": "https://mixed.badssl.com/",
+      "keys": [
+        "html.lang",
+        "html.link.canonical.present",
+        "html.meta.description.present",
+        "html.social.meta",
+        "http.protocol.http2",
+        "http.security.csp",
+        "http.security.hsts",
+        "http.security.permissions_policy",
+        "http.security.referrer_policy",
+        "http.security.x_content_type_options",
+        "http.security.x_frame_options",
+        "http.seo.sitemap",
+        "lighthouse.audit.color-contrast",
+        "lighthouse.audit.html-has-lang",
+        "lighthouse.audit.image-delivery-insight",
+        "lighthouse.audit.inspector-issues",
+        "lighthouse.audit.is-on-https",
+        "lighthouse.audit.landmark-one-main",
+        "lighthouse.audit.meta-description",
+        "lighthouse.audit.network-dependency-tree-insight",
+        "lighthouse.audit.render-blocking-insight",
+        "lighthouse.audit.unsized-images",
+        "lighthouse.score.accessibility",
+        "lighthouse.score.best-practices",
+        "observatory.score",
+        "ssl.grade",
+        "ssl.protocols.legacy_disabled",
+        "ssl.protocols.tls13",
+        "tech.security.version_disclosure",
+        "zap.alert.10036",
+        "zap.alert.10040"
+      ]
+    }
+  ],
+  "lighthouse": [
+    {
+      "id": "accesskeys",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "accesskey",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > button:nth-child(1)",
+        "html:nth-child(1) > body:nth-child(2) > button:nth-child(2)"
+      ]
+    },
+    {
+      "id": "aria-allowed-attr",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "aria-level",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > button:nth-child(1)"
+      ]
+    },
+    {
+      "id": "aria-command-name",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "name",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > div:nth-child(1)"
+      ]
+    },
+    {
+      "id": "aria-conditional-attr",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "aria-checked",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > input:nth-child(1)"
+      ]
+    },
+    {
+      "id": "aria-deprecated-role",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "role",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > div:nth-child(1)"
+      ]
+    },
+    {
+      "id": "aria-dialog-name",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "aria-label",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > div:nth-child(1)"
+      ]
+    },
+    {
+      "id": "aria-hidden-body",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "aria-hidden",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2)"
+      ]
+    },
+    {
+      "id": "aria-hidden-focus",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "aria-hidden",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > div:nth-child(1)",
+        "html:nth-child(1) > body:nth-child(2) > div:nth-child(1) > button:nth-child(1)"
+      ]
+    },
+    {
+      "id": "aria-input-field-name",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "aria-label",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > div:nth-child(1)"
+      ]
+    },
+    {
+      "id": "aria-meter-name",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "aria-label",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > div:nth-child(1)"
+      ]
+    },
+    {
+      "id": "aria-progressbar-name",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "aria-label",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > div:nth-child(1)"
+      ]
+    },
+    {
+      "id": "aria-prohibited-attr",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "aria-label",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > p:nth-child(1)"
+      ]
+    },
+    {
+      "id": "aria-required-attr",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "aria-valuenow",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > div:nth-child(1)"
+      ]
+    },
+    {
+      "id": "aria-required-children",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "option",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > div:nth-child(1)"
+      ]
+    },
+    {
+      "id": "aria-required-parent",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "listbox",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > div:nth-child(1)"
+      ]
+    },
+    {
+      "id": "aria-roles",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "role",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > div:nth-child(1)"
+      ]
+    },
+    {
+      "id": "aria-text",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "role",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > div:nth-child(1)",
+        "html:nth-child(1) > body:nth-child(2) > div:nth-child(1) > a:nth-child(1)"
+      ]
+    },
+    {
+      "id": "aria-toggle-field-name",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "aria-label",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > div:nth-child(1)"
+      ]
+    },
+    {
+      "id": "aria-tooltip-name",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "aria-label",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > div:nth-child(1)"
+      ]
+    },
+    {
+      "id": "aria-treeitem-name",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "aria-label",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > div:nth-child(1)"
+      ]
+    },
+    {
+      "id": "aria-valid-attr",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "aria-labl",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > button:nth-child(1)"
+      ]
+    },
+    {
+      "id": "aria-valid-attr-value",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "aria-expanded",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > button:nth-child(1)"
+      ]
+    },
+    {
+      "id": "autocomplete-valid",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "autocomplete",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > input:nth-child(1)"
+      ]
+    },
+    {
+      "id": "bf-cache",
+      "realSites": [],
+      "targetedMethod": "installed-audit-artifact-replay",
+      "targetedChange": "Replace this page’s unload handler, then test backward/forward navigation",
+      "targets": []
+    },
+    {
+      "id": "bootup-time",
+      "realSites": [],
+      "targetedMethod": "installed-audit-artifact-replay",
+      "targetedChange": "Defer or split the expensive initialization in startup.js",
+      "targets": [
+        "/assets/startup.js"
+      ]
+    },
+    {
+      "id": "button-name",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "name",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > button:nth-child(1)"
+      ]
+    },
+    {
+      "id": "cache-insight",
+      "realSites": [
+        "js-error",
+        "broken-images"
+      ]
+    },
+    {
+      "id": "canonical",
+      "realSites": [],
+      "targetedMethod": "installed-audit-artifact-replay",
+      "targetedChange": "Use an absolute canonical URL for this equivalent page",
+      "targets": [],
+      "scope": "head > link[rel=\"canonical\"] / Link"
+    },
+    {
+      "id": "charset",
+      "realSites": [],
+      "targetedMethod": "installed-audit-artifact-replay",
+      "targetedChange": "Declare UTF-8 near the start of the document",
+      "targets": [],
+      "scope": "Content-Type / head > meta[charset]"
+    },
+    {
+      "id": "cls-culprits-insight",
+      "realSites": [],
+      "targetedMethod": "installed-diagnostic-helper",
+      "targetedChange": "Reserve the image area and stabilize the font causing the shift",
+      "targets": [
+        "main > button",
+        "/assets/text.woff2"
+      ]
+    },
+    {
+      "id": "color-contrast",
+      "realSites": [
+        "w3c-bad",
+        "mixed-content"
+      ],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "color",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > p:nth-child(1)"
+      ]
+    },
+    {
+      "id": "crawlable-anchors",
+      "realSites": [],
+      "targetedMethod": "installed-audit-artifact-replay",
+      "targetedChange": "Use a real href for navigation",
+      "targets": [
+        "main > a"
+      ]
+    },
+    {
+      "id": "cumulative-layout-shift",
+      "realSites": [],
+      "targetedMethod": "installed-audit-artifact-replay",
+      "targetedChange": "Change the source demonstrated by the related diagnostic and repeat the same measurement",
+      "targets": [],
+      "relatedDiagnostic": "cls-culprits-insight"
+    },
+    {
+      "id": "definition-list",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "dt",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > dl:nth-child(1)"
+      ]
+    },
+    {
+      "id": "deprecations",
+      "realSites": [],
+      "targetedMethod": "installed-audit-artifact-replay",
+      "targetedChange": "Replace the deprecated API at the reported code position",
+      "targets": [
+        "/assets/startup.js"
+      ]
+    },
+    {
+      "id": "dlitem",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "dl",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > dt:nth-child(1)",
+        "html:nth-child(1) > body:nth-child(2) > dd:nth-child(2)"
+      ]
+    },
+    {
+      "id": "doctype",
+      "realSites": [
+        "w3c-bad"
+      ]
+    },
+    {
+      "id": "document-latency-insight",
+      "realSites": [],
+      "targetedMethod": "installed-audit-artifact-replay",
+      "targetedChange": "Reduce the demonstrated server wait, preserving private response caching rules",
+      "targets": [],
+      "scope": "Main document timing"
+    },
+    {
+      "id": "document-title",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "title",
+      "targets": [
+        "html:nth-child(1)"
+      ]
+    },
+    {
+      "id": "dom-size-insight",
+      "realSites": [],
+      "targetedMethod": "installed-audit-artifact-replay",
+      "targetedChange": "Reduce rendered descendants of the identified container",
+      "targets": [
+        "main > button"
+      ]
+    },
+    {
+      "id": "duplicated-javascript-insight",
+      "realSites": [],
+      "targetedMethod": "installed-audit-artifact-replay",
+      "targetedChange": "Share the duplicated dependency between these two bundles",
+      "targets": [
+        "/assets/startup.js",
+        "/assets/secondary.js"
+      ]
+    },
+    {
+      "id": "errors-in-console",
+      "realSites": [
+        "w3c-bad",
+        "js-error",
+        "broken-images"
+      ]
+    },
+    {
+      "id": "first-contentful-paint",
+      "realSites": [
+        "broken-images"
+      ]
+    },
+    {
+      "id": "font-display-insight",
+      "realSites": [],
+      "targetedMethod": "installed-audit-artifact-replay",
+      "targetedChange": "Change font-display on the @font-face referencing text.woff2",
+      "targets": [
+        "/assets/text.woff2"
+      ]
+    },
+    {
+      "id": "forced-reflow-insight",
+      "realSites": [],
+      "targetedMethod": "installed-audit-artifact-replay",
+      "targetedChange": "Batch DOM reads before writes at this source position",
+      "targets": [
+        "/assets/startup.js"
+      ]
+    },
+    {
+      "id": "frame-title",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "title",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > iframe:nth-child(1)"
+      ]
+    },
+    {
+      "id": "geolocation-on-start",
+      "realSites": [],
+      "targetedMethod": "installed-audit-artifact-replay",
+      "targetedChange": "Move this request behind an explicit relevant user action",
+      "targets": [
+        "/assets/startup.js"
+      ]
+    },
+    {
+      "id": "heading-order",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "heading",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > h3:nth-child(2)"
+      ]
+    },
+    {
+      "id": "hreflang",
+      "realSites": [],
+      "targetedMethod": "installed-audit-artifact-replay",
+      "targetedChange": "Correct the language code on the alternate link",
+      "targets": [
+        "head > link"
+      ]
+    },
+    {
+      "id": "html-has-lang",
+      "realSites": [
+        "w3c-bad",
+        "js-error",
+        "mixed-content"
+      ],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "lang",
+      "targets": [
+        "html:nth-child(1)"
+      ]
+    },
+    {
+      "id": "html-lang-valid",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "lang",
+      "targets": [
+        "html:nth-child(1)"
+      ]
+    },
+    {
+      "id": "html-xml-lang-mismatch",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "lang",
+      "targets": [
+        "html:nth-child(1)"
+      ]
+    },
+    {
+      "id": "http-status-code",
+      "realSites": [],
+      "targetedMethod": "installed-audit-artifact-replay",
+      "targetedChange": "Restore the route/upstream producing 503, retain real 404 for missing pages",
+      "targets": [],
+      "scope": "Final document HTTP status"
+    },
+    {
+      "id": "image-alt",
+      "realSites": [
+        "w3c-bad",
+        "broken-images"
+      ],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "alt",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > img:nth-child(1)"
+      ]
+    },
+    {
+      "id": "image-aspect-ratio",
+      "realSites": [
+        "broken-images"
+      ]
+    },
+    {
+      "id": "image-delivery-insight",
+      "realSites": [
+        "mixed-content"
+      ]
+    },
+    {
+      "id": "image-size-responsive",
+      "realSites": [
+        "w3c-bad"
+      ]
+    },
+    {
+      "id": "inp-breakdown-insight",
+      "realSites": [],
+      "targetedMethod": "installed-audit-artifact-replay",
+      "targetedChange": "Reduce input delay for this button; repeat the same interaction",
+      "targets": [
+        "main > button"
+      ]
+    },
+    {
+      "id": "input-button-name",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "value",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > input:nth-child(1)"
+      ]
+    },
+    {
+      "id": "input-image-alt",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "alt",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > input:nth-child(1)"
+      ]
+    },
+    {
+      "id": "inspector-issues",
+      "realSites": [
+        "mixed-content"
+      ]
+    },
+    {
+      "id": "interaction-to-next-paint",
+      "realSites": [],
+      "targetedMethod": "installed-audit-artifact-replay",
+      "targetedChange": "Change the source demonstrated by the related diagnostic and repeat the same measurement",
+      "targets": [],
+      "relatedDiagnostic": "inp-breakdown-insight"
+    },
+    {
+      "id": "interactive",
+      "realSites": [],
+      "targetedMethod": "installed-audit-artifact-replay",
+      "targetedChange": "Change the source demonstrated by the related diagnostic and repeat the same measurement",
+      "targets": [],
+      "relatedDiagnostic": "long-tasks"
+    },
+    {
+      "id": "is-crawlable",
+      "realSites": [],
+      "targetedMethod": "installed-audit-artifact-replay",
+      "targetedChange": "Remove noindex only if this page is intended for indexing",
+      "targets": [
+        "head > meta"
+      ]
+    },
+    {
+      "id": "is-on-https",
+      "realSites": [
+        "mixed-content"
+      ]
+    },
+    {
+      "id": "label",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "label",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > input:nth-child(1)"
+      ]
+    },
+    {
+      "id": "label-content-name-mismatch",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "name",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > button:nth-child(1)"
+      ]
+    },
+    {
+      "id": "landmark-one-main",
+      "realSites": [
+        "w3c-bad",
+        "js-error",
+        "broken-images",
+        "mixed-content"
+      ],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "main",
+      "targets": [
+        "html:nth-child(1)"
+      ]
+    },
+    {
+      "id": "largest-contentful-paint",
+      "realSites": [
+        "argos",
+        "broken-images"
+      ]
+    },
+    {
+      "id": "layout-shifts",
+      "realSites": [],
+      "targetedMethod": "legacy-diagnostic-contract",
+      "targetedChange": "Reserve space for the shifted element and inspect the preceding insertion",
+      "targets": [
+        "main > button"
+      ]
+    },
+    {
+      "id": "lcp-breakdown-insight",
+      "realSites": [],
+      "targetedMethod": "installed-audit-artifact-replay",
+      "targetedChange": "Reduce the measured render delay for this LCP element",
+      "targets": [
+        "main > button"
+      ]
+    },
+    {
+      "id": "lcp-discovery-insight",
+      "realSites": [
+        "broken-images"
+      ]
+    },
+    {
+      "id": "legacy-javascript-insight",
+      "realSites": [
+        "argos"
+      ]
+    },
+    {
+      "id": "link-in-text-block",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "underline",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > p:nth-child(1) > a:nth-child(1)",
+        "html:nth-child(1) > body:nth-child(2) > p:nth-child(1)"
+      ]
+    },
+    {
+      "id": "link-name",
+      "realSites": [
+        "w3c-bad"
+      ],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "name",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > a:nth-child(1)"
+      ]
+    },
+    {
+      "id": "link-text",
+      "realSites": [
+        "w3c-bad"
+      ]
+    },
+    {
+      "id": "list",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "li",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > ul:nth-child(1)",
+        "html:nth-child(1) > body:nth-child(2) > ul:nth-child(1) > div:nth-child(1)"
+      ]
+    },
+    {
+      "id": "listitem",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "ul",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > li:nth-child(1)"
+      ]
+    },
+    {
+      "id": "mainthread-work-breakdown",
+      "realSites": [],
+      "targetedMethod": "installed-audit-artifact-replay",
+      "targetedChange": "Defer or split the expensive initialization in startup.js",
+      "targets": [],
+      "relatedDiagnostic": "bootup-time"
+    },
+    {
+      "id": "max-potential-fid",
+      "realSites": [
+        "argos"
+      ]
+    },
+    {
+      "id": "meta-description",
+      "realSites": [
+        "w3c-bad",
+        "js-error",
+        "broken-images",
+        "mixed-content"
+      ]
+    },
+    {
+      "id": "meta-refresh",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "refresh",
+      "targets": [
+        "html:nth-child(1) > head:nth-child(1) > meta:nth-child(3)"
+      ]
+    },
+    {
+      "id": "meta-viewport",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "user-scalable",
+      "targets": [
+        "html:nth-child(1) > head:nth-child(1) > meta:nth-child(3)"
+      ]
+    },
+    {
+      "id": "modern-http-insight",
+      "realSites": [],
+      "targetedMethod": "installed-audit-artifact-replay",
+      "targetedChange": "Enable HTTP/2 or HTTP/3 on the resource origin and verify negotiation",
+      "targets": [
+        "/assets/startup.js"
+      ]
+    },
+    {
+      "id": "network-dependency-tree-insight",
+      "realSites": [
+        "argos",
+        "js-error",
+        "broken-images",
+        "mixed-content"
+      ]
+    },
+    {
+      "id": "notification-on-start",
+      "realSites": [],
+      "targetedMethod": "installed-audit-artifact-replay",
+      "targetedChange": "Move this request behind an explicit relevant user action",
+      "targets": [
+        "/assets/startup.js"
+      ]
+    },
+    {
+      "id": "object-alt",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "aria-label",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > object:nth-child(1)"
+      ]
+    },
+    {
+      "id": "paste-preventing-inputs",
+      "realSites": [],
+      "targetedMethod": "installed-audit-artifact-replay",
+      "targetedChange": "Remove preventDefault from the paste handler",
+      "targets": [
+        "main > input"
+      ]
+    },
+    {
+      "id": "presentation-role-conflict",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "role",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > button:nth-child(1)"
+      ]
+    },
+    {
+      "id": "redirects",
+      "realSites": [],
+      "targetedMethod": "installed-audit-artifact-replay",
+      "targetedChange": "Point the old route directly at the canonical final URL",
+      "targets": []
+    },
+    {
+      "id": "redirects-http",
+      "realSites": [],
+      "targetedMethod": "installed-audit-artifact-replay",
+      "targetedChange": "Redirect the HTTP route to its HTTPS equivalent",
+      "targets": [],
+      "scope": "HTTP entry route and Location"
+    },
+    {
+      "id": "render-blocking-insight",
+      "realSites": [
+        "argos",
+        "js-error",
+        "broken-images",
+        "mixed-content"
+      ]
+    },
+    {
+      "id": "robots-txt",
+      "realSites": [],
+      "targetedMethod": "installed-audit-artifact-replay",
+      "targetedChange": "Correct line 2 to a path beginning with /; preserve intentional exclusions",
+      "targets": [
+        "/robots.txt"
+      ]
+    },
+    {
+      "id": "select-name",
+      "realSites": [
+        "w3c-bad"
+      ],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "label",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > select:nth-child(1)"
+      ]
+    },
+    {
+      "id": "server-response-time",
+      "realSites": [],
+      "targetedMethod": "installed-audit-artifact-replay",
+      "targetedChange": "Optimize the handler or upstream responsible for the document response",
+      "targets": []
+    },
+    {
+      "id": "skip-link",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "href",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > a:nth-child(1)"
+      ]
+    },
+    {
+      "id": "speed-index",
+      "realSites": [
+        "broken-images"
+      ]
+    },
+    {
+      "id": "svg-img-alt",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "aria-label",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > svg:nth-child(1)"
+      ]
+    },
+    {
+      "id": "tabindex",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "tabindex",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > button:nth-child(1)"
+      ]
+    },
+    {
+      "id": "table-fake-caption",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "caption",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > table:nth-child(1)"
+      ]
+    },
+    {
+      "id": "target-size",
+      "realSites": [
+        "w3c-bad"
+      ],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "size",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > button:nth-child(1)",
+        "html:nth-child(1) > body:nth-child(2) > button:nth-child(2)",
+        "html:nth-child(1) > body:nth-child(2) > button:nth-child(2)",
+        "html:nth-child(1) > body:nth-child(2) > button:nth-child(1)"
+      ]
+    },
+    {
+      "id": "td-has-header",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "th",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > table:nth-child(1)",
+        "html:nth-child(1) > body:nth-child(2) > table:nth-child(1) > tbody:nth-child(1) > tr:nth-child(2) > td:nth-child(2)",
+        "html:nth-child(1) > body:nth-child(2) > table:nth-child(1) > tbody:nth-child(1) > tr:nth-child(2) > td:nth-child(3)",
+        "html:nth-child(1) > body:nth-child(2) > table:nth-child(1) > tbody:nth-child(1) > tr:nth-child(3) > td:nth-child(2)"
+      ]
+    },
+    {
+      "id": "td-headers-attr",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "headers",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > table:nth-child(1)",
+        "html:nth-child(1) > body:nth-child(2) > table:nth-child(1) > tbody:nth-child(1) > tr:nth-child(2) > td:nth-child(1)"
+      ]
+    },
+    {
+      "id": "third-parties-insight",
+      "realSites": [],
+      "targetedMethod": "installed-diagnostic-helper",
+      "targetedChange": "Load this integration only when needed or remove it, then test its feature",
+      "targets": [
+        "/embed.js"
+      ]
+    },
+    {
+      "id": "third-party-cookies",
+      "realSites": [],
+      "targetedMethod": "installed-audit-artifact-replay",
+      "targetedChange": "Update the integration to work when third-party cookies are blocked",
+      "targets": [
+        "/embed.js"
+      ]
+    },
+    {
+      "id": "total-blocking-time",
+      "realSites": [],
+      "targetedMethod": "installed-audit-artifact-replay",
+      "targetedChange": "Change the source demonstrated by the related diagnostic and repeat the same measurement",
+      "targets": [],
+      "relatedDiagnostic": "long-tasks"
+    },
+    {
+      "id": "total-byte-weight",
+      "realSites": [],
+      "targetedMethod": "diagnostic-contract",
+      "targetedChange": "Resize and compress this hero image, compare transferred bytes with the same cache state",
+      "targets": [
+        "/assets/hero.webp"
+      ]
+    },
+    {
+      "id": "unminified-css",
+      "realSites": [],
+      "targetedMethod": "installed-byte-efficiency-calculation",
+      "targetedChange": "Minify the deployed stylesheet/script through the production build",
+      "targets": [
+        "/assets/style.css"
+      ]
+    },
+    {
+      "id": "unminified-javascript",
+      "realSites": [],
+      "targetedMethod": "installed-byte-efficiency-calculation",
+      "targetedChange": "Minify the deployed stylesheet/script through the production build",
+      "targets": [
+        "/assets/startup.js"
+      ]
+    },
+    {
+      "id": "unsized-images",
+      "realSites": [
+        "mixed-content"
+      ]
+    },
+    {
+      "id": "unused-css-rules",
+      "realSites": [
+        "argos"
+      ]
+    },
+    {
+      "id": "unused-javascript",
+      "realSites": [
+        "argos"
+      ]
+    },
+    {
+      "id": "valid-lang",
+      "realSites": [],
+      "targetedMethod": "browser-axe-before-after",
+      "targetedChange": "lang",
+      "targets": [
+        "html:nth-child(1) > body:nth-child(2) > p:nth-child(1)"
+      ]
+    },
+    {
+      "id": "valid-source-maps",
+      "realSites": [],
+      "targetedMethod": "installed-audit-artifact-replay",
+      "targetedChange": "Generate a matching source map for this bundle using the project publication policy",
+      "targets": [
+        "/assets/startup.js"
+      ]
+    },
+    {
+      "id": "viewport-insight",
+      "realSites": [
+        "js-error"
+      ]
+    }
+  ],
+  "staticRules": [
+    {
+      "key": "html.analysis.duration_ms",
+      "realSites": [],
+      "review": "informational-not-a-site-finding"
+    },
+    {
+      "key": "html.anchors.href_coverage",
+      "realSites": [
+        "w3c-bad"
+      ],
+      "review": "real-site-finding"
+    },
+    {
+      "key": "html.collect",
+      "realSites": [],
+      "review": "availability-not-a-site-finding"
+    },
+    {
+      "key": "html.doctype.html5",
+      "realSites": [
+        "w3c-bad"
+      ],
+      "review": "real-site-finding"
+    },
+    {
+      "key": "html.h1.count",
+      "realSites": [
+        "js-error",
+        "broken-images"
+      ],
+      "review": "real-site-finding"
+    },
+    {
+      "key": "html.images.alt_coverage",
+      "realSites": [
+        "w3c-bad",
+        "broken-images"
+      ],
+      "review": "real-site-finding"
+    },
+    {
+      "key": "html.lang",
+      "realSites": [
+        "w3c-bad",
+        "js-error",
+        "mixed-content"
+      ],
+      "review": "real-site-finding"
+    },
+    {
+      "key": "html.link.canonical.present",
+      "realSites": [
+        "w3c-bad",
+        "js-error",
+        "broken-images",
+        "mixed-content"
+      ],
+      "review": "real-site-finding"
+    },
+    {
+      "key": "html.meta.charset.present",
+      "realSites": [
+        "w3c-bad",
+        "js-error"
+      ],
+      "review": "real-site-finding"
+    },
+    {
+      "key": "html.meta.description.present",
+      "realSites": [
+        "w3c-bad",
+        "js-error",
+        "broken-images",
+        "mixed-content"
+      ],
+      "review": "real-site-finding"
+    },
+    {
+      "key": "html.meta.robots.present",
+      "realSites": [],
+      "review": "informational-not-a-site-finding"
+    },
+    {
+      "key": "html.meta.viewport.present",
+      "realSites": [
+        "w3c-bad",
+        "js-error"
+      ],
+      "review": "real-site-finding"
+    },
+    {
+      "key": "html.scripts.count",
+      "realSites": [],
+      "review": "informational-not-a-site-finding"
+    },
+    {
+      "key": "html.size.bytes",
+      "realSites": [],
+      "review": "informational-not-a-site-finding"
+    },
+    {
+      "key": "html.social.meta",
+      "realSites": [
+        "w3c-bad",
+        "js-error",
+        "broken-images",
+        "mixed-content"
+      ],
+      "review": "real-site-finding"
+    },
+    {
+      "key": "html.title",
+      "realSites": [],
+      "review": "targeted-analyzer-regression"
+    },
+    {
+      "key": "http.antibot.challenge",
+      "realSites": [],
+      "review": "informational-not-a-site-finding"
+    },
+    {
+      "key": "http.collect",
+      "realSites": [],
+      "review": "availability-not-a-site-finding"
+    },
+    {
+      "key": "http.errors",
+      "realSites": [],
+      "review": "availability-not-a-site-finding"
+    },
+    {
+      "key": "http.final_url.https",
+      "realSites": [],
+      "review": "targeted-analyzer-regression"
+    },
+    {
+      "key": "http.headers.caching",
+      "realSites": [],
+      "review": "informational-not-a-site-finding"
+    },
+    {
+      "key": "http.headers.compression",
+      "realSites": [],
+      "review": "informational-not-a-site-finding"
+    },
+    {
+      "key": "http.headers.content_type",
+      "realSites": [],
+      "review": "targeted-analyzer-regression"
+    },
+    {
+      "key": "http.headers.server",
+      "realSites": [],
+      "review": "informational-not-a-site-finding"
+    },
+    {
+      "key": "http.protocol.http2",
+      "realSites": [
+        "mixed-content"
+      ],
+      "review": "real-site-finding"
+    },
+    {
+      "key": "http.protocol.version",
+      "realSites": [],
+      "review": "informational-not-a-site-finding"
+    },
+    {
+      "key": "http.redirect.count",
+      "realSites": [],
+      "review": "targeted-analyzer-regression"
+    },
+    {
+      "key": "http.redirect.to_https",
+      "realSites": [],
+      "review": "targeted-analyzer-regression"
+    },
+    {
+      "key": "http.response_time_ms",
+      "realSites": [],
+      "review": "informational-not-a-site-finding"
+    },
+    {
+      "key": "http.security.cookie_flags",
+      "realSites": [
+        "js-error",
+        "broken-images"
+      ],
+      "review": "real-site-finding"
+    },
+    {
+      "key": "http.security.csp",
+      "realSites": [
+        "w3c-bad",
+        "js-error",
+        "broken-images",
+        "mixed-content"
+      ],
+      "review": "real-site-finding"
+    },
+    {
+      "key": "http.security.hsts",
+      "realSites": [
+        "w3c-bad",
+        "js-error",
+        "broken-images",
+        "mixed-content"
+      ],
+      "review": "real-site-finding"
+    },
+    {
+      "key": "http.security.permissions_policy",
+      "realSites": [
+        "w3c-bad",
+        "js-error",
+        "broken-images",
+        "mixed-content"
+      ],
+      "review": "real-site-finding"
+    },
+    {
+      "key": "http.security.referrer_policy",
+      "realSites": [
+        "w3c-bad",
+        "js-error",
+        "broken-images",
+        "mixed-content"
+      ],
+      "review": "real-site-finding"
+    },
+    {
+      "key": "http.security.x_content_type_options",
+      "realSites": [
+        "mixed-content"
+      ],
+      "review": "real-site-finding"
+    },
+    {
+      "key": "http.security.x_frame_options",
+      "realSites": [
+        "mixed-content"
+      ],
+      "review": "real-site-finding"
+    },
+    {
+      "key": "http.seo.robots_txt",
+      "realSites": [],
+      "review": "targeted-analyzer-regression"
+    },
+    {
+      "key": "http.seo.sitemap",
+      "realSites": [
+        "w3c-bad",
+        "mixed-content"
+      ],
+      "review": "real-site-finding"
+    },
+    {
+      "key": "http.status_code",
+      "realSites": [],
+      "review": "targeted-analyzer-regression"
+    },
+    {
+      "key": "lighthouse.collect",
+      "realSites": [],
+      "review": "availability-not-a-site-finding"
+    },
+    {
+      "key": "lighthouse.score.accessibility",
+      "realSites": [
+        "w3c-bad",
+        "js-error",
+        "broken-images",
+        "mixed-content"
+      ],
+      "review": "real-site-finding"
+    },
+    {
+      "key": "lighthouse.score.best-practices",
+      "realSites": [
+        "mixed-content"
+      ],
+      "review": "real-site-finding"
+    },
+    {
+      "key": "lighthouse.score.performance",
+      "realSites": [
+        "broken-images"
+      ],
+      "review": "real-site-finding"
+    },
+    {
+      "key": "lighthouse.score.seo",
+      "realSites": [
+        "w3c-bad",
+        "broken-images"
+      ],
+      "review": "real-site-finding"
+    },
+    {
+      "key": "observatory.collect",
+      "realSites": [],
+      "review": "availability-not-a-site-finding"
+    },
+    {
+      "key": "observatory.grade",
+      "realSites": [],
+      "review": "informational-not-a-site-finding"
+    },
+    {
+      "key": "observatory.score",
+      "realSites": [
+        "js-error",
+        "broken-images",
+        "mixed-content"
+      ],
+      "review": "real-site-finding"
+    },
+    {
+      "key": "observatory.tests.passed",
+      "realSites": [],
+      "review": "informational-not-a-site-finding"
+    },
+    {
+      "key": "runtime.analysis.duration_ms",
+      "realSites": [],
+      "review": "informational-not-a-site-finding"
+    },
+    {
+      "key": "runtime.collect",
+      "realSites": [],
+      "review": "availability-not-a-site-finding"
+    },
+    {
+      "key": "runtime.console.errors",
+      "realSites": [
+        "w3c-bad",
+        "broken-images"
+      ],
+      "review": "real-site-finding"
+    },
+    {
+      "key": "runtime.js.errors",
+      "realSites": [
+        "js-error"
+      ],
+      "review": "real-site-finding"
+    },
+    {
+      "key": "runtime.network.5xx",
+      "realSites": [],
+      "review": "targeted-analyzer-regression"
+    },
+    {
+      "key": "runtime.network.bytes_estimated",
+      "realSites": [],
+      "review": "targeted-analyzer-regression"
+    },
+    {
+      "key": "runtime.network.failed_requests",
+      "realSites": [
+        "w3c-bad"
+      ],
+      "review": "real-site-finding"
+    },
+    {
+      "key": "runtime.network.request_count",
+      "realSites": [],
+      "review": "targeted-analyzer-regression"
+    },
+    {
+      "key": "runtime.network.third_party_errors",
+      "realSites": [],
+      "review": "targeted-analyzer-regression"
+    },
+    {
+      "key": "ssl.certificate.expiry_days",
+      "realSites": [
+        "argos"
+      ],
+      "review": "real-site-finding"
+    },
+    {
+      "key": "ssl.certificate.valid",
+      "realSites": [],
+      "review": "targeted-analyzer-regression"
+    },
+    {
+      "key": "ssl.collect",
+      "realSites": [],
+      "review": "availability-not-a-site-finding"
+    },
+    {
+      "key": "ssl.grade",
+      "realSites": [
+        "js-error",
+        "broken-images",
+        "mixed-content"
+      ],
+      "review": "real-site-finding"
+    },
+    {
+      "key": "ssl.protocols.legacy_disabled",
+      "realSites": [
+        "mixed-content"
+      ],
+      "review": "real-site-finding"
+    },
+    {
+      "key": "ssl.protocols.tls12",
+      "realSites": [],
+      "review": "targeted-analyzer-regression"
+    },
+    {
+      "key": "ssl.protocols.tls13",
+      "realSites": [
+        "mixed-content"
+      ],
+      "review": "real-site-finding"
+    },
+    {
+      "key": "tech.analysis.duration_ms",
+      "realSites": [],
+      "review": "informational-not-a-site-finding"
+    },
+    {
+      "key": "tech.backend.hints",
+      "realSites": [],
+      "review": "informational-not-a-site-finding"
+    },
+    {
+      "key": "tech.cdn.cloudflare",
+      "realSites": [],
+      "review": "informational-not-a-site-finding"
+    },
+    {
+      "key": "tech.cms",
+      "realSites": [],
+      "review": "informational-not-a-site-finding"
+    },
+    {
+      "key": "tech.collect",
+      "realSites": [],
+      "review": "availability-not-a-site-finding"
+    },
+    {
+      "key": "tech.frontend.framework",
+      "realSites": [],
+      "review": "informational-not-a-site-finding"
+    },
+    {
+      "key": "tech.frontend.nextjs",
+      "realSites": [],
+      "review": "informational-not-a-site-finding"
+    },
+    {
+      "key": "tech.http.server_header",
+      "realSites": [],
+      "review": "informational-not-a-site-finding"
+    },
+    {
+      "key": "tech.security.version_disclosure",
+      "realSites": [
+        "mixed-content"
+      ],
+      "review": "real-site-finding"
+    },
+    {
+      "key": "zap.collect",
+      "realSites": [],
+      "review": "availability-not-a-site-finding"
+    },
+    {
+      "key": "zap.scan.result",
+      "realSites": [],
+      "review": "informational-not-a-site-finding"
+    }
+  ]
+}

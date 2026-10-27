@@ -4,6 +4,7 @@ import DomainTasks from "./DomainTasks";
 import DomainPageFilters from "./DomainPageFilters";
 import { findingTitle } from "@/components/report/findingCatalogue";
 import CommonFindingContent from "./CommonFindingContent";
+import { findingAnchor } from "@/components/report/reportModel";
 import { findingEditorial } from "@/components/report/findingCatalogue";
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -350,7 +351,7 @@ export default function DomainBatch({
                         <h3>{c.examples}</h3>
                         <ul className={d.examples}>
                           {pages.data.items.filter(page => finding.examplePageIds.includes(page.pageId)).slice(0, 3).map(page =>
-                            <li key={page.pageId}>{page.reportAvailable ? <Link title={page.normalizedUrl} href={`/account/runs/${page.runId}?returnTo=${encodeURIComponent(returnTo)}`}>{compactUrl(page.normalizedUrl, true)}<span className={d.srOnly}> — {c.diagnostic}</span></Link> : <span>{compactUrl(page.normalizedUrl, true)} — {c.reportUnavailable}</span>}</li>)}
+                            <li key={page.pageId}>{page.reportAvailable ? <Link title={page.normalizedUrl} href={`/account/runs/${page.runId}?returnTo=${encodeURIComponent(returnTo)}&view=technical#${findingAnchor(finding.ruleKey)}`}>{compactUrl(page.normalizedUrl, true)}<span className={d.srOnly}> — {c.diagnostic}</span></Link> : <span>{compactUrl(page.normalizedUrl, true)} — {c.reportUnavailable}</span>}</li>)}
                         </ul>
                       </>
                     )}
@@ -415,7 +416,7 @@ export default function DomainBatch({
               ) : (
                 pages.data && (
                   <>
-                    <PageTable pages={pages.data.items} returnTo={returnTo} caption={pageTitle} />
+                    <PageTable pages={pages.data.items} returnTo={returnTo} caption={pageTitle} ruleKey={rule ?? undefined} />
                     <Pagination
                       {...pages.data}
                       href={(offset) => link({ offset: String(offset) })}
