@@ -51,7 +51,10 @@ try{
     mode=name;await page.goto(base+path);await capture(name);
     if(name==='disabled'){
       await page.getByRole('heading',{name:tx('Paiements désactivés','Payments disabled'),exact:true}).waitFor();
-      assert.equal(await page.getByText(tx('Tarif à confirmer','Price to be confirmed'),{exact:true}).count(),2);
+      assert.equal(await page.getByText(tx('19,00 €','€19.00'),{exact:true}).count(),1);
+      assert.equal(await page.getByText(tx('199,00 €','€199.00'),{exact:true}).count(),1);
+      assert.equal(await page.getByText(/22[,.]80/).count(),1);
+      assert.equal(await page.getByText(/238[,.]80/).count(),1);
       assert.ok(await page.getByRole('button',{name:tx('Continuer avec Stripe Checkout','Continue with Stripe Checkout'),exact:true}).isDisabled());
       assert.equal(writes.filter(p=>p.startsWith('/api/account/billing/')).length,0);
     }

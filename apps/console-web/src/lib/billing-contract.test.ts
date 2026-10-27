@@ -4,7 +4,7 @@ import {disabled,variants} from "@/components/connected/billing/fixtures/billing
 import {safeAccountReturn} from "./account-return";
 it("accepts known owner-only states and requires prices before offering a payment",()=>{
   for(const data of Object.values(variants))expect(billingSnapshot(data)).toBe(true);
-  expect(billingSnapshot({...disabled,enabled:true,paymentsEnabled:true,canCheckout:true})).toBe(false);
+  expect(billingSnapshot({...disabled,enabled:true,paymentsEnabled:true,canCheckout:true,plans:disabled.plans.map(p=>({...p,amountHtCents:null}))})).toBe(false);
   expect(billingSnapshot({...disabled,customerId:"cus_private"})).toBe(false);
   expect(billingSnapshot({...disabled,schemaVersion:2})).toBe(false);
 });

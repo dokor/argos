@@ -55,8 +55,8 @@ Configuration serveur `discovery.*` (valeurs par défaut ; limites dures entre p
 
 | Clé | Valeur | Effet |
 |---|---:|---|
-| `max-urls` | 50 (1–1000) | Lignes de snapshot, paramètres utilisateur uniquement plus restrictifs |
-| `max-depth` | 3 (0–10) | Profondeur des liens ; initiale et sitemap à 0 |
+| `max-urls` | 500 (1–1000) | Plafond opérateur des lignes de snapshot, paramètres utilisateur uniquement plus restrictifs |
+| `max-depth` | 5 (0–10) | Plafond opérateur de profondeur des liens ; initiale et sitemap à 0 |
 | `duration-seconds` | 60 (1–300) | Budget monotone de parcours hors attente en file |
 | `requests-per-host` | 2 (1–2) | Découvertes simultanées du même hôte, tous comptes/processus |
 | `workers` | 4 (1–16) | Découvertes RUNNING globales et threads locaux |
@@ -72,6 +72,14 @@ Configuration serveur `discovery.*` (valeurs par défaut ; limites dures entre p
 | `max-sitemaps` | 5 (1–20) | Sitemaps distincts, défaut compris |
 
 Le snapshot expose les quatre limites de parcours dans `effectiveLimits`.
+L’offre courante du compte borne aussi chaque recherche : FREE (ou offre inconnue)
+reste à 50 URL et profondeur 3, avec valeurs initiales 20 et 2 ; PREMIUM passe à
+500 URL et profondeur 5, également proposées par défaut dans le formulaire.
+Les plafonds opérateur peuvent réduire ces valeurs. L’API de capacités et
+l’admission lisent l’offre côté serveur, jamais dans le corps client. La prise en
+charge réduit un snapshot en attente si le compte est repassé en FREE ; elle ne
+l’augmente jamais après un changement d’offre. La découverte ne consomme aucun
+crédit ; les audits sélectionnés conservent leurs limites et quotas propres.
 Le transport utilise la configuration serveur ; modifier ses limites nécessite
 un redémarrage. Conserver une configuration identique entre réplicas. Le lease
 reprend la durée effective à la prise en charge, plus 5 secondes de clôture.
@@ -166,9 +174,10 @@ ni recette visuelle revendiquée pour les écrans F09 encore à réaliser.
 ## Configuration et files (#672, #661)
 
 `GET /api/account/domain-discoveries/limits` publie uniquement les maxima URL,
-profondeur et durée, avec les valeurs proposées au formulaire (20 URL et profondeur
-2, réduites si nécessaire). Les valeurs sûres historiques restent 50/3/60 s.
-Exemple de recette : `discovery.max-urls=200`, `discovery.max-depth=5` ; la durée
+profondeur et durée applicables à l’offre courante, avec les valeurs proposées au
+formulaire (FREE : 20/2 ; PREMIUM : 500/5, réduites si nécessaire). Le budget
+de durée reste de 60 s par défaut pour les deux offres.
+Exemple de recette Premium avec plafond réduit : `discovery.max-urls=200`, `discovery.max-depth=5` ; la durée
 peut être augmentée séparément jusqu'à 300 s. Des entiers hors bornes ou
 fractionnaires font échouer l'initialisation, avec le nom de la configuration.
 Redémarrer toutes les instances après une modification ; aucun rechargement à chaud.

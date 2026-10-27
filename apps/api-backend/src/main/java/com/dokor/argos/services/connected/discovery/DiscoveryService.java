@@ -90,7 +90,7 @@ public final class DiscoveryService {
                         fresh(previous);
                         return view(previous, c);
                     }
-                    policy.validate(input);
+                    policy.validate(input, ctx.user().getOffer());
                     if (dao.active(ctx.user().getId(), c).size() >= policy.accountQueueLimit)
                         throw new AccountError(429, "discovery_queue_full", 2);
                     try {
@@ -133,7 +133,7 @@ public final class DiscoveryService {
                     row.setIdempotencyKey(key);
                     row.setRequestFingerprint(fingerprint);
                     row.setParametersJson(json);
-                    row.setEffectiveLimitsJson(json(policy.limits(input)));
+                    row.setEffectiveLimitsJson(json(policy.limits(input, ctx.user().getOffer())));
                     row.setCreatedAt(clock.instant());
                     row.setExpiresAt(clock.instant().plus(Duration.ofHours(24)));
                     dao.insert(row, c);
@@ -142,7 +142,7 @@ public final class DiscoveryService {
     }
 
     public DiscoveryCapabilities capabilities(String auth) {
-        return sessions.with(auth, null, true, false, (ctx, c) -> policy.capabilities());
+        return sessions.with(auth, null, true, false, (ctx, c) -> policy.capabilities(ctx.user().getOffer()));
     }
 
     public Discovery get(String auth, long id) {

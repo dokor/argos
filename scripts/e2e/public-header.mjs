@@ -9,8 +9,8 @@ await mkdir(output, { recursive: true });
 const translations = {};
 for (const lang of ['fr', 'en']) translations[lang] = JSON.parse(await readFile('apps/console-web/src/lib/i18n/' + lang + '.json', 'utf8'));
 const routes = {
-  fr: ['/', '/faq', '/ressources', '/guides/checklist-audit-site-web', '/ressources/audit-technique-gratuit', '/ressources/accessibilite-numerique', '/ressources/audit-site-pme', '/ressources/audit-site-ecommerce', '/methodologie-score', '/exemple-rapport'],
-  en: ['/en', '/en/faq', '/en/resources', '/en/resources/small-business-website-audit', '/en/resources/ecommerce-website-audit', '/en/example-report'],
+  fr: ['/', '/tarifs', '/faq', '/ressources', '/guides/checklist-audit-site-web', '/ressources/audit-technique-gratuit', '/ressources/accessibilite-numerique', '/ressources/audit-site-pme', '/ressources/audit-site-ecommerce', '/methodologie-score', '/exemple-rapport'],
+  en: ['/en', '/en/pricing', '/en/faq', '/en/resources', '/en/resources/small-business-website-audit', '/en/resources/ecommerce-website-audit', '/en/example-report'],
 };
 const browser = await chromium.launch();
 const evidence = [];

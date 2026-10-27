@@ -43,6 +43,17 @@ class BillingIT extends MariaDbReportFixture {
     private void customer()throws Exception{sql("UPDATE ARG_BILLING_ACCOUNT SET customer_id='"+CUSTOMER+"' WHERE id=733");}
     private String offer()throws Exception{try(var c=source.getConnection();var s=c.prepareStatement("SELECT offer FROM ARG_ACCOUNT_USER WHERE id=733");var r=s.executeQuery()){assertTrue(r.next());return r.getString(1);}}
     private boolean access()throws Exception{try(var c=source.getConnection();var s=c.prepareStatement("SELECT ci_access FROM ARG_ACCOUNT_CI_ENTITLEMENT WHERE id=733");var r=s.executeQuery()){return r.next()&&r.getBoolean(1);}}
+    @Test void publishedPricesAreVisibleWhileCheckoutCiAndProviderCallsStayClosed()throws Exception{
+        var cfg=ConfigFactory.load();
+        var closed=new BillingService(new BillingSettings(cfg),store,gateway,sessions,new AccountSettings(cfg),
+            mock(AccountRateLimiter.class),clock,new CiPolicy(cfg));
+        var view=closed.status("owner");
+        assertEquals(List.of(1900L,19900L),view.plans().stream().map(BillingService.Plan::amountHtCents).toList());
+        assertFalse(view.enabled());assertFalse(view.paymentsEnabled());assertFalse(view.ciEnabled());
+        assertFalse(view.canCheckout());assertFalse(view.portalAvailable());
+        assertThrows(BillingError.class,()->closed.checkout("owner","c".repeat(43),"MONTH","fr","local"));
+        assertEquals("FREE",offer());assertFalse(access());assertTrue(gateway.requests.isEmpty());
+    }
     @Test void migrationAndQuerydslRoundtripHaveNoAutomaticGrant()throws Exception{
         assertEquals(BINDING,row().getBindingId());assertEquals(0L,row().getSyncGeneration());assertFalse(access());assertEquals("FREE",offer());
         var r=service.status("owner");assertFalse(r.ciEnabled());assertEquals(0,gateway.requests.size());

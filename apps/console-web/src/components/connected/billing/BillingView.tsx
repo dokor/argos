@@ -8,12 +8,13 @@ import ConfirmAccountAction from "@/components/account/ConfirmAccountAction";
 import {accountFetch,AccountClientError,type SignInMethod} from "@/lib/account-client";
 import {billingRead,billingSync,billingDestination,BillingClientError} from "@/lib/billing-client";
 import type {BillingCode,BillingSnapshot} from "@/lib/billing-contract";
+import {exampleTtcCents} from "@/lib/premium-pricing";
 import {PageHeading,StatusBadge,EmptyState} from "../Primitives";
 import c from "../Connected.module.scss";
 import s from "./BillingView.module.scss";
 
 const errors:Partial<Record<BillingCode,readonly [string,string]>>={
-  billing_disabled:["Les paiements sont désactivés. Les tarifs et la recette doivent être validés avant ouverture.","Payments are disabled. Pricing and acceptance must be approved before opening."],
+  billing_disabled:["Les paiements sont désactivés jusqu’à la recette complète et à la validation des conditions de lancement.","Payments are disabled until full acceptance and launch conditions are approved."],
   billing_configuration:["Le raccordement de facturation n’est pas prêt. Aucun nouveau paiement n’est proposé ; actualisez l’état plus tard.","Billing setup is not ready. No new payment is offered; refresh the status later."],
   billing_sync_pending:["La confirmation est différée. Actualisez d’abord l’état, puis retrouvez l’intention initiale sans créer une deuxième souscription.","Confirmation is delayed. Refresh the status first, then recover the original intention without creating a second subscription."],
   billing_existing_subscription:["Une souscription existe déjà chez Stripe. Actualisez depuis Stripe ou ouvrez le portail pour la gérer.","A subscription already exists at Stripe. Refresh from Stripe or open the portal to manage it."],
@@ -77,6 +78,9 @@ export default function BillingView(){
   const date=(v:string)=>new Intl.DateTimeFormat(lang,{dateStyle:"long",timeStyle:"short",timeZone:"UTC"}).format(new Date(v))+" UTC";
   const pendingCheckout=snapshot&&["CHECKOUT_PENDING","OPEN"].includes(snapshot.phase);
   const confirmReady=!!profile?.verified;
+  const monthly=snapshot?.plans[0].amountHtCents,annual=snapshot?.plans[1].amountHtCents;
+  const saving=monthly&&annual?monthly*12-annual:null;
+  const discount=monthly&&saving?new Intl.NumberFormat(lang,{style:"percent",maximumFractionDigits:1}).format(saving/(monthly*12)):null;
   return <main className={c.page}>
     <PageHeading title={tx("Abonnement Premium","Premium subscription")} description={tx("Votre offre, vos paiements et vos factures, au même endroit.","Your plan, payments and invoices in one place.")}
       action={profile?.verified&&<button type="button" className={c.secondary} disabled={busy||loading} onClick={()=>void refresh()}>{tx("Actualiser l’état","Refresh status")}</button>}/>
@@ -91,7 +95,7 @@ export default function BillingView(){
       </section>}
       {!snapshot&&!error&&<EmptyState title={tx("État indisponible","Status unavailable")} kind="error"/>}
       {snapshot&&<>
-        {!snapshot.paymentsEnabled&&<section className={s.notice} aria-labelledby="billing-disabled"><h2 id="billing-disabled">{tx("Paiements désactivés","Payments disabled")}</h2><p>{tx("Les tarifs et la recette restent à valider. Aucune souscription payante n’est proposée pour le moment.","Pricing and acceptance are awaiting approval. Paid subscriptions are currently unavailable.")}</p></section>}
+        {!snapshot.paymentsEnabled&&<section className={s.notice} aria-labelledby="billing-disabled"><h2 id="billing-disabled">{tx("Paiements désactivés","Payments disabled")}</h2><p>{tx("Les paiements restent fermés jusqu’à la recette complète et à la validation des conditions de lancement. Les montants affichés ne permettent aucune souscription pour le moment.","Payments remain closed until full acceptance and approval of launch conditions. Displayed prices do not allow a subscription yet.")}</p></section>}
         {!snapshot.ciEnabled&&<p className={s.ciClosed}>{tx("L’accès CI Premium reste désactivé jusqu’à la recette complète.","Premium CI access remains disabled until full acceptance.")}</p>}
         <section className={s.state}><div><h2>{tx("Votre souscription","Your subscription")}</h2><StatusBadge tone={snapshot.status==="ACTIVE"?"success":["PAYMENT_REQUIRED","REFUNDED","DISPUTED"].includes(snapshot.status)?"warning":"neutral"}>{statuses[snapshot.status][lang==="fr"?0:1]}</StatusBadge>
           {snapshot.periodEnd&&<p>{snapshot.status==="CANCEL_AT_PERIOD_END"?tx("Fin d’accès payée : ","Paid access ends: "):tx("Fin de période confirmée : ","Confirmed period end: ")}{date(snapshot.periodEnd)}</p>}
@@ -105,14 +109,16 @@ export default function BillingView(){
           <fieldset disabled={busy||!!pendingCheckout}><legend>{tx("Choisir la périodicité","Choose billing interval")}</legend><div className={s.plans}>{snapshot.plans.map(p=><label key={p.interval} className={s.plan} data-selected={interval===p.interval}>
             <span className={s.choice}><input type="radio" name="billing-interval" value={p.interval} checked={interval===p.interval} onChange={()=>setInterval(p.interval)}/>{p.interval==="MONTH"?tx("Mensuel","Monthly"):tx("Annuel","Annual")}</span>
             <strong>{price(p.amountHtCents)}</strong><span>{p.interval==="MONTH"?tx("HT par mois","excluding tax per month"):tx("HT par an","excluding tax per year")}</span>
-            {p.interval==="YEAR"&&<small>{p.amountHtCents===null?tx("Réduction annuelle à confirmer.","Annual discount to be confirmed."):tx("Réduction incluse dans le tarif annuel approuvé.","Discount included in the approved annual price.")}</small>}
+            {p.amountHtCents!==null&&<small>{price(exampleTtcCents(p.amountHtCents))} {tx("TTC avec TVA à 20 % (exemple)","including 20% VAT (example)")}</small>}
+            {p.interval==="YEAR"&&<small>{saving===null?tx("Réduction annuelle à confirmer.","Annual discount to be confirmed."):tx(`Économisez ${price(saving)} par an (${discount}). Paiement annuel en une fois.`,`Save ${price(saving)} per year (${discount}). Billed annually upfront.`)}</small>}
           </label>)}</div></fieldset>
-          <p className={s.tax}>{tx("Prix principal HT. Le montant TTC est calculé et affiché par Stripe avant paiement selon votre situation fiscale ; aucun taux n’est présumé ici.","Main price excludes tax. Stripe calculates and displays the tax-inclusive total before payment according to your tax situation; no tax rate is assumed here.")}</p>
+          <p className={s.tax}>{tx("Prix principaux HT. Les TTC affichés illustrent une TVA de 20 %. Stripe précisera le TTC applicable avant paiement selon votre situation fiscale. Les quotas restent mensuels avec les deux formules.","Main prices exclude tax. Tax-inclusive examples use 20% VAT. Stripe will show the applicable total before payment according to your tax situation. Quotas remain monthly with either billing interval.")}</p>
           <div className={s.actions}><button className={c.primary} disabled={busy||ambiguous||!snapshot.canCheckout||!confirmReady} onClick={()=>setAction("checkout")}>{pendingCheckout?tx("Retrouver le Checkout en cours","Recover pending Checkout"):tx("Continuer avec Stripe Checkout","Continue with Stripe Checkout")}</button><p className={s.hint}>{tx("Une confirmation de votre identité précède l’ouverture de Stripe. Les coordonnées de carte restent chez Stripe.","Confirm your identity before opening Stripe. Card details stay with Stripe.")}</p></div>
           {pendingCheckout&&<p>{tx("La périodicité est liée à l’intention en cours. Toute reprise retrouve la même session.","The interval is bound to the pending intention. Recovery returns the same session.")}</p>}
           {!confirmReady&&<p>{tx("Reconnectez-vous récemment ou ajoutez un moyen de confirmation depuis la sécurité du compte.","Sign in again recently or add a confirmation method in account security.")} <Link href="/account/settings?section=security">{tx("Sécurité du compte","Account security")}</Link></p>}
         </section>
         <section className={s.details}><h2>{tx("Ce que comprend Premium CI","What Premium CI includes")}</h2><ul><li>{tx("3 clés incluses, 30 analyses par mois pour chaque intégration stable.","3 included keys, 30 analyses per month for each stable integration.")}</li><li>{tx("Domaines vérifiés illimités, un audit simultané par compte, clé valable un an au maximum.","Unlimited verified domains, one concurrent audit per account, keys valid for at most one year.")}</li><li>{tx("Deux mesures confirmées réservent deux analyses. La rotation ou un nouvel abonnement ne remet pas les compteurs à zéro.","Two confirmation samples reserve two analyses. Rotation or a new subscription does not reset counters.")}</li></ul>
+          <p>{tx("À l’ouverture, Premium bénéficiera d’une priorité relative dans la file d’analyse en période d’affluence. Les demandes anciennes continuent de progresser ; quotas et capacité restent applicables, sans délai de démarrage garanti. Cette priorité reste désactivée jusqu’à la recette complète.","At launch, Premium will receive relative analysis queue priority during busy periods. Older requests continue to progress; quotas and capacity still apply, with no guaranteed start time. This priority remains disabled until full acceptance.")}</p>
           <p>{tx("L’annulation en fin de période conserve les accès jusqu’à l’échéance payée, sous réserve d’un paiement confirmé. Impayé, remboursement ou litige suspendent les nouveaux accès selon la politique de lancement à valider. Les audits déjà admis et les rapports existants sont conservés.","Period-end cancellation retains access until the paid expiry, subject to confirmed payment. Unpaid, refunded or disputed payments suspend new access under the launch policy awaiting approval. Already admitted audits and existing reports are preserved.")}</p>
           <Link href="/docs/usage">{tx("Comprendre les quotas et la conservation","Understand quotas and retention")}</Link>
         </section>

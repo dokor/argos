@@ -3,7 +3,7 @@ package com.dokor.argos.services.billing;
 import com.typesafe.config.Config;
 import jakarta.inject.*;
 
-/** Explicit commercial gates: no sample prices or secret defaults, including in test mode. */
+/** Publishing configured prices never opens any commercial gate or provisions a secret. */
 @Singleton
 public final class BillingSettings {
     public static final String API_VERSION="2026-09-30.endive";
@@ -13,7 +13,7 @@ public final class BillingSettings {
         c=root.getConfig("billing");enabled=c.getBoolean("enabled");
         payments=c.getBoolean("payments-enabled");live=c.getBoolean("live-mode");approved=c.getBoolean("prices-approved");
         if(payments&&!enabled)throw invalid();
-        if(approved) {
+        if(approved||c.hasPath("monthly-amount-ht-cents")||c.hasPath("annual-amount-ht-cents")) {
             long m=amount("MONTH"),y=amount("YEAR");
             if(m<1||y<1||m>100_000_000||y>=Math.multiplyExact(m,12))throw invalid();
         }
@@ -38,6 +38,9 @@ public final class BillingSettings {
     public String key(){return id("api-key");}
     public String webhookSecret(){return id("webhook-secret");}
     public String price(String interval){return id(interval.equals("MONTH")?"monthly-price-id":"annual-price-id");}
+    public Long configuredAmount(String interval){
+        return c.hasPath(interval.equals("MONTH")?"monthly-amount-ht-cents":"annual-amount-ht-cents")?amount(interval):null;
+    }
     public long amount(String interval){String p=interval.equals("MONTH")?"monthly-amount-ht-cents":"annual-amount-ht-cents";
         if(!c.hasPath(p)||c.getDouble(p)!=c.getLong(p))throw invalid();return c.getLong(p);}
     public void requireEnabled(){if(!enabled)throw new BillingError("billing_disabled");}

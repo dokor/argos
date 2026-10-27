@@ -18,11 +18,13 @@ beforeEach(()=>{
   HTMLDialogElement.prototype.showModal=function(){this.setAttribute("open","");};HTMLDialogElement.prototype.close=function(){this.removeAttribute("open");};
 });
 afterEach(()=>{cleanup();vi.unstubAllGlobals();});
-it.each(["fr","en"] as const)("displays pending prices, EUR, HT/TTC and both closed gates without starting any payment in %s",async lang=>{
+it.each(["fr","en"] as const)("displays approved prices, illustrative VAT and both closed gates without starting any payment in %s",async lang=>{
   render(<LangProvider initialLang={lang}><BillingView/></LangProvider>);
   expect(await screen.findByRole("heading",{name:lang==="fr"?"Paiements désactivés":"Payments disabled"})).toBeInTheDocument();
-  expect(screen.getAllByText(lang==="fr"?"Tarif à confirmer":"Price to be confirmed")).toHaveLength(2);
-  expect(screen.getByText(/TTC|tax-inclusive total/)).toBeInTheDocument();
+  for(const amount of lang==="fr"?["19,00 €","199,00 €"]:["€19.00","€199.00"])expect(screen.getByText(amount)).toBeInTheDocument();
+  expect(screen.getByText(/22[,.]80/)).toBeInTheDocument();expect(screen.getByText(/238[,.]80/)).toBeInTheDocument();
+  expect(screen.getByText(/12[,.]7/)).toBeInTheDocument();
+  expect(screen.getByText(/Les quotas restent mensuels|Quotas remain monthly/)).toBeInTheDocument();
   expect(screen.getByRole("button",{name:lang==="fr"?"Continuer avec Stripe Checkout":"Continue with Stripe Checkout"})).toBeDisabled();
   expect(billingDestination).not.toHaveBeenCalled();expect(billingSync).not.toHaveBeenCalled();
 });

@@ -11,9 +11,12 @@ on:
       - 'apps/console-web/**/*.css'
       - 'apps/console-web/**/layout.tsx'
       - 'apps/console-web/public/**'
+      - 'apps/console-web/src/components/marketing/Pricing*'
+      - 'apps/console-web/src/components/marketing/pricingCopy.ts'
       - 'apps/console-web/src/components/docs/**'
       - 'apps/console-web/src/components/connected/billing/**'
       - 'apps/console-web/src/lib/billing*'
+      - 'apps/console-web/src/lib/premium-pricing*'
       - 'apps/console-web/src/app/**/docs/**'
       - 'scripts/e2e/developer-docs.mjs'
       - 'scripts/e2e/connected-*.mjs'
@@ -23,6 +26,7 @@ on:
       - '.agents/skills/argos-visual-review/scripts/preview-backend.mjs'
       - 'scripts/e2e/admin-statistics.mjs'
       - 'scripts/e2e/public-header.mjs'
+      - 'scripts/e2e/public-pricing.mjs'
       - 'scripts/e2e/navigation-submenus.mjs'
       - 'scripts/e2e/acceptance-evidence*'
       - 'docs/connected-space/reference/**'
@@ -68,7 +72,8 @@ jobs:
     name: Visual matrix (${{ matrix.group }})
     needs: build
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    # Browser provisioning and the complete visual recipe share this bounded budget.
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       max-parallel: 4

@@ -36,8 +36,8 @@ public final class BillingService {
             a==null?null:Set.of("CHECKOUT_PENDING","OPEN").contains(a.getPhase())?a.getCheckoutInterval():a.getBillingInterval(),a==null||a.getPeriodEnd()==null?null:a.getPeriodEnd().toString(),
             a==null||a.getLastSyncedAt()==null?null:a.getLastSyncedAt().toString(),!same?"billing_configuration":!owned?"billing_managed_elsewhere":a==null?null:a.getLastError(),
             checkout,settings.enabled()&&same&&a!=null&&a.getCustomerId()!=null,
-            List.of(new Plan("MONTH","EUR",settings.pricesApproved()?settings.amount("MONTH"):null),
-                new Plan("YEAR","EUR",settings.pricesApproved()?settings.amount("YEAR"):null)));
+            List.of(new Plan("MONTH","EUR",settings.configuredAmount("MONTH")),
+                new Plan("YEAR","EUR",settings.configuredAmount("YEAR"))));
     });}catch(BillingError|AccountError known){throw known;}catch(Exception ignored){throw BillingError.unavailable();}}
     private long actor(String auth,String csrf,String remote){
         if(!AccountCsrf.valid(csrf))throw AccountError.forbidden("csrf_invalid");
