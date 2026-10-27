@@ -16,8 +16,8 @@ export const topics={
 export type Topic=keyof typeof topics;
 export const text=(value:Text,lang:Lang)=>value[lang==="fr"?0:1];
 export const docPath=(topic:Topic,lang:Lang)=>(lang==="en"?"/en/docs":"/docs")+(topic==="start"?"":"/"+topic);
-export const revision="e3303d9aafcf9924b3e578aceb22ad98383dca3c";
-export const checksum="283b74c313ffe25ebe736ac77bc9ab05742d23f4787298544d5f69bb2a75f03b";
+export const revision="6c5f3f274b9f2d03ed597d64ffb11a9d6aa3c38c";
+export const checksum="169ed3467d59e2e4dde5d3c4230986ee883e9e5c4a44ac9982e9a134c36ac6ae";
 export const install=`# Node.js 24.21.0 · private shell · no tracing
 set -eu
 umask 077
