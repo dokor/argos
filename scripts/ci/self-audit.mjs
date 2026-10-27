@@ -122,7 +122,9 @@ export async function collectAudit({ expectedSha, service, services = service, e
       const created = await client.request('/api/account/analyses', { method: 'POST', retry: true, key,
         body: { url: SITE + '/', profileId: 'server-default-v1' } });
       requireControl(typeof created.runId === 'string' && /^[1-9][0-9]{0,18}$/.test(created.runId), 'response-invalid');
-      const deadline = now() + 240000;
+      // Production allows up to 360s of processing for fresh sequential scans.
+      // Include queue/readiness margin; this bound never extends a backend run.
+      const deadline = now() + 480000;
       while (true) {
         const run = await client.request('/api/account/runs/' + created.runId);
         requireControl(!['FAILED', 'CANCELED'].includes(run.status), 'audit-failed');
