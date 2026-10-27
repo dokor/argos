@@ -90,9 +90,8 @@ class AuditScopeTest {
         f.processor.process(1);
         assertEquals("[]",f.published().meta().get("reusedCheckKeys"));
         verify(f.tech).runFreshTechAnalysis(any(),any());
-        verify(f.tech,never()).getOrRunTechAnalysis(any(),any());
     }
-    @Test void fullRerunExecutesAllEnginesAndTracesTheExistingStackCache() throws Exception {
+    @Test void fullRerunExecutesAllEnginesWithFreshStackChecks() throws Exception {
         Fixture f=new Fixture(AuditScope.full());
         when(f.html.analyze(any(),any())).thenReturn(module("html","html.title"));
         when(f.runtime.analyze(any(),any())).thenReturn(module("runtime","runtime.console.errors"));
@@ -100,14 +99,13 @@ class AuditScopeTest {
         when(f.observatory.analyze(any(),any())).thenReturn(module("observatory","observatory.score"));
         when(f.ssl.analyze(any(),any())).thenReturn(module("ssl","ssl.grade"));
         when(f.zap.analyze(any(),any())).thenReturn(module("zap","zap.alert.10038"));
-        when(f.tech.getOrRunTechAnalysis(any(),any())).thenReturn(new AuditModuleResult("tech","Tech","",
-            Map.of("stackCache",Map.of("hit",true,"checkKeys",List.of("tech.cms"))),module("tech","tech.cms").checks()));
+        when(f.tech.runFreshTechAnalysis(any(),any())).thenReturn(module("tech","tech.cms"));
         f.processor.process(1);
         var report=f.published();
         assertEquals(8,report.modules().size());assertEquals("false",report.meta().get("partialScope"));
-        assertEquals(List.of("tech.cms"),mapper.readValue(report.meta().get("reusedCheckKeys"),List.class));
-        assertFalse(mapper.readValue(report.meta().get("newCheckKeys"),List.class).contains("tech.cms"));
-        verify(f.tech,never()).runFreshTechAnalysis(any(),any());
+        assertEquals("[]",report.meta().get("reusedCheckKeys"));
+        assertTrue(mapper.readValue(report.meta().get("newCheckKeys"),List.class).contains("tech.cms"));
+        verify(f.tech).runFreshTechAnalysis(any(),any());
     }
     private class Fixture {
         final AuditRunService runs=mock(AuditRunService.class);

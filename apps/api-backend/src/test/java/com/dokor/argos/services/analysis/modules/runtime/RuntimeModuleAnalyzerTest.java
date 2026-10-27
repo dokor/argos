@@ -17,6 +17,31 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class RuntimeModuleAnalyzerTest {
+    @Test void requestCountIsAWholePageObservationAndPassesAfterReducingRequests() throws Exception {
+        var mapper=new com.fasterxml.jackson.databind.ObjectMapper();
+        for(int count:new int[]{150,80}) {
+            var response=mapper.readValue("{\"navigation\":{\"status\":\"COMPLETED\"},\"network\":{\"requests\":"+count+",\"byType\":{\"image\":"+count+"}}}",PlaywrightRuntimeClient.RuntimeAnalyzeResponse.class);
+            var check=analyze(response).checks().stream().filter(c->c.key().equals("runtime.network.request_count")).findFirst().orElseThrow();
+            assertEquals(count>120?AuditStatus.WARN:AuditStatus.PASS,check.status());
+            assertEquals(count,check.value());assertFalse(check.details().containsKey("observed"));
+        }
+    }
+    @Test void transferFindingRetainsTheMeasuredFileAndBytesAndDisappearsAfterReduction() throws Exception {
+        var mapper=new com.fasterxml.jackson.databind.ObjectMapper();
+        for(long bytes:new long[]{6000000,100000}) {
+            var response=mapper.readValue("""
+              {"navigation":{"status":"COMPLETED"},"network":{"requests":2,"totalBytesEstimated":%d,"topLargest":[
+              {"url":"https://example.com","type":"image","bytes":%d,"status":200,
+               "observedEvidence":{"kind":"resource","origin":"https://example.com","resourceRef":"0123456789abcdef","resourcePath":"/hero.webp","metrics":{"transferSize":%d}}}]}}
+              """.formatted(bytes,bytes,bytes),PlaywrightRuntimeClient.RuntimeAnalyzeResponse.class);
+            var finding=analyze(response).checks().stream().filter(c->c.key().equals("runtime.network.bytes_estimated")).findFirst().orElseThrow();
+            assertEquals(bytes>3000000?AuditStatus.WARN:AuditStatus.PASS,finding.status());
+            var evidence=(com.dokor.argos.services.analysis.model.ObservedEvidence)finding.details().get("observed");
+            assertEquals("/hero.webp",evidence.items().getFirst().resourcePath());
+            assertEquals((double)bytes,evidence.items().getFirst().metrics().get("transferSize"));
+            assertTrue(evidence.truncated());
+        }
+    }
     @Test void failedNavigationCannotEarnPointsForZeroErrorsOrLowTraffic() throws Exception {
         var mapper = new com.fasterxml.jackson.databind.ObjectMapper();
         var response = mapper.readValue("""

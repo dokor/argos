@@ -5,6 +5,7 @@ import { connectedFixture } from "./fixtures/connected-fixtures.mjs";
 import OverviewView from "./OverviewView";
 import DomainBatch from "./domains/DomainBatch";
 import { findingEditorial } from "@/components/report/findingCatalogue";
+import { findingAnchor } from "@/components/report/reportModel";
 vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams(window.location.search), usePathname: () => window.location.pathname, useRouter: () => ({ push: vi.fn() }) }));
 vi.mock("@/components/account/AccountSession", () => ({ useAccountSession: () => ({ invalidate: vi.fn(), refreshUsage: vi.fn() }) }));
 vi.mock("./domains/useDomainResource", () => ({ activeStatus: () => false, followPages: () => false, useDomainResource: (path: string | null) => {
@@ -36,8 +37,9 @@ it("exposes reach on closed rules and limits examples without losing the affecte
   expect(summary).toHaveTextContent("5 / 6");
   expect(summary.closest("details")).not.toHaveAttribute("open");
   const first = screen.getByText(findingEditorial("runtime.network.failed_requests", "fr").title).closest("details")!;
-  expect(within(first).getAllByRole("listitem")).toHaveLength(3);
+  const examples = within(first).getAllByRole("list").find(list => list.querySelector('a[href^="/account/runs/"]'))!;
+  expect(within(examples).getAllByRole("listitem")).toHaveLength(3);
   expect(within(first).getByRole("link", { name: "Voir les pages concernées (6)" })).toHaveAttribute("href", expect.stringContaining("rule=runtime.network.failed_requests&definitionVersion=ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
-  expect(within(first).getByRole("link", { name: "/collections — Voir le diagnostic" })).toHaveAttribute("href", "/account/runs/401?returnTo=%2Faccount%2Fdomains%2F101%2Fbatches%2F201");
+  expect(within(first).getByRole("link", { name: "/collections — Voir le diagnostic" })).toHaveAttribute("href", "/account/runs/401?returnTo=%2Faccount%2Fdomains%2F101%2Fbatches%2F201&view=technical#" + findingAnchor("runtime.network.failed_requests"));
   expect(container.querySelectorAll("h1")).toHaveLength(1);
 });

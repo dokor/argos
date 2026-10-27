@@ -6,7 +6,7 @@ import java.util.*;
 
 /** Pure, versioned ranking of actions. Never recomputes a historical scoring policy. */
 public final class ReportPriorityService {
-    public static final String VERSION = "priority-risk-v2";
+    public static final String VERSION = "priority-actions-v3";
     private static final Map<String, String> OBSERVATORY_CAUSES = Map.of(
         "content-security-policy", "http.security.csp",
         "strict-transport-security", "http.security.hsts",
@@ -28,6 +28,11 @@ public final class ReportPriorityService {
         Map<String, SortedSet<String>> corroboratingSources = new HashMap<>();
         Map<String, SortedSet<String>> corroboratingKeys = new HashMap<>();
         for (var issue : issues) {
+            // A category score is a summary, not a repair. Keep it in the technical
+            // inventory, but spend action-plan slots on the actual Lighthouse diagnoses.
+            if (issue.id().startsWith("lighthouse.score.") && issues.stream().anyMatch(detail ->
+                detail.id().startsWith("lighthouse.audit.") && Objects.equals(detail.categoryKey(), issue.categoryKey())))
+                continue;
             var check = checks.get(identity(issue.module(), issue.id()));
             // Observatory is an aggregate, not a second fix for each already identified header.
             // Only suppress when every reported failed policy has an exact actionable counterpart.

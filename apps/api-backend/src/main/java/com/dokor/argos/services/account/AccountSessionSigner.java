@@ -10,6 +10,7 @@ import io.jsonwebtoken.security.Keys;
 import jakarta.inject.*;
 
 import java.time.Clock;
+import java.time.Instant;
 import java.util.Date;
 
 /** Plume signer with a quiet maintained JJWT reader: raw parser exceptions contain claims. */
@@ -20,6 +21,7 @@ public class AccountSessionSigner implements WebSessionSigner {
     private final Clock clock;
     private volatile JwtSessionSigner signer;
     private volatile JwtParser parser;
+    private JwtParser renewalParser;
 
     @Inject
     public AccountSessionSigner(AccountSettings settings, ObjectMapper mapper, Clock clock) {
@@ -33,14 +35,18 @@ public class AccountSessionSigner implements WebSessionSigner {
         if (!settings.enabled()) throw new AccountError(503, "account_unavailable");
         var secret = settings.secret();
         signer = new JwtSessionSigner(secret, mapper, clock);
-        parser =
-                Jwts.parser()
+        renewalParser = parser(secret, "account-renewal");
+        parser = parser(secret, "account");
+    }
+
+    private JwtParser parser(String secret, String usage) {
+        return Jwts.parser()
                         .verifyWith(
                                 Keys.hmacShaKeyFor(
                                         secret.getBytes(java.nio.charset.StandardCharsets.UTF_8)))
                         .requireIssuer("argos-account")
                         .requireAudience("argos-account")
-                        .require("usage", "account")
+                        .require("usage", usage)
                         .clock(() -> new Date(clock.millis()))
                         .build();
     }
@@ -48,9 +54,19 @@ public class AccountSessionSigner implements WebSessionSigner {
     @Override
     public <T> T parseSession(String token, Class<T> type) {
         initialize();
+        return parse(token, type, parser, "account");
+    }
+
+    /** A renewal credential can only be used by the CSRF-protected renewal endpoint. */
+    public ArgosWebSession parseRenewal(String token) {
+        initialize();
+        return parse(token, ArgosWebSession.class, renewalParser, "account-renewal");
+    }
+
+    private <T> T parse(String token, Class<T> type, JwtParser reader, String usage) {
         if (token == null || token.length() > 4096) return null;
         try {
-            var claims = parser.parseSignedClaims(token).getPayload();
+            var claims = reader.parseSignedClaims(token).getPayload();
             if (claims.getExpiration() == null
                     || !claims.getExpiration().toInstant().isAfter(clock.instant())) return null;
             if (type == ArgosWebSession.class)
@@ -58,7 +74,7 @@ public class AccountSessionSigner implements WebSessionSigner {
                         new ArgosWebSession(
                                 claims.getIssuer(),
                                 "argos-account",
-                                "account",
+                                usage,
                                 claims.get("uid", Long.class),
                                 claims.get("sid", Long.class),
                                 claims.getExpiration().getTime() / 1000));
@@ -80,5 +96,12 @@ public class AccountSessionSigner implements WebSessionSigner {
                 new ArgosWebSession(
                         "argos-account", "argos-account", "account", user, session, expiry / 1000),
                 expiry);
+    }
+
+    public String issueRenewal(long user, long session, Instant expiresAt) {
+        return serializeSession(
+                new ArgosWebSession("argos-account", "argos-account", "account-renewal",
+                        user, session, expiresAt.toEpochMilli() / 1000),
+                expiresAt.toEpochMilli());
     }
 }

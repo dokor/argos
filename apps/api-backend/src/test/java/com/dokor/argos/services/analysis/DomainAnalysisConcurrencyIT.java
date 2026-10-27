@@ -1,13 +1,8 @@
 package com.dokor.argos.services.analysis;
 
-import com.coreoz.plume.db.querydsl.transaction.TransactionManagerQuerydsl;
-import com.dokor.argos.db.dao.DomainAnalysisDao;
 import com.dokor.argos.services.analysis.model.AuditContext;
 import com.dokor.argos.services.analysis.model.AuditModuleResult;
 import com.dokor.argos.services.analysis.modules.tech.TechModuleAnalyzer;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.querydsl.sql.Configuration;
-import com.querydsl.sql.MySQLTemplates;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,11 +22,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-/** Real InnoDB row-lock proof; run with the mariadb-integration profile. */
+/** Legacy cache rows must not influence new audits; run with the mariadb-integration profile. */
 class DomainAnalysisConcurrencyIT {
     private static MariaDbDataSource source;
-    private final ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
-    private DomainAnalysisDao dao;
     private final AuditContext context = new AuditContext("https://example.com/a", "https://example.com/a", 7L)
         .withHttpResult("https://example.com/a", 200, 1L, List.of(), Map.of(), "<html/>");
     private final AuditModuleResult fresh = new AuditModuleResult(AuditModule.TECH.id(), "Technology", "fresh", Map.of(), List.of());
@@ -52,7 +45,6 @@ class DomainAnalysisConcurrencyIT {
 
     @BeforeEach
     void resetCache() throws Exception {
-        dao = new DomainAnalysisDao(new TransactionManagerQuerydsl(source, new Configuration(MySQLTemplates.DEFAULT)));
         sql("DELETE FROM ARG_DOMAIN_ANALYSIS");
         sql("DELETE FROM ARG_DOMAIN");
         sql("INSERT INTO ARG_DOMAIN(id, hostname) VALUES(7, 'example.com')");
@@ -61,44 +53,40 @@ class DomainAnalysisConcurrencyIT {
     }
 
     @Test
-    void concurrentRepairsRunOnlyOnceAndLeaveOneValidRow() throws Exception {
+    void concurrentAuditsEachAnalyzeDespiteLegacyCacheRow() throws Exception {
         var calls = new AtomicInteger();
         TechModuleAnalyzer analyzer = mock(TechModuleAnalyzer.class);
-        when(analyzer.analyzeStack(any(), any())).thenAnswer(invocation -> {
+        when(analyzer.analyze(any(), any())).thenAnswer(invocation -> {
             calls.incrementAndGet();
             Thread.sleep(200);
             return fresh;
         });
-        when(analyzer.analyzeCurrentResponse(any(), any(), any())).thenReturn(fresh);
-        // Separate service/DAO instances emulate workers sharing only MariaDB.
-        var first = new DomainAnalysisService(dao, analyzer, mapper);
-        var secondDao = new DomainAnalysisDao(new TransactionManagerQuerydsl(source, new Configuration(MySQLTemplates.DEFAULT)));
-        var second = new DomainAnalysisService(secondDao, analyzer, mapper);
+        var first = new DomainAnalysisService(analyzer);
+        var second = new DomainAnalysisService(analyzer);
         try (var threads = Executors.newFixedThreadPool(2)) {
             var start = new CountDownLatch(1);
-            var one = threads.submit(() -> { await(start); return first.getOrRunTechAnalysis(context, LoggerFactory.getLogger(getClass())); });
-            var two = threads.submit(() -> { await(start); return second.getOrRunTechAnalysis(context, LoggerFactory.getLogger(getClass())); });
+            var one = threads.submit(() -> { await(start); return first.runFreshTechAnalysis(context, LoggerFactory.getLogger(getClass())); });
+            var two = threads.submit(() -> { await(start); return second.runFreshTechAnalysis(context, LoggerFactory.getLogger(getClass())); });
             start.countDown();
             assertEquals(fresh, one.get(10, TimeUnit.SECONDS));
             assertEquals(fresh, two.get(10, TimeUnit.SECONDS));
         }
-        assertEquals(1, calls.get());
+        assertEquals(2, calls.get());
         assertEquals(1, rowCount());
     }
 
     @Test
-    void failedRepairCommitsInvalidationAndNextAuditCanRetry() throws Exception {
+    void failedAnalysisDoesNotUseLegacyCacheAndNextAuditRetries() throws Exception {
         TechModuleAnalyzer failing = mock(TechModuleAnalyzer.class);
-        when(failing.analyzeStack(any(), any())).thenThrow(new IllegalStateException("tech failed"));
-        assertThrows(IllegalStateException.class, () -> new DomainAnalysisService(dao, failing, mapper)
-            .getOrRunTechAnalysis(context, LoggerFactory.getLogger(getClass())));
-        assertEquals(0, rowCount());
+        when(failing.analyze(any(), any())).thenThrow(new IllegalStateException("tech failed"));
+        assertThrows(IllegalStateException.class, () -> new DomainAnalysisService(failing)
+            .runFreshTechAnalysis(context, LoggerFactory.getLogger(getClass())));
+        assertEquals(1, rowCount());
 
         TechModuleAnalyzer recovered = mock(TechModuleAnalyzer.class);
-        when(recovered.analyzeStack(any(), any())).thenReturn(fresh);
-        when(recovered.analyzeCurrentResponse(any(), any(), any())).thenReturn(fresh);
-        assertEquals(fresh, new DomainAnalysisService(dao, recovered, mapper)
-            .getOrRunTechAnalysis(context, LoggerFactory.getLogger(getClass())));
+        when(recovered.analyze(any(), any())).thenReturn(fresh);
+        assertEquals(fresh, new DomainAnalysisService(recovered)
+            .runFreshTechAnalysis(context, LoggerFactory.getLogger(getClass())));
         assertEquals(1, rowCount());
     }
 

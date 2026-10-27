@@ -50,7 +50,7 @@ public class SslLabsClient {
         this.runningPoll = runningPoll;
     }
 
-    /** Prefer cached reports; a cache miss can start an assessment. Never force startNew. */
+    /** Request a fresh assessment once, then poll it without restarting or requesting cached reports. */
     public JsonNode analyze(String host) throws Exception {
         String target = com.dokor.argos.services.analysis.RemoteScanPolicy.requireAllowed(host, externalScansEnabled);
         var parent = AuditDeadline.current();
@@ -63,7 +63,7 @@ public class SslLabsClient {
                     while (true) {
                         com.dokor.argos.services.analysis.RemoteScanPolicy.requireAllowed(target, externalScansEnabled);
                         JsonNode result = get(apiBase + "/analyze?host=" + URLEncoder.encode(target, StandardCharsets.UTF_8)
-                            + "&fromCache=on&all=done&publish=off");
+                            + "&all=done&publish=off" + (polls == 0 ? "&startNew=on" : ""));
                         polls++;
                         String status = result.path("status").asText("UNKNOWN");
                         lastStatus = java.util.Set.of("READY", "ERROR", "DNS", "IN_PROGRESS").contains(status) ? status : "UNKNOWN";

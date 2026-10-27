@@ -276,10 +276,8 @@ public class AuditProcessorService {
                             remote, ssl, () -> sslLabsModuleAnalyzer.analyze(ctx, logger));
                         case ZAP -> runModule(runId, run.getClaimToken(), module, moduleStatuses,
                             () -> withHttpSnapshot(snapshotUnavailable, () -> zapModuleAnalyzer.analyze(ctx, logger)));
-                        // Only Tech has a 24h domain cache. Observatory and SSL still run for each audit.
                         case TECH -> runModule(runId, run.getClaimToken(), module, moduleStatuses,
-                            () -> withHttpSnapshot(snapshotUnavailable, () -> executionScope.partial()
-                                ? domainAnalysisService.runFreshTechAnalysis(ctx, logger) : domainAnalysisService.getOrRunTechAnalysis(ctx, logger)));
+                            () -> withHttpSnapshot(snapshotUnavailable, () -> domainAnalysisService.runFreshTechAnalysis(ctx, logger)));
                     };
                     allModules.add(result);
                 }
@@ -306,15 +304,10 @@ public class AuditProcessorService {
                 AuditScoreReport score = scoreService.compute(scoringVersion, scoringFingerprint, enrichedModules);
 
                 Map<String, String> meta = new LinkedHashMap<>();
-                List<String> reusedKeys = enrichedModules.stream().filter(m -> "tech".equals(m.id()) && m.data()!=null)
-                    .map(m -> m.data().get("stackCache")).filter(Map.class::isInstance).map(Map.class::cast)
-                    .filter(cache -> Boolean.TRUE.equals(cache.get("hit"))).map(cache -> cache.get("checkKeys"))
-                    .filter(List.class::isInstance).flatMap(keys -> ((List<?>)keys).stream())
-                    .filter(String.class::isInstance).map(String.class::cast).distinct().sorted().toList();
                 meta.put("executionScope",objectMapper.writeValueAsString(executionScope));
                 meta.put("executedModules",objectMapper.writeValueAsString(AuditModule.ordered().stream().filter(selectedModules::contains).map(AuditModule::id).toList()));
-                meta.put("newCheckKeys",objectMapper.writeValueAsString(enrichedModules.stream().flatMap(m -> m.checks().stream()).map(AuditCheckResult::key).filter(key -> !key.endsWith(".collect") && !reusedKeys.contains(key)).distinct().sorted().toList()));
-                meta.put("reusedCheckKeys",objectMapper.writeValueAsString(reusedKeys));
+                meta.put("newCheckKeys",objectMapper.writeValueAsString(enrichedModules.stream().flatMap(m -> m.checks().stream()).map(AuditCheckResult::key).filter(key -> !key.endsWith(".collect")).distinct().sorted().toList()));
+                meta.put("reusedCheckKeys","[]");
                 meta.put("partialScope",String.valueOf(executionScope.partial()));
                 meta.put("generator", "argos-api-backend");
                 meta.put("measurementFingerprint", MeasurementContract.fingerprint(run.getProfileSnapshot()));

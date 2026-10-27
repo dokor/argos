@@ -27,7 +27,7 @@ export default function FindingGuide({ issue, lang, heading = 3, parts = allPart
         {showHeadings && <Heading>{title}</Heading>}
         <div data-finding-guide-content>
           {part === 'detection' && <><p>{p.detection}</p><p className={s.context}>{p.methodNote}</p></>}
-          {part === 'correction' && <><p>{content.qualification}</p>
+          {part === 'correction' && <>
             <ol>{p.steps.map(step => <li key={step}>{step}</li>)}</ol>
             {p.example && <figure><figcaption>{c.example}</figcaption><pre><code>{p.example}</code></pre></figure>}
           </>}

@@ -14,6 +14,7 @@ import { createHash, timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { ciManagementProxy } from "./ci-management-proxy";
 export const SESSION_COOKIE = "argos_account";
+export const RENEWAL_COOKIE = "argos_account_renewal";
 export const CSRF_COOKIE = "argos_account_csrf";
 const CLAIM_INDEX = "argos_account_claims";
 // Keep the configured origin authoritative; never infer trust from request/proxy headers.
@@ -106,6 +107,15 @@ export async function accountProxy(request: NextRequest, parts: string[]): Promi
   if (!allowed[request.method]?.test(path) && !(request.method === "GET" && domainSummaryPath(path)) && !(request.method === "GET" && /^report-introduction\/[A-Za-z0-9_-]{20,512}$/.test(path)) && !adminPath(request.method,path)) return privateError("resource_unavailable", 404);
   const headers = accountHeaders(request, mutation);
   if (headers instanceof NextResponse) return headers;
+  if (path === "auth/renew") {
+    const renewal = request.cookies.get(RENEWAL_COOKIE)?.value;
+    if (renewal !== undefined) {
+      if (!renewal || renewal.length > 4096) return privateError("session_invalid", 401);
+      headers.set("X-Argos-Renewal", renewal);
+    } else if (!request.cookies.has(SESSION_COOKIE)) {
+      return NextResponse.json({ accepted: false }, { headers: { "Cache-Control": "private, no-store" } });
+    }
+  }
   let body: string | undefined, returnTo = "/account", preserveReturn = false, linkIntent = false;
   if (mutation) {
     try {
@@ -258,9 +268,19 @@ export async function accountProxy(request: NextRequest, parts: string[]): Promi
     response.headers.set("Cache-Control", "private, no-store");
     if (upstream.ok && preserveReturn) response.cookies.set("argos_account_return", returnTo, accountCookieOptions(86400));
     const jwt = upstream.headers.get("x-argos-session");
-    if (upstream.ok && jwt) response.cookies.set(SESSION_COOKIE, jwt, accountCookieOptions(900));
-    if (upstream.status === 401 && path !== "auth/login" || upstream.ok && (path === "auth/logout" || path === "auth/reset" || path === "me/archive"))
+    if (upstream.ok && jwt) {
+      response.cookies.set(SESSION_COOKIE, jwt, accountCookieOptions(900));
+      // The CSRF cookie may predate login; retain its binding throughout the renewed session.
+      const csrf = request.cookies.get(CSRF_COOKIE)?.value;
+      if (csrf && /^[A-Za-z0-9_-]{43}$/.test(csrf)) response.cookies.set(CSRF_COOKIE, csrf, accountCookieOptions(86400));
+    }
+    const renewal = upstream.headers.get("x-argos-renewal");
+    if (upstream.ok && renewal) response.cookies.set(RENEWAL_COOKIE, renewal, accountCookieOptions(86400));
+    if (upstream.status === 401 && path !== "auth/login" || upstream.ok && (path === "auth/logout" || path === "auth/reset" || path === "me/archive")) {
       response.cookies.set(SESSION_COOKIE, "", accountCookieOptions(0));
+      // Access JWTs can expire while a tab sleeps; renewal alone decides if the session can resume.
+      if (path === "auth/renew" || upstream.ok) response.cookies.set(RENEWAL_COOKIE, "", accountCookieOptions(0));
+    }
     if (upstream.status === 429) response.headers.set("Retry-After", upstream.headers.get("retry-after") ?? "900");
     if (upstream.ok && path.endsWith("/start")) {
       const start = JSON.parse(data), browser = upstream.headers.get("x-argos-oauth-browser");

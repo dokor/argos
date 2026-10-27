@@ -5,6 +5,7 @@ import com.dokor.argos.services.analysis.ModuleUnavailableException;
 import com.dokor.argos.services.analysis.model.AuditCheckResult;
 import com.dokor.argos.services.analysis.model.AuditContext;
 import com.dokor.argos.services.analysis.model.AuditModuleResult;
+import com.dokor.argos.services.analysis.model.ObservedEvidence;
 import com.dokor.argos.services.analysis.model.enums.AuditSeverity;
 import com.dokor.argos.services.analysis.model.enums.AuditStatus;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -75,19 +76,28 @@ public class ZapModuleAnalyzer {
             rawCount++;
             // confidence ZAP : 0 = False Positive, 1 = Low, 2 = Medium, 3 = High.
             String confidence = textOrDefault(alert.path("confidence"), "");
-            if ("0".equals(confidence)) {
+            if ("0".equals(confidence) || "False Positive".equalsIgnoreCase(confidence)) {
                 falsePositives++;
                 continue;
             }
             String pluginId = textOrDefault(alert.path("pluginId"), "");
             String alertName = textOrDefault(alert.path("alert"), "Alerte inconnue");
-            int risk = parseRisk(textOrDefault(alert.path("riskcode"), "0"));
-            String description = textOrDefault(alert.path("description"), "");
+            int risk = parseRisk(textOrDefault(alert.path("riskcode"), textOrDefault(alert.path("risk"), "")));
+            if (risk < 0) throw new ModuleUnavailableException("ZAP alert has an unrecognized risk level");
+            String description = plainGuidance(textOrDefault(alert.path("description"), ""));
+            String solution = plainGuidance(textOrDefault(alert.path("solution"), ""));
             String alertUrl = textOrDefault(alert.path("url"), url);
             String checkKey = PLUGIN_KEY_MAP.getOrDefault(pluginId, "zap.alert." + pluginId);
 
-            byKey.computeIfAbsent(checkKey, k -> new ZapFinding(k, pluginId))
-                .addInstance(risk, alertName, description, alertUrl);
+            var finding = byKey.computeIfAbsent(checkKey, k -> new ZapFinding(k, pluginId));
+            finding.addInstance(risk, alertName, description, solution, alertUrl, confidence);
+            locateResponse(finding, context, alert);
+            if ("10055".equals(pluginId) && finding.policyFindings.size() < 10)
+                finding.policyFindings.add(plainGuidance(alertName + ": " + textOrDefault(alert.path("other"), "")));
+            if ("10202".equals(pluginId) && finding.elements.size() < 10) {
+                String selector = formSelector(context.body(), alert);
+                if (selector != null) finding.elements.add(Map.of("kind", "element", "selector", selector));
+            }
         }
 
         logger.info("ZAP module: {} alertes brutes, {} faux positifs écartés, {} findings distincts",
@@ -142,22 +152,42 @@ public class ZapModuleAnalyzer {
         private final String pluginId;
         private String name = "Alerte inconnue";
         private String description = "";
+        private String solution = "";
         private int maxRisk = -1;
         private int instances = 0;
+        private int confidenceLevel = 0;
         private final List<String> urls = new ArrayList<>();
+        private final java.util.Set<String> policyFindings = new java.util.LinkedHashSet<>();
+        private final List<Map<String,String>> elements = new ArrayList<>();
+        private final java.util.Set<Integer> cookieIndexes = new java.util.LinkedHashSet<>();
+        private final Map<String,Object> responseLocation = new LinkedHashMap<>();
+        private final java.util.Set<String> responseLocations = new java.util.LinkedHashSet<>();
+        private final java.util.Set<String> responseHeaders = new java.util.LinkedHashSet<>();
 
         ZapFinding(String key, String pluginId) {
             this.key = key;
             this.pluginId = pluginId;
         }
 
-        void addInstance(int risk, String name, String description, String url) {
+        void addInstance(int risk, String name, String description, String solution, String url, String confidence) {
             instances++;
+            int level = switch (confidence.toLowerCase(java.util.Locale.ROOT)) {
+                case "1", "low" -> 1;
+                case "2", "medium" -> 2;
+                case "3", "high", "4", "confirmed" -> 3;
+                default -> 0;
+            };
             // On garde le libellé/description de l'occurrence la plus grave.
             if (risk > maxRisk) {
                 this.maxRisk = risk;
                 this.name = name;
                 this.description = description;
+                this.solution = solution;
+                this.confidenceLevel = level;
+            } else if (risk == maxRisk) {
+                this.confidenceLevel = Math.min(this.confidenceLevel, level);
+                if (this.description.isBlank()) this.description = description;
+                if (this.solution.isBlank()) this.solution = solution;
             }
             if (url != null && !url.isBlank() && !urls.contains(url) && urls.size() < MAX_URLS_PER_FINDING) {
                 urls.add(url);
@@ -168,9 +198,19 @@ public class ZapModuleAnalyzer {
             Map<String, Object> details = new LinkedHashMap<>();
             details.put("pluginId", pluginId);
             details.put("riskcode", String.valueOf(maxRisk));
+            details.put("measurementConfidence", switch (confidenceLevel) { case 1 -> "LOW"; case 2 -> "MEDIUM"; case 3 -> "HIGH"; default -> "UNKNOWN"; });
             details.put("instances", instances);
+            details.putAll(responseLocation);
+            if (!responseLocations.isEmpty()) details.put("responseBodyLocations",String.join(",",responseLocations));
+            if (!responseHeaders.isEmpty()) details.put("responseHeaders",String.join(",",responseHeaders));
+            if (!cookieIndexes.isEmpty()) details.put("cookieIndexes", cookieIndexes);
             details.put("urls", urls.isEmpty() ? List.of(fallbackUrl) : urls);
             if (!description.isBlank()) details.put("description", description);
+            if (!solution.isBlank()) details.put("solution", solution);
+            if (!policyFindings.isEmpty()) details.put("policyFindings", String.join("\n", policyFindings));
+            if (!elements.isEmpty()) details.put("observed", ObservedEvidence.from(Map.of(
+                "version", "observed-evidence-v1", "source", "zap", "items", elements,
+                "inspected", instances, "truncated", instances > elements.size())));
 
             String message = name + " détecté par l'analyse passive ZAP"
                 + (instances > 1 ? " (" + instances + " occurrences)." : ".");
@@ -186,17 +226,77 @@ public class ZapModuleAnalyzer {
                 String.valueOf(maxRisk),
                 details,
                 message,
-                "Examinez et corrigez ce problème de sécurité : " + name
+                solution.isBlank() ? null : solution
             );
         }
     }
 
+    /** ZAP supplies HTML prose. Keep bounded plain text, never executable markup or credentials. */
+    private static String plainGuidance(String value) {
+        String bounded = value.substring(0, Math.min(value.length(), 16000));
+        return com.dokor.argos.services.analysis.AuditOutputSanitizer.text(org.jsoup.Jsoup.parse(bounded).text());
+    }
+
     private static int parseRisk(String riskcode) {
-        try {
-            return Integer.parseInt(riskcode.trim());
-        } catch (NumberFormatException e) {
-            return 0;
+        return switch (riskcode.trim().toLowerCase(java.util.Locale.ROOT)) {
+            case "0", "informational" -> 0;
+            case "1", "low" -> 1;
+            case "2", "medium" -> 2;
+            case "3", "high" -> 3;
+            default -> -1;
+        };
+    }
+
+    /** Locate retained source evidence without retaining its contents, cookie names or values. */
+    private static void locateResponse(ZapFinding finding, AuditContext context, JsonNode alert) {
+        if (java.util.Set.of("10010", "10011", "10054").contains(finding.pluginId)) {
+            String param = alert.path("param").asText();
+            String[] cookies = context.headers().getOrDefault("set-cookie", "").split("\n");
+            for (int i=0; i<cookies.length && finding.cookieIndexes.size()<10; i++) {
+                int equals = cookies[i].indexOf('=');
+                if (equals > 0 && cookies[i].substring(0,equals).trim().equals(param)) finding.cookieIndexes.add(i+1);
+            }
+            return;
         }
+        String evidence = alert.path("evidence").asText();
+        if (evidence.isBlank() || evidence.length()>512) return;
+        for (var header : context.headers().entrySet()) {
+            if (header.getKey().matches("[a-zA-Z][a-zA-Z0-9-]{0,79}") && header.getValue().contains(evidence)) {
+                finding.responseLocation.putIfAbsent("responseHeader", header.getKey());
+                if(finding.responseHeaders.size()<10)finding.responseHeaders.add(header.getKey());
+                return;
+            }
+        }
+        String body = context.body();
+        int offset = body == null ? -1 : body.indexOf(evidence);
+        int occurrences = 0;
+        while (offset >= 0 && finding.responseLocations.size()<10 && occurrences++<10) {
+            long line=1 + body.substring(0,offset).chars().filter(c -> c=='\n').count();
+            int column=offset-body.lastIndexOf('\n',offset);
+            finding.responseLocation.putIfAbsent("responseBodyLine",line);
+            finding.responseLocation.putIfAbsent("responseBodyColumn",column);
+            finding.responseLocations.add(line+":"+column);
+            offset=body.indexOf(evidence,offset+evidence.length());
+        }
+    }
+
+    /** ZAP 10202 reports a one-based form ordinal. Verify its opening tag against the
+     * received document before deriving a structural selector; never publish field values/HTML. */
+    private static String formSelector(String html, JsonNode alert) {
+        if (html == null) return null;
+        var ordinal = java.util.regex.Pattern.compile("\\[Form ([1-9][0-9]{0,3}):").matcher(alert.path("other").asText());
+        if (!ordinal.find()) return null;
+        var forms = org.jsoup.Jsoup.parse(html).select("form");
+        int index = Integer.parseInt(ordinal.group(1)) - 1;
+        if (index >= forms.size()) return null;
+        var candidate = forms.get(index);
+        var reported = org.jsoup.Jsoup.parseBodyFragment(alert.path("evidence").asText()).selectFirst("form");
+        if (reported == null || reported.attributes().asList().stream().anyMatch(a -> !candidate.attr(a.getKey()).equals(a.getValue()))) return null;
+        var segments = new java.util.LinkedList<String>();
+        for (var node = candidate; node != null && !node.tagName().equals("#root"); node = node.parent())
+            segments.addFirst(java.util.Set.of("html", "body").contains(node.tagName()) ? node.tagName()
+                : node.tagName() + ":nth-child(" + (node.elementSiblingIndex() + 1) + ")");
+        return ObservedEvidence.safeSelector(String.join(" > ", segments));
     }
 
     private static AuditSeverity mapRiskToSeverity(int risk) {

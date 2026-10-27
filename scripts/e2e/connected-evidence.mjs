@@ -16,8 +16,8 @@ async function openEvidence(details,page,lang) {
  await summary.waitFor();
  const panel=summary.locator('..');
  assert.equal(await panel.evaluate(el=>el.open),false,'Technical evidence starts collapsed');
- const block=panel.locator('[data-observed-evidence]');
- if(await block.count()) assert.equal(await block.isVisible(),false,'The finding alone does not open its evidence');
+ const block=details.locator('[data-observed-evidence]');
+ if(await block.count()) assert.equal(await block.isVisible(),true,'Observed locations are visible as soon as the finding opens');
  await summary.focus();await page.keyboard.press('Enter');
  assert.ok(await panel.evaluate(el=>el.open),'Evidence opens with the keyboard');
  assert.ok(await summary.evaluate(el=>el===document.activeElement),'Evidence toggle retains focus');
@@ -69,7 +69,11 @@ try {
     assert.ok(await dom.evaluate(el=>el.open));
     await openEvidence(dom,page,lang);
     await dom.locator('[data-observed-evidence]').waitFor();
-    assert.ok((await dom.locator('[data-observed-evidence]').textContent()).includes('1,HTML,1,BODY,2,MAIN,4,IMG'));
+    const locate=dom.getByText(lang==='fr'?'Retrouver précisément cet élément':'Locate this exact element',{exact:true});
+    await locate.focus();await page.keyboard.press('Enter');
+    const command=locate.locator('..').locator('code');
+    assert.ok(await command.isVisible(),'Exact DOM location must be accessible with the keyboard');
+    assert.equal(await command.textContent(),"inspect([1,1,2,4].reduce((n,i)=>[...n.childNodes].filter(c=>c.nodeType!==3||c.textContent.trim())[i],document))",'The actionable command must retain every index from the recorded DOM path');
     await dom.locator('[data-observed-evidence]').screenshot({path:`${output}/dom-${lang}-${colorScheme}-${width}.png`});
     if(width===390 && lang==='en' && colorScheme==='dark') for(const edge of [320,768]) {
       await page.setViewportSize({width:edge,height:900});
@@ -80,7 +84,7 @@ try {
    }
    await proofToggle.focus();await page.keyboard.press('Enter');
    assert.equal(await proof.evaluate(el=>el.open),false,'Evidence closes with the keyboard');
-   if(state!=='historical') assert.equal(await proof.locator('[data-observed-evidence]').isVisible(),false);
+   if(state!=='historical') assert.equal(await details.locator('[data-observed-evidence]').isVisible(),true,'Closing methodology keeps observed locations visible');
    await summary.focus();await page.keyboard.press('Enter');assert.equal(await details.evaluate(el=>el.open),false);
   }
   assert.deepEqual(errors,[]);await context.close();
