@@ -1215,7 +1215,7 @@
   {
     "key": "tech.analysis.duration_ms",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:304"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:309"
     ],
     "scorable": false,
     "weight": 0,
@@ -1231,7 +1231,7 @@
   {
     "key": "tech.backend.hints",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:234"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:239"
     ],
     "scorable": false,
     "weight": 0,
@@ -1247,7 +1247,7 @@
   {
     "key": "tech.cdn.cloudflare",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:249"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:254"
     ],
     "scorable": false,
     "weight": 0,
@@ -1263,7 +1263,7 @@
   {
     "key": "tech.cms",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:130"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:131"
     ],
     "scorable": false,
     "weight": 0,
@@ -1293,7 +1293,7 @@
   {
     "key": "tech.frontend.framework",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:145"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:146"
     ],
     "scorable": false,
     "weight": 0,
@@ -1309,7 +1309,7 @@
   {
     "key": "tech.frontend.nextjs",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:175"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:176"
     ],
     "scorable": false,
     "weight": 0,
@@ -1325,7 +1325,7 @@
   {
     "key": "tech.http.server_header",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:264"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:269"
     ],
     "scorable": false,
     "weight": 0,
@@ -1339,9 +1339,47 @@
     "reference": null
   },
   {
+    "key": "tech.security.php_cves",
+    "sources": [
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/PhpVersionAnalyzer.java:17"
+    ],
+    "scorable": true,
+    "weight": 0,
+    "domain": "security",
+    "owner": "tech",
+    "collectorContract": "analysis-measurements-v6",
+    "availableFacts": "Indices du HTML/en-têtes et motifs de bannières ; ne pas en déduire une version installée certaine.",
+    "content": "specific-fr-en",
+    "detection": {
+      "fr": "Le module technique extrait une version PHP explicitement exposée dans Server, X-Powered-By ou X-PHP-Version. Il la compare aux dates de support et aux plages des avis officiels PHP conservés avec le catalogue.",
+      "en": "The technology module extracts a PHP version explicitly exposed in Server, X-Powered-By or X-PHP-Version. It compares it with support dates and version ranges from the bundled official PHP advisories."
+    },
+    "missingCollection": "La version exacte de la règle et des emplacements peuvent manquer dans un rapport historique.",
+    "reference": "https://www.php.net/supported-versions.php"
+  },
+  {
+    "key": "tech.security.php_eol",
+    "sources": [
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/PhpVersionAnalyzer.java:16"
+    ],
+    "scorable": true,
+    "weight": 0,
+    "domain": "security",
+    "owner": "tech",
+    "collectorContract": "analysis-measurements-v6",
+    "availableFacts": "Indices du HTML/en-têtes et motifs de bannières ; ne pas en déduire une version installée certaine.",
+    "content": "specific-fr-en",
+    "detection": {
+      "fr": "Le module technique extrait une version PHP explicitement exposée dans Server, X-Powered-By ou X-PHP-Version. Il la compare aux dates de support et aux plages des avis officiels PHP conservés avec le catalogue.",
+      "en": "The technology module extracts a PHP version explicitly exposed in Server, X-Powered-By or X-PHP-Version. It compares it with support dates and version ranges from the bundled official PHP advisories."
+    },
+    "missingCollection": "La version exacte de la règle et des emplacements peuvent manquer dans un rapport historique.",
+    "reference": "https://www.php.net/supported-versions.php"
+  },
+  {
     "key": "tech.security.version_disclosure",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:285"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:290"
     ],
     "scorable": true,
     "weight": 3,

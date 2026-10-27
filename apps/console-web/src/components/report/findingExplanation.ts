@@ -55,6 +55,22 @@ export function recordedPilotDetection(issue: Issue): FindingDetection | undefin
 
 export function findingExplanation(issue: Issue, lang: Lang): Explanation {
   const p = findingPlaybook(issue.id, lang), fr = lang === 'fr';
+  if (['tech.security.php_eol', 'tech.security.php_cves'].includes(issue.id ?? '')) {
+    const detail = (key: string) => cleanEvidence(issue.structuredEvidence?.details?.find(d => d.key === key)?.text ?? '');
+    const version = /^\d{1,2}\.\d{1,2}(?:\.\d{1,3})?$/.test(detail('phpVersion')) ? `PHP ${detail('phpVersion')}` : 'PHP';
+    const eol = issue.id === 'tech.security.php_eol';
+    const cves = [...new Set(detail('cves').match(/CVE-\d{4}-\d{4,}/g) ?? [])];
+    const checked = detail(eol ? 'supportVerifiedAt' : 'advisoriesVerifiedAt');
+    return { ...p,
+      title: eol ? (fr ? `${version} : branche en fin de support` : `${version}: end-of-life branch`)
+        : (fr ? `${version} : CVE connues à vérifier` : `${version}: review known CVEs`),
+      observation: eol
+        ? (fr ? `La réponse HTTP expose ${version}. Cette branche n’est plus maintenue par le projet PHP.` : `The HTTP response exposes ${version}. This branch is no longer supported by the PHP project.`)
+        : (fr ? `La version exposée ${version} correspond à des avis de sécurité PHP` : `The exposed ${version} version matches PHP security advisories`) + (cves.length ? ` : ${cves.join(', ')}.` : '.'),
+      methodNote: (fr ? 'Référentiel enregistré avec ce constat' : 'Reference recorded with this finding') + (/^\d{4}-\d{2}-\d{2}$/.test(checked) ? ` (${checked}). ` : '. ') + p.limits,
+      reference: eol ? p.reference : 'https://github.com/php/php-src/security/advisories',
+    };
+  }
   const current = fr
     ? 'Référentiel des collecteurs actuels. La version exacte de cette règle n’est pas conservée dans la fiche ; un rapport historique peut utiliser une autre méthode.'
     : 'Current collector reference. The exact version of this rule is not retained in the finding; a historical report may use another method.';

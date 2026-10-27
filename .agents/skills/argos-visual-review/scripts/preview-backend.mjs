@@ -26,12 +26,24 @@ function fixture(token) {
   const partial = token === "review-partial", unavailable = token === "review-unavailable";
   const empty = token === "review-empty";
   const ratio = unavailable ? 0 : coverageReview ? 215 / 223 : partial ? .55 : 1;
-  const findings = empty ? [] : !(coverageReview || questionsReview) ? issues : issues.map((issue, index) => ({
+  const findings = empty ? [] : !(coverageReview || questionsReview) ? [...issues] : issues.map((issue, index) => ({
     ...issue,
     id: index === 0 ? "lighthouse.audit.largest-contentful-paint" : index === 3 ? "html.meta.description.present" : index === 4 ? "runtime.network.bytes_estimated" : issue.id,
     structuredEvidence: index === 0 ? { source: "lighthouse", measurement: { value: 4200, unit: "ms" } }
       : index === 2 ? { source: "html", details: [{ key: "imgCount", text: "4" }, { key: "imgAltMissingCount", text: "2" }] } : undefined,
   }));
+  if (token === 'review-php') {
+    findings.splice(0, findings.length, ...['php_eol', 'php_cves'].map(kind => ({
+      id: `tech.security.${kind}`, categoryKey: 'security', severity: 'important',
+      title: 'PHP 8.1.33', impact: '', recommendation: '', confidence: 'MEDIUM', effort: 'M',
+      structuredEvidence: { source: 'tech', details: [
+        { key: 'phpVersion', text: '8.1.33' }, { key: 'responseHeader', text: 'x-powered-by' },
+        { key: 'supportStatus', text: 'END_OF_LIFE' }, { key: 'securitySupportUntil', text: '2025-12-31' },
+        { key: 'cves', text: '[CVE-2025-14178, CVE-2025-14177, CVE-2025-14180]' },
+        { key: 'supportVerifiedAt', text: '2026-10-27' }, { key: 'advisoriesVerifiedAt', text: '2026-10-27' },
+      ] },
+    })));
+  }
   if (questionsReview) findings.unshift({
     id: "lighthouse.audit.font-display-insight", categoryKey: "performance", severity: "critical",
     title: "Affichage de la police", impact: "Affichage de la police", recommendation: "", confidence: "UNKNOWN",
@@ -48,7 +60,7 @@ function fixture(token) {
       cdnProxies: [{ name: "Cloudflare", confidence: "MEDIUM", evidence: ["cf-ray present"] }], networkProvider: null, originStatus: "PROBABLE_PLATFORM",
     } },
     scores: { global: empty ? 96 : 64, globalAvailable: !unavailable, completeness: coverageReview ? 87.5 : ratio * 100,
-      byCategory: categories.map(c => ({ ...c, score: empty ? 96 : c.score, issues: questionsReview ? findings.filter(i => i.categoryKey === c.key).length : empty ? 0 : c.issues })),
+      byCategory: categories.map(c => ({ ...c, score: empty ? 96 : c.score, issues: questionsReview || token === 'review-php' ? findings.filter(i => i.categoryKey === c.key).length : empty ? 0 : c.issues })),
       coverage: coverageReview ? coverage96 : { version: "visual-fixture", threshold: .8, provisional: partial || unavailable,
         global: aggregate("global", ratio),
         domains: categories.map(c => aggregate(c.key, partial && c.key === "security" ? 0 : ratio)),
@@ -88,7 +100,7 @@ function fixture(token) {
     },
   };
 }
-const tokens = new Set(["review-complete", "review-partial", "review-unavailable", "review-empty", "review-details", "review-coverage", "review-questions"]);
+const tokens = new Set(["review-complete", "review-partial", "review-unavailable", "review-empty", "review-details", "review-coverage", "review-questions", "review-php"]);
 const port = Number(process.env.ARGOS_PREVIEW_PORT ?? 3018);
 createServer((req, res) => {
   if (req.method === "GET" && req.url?.startsWith("/api/account/admin/statistics")) {

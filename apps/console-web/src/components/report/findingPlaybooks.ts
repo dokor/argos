@@ -5,6 +5,40 @@ export type Playbook = { reference?: string; verifiedAt?: string; specific: bool
 export const playbookGroups: Array<{keys: string[]; reference: string; verifiedAt: string; fr: PlaybookCopy; en: PlaybookCopy}> = [
   {
     "keys": [
+      "tech.security.php_eol",
+      "tech.security.php_cves"
+    ],
+    "reference": "https://www.php.net/supported-versions.php",
+    "verifiedAt": "2026-10-27",
+    "fr": {
+      "detection": "Le module technique extrait une version PHP explicitement exposée dans Server, X-Powered-By ou X-PHP-Version. Il la compare aux dates de support et aux plages des avis officiels PHP conservés avec le catalogue.",
+      "summary": "Vérifier la version PHP dans l’administration de l’hébergement, consulter les avis référencés puis installer les correctifs applicables sur une branche maintenue, après test du CMS.",
+      "steps": [
+        "Dans l’administration de l’hébergement, vérifier la version PHP réellement exécutée et les éventuels correctifs rétroportés. Comparer avec la bannière observée dans la réponse HTTP.",
+        "Consulter les dates de support et les avis CVE référencés dans les preuves. Vérifier les extensions et conditions de configuration concernées avec l’hébergeur.",
+        "Sur un environnement de test, sauvegarder le site puis mettre à jour PHP vers une branche maintenue avec ses correctifs. Vérifier la compatibilité du CMS, des thèmes et des extensions.",
+        "Après mise à jour, tester les parcours essentiels et relancer l’audit. Masquer une bannière ne remplace pas la mise à jour du moteur PHP."
+      ],
+      "expected": "La version réellement exécutée est maintenue et inclut les correctifs applicables. Les parcours du CMS fonctionnent après la migration.",
+      "example": "",
+      "limits": "La détection est passive. Un CMS ou un cookie PHP ne révèle pas la version du moteur. Une bannière peut être modifiée par un proxy ; une correspondance CVE ne prouve pas que le site est exploitable. Le catalogue est daté et ne garantit pas l’absence d’autres vulnérabilités."
+    },
+    "en": {
+      "detection": "The technology module extracts a PHP version explicitly exposed in Server, X-Powered-By or X-PHP-Version. It compares it with support dates and version ranges from the bundled official PHP advisories.",
+      "summary": "Check PHP in the hosting administration, review the referenced advisories, then install applicable fixes on a supported branch after testing the CMS.",
+      "steps": [
+        "In the hosting administration, check the PHP version actually running and any backported patches. Compare it with the banner observed in the HTTP response.",
+        "Review support dates and CVE advisories referenced in the evidence. Check affected extensions and configuration conditions with the hosting provider.",
+        "In a test environment, back up the site and update PHP to a supported branch with its security fixes. Check CMS, theme and extension compatibility.",
+        "After updating, test essential journeys and rerun the audit. Hiding a banner does not replace updating the PHP runtime."
+      ],
+      "expected": "The version actually running is supported and includes applicable fixes. CMS journeys work after migration.",
+      "example": "",
+      "limits": "Detection is passive. A CMS or PHP cookie does not reveal the runtime version. A proxy may change a banner; a CVE match does not prove the site is exploitable. The catalogue is dated and cannot guarantee the absence of other vulnerabilities."
+    }
+  },
+  {
+    "keys": [
       "html.title"
     ],
     "reference": "https://developers.google.com/search/docs/appearance/title-link",

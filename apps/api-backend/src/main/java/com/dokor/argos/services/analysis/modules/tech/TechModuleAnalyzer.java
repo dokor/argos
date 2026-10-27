@@ -71,6 +71,7 @@ public class TechModuleAnalyzer {
     }
 
     private final NextJsDetectorService nextDetector;
+    private final PhpVersionAnalyzer phpAnalyzer = new PhpVersionAnalyzer();
 
     @Inject
     public TechModuleAnalyzer(NextJsDetectorService nextDetector) {
@@ -218,6 +219,10 @@ public class TechModuleAnalyzer {
         boolean cloudflare = matchesAny(CLOUDFLARE_HINT_PATTERN, concat(headers));
         long durationMs = System.currentTimeMillis() - start;
         List<AuditCheckResult> checks = new ArrayList<>(stack.checks());
+        Object cmsData = stack.data().get("cms");
+        String cmsName = cmsData instanceof Map<?, ?> cms && cms.get("name") instanceof String name ? name : null;
+        var php = phpAnalyzer.analyze(headers, cmsName);
+        checks.addAll(php.checks());
         Map<String, Object> objectMap = new HashMap<>(Map.of());
         if (serverHeader != null) {
             objectMap.put("server", serverHeader);
@@ -316,6 +321,7 @@ public class TechModuleAnalyzer {
 
         String summary = stack.summary() + " cloudflare=" + cloudflare + " durationMs=" + durationMs;
         Map<String, Object> data = new LinkedHashMap<>(stack.data());
+        if (!php.data().isEmpty()) data.put("php", php.data());
         data.put("inputUrl", inputUrl);
         data.put("normalizedUrl", normalizedUrl);
         data.put("finalUrl", finalUrl);
