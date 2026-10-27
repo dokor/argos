@@ -13,6 +13,7 @@ import { oauthCallbackError, type OAuthCallbackError } from "./oauth-callback-er
 import { createHash, timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { ciManagementProxy } from "./ci-management-proxy";
+import { billingProxy } from "./billing-proxy";
 export const SESSION_COOKIE = "argos_account";
 export const RENEWAL_COOKIE = "argos_account_renewal";
 export const CSRF_COOKIE = "argos_account_csrf";
@@ -102,6 +103,7 @@ const allowed: Record<string, RegExp> = {
   DELETE: /^(?:runs\/\d{1,19}\/share|sessions\/\d{1,19}|report-introduction\/[A-Za-z0-9_-]{20,512})$/,
 };
 export async function accountProxy(request: NextRequest, parts: string[]): Promise<NextResponse> {
+  if(parts[0] === "billing") return billingProxy(request,parts.slice(1),() => accountHeaders(request,request.method!=="GET"));
   const path = parts.join("/"), mutation = request.method !== "GET", callback = /^auth\/oauth\/(google|github|linkedin)\/callback$/.test(path);
   if(parts[0] === "ci") return ciManagementProxy(request,parts.slice(1),() => accountHeaders(request,mutation));
   if (!allowed[request.method]?.test(path) && !(request.method === "GET" && domainSummaryPath(path)) && !(request.method === "GET" && /^report-introduction\/[A-Za-z0-9_-]{20,512}$/.test(path)) && !adminPath(request.method,path)) return privateError("resource_unavailable", 404);

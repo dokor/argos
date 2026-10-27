@@ -39,6 +39,8 @@ public class SchedulerJobs {
     @Inject public void batches(com.dokor.argos.services.connected.batch.BatchReconciler reconciler){this.batches=reconciler;}
     private com.dokor.argos.services.connected.discovery.DiscoveryWorker discoveries;
     private com.dokor.argos.services.ci.CiTargetsService ciTargets;
+    private com.dokor.argos.services.billing.BillingService billing;
+    @Inject public void billing(com.dokor.argos.services.billing.BillingService service){this.billing=service;}
     @Inject public void ciTargets(com.dokor.argos.services.ci.CiTargetsService targets){this.ciTargets=targets;}
     @Inject public void discoveries(com.dokor.argos.services.connected.discovery.DiscoveryWorker worker){this.discoveries=worker;}
 
@@ -61,6 +63,7 @@ public class SchedulerJobs {
     }
 
     public void scheduleJobs() {
+        if(billing!=null) scheduler.schedule("Reconcile Stripe billing",billing::tick,Schedules.fixedDelaySchedule(Duration.ofMinutes(1)));
         if(ciTargets!=null) scheduler.schedule("Recheck CI target proofs",ciTargets::tick,Schedules.fixedDelaySchedule(Duration.ofMinutes(1)));
         if(problemStatistics!=null) scheduler.schedule("Project problem statistics",problemStatistics::backfill,Schedules.fixedDelaySchedule(Duration.ofMinutes(1)));
         if(premiumWaitlist!=null) scheduler.schedule("Purge expired premium interest",premiumWaitlist::purge,Schedules.fixedDelaySchedule(Duration.ofHours(1)));

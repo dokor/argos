@@ -2,6 +2,7 @@ export type Lang = "fr" | "en";
 
 // Only pages with a complete English version belong in this map.
 export const accountRoutes: Record<string, string> = {
+  "/account/billing": "/en/account/billing",
   "/account/domains": "/en/account/domains",
   "/account/usage": "/en/account/usage",
   "/account/settings": "/en/account/settings",
