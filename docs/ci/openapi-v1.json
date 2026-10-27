@@ -1671,7 +1671,9 @@
               "runtime.network.request_count",
               "runtime.network.bytes_estimated",
               "runtime.analysis.duration_ms",
-              "tech.security.version_disclosure"
+              "tech.security.version_disclosure",
+              "tech.security.php_cves",
+              "tech.security.php_eol"
             ]
           },
           "category": {

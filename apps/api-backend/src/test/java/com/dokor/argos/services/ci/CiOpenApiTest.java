@@ -27,6 +27,11 @@ class CiOpenApiTest {
             var declared=new HashSet<String>();schemas.path(name).path("properties").fieldNames().forEachRemaining(declared::add);
             assertEquals(actual,declared,name);assertFalse(schemas.path(name).path("additionalProperties").asBoolean(true),name);
         });
+        for(String name:List.of("ExportCheck","ExportFinding","ConfirmedFinding")) {
+            var keys=new HashSet<String>();
+            schemas.path(name).path("properties").path("key").path("enum").forEach(key->keys.add(key.asText()));
+            assertEquals(CiExportProjection.catalogue().keySet(),keys,name);
+        }
         var errors=path.getParent().resolve(schemas.path("Error").path("$ref").asText()).normalize();
         assertTrue(Files.exists(errors));assertEquals("Argos CI error v1 (preview)",mapper.readTree(errors.toFile()).path("title").asText());
         assertEquals(11,api.path("paths").size());

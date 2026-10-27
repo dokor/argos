@@ -1,3 +1,4 @@
+import { mockSessionRenewal } from './session-renewal-fixture.mjs';
 import assert from 'node:assert/strict';
 import {mkdir,readFile,writeFile} from 'node:fs/promises';
 import {chromium} from '../../apps/playwright-service/node_modules/playwright/index.mjs';
@@ -43,6 +44,7 @@ try{
     }
     await route.fulfill({status,contentType:'application/json',body:JSON.stringify(data)});
   });
+  await mockSessionRenewal(page);
   const url=base+(lang==='en'?'/en':'')+'/account/integrations';
   async function visit(){await page.goto(url);await page.getByRole('heading',{name:tx('Vos clés API','Your API keys'),exact:true}).waitFor();}
   async function check(name,dialog=false){

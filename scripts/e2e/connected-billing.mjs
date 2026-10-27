@@ -1,3 +1,4 @@
+import { mockSessionRenewal } from './session-renewal-fixture.mjs';
 import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
 import {chromium} from '../../apps/playwright-service/node_modules/playwright/index.mjs';
@@ -33,6 +34,7 @@ try{
    else if(path==='/api/account/billing/portal')data={url:'https://billing.stripe.com/p/session?secret=fixture_only'};
    await route.fulfill({status,contentType:'application/json',body:JSON.stringify(data)});
   });
+  await mockSessionRenewal(page);
   await page.route('https://**/*',route=>{external.push(new URL(route.request().url()).origin);return route.fulfill({contentType:'text/html',body:'<h1>Fictional hosted payment destination</h1>'});});
   const path=(lang==='en'?'/en':'')+'/account/billing',tx=(fr,en)=>lang==='fr'?fr:en;
   async function capture(name){
