@@ -24,8 +24,9 @@ const nextConfig: NextConfig = {
   // console-web has its own dependencies and lockfile, separate from root ADE tooling.
   // The config directory also resolves to /app in the console-web Docker context.
   turbopack: { root: __dirname },
-  // Avoid combining the public shell with styles only used by report pages.
-  experimental: { globalNotFound: true, cssChunking: "graph" },
+  // Keep route CSS small, then ship it with the HTML to avoid blocking CSS round trips.
+  // inlineCss is global: verify both public pages and reports when updating Next.js.
+  experimental: { globalNotFound: true, cssChunking: "graph", inlineCss: true },
   reactCompiler: true,
   async redirects() {
     return [

@@ -1,0 +1,633 @@
+{
+  "schema": "homepage-lcp-comparison-v1",
+  "date": "2026-10-27",
+  "url": "http://localhost:3020/",
+  "method": "devtools (applied network and CPU throttling)",
+  "version": "13.5.0",
+  "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36 Edg/156.0.0.0",
+  "profile": {
+    "formFactor": "mobile",
+    "screenEmulation": {
+      "mobile": true,
+      "width": 412,
+      "height": 823,
+      "deviceScaleFactor": 1.75,
+      "disabled": false
+    },
+    "throttling": {
+      "rttMs": 150,
+      "throughputKbps": 1638.4,
+      "requestLatencyMs": 562.5,
+      "downloadThroughputKbps": 1474.5600000000002,
+      "uploadThroughputKbps": 675,
+      "cpuSlowdownMultiplier": 4
+    },
+    "throttlingMethod": "devtools",
+    "emulatedUserAgent": "Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Mobile Safari/537.36"
+  },
+  "actual": {
+    "baseline": {
+      "ref": "42d549d4",
+      "profile": {
+        "formFactor": "mobile",
+        "screenEmulation": {
+          "mobile": true,
+          "width": 412,
+          "height": 823,
+          "deviceScaleFactor": 1.75,
+          "disabled": false
+        },
+        "throttling": {
+          "rttMs": 150,
+          "throughputKbps": 1638.4,
+          "requestLatencyMs": 562.5,
+          "downloadThroughputKbps": 1474.5600000000002,
+          "uploadThroughputKbps": 675,
+          "cpuSlowdownMultiplier": 4
+        },
+        "throttlingMethod": "devtools",
+        "emulatedUserAgent": "Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Mobile Safari/537.36"
+      },
+      "version": "13.5.0",
+      "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36 Edg/156.0.0.0",
+      "summaries": {
+        "cold": {
+          "runs": 3,
+          "lcpRange": [
+            1973.11,
+            2049.893
+          ],
+          "medians": {
+            "lcp": 2016.691,
+            "fcp": 1973.11,
+            "tbt": 169.98800000000028,
+            "cls": 0.00009627649436313142,
+            "score": 0.96,
+            "cssRequests": 4,
+            "cssTransfer": 25782,
+            "scriptTransfer": 240720,
+            "totalTransfer": 360546
+          }
+        },
+        "warm": {
+          "runs": 3,
+          "lcpRange": [
+            980.93,
+            1089.346
+          ],
+          "medians": {
+            "lcp": 1044.534,
+            "fcp": 1044.534,
+            "tbt": 61.30300000000011,
+            "cls": 0.00009627649436313142,
+            "score": 1,
+            "cssRequests": 4,
+            "cssTransfer": 0,
+            "scriptTransfer": 0,
+            "totalTransfer": 13477
+          }
+        }
+      },
+      "samples": [
+        {
+          "series": "base-real",
+          "cache": "cold",
+          "run": 1,
+          "lcp": 2016.691,
+          "fcp": 1652.555,
+          "tbt": 433.7379999980926,
+          "cls": 0.00009627649436313142,
+          "score": 0.88,
+          "cssRequests": 4,
+          "cssTransfer": 25782,
+          "scriptTransfer": 240720,
+          "totalTransfer": 360546
+        },
+        {
+          "series": "base-real",
+          "cache": "cold",
+          "run": 2,
+          "lcp": 1973.11,
+          "fcp": 1973.11,
+          "tbt": 169.98800000000028,
+          "cls": 0.00009627649436313142,
+          "score": 0.96,
+          "cssRequests": 4,
+          "cssTransfer": 25782,
+          "scriptTransfer": 240720,
+          "totalTransfer": 360544
+        },
+        {
+          "series": "base-real",
+          "cache": "cold",
+          "run": 3,
+          "lcp": 2049.893,
+          "fcp": 2049.893,
+          "tbt": 134.37699999999995,
+          "cls": 0.00009410984210438125,
+          "score": 0.96,
+          "cssRequests": 4,
+          "cssTransfer": 25782,
+          "scriptTransfer": 240720,
+          "totalTransfer": 360546
+        },
+        {
+          "series": "base-real",
+          "cache": "warm",
+          "run": 1,
+          "lcp": 1089.346,
+          "fcp": 1089.346,
+          "tbt": 61.30300000000011,
+          "cls": 0.00009627649436313142,
+          "score": 1,
+          "cssRequests": 4,
+          "cssTransfer": 0,
+          "scriptTransfer": 0,
+          "totalTransfer": 13479
+        },
+        {
+          "series": "base-real",
+          "cache": "warm",
+          "run": 2,
+          "lcp": 1044.534,
+          "fcp": 1044.534,
+          "tbt": 49.53399999999988,
+          "cls": 0.00009627649436313142,
+          "score": 1,
+          "cssRequests": 4,
+          "cssTransfer": 0,
+          "scriptTransfer": 0,
+          "totalTransfer": 13473
+        },
+        {
+          "series": "base-real",
+          "cache": "warm",
+          "run": 3,
+          "lcp": 980.93,
+          "fcp": 980.93,
+          "tbt": 149.62099999999987,
+          "cls": 0.00009627649436313142,
+          "score": 0.98,
+          "cssRequests": 4,
+          "cssTransfer": 0,
+          "scriptTransfer": 0,
+          "totalTransfer": 13477
+        }
+      ]
+    },
+    "prBefore": {
+      "ref": "016185ac",
+      "profile": {
+        "formFactor": "mobile",
+        "screenEmulation": {
+          "mobile": true,
+          "width": 412,
+          "height": 823,
+          "deviceScaleFactor": 1.75,
+          "disabled": false
+        },
+        "throttling": {
+          "rttMs": 150,
+          "throughputKbps": 1638.4,
+          "requestLatencyMs": 562.5,
+          "downloadThroughputKbps": 1474.5600000000002,
+          "uploadThroughputKbps": 675,
+          "cpuSlowdownMultiplier": 4
+        },
+        "throttlingMethod": "devtools",
+        "emulatedUserAgent": "Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Mobile Safari/537.36"
+      },
+      "version": "13.5.0",
+      "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36 Edg/156.0.0.0",
+      "summaries": {
+        "cold": {
+          "runs": 3,
+          "lcpRange": [
+            2200.393,
+            2435.581
+          ],
+          "medians": {
+            "lcp": 2304.985,
+            "fcp": 2304.985,
+            "tbt": 158.3829999980926,
+            "cls": 0.00009627649436313142,
+            "score": 0.93,
+            "cssRequests": 10,
+            "cssTransfer": 19803,
+            "scriptTransfer": 226705,
+            "totalTransfer": 343913
+          }
+        },
+        "warm": {
+          "runs": 3,
+          "lcpRange": [
+            1102.695,
+            1323.129
+          ],
+          "medians": {
+            "lcp": 1185.95,
+            "fcp": 1185.95,
+            "tbt": 29.09699999999998,
+            "cls": 0.00009627649436313142,
+            "score": 1,
+            "cssRequests": 10,
+            "cssTransfer": 0,
+            "scriptTransfer": 0,
+            "totalTransfer": 16832
+          }
+        }
+      },
+      "samples": [
+        {
+          "series": "pr-before-real",
+          "cache": "cold",
+          "run": 1,
+          "lcp": 2200.393,
+          "fcp": 2200.393,
+          "tbt": 287.78399999999965,
+          "cls": 0.00009627649436313142,
+          "score": 0.9,
+          "cssRequests": 10,
+          "cssTransfer": 19803,
+          "scriptTransfer": 226705,
+          "totalTransfer": 343914
+        },
+        {
+          "series": "pr-before-real",
+          "cache": "cold",
+          "run": 2,
+          "lcp": 2435.581,
+          "fcp": 2435.581,
+          "tbt": 157.92400000000043,
+          "cls": 0.00009627649436313142,
+          "score": 0.93,
+          "cssRequests": 10,
+          "cssTransfer": 19803,
+          "scriptTransfer": 226705,
+          "totalTransfer": 343913
+        },
+        {
+          "series": "pr-before-real",
+          "cache": "cold",
+          "run": 3,
+          "lcp": 2304.985,
+          "fcp": 2304.985,
+          "tbt": 158.3829999980926,
+          "cls": 0.00009627649436313142,
+          "score": 0.94,
+          "cssRequests": 10,
+          "cssTransfer": 19803,
+          "scriptTransfer": 226705,
+          "totalTransfer": 343911
+        },
+        {
+          "series": "pr-before-real",
+          "cache": "warm",
+          "run": 1,
+          "lcp": 1323.129,
+          "fcp": 1323.129,
+          "tbt": 11.741999999999962,
+          "cls": 0.00009627649436313142,
+          "score": 1,
+          "cssRequests": 10,
+          "cssTransfer": 0,
+          "scriptTransfer": 0,
+          "totalTransfer": 16831
+        },
+        {
+          "series": "pr-before-real",
+          "cache": "warm",
+          "run": 2,
+          "lcp": 1102.695,
+          "fcp": 1102.695,
+          "tbt": 29.09699999999998,
+          "cls": 0.00009627649436313142,
+          "score": 1,
+          "cssRequests": 10,
+          "cssTransfer": 0,
+          "scriptTransfer": 0,
+          "totalTransfer": 16840
+        },
+        {
+          "series": "pr-before-real",
+          "cache": "warm",
+          "run": 3,
+          "lcp": 1185.95,
+          "fcp": 1185.95,
+          "tbt": 81.62199999809263,
+          "cls": 0.00009627649436313142,
+          "score": 1,
+          "cssRequests": 10,
+          "cssTransfer": 0,
+          "scriptTransfer": 0,
+          "totalTransfer": 16832
+        }
+      ]
+    },
+    "corrected": {
+      "ref": "016185ac + experimental.inlineCss=true",
+      "profile": {
+        "formFactor": "mobile",
+        "screenEmulation": {
+          "mobile": true,
+          "width": 412,
+          "height": 823,
+          "deviceScaleFactor": 1.75,
+          "disabled": false
+        },
+        "throttling": {
+          "rttMs": 150,
+          "throughputKbps": 1638.4,
+          "requestLatencyMs": 562.5,
+          "downloadThroughputKbps": 1474.5600000000002,
+          "uploadThroughputKbps": 675,
+          "cpuSlowdownMultiplier": 4
+        },
+        "throttlingMethod": "devtools",
+        "emulatedUserAgent": "Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Mobile Safari/537.36"
+      },
+      "version": "13.5.0",
+      "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36 Edg/156.0.0.0",
+      "summaries": {
+        "cold": {
+          "runs": 6,
+          "lcpRange": [
+            1202.63,
+            1370.098
+          ],
+          "medians": {
+            "lcp": 1246.3235,
+            "fcp": 1246.3235,
+            "tbt": 123.41550000000007,
+            "cls": 0.00009410984210438125,
+            "score": 0.99,
+            "cssRequests": 0,
+            "cssTransfer": 0,
+            "scriptTransfer": 226705,
+            "totalTransfer": 342934.5
+          }
+        },
+        "warm": {
+          "runs": 6,
+          "lcpRange": [
+            967.373,
+            1154.252
+          ],
+          "medians": {
+            "lcp": 1038.0945,
+            "fcp": 1038.0945,
+            "tbt": 27.293000000000006,
+            "cls": 0.00009627649436313142,
+            "score": 1,
+            "cssRequests": 0,
+            "cssTransfer": 0,
+            "scriptTransfer": 0,
+            "totalTransfer": 35664
+          }
+        }
+      },
+      "samples": [
+        {
+          "series": "fix-real",
+          "cache": "cold",
+          "run": 1,
+          "lcp": 1259.544,
+          "fcp": 1259.544,
+          "tbt": 127.49299999999994,
+          "cls": 0.00009410984210438125,
+          "score": 0.99,
+          "cssRequests": 0,
+          "cssTransfer": 0,
+          "scriptTransfer": 226705,
+          "totalTransfer": 342932
+        },
+        {
+          "series": "fix-real",
+          "cache": "cold",
+          "run": 2,
+          "lcp": 1216.692,
+          "fcp": 1216.692,
+          "tbt": 132.9079999999999,
+          "cls": 0.00009410984210438125,
+          "score": 0.99,
+          "cssRequests": 0,
+          "cssTransfer": 0,
+          "scriptTransfer": 226705,
+          "totalTransfer": 342931
+        },
+        {
+          "series": "fix-real",
+          "cache": "cold",
+          "run": 3,
+          "lcp": 1370.098,
+          "fcp": 1370.098,
+          "tbt": 119.33800000000019,
+          "cls": 0.00009410984210438125,
+          "score": 0.99,
+          "cssRequests": 0,
+          "cssTransfer": 0,
+          "scriptTransfer": 226705,
+          "totalTransfer": 342933
+        },
+        {
+          "series": "fix-real",
+          "cache": "warm",
+          "run": 1,
+          "lcp": 1004.897,
+          "fcp": 1004.897,
+          "tbt": 23.837999999999965,
+          "cls": 0.00009627649436313142,
+          "score": 1,
+          "cssRequests": 0,
+          "cssTransfer": 0,
+          "scriptTransfer": 0,
+          "totalTransfer": 35662
+        },
+        {
+          "series": "fix-real",
+          "cache": "warm",
+          "run": 2,
+          "lcp": 987.125,
+          "fcp": 987.125,
+          "tbt": 5.1059999999999945,
+          "cls": 0.00009627649436313142,
+          "score": 1,
+          "cssRequests": 0,
+          "cssTransfer": 0,
+          "scriptTransfer": 0,
+          "totalTransfer": 35668
+        },
+        {
+          "series": "fix-real",
+          "cache": "warm",
+          "run": 3,
+          "lcp": 967.373,
+          "fcp": 967.373,
+          "tbt": 30.748000000000047,
+          "cls": 0.00009627649436313142,
+          "score": 1,
+          "cssRequests": 0,
+          "cssTransfer": 0,
+          "scriptTransfer": 0,
+          "totalTransfer": 35667
+        },
+        {
+          "series": "fix-confirm-real",
+          "cache": "cold",
+          "run": 1,
+          "lcp": 1233.103,
+          "fcp": 1233.103,
+          "tbt": 97.39299999999957,
+          "cls": 0.00009410984210438125,
+          "score": 0.99,
+          "cssRequests": 0,
+          "cssTransfer": 0,
+          "scriptTransfer": 226705,
+          "totalTransfer": 342936
+        },
+        {
+          "series": "fix-confirm-real",
+          "cache": "cold",
+          "run": 2,
+          "lcp": 1299.063,
+          "fcp": 1299.063,
+          "tbt": 105.11799999999971,
+          "cls": 0.00009410984210438125,
+          "score": 0.99,
+          "cssRequests": 0,
+          "cssTransfer": 0,
+          "scriptTransfer": 226705,
+          "totalTransfer": 342936
+        },
+        {
+          "series": "fix-confirm-real",
+          "cache": "cold",
+          "run": 3,
+          "lcp": 1202.63,
+          "fcp": 1202.63,
+          "tbt": 145.56299999999965,
+          "cls": 0.00009410984210438125,
+          "score": 0.98,
+          "cssRequests": 0,
+          "cssTransfer": 0,
+          "scriptTransfer": 226705,
+          "totalTransfer": 342937
+        },
+        {
+          "series": "fix-confirm-real",
+          "cache": "warm",
+          "run": 1,
+          "lcp": 1154.252,
+          "fcp": 1154.252,
+          "tbt": 35.75299999999993,
+          "cls": 0.00009627649436313142,
+          "score": 1,
+          "cssRequests": 0,
+          "cssTransfer": 0,
+          "scriptTransfer": 0,
+          "totalTransfer": 35663
+        },
+        {
+          "series": "fix-confirm-real",
+          "cache": "warm",
+          "run": 2,
+          "lcp": 1073.796,
+          "fcp": 1073.796,
+          "tbt": 1.627999999999929,
+          "cls": 0.00009627649436313142,
+          "score": 1,
+          "cssRequests": 0,
+          "cssTransfer": 0,
+          "scriptTransfer": 0,
+          "totalTransfer": 35664
+        },
+        {
+          "series": "fix-confirm-real",
+          "cache": "warm",
+          "run": 3,
+          "lcp": 1071.292,
+          "fcp": 1071.292,
+          "tbt": 55.236999999999625,
+          "cls": 0.00009627649436313142,
+          "score": 1,
+          "cssRequests": 0,
+          "cssTransfer": 0,
+          "scriptTransfer": 0,
+          "totalTransfer": 35664
+        }
+      ]
+    }
+  },
+  "simulations": {
+    "baseline": {
+      "method": "simulate",
+      "samples": [
+        {
+          "lcp": 2604.882,
+          "tbt": 88,
+          "score": 0.96
+        },
+        {
+          "lcp": 2635.1600000000003,
+          "tbt": 34,
+          "score": 0.97
+        },
+        {
+          "lcp": 2757.3325,
+          "tbt": 69,
+          "score": 0.96
+        }
+      ],
+      "lcpMedian": 2635.1600000000003
+    },
+    "prBefore": {
+      "method": "simulate",
+      "samples": [
+        {
+          "lcp": 2084.07,
+          "tbt": 62,
+          "score": 0.99
+        },
+        {
+          "lcp": 3047.08,
+          "tbt": 37,
+          "score": 0.94
+        },
+        {
+          "lcp": 2628.5243999999993,
+          "tbt": 32.5,
+          "score": 0.97
+        }
+      ],
+      "lcpMedian": 2628.5243999999993
+    },
+    "corrected": {
+      "method": "simulate",
+      "samples": [
+        {
+          "lcp": 1521.8026,
+          "tbt": 89.5,
+          "score": 1
+        },
+        {
+          "lcp": 3030.82175,
+          "tbt": 108,
+          "score": 0.94
+        },
+        {
+          "lcp": 3031.222,
+          "tbt": 107,
+          "score": 0.94
+        }
+      ],
+      "lcpMedian": 3030.82175
+    }
+  },
+  "limits": [
+    "Local HTTP/1.1 fixture environment, not field data.",
+    "No build or test concurrent with timing measurements.",
+    "Cold runs reset browser storage; warm runs use the same temporary browser without reset.",
+    "Simulation results do not demonstrate a simulated-LCP improvement.",
+    "inlineCss is experimental and global; HTML grows and CSS is not independently cached on a full reload."
+  ]
+}
