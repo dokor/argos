@@ -42,12 +42,23 @@ class SslLabsClientTest {
         var client = client(Duration.ofSeconds(3), 8, 200, "READY");
         assertEquals("READY", client.analyze("example.com").path("status").asText());
         assertEquals(8, queries.size());
-        assertTrue(queries.stream().allMatch(q -> q.contains("fromCache=on") && q.contains("all=done") && q.contains("publish=off") && !q.contains("startNew")));
+        assertTrue(queries.stream().allMatch(q -> !q.contains("fromCache") && q.contains("all=done") && q.contains("publish=off")));
+        assertTrue(queries.getFirst().contains("startNew=on"));
+        assertTrue(queries.stream().skip(1).noneMatch(q -> q.contains("startNew")));
     }
 
-    @Test void cachedReadyNeedsOnlyOneCall() throws Exception {
+    @Test void readyAssessmentNeedsOnlyOneCall() throws Exception {
         assertEquals("READY", client(Duration.ofSeconds(2), 1, 200, "READY").analyze("example.com").path("status").asText());
         assertEquals(1, queries.size());
+        assertTrue(queries.getFirst().contains("startNew=on"));
+    }
+
+    @Test void consecutiveAuditsEachRequestANewAssessment() throws Exception {
+        var client = client(Duration.ofSeconds(2), 1, 200, "READY");
+        client.analyze("example.com");
+        client.analyze("example.com");
+        assertEquals(2, queries.size());
+        assertTrue(queries.stream().allMatch(q -> q.contains("startNew=on") && !q.contains("fromCache")));
     }
 
     @Test void pendingResultHasItsOwnDiagnosticAndRemainsBounded() throws Exception {
