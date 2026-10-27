@@ -55,5 +55,7 @@
   "runtime.network.request_count": "performance",
   "runtime.network.bytes_estimated": "performance",
   "runtime.analysis.duration_ms": "performance",
-  "tech.security.version_disclosure": "security"
+  "tech.security.version_disclosure": "security",
+  "tech.security.php_cves": "security",
+  "tech.security.php_eol": "security"
 }
