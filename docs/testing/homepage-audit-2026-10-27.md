@@ -295,3 +295,15 @@ Ne pas présenter les constats partiellement traités comme résolus.
 
 Références : [configuration de la bannière Next.js](https://nextjs.org/docs/app/api-reference/config/next-config-js/poweredByHeader)
 et [correctif stable Next.js 16.4.3](https://github.com/vercel/next.js/releases/tag/v16.4.3).
+
+## Suivi demandé : FCP et TBT simulés
+
+Le [suivi FCP/TBT](homepage-fcp-tbt-2026-10-27.md) documente une comparaison
+contemporaine en cinq paires : prototype local FCP −12,5 %, LCP −10,6 %,
+TBT 64 → 62,14 ms avec plages recouvrantes, **sans gain TBT confirmé**.
+Le prototype exige une livraison précompressée non intégrée ; les essais
+applicatifs seuls ne conservaient pas le LCP. Le code applicatif reste sur
+6d96ab03. Outils, échantillons et patch de proposition sont conservés pour la
+revue ; ces résultats ne décrivent pas un changement de l’application livrée.
+Aucun déploiement. Le harnais PDF est aligné sur le renouvellement de session
+et l’origine locale, sans affaiblir ses assertions ni les contrôles applicatifs.
