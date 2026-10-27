@@ -108,9 +108,12 @@ Vérifications effectivement exécutées sur les sources proposées :
   retour du focus contrôlés. Les envois réussis, refus anti-bot et refus CSRF sont
   couverts par les tests avec services simulés, sans écriture de production.
 - Rapport d’exemple public à données fictives : contrôle de rendu et changement
-  du scénario de couverture. La fixture privée `review-complete-fixture` n’a pas
-  fourni de rapport dans cet environnement ; aucun parcours privé complet n’est
-  déclaré vérifié.
+  du scénario de couverture. Rapport fictif `review-complete-fixture` : rendu FR
+  sombre à 1280 px, passage aux constats techniques et ouverture d’un détail,
+  navigation vers EN avec conservation de la vue, rendu clair à 390 px sans
+  débordement. Le serveur de fixtures doit disposer du même accès loopback que
+  Next. Aucun compte réel, export PDF, relancement d’audit ni parcours privé
+  complet en production n’est déclaré vérifié.
 
 Preuves locales (non commitées) : `outputs/audit-homepage-before-lighthouse.json`,
 `outputs/audit-homepage-final-lighthouse.json`, listes `*-assets.json`, journaux
