@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
-import { render, screen } from '@testing-library/react';
+import { render, screen } from "@/test/render";
 import { renderToString } from 'react-dom/server';
 import { expect, it, vi } from 'vitest';
-import { LangProvider } from '@/lib/i18n/LangContext';
+import { LangProvider } from '@/lib/i18n/LangProvider';
 import WebTip from './WebTip';
 import { selectWebTip, webTips } from './webTips';
 it('has 50 bilingual, dated, sourced entries with stable unique IDs',()=>{
@@ -17,7 +17,7 @@ it('filters missing language, disabled and expired entries and handles empty/sin
   expect(selectWebTip(webTips,'fr',tip.id,()=>0)?.id).not.toBe(tip.id);
 });
 it('has an identical empty SSR slot, then keeps one tip across rerenders and preference changes',()=>{
-  expect(renderToString(<WebTip/>)).not.toContain('<aside');
+  expect(renderToString(<LangProvider initialLang="fr"><WebTip/></LangProvider>)).not.toContain('<aside');
   const random=vi.spyOn(Math,'random');
   const {rerender}=render(<LangProvider initialLang="fr"><WebTip/></LangProvider>);
   const text=screen.getByRole('complementary').textContent, calls=random.mock.calls.length;

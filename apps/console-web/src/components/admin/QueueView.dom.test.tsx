@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import {beforeEach, expect, it, vi} from "vitest";
-import {render, screen, fireEvent, waitFor, within} from "@testing-library/react";
-import {LangProvider} from "@/lib/i18n/LangContext";
+import {render, screen, fireEvent, waitFor, within} from "@/test/render";
+import {LangProvider} from "@/lib/i18n/LangProvider";
 import {AccountClientError} from "@/lib/account-client";
 import QueueView from "./QueueView";
 const state = vi.hoisted(() => ({api: vi.fn(), push: vi.fn(), query: "", session: {ready:true, denied:false, profile:{admin:true,verified:true}}}));

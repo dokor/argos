@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent } from "@/test/render";
 
 // RelaunchButton (#9) utilise useRouter via useAuditSubmit : on mocke le routing.
 vi.mock("next/navigation", () => ({
@@ -8,7 +8,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 import ReportHero from "./ReportHero";
-import { LangProvider } from "@/lib/i18n/LangContext";
+import { LangProvider } from "@/lib/i18n/LangProvider";
 import type { Report } from "./types";
 
 // Compact synthetic weights reproduce the production sample's missing contributions.

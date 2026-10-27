@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
-import { LangProvider } from "@/lib/i18n/LangContext";
+import { fireEvent, render, screen } from "@/test/render";
+import { LangProvider } from "@/lib/i18n/LangProvider";
 import DomainScopeGuide from "./DomainScopeGuide";
 const state = vi.hoisted(() => ({ usage: null as { available: number | null } | null, usageError: false, refreshUsage: vi.fn() }));
 vi.mock("next/navigation", () => ({ usePathname: () => "/account/domains/new" }));

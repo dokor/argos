@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, expect, it, vi } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, within } from "@/test/render";
 import { connectedFixture } from "./fixtures/connected-fixtures.mjs";
 import OverviewView from "./OverviewView";
 import DomainBatch from "./domains/DomainBatch";

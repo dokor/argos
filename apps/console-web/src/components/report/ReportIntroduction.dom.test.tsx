@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { beforeEach, it, expect, vi } from "vitest";
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@/test/render";
 import userEvent from "@testing-library/user-event";
-import { LangProvider } from "@/lib/i18n/LangContext";
+import { LangProvider } from "@/lib/i18n/LangProvider";
 import { accountFetch } from "@/lib/account-client";
 import { demoReport } from "@/components/marketing/reportDemoFixture";
 import { buildReportModel } from "./reportModel";

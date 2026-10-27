@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, expect, it, vi } from "vitest";
-import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act } from "@/test/render";
 import AnalysisForm from "./AnalysisForm";
 import { accountFetch, AccountClientError } from "@/lib/account-client";
 import { pendingAnalysis } from "@/lib/connected/analysis-recovery";

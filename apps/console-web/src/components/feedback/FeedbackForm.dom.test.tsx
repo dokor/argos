@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, afterEach, it, expect, vi } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { LangProvider } from "@/lib/i18n/LangContext";
+import { LangProvider } from "@/lib/i18n/LangProvider";
 import FeedbackForm from "./FeedbackForm";
 import ReportFeedback, { FeedbackReportContext } from "./ReportFeedback";
 vi.mock("@/lib/account-client",()=>({accountAuditHeaders:async()=>({"X-Argos-CSRF":"c".repeat(43)})}));

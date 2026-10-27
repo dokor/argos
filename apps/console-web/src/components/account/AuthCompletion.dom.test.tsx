@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { LangProvider } from "@/lib/i18n/LangContext";
+import { fireEvent, render, screen, waitFor } from "@/test/render";
+import { LangProvider } from "@/lib/i18n/LangProvider";
 import { accountFetch } from "@/lib/account-client";
 import { localizedAccountReturn } from "@/lib/account-navigation";
 import fr from "@/lib/i18n/fr.json";

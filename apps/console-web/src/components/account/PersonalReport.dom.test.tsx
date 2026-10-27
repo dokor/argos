@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, afterEach, expect, it, vi } from "vitest";
-import { render, screen, act } from "@testing-library/react";
+import { render, screen, act } from "@/test/render";
 import { accountFetch, AccountClientError } from "@/lib/account-client";
 import PersonalReport from "./PersonalReport";
 const {session}=vi.hoisted(()=>({session:{profile:{verified:true},ready:true,denied:false,invalidate:vi.fn()}}));

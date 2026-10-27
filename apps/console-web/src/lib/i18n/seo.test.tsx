@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { renderToStaticMarkup } from "react-dom/server";
-import { LangProvider } from "./LangContext";
+import { renderToStaticMarkup } from "@/test/render";
+import { LangProvider } from "./LangProvider";
 import { languageRoutes, localizedPath } from "./routes";
 import { localizedMetadata, siteUrl } from "./metadata";
 import sitemap from "@/app/sitemap";

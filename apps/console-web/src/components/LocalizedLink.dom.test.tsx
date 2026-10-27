@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { LangProvider } from "@/lib/i18n/LangContext";
+import { LangProvider } from "@/lib/i18n/LangProvider";
 import LocalizedLink from "./LocalizedLink";
 
 vi.mock("next/link", () => ({ default: ({ prefetch, ...props }: { prefetch?: boolean; href: string }) =>

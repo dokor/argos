@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@/test/render";
 import type { ReactNode } from "react";
-import { LangProvider } from "@/lib/i18n/LangContext";
+import { LangProvider } from "@/lib/i18n/LangProvider";
 import { accountFetch, AccountClientError } from "@/lib/account-client";
 import AccountSession from "./AccountSession";
 import AccountView from "./AccountView";

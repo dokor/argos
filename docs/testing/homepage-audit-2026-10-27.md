@@ -1,8 +1,9 @@
 # Vérification de l’audit de l’accueil du 27 octobre 2026
 
 Périmètre : `https://argos.lelouet.fr/`, rapport généré à 09:26 UTC, issue #776.
-La stack effectivement installée est Next.js 16.4.2 / React 19.2.3, TypeScript,
-SCSS Modules, avec le BFF Next et le backend Java. Aucun déploiement ni écriture
+L’audit initial utilisait Next.js 16.4.2 / React 19.2.3. La solution finale utilise
+le correctif stable Next.js 16.4.3, TypeScript et SCSS Modules, avec le BFF Next
+et le backend Java. Aucun déploiement ni écriture
 de données de production n’a été effectué.
 
 ## Changements livrés
@@ -15,15 +16,26 @@ de données de production n’a été effectué.
   nouveau `FeedbackDialog.tsx` : le dialogue et le formulaire sont importés à
   l’ouverture. Le brouillon, l’abandon explicite, le verrou pendant l’envoi et le
   retour du focus sont conservés. L’annonce de chargement ne déplace pas la navigation.
-- `apps/console-web/next.config.ts` : `poweredByHeader: false`, découpage CSS
-  Turbopack `graph` pour limiter les styles aux routes concernées, puis
-  `inlineCss: true` pour livrer ces styles dans le HTML et supprimer les allers-retours
-  CSS bloquants du premier affichage. Ces options sont expérimentales. `inlineCss`
-  s’applique à toutes les routes, augmente le HTML et empêche la mise en cache
-  indépendante du CSS lors d’un rechargement complet. La documentation Next.js
-  [déconseille actuellement son usage en production](https://nextjs.org/docs/app/api-reference/config/next-config-js/inlineCss).
-  La PR reste en brouillon pour revue de ce compromis ; aucun déploiement n’est autorisé.
-  Le bundler et les dépendances ne changent pas.
+- `apps/console-web/next.config.ts` : `poweredByHeader: false` conservé ; retrait
+  de `inlineCss` **et** de `cssChunking: "graph"`. Les styles restent externes avec
+  le découpage par défaut. L’option préexistante `globalNotFound` est conservée
+  pour les racines FR/EN ; aucune nouvelle option expérimentale d’optimisation.
+- `LangProvider.tsx` sélectionne le dictionnaire côté serveur. `LangContext.tsx`
+  reçoit uniquement la langue de la route et ses traductions ; il n’importe plus
+  les deux catalogues JSON dans le JavaScript client. Le footer utilise ce même
+  contexte, sans importer un catalogue français de secours ; sa propriété
+  `fixedFrench`, sans appelant, a été retirée. Les liens de langue restent pilotés
+  par l’URL. Les tests isolés injectent maintenant un dictionnaire explicite.
+- `SiteDocument.tsx` : seul le préchargement de Geist Mono est désactivé. Cette
+  police n’est utilisée que pour le code de la page d’erreur ; elle reste disponible
+  à l’usage. Les polices, variantes, métriques de repli et couleurs sont conservées.
+- `ReportExport.tsx` importe le code PDF à la demande après la vérification d’accès.
+  Les règles d’impression restent chargées comme auparavant et l’aperçu attend
+  les feuilles de style et les polices avant d’annoncer qu’il est prêt.
+- Next.js et sa configuration ESLint passent à la version stable 16.4.3, sans
+  changer React ni le bundler. Les [notes de version](https://github.com/vercel/next.js/releases/tag/v16.4.3)
+  décrivent notamment le correctif du runtime chargé dans `proxy.ts` et des URL
+  de polices. Les gains revendiqués sont ceux de la solution complète mesurée.
 - `apps/console-web/src/lib/content-security-policy.ts` : retrait de la source
   générale `https:` des images. Les sources utilisées sont locales ou `data:`.
   Les nonces de scripts et les permissions Turnstile restent en place.
@@ -40,148 +52,175 @@ nécessaire pour constater le résultat à travers Traefik.
 | Identifiant | État | Preuve, fichiers et reste à traiter |
 | --- | --- | --- |
 | `lighthouse.audit.mainthread-work-breakdown` | Modifié à vérifier | Accueil et aperçu rendus côté serveur ; dialogue différé. Comparaison Lighthouse locale dans le tableau de mesures ci-dessous. Le temps de l’audit public n’est pas reproduit à l’identique. |
-| `lighthouse.audit.max-potential-fid` | Modifié à vérifier | Même cause et mêmes fichiers. Le travail applicatif diminue ; le runtime React/Next reste nécessaire. Nouvelle mesure sur l’URL déployée requise. |
-| `lighthouse.audit.network-dependency-tree-insight` | Modifié à vérifier | Le CSS partagé de 123 006 octets contenait des sélecteurs de rapport. Découpage dans `next.config.ts`. L’arbre fourni montrait des liens directs document → CSS, sans preuve d’une cascade d’imports anormale. Des ressources critiques et le diagnostic Lighthouse restent présents. Aucun préchargement spéculatif ajouté. |
-| `lighthouse.audit.unused-css-rules` | Corrigé et vérifié localement | Le fichier public fourni et le build de référence sont identiques. Lighthouse signalait environ 18 Ko compressés inutilisés ; le build avec découpage `graph` ne signale plus de ressource dans cet audit. Les feuilles de style nécessaires aux autres pages sont conservées. |
+| `lighthouse.audit.max-potential-fid` | Modifié à vérifier | Le volume de JavaScript initial diminue ; les coûts CPU ne progressent pas uniformément et le runtime React/Next reste nécessaire. Nouvelle mesure publique requise si une mise en ligne est décidée. |
+| `lighthouse.audit.network-dependency-tree-insight` | Modifié à vérifier, signal persistant | JavaScript et préchargement de police réduits. La solution finale utilise le découpage CSS par défaut ; des styles partagés et des ressources critiques restent présents. Aucun préchargement spéculatif ajouté. |
+| `lighthouse.audit.unused-css-rules` | Signal persistant dans la solution stable | Le découpage expérimental `graph`, qui supprimait le signal dans l’essai précédent, a été retiré. Le découpage par défaut charge encore des styles partagés inutilisés sur l’accueil. La correction finale ne prétend pas éliminer cet audit. |
 | `lighthouse.audit.unused-javascript` | Modifié à vérifier, signal persistant | Les deux ressources précises du rapport contiennent les runtimes React DOM et Next.js. La couverture d’un premier chargement ne justifie pas de retirer leur code de navigation. Moins de JavaScript applicatif et d’hydratation avec le rendu serveur et l’import différé ; les deux runtimes restent signalés. |
 | `zap.alert.10055` | Modifié à vérifier, traitement partiel | `img-src 'self' data:` est vérifié dans la réponse locale et le test du proxy. Les preuves ZAP regroupent aussi `style-src unsafe-inline` : cette autorisation reste nécessaire aux styles React actuels. L’alerte complète ne doit donc pas être déclarée éliminée. Retirer ces styles demanderait un chantier distinct couvrant notamment les rapports et les valeurs dynamiques. |
-| `lighthouse.audit.total-blocking-time` | Modifié à vérifier | Même cause que les deux premières priorités. La réduction mesurée localement ne garantit pas la disparition du constat public. |
-| `lighthouse.audit.largest-contentful-paint` | Amélioration vérifiée avec ralentissement appliqué, limite en simulation | CSS critique intégré au HTML. À froid : médiane 2,305 → 1,246 s ; avec cache : 1,186 → 1,038 s, avant/après correction de la PR. Le LCP calculé par le simulateur ne s’améliore pas ; les deux méthodes et leurs limites sont conservées ci-dessous. Aucune garantie de gain public. |
+| `lighthouse.audit.total-blocking-time` | Résultats mixtes selon la méthode | Le TBT médian appliqué baisse face à la PR originale ; le TBT simulé augmente. Les deux séries sont conservées ci-dessous, sans déclarer le constat public éliminé. |
+| `lighthouse.audit.largest-contentful-paint` | Mesuré dans les deux modes, sans inlineCss | Dictionnaire résolu au serveur et préchargement inutile retiré. Comparaison finale de la PR originale, de l’essai inlineCss et de la solution stable ci-dessous, avec tous les échantillons et les compromis. Aucune garantie de gain public. |
 | `lighthouse.audit.legacy-javascript-insight` | Non confirmé comme code supprimable | La ressource pointée contient les polyfills générés par Next.js. Aucune preuve que la compatibilité visée puisse être abandonnée. Aucun retrait aveugle de polyfills ni changement de navigateurs supportés. Le signal demeure. |
-| `lighthouse.audit.render-blocking-insight` | Corrigé et vérifié localement | Aucun téléchargement de feuille CSS au chargement initial de l’accueil corrigé ; styles présents dans le HTML. Le diagnostic ne liste plus de ressource bloquante dans la passe locale contrôlée. Les styles des composants différés restent chargés à leur ouverture. |
+| `lighthouse.audit.render-blocking-insight` | Signal persistant dans la solution stable | Quatre feuilles CSS demandées initialement, dont trois listées par le diagnostic de la passe contrôlée. Elles sont mises en cache indépendamment du document. Le gain LCP ne signifie pas que les styles ont cessé de bloquer le rendu. |
 | `ssl.certificate.expiry_days` | Intervention externe requise | Lecture TLS publique avec validation de chaîne : certificat valide, Let’s Encrypt YR2, expiration le **26 novembre 2026 à 07:22:27 UTC**, 29 jours restants au contrôle. L’échéance est confirmée, pas une panne de renouvellement. Procédure ci-dessous. |
 | `zap.alert.10202` | Non confirmé | Le formulaire public d’audit ne dépend pas des droits d’une session anonyme. Dès qu’un cookie de compte est présent, le BFF exige origine exacte, cookie CSRF et en-tête `X-Argos-CSRF` concordants avant tout appel au backend. La newsletter et la liste Premium ne relaient pas les droits de compte. Les tests de refus/acceptation sont passés ; aucun champ caché sans validation n’a été ajouté. Cela ne constitue pas un test d’intrusion en production. |
 | `zap.alert.10037` | Corrigé et vérifié localement | La réponse publique exposait `X-Powered-By: Next.js`. Option désactivée dans `next.config.ts` ; absence contrôlée sur l’accueil et une réponse 404 locale. Vérifier aussi la réponse publique après déploiement. |
 
 ## Méthode de comparaison
 
-Trois versions comparées : référence `42d549d4` de `origin/main`, PR avant
-correction `016185ac`, puis cette PR avec `inlineCss: true`. Le contenu et les
-polices sont identiques. Les optimisations de rendu serveur et de dialogue différé
-de la PR sont conservées.
+Comparaison finale de trois versions : PR originale `016185ac`, essai avec
+`inlineCss` `fa7533ae`, puis solution stable de cette PR. Les deux références ont
+été reconstruites avec leur lockfile Next.js 16.4.2 ; la solution utilise 16.4.3.
+Le code applicatif de `fa7533ae` ne diffère de `016185ac` que par `next.config.ts` :
+la référence originale est reconstruite avec cette configuration d’origine.
 
-Chaque frontend a été compilé avec `API_BASE=http://127.0.0.1:3018`, puis servi
-successivement sur **la même URL** `http://localhost:3020/`. Le backend de revue
-fournit des fixtures fictives et refuse les écritures. Dépendances verrouillées,
-Lighthouse **13.5.0**, Microsoft Edge headless **156**, viewport mobile 412 × 823,
-DPR 1,75, CPU ×4. Aucune compilation ni suite de tests pendant les mesures.
+Builds de production servis successivement sur **la même URL**
+`http://localhost:3020/`, avec `API_BASE=http://127.0.0.1:3018` et le backend fictif
+en lecture seule. Deux lectures HTML préparent chaque serveur avant la série.
+Aucun build ni test n’a tourné pendant les mesures. Lighthouse **13.5.0**, Edge
+headless **156**, mobile 412 × 823, DPR 1,75, CPU ×4, HTTP/1.1 local.
 
-Pour observer le navigateur avec les contraintes réellement appliquées, le script
-[`scripts/review/measure-homepage-lcp.mjs`](../../scripts/review/measure-homepage-lcp.mjs)
-utilise `throttlingMethod: devtools` : latence de requête 562,5 ms, téléchargement
-1 474,56 kbit/s, envoi 675 kbit/s (paramètres du profil Lighthouse mobile).
-À froid, Lighthouse réinitialise le stockage à chaque passe. Les passes avec
-cache réutilisent le même navigateur temporaire sans réinitialisation ; le
-transfert des scripts et feuilles CSS y est nul. Le navigateur est fermé ensuite.
+Deux méthodes conservées séparément :
 
-Trois passes par état de cache pour la référence et la PR avant correction ;
-deux séries indépendantes de trois passes par état pour la correction, soit six.
-Toutes les valeurs du tableau sont des médianes ; les échantillons, profils et
-plages sont versionnés dans
-[`homepage-lcp-2026-10-27.metrics.json`](homepage-lcp-2026-10-27.metrics.json).
+- `simulate` : cinq passages à froid, profil mobile Lighthouse (RTT 150 ms,
+  débit cible 1 638,4 kbit/s). Le modèle calcule le résultat à partir de la trace.
+- `devtools` : ralentissement réellement appliqué au navigateur (latence des
+  requêtes 562,5 ms, téléchargement 1 474,56 kbit/s, envoi 675 kbit/s). Trois
+  passages à froid, puis trois avec cache dans le même navigateur temporaire.
+  Les passes froides réinitialisent le stockage ; les passes chaudes conservent
+  les ressources et leur transfert JS/CSS/polices est nul. Le navigateur est fermé
+  après chaque série.
 
-| Mesure avec ralentissement appliqué | Référence | PR avant correction | PR corrigée |
+Tous les passages des séries finales sont conservés, y compris les valeurs les
+moins favorables. Les essais exploratoires restent séparés et ne sont pas intégrés
+aux médianes finales. Profils, échantillons, indices CPU, plages et médianes :
+[`homepage-lcp-stable-2026-10-27.metrics.json`](homepage-lcp-stable-2026-10-27.metrics.json).
+Le précédent fichier `homepage-lcp-2026-10-27.metrics.json` conserve l’historique
+de l’essai expérimental ; il ne décrit pas la solution actuelle.
+
+### Résultats de l’accueil
+
+Valeurs médianes ; les transferts sont ceux enregistrés par le navigateur,
+en octets, avec les en-têtes. Ils ne sont pas des tailles gzip calculées hors ligne.
+
+| Mesure | PR originale | Essai inlineCss | Solution stable |
 | --- | ---: | ---: | ---: |
-| LCP à froid | 2 017 ms | 2 305 ms | **1 246 ms (−45,9 % vs PR)** |
-| LCP avec cache | 1 045 ms | 1 186 ms | **1 038 ms (−12,5 % vs PR)** |
-| TBT à froid | 170 ms | 158 ms | 123 ms |
-| TBT avec cache | 61 ms | 29 ms | 27 ms |
-| Score performance à froid | 96 | 93 | 99 |
-| Score performance avec cache | 100 | 100 | 100 |
+| LCP simulé, 5 passages | 2 628 ms | 2 996 ms | **2 313 ms** |
+| FCP simulé | 1 089 ms | 1 011 ms | 1 215 ms |
+| TBT simulé | 45,5 ms | 66 ms | 114 ms |
+| Score performance simulé | 97 | 94 | 98 |
+| LCP appliqué, à froid | 2 431 ms | 1 300 ms | **2 142 ms** |
+| LCP appliqué, avec cache | 1 150 ms | 1 003 ms | **1 095 ms** |
+| TBT appliqué, à froid | 339 ms | 117 ms | 182 ms |
+| TBT appliqué, avec cache | 150 ms | 37 ms | 148 ms |
+| Score appliqué, à froid | 87 | 99 | 94 |
+| Score appliqué, avec cache | 98 | 100 | 98 |
 | CLS | ≈ 0,0001 | ≈ 0,0001 | ≈ 0,0001 |
-| Feuilles CSS demandées au chargement | 4 | 10 | 0 |
-| Transfert CSS à froid | 25 782 octets | 19 803 octets | 0 octet (intégré au HTML) |
-| Transfert JavaScript à froid | 240 720 octets | 226 705 octets | 226 705 octets |
-| Transfert total à froid | 360 546 octets | 343 913 octets | ≈ 342 935 octets |
-| Transfert total avec cache | 13 477 octets | 16 832 octets | 35 664 octets |
+| Feuilles CSS demandées initialement | 10 | 0 | 4 |
+| Transfert CSS à froid | 19 803 | 0 (intégré au HTML) | 27 789 |
+| Transfert JavaScript à froid | 226 705 | 226 705 | **179 498** |
+| Transfert polices à froid | 53 518 | 53 518 | **29 849** |
+| Transfert HTML à froid | 14 579 | 33 406 | 39 257 |
+| Transfert total à froid | 343 910 | 342 934 | **305 698** |
+| Transfert total avec cache | 16 834 | 35 668 | 41 517 |
 
-Le LCP corrigé s’étend de **1 203 à 1 370 ms à froid**, et de **967 à 1 154 ms
-avec cache**. Le CSS arrive avec le document : le navigateur n’attend plus dix
-réponses CSS pour afficher l’accueil. Les gains de JavaScript de la PR initiale
-sont conservés. Le HTML plus volumineux explique le transfert supérieur avec
-cache ; les résultats locaux ne prouvent pas que ce compromis sera favorable
-pour toutes les routes ou conditions réseau.
+La solution stable réduit le LCP simulé médian de **12,0 % face à la PR originale**
+et de **22,8 % face à inlineCss**. Le JavaScript initial baisse de **20,8 %** et
+le transfert total à froid de **11,1 %** face à la PR originale. Sous ralentissement
+appliqué, les médianes LCP baissent de **11,9 % à froid** et **4,8 % avec cache**
+face à la PR originale. Le faible écart avec cache reste dans la variabilité observée.
 
-La première comparaison ne comportait qu’une passe par version et annonçait
-1,72 → 3,07 s de LCP **simulé**. Les nouvelles séries avec ce même mode donnent :
+Les plages LCP simulées sont respectivement **2 595–3 545 ms**, **2 863–3 011 ms**
+et **1 659–2 890 ms**. Pour la solution stable, le LCP appliqué va de
+**2 054 à 2 327 ms à froid**, et de **1 049 à 1 215 ms avec cache**.
 
-| LCP calculé par le simulateur Lighthouse, trois passes | Référence | PR avant correction | PR corrigée |
-| --- | ---: | ---: | ---: |
-| Médiane | 2 635 ms | 2 629 ms | 3 031 ms |
-| Minimum–maximum | 2 605–2 757 ms | 2 084–3 047 ms | 1 522–3 031 ms |
+Compromis conservés dans le bilan :
 
-**La correction n’améliore pas cette estimation simulée.** La dispersion et les
-traces des téléchargements/tâches Next/React empêchent de la confondre avec le
-LCP observé sous ralentissement appliqué. Les deux résultats sont conservés ;
-aucun passage favorable n’a été sélectionné pour représenter la série. Les
-limites du simulateur ne sont pas une preuve d’un défaut de Lighthouse.
+- L’essai `inlineCss` reste plus rapide en LCP appliqué à froid (1,30 contre
+  2,14 s) et avec cache (1,00 contre 1,10 s). Il a été retiré pour respecter le
+  critère de stabilité et améliorer aussi l’estimation simulée.
+- Le FCP et le TBT simulés augmentent. Cette PR ne revendique pas une amélioration
+  de toutes les métriques ni de chaque passage.
+- Le dictionnaire de la langue courante est sérialisé dans le document : le HTML
+  et le transfert total avec cache augmentent. Les CSS restent externes et se
+  mettent en cache indépendamment. Des styles inutilisés et le diagnostic CSS
+  bloquant persistent avec le découpage par défaut.
+- La station est partagée ; les indices CPU et tous les échantillons sont exposés.
+  Cet échantillon local ne fournit ni intervalle de confiance ni mesure terrain.
+  Les conditions publiques avec Traefik, HTTP/2 et backend réel restent à mesurer
+  si une mise en ligne est décidée séparément. Aucun déploiement dans cette tâche.
 
-Le serveur local utilise HTTP/1.1, sans Traefik ni latence de backend public.
-Cet échantillon de laboratoire ne constitue ni une mesure terrain ni une garantie
-de gain en production. L’option Next.js reste **expérimentale et globale**, avec
-le coût de cache décrit plus haut. La PR reste en **brouillon** pour revue du
-compromis. Aucun déploiement n’a été effectué.
+### Contrôle d’un consommateur partagé
 
-### Reproduire les mesures
+Le rapport d’exemple EN a aussi été mesuré sur trois passages simulés par version,
+face à la dernière version avec `inlineCss` : LCP médian **3 496 → 3 485 ms**,
+JavaScript **383 652 → 333 750 octets**, transfert total **516 325 → 459 293 octets**.
+Le LCP est pratiquement identique dans cet échantillon ; aucun gain significatif
+n’est revendiqué pour cette page.
 
-Installer les dépendances verrouillées du frontend et de `apps/lighthouse-service`
-avec `npm ci`. Démarrer le backend de revue avec
+### Reproduire
+
+Installer les dépendances verrouillées de `apps/console-web` et
+`apps/lighthouse-service` avec `npm ci`. Démarrer le backend de revue avec
 `node .agents/skills/argos-visual-review/scripts/preview-backend.mjs`, puis compiler
-et démarrer le frontend (`npm run build`, `npm run start -- --port 3020`) avec
-`API_BASE=http://127.0.0.1:3018`. Sous Windows, les deux serveurs doivent disposer
-du même accès loopback.
+et démarrer le frontend avec `API_BASE=http://127.0.0.1:3018` (`npm run build`,
+`npm run start -- --port 3020`). Les deux processus doivent disposer du même accès
+loopback. Préparer le serveur par deux lectures HTML avant de mesurer.
 
-Définir `CHROME_PATH` vers le même exécutable Chrome/Edge pour chaque version,
-puis lancer depuis la racine, sans autre travail consommateur en parallèle :
+Définir `CHROME_PATH` vers le même Chrome/Edge pour toutes les versions, puis :
 
 ```text
-node scripts/review/measure-homepage-lcp.mjs http://localhost:3020/ outputs/lcp-comparison/version 3 3
+node scripts/review/measure-homepage-lcp.mjs http://localhost:3020/ outputs/lcp/version-sim 5 0 simulate
+node scripts/review/measure-homepage-lcp.mjs http://localhost:3020/ outputs/lcp/version-real 3 3 devtools
 ```
 
-Le script écrit chaque rapport Lighthouse et un résumé dans le dossier choisi.
-`ARGOS_LIGHTHOUSE_ROOT` permet de réutiliser une installation verrouillée du
-paquet Lighthouse ; par défaut, il utilise celle de `apps/lighthouse-service`.
-Comparer les versions avec le même environnement, le même port et des dossiers
-de sortie distincts. La seconde série de confirmation corrigée est conservée
-séparément dans les preuves brutes et regroupée dans le fichier de métriques.
+Ne pas lancer de build ou de tests pendant les mesures. Chaque commande écrit
+ses rapports complets et `summary.json`. `ARGOS_LIGHTHOUSE_ROOT` peut réutiliser
+une installation verrouillée de Lighthouse ; par défaut, le script utilise celle
+de `apps/lighthouse-service`. Comparer les versions sur le même port, avec des
+dossiers de sortie distincts. Les variantes de bundler, de police et le premier
+prototype i18n explorés puis retirés ne font pas partie du code livré.
 
-### Vérifications du rendu et des fonctionnalités
+### Vérifications de non-régression
 
-- `npm run lint` : succès.
-- `npm test -- --maxWorkers=4` : **148 fichiers, 1 485 tests réussis**, plus les
-  trois tests du contrôle éditorial et la validation de structure FR/EN.
-- `npm run build` avec les options finales : succès, TypeScript inclus.
-- `node --check scripts/review/measure-homepage-lcp.mjs` et `git diff --check` : succès.
-- Accueil FR clair : captures avant/après **identiques octet pour octet** à
-  1280 × 900 et 390 × 844. Un seul h1, aucun débordement horizontal ; les styles
-  sont disponibles dès le premier document. Les empreintes sont dans le compte
-  rendu local `outputs/ui-review/lcp-fix/review.md`.
-- Dialogue de retour sur mobile : ouverture différée avec styles, focus initial,
-  Escape, reprise du brouillon conservé, abandon explicite et retour du focus.
-  Aucun retour n’a été envoyé.
-- Formulaire d’audit : validation à vide et erreur du backend de revue après
-  soumission d’une URL fictive ; champ réactivé et valeur conservée. Aucun audit
-  réel créé. Les succès, refus anti-bot et refus CSRF sont couverts par les tests
-  avec services simulés.
-- Menu mobile, passage FR → EN et clair → sombre, fermeture Escape et focus
-  contrôlés à 390 px ; accueil EN sombre sans débordement à 320 px. À 768 px,
-  l’ancre « How it works » reste visible sous la navigation.
-- Navigation client vers le rapport d’exemple EN sombre à 768 px et changement
-  du scénario de couverture. Rapport fictif EN clair à 390 px : affichage et
-  sélection des constats techniques. Pas de débordement observé.
-- Connexion EN claire à 390 px : seul l’état « déjà connecté » fourni par la
-  fixture a été vérifié. Page 404 FR claire à 390 px : rendu vérifié. Aucune
-  erreur CSP dans les journaux de cette revue.
-- Aucun compte réel, export PDF, relancement d’audit ni parcours privé complet
-  en production n’est déclaré vérifié. La couverture ci-dessus n’est pas une
-  matrice exhaustive de toutes les routes, langues, tailles et thèmes.
+- Lint, build de production et TypeScript : succès. Syntaxe du script de mesure
+  et `git diff --check` contrôlés avant livraison.
+- **1 489 tests frontend distincts réussis** : suite complète de 1 487 tests,
+  dont deux nouveaux contrôles de langue résolue au serveur, puis deux nouveaux
+  cas PDF ciblés FR/EN. Les refus d’accès existants ont été rejoués avec ces cas.
+  Trois tests éditoriaux et la structure FR/EN passent également.
+- `node scripts/e2e/report-pdf.mjs` avec Edge installé : **24 PDF générés et
+  contrats vérifiés** (FR/EN, synthèse/complet, accès public/propriétaire/partagé,
+  expiration, compteurs uniques et absence de token dans l’aperçu). Le chargement
+  du module différé, les feuilles de style et les polices sont donc exercés dans
+  un navigateur réel. La capture HTML en média print `empty-en-summary.png` a été
+  examinée ; toutes les pages PDF n’ont pas été inspectées manuellement.
+- Accueil FR clair à **1280 × 900 et 390 × 844** : captures avant/après identiques
+  octet pour octet. Un h1, aucun débordement horizontal. Les empreintes et preuves
+  sont dans `outputs/ui-review/lcp-stable/review.md`.
+- FR mobile : dialogue de retour chargé à la demande, focus initial, Escape,
+  conservation/reprise/abandon du brouillon et retour du focus vérifiés sans envoi.
+  Formulaire d’audit vide puis URL fictive : validation et refus attendu du backend
+  en lecture seule, champ réactivé et valeur conservée. Aucun audit réel créé.
+- EN sombre à 390 et 320 px : langue, thème, fermeture clavier du menu, focus
+  et absence de débordement vérifiés. À 768 px, l’ancre reste visible à 136 px
+  sous un en-tête finissant à 121 px. Navigation cliente vers l’exemple EN et
+  changement de couverture vérifiés.
+- Rapport fictif EN clair à 390 px : rendu, vue des constats techniques et
+  commandes d’export vérifiés. Le navigateur de revue a affiché l’état d’export
+  indisponible avec ces fixtures ; le succès PDF est vérifié par la recette
+  contrôlée ci-dessus. État de connexion déjà active EN et 404 FR vérifiés.
+- HTTP `/`, `/en`, rapport fictif et 404 : aucune bannière `X-Powered-By`, cache
+  HTML privé/no-store, CSP des images conservée, nonce concordant sur tous les
+  scripts et aucune balise `<style>`. Aucun message CSP dans la revue navigateur.
+- Aucun compte réel, audit de production, envoi de retour ou déploiement. Cette
+  couverture n’est ni une matrice manuelle exhaustive ni une certification WCAG
+  ou PDF/UA ; aucun test avec lecteur d’écran n’est revendiqué.
 
-Preuves brutes locales non commitées : `outputs/lcp-regression/base-real/`,
-`pr-before-real/`, `fix-real/`, `fix-confirm-real/`, séries simulées `base-*`,
-`pr-before-*`, `inline-css-*`, journaux `final-tests.log`, `inline-css-build.log`
-et captures dans `outputs/ui-review/lcp-fix/`. Le résumé des mesures et le script
-sont versionnés pour la revue distante. Aucun test Maven n’est nécessaire pour
-les sources Java inchangées.
+Les rapports bruts, journaux et captures locaux sont ignorés par Git :
+`outputs/lcp-stable/`, `outputs/ui-review/lcp-stable/` et
+`outputs/pdf/report-fixtures/`. Le résumé des mesures et le script sont versionnés
+pour la revue distante. Aucun test Maven n’est requis pour le code Java inchangé.
+
 
 ## Certificat : procédure pour l’exploitant
 
@@ -223,4 +262,4 @@ ouverture, les thèmes FR/EN et la navigation entre accueil et rapport.
 Ne pas présenter les constats partiellement traités comme résolus.
 
 Références : [configuration de la bannière Next.js](https://nextjs.org/docs/app/api-reference/config/next-config-js/poweredByHeader)
-et types/documentation du paquet Next.js 16.4.2 installé pour `cssChunking`.
+et [correctif stable Next.js 16.4.3](https://github.com/vercel/next.js/releases/tag/v16.4.3).

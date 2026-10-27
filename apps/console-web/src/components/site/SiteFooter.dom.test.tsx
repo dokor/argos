@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
-import { render, screen, within } from "@testing-library/react";
-import { LangProvider } from "@/lib/i18n/LangContext";
+import { render, screen, within } from "@/test/render";
+import { LangProvider } from "@/lib/i18n/LangProvider";
 import SiteFooter from "./SiteFooter";
 
 describe("shared footer (#317)", () => {

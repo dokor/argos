@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import {afterEach,beforeEach,expect,it,vi} from 'vitest';
-import {act,fireEvent,render,screen} from '@testing-library/react';
+import {act,fireEvent,render,screen} from "@/test/render";
 import NotificationCenter,{type Inbox,type Notice} from './NotificationCenter';
 import {accountFetch} from '@/lib/account-client';
 vi.mock('@/lib/account-client',()=>({accountFetch:vi.fn()}));

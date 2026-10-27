@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
-import { LangProvider } from "@/lib/i18n/LangContext";
+import { render, screen, waitFor } from "@/test/render";
+import { LangProvider } from "@/lib/i18n/LangProvider";
 import KnownUrls from "./KnownUrls";
 import UsageStrip from "./UsageStrip";
 import DomainCommonMetric from "./domains/DomainCommonMetric";

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { LangProvider } from "@/lib/i18n/LangContext";
+import { LangProvider } from "@/lib/i18n/LangProvider";
 import { frenchPath, localizedPath } from "@/lib/i18n/routes";
 import { siteUrl } from "@/lib/i18n/metadata";
 import LangToggle from "@/components/LangToggle";

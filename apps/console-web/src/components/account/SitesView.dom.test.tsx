@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, expect, it, vi } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { LangProvider } from "@/lib/i18n/LangContext";
+import { render, screen, fireEvent, waitFor } from "@/test/render";
+import { LangProvider } from "@/lib/i18n/LangProvider";
 import { accountFetch } from "@/lib/account-client";
 import SitesView from "./SitesView";
 const {push,session}=vi.hoisted(()=>({push:vi.fn(),session:{profile:{verified:true},ready:true,denied:false,invalidate:vi.fn()}}));

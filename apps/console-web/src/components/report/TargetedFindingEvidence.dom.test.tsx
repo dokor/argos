@@ -4,7 +4,7 @@ import {afterEach,expect,it} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {URL as NodeURL} from 'node:url';
 import catalogue from './lighthouseAuditCatalogue.json';
-import {LangProvider} from '@/lib/i18n/LangContext';
+import {LangProvider} from '@/lib/i18n/LangProvider';
 import FindingDetails from './FindingDetails';
 import {findingExplanation} from './findingExplanation';
 import {documentTargets,pageTargets} from './findingTargets';

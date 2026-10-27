@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 vi.mock("@/components/account/RunClaim", () => ({ default: () => null }));
-import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, render, screen, waitFor } from "@/test/render";
 
 const { refresh, router } = vi.hoisted(() => {
   const refresh = vi.fn();

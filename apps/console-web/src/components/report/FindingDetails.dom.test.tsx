@@ -2,7 +2,7 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
-import { LangProvider } from '@/lib/i18n/LangContext';
+import { LangProvider } from '@/lib/i18n/LangProvider';
 import FindingDetails from './FindingDetails';
 import { reportReadingCopy } from './reportReadingCopy';
 import type { Finding } from './reportModel';

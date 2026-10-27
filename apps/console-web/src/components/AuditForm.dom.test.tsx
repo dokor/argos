@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@/test/render";
 
 // Mocks des dépendances externes (routing + client API).
 const { push } = vi.hoisted(() => ({ push: vi.fn() }));
@@ -11,7 +11,7 @@ vi.mock("@/lib/ArgosApi", () => ({ argosApi: { createAudit: vi.fn() } }));
 
 import AuditForm from "./AuditForm";
 import { argosApi } from "@/lib/ArgosApi";
-import { LangProvider } from "@/lib/i18n/LangContext";
+import { LangProvider } from "@/lib/i18n/LangProvider";
 
 describe("AuditForm (soumission d'audit)", () => {
   beforeEach(() => {

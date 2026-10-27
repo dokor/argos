@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import { beforeEach, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@/test/render";
 import userEvent from "@testing-library/user-event";
 import AccountShell, { AccountFooter } from "./AccountShell";
-import { LangProvider } from "@/lib/i18n/LangContext";
+import { LangProvider } from "@/lib/i18n/LangProvider";
 const state = vi.hoisted(() => ({ path: "/account/integrations", session: {
   ready: true, denied: false, error: "", profile: { displayName: "Camille", verified: true, admin: false },
   usage: { offer: "FREE", limit: 100 as number | null, used: 32, reserved: 4, available:64 }, usageError: false, refreshUsage: vi.fn(),

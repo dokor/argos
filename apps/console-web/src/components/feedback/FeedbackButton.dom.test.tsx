@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import {beforeEach,it,expect,vi} from "vitest";
-import {render,screen,fireEvent,waitFor,within} from "@testing-library/react";
-import {LangProvider} from "@/lib/i18n/LangContext";
+import {render,screen,fireEvent,waitFor,within} from "@/test/render";
+import {LangProvider} from "@/lib/i18n/LangProvider";
 import FeedbackButton from "./FeedbackButton";
 vi.mock("@/lib/account-client",()=>({accountAuditHeaders:async()=>({})}));
 vi.mock("@/components/security/useAntiBot",()=>({useAntiBot:()=>({verify:async()=>undefined,element:null})}));

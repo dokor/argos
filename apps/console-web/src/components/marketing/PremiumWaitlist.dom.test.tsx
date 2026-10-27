@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it, vi } from "vitest";
 import { cleanup, render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { LangProvider } from "@/lib/i18n/LangContext";
+import { LangProvider } from "@/lib/i18n/LangProvider";
 import PremiumWaitlist, { premiumCopy } from "./PremiumWaitlist";
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 for (const lang of ["fr", "en"] as const) {

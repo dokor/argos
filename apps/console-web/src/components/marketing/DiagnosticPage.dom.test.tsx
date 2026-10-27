@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { LangProvider } from "@/lib/i18n/LangContext";
+import { LangProvider } from "@/lib/i18n/LangProvider";
 import { argosApi } from "@/lib/ArgosApi";
 import DiagnosticPage from "./DiagnosticPage";
 import { diagnosticPages, diagnosticRoutes, type DiagnosticTopic } from "./diagnosticPages";

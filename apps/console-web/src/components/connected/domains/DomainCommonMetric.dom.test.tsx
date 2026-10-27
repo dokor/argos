@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, expect, it, vi } from "vitest";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { LangProvider } from "@/lib/i18n/LangContext";
+import { act, fireEvent, render, screen, waitFor } from "@/test/render";
+import { LangProvider } from "@/lib/i18n/LangProvider";
 import DomainCommonMetric from "./DomainCommonMetric";
 const state = vi.hoisted(() => ({ data: null as unknown, error: "", paths: [] as (string | null)[], reload: vi.fn() }));
 let visible: (entries: { isIntersecting: boolean }[]) => void;

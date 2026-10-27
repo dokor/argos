@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { LangProvider } from "@/lib/i18n/LangContext";
+import { LangProvider } from "@/lib/i18n/LangProvider";
 import { findingEditorial } from "@/components/report/findingCatalogue";
 import type { CommonFinding } from "@/lib/connected/contracts";
 import CommonFindingContent from "./CommonFindingContent";

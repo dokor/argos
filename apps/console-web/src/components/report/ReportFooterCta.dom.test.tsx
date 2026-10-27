@@ -2,7 +2,7 @@
 import { describe,it,expect,vi,beforeEach } from 'vitest';
 import { render,screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { LangProvider } from '@/lib/i18n/LangContext';
+import { LangProvider } from '@/lib/i18n/LangProvider';
 import ReportFooterCta from './ReportFooterCta';
 import { reportShareUrl,validContact } from './reportSharing';
 beforeEach(()=>{vi.restoreAllMocks();window.history.replaceState(null,'','/en/report/fixture-private?view=technical&domain=seo&severity=important&extra=discard#finding-61');});

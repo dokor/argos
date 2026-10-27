@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { LangProvider } from "@/lib/i18n/LangContext";
+import { LangProvider } from "@/lib/i18n/LangProvider";
 import ReportPage from "@/app/(fr)/report/[token]/ReportPage";
 import { demoReport } from "@/components/marketing/reportDemoFixture";
 import { buildReportModel } from "./reportModel";

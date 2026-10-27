@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen } from "@/test/render";
 import userEvent from "@testing-library/user-event";
 import ScoreGrid from "./ScoreGrid";
-import { LangProvider } from "@/lib/i18n/LangContext";
+import { LangProvider } from "@/lib/i18n/LangProvider";
 import type { Coverage } from "./types";
 
 const aggregate = { key: "security", measuredWeight: 0, expectedWeight: 100, ratio: 0, available: false, sufficient: false };

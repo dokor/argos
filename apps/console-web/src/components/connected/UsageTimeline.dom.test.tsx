@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, expect, it, vi } from "vitest";
-import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { LangProvider } from "@/lib/i18n/LangContext";
+import { act, fireEvent, render, screen, waitFor, within } from "@/test/render";
+import { LangProvider } from "@/lib/i18n/LangProvider";
 import { accountFetch } from "@/lib/account-client";
 import type { UsageTimeline as Timeline } from "@/lib/usage-timeline";
 import UsageTimeline from "./UsageTimeline";

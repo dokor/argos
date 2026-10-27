@@ -4,7 +4,7 @@ import { expect,it } from 'vitest';
 import FindingGuide from './FindingGuide';
 import PrintableReport from './PrintableReport';
 import FindingDetails from './FindingDetails';
-import { LangProvider } from '@/lib/i18n/LangContext';
+import { LangProvider } from '@/lib/i18n/LangProvider';
 import { findingContent, cleanEvidence } from './findingCatalogue';
 import { findingPlaybook, rulePlaybooks } from './findingPlaybooks';
 import historical from './fixtures/historical-report.json';

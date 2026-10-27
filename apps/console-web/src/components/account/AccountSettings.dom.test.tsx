@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import {beforeEach,it,expect,vi} from "vitest";
-import {render,screen,fireEvent,waitFor,within,act} from "@testing-library/react";
+import {render,screen,fireEvent,waitFor,within,act} from "@/test/render";
 import AccountSettings from "./AccountSettings";
 import {accountFetch,AccountClientError} from "@/lib/account-client";
 const state=vi.hoisted(()=>({section:"profile",push:vi.fn(),denied:false,invalidate:vi.fn()}));

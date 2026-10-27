@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, it, expect, vi } from "vitest";
-import { render, screen, fireEvent, act, within } from "@testing-library/react";
+import { render, screen, fireEvent, act, within } from "@/test/render";
 import DomainNew from "./DomainNew";
 import fr from "@/lib/i18n/fr.json";
 import { accountFetch } from "@/lib/account-client";
