@@ -2,13 +2,13 @@
   {
     "key": "html.analysis.duration_ms",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:178"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:179"
     ],
     "scorable": true,
     "weight": 1,
     "domain": "seo",
     "owner": "html",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Snapshot HTML reçu sans exécution JS ; présence/état/valeur des métadonnées, longueur du titre, h1Count, imgCount et imgAltMissingCount, anchorCount et noHrefCount selon la clé.",
     "content": "specific-fr-en",
     "detection": {
@@ -21,14 +21,14 @@
   {
     "key": "html.anchors.href_coverage",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:554",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:593"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:573",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:612"
     ],
     "scorable": true,
     "weight": 2,
     "domain": "a11y",
     "owner": "html",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Snapshot HTML reçu sans exécution JS ; présence/état/valeur des métadonnées, longueur du titre, h1Count, imgCount et imgAltMissingCount, anchorCount et noHrefCount selon la clé.",
     "content": "specific-fr-en",
     "detection": {
@@ -45,7 +45,7 @@
     "weight": 0,
     "domain": "html",
     "owner": "html",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Snapshot HTML reçu sans exécution JS ; présence/état/valeur des métadonnées, longueur du titre, h1Count, imgCount et imgAltMissingCount, anchorCount et noHrefCount selon la clé.",
     "content": "explicit-fallback-fr-en",
     "detection": null,
@@ -55,13 +55,13 @@
   {
     "key": "html.doctype.html5",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:409"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:410"
     ],
     "scorable": true,
     "weight": 1,
     "domain": "a11y",
     "owner": "html",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Snapshot HTML reçu sans exécution JS ; présence/état/valeur des métadonnées, longueur du titre, h1Count, imgCount et imgAltMissingCount, anchorCount et noHrefCount selon la clé.",
     "content": "specific-fr-en",
     "detection": {
@@ -74,13 +74,13 @@
   {
     "key": "html.h1.count",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:358"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:359"
     ],
     "scorable": true,
     "weight": 3,
     "domain": "seo",
     "owner": "html",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Snapshot HTML reçu sans exécution JS ; présence/état/valeur des métadonnées, longueur du titre, h1Count, imgCount et imgAltMissingCount, anchorCount et noHrefCount selon la clé.",
     "content": "specific-fr-en",
     "detection": {
@@ -93,15 +93,15 @@
   {
     "key": "html.images.alt_coverage",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:495",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:534",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:545"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:514",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:553",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:564"
     ],
     "scorable": true,
     "weight": 4,
     "domain": "a11y",
     "owner": "html",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Snapshot HTML reçu sans exécution JS ; présence/état/valeur des métadonnées, longueur du titre, h1Count, imgCount et imgAltMissingCount, anchorCount et noHrefCount selon la clé.",
     "content": "specific-fr-en",
     "detection": {
@@ -114,13 +114,13 @@
   {
     "key": "html.lang",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:376"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:377"
     ],
     "scorable": true,
     "weight": 2,
     "domain": "a11y",
     "owner": "html",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Snapshot HTML reçu sans exécution JS ; présence/état/valeur des métadonnées, longueur du titre, h1Count, imgCount et imgAltMissingCount, anchorCount et noHrefCount selon la clé.",
     "content": "specific-fr-en",
     "detection": {
@@ -133,13 +133,13 @@
   {
     "key": "html.link.canonical.present",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:317"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:318"
     ],
     "scorable": true,
     "weight": 2,
     "domain": "seo",
     "owner": "html",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Snapshot HTML reçu sans exécution JS ; présence/état/valeur des métadonnées, longueur du titre, h1Count, imgCount et imgAltMissingCount, anchorCount et noHrefCount selon la clé.",
     "content": "specific-fr-en",
     "detection": {
@@ -152,13 +152,13 @@
   {
     "key": "html.meta.charset.present",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:425"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:426"
     ],
     "scorable": true,
     "weight": 2,
     "domain": "seo",
     "owner": "html",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Snapshot HTML reçu sans exécution JS ; présence/état/valeur des métadonnées, longueur du titre, h1Count, imgCount et imgAltMissingCount, anchorCount et noHrefCount selon la clé.",
     "content": "specific-fr-en",
     "detection": {
@@ -171,13 +171,13 @@
   {
     "key": "html.meta.description.present",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:300"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:301"
     ],
     "scorable": true,
     "weight": 3,
     "domain": "seo",
     "owner": "html",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Snapshot HTML reçu sans exécution JS ; présence/état/valeur des métadonnées, longueur du titre, h1Count, imgCount et imgAltMissingCount, anchorCount et noHrefCount selon la clé.",
     "content": "specific-fr-en",
     "detection": {
@@ -190,13 +190,13 @@
   {
     "key": "html.meta.robots.present",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:124"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:125"
     ],
     "scorable": true,
     "weight": 2,
     "domain": "seo",
     "owner": "html",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Snapshot HTML reçu sans exécution JS ; présence/état/valeur des métadonnées, longueur du titre, h1Count, imgCount et imgAltMissingCount, anchorCount et noHrefCount selon la clé.",
     "content": "specific-fr-en",
     "detection": {
@@ -209,13 +209,13 @@
   {
     "key": "html.meta.viewport.present",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:393"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:394"
     ],
     "scorable": true,
     "weight": 2,
     "domain": "a11y",
     "owner": "html",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Snapshot HTML reçu sans exécution JS ; présence/état/valeur des métadonnées, longueur du titre, h1Count, imgCount et imgAltMissingCount, anchorCount et noHrefCount selon la clé.",
     "content": "specific-fr-en",
     "detection": {
@@ -228,13 +228,13 @@
   {
     "key": "html.scripts.count",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:148"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:149"
     ],
     "scorable": true,
     "weight": 1,
     "domain": "seo",
     "owner": "html",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Snapshot HTML reçu sans exécution JS ; présence/état/valeur des métadonnées, longueur du titre, h1Count, imgCount et imgAltMissingCount, anchorCount et noHrefCount selon la clé.",
     "content": "specific-fr-en",
     "detection": {
@@ -247,13 +247,13 @@
   {
     "key": "html.size.bytes",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:163"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:164"
     ],
     "scorable": true,
     "weight": 1,
     "domain": "seo",
     "owner": "html",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Snapshot HTML reçu sans exécution JS ; présence/état/valeur des métadonnées, longueur du titre, h1Count, imgCount et imgAltMissingCount, anchorCount et noHrefCount selon la clé.",
     "content": "specific-fr-en",
     "detection": {
@@ -266,13 +266,13 @@
   {
     "key": "html.social.meta",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:468"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:469"
     ],
     "scorable": true,
     "weight": 1,
     "domain": "seo",
     "owner": "html",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Snapshot HTML reçu sans exécution JS ; présence/état/valeur des métadonnées, longueur du titre, h1Count, imgCount et imgAltMissingCount, anchorCount et noHrefCount selon la clé.",
     "content": "specific-fr-en",
     "detection": {
@@ -285,14 +285,14 @@
   {
     "key": "html.title",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:280",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:291"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:281",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:292"
     ],
     "scorable": true,
     "weight": 4,
     "domain": "seo",
     "owner": "html",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Snapshot HTML reçu sans exécution JS ; présence/état/valeur des métadonnées, longueur du titre, h1Count, imgCount et imgAltMissingCount, anchorCount et noHrefCount selon la clé.",
     "content": "specific-fr-en",
     "detection": {
@@ -311,7 +311,7 @@
     "weight": 2,
     "domain": "performance",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -328,7 +328,7 @@
     "weight": 0,
     "domain": "http",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "explicit-fallback-fr-en",
     "detection": null,
@@ -344,7 +344,7 @@
     "weight": 2,
     "domain": "performance",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -363,7 +363,7 @@
     "weight": 2,
     "domain": "security",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -376,13 +376,13 @@
   {
     "key": "http.headers.caching",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:815"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:818"
     ],
     "scorable": true,
     "weight": 2,
     "domain": "performance",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -395,13 +395,13 @@
   {
     "key": "http.headers.compression",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:789"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:792"
     ],
     "scorable": true,
     "weight": 2,
     "domain": "performance",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -420,7 +420,7 @@
     "weight": 2,
     "domain": "seo",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -433,13 +433,13 @@
   {
     "key": "http.headers.server",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:832"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:835"
     ],
     "scorable": true,
     "weight": 2,
     "domain": "performance",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -452,14 +452,14 @@
   {
     "key": "http.protocol.http2",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:760",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:772"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:763",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:775"
     ],
     "scorable": true,
     "weight": 2,
     "domain": "performance",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -478,7 +478,7 @@
     "weight": 2,
     "domain": "performance",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -497,7 +497,7 @@
     "weight": 2,
     "domain": "performance",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -516,7 +516,7 @@
     "weight": 2,
     "domain": "security",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -535,7 +535,7 @@
     "weight": 2,
     "domain": "performance",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -549,13 +549,13 @@
     "key": "http.security.cookie_flags",
     "sources": [
       "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:687",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:714"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:717"
     ],
     "scorable": true,
     "weight": 6,
     "domain": "security",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -569,14 +569,14 @@
     "key": "http.security.csp",
     "sources": [
       "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:626",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:874",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/zap/ZapModuleAnalyzer.java:25"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:877",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/zap/ZapModuleAnalyzer.java:26"
     ],
     "scorable": true,
     "weight": 10,
     "domain": "security",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -590,16 +590,16 @@
     "key": "http.security.hsts",
     "sources": [
       "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:617",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:106",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:377",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:389",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/zap/ZapModuleAnalyzer.java:26"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:107",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:399",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:411",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/zap/ZapModuleAnalyzer.java:27"
     ],
     "scorable": true,
     "weight": 8,
     "domain": "security",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -618,7 +618,7 @@
     "weight": 6,
     "domain": "security",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -637,7 +637,7 @@
     "weight": 3,
     "domain": "security",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -651,13 +651,13 @@
     "key": "http.security.x_content_type_options",
     "sources": [
       "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:635",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/zap/ZapModuleAnalyzer.java:27"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/zap/ZapModuleAnalyzer.java:28"
     ],
     "scorable": true,
     "weight": 4,
     "domain": "security",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -671,13 +671,13 @@
     "key": "http.security.x_frame_options",
     "sources": [
       "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:644",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/zap/ZapModuleAnalyzer.java:28"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/zap/ZapModuleAnalyzer.java:29"
     ],
     "scorable": true,
     "weight": 6,
     "domain": "security",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -690,13 +690,13 @@
   {
     "key": "http.seo.robots_txt",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:902"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:905"
     ],
     "scorable": true,
     "weight": 2,
     "domain": "seo",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -709,13 +709,13 @@
   {
     "key": "http.seo.sitemap",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:909"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:912"
     ],
     "scorable": true,
     "weight": 3,
     "domain": "seo",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -735,7 +735,7 @@
     "weight": 2,
     "domain": "performance",
     "owner": "http",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Statut et valeur du contrôle ; détails assainis de la réponse, du parcours ou de la sonde. Temps et nombre de redirections ont une unité explicite. Pas de valeur de cookie publiée.",
     "content": "specific-fr-en",
     "detection": {
@@ -752,7 +752,7 @@
     "weight": 0,
     "domain": "lighthouse",
     "owner": "lighthouse",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Note de catégorie sur 100 ; pour les audits, ratio score, catégorie, poids Lighthouse et numericValue/numericUnit si fournis ; échantillons observés optionnels.",
     "content": "explicit-fallback-fr-en",
     "detection": null,
@@ -768,7 +768,7 @@
     "weight": 10,
     "domain": "a11y",
     "owner": "lighthouse",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Note de catégorie sur 100 ; pour les audits, ratio score, catégorie, poids Lighthouse et numericValue/numericUnit si fournis ; échantillons observés optionnels.",
     "content": "specific-fr-en",
     "detection": {
@@ -787,7 +787,7 @@
     "weight": 6,
     "domain": "security",
     "owner": "lighthouse",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Note de catégorie sur 100 ; pour les audits, ratio score, catégorie, poids Lighthouse et numericValue/numericUnit si fournis ; échantillons observés optionnels.",
     "content": "specific-fr-en",
     "detection": {
@@ -806,7 +806,7 @@
     "weight": 22,
     "domain": "performance",
     "owner": "lighthouse",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Note de catégorie sur 100 ; pour les audits, ratio score, catégorie, poids Lighthouse et numericValue/numericUnit si fournis ; échantillons observés optionnels.",
     "content": "specific-fr-en",
     "detection": {
@@ -825,7 +825,7 @@
     "weight": 8,
     "domain": "seo",
     "owner": "lighthouse",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Note de catégorie sur 100 ; pour les audits, ratio score, catégorie, poids Lighthouse et numericValue/numericUnit si fournis ; échantillons observés optionnels.",
     "content": "specific-fr-en",
     "detection": {
@@ -842,7 +842,7 @@
     "weight": 0,
     "domain": "observatory",
     "owner": "observatory",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Note et informations de sous-tests disponibles dans la réponse source ; ne pas inventer un sous-test absent.",
     "content": "explicit-fallback-fr-en",
     "detection": null,
@@ -852,13 +852,13 @@
   {
     "key": "observatory.grade",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/observatory/ObservatoryModuleAnalyzer.java:137"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/observatory/ObservatoryModuleAnalyzer.java:140"
     ],
     "scorable": false,
     "weight": 0,
     "domain": "observatory",
     "owner": "observatory",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Note et informations de sous-tests disponibles dans la réponse source ; ne pas inventer un sous-test absent.",
     "content": "explicit-fallback-fr-en",
     "detection": null,
@@ -868,13 +868,13 @@
   {
     "key": "observatory.score",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/observatory/ObservatoryModuleAnalyzer.java:116"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/observatory/ObservatoryModuleAnalyzer.java:119"
     ],
     "scorable": true,
     "weight": 8,
     "domain": "security",
     "owner": "observatory",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Note et informations de sous-tests disponibles dans la réponse source ; ne pas inventer un sous-test absent.",
     "content": "specific-fr-en",
     "detection": {
@@ -887,13 +887,13 @@
   {
     "key": "observatory.tests.passed",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/observatory/ObservatoryModuleAnalyzer.java:159"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/observatory/ObservatoryModuleAnalyzer.java:162"
     ],
     "scorable": false,
     "weight": 0,
     "domain": "observatory",
     "owner": "observatory",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Note et informations de sous-tests disponibles dans la réponse source ; ne pas inventer un sous-test absent.",
     "content": "explicit-fallback-fr-en",
     "detection": null,
@@ -903,13 +903,13 @@
   {
     "key": "runtime.analysis.duration_ms",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:191"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:194"
     ],
     "scorable": true,
     "weight": 4,
     "domain": "performance",
     "owner": "runtime",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Compteurs, attribution site/tiers si fournie, échantillon plafonné de ressources ; octets estimés. Navigation incomplète et champs absents restent indisponibles.",
     "content": "specific-fr-en",
     "detection": {
@@ -926,7 +926,7 @@
     "weight": 0,
     "domain": "runtime",
     "owner": "runtime",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Compteurs, attribution site/tiers si fournie, échantillon plafonné de ressources ; octets estimés. Navigation incomplète et champs absents restent indisponibles.",
     "content": "explicit-fallback-fr-en",
     "detection": null,
@@ -937,14 +937,14 @@
     "key": "runtime.console.errors",
     "sources": [
       "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:20",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:96",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:204"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:99",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:207"
     ],
     "scorable": true,
     "weight": 5,
     "domain": "performance",
     "owner": "runtime",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Compteurs, attribution site/tiers si fournie, échantillon plafonné de ressources ; octets estimés. Navigation incomplète et champs absents restent indisponibles.",
     "content": "specific-fr-en",
     "detection": {
@@ -957,14 +957,14 @@
   {
     "key": "runtime.js.errors",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:109",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:205"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:112",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:208"
     ],
     "scorable": true,
     "weight": 6,
     "domain": "performance",
     "owner": "runtime",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Compteurs, attribution site/tiers si fournie, échantillon plafonné de ressources ; octets estimés. Navigation incomplète et champs absents restent indisponibles.",
     "content": "specific-fr-en",
     "detection": {
@@ -977,14 +977,14 @@
   {
     "key": "runtime.network.5xx",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:122",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:206"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:125",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:209"
     ],
     "scorable": true,
     "weight": 8,
     "domain": "performance",
     "owner": "runtime",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Compteurs, attribution site/tiers si fournie, échantillon plafonné de ressources ; octets estimés. Navigation incomplète et champs absents restent indisponibles.",
     "content": "specific-fr-en",
     "detection": {
@@ -997,14 +997,14 @@
   {
     "key": "runtime.network.bytes_estimated",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:178",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:209"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:181",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:212"
     ],
     "scorable": true,
     "weight": 4,
     "domain": "performance",
     "owner": "runtime",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Compteurs, attribution site/tiers si fournie, échantillon plafonné de ressources ; octets estimés. Navigation incomplète et champs absents restent indisponibles.",
     "content": "specific-fr-en",
     "detection": {
@@ -1017,14 +1017,14 @@
   {
     "key": "runtime.network.failed_requests",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:135",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:207"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:138",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:210"
     ],
     "scorable": true,
     "weight": 4,
     "domain": "performance",
     "owner": "runtime",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Compteurs, attribution site/tiers si fournie, échantillon plafonné de ressources ; octets estimés. Navigation incomplète et champs absents restent indisponibles.",
     "content": "specific-fr-en",
     "detection": {
@@ -1037,14 +1037,14 @@
   {
     "key": "runtime.network.request_count",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:165",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:208"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:168",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:211"
     ],
     "scorable": true,
     "weight": 4,
     "domain": "performance",
     "owner": "runtime",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Compteurs, attribution site/tiers si fournie, échantillon plafonné de ressources ; octets estimés. Navigation incomplète et champs absents restent indisponibles.",
     "content": "specific-fr-en",
     "detection": {
@@ -1057,14 +1057,14 @@
   {
     "key": "runtime.network.third_party_errors",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:150",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:210"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:153",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:213"
     ],
     "scorable": true,
     "weight": 0,
     "domain": "performance",
     "owner": "runtime",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Compteurs, attribution site/tiers si fournie, échantillon plafonné de ressources ; octets estimés. Navigation incomplète et champs absents restent indisponibles.",
     "content": "specific-fr-en",
     "detection": {
@@ -1077,20 +1077,20 @@
   {
     "key": "ssl.certificate.expiry_days",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:250",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:267",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:470"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:272",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:289",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:492"
     ],
     "scorable": true,
     "weight": 3,
     "domain": "security",
     "owner": "ssl",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Note, certificat, jours avant expiration ou protocoles par points de terminaison selon la clé ; couverture des points de terminaison éventuellement partielle.",
     "content": "specific-fr-en",
     "detection": {
-      "fr": "SSL Labs examine des points de terminaison TLS. La note, la validité du certificat, son expiration et les protocoles sont des observations distinctes ; la couverture peut être partielle.",
-      "en": "SSL Labs examines TLS endpoints. Grade, certificate validity, expiry and protocols are separate observations; coverage can be partial."
+      "fr": "SSL Labs signale ce contrôle comme à examiner. Un renouvellement manqué peut provoquer une interruption HTTPS à l’expiration.",
+      "en": "SSL Labs flags this check for review. A missed renewal can interrupt HTTPS when the certificate expires."
     },
     "missingCollection": "La version exacte de la règle et des emplacements peuvent manquer dans un rapport historique.",
     "reference": "https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Transport_Layer_Security"
@@ -1098,19 +1098,19 @@
   {
     "key": "ssl.certificate.valid",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:104",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:218"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:105",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:240"
     ],
     "scorable": true,
     "weight": 6,
     "domain": "security",
     "owner": "ssl",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Note, certificat, jours avant expiration ou protocoles par points de terminaison selon la clé ; couverture des points de terminaison éventuellement partielle.",
     "content": "specific-fr-en",
     "detection": {
-      "fr": "SSL Labs examine des points de terminaison TLS. La note, la validité du certificat, son expiration et les protocoles sont des observations distinctes ; la couverture peut être partielle.",
-      "en": "SSL Labs examines TLS endpoints. Grade, certificate validity, expiry and protocols are separate observations; coverage can be partial."
+      "fr": "SSL Labs signale ce contrôle comme à examiner. Un certificat expiré, non approuvé ou ne couvrant pas le nom demandé peut bloquer la connexion.",
+      "en": "SSL Labs flags this check for review. An expired, untrusted or mismatched certificate can block the connection."
     },
     "missingCollection": "La version exacte de la règle et des emplacements peuvent manquer dans un rapport historique.",
     "reference": "https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Transport_Layer_Security"
@@ -1122,7 +1122,7 @@
     "weight": 0,
     "domain": "ssl",
     "owner": "ssl",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Note, certificat, jours avant expiration ou protocoles par points de terminaison selon la clé ; couverture des points de terminaison éventuellement partielle.",
     "content": "explicit-fallback-fr-en",
     "detection": null,
@@ -1132,15 +1132,15 @@
   {
     "key": "ssl.grade",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:99",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:185",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:472"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:100",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:197",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:494"
     ],
     "scorable": true,
     "weight": 10,
     "domain": "security",
     "owner": "ssl",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Note, certificat, jours avant expiration ou protocoles par points de terminaison selon la clé ; couverture des points de terminaison éventuellement partielle.",
     "content": "specific-fr-en",
     "detection": {
@@ -1153,19 +1153,19 @@
   {
     "key": "ssl.protocols.legacy_disabled",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:102",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:353"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:103",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:375"
     ],
     "scorable": true,
     "weight": 3,
     "domain": "security",
     "owner": "ssl",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Note, certificat, jours avant expiration ou protocoles par points de terminaison selon la clé ; couverture des points de terminaison éventuellement partielle.",
     "content": "specific-fr-en",
     "detection": {
-      "fr": "SSL Labs examine des points de terminaison TLS. La note, la validité du certificat, son expiration et les protocoles sont des observations distinctes ; la couverture peut être partielle.",
-      "en": "SSL Labs examines TLS endpoints. Grade, certificate validity, expiry and protocols are separate observations; coverage can be partial."
+      "fr": "SSL Labs signale ce contrôle comme à examiner. Des protocoles obsolètes peuvent permettre des connexions avec des protections insuffisantes.",
+      "en": "SSL Labs flags this check for review. Obsolete protocols can allow connections with inadequate protections."
     },
     "missingCollection": "La version exacte de la règle et des emplacements peuvent manquer dans un rapport historique.",
     "reference": "https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Transport_Layer_Security"
@@ -1173,20 +1173,20 @@
   {
     "key": "ssl.protocols.tls12",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:101",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:324",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:337"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:102",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:346",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:359"
     ],
     "scorable": true,
     "weight": 2,
     "domain": "security",
     "owner": "ssl",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Note, certificat, jours avant expiration ou protocoles par points de terminaison selon la clé ; couverture des points de terminaison éventuellement partielle.",
     "content": "specific-fr-en",
     "detection": {
-      "fr": "SSL Labs examine des points de terminaison TLS. La note, la validité du certificat, son expiration et les protocoles sont des observations distinctes ; la couverture peut être partielle.",
-      "en": "SSL Labs examines TLS endpoints. Grade, certificate validity, expiry and protocols are separate observations; coverage can be partial."
+      "fr": "SSL Labs signale ce contrôle comme à examiner. L’absence d’une version TLS peut limiter la compatibilité ou l’usage des protocoles récents.",
+      "en": "SSL Labs flags this check for review. A missing TLS version can limit compatibility or use of newer protocols."
     },
     "missingCollection": "La version exacte de la règle et des emplacements peuvent manquer dans un rapport historique.",
     "reference": "https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Transport_Layer_Security"
@@ -1194,20 +1194,20 @@
   {
     "key": "ssl.protocols.tls13",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:100",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:308",
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:321"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:101",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:330",
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:343"
     ],
     "scorable": true,
     "weight": 2,
     "domain": "security",
     "owner": "ssl",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Note, certificat, jours avant expiration ou protocoles par points de terminaison selon la clé ; couverture des points de terminaison éventuellement partielle.",
     "content": "specific-fr-en",
     "detection": {
-      "fr": "SSL Labs examine des points de terminaison TLS. La note, la validité du certificat, son expiration et les protocoles sont des observations distinctes ; la couverture peut être partielle.",
-      "en": "SSL Labs examines TLS endpoints. Grade, certificate validity, expiry and protocols are separate observations; coverage can be partial."
+      "fr": "SSL Labs signale ce contrôle comme à examiner. L’absence d’une version TLS peut limiter la compatibilité ou l’usage des protocoles récents.",
+      "en": "SSL Labs flags this check for review. A missing TLS version can limit compatibility or use of newer protocols."
     },
     "missingCollection": "La version exacte de la règle et des emplacements peuvent manquer dans un rapport historique.",
     "reference": "https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Transport_Layer_Security"
@@ -1215,13 +1215,13 @@
   {
     "key": "tech.analysis.duration_ms",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:304"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:309"
     ],
     "scorable": false,
     "weight": 0,
     "domain": "tech",
     "owner": "tech",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Indices du HTML/en-têtes et motifs de bannières ; ne pas en déduire une version installée certaine.",
     "content": "explicit-fallback-fr-en",
     "detection": null,
@@ -1231,13 +1231,13 @@
   {
     "key": "tech.backend.hints",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:234"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:239"
     ],
     "scorable": false,
     "weight": 0,
     "domain": "tech",
     "owner": "tech",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Indices du HTML/en-têtes et motifs de bannières ; ne pas en déduire une version installée certaine.",
     "content": "explicit-fallback-fr-en",
     "detection": null,
@@ -1247,13 +1247,13 @@
   {
     "key": "tech.cdn.cloudflare",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:249"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:254"
     ],
     "scorable": false,
     "weight": 0,
     "domain": "tech",
     "owner": "tech",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Indices du HTML/en-têtes et motifs de bannières ; ne pas en déduire une version installée certaine.",
     "content": "explicit-fallback-fr-en",
     "detection": null,
@@ -1263,13 +1263,13 @@
   {
     "key": "tech.cms",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:130"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:131"
     ],
     "scorable": false,
     "weight": 0,
     "domain": "tech",
     "owner": "tech",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Indices du HTML/en-têtes et motifs de bannières ; ne pas en déduire une version installée certaine.",
     "content": "explicit-fallback-fr-en",
     "detection": null,
@@ -1283,7 +1283,7 @@
     "weight": 0,
     "domain": "tech",
     "owner": "tech",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Indices du HTML/en-têtes et motifs de bannières ; ne pas en déduire une version installée certaine.",
     "content": "explicit-fallback-fr-en",
     "detection": null,
@@ -1293,13 +1293,13 @@
   {
     "key": "tech.frontend.framework",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:145"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:146"
     ],
     "scorable": false,
     "weight": 0,
     "domain": "tech",
     "owner": "tech",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Indices du HTML/en-têtes et motifs de bannières ; ne pas en déduire une version installée certaine.",
     "content": "explicit-fallback-fr-en",
     "detection": null,
@@ -1309,13 +1309,13 @@
   {
     "key": "tech.frontend.nextjs",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:175"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:176"
     ],
     "scorable": false,
     "weight": 0,
     "domain": "tech",
     "owner": "tech",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Indices du HTML/en-têtes et motifs de bannières ; ne pas en déduire une version installée certaine.",
     "content": "explicit-fallback-fr-en",
     "detection": null,
@@ -1325,13 +1325,13 @@
   {
     "key": "tech.http.server_header",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:264"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:269"
     ],
     "scorable": false,
     "weight": 0,
     "domain": "tech",
     "owner": "tech",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Indices du HTML/en-têtes et motifs de bannières ; ne pas en déduire une version installée certaine.",
     "content": "explicit-fallback-fr-en",
     "detection": null,
@@ -1339,15 +1339,53 @@
     "reference": null
   },
   {
+    "key": "tech.security.php_cves",
+    "sources": [
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/PhpVersionAnalyzer.java:17"
+    ],
+    "scorable": true,
+    "weight": 0,
+    "domain": "security",
+    "owner": "tech",
+    "collectorContract": "analysis-measurements-v7",
+    "availableFacts": "Indices du HTML/en-têtes et motifs de bannières ; ne pas en déduire une version installée certaine.",
+    "content": "specific-fr-en",
+    "detection": {
+      "fr": "Le module technique extrait une version PHP explicitement exposée dans Server, X-Powered-By ou X-PHP-Version. Il la compare aux dates de support et aux plages des avis officiels PHP conservés avec le catalogue.",
+      "en": "The technology module extracts a PHP version explicitly exposed in Server, X-Powered-By or X-PHP-Version. It compares it with support dates and version ranges from the bundled official PHP advisories."
+    },
+    "missingCollection": "La version exacte de la règle et des emplacements peuvent manquer dans un rapport historique.",
+    "reference": "https://www.php.net/supported-versions.php"
+  },
+  {
+    "key": "tech.security.php_eol",
+    "sources": [
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/PhpVersionAnalyzer.java:16"
+    ],
+    "scorable": true,
+    "weight": 0,
+    "domain": "security",
+    "owner": "tech",
+    "collectorContract": "analysis-measurements-v7",
+    "availableFacts": "Indices du HTML/en-têtes et motifs de bannières ; ne pas en déduire une version installée certaine.",
+    "content": "specific-fr-en",
+    "detection": {
+      "fr": "Le module technique extrait une version PHP explicitement exposée dans Server, X-Powered-By ou X-PHP-Version. Il la compare aux dates de support et aux plages des avis officiels PHP conservés avec le catalogue.",
+      "en": "The technology module extracts a PHP version explicitly exposed in Server, X-Powered-By or X-PHP-Version. It compares it with support dates and version ranges from the bundled official PHP advisories."
+    },
+    "missingCollection": "La version exacte de la règle et des emplacements peuvent manquer dans un rapport historique.",
+    "reference": "https://www.php.net/supported-versions.php"
+  },
+  {
     "key": "tech.security.version_disclosure",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:285"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:290"
     ],
     "scorable": true,
     "weight": 3,
     "domain": "security",
     "owner": "tech",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Indices du HTML/en-têtes et motifs de bannières ; ne pas en déduire une version installée certaine.",
     "content": "specific-fr-en",
     "detection": {
@@ -1364,7 +1402,7 @@
     "weight": 0,
     "domain": "zap",
     "owner": "zap",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Identifiant de plugin, niveau de risque et éléments assainis disponibles ; une alerte passive ne démontre pas une exploitation.",
     "content": "explicit-fallback-fr-en",
     "detection": null,
@@ -1374,13 +1412,13 @@
   {
     "key": "zap.scan.result",
     "sources": [
-      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/zap/ZapModuleAnalyzer.java:104"
+      "apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/zap/ZapModuleAnalyzer.java:114"
     ],
     "scorable": false,
     "weight": 0,
     "domain": "zap",
     "owner": "zap",
-    "collectorContract": "analysis-measurements-v6",
+    "collectorContract": "analysis-measurements-v7",
     "availableFacts": "Identifiant de plugin, niveau de risque et éléments assainis disponibles ; une alerte passive ne démontre pas une exploitation.",
     "content": "explicit-fallback-fr-en",
     "detection": null,

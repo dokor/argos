@@ -1,0 +1,9 @@
+.inventory{border-top:1px solid var(--argos-border);padding-block:16px;min-width:0;
+  summary{font-size:16px;font-weight:600;cursor:pointer;min-height:44px;align-content:center;}
+  p{margin:12px 0;max-width:75ch;}
+  ul{padding:0;list-style:none;}li{display:grid;gap:5px;padding:16px 0;border-bottom:1px solid var(--argos-border);overflow-wrap:anywhere;}
+  li span,code{font-size:13px;color:var(--argos-text-muted);}
+  summary:focus-visible,button:focus-visible{outline:3px solid var(--argos-brand);outline-offset:3px;}}
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin-block:16px;
+  button{min-height:44px;border:1px solid var(--argos-border);border-radius:6px;padding:8px 12px;}
+  button[aria-pressed=true]{border-color:var(--argos-brand);color:var(--argos-brand);font-weight:600;}}

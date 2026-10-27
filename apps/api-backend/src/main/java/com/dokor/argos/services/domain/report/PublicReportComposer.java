@@ -60,14 +60,10 @@ public class PublicReportComposer {
 
         List<ReportDto.Issue> issues = buildIssues(internalReport);
 
-        // Un point peut relever de plusieurs catégories (ex. un check SSL alimente
-        // les catégories "security" ET "ssl", comme son score). On compte donc le
-        // point dans chacune de ses catégories pour rester cohérent avec les scores.
+        // Count each canonical finding once, in its primary business domain.
         Map<String, Long> issuesByCat = new HashMap<>();
         for (ReportDto.Issue issue : issues) {
-            for (String key : issue.categoryKeys()) {
-                issuesByCat.merge(key, 1L, Long::sum);
-            }
+            issuesByCat.merge(issue.categoryKey(), 1L, Long::sum);
         }
 
         List<ReportDto.CategoryScore> byCategoryWithCounts = byCategory.stream()
@@ -117,7 +113,8 @@ public class PublicReportComposer {
         ).withPageIdentity(ReportPageIdentity.from(internalReport.normalizedUrl(), internalReport.modules().stream()
             .filter(m -> "http".equals(m.id()) && m.data() != null)
             .map(m -> m.data().get("finalUrl")).filter(String.class::isInstance).map(String.class::cast)
-            .findFirst().orElse(null))).withMeasurements(ObservedMeasurements.from(internalReport));
+            .findFirst().orElse(null))).withMeasurements(ObservedMeasurements.from(internalReport))
+            .withDiagnostics(ReportDiagnostics.from(internalReport, issues));
     }
 
     private static ReportDto.ScoreCalculation calculation(AuditScoreReport score, Map<String, String> meta) {
@@ -152,6 +149,11 @@ public class PublicReportComposer {
 
     private static List<ReportDto.Issue> buildIssues(AuditReportJson internalReport) {
         List<ReportDto.Issue> issues = new ArrayList<>();
+        Set<String> unmeasured = new HashSet<>();
+        var coverage = internalReport.score() == null ? null : internalReport.score().coverage();
+        if (coverage != null && coverage.checks() != null) coverage.checks().stream()
+            .filter(check -> check.state() != com.dokor.argos.services.analysis.scoring.MeasurementCoverage.State.MEASURED)
+            .forEach(check -> unmeasured.add(check.key()));
 
         for (AuditModuleResult module : internalReport.modules()) {
             for (AuditCheckResult check : module.checks()) {
@@ -160,7 +162,7 @@ public class PublicReportComposer {
                 }
                 // Non-scorable checks (e.g. lighthouse.collect when unavailable) are service-level
                 // informational signals, not site issues the owner can fix exclude from issue list.
-                if (!check.scorable()) {
+                if (!check.scorable() || unmeasured.contains(check.key())) {
                     continue;
                 }
 
@@ -177,7 +179,7 @@ public class PublicReportComposer {
                     check.title() != null ? check.title() : check.key(),
                     check.message() != null ? check.message() : "Point à améliorer détecté.",
                     evidenceFrom(check),
-                    check.recommendation() != null ? check.recommendation() : "Corriger selon les bonnes pratiques.",
+                    check.recommendation() != null ? check.recommendation() : "",
                     ReportPriorityService.explicitEffort(check),
                     ReportPriorityService.explicitConfidence(check),
                     ReportEvidence.from(module.id(), check)
@@ -185,6 +187,11 @@ public class PublicReportComposer {
             }
         }
 
+        // One row per check, deterministic even if several collectors retain it.
+        Map<String, ReportDto.Issue> canonical = new LinkedHashMap<>();
+        for (var issue : issues) canonical.merge(issue.id(), issue,
+            (a, b) -> severityRank(a.severity()) <= severityRank(b.severity()) ? a : b);
+        issues = new ArrayList<>(canonical.values());
         // tri : critical > important > info
         issues.sort(Comparator.comparingInt(i -> severityRank(i.severity())));
         return issues;

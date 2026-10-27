@@ -13,10 +13,12 @@ vi.mock("./ReportIntroductionEditor",()=>({default:()=>null}));
 vi.mock("@/components/account/RunClaim",()=>({default:()=>null}));
 vi.mock("@/components/account/PublicReportHistory",()=>({default:()=>null}));
 const token="a".repeat(43),full=demoReport("fr"),summary={...full,access:"summary" as const,issues:full.issues.map(i=>({...i,evidence:undefined,recommendation:""}))};
-beforeEach(()=>{window.history.replaceState(null,"","/share/"+token);vi.mocked(accountFetch).mockReset();vi.stubGlobal("fetch",vi.fn().mockResolvedValue(Response.json({signedIn:false})));});
+beforeEach(()=>{window.history.replaceState(null,"","/share/"+token);vi.mocked(accountFetch).mockReset().mockResolvedValue({signedIn:false});});
 afterEach(()=>vi.unstubAllGlobals());
 it("keeps public and shared details gated and only offers summary PDF",()=>{
  render(<LangProvider><ReportPage params={{report:summary}} shared/></LangProvider>);
+ expect(screen.getAllByRole("term")[0]).not.toBeVisible();
+ fireEvent.click(screen.getByText("Mesures de chargement, ressources et erreurs"));
  expect(screen.getAllByRole("term")).toHaveLength(13);
  expect(screen.getByRole("link",{name:"English"})).toHaveAttribute("href","/en/share/"+token);
  expect(screen.getByRole("link",{name:"Créer mon compte"})).toHaveAttribute("href","/account/register?returnTo="+encodeURIComponent("/share/"+token));
@@ -32,7 +34,7 @@ it.each([false,true])("does not expose the private breadcrumb on a public or sha
  expect(screen.queryByRole("link",{name:"Mes sites"})).not.toBeInTheDocument();
 });
 it("loads shared details only through the authenticated endpoint",async()=>{
- vi.stubGlobal("fetch",vi.fn().mockResolvedValue(Response.json({signedIn:true})));vi.mocked(accountFetch).mockResolvedValue(full);
+ vi.mocked(accountFetch).mockImplementation(async path=>path==="session"?{signedIn:true}:full);
  render(<LangProvider><ReportPage params={{report:summary}} shared/></LangProvider>);
  await waitFor(()=>expect(accountFetch).toHaveBeenCalledWith("shared-reports/"+token,"GET",undefined,expect.any(AbortSignal)));
  await waitFor(()=>expect(screen.queryByRole("link",{name:"Créer mon compte"})).not.toBeInTheDocument());

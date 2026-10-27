@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
  * - se base sur signaux HTML + headers HTTP disponibles (si l'orchestrateur les fournit)
  * <p>
  * Le contexte enrichi par HTTP fournit les en-têtes et le HTML. L'orchestrateur
- * passe par DomainAnalysisService pour réutiliser le résultat en cache.
+ * relance la détection à chaque audit à partir de ce contexte, sans cache persistant.
  * <p>
  * Plus tard :
  * - intégrer Playwright (JS rendu) pour une détection plus fiable (Next/React/Angular etc.)
@@ -71,6 +71,7 @@ public class TechModuleAnalyzer {
     }
 
     private final NextJsDetectorService nextDetector;
+    private final PhpVersionAnalyzer phpAnalyzer = new PhpVersionAnalyzer();
 
     @Inject
     public TechModuleAnalyzer(NextJsDetectorService nextDetector) {
@@ -203,7 +204,7 @@ public class TechModuleAnalyzer {
             "cms=" + safe(cms.name) + " frontend=" + safe(frontend.name), data, checks);
     }
 
-    /** Recalculates response-specific checks on every run, including cache hits. */
+    /** Evaluates response-specific checks from this audit's HTTP snapshot. */
     public AuditModuleResult analyzeCurrentResponse(AuditContext context, AuditModuleResult stack, Logger logger) {
         long start = System.currentTimeMillis();
         String inputUrl = context.inputUrl();
@@ -218,6 +219,10 @@ public class TechModuleAnalyzer {
         boolean cloudflare = matchesAny(CLOUDFLARE_HINT_PATTERN, concat(headers));
         long durationMs = System.currentTimeMillis() - start;
         List<AuditCheckResult> checks = new ArrayList<>(stack.checks());
+        Object cmsData = stack.data().get("cms");
+        String cmsName = cmsData instanceof Map<?, ?> cms && cms.get("name") instanceof String name ? name : null;
+        var php = phpAnalyzer.analyze(headers, cmsName);
+        checks.addAll(php.checks());
         Map<String, Object> objectMap = new HashMap<>(Map.of());
         if (serverHeader != null) {
             objectMap.put("server", serverHeader);
@@ -316,6 +321,7 @@ public class TechModuleAnalyzer {
 
         String summary = stack.summary() + " cloudflare=" + cloudflare + " durationMs=" + durationMs;
         Map<String, Object> data = new LinkedHashMap<>(stack.data());
+        if (!php.data().isEmpty()) data.put("php", php.data());
         data.put("inputUrl", inputUrl);
         data.put("normalizedUrl", normalizedUrl);
         data.put("finalUrl", finalUrl);
@@ -323,7 +329,7 @@ public class TechModuleAnalyzer {
         data.put("cloudflare", cloudflare);
         data.put("serverHeader", serverHeader);
         data.put("xPoweredBy", poweredBy);
-        // Fresh for every final response, independently of the stack cache.
+        // Fresh for every final response.
         data.put("hosting", HostingDetector.detect(headers));
         data.put("durationMs", durationMs);
         data.put("partial", html == null || html.isBlank());

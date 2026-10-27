@@ -1,0 +1,81 @@
+name: Production session verification
+
+on:
+  pull_request:
+    paths: ['scripts/ops/**', '.github/workflows/production-sessions.yml']
+  workflow_dispatch:
+    inputs:
+      revision:
+        description: Exact application revision expected in api-backend and console-web
+        required: true
+        default: 05d1755b3a66884ffb42da146921123264855fcd
+        type: string
+      apply_24h:
+        description: Back up prod.conf and set absolute/idle limits to 24h if required
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.event_name == 'workflow_dispatch' && 'deploy-production' || format('session-ops-ci-{0}', github.ref) }}
+  queue: max
+  cancel-in-progress: false
+
+jobs:
+  tests:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24.21.0'
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: node --test scripts/ops/*.test.mjs
+      - run: node --check scripts/ops/production-sessions.mjs && node --check scripts/ops/session-browser.mjs
+      - run: javac --release 21 -d "$RUNNER_TEMP" scripts/ops/ArgosSessionSettingsProbe.java
+
+  production:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.repository == 'dokor/argos'
+    runs-on: self-hosted
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24.21.0'
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Verify effective settings and observe real ten-minute renewal
+        env:
+          EXPECTED_REVISION: ${{ inputs.revision }}
+          APPLY_24H: ${{ inputs.apply_24h }}
+          ARGOS_CI_EMAIL: ${{ secrets.ARGOS_CI_EMAIL }}
+          ARGOS_CI_PASSWORD: ${{ secrets.ARGOS_CI_PASSWORD }}
+        run: |
+          if [ "$APPLY_24H" = true ]; then
+            node scripts/ops/production-sessions.mjs --apply-24h
+          else
+            node scripts/ops/production-sessions.mjs
+          fi
+      - name: Retain duration and renewal evidence only
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: production-session-verification-${{ github.run_id }}-${{ github.run_attempt }}
+          path: outputs/production-sessions.json
+          if-no-files-found: error
+          retention-days: 14

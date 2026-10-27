@@ -48,7 +48,9 @@ Le démarrage applique les migrations : utiliser une base jetable pour les essai
   [configuration des comptes](../../docs/accounts/operations.md) pour JWT, SMTP,
   OAuth et origine autorisée.
 - `AHREFS_API_KEY` active l'enrichissement Domain Rating des nouveaux rapports,
-  mis en cache 24 h par domaine ; il n'affecte pas le score.
+  demandé à chaque publication sans cache ; il n'affecte pas le score.
+- Chaque audit recalcule ses mesures, y compris les technologies. Voir la
+  [politique de fraîcheur](../../docs/analysis/fresh-results.md).
 - La synthèse facultative est décrite dans le [guide du service](codex-summary/README.md).
   Son indisponibilité n'empêche pas la publication d'un rapport.
 

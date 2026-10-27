@@ -27,7 +27,8 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const text = readFileSync(new URL('apps/console-web/src/components/report/findingPlaybooks.ts', root), 'utf8').replaceAll('\r\n', '\n');
   const start = text.indexOf(' = [', text.indexOf('export const playbookGroups')) + 3;
   const groups = JSON.parse(text.slice(start, text.indexOf(';\n\nexport const rulePlaybooks', start)));
-  const rows = lighthouseInventory(config, pkg.version, new Set(groups.flatMap(g => g.keys)));
+  const { detailedRuleGuidance } = await import(new URL('apps/console-web/src/components/report/findingRuleGuidance.ts', root));
+  const rows = lighthouseInventory(config, pkg.version, new Set([...groups, ...detailedRuleGuidance].flatMap(g => g.keys)));
   const document = { note: 'Configured candidates, not observed production frequency. Actual emission also requires binary/numeric/metricSavings mode, score < 0.9 and selection within the first 12 diagnoses. Manual, informative, unavailable and passing results are not emitted.', rows };
   const output = new URL('docs/report/lighthouse-rule-inventory.json', root);
   const json = JSON.stringify(document, null, 2) + '\n';

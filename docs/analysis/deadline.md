@@ -12,10 +12,10 @@ checks without scoring infrastructure failure. Already obtained results are kept
 
 The same deadline is scoped onto every worker and caps each Java HTTP request;
 redirects share a 30-second cumulative cap, and polls cannot reset the global
-budget. SSL Labs prefers cached results and waits up to `ssl-labs.timeout` (90s
+budget. SSL Labs requests a fresh assessment and waits up to `ssl-labs.timeout` (90s
 by default), capped by the shared collection deadline. Polling follows the upstream
-recommendation: 5s during DNS, 10s during IN_PROGRESS. A cache miss can initiate an
-assessment even with `fromCache=on`; no call forces `startNew`. Pending results
+recommendation: 5s during DNS, 10s during IN_PROGRESS. Only the first request uses
+`startNew=on`; polls omit it, and no request uses `fromCache`. Pending results
 become unavailable with the last observed upstream status, distinct from HTTP 429.
 AI enrichment is optional, skipped with less than two seconds left, and its HTTP
 timeout consumes only the publication reserve. The final database commit is still

@@ -2,8 +2,8 @@ name: CI
 
 on:
   workflow_dispatch:
+  # Stacked PRs need the same checks before their base is retargeted to main.
   pull_request:
-    branches: [main]
   schedule:
     - cron: '0 4 * * *'
 
