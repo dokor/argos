@@ -9,7 +9,7 @@ beforeEach(() => { vi.useFakeTimers(); vi.mocked(renewAccountSession).mockReset(
 afterEach(() => vi.useRealTimers());
 
 it("renews on public pages, on return to the tab, and stops on unmount", async () => {
-  const view = render(<SessionRenewal />);
+  const view = render(<SessionRenewal enabled />);
   await act(async () => {});
   expect(renewAccountSession).toHaveBeenCalledOnce();
   await act(async () => { await vi.advanceTimersByTimeAsync(600000); });
@@ -26,7 +26,23 @@ it("renews on public pages, on return to the tab, and stops on unmount", async (
 
 it("retries transient errors without waiting another ten minutes", async () => {
   vi.mocked(renewAccountSession).mockRejectedValueOnce(new Error("offline"));
-  render(<SessionRenewal />);
+  render(<SessionRenewal enabled />);
   await act(async () => { await vi.advanceTimersByTimeAsync(30000); });
+  expect(renewAccountSession).toHaveBeenCalledTimes(2);
+});
+
+it("does not renew an anonymous visit on mount, focus, online or the periodic timer", async () => {
+  render(<SessionRenewal />);
+  await act(async () => { window.dispatchEvent(new Event("focus")); window.dispatchEvent(new Event("online")); await vi.advanceTimersByTimeAsync(1200000); });
+  expect(renewAccountSession).not.toHaveBeenCalled();
+});
+
+it("starts after login and stops after invalidation, even when initially anonymous", async () => {
+  render(<SessionRenewal />);
+  await act(async () => { window.dispatchEvent(new Event("argos-account-login")); });
+  expect(renewAccountSession).toHaveBeenCalledOnce();
+  await act(async () => { window.dispatchEvent(new Event("argos-account-invalid")); await vi.advanceTimersByTimeAsync(600000); window.dispatchEvent(new Event("focus")); });
+  expect(renewAccountSession).toHaveBeenCalledOnce();
+  await act(async () => { window.dispatchEvent(new Event("argos-account-login")); });
   expect(renewAccountSession).toHaveBeenCalledTimes(2);
 });

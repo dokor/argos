@@ -22,12 +22,19 @@ it("removes admin details on role change or revocation", () => {
 });
 it("resolves shared report access through the account profile and invalidates on logout", async () => {
   session.ready = false;
-  fetchMock.mockResolvedValue({ verified: true, admin: true });
+  fetchMock.mockResolvedValueOnce({ signedIn: true }).mockResolvedValue({ verified: true, admin: true });
   const { result } = renderHook(() => useIsAdmin());
   await waitFor(() => expect(result.current).toBe(true));
   expect(fetchMock).toHaveBeenCalledWith("me", "GET", undefined, expect.any(AbortSignal));
   act(() => window.dispatchEvent(new Event("argos-account-invalid")));
   expect(result.current).toBe(false);
+});
+it("reads only passive status for anonymous public report readers", async () => {
+  session.ready = false;
+  fetchMock.mockResolvedValue({ signedIn: false });
+  const { result } = renderHook(() => useIsAdmin());
+  await waitFor(() => expect(result.current).toBe(false));
+  expect(fetchMock).toHaveBeenCalledExactlyOnceWith("session", "GET", undefined, expect.any(AbortSignal));
 });
 it("fails closed on service errors and aborts on unmount", async () => {
   session.ready = false; fetchMock.mockRejectedValue(new Error("unavailable"));
@@ -37,8 +44,9 @@ it("fails closed on service errors and aborts on unmount", async () => {
 });
 it("ignores a pending admin response after logout", async () => {
   session.ready = false; let resolve!: (profile: {verified: boolean; admin: boolean}) => void;
-  fetchMock.mockImplementation(() => new Promise(done => { resolve = done; }));
+  fetchMock.mockResolvedValueOnce({ signedIn: true }).mockImplementationOnce(() => new Promise(done => { resolve = done; }));
   const { result } = renderHook(() => useIsAdmin());
+  await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
   act(() => window.dispatchEvent(new Event("argos-account-invalid")));
   await act(async () => resolve({ verified: true, admin: true }));
   expect(result.current).toBe(false);

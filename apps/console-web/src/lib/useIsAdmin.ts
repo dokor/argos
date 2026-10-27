@@ -15,8 +15,14 @@ export function useIsAdmin(): boolean | null {
       controller?.abort();
       const request = new AbortController();
       controller = request;
-      void accountFetch<AccountProfile>("me", "GET", undefined, request.signal)
-        .then(profile => { if (!request.signal.aborted) setIsAdmin(profile.verified && profile.admin === true); })
+      // Shared/public reports must not renew a session for an anonymous reader.
+      void accountFetch<{ signedIn: boolean }>("session", "GET", undefined, request.signal)
+        .then(async status => {
+          if (!status.signedIn || request.signal.aborted) return false;
+          const profile = await accountFetch<AccountProfile>("me", "GET", undefined, request.signal);
+          return profile.verified && profile.admin === true;
+        })
+        .then(admin => { if (!request.signal.aborted) setIsAdmin(admin); })
         .catch(() => { if (!request.signal.aborted) setIsAdmin(false); });
     };
     const invalidate = () => { controller?.abort(); setIsAdmin(false); };

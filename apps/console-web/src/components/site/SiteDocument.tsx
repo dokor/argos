@@ -1,12 +1,13 @@
 /* eslint-disable @next/next/no-head-element -- Shared root document for the French and English root layouts. */
 import type { Metadata, Viewport } from "next";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { Geist, Geist_Mono } from "next/font/google";
 import { LangProvider } from "@/lib/i18n/LangContext";
 import { ThemeProvider } from "@/lib/theme/ThemeContext";
 import ProductAnalytics from "@/components/analytics/ProductAnalytics";
 import ClientErrorLogger from "@/components/ClientErrorLogger";
 import SessionRenewal from "@/components/account/SessionRenewal";
+import { SESSION_COOKIE, RENEWAL_COOKIE } from "@/lib/account-proxy";
 import EasterEggs from "@/components/easter-eggs/EasterEggs";
 import fr from "@/lib/i18n/fr.json";
 import en from "@/lib/i18n/en.json";
@@ -123,6 +124,9 @@ export default async function SiteDocument({
 }>) {
   // Reading request headers opts both root layouts into dynamic rendering.
   const nonce = (await headers()).get("x-nonce") ?? undefined;
+  const credentials = await cookies();
+  // Only presence reaches the client; the backend remains authoritative.
+  const canRenew = Boolean(credentials.get(SESSION_COOKIE)?.value || credentials.get(RENEWAL_COOKIE)?.value);
   return (
     <html lang={lang} data-scroll-behavior="smooth">
       <head>
@@ -135,7 +139,7 @@ export default async function SiteDocument({
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <ClientErrorLogger />
-        <SessionRenewal />
+        <SessionRenewal enabled={canRenew} />
         <ThemeProvider>
           <LangProvider initialLang={lang}><ProductAnalytics />{children}<EasterEggs /></LangProvider>
         </ThemeProvider>

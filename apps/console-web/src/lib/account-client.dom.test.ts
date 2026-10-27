@@ -13,12 +13,35 @@ afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); });
 
 it("renews once before concurrent private requests and renews again after sleep", async () => {
   const { accountFetch } = await import("./account-client");
-  await Promise.all([accountFetch("me"), accountFetch("session"), accountFetch("sessions")]);
+  await Promise.all([accountFetch("me"), accountFetch("usage"), accountFetch("sessions")]);
   expect(fetchMock.mock.calls.filter(([url]) => url.endsWith("/auth/renew"))).toHaveLength(1);
   expect(fetchMock.mock.calls.map(([url]) => url).slice(0, 2)).toEqual(["/api/account/csrf", "/api/account/auth/renew"]);
   vi.setSystemTime(new Date("2026-10-27T21:00:00Z"));
   await accountFetch("me");
   expect(fetchMock.mock.calls.filter(([url]) => url.endsWith("/auth/renew"))).toHaveLength(2);
+});
+
+it.each([false, true])("reads public session status without CSRF or renewal traffic: signedIn=%s", async signedIn => {
+  const { accountFetch } = await import("./account-client");
+  fetchMock.mockImplementation(async (url, init) => {
+    expect(url).toBe("/api/account/session");
+    expect(init.method).toBe("GET");
+    expect(init.headers["X-Argos-CSRF"]).toBeUndefined();
+    return Response.json({ signedIn });
+  });
+  expect(await accountFetch("session")).toEqual({ signedIn });
+  vi.advanceTimersByTime(11 * 60 * 1000);
+  expect(await accountFetch("session")).toEqual({ signedIn });
+  expect(fetchMock).toHaveBeenCalledTimes(2);
+});
+
+it("still renews the next private request after a passive public session read", async () => {
+  const { accountFetch } = await import("./account-client");
+  await accountFetch("session");
+  await accountFetch("me");
+  expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
+    "/api/account/session", "/api/account/csrf", "/api/account/auth/renew", "/api/account/me",
+  ]);
 });
 
 it("retries a temporary renewal outage before sending private requests", async () => {
