@@ -76,7 +76,13 @@ try {
       assert.ok(process.env.REPORT_FIXTURE_SESSION,'Verified fixture session is supplied in memory');
       const denied=await page.request.get(`${base}/api/account/reports/${token}`);
       assert.equal(denied.status(),401,'Technical details require authentication');
-      await page.context().addCookies([{name:'argos_account',value:process.env.REPORT_FIXTURE_SESSION,url:base,httpOnly:true,sameSite:'Lax'}]);
+      const csrf='c'.repeat(43);
+      await page.context().addCookies([
+        {name:'argos_account',value:process.env.REPORT_FIXTURE_SESSION,url:base,httpOnly:true,sameSite:'Lax'},
+        {name:'argos_account_csrf',value:csrf,url:base,httpOnly:true,sameSite:'Lax'},
+      ]);
+      const renewed=await page.request.post(`${base}/api/account/auth/renew`,{data:{},headers:{Origin:base,'X-Argos-CSRF':csrf}});
+      assert.equal(renewed.status(),200,'Injected fixture session and its CSRF binding must support renewal');
       const detailedResponse=await page.request.get(`${base}/api/account/reports/${token}`);
       assert.equal(detailedResponse.status(),200);
       const detailed=await detailedResponse.json();

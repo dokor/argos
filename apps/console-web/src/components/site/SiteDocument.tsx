@@ -6,6 +6,7 @@ import { LangProvider } from "@/lib/i18n/LangProvider";
 import { ThemeProvider } from "@/lib/theme/ThemeContext";
 import ProductAnalytics from "@/components/analytics/ProductAnalytics";
 import ClientErrorLogger from "@/components/ClientErrorLogger";
+import SessionRenewal from "@/components/account/SessionRenewal";
 import EasterEggs from "@/components/easter-eggs/EasterEggs";
 import fr from "@/lib/i18n/fr.json";
 import en from "@/lib/i18n/en.json";
@@ -135,6 +136,7 @@ export default async function SiteDocument({
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <ClientErrorLogger />
+        <SessionRenewal />
         <ThemeProvider>
           <LangProvider initialLang={lang}><ProductAnalytics />{children}<EasterEggs /></LangProvider>
         </ThemeProvider>

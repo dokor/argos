@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
  * - se base sur signaux HTML + headers HTTP disponibles (si l'orchestrateur les fournit)
  * <p>
  * Le contexte enrichi par HTTP fournit les en-têtes et le HTML. L'orchestrateur
- * passe par DomainAnalysisService pour réutiliser le résultat en cache.
+ * relance la détection à chaque audit à partir de ce contexte, sans cache persistant.
  * <p>
  * Plus tard :
  * - intégrer Playwright (JS rendu) pour une détection plus fiable (Next/React/Angular etc.)
@@ -204,7 +204,7 @@ public class TechModuleAnalyzer {
             "cms=" + safe(cms.name) + " frontend=" + safe(frontend.name), data, checks);
     }
 
-    /** Recalculates response-specific checks on every run, including cache hits. */
+    /** Evaluates response-specific checks from this audit's HTTP snapshot. */
     public AuditModuleResult analyzeCurrentResponse(AuditContext context, AuditModuleResult stack, Logger logger) {
         long start = System.currentTimeMillis();
         String inputUrl = context.inputUrl();
@@ -329,7 +329,7 @@ public class TechModuleAnalyzer {
         data.put("cloudflare", cloudflare);
         data.put("serverHeader", serverHeader);
         data.put("xPoweredBy", poweredBy);
-        // Fresh for every final response, independently of the stack cache.
+        // Fresh for every final response.
         data.put("hosting", HostingDetector.detect(headers));
         data.put("durationMs", durationMs);
         data.put("partial", html == null || html.isBlank());

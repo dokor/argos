@@ -550,6 +550,226 @@ export const webTips: WebTip[] = [
       "fr": "Un score Lighthouse résume plusieurs métriques et peut varier entre deux exécutions ; examiner les mesures aide à comprendre l’écart.",
       "en": "A Lighthouse score combines several metrics and can vary between runs; inspecting measurements helps explain the difference."
     }
+  },
+  {
+    "id": "search-title-sources",
+    "category": "seo",
+    "active": true,
+    "sourceUrl": "https://developers.google.com/search/docs/appearance/title-link",
+    "verifiedAt": "2026-10-27",
+    "translations": {
+      "fr": "Le titre affiché par Google peut venir de la balise title, du titre principal ou d’autres textes de la page.",
+      "en": "The title shown by Google can come from the title element, the main heading or other text on the page."
+    }
+  },
+  {
+    "id": "structured-data-visible",
+    "category": "seo",
+    "active": true,
+    "sourceUrl": "https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data",
+    "verifiedAt": "2026-10-27",
+    "translations": {
+      "fr": "Les données structurées décrivent le contenu d’une page pour les moteurs ; elles doivent correspondre aux informations visibles.",
+      "en": "Structured data describes a page’s content for search engines; it should match the information visible to users."
+    }
+  },
+  {
+    "id": "hreflang-versions",
+    "category": "seo",
+    "active": true,
+    "sourceUrl": "https://developers.google.com/search/docs/specialty/international/localized-versions",
+    "verifiedAt": "2026-10-27",
+    "translations": {
+      "fr": "hreflang signale les versions linguistiques ou régionales d’une page pour aider Google à proposer la version adaptée.",
+      "en": "hreflang identifies a page’s language or regional versions to help Google offer the appropriate version."
+    }
+  },
+  {
+    "id": "crawlable-links",
+    "category": "seo",
+    "active": true,
+    "sourceUrl": "https://developers.google.com/search/docs/crawling-indexing/links-crawlable",
+    "verifiedAt": "2026-10-27",
+    "translations": {
+      "fr": "Pour découvrir une autre page, Google s’appuie généralement sur un lien HTML avec un attribut href ; un clic JavaScript seul ne suffit pas toujours.",
+      "en": "To discover another page, Google generally relies on an HTML link with an href attribute; a JavaScript click handler alone may not be enough."
+    }
+  },
+  {
+    "id": "offscreen-rendering",
+    "category": "performance",
+    "active": true,
+    "sourceUrl": "https://web.dev/articles/content-visibility",
+    "verifiedAt": "2026-10-27",
+    "translations": {
+      "fr": "content-visibility: auto peut différer le rendu d’une section hors écran tout en gardant son contenu accessible à la recherche dans la page.",
+      "en": "content-visibility: auto can defer rendering an off-screen section while keeping its content available to find-in-page search."
+    }
+  },
+  {
+    "id": "font-subsets",
+    "category": "performance",
+    "active": true,
+    "sourceUrl": "https://web.dev/articles/font-best-practices",
+    "verifiedAt": "2026-10-27",
+    "translations": {
+      "fr": "Une police peut contenir des milliers de caractères inutilisés. Des sous-ensembles adaptés aux langues du site réduisent le poids à télécharger.",
+      "en": "A font can contain thousands of unused characters. Subsets matched to the site’s languages reduce the download size."
+    }
+  },
+  {
+    "id": "font-preconnect",
+    "category": "performance",
+    "active": true,
+    "sourceUrl": "https://web.dev/articles/font-best-practices",
+    "verifiedAt": "2026-10-27",
+    "translations": {
+      "fr": "Pour une police hébergée sur un autre domaine, preconnect peut préparer la connexion avant que le navigateur demande le fichier.",
+      "en": "For a font hosted on another domain, preconnect can prepare the connection before the browser requests the file."
+    }
+  },
+  {
+    "id": "long-tasks-interaction",
+    "category": "performance",
+    "active": true,
+    "sourceUrl": "https://web.dev/articles/optimize-long-tasks",
+    "verifiedAt": "2026-10-27",
+    "translations": {
+      "fr": "Une longue tâche JavaScript peut retarder la réaction à un clic. Découper le travail laisse au navigateur des occasions de répondre.",
+      "en": "A long JavaScript task can delay the response to a click. Splitting the work gives the browser opportunities to respond."
+    }
+  },
+  {
+    "id": "subresource-integrity",
+    "category": "security",
+    "active": true,
+    "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Subresource_Integrity",
+    "verifiedAt": "2026-10-27",
+    "translations": {
+      "fr": "L’attribut integrity permet au navigateur de vérifier qu’un script ou une feuille de style téléchargés correspondent à l’empreinte attendue.",
+      "en": "The integrity attribute lets the browser check that a downloaded script or stylesheet matches the expected hash."
+    }
+  },
+  {
+    "id": "mixed-content",
+    "category": "security",
+    "active": true,
+    "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Mixed_content",
+    "verifiedAt": "2026-10-27",
+    "translations": {
+      "fr": "Une page HTTPS qui charge une ressource HTTP crée du contenu mixte : le navigateur peut bloquer la ressource ou tenter de la charger en HTTPS.",
+      "en": "An HTTPS page loading an HTTP resource creates mixed content: the browser may block the resource or try loading it over HTTPS."
+    }
+  },
+  {
+    "id": "content-type-nosniff",
+    "category": "security",
+    "active": true,
+    "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/X-Content-Type-Options",
+    "verifiedAt": "2026-10-27",
+    "translations": {
+      "fr": "Avec X-Content-Type-Options: nosniff, le navigateur bloque un script ou une feuille de style servis avec un type de contenu incompatible.",
+      "en": "With X-Content-Type-Options: nosniff, the browser blocks a script or stylesheet served with an incompatible content type."
+    }
+  },
+  {
+    "id": "cors-credentials",
+    "category": "security",
+    "active": true,
+    "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS",
+    "verifiedAt": "2026-10-27",
+    "translations": {
+      "fr": "Pour partager une réponse CORS à une requête avec cookies, le serveur doit autoriser une origine précise ; le joker * ne convient pas.",
+      "en": "To share a CORS response to a request with cookies, the server must allow a specific origin; the * wildcard cannot be used."
+    }
+  },
+  {
+    "id": "color-with-text",
+    "category": "a11y",
+    "active": true,
+    "sourceUrl": "https://www.w3.org/WAI/WCAG22/Understanding/use-of-color.html",
+    "verifiedAt": "2026-10-27",
+    "translations": {
+      "fr": "Une erreur signalée seulement en rouge peut passer inaperçue. Un texte ou un symbole permet aussi de la reconnaître sans distinguer la couleur.",
+      "en": "An error shown only in red can go unnoticed. Text or a symbol also makes it recognisable without distinguishing the colour."
+    }
+  },
+  {
+    "id": "page-language",
+    "category": "a11y",
+    "active": true,
+    "sourceUrl": "https://www.w3.org/WAI/WCAG22/Understanding/language-of-page.html",
+    "verifiedAt": "2026-10-27",
+    "translations": {
+      "fr": "Déclarer la langue principale d’une page aide les lecteurs d’écran à choisir une prononciation adaptée.",
+      "en": "Declaring a page’s main language helps screen readers choose an appropriate pronunciation."
+    }
+  },
+  {
+    "id": "captions-sounds",
+    "category": "a11y",
+    "active": true,
+    "sourceUrl": "https://www.w3.org/WAI/WCAG22/Understanding/captions-prerecorded.html",
+    "verifiedAt": "2026-10-27",
+    "translations": {
+      "fr": "Les sous-titres accessibles d’une vidéo transmettent les dialogues, mais aussi les sons utiles et l’identité des personnes qui parlent.",
+      "en": "Accessible video captions convey dialogue as well as meaningful sounds and the identity of speakers."
+    }
+  },
+  {
+    "id": "zoom-reflow",
+    "category": "a11y",
+    "active": true,
+    "sourceUrl": "https://www.w3.org/WAI/WCAG22/Understanding/reflow.html",
+    "verifiedAt": "2026-10-27",
+    "translations": {
+      "fr": "Un texte qui se réorganise quand on zoome évite de devoir faire défiler la page horizontalement pour lire chaque ligne.",
+      "en": "Text that reflows when zooming avoids the need to scroll the page horizontally to read each line."
+    }
+  },
+  {
+    "id": "form-autocomplete",
+    "category": "ux",
+    "active": true,
+    "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/autocomplete",
+    "verifiedAt": "2026-10-27",
+    "translations": {
+      "fr": "autocomplete peut préciser qu’un champ attend un nom, une adresse ou un e-mail pour aider le navigateur à proposer les bonnes informations.",
+      "en": "autocomplete can identify a field as expecting a name, address or email to help the browser suggest the right information."
+    }
+  },
+  {
+    "id": "mobile-inputmode",
+    "category": "ux",
+    "active": true,
+    "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/inputmode",
+    "verifiedAt": "2026-10-27",
+    "translations": {
+      "fr": "inputmode suggère un clavier adapté sur mobile, par exemple numérique ; cet attribut ne valide pas la valeur saisie.",
+      "en": "inputmode suggests a suitable mobile keyboard, such as a numeric one; this attribute does not validate the entered value."
+    }
+  },
+  {
+    "id": "descriptive-link-text",
+    "category": "ux",
+    "active": true,
+    "sourceUrl": "https://www.w3.org/WAI/WCAG22/Understanding/link-purpose-in-context.html",
+    "verifiedAt": "2026-10-27",
+    "translations": {
+      "fr": "Un lien nommé « Télécharger le guide » donne plus d’indications sur sa destination qu’un simple « Cliquez ici ».",
+      "en": "A link named “Download the guide” gives more information about its destination than a simple “Click here”."
+    }
+  },
+  {
+    "id": "reduced-motion-preference",
+    "category": "ux",
+    "active": true,
+    "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@media/prefers-reduced-motion",
+    "verifiedAt": "2026-10-27",
+    "translations": {
+      "fr": "prefers-reduced-motion permet à un site d’adapter ses animations quand l’utilisateur a demandé moins de mouvement dans son système.",
+      "en": "prefers-reduced-motion lets a site adapt its animations when the user has requested less motion in their system settings."
+    }
   }
 ];
 

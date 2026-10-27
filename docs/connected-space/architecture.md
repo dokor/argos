@@ -12,7 +12,7 @@ Java reste l’autorité des autorisations, quotas, transitions et agrégats.
 Réutiliser les services de compte, le normaliseur, le registre d’usage et le
 moteur d’audit, ses verrous et ses publications idempotentes. Le crawler et
 l’orchestrateur de lots sont des services distincts ; `DomainAnalysisService`
-actuel est un cache technologique, pas un futur lot renommé.
+relance la détection technologique pour chaque audit, sans cache partagé.
 
 ## ARC-02 — Modèle logique
 
