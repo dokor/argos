@@ -216,6 +216,12 @@ add(["lighthouse.audit.is-crawlable"],
 add(["tech.security.version_disclosure"],
   ["Des versions logicielles sont exposées", "Des bannières peuvent faciliter l’identification des logiciels ; elles ne prouvent pas une vulnérabilité."],
   ["Software versions are exposed", "Banners may help identify software; they do not prove a vulnerability."]);
+add(["tech.security.php_eol"],
+  ["La branche PHP exposée n’est plus maintenue", "Une branche en fin de support ne reçoit plus de correctifs de sécurité du projet PHP."],
+  ["The exposed PHP branch has reached end of life", "An end-of-life branch no longer receives security fixes from the PHP project."]);
+add(["tech.security.php_cves"],
+  ["La version PHP exposée correspond à des CVE connues", "Des avis PHP concernent cette version. Leur applicabilité dépend des extensions, de la configuration et des correctifs de l’hébergeur."],
+  ["The exposed PHP version matches known CVEs", "PHP advisories cover this version. Applicability depends on extensions, configuration and hosting-provider patches."]);
 add(["lighthouse.audit.lcp-discovery-insight"],
   ["La découverte de la ressource LCP est à examiner", "Une ressource découverte tardivement peut retarder l’affichage du contenu principal."],
   ["Review LCP resource discovery", "A late-discovered resource may delay the main content appearing."]);

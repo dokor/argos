@@ -13,6 +13,41 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 class TechModuleAnalyzerTest {
+    @Test void publishesPhpRisksAsSecurityFindingsWithoutAddingScoreWeight() {
+        var context = new AuditContext("https://example.com", "https://example.com", 0L)
+            .withHttpResult("https://example.com", 200, 10, List.of(), Map.of("x-powered-by", "PHP/8.1.33"),
+                "<link href='/wp-content/style.css'>");
+        var policy = new com.dokor.argos.services.analysis.scoring.DefaultScorePolicy();
+        var modules = new com.dokor.argos.services.analysis.scoring.ScoreEnricherService(policy)
+            .enrich(List.of(analyzer.analyze(context, LoggerFactory.getLogger("test"))));
+        var score = new com.dokor.argos.services.analysis.scoring.ScoreService(policy).compute(policy.version(), modules);
+        var internal = new com.dokor.argos.services.analysis.model.AuditReportJson(4,
+            context.inputUrl(), context.normalizedUrl(), java.time.Instant.now(), Map.of(), modules, score);
+        var report = new com.dokor.argos.services.domain.report.PublicReportComposer().compose(internal);
+        var phpIssues = report.issues().stream().filter(i -> i.id().startsWith("tech.security.php_")).toList();
+        assertEquals(2, phpIssues.size());
+        assertTrue(phpIssues.stream().allMatch(i -> i.categoryKey().equals("security")));
+        assertTrue(phpIssues.stream().allMatch(i -> i.structuredEvidence().details().stream()
+            .anyMatch(d -> d.key().equals("phpVersion") && d.text().equals("8.1.33"))));
+        assertTrue(modules.getFirst().checks().stream().filter(c -> c.key().startsWith("tech.security.php_"))
+            .allMatch(c -> c.scorable() && c.weight() == 0));
+    }
+
+    @Test void reassessesPhpUsingCurrentHeadersEvenWithACachedStack() {
+        var logger = LoggerFactory.getLogger("test");
+        var context = new AuditContext("https://example.com", "https://example.com", 0L)
+            .withHttpResult("https://example.com", 200, 10, List.of(), Map.of("x-powered-by", "PHP/7.4.33"),
+                "<link href='/wp-content/style.css'>");
+        var stack = analyzer.analyzeStack(context, logger);
+        assertFalse(stack.data().containsKey("php"));
+        assertTrue(stack.checks().stream().noneMatch(c -> c.key().startsWith("tech.security.php_")));
+        var current = context.withHttpResult("https://example.com", 200, 10, List.of(),
+            Map.of("x-powered-by", "PHP/8.5.12"), context.body());
+        var result = analyzer.analyzeCurrentResponse(current, stack, logger);
+        assertEquals("8.5.12", ((Map<?, ?>) result.data().get("php")).get("phpVersion"));
+        assertTrue(result.checks().stream().filter(c -> c.key().startsWith("tech.security.php_"))
+            .allMatch(c -> c.status() == AuditStatus.PASS));
+    }
 
     // NextJsDetectorService est un détecteur pur (déterministe, sans dépendance) :
     // on utilise une vraie instance plutôt qu'un mock, qui renverrait null sur detect()

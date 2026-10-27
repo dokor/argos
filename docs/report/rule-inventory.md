@@ -70,14 +70,16 @@ Les littéraux sont inventoriés de manière conservatrice, y compris contrôles
 | ssl.protocols.legacy_disabled | ssl | 3 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:103 |
 | ssl.protocols.tls12 | ssl | 2 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:102 |
 | ssl.protocols.tls13 | ssl | 2 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:101 |
-| tech.analysis.duration_ms | tech | 0 | explicit-fallback-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:304 |
-| tech.backend.hints | tech | 0 | explicit-fallback-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:234 |
-| tech.cdn.cloudflare | tech | 0 | explicit-fallback-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:249 |
-| tech.cms | tech | 0 | explicit-fallback-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:130 |
+| tech.analysis.duration_ms | tech | 0 | explicit-fallback-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:309 |
+| tech.backend.hints | tech | 0 | explicit-fallback-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:239 |
+| tech.cdn.cloudflare | tech | 0 | explicit-fallback-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:254 |
+| tech.cms | tech | 0 | explicit-fallback-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:131 |
 | tech.collect | tech | 0 | explicit-fallback-fr-en | Availability stub from orchestrator |
-| tech.frontend.framework | tech | 0 | explicit-fallback-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:145 |
-| tech.frontend.nextjs | tech | 0 | explicit-fallback-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:175 |
-| tech.http.server_header | tech | 0 | explicit-fallback-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:264 |
-| tech.security.version_disclosure | tech | 3 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:285 |
+| tech.frontend.framework | tech | 0 | explicit-fallback-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:146 |
+| tech.frontend.nextjs | tech | 0 | explicit-fallback-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:176 |
+| tech.http.server_header | tech | 0 | explicit-fallback-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:269 |
+| tech.security.php_cves | tech | 0 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/PhpVersionAnalyzer.java:17 |
+| tech.security.php_eol | tech | 0 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/PhpVersionAnalyzer.java:16 |
+| tech.security.version_disclosure | tech | 3 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:290 |
 | zap.collect | zap | 0 | explicit-fallback-fr-en | Availability stub from orchestrator |
 | zap.scan.result | zap | 0 | explicit-fallback-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/zap/ZapModuleAnalyzer.java:114 |

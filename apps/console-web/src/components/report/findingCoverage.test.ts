@@ -7,6 +7,23 @@ import { expectsScalarMeasurement, findingExplanation } from './findingExplanati
 import type { Issue } from './types';
 
 const issue: Issue = { severity: 'important', title: 'Source title', impact: '', recommendation: '', confidence: 'HIGH' };
+it('shows the observed PHP version and CVEs with localized remedies and no claim of exploitability', () => {
+  for (const lang of ['fr', 'en'] as const) {
+    const structuredEvidence = { source: 'tech', details: [
+      { key: 'phpVersion', text: '8.2.34' }, { key: 'cves', text: '[CVE-2026-109618]' },
+      { key: 'advisoriesVerifiedAt', text: '2026-10-27' }, { key: 'responseHeader', text: 'x-powered-by' },
+    ] };
+    const content = findingContent({ ...issue, id: 'tech.security.php_cves', structuredEvidence }, lang);
+    expect(content.title).toContain('PHP 8.2.34');
+    expect(content.observation).toContain('CVE-2026-109618');
+    expect(content.recommendation).toContain(lang === 'fr' ? 'hébergement' : 'hosting');
+    expect(content.missingInformation).toBe('');
+    expect(findingExplanation({ ...issue, id: 'tech.security.php_cves', structuredEvidence }, lang).methodNote).toContain('2026-10-27');
+    const eol = findingContent({ ...issue, id: 'tech.security.php_eol', structuredEvidence }, lang);
+    expect(eol.title).toContain('PHP 8.2.34');
+    expect(eol.observation).toContain(lang === 'fr' ? 'plus maintenue' : 'no longer supported');
+  }
+});
 it('covers every potentially publishable rule of the pinned Lighthouse configuration in both languages', () => {
   for (const id of Object.keys(lighthouse.audits)) for (const lang of ['fr', 'en'] as const) {
     const key = `lighthouse.audit.${id}`;
