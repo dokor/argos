@@ -51,6 +51,7 @@ class ScorePolicyContractTest {
             Set.of(
                 "tech.cms", "tech.frontend.framework", "tech.frontend.nextjs", "tech.backend.hints",
                 "tech.cdn.cloudflare", "tech.http.server_header", "tech.security.version_disclosure",
+                "tech.security.php_eol", "tech.security.php_cves",
                 "tech.collect", "tech.analysis.duration_ms"
             )
         );

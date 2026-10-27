@@ -33,18 +33,22 @@ Avant de diagnostiquer une panne fournisseur ou de modifier un délai, consulter
 [les codes de diagnostic et la supervision](security-collector-diagnostics.md).
 
 
-L'API `analyze?fromCache=on` rend un résultat en cache, ou peut démarrer une analyse
-si le cache manque. SSL Labs indique que les analyses prennent généralement au moins
+Le client demande une analyse fraîche avec `startNew=on` sur le premier appel
+uniquement. Les sondages suivants omettent ce paramètre pour ne pas relancer
+l'analyse en boucle ; aucun appel n'utilise `fromCache`. SSL Labs indique que les
+analyses prennent généralement au moins
 60s. Le client attend maintenant jusqu'à `ssl-labs.timeout=90s`, toujours limité par
 `audit.timeout` (120s par défaut). Les sondages sont espacés de 5s en DNS et de 10s
 en IN_PROGRESS. Cela peut allonger un audit sans cache ; aucune durée de 20–30s n'est
 garantie dans ce cas. Une analyse encore en cours produit un module indisponible,
 non scoré, sans pénaliser le site. Les logs indiquent le statut, le nombre de sondages
 et le budget restant, et distinguent une analyse en cours d'un HTTP 429, d'une erreur
-de transport ou d'un ERROR amont. Aucun `startNew` n'est forcé.
+de transport ou d'un ERROR amont. Les budgets et les protections SSRF restent actifs.
 
 Un résultat SSL Labs READY ultérieur ne modifie pas rétroactivement un rapport déjà
-publié ; un nouvel audit peut bénéficier du cache. Le dossier V1/rollback V7 reste
+publié ; un nouvel audit demande une nouvelle mesure. SSL Labs peut toutefois
+retourner une analyse déjà en cours pour le même hôte, selon son contrat API.
+Voir la [politique de fraîcheur](fresh-results.md). Le dossier V1/rollback V7 reste
 applicable : ne pas remettre un ancien binaire incompatible avec le schéma migré.
 
 Références : [API SSL Labs v3](https://github.com/ssllabs/ssllabs-scan/blob/master/ssllabs-api-docs-v3.md),

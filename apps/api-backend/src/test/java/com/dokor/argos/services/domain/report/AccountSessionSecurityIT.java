@@ -44,7 +44,8 @@ class AccountSessionSecurityIT extends MariaDbReportFixture {
     void sessionRegistry() {
         clock = new MutableClock();
         settings = new AccountSettings(ConfigFactory.parseMap(Map.of(
-                "account.enabled", true, "account.jwt-secret", "s".repeat(64))));
+                "account.enabled", true, "account.jwt-secret", "s".repeat(64),
+                "account.idle-ttl", "30m")));
         dao = new AccountDao(new TransactionManagerQuerydsl(source, new Configuration(MySQLTemplates.DEFAULT)));
         signer = new AccountSessionSigner(settings, mapper, clock);
         sessions = new AccountSessionService(dao, signer, tokens, settings, clock);
@@ -108,7 +109,7 @@ class AccountSessionSecurityIT extends MariaDbReportFixture {
     void businessActivityMovesOnlyTheIdleDeadlineAndNeverTheAbsoluteDeadline() {
         Instant absolute = START.plus(settings.absoluteTtl());
         String current = issued.jwt();
-        for (int minute = 10; minute < 720; minute += 10) {
+        for (int minute = 10; minute < settings.absoluteTtl().toMinutes(); minute += 10) {
             clock.now = START.plusSeconds(minute * 60L);
             sessions.with(bearer(current), null, true, true, (ctx, c) -> null);
             current = sessions.renew(bearer(current), CSRF);
@@ -153,6 +154,20 @@ class AccountSessionSecurityIT extends MariaDbReportFixture {
     }
 
     enum Invalidation { LOGOUT, RESET, ARCHIVE }
+
+    @Test
+    void renewalCredentialResumesExpiredAccessWithoutMovingRegistryDeadlines() {
+        String renewal = sessions.renewal(issued.context());
+        var before = stored();
+        clock.now = START.plus(settings.jwtTtl());
+        assertNull(signer.parseSession(issued.jwt(), ArgosWebSession.class));
+        var resumed = sessions.renew(null, renewal, CSRF);
+        assertAccepted(resumed.jwt());
+        assertUnchanged(before, stored());
+        revoke(resumed.jwt());
+        assertEquals(401, assertThrows(AccountError.class,
+                () -> sessions.renew(null, renewal, CSRF)).getResponse().getStatus());
+    }
 
     @ParameterizedTest
     @EnumSource(Invalidation.class)

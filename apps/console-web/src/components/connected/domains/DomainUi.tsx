@@ -10,6 +10,7 @@ import { EmptyState, StatusBadge, DataTable } from "../Primitives";
 import s from "../Connected.module.scss";
 import d from "./Domains.module.scss";
 import { compactUrl } from "../compactCopy";
+import { findingAnchor } from "@/components/report/reportModel";
 export function useDomainText() {
   const { t, lang } = useLang();
   return { c: t.domainPage, lang };
@@ -147,15 +148,17 @@ export function Pagination({
 export function ReportLink({
   page,
   returnTo,
+  ruleKey,
 }: {
   page: PageResult;
   returnTo: string;
+  ruleKey?: string;
 }) {
   const { c } = useDomainText();
   return (
     <Link
       className={d.link}
-      href={`/account/runs/${page.runId}?returnTo=${encodeURIComponent(returnTo)}`}
+      href={`/account/runs/${page.runId}?returnTo=${encodeURIComponent(returnTo)}${ruleKey && page.reportAvailable ? `&view=technical#${findingAnchor(ruleKey)}` : ""}`}
     >
       {page.reportAvailable ? c.diagnostic : c.details}
       <span className={d.srOnly}> — {page.normalizedUrl}</span>
@@ -201,10 +204,12 @@ export function PageTable({
   pages,
   returnTo,
   caption,
+  ruleKey,
 }: {
   pages: readonly PageResult[];
   returnTo: string;
   caption?: string;
+  ruleKey?: string;
 }) {
   const { c } = useDomainText();
   return pages.length ? (
@@ -245,7 +250,7 @@ export function PageTable({
               </p>
             </td>
             <td>
-              <ReportLink page={page} returnTo={returnTo} />
+              <ReportLink page={page} returnTo={returnTo} ruleKey={ruleKey} />
               <details className={d.tableDetails}>
                 <summary>{c.modules}</summary>
                 <ul>

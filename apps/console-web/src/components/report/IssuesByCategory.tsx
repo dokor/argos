@@ -35,12 +35,14 @@ export default function IssuesByCategory({ report, model = buildReportModel(repo
   const ti = t.report.issuesByCategory;
   const catInfo = t.report.categoryInfo as Record<string, string>;
   const [filter, setFilter] = React.useState<Filter>("all");
+  const [search, setSearch] = React.useState("");
 
   const [activeSelection, setActiveSelection] = React.useState(selection);
   const effectiveFilter = severity ?? (selection && activeSelection !== selection ? "all" : filter);
   if (selection && activeSelection !== selection) {
     setActiveSelection(selection);
     setFilter("all");
+    setSearch("");
   }
   React.useEffect(() => {
     if (!selection) return;
@@ -54,7 +56,13 @@ export default function IssuesByCategory({ report, model = buildReportModel(repo
     }
   }, [selection, model]);
   const domains = t.report.priorityCards.domains as Record<string, string>;
-  const visibleCount = model.findings.filter(finding => (domain === "all" || finding.domain === domain) && (effectiveFilter === "all" || finding.issue.severity === effectiveFilter)).length;
+  const matches = (finding: ReportModel["findings"][number]) => {
+    const content = findingContent(finding.issue, lang);
+    return [content.title, content.observation, finding.key, finding.issue.evidence,
+      ...(finding.issue.structuredEvidence?.observed?.items.flatMap(item => [item.origin, item.resourcePath, item.selector]) ?? [])]
+      .filter(Boolean).join(" ").toLocaleLowerCase(lang).includes(search.trim().toLocaleLowerCase(lang));
+  };
+  const visibleCount = model.findings.filter(finding => (domain === "all" || finding.domain === domain) && (effectiveFilter === "all" || finding.issue.severity === effectiveFilter) && matches(finding)).length;
 
   const FILTERS: { key: Filter; label: string }[] = [
     { key: "all",       label: ti.filterAll },
@@ -73,6 +81,8 @@ export default function IssuesByCategory({ report, model = buildReportModel(repo
 
       {/* Sticky filter bar */}
       <div className={s.filterBar}>
+        <div className={s.search}><label htmlFor="report-finding-search">{lang==="fr"?"Rechercher un problème ou une ressource":"Find a problem or resource"}</label>
+          <input type="search" id="report-finding-search" value={search} onChange={event=>setSearch(event.target.value)}/></div>
         {onFilterChange && <div className={s.domainFilter}><label htmlFor="report-domain-filter">{copy.domain}</label>
           <select id="report-domain-filter" value={domain} onChange={event => onFilterChange(event.target.value, effectiveFilter)}>
             <option value="all">{copy.allDomains}</option>
@@ -96,12 +106,13 @@ export default function IssuesByCategory({ report, model = buildReportModel(repo
 
       <div className={s.resultsBar}>
         <p className={s.resultCount} role="status">{(visibleCount === 1 ? ti.resultCountOne : ti.resultCount).replace("{n}", String(visibleCount)).replace("{total}", String(model.counts.total))}</p>
-        {visibleCount === 0 && model.counts.total > 0 && onFilterChange && <button className={s.filterBtn} type="button" onClick={() => onFilterChange("all", "all")}>{copy.clear}</button>}
+        {visibleCount === 0 && model.counts.total > 0 && <button className={s.filterBtn} type="button" onClick={() => {setSearch("");setFilter("all");onFilterChange?.("all", "all");}}>{copy.clear}</button>}
       </div>
 
       {/* Categories */}
-      {model.groups.filter(group => (domain === "all" || group.key === domain) && (group.key !== "unknown" || group.findings.length > 0)).map((cat) => {
-        const issues = cat.findings.filter(finding => effectiveFilter === "all" || finding.issue.severity === effectiveFilter)
+      {model.groups.filter(group => (domain === "all" || group.key === domain) && (group.key !== "unknown" || group.findings.length > 0)
+        && (!(search.trim() || effectiveFilter !== "all") || group.findings.some(finding => matches(finding) && (effectiveFilter === "all" || finding.issue.severity === effectiveFilter)))).map((cat) => {
+        const issues = cat.findings.filter(finding => (effectiveFilter === "all" || finding.issue.severity === effectiveFilter) && matches(finding))
           .slice().sort((a, b) => sevWeight(a.issue.severity) - sevWeight(b.issue.severity) || (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
         const sc = domainScore(cat.score?.score, cat.key, report.scores.coverage);
         const chip = sc === undefined ? {fg: "var(--argos-text-muted)", bg: "var(--argos-surface-2)"} : scoreChipTheme(sc / 100);
@@ -129,7 +140,9 @@ export default function IssuesByCategory({ report, model = buildReportModel(repo
 
             <div className={s.issueList}>
               {issues.length === 0 ? (
-                <p className={s.noIssues}>{ti.noIssues}</p>
+                <p className={s.noIssues}>{search || effectiveFilter !== "all"
+                  ? (lang==="fr"?"Aucun résultat avec ces filtres.":"No results match these filters.")
+                  : sc === undefined ? (lang==="fr"?"Domaine non évalué : aucun résultat ne permet de conclure.":"Domain not evaluated: there is no result to draw a conclusion from.") : ti.noIssues}</p>
               ) : (
                 issues.map((finding) => {
                   const { issue } = finding;
@@ -150,7 +163,7 @@ export default function IssuesByCategory({ report, model = buildReportModel(repo
                             {source && <span>{source}</span>}
                           </span>
                           <span className={s.issueTitle}>{content.title}</span>
-                          <span className={s.issueImpact}>{content.impact}</span>
+                          <span className={s.issueImpact}>{content.observation}</span>
                           <span className={s.issueQualification}>{content.qualification}
                             {(!issue.confidence || issue.confidence === "UNKNOWN") && ` · ${copy.unknownConfidence}`}
                           </span>
@@ -158,7 +171,7 @@ export default function IssuesByCategory({ report, model = buildReportModel(repo
                         <span className={s.chevron} aria-hidden="true">▾</span>
                       </summary>
 
-                      <FindingDetails finding={finding} />
+                      <FindingDetails finding={finding} pageUrl={report.pageIdentity?.destination || report.pageIdentity?.requested || report.url} />
                       <div className={s.issueFooter}>
                         <span>{copy.findingQuestions.severityProvenance}</span>
                         {issue.id && <ReportFeedback findingKey={issue.id} />}

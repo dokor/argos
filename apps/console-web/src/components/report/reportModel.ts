@@ -12,6 +12,11 @@ export type Finding = {
 };
 export type FindingSelection = { key: string; request: number };
 
+/** Stable across page reports and their domain/batch links, including historical reports. */
+export function findingAnchor(key: string) {
+  return `finding-${Array.from(key).map(char => char.codePointAt(0)!.toString(16)).join("-")}`;
+}
+
 function businessDomain(key?: string | null): BusinessDomain | undefined {
   return BUSINESS_DOMAINS.find(domain => domain === key);
 }
@@ -47,7 +52,7 @@ export function buildReportModel(report: Report) {
       continue;
     }
     const finding: Finding = {
-      key, anchor: `finding-${Array.from(key).map(char => char.codePointAt(0)!.toString(16)).join("-")}`, domain: findingDomain(issue),
+      key, anchor: findingAnchor(key), domain: findingDomain(issue),
       issue, sources: [...new Set(sources(issue))],
     };
     byKey.set(key, finding);

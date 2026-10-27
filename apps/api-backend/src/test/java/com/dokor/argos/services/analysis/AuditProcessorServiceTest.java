@@ -342,7 +342,7 @@ class AuditProcessorServiceTest {
             when(runtime.analyze(any(), any())).thenReturn(result("runtime"));
             when(lighthouse.analyze(any(), any())).thenReturn(result("lighthouse"));
             when(zap.analyze(any(), any())).thenReturn(result("zap"));
-            when(domains.getOrRunTechAnalysis(any(), any())).thenReturn(result("tech"));
+            when(domains.runFreshTechAnalysis(any(), any())).thenReturn(result("tech"));
             when(observatory.analyze(any(), any())).thenReturn(result("observatory"));
             when(ssl.analyze(any(), any())).thenReturn(result("ssl"));
             when(merger.merge(anyList())).thenAnswer(call -> call.getArgument(0));
@@ -368,7 +368,7 @@ class AuditProcessorServiceTest {
                 order.verify(observatory).analyze(argThat(ctx -> "<p>fixture</p>".equals(ctx.body())), any());
                 order.verify(ssl).analyze(argThat(ctx -> "https://example.com/final".equals(ctx.finalUrl())), any());
                 order.verify(zap).analyze(any(), any());
-                order.verify(domains).getOrRunTechAnalysis(any(), any());
+                order.verify(domains).runFreshTechAnalysis(any(), any());
                 var report = ArgumentCaptor.forClass(AuditReportJson.class);
                 verify(publisher).completeAndPublish(eq(1L), any(), report.capture(), anyString(), nullable(String.class));
                 assertEquals("1", report.getValue().meta().get("maxConcurrentModules"));
@@ -581,7 +581,7 @@ class AuditProcessorServiceTest {
                     assertEquals("<p>fixture</p>", context.body());
                     release.countDown(); return result("html");
                 });
-                when(domains.getOrRunTechAnalysis(any(), any())).thenAnswer(call -> {
+                when(domains.runFreshTechAnalysis(any(), any())).thenAnswer(call -> {
                     var context = (AuditContext) call.getArgument(0);
                     assertEquals("https://example.com/final", context.finalUrl());
                     assertEquals("<p>fixture</p>", context.body());

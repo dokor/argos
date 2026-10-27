@@ -11,17 +11,19 @@ ni un cookie d'administration présenté par le navigateur n'accorde de droits.
 |---|---|
 | JWT | Signer Plume, issuer/audience `argos-account`, usage `account`, `uid`, `sid`, expiration obligatoires pour authentifier une requête |
 | Durée du JWT | 15 minutes ; expiration exclusive, aucune dérive tolérée |
-| Renouvellement | POST explicite avant expiration, à 10 minutes côté interface ; session courante, origine et CSRF requis |
-| Inactivité | 30 minutes depuis la dernière activité métier ; le renouvellement ne la modifie pas |
-| Durée absolue | 12 heures depuis la création ; ni activité ni renouvellement ne la prolongent |
+| Renouvellement | POST automatique à 10 minutes sur tout le site, avant une requête privée et à la reprise d'un onglet ; origine, CSRF et registre valide requis |
+| Preuve de renouvellement | JWT d'usage `account-renewal`, expiration fixée à celle du registre ; cookie HttpOnly `argos_account_renewal`, inutilisable pour les lectures et mutations métier |
+| Inactivité | 24 heures par défaut depuis la dernière activité métier ; le renouvellement ne la modifie pas |
+| Durée absolue | 24 heures par défaut depuis la création ; ni activité ni renouvellement ne la prolongent |
 | Réauthentification récente | 5 minutes ; un renouvellement n'est pas une preuve récente |
 | Chevauchement | Les JWT précédents restent acceptés jusqu'à leur expiration, avec le même registre serveur révocable |
 | Fingerprint Plume | Désactivé ; aucun cookie fingerprint n'est attendu. La liaison CSRF au navigateur reste obligatoire |
 | Stockage | Cookie `argos_account`, HttpOnly, Path=/, SameSite=Lax, Secure en HTTPS ; aucun JWT dans la réponse JSON du BFF ni en DB |
 | Révocation | Compte puis session verrouillés dans la transaction ; déconnexion, reset, révocation et archivage prévalent sur tout JWT signé, même renouvelé en course |
 
-À l'égalité de l'échéance, l'accès est refusé. Un JWT expiré exige une nouvelle
-connexion. Les droits et l'état du compte sont relus en DB : les claims ne
+À l'égalité de l'échéance, l'accès est refusé. Un JWT d'accès expiré est refusé sur
+les routes privées ; seule la preuve de renouvellement peut en obtenir un nouveau,
+tant que le registre est valide. Les droits et l'état du compte sont relus en DB : les claims ne
 transportent aucun rôle ni offre faisant autorité. Une nouvelle authentification
 crée une nouvelle session ; les identités et sessions des autres navigateurs
 restent distinctes et révocables.
@@ -52,7 +54,7 @@ refusés sur toutes les opérations authentifiées, renouvellement compris.
 | PATCH `/account/me` | Vérifié, origine + CSRF ; seul displayName est modifiable |
 | POST `/account/auth/confirm-email` | Session valide, origine + CSRF ; preuve Argos obligatoire avant activation |
 | POST `/account/auth/reauth` | Session valide, origine + CSRF ; mot de passe existant ou code email lié à cette session |
-| POST `/account/auth/renew` | Session valide, origine + CSRF ; aucun déplacement des limites serveur |
+| POST `/account/auth/renew` | JWT d'accès valide ou preuve de renouvellement dédiée, registre valide, origine + CSRF ; aucun déplacement des limites serveur |
 | POST `/account/auth/logout` | Session valide, origine + CSRF ; révocation serveur |
 | POST `/account/me/archive` | Session valide, origine + CSRF, confirmation et réauthentification récente ; y compris PENDING |
 | GET `/account/sessions`, GET `/account/methods` | Vérifié, ressources du compte courant uniquement |

@@ -226,9 +226,7 @@ class ControlledAuditE2eIT extends MariaDbReportFixture {
                         new SslLabsModuleAnalyzer(ssl),
                         new ZapModuleAnalyzer(zap),
                         new DomainAnalysisService(
-                                new DomainAnalysisDao(tx),
-                                new TechModuleAnalyzer(new NextJsDetectorService()),
-                                mapper),
+                                new TechModuleAnalyzer(new NextJsDetectorService())),
                         new CheckMergerService(),
                         new ScoreEnricherService(policy),
                         new ScoreService(policy),

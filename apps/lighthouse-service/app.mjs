@@ -87,7 +87,7 @@ export function createLighthouseServer({ analyze, log = () => {}, maxConcurrency
       const safe = redactDiagnostics(result.lhr);
       for (const [id, audit] of Object.entries(result.lhr.audits ?? {})) {
         if (safe.audits?.[id] && typeof audit === 'object' && audit !== null)
-          safe.audits[id].observedEvidence = lighthouseEvidence(audit);
+          safe.audits[id].observedEvidence = lighthouseEvidence(audit, result.lhr.mainDocumentUrl ?? result.lhr.finalUrl, id);
       }
       res.end(JSON.stringify(safe));
     } catch (error) {

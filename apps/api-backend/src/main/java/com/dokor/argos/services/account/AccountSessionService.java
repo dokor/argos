@@ -43,6 +43,11 @@ public class AccountSessionService {
         if (authorization == null || !authorization.startsWith("Bearer "))
             throw AccountError.unauthorized();
         var claim = signer.parseSession(authorization.substring(7), ArgosWebSession.class);
+        return require(claim, csrf, verified, activity, c);
+    }
+
+    private Context require(
+            ArgosWebSession claim, String csrf, boolean verified, boolean activity, Connection c) {
         if (claim == null || claim.uid() == null || claim.sid() == null)
             throw AccountError.unauthorized();
         var user = dao.user(claim.uid(), c, true);
@@ -105,6 +110,23 @@ public class AccountSessionService {
                 false,
                 false,
                 (context, c) -> signer.issue(context.user().getId(), context.session().getId()));
+    }
+
+    public Issued renew(String auth, String renewal, String csrf) {
+        return dao.transaction(c -> {
+            Context context = renewal == null
+                    ? require(auth, csrf, false, false, c)
+                    : require(signer.parseRenewal(renewal), csrf, false, false, c);
+            return new Issued(signer.issue(context.user().getId(), context.session().getId()), context);
+        });
+    }
+
+    public String renewal(Context context) {
+        return signer.issueRenewal(context.user().getId(), context.session().getId(), context.session().getExpiresAt());
+    }
+
+    public String renewal(String auth) {
+        return with(auth, null, false, false, (context, c) -> renewal(context));
     }
 
     public void revokeAll(long user, Long except, Connection c) {

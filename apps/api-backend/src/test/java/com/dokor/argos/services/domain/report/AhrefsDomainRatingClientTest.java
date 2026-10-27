@@ -20,11 +20,12 @@ class AhrefsDomainRatingClientTest {
     private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-10-06T12:00:00Z"), ZoneOffset.UTC);
 
     @Test
-    void fetchesAndCachesValidRatingWithBearerKey() throws Exception {
+    void fetchesUpdatedRatingForEveryReportWithBearerKey() throws Exception {
         HttpClient http = mock(HttpClient.class);
         @SuppressWarnings("unchecked") HttpResponse<String> response = mock(HttpResponse.class);
         when(response.statusCode()).thenReturn(200);
-        when(response.body()).thenReturn("{\"domain_rating\":{\"domain_rating\":42.4}}");
+        when(response.body()).thenReturn("{\"domain_rating\":{\"domain_rating\":42.4}}",
+            "{\"domain_rating\":{\"domain_rating\":43.1}}");
         when(http.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(response);
         var client = new AhrefsDomainRatingClient(http, new ObjectMapper(), "secret", ENDPOINT, CLOCK);
 
@@ -32,9 +33,9 @@ class AhrefsDomainRatingClientTest {
         assertNotNull(first);
         assertEquals(42.4, first.score());
         assertEquals("2026-10-06T12:00:00Z", first.fetchedAt());
-        assertSame(first, client.get("example.com"));
+        assertEquals(43.1, client.get("example.com").score());
         var request = org.mockito.ArgumentCaptor.forClass(HttpRequest.class);
-        verify(http, times(1)).send(request.capture(), any(HttpResponse.BodyHandler.class));
+        verify(http, times(2)).send(request.capture(), any(HttpResponse.BodyHandler.class));
         assertEquals("https://api.ahrefs.com/v3/public/domain-rating-free?target=example.com",
             request.getValue().uri().toString());
         assertEquals("Bearer secret", request.getValue().headers().firstValue("Authorization").orElseThrow());

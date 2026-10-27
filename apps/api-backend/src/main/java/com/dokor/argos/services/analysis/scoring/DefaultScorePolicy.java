@@ -177,6 +177,9 @@ public class DefaultScorePolicy implements ScorePolicy {
         // ----- Tech -----
         // Divulgation de version logicielle via en-têtes : scorable sécurité (ex-V4, issue #158).
         map.put("tech.security.version_disclosure", rule(true, 3, "security", "tech"));
+        // Banner-based PHP risks are visible diagnostics, without altering quality scores.
+        map.put("tech.security.php_eol", rule(true, 0, "security", "tech"));
+        map.put("tech.security.php_cves", rule(true, 0, "security", "tech"));
         map.put("tech.cms",                rule(false, 0, "tech"));
         map.put("tech.frontend.framework", rule(false, 0, "tech"));
         map.put("tech.backend.hints",      rule(false, 0, "tech"));
