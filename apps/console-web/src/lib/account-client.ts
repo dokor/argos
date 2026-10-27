@@ -15,7 +15,7 @@ async function csrfToken(signal?: AbortSignal): Promise<string> {
   return csrf!;
 }
 export async function accountFetch<T>(path: string, method = "GET", body?: unknown, signal?: AbortSignal, idempotencyKey?: string, captcha?: string): Promise<T> {
-  const authenticated = !path.startsWith("auth/") || ["auth/logout", "auth/reauth", "auth/confirm-email"].includes(path);
+  const authenticated = path !== "session" && (!path.startsWith("auth/") || ["auth/logout", "auth/reauth", "auth/confirm-email"].includes(path));
   if (authenticated && typeof window !== "undefined") await renewAccountSession();
   signal?.throwIfAborted();
   const headers: Record<string, string> = { "Content-Type": "application/json" };

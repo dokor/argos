@@ -13,12 +13,19 @@ afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); });
 
 it("renews once before concurrent private requests and renews again after sleep", async () => {
   const { accountFetch } = await import("./account-client");
-  await Promise.all([accountFetch("me"), accountFetch("session"), accountFetch("sessions")]);
+  await Promise.all([accountFetch("me"), accountFetch("sessions")]);
   expect(fetchMock.mock.calls.filter(([url]) => url.endsWith("/auth/renew"))).toHaveLength(1);
   expect(fetchMock.mock.calls.map(([url]) => url).slice(0, 2)).toEqual(["/api/account/csrf", "/api/account/auth/renew"]);
   vi.setSystemTime(new Date("2026-10-27T21:00:00Z"));
   await accountFetch("me");
   expect(fetchMock.mock.calls.filter(([url]) => url.endsWith("/auth/renew"))).toHaveLength(2);
+});
+
+it("checks the public session without renewing it or requesting a CSRF token", async () => {
+  const { accountFetch } = await import("./account-client");
+  await expect(accountFetch("session")).resolves.toEqual({ signedIn: true });
+  expect(fetchMock).toHaveBeenCalledOnce();
+  expect(fetchMock).toHaveBeenCalledWith("/api/account/session", expect.objectContaining({ method: "GET" }));
 });
 
 it("retries a temporary renewal outage before sending private requests", async () => {
