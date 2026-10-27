@@ -11,7 +11,7 @@ test('PR controls share one classification and publish all existing required con
   assert.equal(ci.split('run: node scripts/ci/changed-paths.mjs').length - 1, 1);
   assert.ok(!ci.includes('workflow_call:'));
   assert.ok(!ci.includes('  push:'));
-  assert.match(ci, /pull_request:\n    branches: \[main\]/);
+  assert.match(ci, /^  pull_request:\n(?!    )/m, 'Required checks must also run for stacked PR bases');
   for (const name of REQUIRED_CHECKS.filter(name => name !== 'Secret scan')) {
     assert.ok(ci.includes(`    name: ${name}\n`) || name === 'auth' && ci.includes('\n  auth:\n'), `Missing required context: ${name}`);
   }
