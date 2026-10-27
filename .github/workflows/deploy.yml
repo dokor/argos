@@ -66,6 +66,44 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: '24.21.0'
+      - name: Prepare private proxy paths with the existing host configuration
+        run: |
+          node --input-type=module <<'NODE'
+          import { execFileSync } from 'node:child_process';
+          import { isAbsolute, join } from 'node:path';
+          const docker = args => execFileSync('docker', args, { encoding: 'utf8', timeout: 120000, stdio: ['ignore', 'pipe', 'pipe'] });
+          try {
+            const [container] = JSON.parse(docker(['container', 'inspect', 'traefik']));
+            const legacy = container.Config?.Labels?.['com.docker.compose.project.working_dir'];
+            if (!isAbsolute(legacy ?? '') || legacy.includes(',')) throw new Error();
+            // Only the reserved proxy state paths are writable inside this helper.
+            // Existing environment values are copied privately, never reconstructed.
+            docker(['run', '--rm', '--user', '0:0', '--network', 'none', '--read-only',
+              '--mount', 'type=bind,source=/srv/infra/raspberry-infra,target=/state',
+              '--mount', `type=bind,source=${join(legacy, '.env')},target=/legacy.env,readonly`,
+              'alpine:3.22', 'sh', '-eu', '-c', `
+                test ! -L /state/env && test ! -L /state/proxy
+                mkdir -p /state/env /state/proxy
+                test ! -L /state/env/proxy.env && test ! -L /state/proxy/acme.json
+                if [ ! -e /state/env/proxy.env ]; then
+                  umask 077
+                  set -C
+                  cat /legacy.env > /state/env/proxy.env
+                fi
+                test -f /state/env/proxy.env
+                chown "$1:$2" /state/env /state/proxy /state/env/proxy.env
+                chmod 600 /state/env/proxy.env
+                if [ -e /state/proxy/acme.json ]; then
+                  test -f /state/proxy/acme.json
+                  chown "$1:$2" /state/proxy/acme.json
+                  chmod 600 /state/proxy/acme.json
+                fi`, 'proxy-state', String(process.getuid()), String(process.getgid())]);
+            console.log('Reserved proxy directories prepared; existing private environment retained.');
+          } catch {
+            console.error('Cannot prepare reserved proxy paths; no private configuration was printed.');
+            process.exitCode = 1;
+          }
+          NODE
       - name: Preserve the live ACME account, certificates and proxy environment
         id: state
         run: |
