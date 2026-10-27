@@ -44,5 +44,7 @@ littérale utilise en revanche son certificat sans SNI. Aucune chaîne pertinent
 ou un indicateur SNI mal formé conserve une mesure inconnue.
 Depuis `analysis-measurements-v5`, le contrat distingue cette sélection corrigée des
 anciens rapports ; les empreintes et les rapports historiques restent figés.
-La version courante `analysis-measurements-v6` inclut également les
+Depuis `analysis-measurements-v6`, le contrat inclut également les
 [seuils d’expiration 30/15 jours](../security/web-response-policy.md).
+La version courante `analysis-measurements-v7` demande des mesures sans cache
+inter-audits ; voir la [politique de fraîcheur](fresh-results.md).

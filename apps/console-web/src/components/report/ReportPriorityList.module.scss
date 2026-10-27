@@ -8,6 +8,7 @@
 .severity[data-severity=critical] {color:var(--argos-error);}
 .severity[data-severity=important] {color:var(--argos-measure-warning);}
 .impact {font-size:13px;color:t.$text-muted;margin-top:5px;}
+.nextStep {font-size:14px;line-height:1.6;margin-top:10px;max-width:75ch;}
 .explanation {font-size:13px;line-height:1.55;color:t.$text-muted;max-width:75ch;margin:8px 0;}
 .underlying {font-size:13px;margin-top:12px;}
 .findingLink {display:block;color:t.$brand;min-height:44px;padding-block:10px;overflow-wrap:anywhere;}

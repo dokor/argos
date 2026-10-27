@@ -14,35 +14,28 @@ const issue: Issue = {
   evidence: 'Source evidence token=private-value',
   structuredEvidence: { source: 'lighthouse', details: [{ key: 'category', text: 'performance' }, { key: 'score', text: '0.0' }, { key: 'weight', text: '0' }],
     observed: { version: 'observed-evidence-v1', source: 'lighthouse', state: 'AVAILABLE', inspected: 3, truncated: false, redacted: true,
-      items: ['1111111111111111', '2222222222222222', '3333333333333333'].map(resourceRef => ({ kind: 'resource', origin: 'https://fonts.gstatic.com/', resourceRef })) },
+      items: [{ kind: 'resource', origin: 'https://fonts.gstatic.com', resourceRef: '1111111111111111', resourcePath: '/fonts/inter.woff2', metrics: { wastedMs: 180 } },
+        { kind: 'element', selector: 'main > p.intro', nodePath: '1,HTML,1,BODY,2,P' }] },
   },
 };
 const finding: Finding = { key: issue.id!, anchor: 'finding-font', domain: 'performance', sources: ['lighthouse'], issue };
 
 for (const lang of ['fr', 'en'] as const) describe(`finding questions in ${lang}`, () => {
-  it('opens the observation and keeps four independent question previews with all evidence reachable', async () => {
+  it('shows the problem, exact location, correction and verification without another disclosure', async () => {
     const user = userEvent.setup(), copy = reportReadingCopy[lang], questions = copy.findingQuestions;
     const before = JSON.stringify(issue);
     const { container } = render(<LangProvider initialLang={lang}><FindingDetails finding={finding}/></LangProvider>);
-    const titleText = (title: string) => screen.getByText(title.replaceAll('\u00a0', ' '), { exact: true });
-    const disclosure = (title: string) => titleText(title).closest('details')!;
-    expect(disclosure(questions.observation).open).toBe(true);
-    expect(disclosure(questions.impact).open).toBe(false);
-    expect(disclosure(questions.action).open).toBe(false);
-    expect(disclosure(questions.verification).open).toBe(false);
-    expect(screen.getByText(questions.resourcesMany.replace('{n}', '3'))).toBeVisible();
-    expect(within(disclosure(questions.observation)).getByText(copy.unknownConfidence)).toBeVisible();
-    expect(within(disclosure(questions.observation)).getByText(copy.missingMeasure)).toBeVisible();
+    for (const question of [questions.observation, questions.impact, questions.action, questions.verification]) {
+      expect(screen.getByRole('region', { name: question })).toBeVisible();
+    }
+    expect(screen.getByText('https://fonts.gstatic.com/fonts/inter.woff2')).toBeVisible();
+    expect(screen.getByText('main > p.intro')).toBeVisible();
+    expect(screen.getByText('180 ms')).toBeVisible();
     expect(screen.getByText(issue.id!)).not.toBeVisible();
-
-    await user.click(titleText(questions.action));
-    expect(disclosure(questions.action).open).toBe(true);
-    expect(disclosure(questions.observation).open).toBe(true);
-    expect(within(disclosure(questions.action)).getByRole('list')).toBeVisible();
-    await user.click(titleText(questions.verification));
-    expect(disclosure(questions.verification).querySelector('[data-finding-guide-section="verification"]')).toBeVisible();
+    expect(within(screen.getByRole('region', { name: questions.action })).getByRole('list')).toBeVisible();
+    expect(screen.getByRole('region', { name: questions.verification }).querySelector('[data-finding-guide-section="verification"]')).toBeVisible();
     await user.click(screen.getByText(questions.evidence, { exact: true }));
-    for (const item of issue.structuredEvidence!.observed!.items) expect(screen.getByText(item.resourceRef!)).toBeVisible();
+    expect(screen.getByText(lang === 'fr' ? /Confiance de mesure : inconnue/ : /Measurement confidence: unknown/)).toBeVisible();
     expect(screen.getByText(issue.id!)).toBeVisible();
     expect(screen.getByText(copy.lighthouseRatio)).toBeVisible();
     expect(screen.getByText('0.0')).toBeVisible();

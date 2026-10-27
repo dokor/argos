@@ -20,6 +20,15 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ZapClientTest {
+    @Test void importsDistinctCookieHeadersSoTheScannerDoesNotInventMissingFlags() throws Exception {
+        var context=snapshot("https://example.com").withHttpResult("https://example.com",200,1,List.of(),
+            Map.of("set-cookie","session=[redacted]; secure; httponly; samesite=lax\npreferences=[redacted]; secure"),"<html/>");
+        client(Duration.ofSeconds(3)).analyze(context);
+        var headers=imported.path("log").path("entries").get(0).path("response").path("headers");
+        var cookies=new ArrayList<String>();
+        headers.forEach(h->{if(h.path("name").asText().equalsIgnoreCase("set-cookie"))cookies.add(h.path("value").asText());});
+        assertEquals(List.of("session=[redacted]; secure; httponly; samesite=lax","preferences=[redacted]; secure"),cookies);
+    }
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private HttpServer server;
     private final List<String> calls = new ArrayList<>();

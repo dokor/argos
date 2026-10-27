@@ -1,5 +1,5 @@
 import express from 'express';
-import { resourceEvidence, evidenceEnvelope, EVIDENCE_LIMIT } from './evidence.mjs';
+import { resourceEvidence, scriptEvidence, exceptionEvidence, evidenceEnvelope, EVIDENCE_LIMIT } from './evidence.mjs';
 import { analysisUrl } from './policy.mjs';
 import { proxyEndpoint, browserFlags, protectContext, safeOrigin, navigationScope } from './browser-policy.mjs';
 import { partitionNetworkErrors, isFirstPartyUrl } from './domain.mjs';
@@ -67,6 +67,7 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
       let collecting = true;
 
       const consoleSamples = [];
+      const consoleLocations = [], exceptionLocations = [];
       let consoleErrors = 0;
       const consoleErrorOrigins = new Map();
       let consoleOriginsComplete = true;
@@ -78,6 +79,10 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
         const loc = msg.location?.();
         if (type === 'error') {
           consoleErrors++;
+          if (consoleLocations.length < EVIDENCE_LIMIT) {
+            const item = scriptEvidence(loc?.url, loc?.lineNumber, loc?.columnNumber, page.url());
+            if (item) consoleLocations.push(item);
+          }
           // Sans URL de localisation (script inline / eval) : attribué au site.
           const origin = loc?.url ? safeOrigin(loc.url) : '';
           if (consoleErrorOrigins.has(origin) || consoleErrorOrigins.size < 300)
@@ -100,6 +105,10 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
       page.on('pageerror', (err) => {
         if (!collecting) return;
         jsErrorCount++;
+        if (exceptionLocations.length < EVIDENCE_LIMIT) {
+          const item = exceptionEvidence(err, page.url());
+          if (item) exceptionLocations.push(item);
+        }
         if (jsErrorSamples.length < 10) {
           jsErrorSamples.push({ message: '[site message redacted]' });
         }
@@ -150,7 +159,7 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
         }
 
         const request = response.request();
-        transfers.set(request, { url: safeOrigin(url), bytes: null, type: request.resourceType(), status });
+        transfers.set(request, { url: safeOrigin(url), bytes: null, type: request.resourceType(), status, observedEvidence:resourceEvidence(url) });
       });
       page.on('requestfinished', request => {
         if (!collecting) return;
@@ -207,7 +216,8 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
       const bytesComplete = observedTransfers.length > 0 && observedTransfers.every(item => item.bytes !== null)
         && Number.isSafeInteger(totalBytesEstimated);
       const topLargest = observedTransfers.filter(item => item.bytes > 0)
-        .sort((a, b) => b.bytes - a.bytes).slice(0, 10);
+        .sort((a, b) => b.bytes - a.bytes).slice(0, 10)
+        .map(item=>({...item,observedEvidence:item.observedEvidence?{...item.observedEvidence,resourceType:item.type,status:item.status,metrics:{transferSize:item.bytes}}:null}));
       const networkOwnership = partitionNetworkErrors({ failedRequestUrls, status5xxUrls }, finalUrl);
       const consoleErrorsFirstParty = consoleOriginsComplete
         ? [...consoleErrorOrigins].reduce((count, [origin, occurrences]) =>
@@ -231,9 +241,12 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
           errors: consoleOriginsComplete ? consoleErrors : null,
           errorsFirstParty: consoleErrorsFirstParty,
           warnings: consoleWarnings,
-          samples: consoleSamples
+          samples: consoleSamples,
+          observedEvidence: evidenceEnvelope('runtime', consoleLocations.map(item=>({...item,
+            ownership:isFirstPartyUrl(item.origin,finalUrl)?'FIRST_PARTY':'THIRD_PARTY'})), consoleErrors, consoleErrors>consoleLocations.length)
         },
-        jsErrors: { count: jsErrorCount, samples: jsErrorSamples },
+        jsErrors: { count: jsErrorCount, samples: jsErrorSamples,
+          observedEvidence: evidenceEnvelope('runtime', exceptionLocations, jsErrorCount, jsErrorCount>exceptionLocations.length) },
         network: {
           requests: Object.values(byType).length
             ? Object.values(byType).reduce((a, b) => a + b, 0)

@@ -1,44 +1,23 @@
 package com.dokor.argos.services.analysis;
 
-import com.dokor.argos.db.dao.DomainAnalysisDao;
-import com.dokor.argos.db.generated.DomainAnalysis;
 import com.dokor.argos.services.analysis.model.*;
 import com.dokor.argos.services.analysis.model.enums.AuditStatus;
 import com.dokor.argos.services.analysis.modules.tech.*;
 import com.dokor.argos.services.analysis.scoring.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.dokor.argos.services.domain.report.PublicReportComposer;
 import com.dokor.argos.services.domain.report.ReportDto;
 import java.time.Instant;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class DomainAnalysisServiceTest {
-    private final DomainAnalysisDao dao = mock(DomainAnalysisDao.class);
     private final TechModuleAnalyzer analyzer = spy(new TechModuleAnalyzer(new NextJsDetectorService()));
-    private final ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
-    private final AtomicReference<DomainAnalysis> cache = new AtomicReference<>();
-    private final DomainAnalysisService service = new DomainAnalysisService(dao, analyzer, mapper);
-
-    @SuppressWarnings("unchecked")
-    DomainAnalysisServiceTest() {
-        when(dao.withLockedDomain(eq(7L), any())).thenAnswer(call ->
-            ((Function<Connection, ?>) call.getArgument(1)).apply(null));
-        when(dao.findFreshByDomainId(eq(7L), isNull())).thenAnswer(call -> Optional.ofNullable(cache.get()));
-        doAnswer(call -> { cache.set(null); return null; }).when(dao).deleteByDomainId(eq(7L), isNull());
-        when(dao.save(any(DomainAnalysis.class), isNull())).thenAnswer(call -> {
-            cache.set(call.getArgument(0));
-            return call.getArgument(0);
-        });
-    }
+    private final DomainAnalysisService service = new DomainAnalysisService(analyzer);
 
     @Test
     void twoPathsUseCurrentHeadersEvidenceRecommendationsAndScore() {
@@ -54,7 +33,7 @@ class DomainAnalysisServiceTest {
         assertEquals(1, report(first).issues().size());
         assertTrue(report(first).issues().getFirst().evidence().contains("Apache/2.4.1"));
         assertTrue(report(second).issues().isEmpty());
-        assertFalse((Boolean) provenance(second).get("hit"));
+        assertNull(report(second).tech().stackCache());
     }
 
     @Test
@@ -75,31 +54,22 @@ class DomainAnalysisServiceTest {
         var redirected = context("/a", "nginx", "<html>wp-content</html>")
             .withHttpResult("https://other.example/b", 200, 1L, List.of(), Map.of("server", "nginx"), "<html>wp-content</html>");
         var result = run(redirected);
-        assertEquals("https://other.example/b", provenance(result).get("sourceFinalUrl"));
-        assertFalse((Boolean) provenance(result).get("hit"));
+        assertEquals("https://other.example/b", result.data().get("finalUrl"));
+        assertNull(report(result).tech().stackCache());
         verify(analyzer, times(2)).analyzeStack(any(), any());
     }
 
     @Test
-    void identicalFinalPageReusesOnlyStackAndKeepsOriginalDate() throws Exception {
+    void identicalFinalPageIsAnalyzedAgainWithoutRetainingStack() {
         var context = context("/a", "nginx", "<html/>");
-        var first = run(context);
-        var serialized = mapper.readValue(cache.get().getResultJson(), DomainAnalysisService.TechCache.class);
-        assertEquals(3, serialized.stack().checks().size());
-        assertFalse(serialized.stack().data().containsKey("serverHeader"));
-        assertFalse(serialized.stack().data().containsKey("finalUrl"));
+        run(context);
         var second = run(new AuditContext("https://example.com/alias", "https://example.com/alias", 7L)
             .withHttpResult(context.finalUrl(), 200, 1L, List.of(), context.headers(), context.body()));
-        assertTrue((Boolean) provenance(second).get("hit"));
-        assertEquals(provenance(first).get("analyzedAt"), provenance(second).get("analyzedAt"));
-        assertEquals(provenance(first).get("expiresAt"), provenance(second).get("expiresAt"));
         assertEquals("https://example.com/alias", second.data().get("inputUrl"));
-        assertTrue(report(second).tech().stackCache().hit());
-        assertEquals(provenance(first).get("analyzedAt"), report(second).tech().stackCache().analyzedAt());
-        assertEquals(context.finalUrl(), report(second).tech().stackCache().sourceFinalUrl());
-        verify(analyzer).analyzeStack(any(), any());
+        assertFalse(second.data().containsKey("stackCache"));
+        assertNull(report(second).tech().stackCache());
+        verify(analyzer, times(2)).analyzeStack(any(), any());
         verify(analyzer, times(2)).analyzeCurrentResponse(any(), any(), any());
-        verify(dao).save(any(DomainAnalysis.class), isNull());
         assertClean(second);
     }
 
@@ -113,25 +83,14 @@ class DomainAnalysisServiceTest {
     }
 
     @Test
-    void corruptAndLegacyCachesAreDeletedAndRecalculated() throws Exception {
-        for (String json : List.of("{broken json", "{}", mapper.writeValueAsString(run(context("/a", "Apache/2.4.1", "<html/>"))))) {
-            var entity = new DomainAnalysis();
-            entity.setDomainId(7L);
-            entity.setResultJson(json);
-            cache.set(entity);
-            assertClean(run(context("/a", "nginx", "<html/>")));
-        }
-    }
-
-    @Test
-    void failedRepairCommitsDeletionWithoutSavingFalseSuccess() {
-        var entity = new DomainAnalysis();
-        entity.setResultJson("{}");
-        cache.set(entity);
+    void failedRerunCannotFallBackToPreviousSuccessAndNextRunRetries() {
+        var context = context("/a", "nginx", "<html/>");
+        run(context);
         doThrow(new IllegalStateException("analysis failed")).when(analyzer).analyzeStack(any(), any());
-        assertThrows(IllegalStateException.class, () -> run(context("/a", "nginx", "<html/>")));
-        assertNull(cache.get());
-        verify(dao, never()).save(any(DomainAnalysis.class), any());
+        assertThrows(IllegalStateException.class, () -> run(context));
+        doCallRealMethod().when(analyzer).analyzeStack(any(), any());
+        assertClean(run(context));
+        verify(analyzer, times(3)).analyzeStack(any(), any());
     }
 
     @Test
@@ -152,7 +111,7 @@ class DomainAnalysisServiceTest {
     }
 
     private AuditModuleResult run(AuditContext context) {
-        return service.getOrRunTechAnalysis(context, LoggerFactory.getLogger(getClass()));
+        return service.runFreshTechAnalysis(context, LoggerFactory.getLogger(getClass()));
     }
 
     private AuditContext context(String path, String server, String html) {
@@ -185,8 +144,4 @@ class DomainAnalysisServiceTest {
             new ScoreEnricherService(policy).enrich(List.of(result))).global().ratio();
     }
 
-    @SuppressWarnings("unchecked")
-    private Map<String, Object> provenance(AuditModuleResult result) {
-        return (Map<String, Object>) result.data().get("stackCache");
-    }
 }
