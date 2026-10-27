@@ -54,8 +54,9 @@ mesures observées. Il ne s'agit pas d'une commande arbitraire de sous-module.
 
 Les doublons entre sources d'une catégorie continuent de passer par le merger.
 Une relance d'une clé canonique HTTP utilise HTTP ; elle ne déclenche pas ZAP pour
-la même clé. Tech contourne son cache de signatures lors d'une relance ciblée.
-Une analyse complète conserve le cache existant des seules signatures de stack.
+la même clé. Tech recalcule ses signatures pour chaque analyse, ciblée ou complète.
+Aucun résultat d'un audit précédent n'est réutilisé ; voir la
+[politique de fraîcheur](fresh-results.md).
 
 La migration V34 ajoute `ARG_AUDIT_RUN.execution_scope` ; NULL signifie analyse
 complète pour les runs historiques. Les modules hors périmètre sont `SKIPPED`,
@@ -79,8 +80,8 @@ collectée. Elle n'émet **aucune requête DNS/ASN/RDAP/API supplémentaire**, n
 consomme aucun quota de fournisseur, et ne cherche pas à contourner un proxy.
 Elle hérite des limites de taille, de durée et des protections SSRF du collecteur
 HTTP. Elle est recalculée dans `analyzeCurrentResponse` à chaque analyse Tech,
-indépendamment du cache de stack (24 h). Les anciennes entrées de cache n'ont
-donc pas besoin d'être enrichies ou invalidées.
+comme les signatures de stack. L'ancien cache persistant de stack n'est plus lu
+ni alimenté.
 
 | Signal non vide | Interprétation |
 |---|---|

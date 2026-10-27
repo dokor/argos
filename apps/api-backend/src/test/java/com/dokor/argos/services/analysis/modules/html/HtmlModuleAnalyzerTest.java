@@ -16,6 +16,19 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 class HtmlModuleAnalyzerTest {
+    @Test void observedSelectorsResolveOnlyTheFailingElementsWithoutTheirPrivateContent() throws Exception {
+        String source="<html><body><main><img alt='ok'><img src='private?secret=x'><a href='/ok'>ok</a><a>private label</a></main></body></html>";
+        var document=org.jsoup.Jsoup.parse(source);
+        var module=html(source);
+        for (String key : List.of("html.images.alt_coverage","html.anchors.href_coverage")) {
+            var evidence=(com.dokor.argos.services.analysis.model.ObservedEvidence)check(module,key).details().get("observed");
+            assertEquals(1,evidence.items().size());
+            var selected=document.select(evidence.items().getFirst().selector());
+            assertEquals(1,selected.size());
+            assertFalse(selected.first().hasAttr(key.contains("images")?"alt":"href"));
+            assertFalse(new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(evidence).contains("private"));
+        }
+    }
     @Test void freezesTitleHeuristicsAndImageCountsAtTheProducerWithoutChangingScores() {
         for (String title : List.of("", "ABC", "x".repeat(81))) {
             var module = html("<html><head><title>" + title + "</title></head><body>"

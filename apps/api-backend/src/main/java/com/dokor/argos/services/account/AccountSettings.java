@@ -68,11 +68,11 @@ public class AccountSettings {
     }
 
     public Duration absoluteTtl() {
-        return duration("session-ttl", Duration.ofHours(12));
+        return duration("session-ttl", Duration.ofHours(24));
     }
 
     public Duration idleTtl() {
-        return duration("idle-ttl", Duration.ofMinutes(30));
+        return duration("idle-ttl", Duration.ofHours(24));
     }
 
     public Duration recentTtl() {

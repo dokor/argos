@@ -122,6 +122,7 @@ public class AccountAuthWs {
         journey.authenticated(result.context().session().getId(), result.context().user().getId(), "password", language(), measurement());
         return Response.ok(profile(result.context().user()))
                 .header("X-Argos-Session", result.jwt())
+                .header("X-Argos-Renewal", sessions.renewal(result.context()))
                 .header("Cache-Control", "private, no-store")
                 .build();
     }
@@ -186,12 +187,12 @@ public class AccountAuthWs {
 
     @POST
     @Path("/renew")
-    @AccountAccess
     public Response renew() {
         String token = csrf.require(request());
-        String jwt = sessions.renew(authorization(), token);
+        var issued = sessions.renew(authorization(), request().getHeaderString("X-Argos-Renewal"), token);
         return Response.ok(Map.of("accepted", true))
-                .header("X-Argos-Session", jwt)
+                .header("X-Argos-Session", issued.jwt())
+                .header("X-Argos-Renewal", sessions.renewal(issued.context()))
                 .header("Cache-Control", "private, no-store")
                 .build();
     }
@@ -254,7 +255,8 @@ public class AccountAuthWs {
         var response =
                 Response.ok(Map.of("returnTo", result.returnPath()))
                         .header("Cache-Control", "private, no-store");
-        if (result.jwt() != null) response.header("X-Argos-Session", result.jwt());
+        if (result.jwt() != null) response.header("X-Argos-Session", result.jwt())
+                .header("X-Argos-Renewal", sessions.renewal("Bearer " + result.jwt()));
         return response.build();
     }
 }

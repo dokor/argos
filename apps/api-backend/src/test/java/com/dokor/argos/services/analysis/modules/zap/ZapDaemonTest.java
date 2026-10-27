@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @EnabledIfEnvironmentVariable(named = "ZAP_TEST_URL", matches = ".+")
 class ZapDaemonTest {
     @Test void findsSnapshotIssuesAndDoesNotReusePreviousAlerts() throws Exception {
-        var client = new ZapClient(new ObjectMapper(), System.getenv("ZAP_TEST_URL"), "",
+        var client = new ZapClient(new ObjectMapper(), System.getenv("ZAP_TEST_URL"), System.getenv().getOrDefault("ZAP_TEST_API_KEY", ""),
             Duration.ofSeconds(45), Duration.ofMillis(250));
         String target = "https://snapshot.invalid/page";
         var context = new AuditContext(target, target, 1);
@@ -24,6 +24,14 @@ class ZapDaemonTest {
             Map.of("content-type", "text/html"), "<!doctype html><html><head><title>Snapshot</title></head><body>Hello</body></html>");
         JsonNode first = client.analyze(missing);
         assertTrue(hasPlugin(first, "10021"), "The imported response must actually be passively scanned");
+        // Exercise the actual core API schema through the analyzer, not just plugin presence.
+        // The daemon returns risk="Low", unlike exported fixtures using riskcode="1".
+        var snapshotClient = org.mockito.Mockito.mock(ZapClient.class);
+        org.mockito.Mockito.when(snapshotClient.analyze(missing)).thenReturn(first);
+        var findings = new ZapModuleAnalyzer(snapshotClient).analyze(missing, org.slf4j.LoggerFactory.getLogger("test"));
+        var header = findings.checks().stream().filter(check -> check.key().equals("http.security.x_content_type_options")).findFirst().orElseThrow();
+        assertEquals(com.dokor.argos.services.analysis.model.enums.AuditStatus.WARN, header.status(), "A real daemon risk must not silently become informational");
+        assertNotNull(header.recommendation());
 
         var fixed = context.withHttpResult(target, 200, 10, List.of(),
             Map.of("content-type", "text/html", "x-content-type-options", "nosniff"), missing.body());

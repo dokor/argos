@@ -21,6 +21,27 @@ import static org.mockito.Mockito.*;
 
 class LighthouseModuleAnalyzerTest {
     @Test
+    void connectsMeasuredLcpToTheElementFromTheSameRunAndKeepsBrowserOnlyFailuresInformational() throws Exception {
+        var mapper = new ObjectMapper();
+        var client = mock(LighthouseClient.class);
+        when(client.analyze(anyString())).thenReturn(mapper.readTree("""
+            {"categories":{"performance":{"score":0.8,"auditRefs":[{"id":"largest-contentful-paint","weight":25},{"id":"bf-cache","weight":0}]}},
+             "audits":{"largest-contentful-paint":{"score":0.87,"scoreDisplayMode":"numeric","numericValue":2623,"numericUnit":"millisecond",
+               "observedEvidence":{"version":"observed-evidence-v1","source":"lighthouse","items":[]}},
+              "lcp-breakdown-insight":{"observedEvidence":{"version":"observed-evidence-v1","source":"lighthouse","items":[{"kind":"element","selector":"main > h1.headline"}]}},
+              "bf-cache":{"score":0,"scoreDisplayMode":"binary","details":{"items":[{"protocolReason":"MainResourceHasCacheControlNoStore","failureType":"Aucune action possible"}]}}}}
+            """));
+        var result = new LighthouseModuleAnalyzer(client).analyze(ctx(), LoggerFactory.getLogger("test"));
+        var lcp = result.checks().stream().filter(c -> c.key().equals("lighthouse.audit.largest-contentful-paint")).findFirst().orElseThrow();
+        assertEquals("lcp-breakdown-insight", lcp.details().get("relatedAudit"));
+        var observed = (com.dokor.argos.services.analysis.model.ObservedEvidence) lcp.details().get("observed");
+        assertEquals("main > h1.headline", observed.items().getFirst().selector());
+        var cache = result.checks().stream().filter(c -> c.key().equals("lighthouse.audit.bf-cache")).findFirst().orElseThrow();
+        assertEquals(AuditStatus.INFO, cache.status());
+        assertEquals("MainResourceHasCacheControlNoStore", cache.details().get("bfCacheReasons"));
+    }
+
+    @Test
     void retainsRawNumericMeasurementsSeparatelyFromTheScoreRatio() throws Exception {
         LighthouseClient client = mock(LighthouseClient.class);
         when(client.analyze(anyString())).thenReturn(new ObjectMapper().readTree("""

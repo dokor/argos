@@ -11,7 +11,8 @@ async function serverFor(t, chromium) {
 }
 function collector({ navigationFailure = false, contextFailure = false, cdpFailure = null,
   jsCount = 1, contentLength = '321', failureCount = 1, finalUrl = 'https://www.example.co.uk/final',
-  responseSizes = [321], sizeFailure = false, sizeDelay = 0, finished = true, sizeStall = false } = {}) {
+  responseSizes = [321], sizeFailure = false, sizeDelay = 0, finished = true, sizeStall = false,
+  responseUrl = 'https://other.test/api' } = {}) {
   let closed = 0, launched = 0;
   const handlers = {};
   const contextHandlers = {};
@@ -31,7 +32,7 @@ function collector({ navigationFailure = false, contextFailure = false, cdpFailu
 
       for (let i = 0; i < failureCount; i++) handlers.requestfailed({ url: () => 'https://assets.example.co.uk/script.js?token=private-secret', resourceType: () => 'script', failure: () => ({errorText:'net::ERR_CONNECTION_RESET'}) });
       for (const responseBodySize of responseSizes) {
-        const request = { url: () => 'https://other.test/api', resourceType: () => 'fetch', method: () => 'GET',
+        const request = { url: () => responseUrl, resourceType: () => 'fetch', method: () => 'GET',
           sizes: async () => {
             if (sizeStall) await new Promise((_resolve, reject) => rejectSizes.push(reject));
             if (sizeDelay) await new Promise(resolve => setTimeout(resolve, sizeDelay));
@@ -126,7 +127,8 @@ test('runtime contract retains metrics and partitions errors using the final dom
   assert.equal(evidence.items[0].reason,'net::ERR_CONNECTION_RESET');
   assert.equal(evidence.items[1].ownership,'THIRD_PARTY');
   assert.equal(evidence.items[1].status,503);
-  assert.doesNotMatch(JSON.stringify(evidence),/private-secret|script.js|\?token/);
+  assert.doesNotMatch(JSON.stringify(evidence),/private-secret|\?token/);
+  assert.equal(evidence.items[0].resourcePath,'/script.js');
   assert.equal(fake.closed(), 1);
 });
 
@@ -149,6 +151,15 @@ test('chunked responses use Chromium encoded sizes and settle before browser cle
   assert.equal(report.network.totalBytesEstimated, 512);
   assert.equal(report.network.topLargest[0].bytes, 512);
   assert.equal(fake.closed(), 1);
+});
+
+test('largest transfer keeps its real file and measured bytes while stripping query secrets',async t=>{
+ const fake=collector({responseUrl:'https://other.test/assets/hero.webp?token=private-secret',responseSizes:[6000000]});
+ const report=await(await analyze(await serverFor(t,fake.chromium))).json();
+ const evidence=report.network.topLargest[0].observedEvidence;
+ assert.equal(evidence.resourcePath,'/assets/hero.webp');
+ assert.equal(evidence.metrics.transferSize,6000000);assert.equal(evidence.status,503);
+ assert.doesNotMatch(JSON.stringify(report),/private-secret|token=/);
 });
 
 test('encoded byte measurements take precedence over advertised Content-Length', async t => {
