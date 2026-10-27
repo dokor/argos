@@ -75,6 +75,12 @@ public class AuditReport extends com.coreoz.plume.db.querydsl.crud.CrudEntityQue
 
     @Column("report_json")
     private String reportJson;
+    private String ciExportJson;
+    public String getCiExportJson() { return ciExportJson; }
+    public void setCiExportJson(String value) { ciExportJson=value; }
+    @Column("ci_verdict_json") private String ciVerdictJson;
+    public String getCiVerdictJson() { return ciVerdictJson; }
+    public void setCiVerdictJson(String value) { ciVerdictJson=value; }
 
     @Column("introduction_json")
     private String introductionJson;

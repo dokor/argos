@@ -75,7 +75,7 @@ public class AccountSitesService {
         FROM ARG_ACCOUNT_SITE s JOIN ARG_DOMAIN d ON d.id=s.domain_id
         LEFT JOIN ARG_AUDIT_RUN r ON r.id=(
           SELECT x.id FROM ARG_AUDIT_RUN x JOIN ARG_ACCOUNT_SITE_URL u ON u.audit_id=x.audit_id
-          WHERE u.site_id=s.id AND x.owner_user_id=s.owner_user_id ORDER BY x.created_at DESC,x.id DESC LIMIT 1)
+          WHERE x.ci_navigation_origins IS NULL AND u.site_id=s.id AND x.owner_user_id=s.owner_user_id ORDER BY x.created_at DESC,x.id DESC LIMIT 1)
         """;
     private Site readSite(ResultSet r) throws SQLException {
         return new Site(r.getString("id"),r.getString("hostname"),r.getLong("url_count"),date(r,"activity"),r.getString("status"));
@@ -110,11 +110,11 @@ public class AccountSitesService {
                   p.provisional
                 FROM ARG_ACCOUNT_SITE_URL u JOIN ARG_ACCOUNT_SITE s ON s.id=u.site_id JOIN ARG_AUDIT a ON a.id=u.audit_id
                 LEFT JOIN ARG_AUDIT_RUN r ON r.id=(
-                  SELECT x.id FROM ARG_AUDIT_RUN x WHERE x.audit_id=u.audit_id AND x.owner_user_id=s.owner_user_id
+                  SELECT x.id FROM ARG_AUDIT_RUN x WHERE x.ci_navigation_origins IS NULL AND x.audit_id=u.audit_id AND x.owner_user_id=s.owner_user_id
                   ORDER BY x.created_at DESC,x.id DESC LIMIT 1)
                 LEFT JOIN ARG_AUDIT_REPORT p ON p.id=(
                   SELECT b.id FROM ARG_AUDIT_REPORT b JOIN ARG_AUDIT_RUN x ON x.id=b.run_id
-                  WHERE x.audit_id=u.audit_id AND x.owner_user_id=s.owner_user_id AND (b.expires_at IS NULL OR b.expires_at>?)
+                  WHERE x.ci_navigation_origins IS NULL AND x.audit_id=u.audit_id AND x.owner_user_id=s.owner_user_id AND (b.expires_at IS NULL OR b.expires_at>?)
                   ORDER BY b.created_at DESC,b.id DESC LIMIT 1)
                 WHERE s.owner_user_id=? AND u.site_id=? AND u.id>? AND LOCATE(LOWER(?),LOWER(a.normalized_url))>0 ORDER BY u.id LIMIT ?
                 """,r->new SiteUrl(r.getString("id"),r.getString("audit_id"),r.getString("normalized_url"),

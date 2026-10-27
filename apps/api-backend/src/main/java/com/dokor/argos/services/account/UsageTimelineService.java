@@ -64,7 +64,7 @@ public final class UsageTimelineService {
     }
 
     // LEFT JOIN preserves the accounting total even if a historical target is unavailable.
-    private static final String SOURCE = " FROM ARG_USAGE_RUN u LEFT JOIN ARG_AUDIT_RUN r ON r.id=u.id AND r.owner_user_id=u.user_id"
+    private static final String SOURCE = " FROM ARG_USAGE_RUN u LEFT JOIN ARG_AUDIT_RUN r ON r.id=u.id AND r.owner_user_id=u.user_id AND r.ci_navigation_origins IS NULL"
             + " LEFT JOIN ARG_AUDIT a ON a.id=r.audit_id LEFT JOIN ARG_DOMAIN d ON d.id=a.domain_id";
     private static final String SCOPE = " WHERE u.user_id=? AND u.state='COUNTED' AND u.counted_at>=? AND u.counted_at<?";
 

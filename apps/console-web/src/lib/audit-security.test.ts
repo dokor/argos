@@ -4,7 +4,7 @@ import { boundedJson } from "./bounded-request";
 
 describe("audit admission", () => {
   it.each(["http://127.1", "http://2130706433", "http://0x7f000001", "https://u:p@example.com",
-    "https://example.com:8443", "http://100.64.0.1", "http://192.0.2.1", "http://224.0.0.1",
+    "https://example.com:8443", "http://168.63.129.16", "http://100.100.100.200", "http://100.64.0.1", "http://192.0.2.1", "http://224.0.0.1",
     "http://[fe90::1]", "http://[::ffff:8.8.8.8]", "http://[2001:db8::1]", "https://localhost.",
     "https://example.com\\@localhost", "https://example.com\n", "file:///etc/passwd",
     "https://%65xample.com", "https://example%2ecom", "https://%38.8.8.8",

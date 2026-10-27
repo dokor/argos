@@ -94,8 +94,8 @@ public class HttpModuleAnalyzer {
                     if(!context.navigationOrigins().isEmpty()) com.dokor.argos.services.ci.CiOrigin.require(context.navigationOrigins(),currentUrl);
                     UrlNormalizer.validatePublicUrl(currentUrl);
                 } catch (IllegalArgumentException ssrf) {
-                    logger.warn("HTTP module: blocked SSRF target url={} reason={}",
-                        UrlNormalizer.sanitizeForLog(currentUrl), ssrf.getMessage());
+                    logger.warn("HTTP module: blocked SSRF target url={} reason=TARGET_BLOCKED",
+                        UrlNormalizer.sanitizeForLog(currentUrl));
                     fetchOutcome = "TARGET_BLOCKED";
                     errors.add("SsrfBlocked: " + ssrf.getMessage());
                     break;

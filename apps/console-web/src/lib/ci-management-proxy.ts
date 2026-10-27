@@ -1,12 +1,13 @@
 import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
+import { ciBackendOrigin } from "./ci-backend-origin";
 import catalog from "./ci-error-catalog.json";
 import { boundedJson } from "./bounded-request";
 import { ssrfError } from "./audit-url-validation";
 
 type Code = keyof typeof catalog.errors;
 const errors = catalog.errors;
-const headers = { "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" };
+const headers = { "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff", "Referrer-Policy": "no-referrer", "X-Robots-Tag": "noindex, nofollow, noarchive", "Vary": "Authorization" };
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 const time = (v: unknown) => v === null || typeof v === "string" && /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d{1,9})?Z$/.test(v) && Number.isFinite(Date.parse(v));
 const object = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
@@ -108,7 +109,7 @@ export async function ciManagementProxy(request: NextRequest,parts: string[],get
     } catch { return ciFailure("CONFIG_INVALID"); }
   }
   try {
-    const upstream=await fetch((process.env.API_BASE??"http://api-backend:8081")+"/api/account/ci/"+path+(after!==null?"?after="+after:""),
+    const upstream=await fetch(ciBackendOrigin()+"/api/account/ci/"+path+(after!==null?"?after="+after:""),
       {method:request.method,headers:forwarded,body,cache:"no-store",redirect:"error",signal:AbortSignal.timeout(15000)});
     if(!/^application\/json(?:\s*;\s*charset=utf-8)?$/i.test(upstream.headers.get("content-type")??"")) return ciFailure("TRANSPORT_FAILED");
     const data=await boundedJson(upstream,upstream.ok?262144:4096);

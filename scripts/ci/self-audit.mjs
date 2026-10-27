@@ -3,6 +3,8 @@ import { appendFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { setTimeout as sleep } from 'node:timers/promises';
+import { createHash } from 'node:crypto';
+import { trustedEndpoint, boundedJson } from './trusted-http.mjs';
 import { SITE, POLICY, SERVICES, SHA, ControlError, requireControl, normalizeServices, parseServices, analysisKey, evaluateReports, collectionEvidence } from './self-audit-policy.mjs';
 
 const IMAGE = /^sha256:[a-f0-9]{64}$/;
@@ -39,10 +41,11 @@ export function accountClient({ fetcher = fetch, wait = sleep } = {}) {
   const cookies = new Map();
   let csrf;
   async function request(path, { method = 'GET', body, key, retry = method === 'GET' } = {}) {
+    const endpoint=trustedEndpoint(SITE,path);
     for (let attempt = 0; attempt < (retry ? 3 : 1); attempt++) {
-      let response;
+      let response;const signal=AbortSignal.timeout(10000);
       try {
-        response = await fetcher(SITE + path, { method, redirect: 'error', signal: AbortSignal.timeout(10000),
+        response = await fetcher(endpoint, { method, redirect: 'error', signal,
           headers: { Accept: 'application/json', 'Content-Type': 'application/json',
             Cookie: [...cookies].map(([name, value]) => `${name}=${value}`).join('; '),
             ...(method !== 'GET' ? { Origin: SITE, 'X-Argos-CSRF': csrf } : {}),
@@ -63,19 +66,7 @@ export function accountClient({ fetcher = fetch, wait = sleep } = {}) {
         const match = /^(argos_account(?:_csrf)?)=([^;\s]{0,4096})(?:;|$)/.exec(cookie);
         if (match) cookies.set(match[1], match[2]);
       }
-      const reader = response.body.getReader();
-      const chunks = [];
-      let size = 0;
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          size += value.length;
-          requireControl(size <= 2 * 1024 * 1024, 'response-invalid');
-          chunks.push(value);
-        }
-        return JSON.parse(Buffer.concat(chunks).toString('utf8'));
-      } catch { await reader.cancel().catch(() => {}); throw new ControlError('response-invalid'); }
+      return boundedJson(response,2*1024*1024,signal);
     }
   }
   return {
@@ -101,6 +92,7 @@ export async function collectAudit({ expectedSha, service, services = service, e
   let selected = null;
   try { selected = normalizeServices(services); } catch { /* Invalid input stays out of evidence. */ }
   const evidence = { schemaVersion: 1, policy: POLICY, expectedSha: SHA.test(expectedSha) ? expectedSha : null,
+    repository:'dokor/argos',invocation:typeof invocation==='string' && /^[1-9][0-9]{0,19}:[1-9][0-9]{0,5}$/.test(invocation)?invocation:null,
     services: selected, outcome: 'CONTROL_FAILED', findings: [], collection: [] };
   try {
     requireControl(SHA.test(expectedSha) && selected && email && password
@@ -162,8 +154,10 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   try {
     const output = 'outputs/post-deploy-audit.json';
     mkdirSync(dirname(output), { recursive: true });
-    writeFileSync(output, JSON.stringify(evidence, null, 2) + '\n', { mode: 0o600, flag: 'wx' });
-    if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `outcome=${evidence.outcome}\n`);
+    const bytes=JSON.stringify(evidence,null,2)+'\n';
+    requireControl(Buffer.byteLength(bytes,'utf8')<=65536,'evidence-invalid');
+    writeFileSync(output, bytes, { mode: 0o600, flag: 'wx' });
+    if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `outcome=${evidence.outcome}\nevidence_sha256=${createHash('sha256').update(bytes).digest('hex')}\n`);
     if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY,
       `Argos post-deployment audit: **${evidence.outcome}**. Confirmed findings: ${evidence.findings.length}.` +
       (evidence.reason ? ` Control reason: \`${evidence.reason}\`.` : '') + '\n');

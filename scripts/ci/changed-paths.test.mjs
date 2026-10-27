@@ -42,7 +42,7 @@ for (const [name,paths,expected] of cases) test(name + ' selects only affected c
 });
 
 test('shared routing changes and explicit full runs exercise all checks', () => {
-  for (const paths of [['.github/workflows/ci.yml'],['scripts/ci/changed-paths.mjs'],null]) assert.deepEqual(enabled(paths),all);
+  for (const paths of [['.github/workflows/ci.yml'],['.github/action-pins.json'],['scripts/ci/changed-paths.mjs'],null]) assert.deepEqual(enabled(paths),all);
 });
 
 test('multiple changed components combine their consumers', () => {

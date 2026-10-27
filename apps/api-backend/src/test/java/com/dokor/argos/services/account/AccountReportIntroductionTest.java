@@ -36,7 +36,7 @@ class AccountReportIntroductionTest {
         var result = service.publish("Bearer fixture", csrf, token, input());
         assertEquals(now.toString(), result.introduction().publishedAt());
         verify(query).setLong(1, 42L); verify(query).setBytes(eq(2), eq(new TokenService().sha256(token)));
-        verify(connection).prepareStatement(argThat(sql -> sql.contains("WHERE r.owner_user_id=? AND p.token_hash=?") && sql.endsWith("FOR UPDATE")));
+        verify(connection).prepareStatement(argThat(sql -> sql.contains("WHERE r.ci_navigation_origins IS NULL AND r.owner_user_id=? AND p.token_hash=?") && sql.endsWith("FOR UPDATE")));
         verify(connection).prepareStatement("UPDATE ARG_AUDIT_REPORT SET introduction_json=? WHERE id=?");
         verify(update).setLong(2, 99L); verify(update).executeUpdate();
     }
