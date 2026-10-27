@@ -27,8 +27,19 @@ public record AuditContext(
     long httpDurationMs,
     List<String> redirectChain,
     Map<String, String> headers,
-    String body
+    String body,
+    List<String> navigationOrigins
 ) {
+    public AuditContext { navigationOrigins = navigationOrigins == null || navigationOrigins.isEmpty()
+        ? List.of() : com.dokor.argos.services.ci.CiOrigin.scope(navigationOrigins); }
+    public AuditContext(String inputUrl,String normalizedUrl,long domainId,Instant startedAt,
+        String finalUrl,int status,long duration,List<String> redirects,Map<String,String> headers,String body) {
+        this(inputUrl,normalizedUrl,domainId,startedAt,finalUrl,status,duration,redirects,headers,body,List.of());
+    }
+    public AuditContext withNavigationOrigins(List<String> origins) {
+        return new AuditContext(inputUrl,normalizedUrl,domainId,startedAt,finalUrl,httpStatusCode,httpDurationMs,
+            redirectChain,headers,body,com.dokor.argos.services.ci.CiOrigin.scope(origins));
+    }
     /**
      * Constructeur initial : crée le contexte avant toute analyse.
      *
@@ -69,7 +80,8 @@ public record AuditContext(
             httpDurationMs,
             redirectChain != null ? redirectChain : List.of(),
             headers != null ? headers : Map.of(),
-            body
+            body,
+            navigationOrigins
         );
     }
 }

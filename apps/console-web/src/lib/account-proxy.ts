@@ -12,6 +12,7 @@ import { validIntroduction } from "./report-introduction";
 import { oauthCallbackError, type OAuthCallbackError } from "./oauth-callback-error";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
+import { ciManagementProxy } from "./ci-management-proxy";
 export const SESSION_COOKIE = "argos_account";
 export const RENEWAL_COOKIE = "argos_account_renewal";
 export const CSRF_COOKIE = "argos_account_csrf";
@@ -102,6 +103,7 @@ const allowed: Record<string, RegExp> = {
 };
 export async function accountProxy(request: NextRequest, parts: string[]): Promise<NextResponse> {
   const path = parts.join("/"), mutation = request.method !== "GET", callback = /^auth\/oauth\/(google|github|linkedin)\/callback$/.test(path);
+  if(parts[0] === "ci") return ciManagementProxy(request,parts.slice(1),() => accountHeaders(request,mutation));
   if (!allowed[request.method]?.test(path) && !(request.method === "GET" && domainSummaryPath(path)) && !(request.method === "GET" && /^report-introduction\/[A-Za-z0-9_-]{20,512}$/.test(path)) && !adminPath(request.method,path)) return privateError("resource_unavailable", 404);
   const headers = accountHeaders(request, mutation);
   if (headers instanceof NextResponse) return headers;
