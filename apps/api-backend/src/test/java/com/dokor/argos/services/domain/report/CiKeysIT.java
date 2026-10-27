@@ -62,9 +62,50 @@ class CiKeysIT extends MariaDbReportFixture {
     }
     private CiKeysService.Input input(String integration){return new CiKeysService.Input("Deployment",List.of("audits:write","results:read","usage:read"),List.of(targetId),integration,null);}
     private CiKeysService.Issued issue(){return keys.create(auth,CSRF,input(null),"fixture");}
+    private CiAccountStatusService status(CiPolicy policy){
+        var ops=new CiAccountOperations(sessions,new AccountRateLimiter(dao,tokens,clock,settings),entitlement);
+        return new CiAccountStatusService(ops,policy,new UsagePolicy(config),clock);
+    }
     private CiKeysService.Context authenticate(CiKeysService.Issued key){return keys.withCredential("Bearer "+key.credential(),"fixture",null,(ctx,c)->ctx);}
     private CiErrorCode code(WebApplicationException e){return ((CiErrors.Envelope)e.getResponse().getEntity()).error().code();}
     private void unauthorized(Runnable work){assertEquals(CiErrorCode.AUTHENTICATION_FAILED,code(assertThrows(WebApplicationException.class,work::run)));}
+
+    @Test void browserStatusIsOwnerScopedReadOnlyAndContainsNoCredential() throws Exception {
+        var first=issue();var second=issue();var identity=authenticate(first);var foreign=user("status-foreign@example.com");
+        // Fixtures cover current counts, an old reservation, a previous counted month,
+        // a released run, and a foreign owner's attribution that must never bleed in.
+        String[] periods={"2026-10","2026-09","2026-09","2026-10","2026-10"};
+        String[] states={"COUNTED","RESERVED","COUNTED","RELEASED","COUNTED"};
+        try(var connection=source.getConnection();var s=connection.prepareStatement("INSERT INTO ARG_USAGE_RUN(id,user_id,period,state,created_at,ci_integration_id,ci_target_hash,ci_intent_id,ci_sample) VALUES(?,?,?,?,?,?,?,?,1)")){
+            for(int n=0;n<5;n++){s.setLong(1,n+1);s.setLong(2,n==4?foreign.getId():owner.getId());s.setString(3,periods[n]);s.setString(4,states[n]);s.setTimestamp(5,java.sql.Timestamp.from(clock.instant()));s.setLong(6,identity.integrationId());s.setBytes(7,tokens.sha256("https://example.com"));s.setString(8,UUID.randomUUID().toString());s.executeUpdate();}
+        }
+        var service=status(new CiPolicy(config));var view=service.read(auth);
+        assertTrue(view.enabled());assertTrue(view.eligible());assertEquals(30,view.limits().monthlyAnalysesPerKey());assertNull(view.limits().verifiedTargets());
+        assertEquals(2,view.integrations().size());var slot=view.integrations().getFirst();
+        assertEquals(first.key().integrationId(),slot.id());assertEquals(1,slot.used());assertEquals(1,slot.reserved());
+        assertEquals(second.key().integrationId(),view.integrations().get(1).id());assertEquals(0,view.integrations().get(1).used());
+        assertTrue(service.read(login(foreign)).integrations().isEmpty());
+        assertFalse(mapper.writeValueAsString(view).contains(first.credential()));
+        assertFalse(mapper.writeValueAsString(view).contains("https://example.com"));
+        assertTrue(mapper.writeValueAsString(view).contains("\"verifiedTargets\":null"));
+        try(var connection=source.getConnection();var s=connection.prepareStatement("SELECT COUNT(*) FROM ARG_USAGE_RUN");var r=s.executeQuery()){assertTrue(r.next());assertEquals(5,r.getLong(1));}
+    }
+    @Test void closedCiStillShowsOwnedIntegrationsWithoutGrantingAccess() {
+        var issued=issue();var view=status(new CiPolicy(ConfigFactory.empty())).read(auth);
+        assertFalse(view.enabled());assertFalse(view.eligible());assertNull(view.limits());
+        assertEquals(issued.key().integrationId(),view.integrations().getFirst().id());
+    }
+    @Test void statusRequiresCurrentPremiumProjectionAndDoesNotTreatAdminAsPaidAccess() throws Exception {
+        var service=status(new CiPolicy(config));assertTrue(service.read(auth).eligible());
+        sql("UPDATE ARG_ACCOUNT_CI_ENTITLEMENT SET ci_access=0 WHERE id="+owner.getId());assertFalse(service.read(auth).eligible());
+        sql("UPDATE ARG_ACCOUNT_CI_ENTITLEMENT SET ci_access=1,valid_until='2026-10-18 12:00:00' WHERE id="+owner.getId());assertFalse(service.read(auth).eligible());
+        sql("UPDATE ARG_ACCOUNT_CI_ENTITLEMENT SET valid_until='2028-10-18' WHERE id="+owner.getId());
+        sql("UPDATE ARG_ACCOUNT_USER SET offer='FREE',role='ADMIN' WHERE id="+owner.getId());assertFalse(service.read(auth).eligible());
+    }
+    @Test void statusDoesNotTreatApiKeysAsBrowserSessions() {
+        var key=issue();var service=status(new CiPolicy(config));
+        unauthorized(()->service.read(null));unauthorized(()->service.read("Bearer "+key.credential()));
+    }
 
     @Test void secretIsShownOnceAndNoRoleOrScopeEscalationIsAccepted() throws Exception {
         var issued=issue();var stored=dao.transactions.selectQuery().select(QCiApiKey.table).from(QCiApiKey.table).fetchOne();
@@ -168,6 +209,7 @@ class CiKeysIT extends MariaDbReportFixture {
     @Test void realHttpRequiresApiKeyEverywhereAndManagementRequiresBrowserCsrf() throws Exception {
         var issued=issue();var json=new SafeJsonProvider();json.setMapper(mapper);
         var resources=new ResourceConfig().register(json).register(new CiKeyFilter(keys)).register(new CiIdentityWs())
+            .register(new CiAccountStatusWs(status(new CiPolicy(config))))
             .register(new CiKeysWs(keys,new AccountCsrf(settings))).register(new CiResponseBoundary())
             .register(RequireExplicitAccessControlFeature.accessControlAnnotations(PublicApi.class,AccountAccess.class))
             .register(new PermissionFeature<>(new AccountPermissionProvider(sessions),AccountAccess.class,AccountAccess::value));
@@ -190,6 +232,13 @@ class CiKeysIT extends MariaDbReportFixture {
             assertEquals(issued.key().integrationId(),mapper.readTree(accepted.body()).path("integrationId").asText());
             var machineCannotManage=client.send(HttpRequest.newBuilder(URI.create(base+"/account/ci/keys")).header("Authorization","Bearer "+issued.credential()).GET().build(),HttpResponse.BodyHandlers.ofString());
             assertEquals(401,machineCannotManage.statusCode());
+            var machineCannotReadAccount=client.send(HttpRequest.newBuilder(URI.create(base+"/account/ci/status")).header("Authorization","Bearer "+issued.credential()).GET().build(),HttpResponse.BodyHandlers.ofString());
+            assertEquals(401,machineCannotReadAccount.statusCode());
+            var accountStatus=client.send(HttpRequest.newBuilder(URI.create(base+"/account/ci/status")).header("Authorization",auth).GET().build(),HttpResponse.BodyHandlers.ofString());
+            assertEquals(200,accountStatus.statusCode());assertEquals("private, no-store",accountStatus.headers().firstValue("cache-control").orElseThrow());
+            assertTrue(mapper.readTree(accountStatus.body()).path("eligible").asBoolean());assertFalse(accountStatus.body().contains(issued.credential()));
+            var injectedStatus=client.send(HttpRequest.newBuilder(URI.create(base+"/account/ci/status?owner=22")).header("Authorization",auth).GET().build(),HttpResponse.BodyHandlers.ofString());
+            assertEquals(400,injectedStatus.statusCode());
             var denied=client.send(HttpRequest.newBuilder(URI.create(base+"/account/ci/keys")).header("Authorization",auth).header("Content-Type","application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(input(null)))).build(),HttpResponse.BodyHandlers.ofString());
             assertEquals(403,denied.statusCode());assertEquals("REQUEST_REJECTED",mapper.readTree(denied.body()).path("error").path("code").asText());

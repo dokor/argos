@@ -51,10 +51,10 @@ it("collapses and restores navigation without losing accessible destinations or 
   expect(toggle).toHaveAttribute("aria-expanded", "false");
   expect(shell).toHaveAttribute("data-collapsed", "true");
   expect(screen.getByRole("button", { name: /Menu du compte/ }).parentElement).toHaveAttribute("data-compact", "true");
-  for (const label of ["Vue d’ensemble", "Analyses", "Domaines", "Intégrations — Bientôt", "Mon compte", "Offre et quotas", "Aide"]) {
+  for (const label of ["Vue d’ensemble", "Analyses", "Domaines", "Intégrations", "Mon compte", "Offre et quotas", "Aide"]) {
     expect(within(navigation).getByRole("link", { name: label })).toBeInTheDocument();
   }
-  const integrations = within(navigation).getByRole("link", { name: "Intégrations — Bientôt" });
+  const integrations = within(navigation).getByRole("link", { name: "Intégrations" });
   expect(integrations).toHaveAttribute("aria-current", "page");
   fireEvent.keyDown(integrations, { key: "Escape" });
   expect(shell).toHaveAttribute("data-tooltip-dismissed", "true");
@@ -76,7 +76,7 @@ it("localizes compact controls and preserves English navigation destinations", (
   render(<LangProvider initialLang="en"><AccountShell>{content}</AccountShell></LangProvider>);
   fireEvent.click(screen.getByRole("button", { name: "Collapse menu" }));
   expect(screen.getByRole("button", { name: "Expand menu" })).toHaveAttribute("aria-expanded", "false");
-  expect(screen.getByRole("link", { name: "Integrations — Soon" })).toHaveAttribute("href", "/en/account/integrations");
+  expect(screen.getByRole("link", { name: "Integrations" })).toHaveAttribute("href", "/en/account/integrations");
 });
 it("shares one footer, real available credits and a current navigation item", () => {
   render(<AccountShell>{content}</AccountShell>);
