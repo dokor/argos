@@ -173,6 +173,130 @@ class AccountLifecycleIT extends MariaDbReportFixture {
         error(404, () -> personal.get(bearer(other), created.runId()));
     }
     @Test
+    void registrationPersistsPendingFreeUserAndHashedCredentialsWithoutStartingSession()
+            throws Exception {
+        String password = "  🔐 a synthetic passphrase  ";
+        Long id = auth.register("New.User@Example.com", password, "  New User  ", "en");
+        assertNotNull(id);
+        var user = dao.transaction(c -> dao.user(id, c, false));
+        assertEquals("new.user@example.com", user.getEmail());
+        assertEquals("New User", user.getDisplayName());
+        assertEquals("PENDING", user.getState());
+        assertEquals("USER", user.getRole());
+        assertEquals("FREE", user.getOffer());
+        assertEquals(clock.instant(), user.getCreatedAt());
+        var identity = dao.transaction(c -> dao.identity("password", id.toString(), c, false));
+        assertEquals(id, identity.getUserId());
+        assertTrue(identity.getPasswordHash().startsWith("$argon2id$"));
+        assertTrue(passwords.verify(identity.getPasswordHash(), password));
+        assertFalse(passwords.verify(identity.getPasswordHash(), password.strip()));
+        assertEquals(0, count("ARG_ACCOUNT_SESSION"));
+        assertEquals(1, mail.messages.size());
+        String token = mail.token(user.getEmail());
+        var stored = dao.transaction(c -> dao.transactions.selectQuery(c)
+                .select(QAccountToken.table).from(QAccountToken.table).fetchOne());
+        assertEquals(id, stored.getUserId());
+        assertEquals("VERIFY", stored.getPurpose());
+        assertArrayEquals(tokens.sha256(token), stored.getTokenHash());
+        assertEquals(clock.instant().plus(settings.tokenTtl("VERIFY")), stored.getExpiresAt());
+        assertNull(stored.getConsumedAt());
+        assertNull(stored.getSessionId());
+
+        assertNull(auth.register("NEW.USER@example.com", PASSWORD, "Replacement", "fr"));
+        assertEquals(1, mail.messages.size());
+        assertEquals(1, count("ARG_ACCOUNT_USER"));
+        assertEquals(1, count("ARG_ACCOUNT_IDENTITY"));
+        assertEquals(1, count("ARG_ACCOUNT_TOKEN"));
+        assertEquals("New User", dao.transaction(c -> dao.user(id, c, false)).getDisplayName());
+        auth.verify(token);
+        error(401, () -> auth.login(user.getEmail(), PASSWORD, CSRF));
+        assertEquals("ACTIVE", auth.login(user.getEmail(), password, CSRF).context().user().getState());
+    }
+
+    @Test
+    void invalidRegistrationLeavesNoAccountIdentityTokenSessionOrMail() throws Exception {
+        for (String email : Arrays.asList(null, "", "invalid", " user@example.com", "a\r\nb@example.com"))
+            error(400, () -> auth.register(email, PASSWORD, "Fixture"));
+        for (String password : Arrays.asList(null, "", "x".repeat(14), "🔐".repeat(14), "x".repeat(129)))
+            error(400, () -> auth.register("invalid@example.com", password, "Fixture"));
+        for (String name : Arrays.asList(null, "", "   ", "x".repeat(101), "Control\u0001"))
+            error(400, () -> auth.register("invalid@example.com", PASSWORD, name));
+        for (String table : List.of("ARG_ACCOUNT_USER", "ARG_ACCOUNT_IDENTITY", "ARG_ACCOUNT_TOKEN", "ARG_ACCOUNT_SESSION"))
+            assertEquals(0, count(table), table);
+        assertTrue(mail.messages.isEmpty());
+    }
+
+    @Test
+    void simultaneousRegistrationsCreateOnlyOneAccountAndVerificationMessage() throws Exception {
+        assertEquals(1, race(() -> auth.register("race-register@example.com", PASSWORD, "Fixture", "fr") != null));
+        assertEquals(1, count("ARG_ACCOUNT_USER"));
+        assertEquals(1, count("ARG_ACCOUNT_IDENTITY"));
+        assertEquals(1, count("ARG_ACCOUNT_TOKEN"));
+        assertEquals(0, count("ARG_ACCOUNT_SESSION"));
+        assertEquals(1, mail.messages.size());
+        auth.verify(mail.token("race-register@example.com"));
+        assertEquals("ACTIVE", auth.login("race-register@example.com", PASSWORD, CSRF).context().user().getState());
+    }
+
+    @Test
+    void failedRegistrationDeliveryRollsBackAllRowsAndAllowsRetry() throws Exception {
+        mail.fail = true;
+        error(503, () -> auth.register("retry-register@example.com", PASSWORD, "Fixture"));
+        for (String table : List.of("ARG_ACCOUNT_USER", "ARG_ACCOUNT_IDENTITY", "ARG_ACCOUNT_TOKEN", "ARG_ACCOUNT_SESSION"))
+            assertEquals(0, count(table), table);
+        assertTrue(mail.messages.isEmpty());
+        mail.fail = false;
+        assertNotNull(auth.register("retry-register@example.com", PASSWORD, "Fixture", "en"));
+        assertEquals(1, count("ARG_ACCOUNT_USER"));
+        assertEquals(1, count("ARG_ACCOUNT_IDENTITY"));
+        assertEquals(1, count("ARG_ACCOUNT_TOKEN"));
+        assertEquals(1, mail.messages.size());
+        auth.verify(mail.token("retry-register@example.com"));
+        assertEquals("ACTIVE", auth.login("retry-register@example.com", PASSWORD, CSRF).context().user().getState());
+    }
+
+    @Test
+    void registrationHttpRequiresCsrfRejectsPrivilegeFieldsAndHidesEmailCollisions()
+            throws Exception {
+        String body = mapper.writeValueAsString(Map.of(
+                "email", "http-register@example.com", "password", PASSWORD, "displayName", "Fixture"));
+        try (var http = new HttpFixture()) {
+            assertEquals(403, http.call("POST", "/account/auth/register", null, body, false).statusCode());
+            for (var headers : List.of(
+                    Map.of("Origin", "https://attacker.example"),
+                    Map.of("X-Argos-CSRF", "d".repeat(43)),
+                    Map.of("Cookie", "argos_account_csrf=" + "d".repeat(43))))
+                assertEquals(403, http.call("POST", "/account/auth/register", null, body, true, headers).statusCode());
+            assertEquals(400, http.call("POST", "/account/auth/register", null, "null", true).statusCode());
+            assertEquals(400, http.call("POST", "/account/auth/register", null, "{broken}", true).statusCode());
+            for (String field : List.of("role", "offer", "state", "emailVerified")) {
+                var forged = mapper.readTree(body).deepCopy();
+                ((com.fasterxml.jackson.databind.node.ObjectNode) forged).put(field, "ADMIN");
+                assertEquals(400, http.call("POST", "/account/auth/register", null, forged.toString(), true).statusCode());
+            }
+            assertEquals(0, count("ARG_ACCOUNT_USER"));
+            assertTrue(mail.messages.isEmpty());
+            var created = http.call("POST", "/account/auth/register", null, body, true);
+            assertEquals(200, created.statusCode(), created.body());
+            var duplicate = http.call("POST", "/account/auth/register", null,
+                    body.replace("http-register@example.com", "HTTP-REGISTER@EXAMPLE.COM"), true);
+            assertEquals(created.statusCode(), duplicate.statusCode());
+            assertEquals(mapper.readTree(created.body()), mapper.readTree(duplicate.body()));
+            assertEquals(mapper.readTree("{\"accepted\":true}"), mapper.readTree(created.body()));
+            for (var response : List.of(created, duplicate)) {
+                assertEquals("private, no-store", response.headers().firstValue("cache-control").orElseThrow());
+                assertTrue(response.headers().firstValue("X-Argos-Session").isEmpty());
+                assertTrue(response.headers().firstValue("Set-Cookie").isEmpty());
+            }
+            assertEquals(1, count("ARG_ACCOUNT_USER"));
+            assertEquals(1, count("ARG_ACCOUNT_IDENTITY"));
+            assertEquals(1, count("ARG_ACCOUNT_TOKEN"));
+            assertEquals(0, count("ARG_ACCOUNT_SESSION"));
+            assertEquals(1, mail.messages.size());
+        }
+    }
+
+    @Test
     void localizedEmailsCompleteVerificationAndResetWithoutReusingTokens() {
         String email = "localized@example.com";
         auth.register(email, PASSWORD, "Fixture", "en");
