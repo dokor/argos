@@ -8,7 +8,7 @@ import java.util.List;
  * switch branch, which the compiler checks.
  *
  * Execution remains explicit in AuditProcessorService: HTTP supplies the context,
- * Observatory and SSL overlap the local modules, and Tech alone has a domain cache.
+ * Observatory and SSL overlap the local modules. Each audit collects fresh results.
  */
 public enum AuditModule {
     HTTP("http", "HTTP & Sécurité", "HTTP"),
