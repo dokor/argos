@@ -45,6 +45,10 @@ try {
           const url = new URL(route.request().url()),
             path = url.pathname,
             method = route.request().method();
+          if (path === "/api/account/auth/renew") {
+            assert.equal(method, "POST");
+            return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(response(path)) });
+          }
           let data = response(path, url.searchParams),
             status = 200;
           if (method === "POST") {
@@ -266,7 +270,7 @@ try {
         await page
           .getByRole("button", { name: c.confirm, exact: true })
           .click();
-        assert.equal(posts.length, before, "Reload never submits");
+        assert.equal(posts.length, before, "Reload never submits a domain operation");
         await page.getByRole("dialog").waitFor();
         await check("confirmation");
         const modal = page.getByRole("dialog");

@@ -5,6 +5,8 @@ export const items=Array.from({length:24},(_,index)=>{
  return {runId:index===0?'9007199254740992':String(2000+index),batchId:index%6===0?'700':null,state,period:index===10?'2026-09':'2026-10',createdAt:date,countedAt:state==='COUNTED'?date:null,releasedAt:state==='RELEASED'?date:null,url:'https://atelier.example/collection/'+(index===0?'une-url-technique-avec-un-chemin-long-et-des-parametres?tri=date&categorie=toutes':index)};
 });
 export function response(path,params=new URLSearchParams()) {
+ if(path==='/api/account/csrf')return {csrf:'c'.repeat(43)};
+ if(path==='/api/account/auth/renew')return {accepted:true};
  if(path==='/api/account/me')return {displayName:'Camille · Démonstration',email:'fixture@example.com',verified:true};
  if(path==='/api/account/usage')return usage;
  if(path==='/api/account/usage/timeline'){

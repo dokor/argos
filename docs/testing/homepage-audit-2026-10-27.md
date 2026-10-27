@@ -149,6 +149,33 @@ Compromis conservés dans le bilan :
   Les conditions publiques avec Traefik, HTTP/2 et backend réel restent à mesurer
   si une mise en ligne est décidée séparément. Aucun déploiement dans cette tâche.
 
+### Vérification après intégration de main
+
+La version `f1b2141d` intègre ensuite `main` (`eadc2b7a`), notamment le
+renouvellement de session sur les pages publiques et les nouveaux conseils.
+Une nouvelle série complète, avec les mêmes profils, donne :
+
+| Médiane intégrée | Valeur |
+| --- | ---: |
+| LCP simulé, 5 passages à froid | **2 269 ms** |
+| LCP appliqué, 3 passages à froid | **1 969 ms** |
+| LCP appliqué, 3 passages avec cache | **1 075 ms** |
+| FCP / TBT simulés | 1 213 / 75 ms |
+| JavaScript / transfert total à froid | 179 770 / 307 333 octets |
+| Transfert total avec cache | 42 878 octets |
+
+Les plages LCP sont 2 265–2 846 ms en simulation, 1 838–2 052 ms à froid
+appliqué et 965–1 115 ms avec cache. Aucune ressource en échec. Le LCP simulé
+reste inférieur aux deux références (−13,6 % face à la PR originale), mais cette
+vérification inclut aussi les changements de main ; la comparaison contrôlée
+précédente reste distincte. `ACCOUNT_ORIGIN=http://localhost:3020` permet la vraie
+réponse anonyme du BFF au renouvellement de session, sans interception ni mutation
+du backend. Tous les échantillons sont conservés sous `versions.stableIntegrated`.
+
+Les fixtures E2E ont également été adaptées au contrat de renouvellement : origine
+locale dans la CI, CSRF et acquittement synthétique sans émission de session.
+Les assertions métier et les contrôles d’accès réels sont conservés.
+
 ### Contrôle d’un consommateur partagé
 
 Le rapport d’exemple EN a aussi été mesuré sur trois passages simulés par version,
@@ -163,7 +190,8 @@ Installer les dépendances verrouillées de `apps/console-web` et
 `apps/lighthouse-service` avec `npm ci`. Démarrer le backend de revue avec
 `node .agents/skills/argos-visual-review/scripts/preview-backend.mjs`, puis compiler
 et démarrer le frontend avec `API_BASE=http://127.0.0.1:3018` (`npm run build`,
-`npm run start -- --port 3020`). Les deux processus doivent disposer du même accès
+`npm run start -- --port 3020`) et `ACCOUNT_ORIGIN=http://localhost:3020`.
+Les deux processus doivent disposer du même accès
 loopback. Préparer le serveur par deux lectures HTML avant de mesurer.
 
 Définir `CHROME_PATH` vers le même Chrome/Edge pour toutes les versions, puis :
@@ -187,15 +215,16 @@ prototype i18n explorés puis retirés ne font pas partie du code livré.
 - Lockfile complété avec les entrées optionnelles `@emnapi/core` et
   `@emnapi/runtime` requises par l’installation Linux. Validation `npm ci --dry-run`
   avec npm 11.19.0 et cible Linux x64 réussie ; aucune version déjà mesurée changée.
-- **1 489 tests frontend distincts réussis** : suite complète de 1 487 tests,
-  dont deux nouveaux contrôles de langue résolue au serveur, puis deux nouveaux
-  cas PDF ciblés FR/EN. Les refus d’accès existants ont été rejoués avec ces cas.
-  Trois tests éditoriaux et la structure FR/EN passent également.
+- **1 522 tests frontend réussis dans 152 fichiers** après intégration de main,
+  dont les contrôles de langue résolue au serveur, deux cas PDF ciblés FR/EN et
+  les refus d’accès existants. Le nouveau test d’inscription de main utilise le
+  fournisseur serveur. Trois tests éditoriaux et la structure FR/EN passent.
 - `node scripts/e2e/report-pdf.mjs` avec Edge installé : **24 PDF générés et
   contrats vérifiés** (FR/EN, synthèse/complet, accès public/propriétaire/partagé,
   expiration, compteurs uniques et absence de token dans l’aperçu). Le chargement
   du module différé, les feuilles de style et les polices sont donc exercés dans
-  un navigateur réel. La capture HTML en média print `empty-en-summary.png` a été
+  un navigateur réel sur la version stable avant intégration de main ; le code
+  d’export est inchangé depuis. La capture HTML en média print `empty-en-summary.png` a été
   examinée ; toutes les pages PDF n’ont pas été inspectées manuellement.
 - Accueil FR clair à **1280 × 900 et 390 × 844** : captures avant/après identiques
   octet pour octet. Un h1, aucun débordement horizontal. Les empreintes et preuves

@@ -118,6 +118,8 @@ createServer((req, res) => {
   }
   res.setHeader("Content-Type", "application/json; charset=utf-8");
   res.setHeader("Cache-Control", "no-store");
+  // Non-mutating session acknowledgement for synthetic browser recipes; no session is issued.
+  if (req.method === "POST" && req.url === "/api/account/auth/renew") { res.end(JSON.stringify({ accepted: true })); return; }
   if (req.method !== "GET") { res.writeHead(405); res.end(JSON.stringify({ error: "Read-only visual fixtures" })); return; }
   const path = new URL(req.url, "http://127.0.0.1:3018").pathname;
   const params = new URL(req.url, "http://127.0.0.1:3018").searchParams;
