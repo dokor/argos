@@ -70,7 +70,9 @@ jobs:
         id: state
         run: |
           node --input-type=module <<'NODE'
-          import { appendFileSync } from 'node:fs';
+          import { appendFileSync, accessSync, constants, statSync } from 'node:fs';
+          import { dirname } from 'node:path';
+          import { spawnSync } from 'node:child_process';
           import { prepareProxyState } from './proxy-source/scripts/proxy-state.mjs';
           process.umask(0o077);
           try {
@@ -82,6 +84,25 @@ jobs:
             const known = ['persistent-proxy-env-required', 'acme-invalid', 'acme-incomplete',
               'proxy-project-unverified', 'state-not-a-regular-file', 'state-must-be-outside-checkout'];
             console.error('Proxy state preparation failed:', known.includes(error.message) ? error.message : 'private-state-unavailable');
+            const accessible = (path, mode) => { try { accessSync(path, mode); return true; } catch { return false; } };
+            const paths = [process.env.PROXY_ENV_FILE, process.env.TRAEFIK_ACME_FILE,
+              '/srv', '/srv/infra', '/srv/infra/raspberry-infra', dirname(process.env.PROXY_ENV_FILE), dirname(process.env.TRAEFIK_ACME_FILE)];
+            const state = paths.map(path => {
+              let metadata = {};
+              try { const stat = statSync(path); metadata = { uid: stat.uid, mode: (stat.mode & 0o777).toString(8) }; } catch {}
+              return { path, exists: accessible(path, constants.F_OK), readable: accessible(path, constants.R_OK), writable: accessible(path, constants.W_OK), ...metadata };
+            });
+            const docker = spawnSync('docker', ['container', 'inspect', 'traefik'], { encoding: 'utf8', timeout: 10000 });
+            let live = {};
+            if (docker.status === 0) {
+              const [container] = JSON.parse(docker.stdout);
+              const legacy = container.Config?.Labels?.['com.docker.compose.project.working_dir'];
+              live = { running: container.State?.Running, project: container.Config?.Labels?.['com.docker.compose.project'],
+                legacyEnvExists: typeof legacy === 'string' && accessible(`${legacy}/.env`, constants.F_OK) };
+            }
+            console.log(JSON.stringify({ diagnostic: 'proxy-state-metadata-only',
+              errorCode: /^[A-Z_0-9]+$/.test(error.code ?? '') ? error.code : 'none',
+              dockerInspectStatus: docker.status, live, paths: state }));
             process.exitCode = 1;
           }
           NODE
