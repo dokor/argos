@@ -3,7 +3,7 @@ import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import { accountFetch, AccountClientError } from "@/lib/account-client";
-import { LangProvider } from "@/lib/i18n/LangContext";
+import { LangProvider } from "@/lib/i18n/LangProvider";
 import fr from "@/lib/i18n/fr.json";
 import en from "@/lib/i18n/en.json";
 import ReportAiPrompt from "./ReportAiPrompt";

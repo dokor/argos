@@ -2,7 +2,7 @@
 import { expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import LangToggle from "@/components/LangToggle";
-import { LangProvider } from "@/lib/i18n/LangContext";
+import { LangProvider } from "@/lib/i18n/LangProvider";
 
 const route = vi.hoisted(() => ({ pathname: "" }));
 vi.mock("next/navigation", () => ({ usePathname: () => route.pathname }));

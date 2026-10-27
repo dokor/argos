@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import {beforeEach,afterEach,it,expect,vi} from "vitest";
-import {render,screen,fireEvent,waitFor} from "@testing-library/react";
+import {render,screen,fireEvent,waitFor} from "@/test/render";
 import {useAntiBot} from "./useAntiBot";
 const done=vi.fn(),fetchMock=vi.fn();let options:Record<string,unknown>;
 function Form(){const bot=useAntiBot("register");return <form onSubmit={async event=>{event.preventDefault();try{done(await bot.verify());}catch{}}}>{bot.element}<button disabled={bot.working}>Send</button></form>;}

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import {beforeEach,expect,it,vi} from 'vitest';
-import {fireEvent,render,screen,waitFor} from '@testing-library/react';
+import {fireEvent,render,screen,waitFor} from "@/test/render";
 import TrafficView from './TrafficView';
 import {accountFetch} from '@/lib/account-client';
 const session=vi.hoisted(()=>({ready:true,denied:false,profile:{verified:true,admin:true}}));

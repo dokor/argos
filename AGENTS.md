@@ -124,7 +124,7 @@ Les Route Handlers BFF, y compris les routes dynamiques des comptes/admin, sont 
   - **Route handlers** (`src/app/api/*`) pour les flux avec validation/secrets : `POST/GET /api/audits` (SSRF + longueur), `POST /api/newsletter`, les mutations de compte.
   - **Rewrite proxy** pour les lectures restantes (`/api/reports/*`, `/api/audits/runs/*`, `/api/audits/*/history`).
 - `API_BASE` (URL interne du backend Java) est **exclusivement serveur** — jamais exposée au client. `argosApi.http()` (`src/lib/ArgosApi.ts`) utilise l'URL absolue en SSR et un chemin relatif côté client (proxifié).
-- **Frontière client/serveur** : la plupart des composants sont `"use client"` **parce que l'i18n (`LangContext`) et le thème (`ThemeContext`) sont des contextes client**, en plus de l'interactivité. Réduire davantage l'hydratation des contenus statiques suppose une **i18n résolue côté serveur** (chantier séparé). Les composants purs sans hook/événement ne portent pas la directive (ex. `ArgosIcon`).
+- **Frontière client/serveur** : `LangProvider.tsx` sélectionne le dictionnaire FR/EN côté serveur ; `LangContext.tsx` reçoit cette valeur et expose `useLang` côté client, sans importer les catalogues JSON à l'exécution. Les composants qui utilisent l'i18n ou le thème restent `"use client"`. Réduire leur hydratation demande une migration composant par composant avec des propriétés résolues côté serveur. Les composants purs sans hook/événement ne portent pas la directive (ex. `ArgosIcon`). Les tests isolés fournissent leur langue via `LangProvider` ou les fixtures de `src/test/render.tsx`.
 
 ### Composants rapport (`src/components/report/`)
 | Composant | Rôle |

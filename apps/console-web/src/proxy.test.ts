@@ -18,5 +18,6 @@ it("replaces client-supplied nonces and policies with a fresh matching request/r
   expect(scripts).not.toContain("'unsafe-inline'");
   expect(scripts).not.toContain("'unsafe-eval'");
   expect(scripts).toContain("https://challenges.cloudflare.com");
+  expect(policy.split(";").find(part => part.trim().startsWith("img-src "))?.trim()).toBe("img-src 'self' data:");
   expect(first.headers.get("Cache-Control")).toBe("private, no-store");
 });

@@ -38,6 +38,12 @@ try {
         await page.route("**/api/account/**", async (route) => {
           const req = route.request(),
             url = new URL(req.url());
+          // Session bootstrap is separate from the read-only overview business requests below.
+          if (url.pathname === "/api/account/csrf" || url.pathname === "/api/account/auth/renew") {
+            const renewal = url.pathname.endsWith("/renew");
+            assert.equal(req.method(), renewal ? "POST" : "GET");
+            return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(renewal ? { accepted: true } : { csrf: "c".repeat(43) }) });
+          }
           calls.push({ method: req.method(), path: url.pathname });
           assert.equal(req.method(), "GET");
           let status = 200,

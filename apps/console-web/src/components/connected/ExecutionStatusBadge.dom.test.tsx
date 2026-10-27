@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { expect, it } from "vitest";
-import { render, screen } from "@testing-library/react";
-import { LangProvider } from "@/lib/i18n/LangContext";
+import { render, screen } from "@/test/render";
+import { LangProvider } from "@/lib/i18n/LangProvider";
 import ExecutionStatusBadge from "./ExecutionStatusBadge";
 
 it.each([

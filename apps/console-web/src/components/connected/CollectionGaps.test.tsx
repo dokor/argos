@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { LangProvider } from "@/lib/i18n/LangContext";
+import { LangProvider } from "@/lib/i18n/LangProvider";
 import CollectionGaps, { RepeatedCollectionGaps } from "./CollectionGaps";
 import { PageList } from "./domains/DomainUi";
 import type { PageResult } from "@/lib/connected/contracts";

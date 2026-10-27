@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import {beforeEach,it,expect,vi} from "vitest";
-import {render,screen,fireEvent,waitFor,act} from "@testing-library/react";
+import {render,screen,fireEvent,waitFor,act} from "@/test/render";
 import UsageView from "./UsageView";
 vi.mock("./UsageTimeline",()=>({default:()=>null}));
-import {LangProvider} from "@/lib/i18n/LangContext";
+import {LangProvider} from "@/lib/i18n/LangProvider";
 import {accountFetch,AccountClientError} from "@/lib/account-client";
 const mock=vi.hoisted(()=>({query:"",push:vi.fn(),session:{profile:{verified:true},denied:false,usageError:false,invalidate:vi.fn(),refreshUsage:vi.fn(),usage:null as null|{offer:string;period:string;timezone:string;startsAt:string;resetsAt:string;used:number;reserved:number;available:number|null;limit:number|null;canLaunch:boolean}}}));
 vi.mock("next/navigation",()=>({useRouter:()=>({push:mock.push}),useSearchParams:()=>new URLSearchParams(mock.query),usePathname:()=>"/account/usage"}));

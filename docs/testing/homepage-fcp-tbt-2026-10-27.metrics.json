@@ -1,0 +1,479 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-27",
+  "status": "prototype-only-not-integrated",
+  "applicationRevision": "6d96ab030931d12dc2fe1fe812a28bb8ad65a9f4",
+  "applicationChanged": false,
+  "goalComplete": false,
+  "protocol": {
+    "target": "http://localhost:3020/",
+    "lighthouse": "13.5.0",
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36 Edg/156.0.0.0",
+    "profile": {
+      "formFactor": "mobile",
+      "screenEmulation": {
+        "mobile": true,
+        "width": 412,
+        "height": 823,
+        "deviceScaleFactor": 1.75,
+        "disabled": false
+      },
+      "throttling": {
+        "rttMs": 150,
+        "throughputKbps": 1638.4,
+        "requestLatencyMs": 562.5,
+        "downloadThroughputKbps": 1474.5600000000002,
+        "uploadThroughputKbps": 675,
+        "cpuSlowdownMultiplier": 4
+      },
+      "throttlingMethod": "simulate",
+      "emulatedUserAgent": "Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Mobile Safari/537.36"
+    },
+    "rounds": 5,
+    "order": [
+      "1-before",
+      "1-after",
+      "2-after",
+      "2-before",
+      "3-before",
+      "3-after",
+      "4-after",
+      "4-before",
+      "5-before",
+      "5-after"
+    ],
+    "cache": "cold; fresh browser for every sample",
+    "delivery": "local-static-precompression-prototype",
+    "fixture": "Synthetic loopback API; no real audits or accounts",
+    "concurrency": "No build/test concurrency during final series; shared workstation",
+    "appliedThrottlingMeasured": false,
+    "warmCacheMeasured": false
+  },
+  "comparison": {
+    "before": "Stable PR application with normal Next gzip via pass-through local proxy",
+    "after": "Archived frontend patch plus local-only Brotli proxy for initial JS/CSS"
+  },
+  "variants": {
+    "before": {
+      "buildId": "aPifSf8TuYQlyD_IIamyr",
+      "samples": [
+        {
+          "round": 1,
+          "cache": "cold",
+          "run": 1,
+          "lcp": 2840.17305,
+          "fcp": 1217.4487,
+          "tbt": 64,
+          "cls": 9.627649436313142E-05,
+          "score": 0.95,
+          "benchmarkIndex": 2241,
+          "cssRequests": 4,
+          "cssTransfer": 27789,
+          "scriptRequests": 13,
+          "scriptTransfer": 179770,
+          "fontTransfer": 29849,
+          "documentTransfer": 39280,
+          "failedRequests": 0,
+          "totalTransfer": 307339,
+          "lcpElement": "Identifiez les problèmes techniques à corriger en priorité."
+        },
+        {
+          "round": 2,
+          "cache": "cold",
+          "run": 1,
+          "lcp": 2842.94735,
+          "fcp": 1219.9649,
+          "tbt": 63,
+          "cls": 9.627649436313142E-05,
+          "score": 0.95,
+          "benchmarkIndex": 2252.5,
+          "cssRequests": 4,
+          "cssTransfer": 27789,
+          "scriptRequests": 13,
+          "scriptTransfer": 179770,
+          "fontTransfer": 29849,
+          "documentTransfer": 39273,
+          "failedRequests": 0,
+          "totalTransfer": 307332,
+          "lcpElement": "Identifiez les problèmes techniques à corriger en priorité."
+        },
+        {
+          "round": 3,
+          "cache": "cold",
+          "run": 1,
+          "lcp": 2843.07405,
+          "fcp": 1219.3826999999999,
+          "tbt": 64,
+          "cls": 9.627649436313142E-05,
+          "score": 0.95,
+          "benchmarkIndex": 2273.5,
+          "cssRequests": 4,
+          "cssTransfer": 27789,
+          "scriptRequests": 13,
+          "scriptTransfer": 179770,
+          "fontTransfer": 29849,
+          "documentTransfer": 39273,
+          "failedRequests": 0,
+          "totalTransfer": 307332,
+          "lcpElement": "Identifiez les problèmes techniques à corriger en priorité."
+        },
+        {
+          "round": 4,
+          "cache": "cold",
+          "run": 1,
+          "lcp": 2844.1202499999995,
+          "fcp": 1219.4135,
+          "tbt": 65,
+          "cls": 9.627649436313142E-05,
+          "score": 0.95,
+          "benchmarkIndex": 2242.5,
+          "cssRequests": 4,
+          "cssTransfer": 27789,
+          "scriptRequests": 13,
+          "scriptTransfer": 179770,
+          "fontTransfer": 29849,
+          "documentTransfer": 39270,
+          "failedRequests": 0,
+          "totalTransfer": 307329,
+          "lcpElement": "Identifiez les problèmes techniques à corriger en priorité."
+        },
+        {
+          "round": 5,
+          "cache": "cold",
+          "run": 1,
+          "lcp": 2838.5625,
+          "fcp": 1220.375,
+          "tbt": 58,
+          "cls": 9.627649436313142E-05,
+          "score": 0.95,
+          "benchmarkIndex": 2271.5,
+          "cssRequests": 4,
+          "cssTransfer": 27789,
+          "scriptRequests": 13,
+          "scriptTransfer": 179770,
+          "fontTransfer": 29849,
+          "documentTransfer": 39275,
+          "failedRequests": 0,
+          "totalTransfer": 307334,
+          "lcpElement": "Identifiez les problèmes techniques à corriger en priorité."
+        }
+      ],
+      "medians": {
+        "lcp": 2842.94735,
+        "fcp": 1219.4135,
+        "tbt": 64,
+        "cls": 9.627649436313142E-05,
+        "score": 0.95,
+        "cssTransfer": 27789,
+        "scriptTransfer": 179770,
+        "fontTransfer": 29849,
+        "documentTransfer": 39273,
+        "totalTransfer": 307332,
+        "failedRequests": 0,
+        "benchmarkIndex": 2252.5
+      },
+      "ranges": {
+        "lcp": {
+          "min": 2838.5625,
+          "max": 2844.1202499999995
+        },
+        "fcp": {
+          "min": 1217.4487,
+          "max": 1220.375
+        },
+        "tbt": {
+          "min": 58,
+          "max": 65
+        },
+        "cls": {
+          "min": 9.627649436313142E-05,
+          "max": 9.627649436313142E-05
+        },
+        "score": {
+          "min": 0.95,
+          "max": 0.95
+        },
+        "cssTransfer": {
+          "min": 27789,
+          "max": 27789
+        },
+        "scriptTransfer": {
+          "min": 179770,
+          "max": 179770
+        },
+        "fontTransfer": {
+          "min": 29849,
+          "max": 29849
+        },
+        "documentTransfer": {
+          "min": 39270,
+          "max": 39280
+        },
+        "totalTransfer": {
+          "min": 307329,
+          "max": 307339
+        },
+        "failedRequests": {
+          "min": 0,
+          "max": 0
+        },
+        "benchmarkIndex": {
+          "min": 2241,
+          "max": 2273.5
+        }
+      }
+    },
+    "after": {
+      "buildId": "Z_jcukXJEaRevbl30Nbph",
+      "samples": [
+        {
+          "round": 1,
+          "cache": "cold",
+          "run": 1,
+          "lcp": 2541.7056,
+          "fcp": 1066.4704,
+          "tbt": 62.882399999999734,
+          "cls": 9.627649436313142E-05,
+          "score": 0.97,
+          "benchmarkIndex": 2267,
+          "cssRequests": 4,
+          "cssTransfer": 12779,
+          "scriptRequests": 15,
+          "scriptTransfer": 159709,
+          "fontTransfer": 29849,
+          "documentTransfer": 16847,
+          "failedRequests": 0,
+          "totalTransfer": 248655,
+          "lcpElement": "Identifiez les problèmes techniques à corriger en priorité."
+        },
+        {
+          "round": 2,
+          "cache": "cold",
+          "run": 1,
+          "lcp": 2541.8968999999997,
+          "fcp": 1067.2646,
+          "tbt": 61.68384999999989,
+          "cls": 9.627649436313142E-05,
+          "score": 0.97,
+          "benchmarkIndex": 2276.5,
+          "cssRequests": 4,
+          "cssTransfer": 12779,
+          "scriptRequests": 15,
+          "scriptTransfer": 159709,
+          "fontTransfer": 29849,
+          "documentTransfer": 16846,
+          "failedRequests": 0,
+          "totalTransfer": 248654,
+          "lcpElement": "Identifiez les problèmes techniques à corriger en priorité."
+        },
+        {
+          "round": 3,
+          "cache": "cold",
+          "run": 1,
+          "lcp": 2539.2806000000005,
+          "fcp": 1067.5204,
+          "tbt": 58.61990000000014,
+          "cls": 9.627649436313142E-05,
+          "score": 0.97,
+          "benchmarkIndex": 2241.5,
+          "cssRequests": 4,
+          "cssTransfer": 12779,
+          "scriptRequests": 15,
+          "scriptTransfer": 159709,
+          "fontTransfer": 29849,
+          "documentTransfer": 16851,
+          "failedRequests": 0,
+          "totalTransfer": 248659,
+          "lcpElement": "Identifiez les problèmes techniques à corriger en priorité."
+        },
+        {
+          "round": 4,
+          "cache": "cold",
+          "run": 1,
+          "lcp": 2541.5218499999996,
+          "fcp": 1064.3479,
+          "tbt": 66.41302500000029,
+          "cls": 9.627649436313142E-05,
+          "score": 0.97,
+          "benchmarkIndex": 2213.5,
+          "cssRequests": 4,
+          "cssTransfer": 12779,
+          "scriptRequests": 15,
+          "scriptTransfer": 159709,
+          "fontTransfer": 29849,
+          "documentTransfer": 16850,
+          "failedRequests": 0,
+          "totalTransfer": 248658,
+          "lcpElement": "Identifiez les problèmes techniques à corriger en priorité."
+        },
+        {
+          "round": 5,
+          "cache": "cold",
+          "run": 1,
+          "lcp": 2539.1348,
+          "fcp": 1065.4232,
+          "tbt": 62.14419999999973,
+          "cls": 9.627649436313142E-05,
+          "score": 0.97,
+          "benchmarkIndex": 2278,
+          "cssRequests": 4,
+          "cssTransfer": 12779,
+          "scriptRequests": 15,
+          "scriptTransfer": 159709,
+          "fontTransfer": 29849,
+          "documentTransfer": 16850,
+          "failedRequests": 0,
+          "totalTransfer": 248658,
+          "lcpElement": "Identifiez les problèmes techniques à corriger en priorité."
+        }
+      ],
+      "medians": {
+        "lcp": 2541.5218499999996,
+        "fcp": 1066.4704,
+        "tbt": 62.14419999999973,
+        "cls": 9.627649436313142E-05,
+        "score": 0.97,
+        "cssTransfer": 12779,
+        "scriptTransfer": 159709,
+        "fontTransfer": 29849,
+        "documentTransfer": 16850,
+        "totalTransfer": 248658,
+        "failedRequests": 0,
+        "benchmarkIndex": 2267
+      },
+      "ranges": {
+        "lcp": {
+          "min": 2539.1348,
+          "max": 2541.8968999999997
+        },
+        "fcp": {
+          "min": 1064.3479,
+          "max": 1067.5204
+        },
+        "tbt": {
+          "min": 58.61990000000014,
+          "max": 66.41302500000029
+        },
+        "cls": {
+          "min": 9.627649436313142E-05,
+          "max": 9.627649436313142E-05
+        },
+        "score": {
+          "min": 0.97,
+          "max": 0.97
+        },
+        "cssTransfer": {
+          "min": 12779,
+          "max": 12779
+        },
+        "scriptTransfer": {
+          "min": 159709,
+          "max": 159709
+        },
+        "fontTransfer": {
+          "min": 29849,
+          "max": 29849
+        },
+        "documentTransfer": {
+          "min": 16846,
+          "max": 16851
+        },
+        "totalTransfer": {
+          "min": 248654,
+          "max": 248659
+        },
+        "failedRequests": {
+          "min": 0,
+          "max": 0
+        },
+        "benchmarkIndex": {
+          "min": 2213.5,
+          "max": 2278
+        }
+      }
+    }
+  },
+  "relativeMedianChangePercent": {
+    "lcp": -10.60257060335642,
+    "fcp": -12.542349252325003,
+    "tbt": -2.899687500000425,
+    "totalTransfer": -19.091406036468705
+  },
+  "tbtConclusion": "No confirmed improvement: overlapping ranges; do not claim a TBT gain.",
+  "historicalComparison": "Do not compare these medians to the older 2269 ms baseline as a controlled A/B.",
+  "sourceProposal": {
+    "path": "homepage-fcp-tbt-2026-10-27.prototype.patch",
+    "baseRevision": "6d96ab030931d12dc2fe1fe812a28bb8ad65a9f4",
+    "sha256": "e331ff2cc941ea0e10ed2dbf0819494590a3d0a7e9b151890e9ab9801537e630",
+    "applied": false,
+    "deliveryImplementation": "scripts/review/local-precompressed-proxy.mjs; local benchmark only; not a production server"
+  },
+  "verification": {
+    "prototype": {
+      "frontendUnitTests": 1526,
+      "testFiles": 152,
+      "lint": true,
+      "productionBuildAndTypeScript": true,
+      "pdfE2E": {
+        "exports": 24,
+        "result": "passed",
+        "build": "Separate Webpack build; local harness fixes for session renewal and runtime origin"
+      }
+    },
+    "visual": {
+      "tool": "CUA in-app browser; synthetic fixtures",
+      "comparisons": [
+        {
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "image": {
+            "width": 375,
+            "height": 812
+          },
+          "language": "fr",
+          "theme": "light",
+          "identicalBytes": true,
+          "sha256": "5c8af5740fcee616af9883caa6ab13077d0dd976e78756f379ba91e660fb61fb"
+        },
+        {
+          "viewport": {
+            "width": 1280,
+            "height": 900
+          },
+          "image": {
+            "width": 1265,
+            "height": 889
+          },
+          "language": "fr",
+          "theme": "light",
+          "identicalBytes": true,
+          "sha256": "a9c7d64cce2c7cc84dc1937a038a9df4b9a819624ffee0cc2a630c26446524fe"
+        }
+      ],
+      "localEvidence": "outputs/ui-review/fcp-tbt/",
+      "remoteScreenshotsAttached": false
+    },
+    "stableApplication": {
+      "applicationUnchangedFrom": "6d96ab030931d12dc2fe1fe812a28bb8ad65a9f4",
+      "pdfE2E": {
+        "exports": 24,
+        "result": "passed",
+        "build": "Default Turbopack production build with TypeScript",
+        "log": "outputs/fcp-tbt/stable-pdf-rerun.log",
+        "unchangedAssertions": true
+      },
+      "unitTests": "1522 passed previously on 6d96ab03; not rerun for documentation and fixture-only follow-up"
+    }
+  },
+  "limitations": [
+    "TBT improvement not established",
+    "No new applied-throttling or warm-cache series for this prototype",
+    "Local precompression proxy is not production-ready; full conditional caching, negotiation and routing checks remain",
+    "Application-only attempts did not preserve LCP; not integrated",
+    "Production startup/Docker and Traefik changes rejected by automatic approval review and not applied",
+    "No deployment or merge"
+  ],
+  "rawLocalEvidence": "outputs/fcp-tbt/local-precompressed-prototype-sim/"
+}

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen } from "@/test/render";
 import DomainTasks from "./DomainTasks";
 vi.mock("./useDomainResource",()=>({followPages:()=>true,useDomainResource:(path:string)=>({
  data:path==="domain-discoveries"?[

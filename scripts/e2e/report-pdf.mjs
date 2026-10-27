@@ -21,6 +21,8 @@ const sharedToken='s'.repeat(43);
 const api=http.createServer((req,res)=>{
  res.setHeader('Content-Type','application/json');res.setHeader('Cache-Control','private, no-store');
  const pathname=new URL(req.url,'http://localhost').pathname;
+ // Acknowledge renewal for this synthetic session without issuing credentials.
+ if(req.method==='POST'&&pathname==='/api/account/auth/renew')return res.end(JSON.stringify({accepted:true}));
  if(pathname==='/api/account/me')return res.end(JSON.stringify({verified:true,displayName:'PDF fixture',email:'pdf@example.test'}));
  if(pathname==='/api/account/usage')return res.end(JSON.stringify({available:10}));
  if(pathname==='/api/account/runs/644')return res.end(JSON.stringify({status:'COMPLETED',reportAvailability:'AVAILABLE'}));
@@ -34,11 +36,11 @@ const api=http.createServer((req,res)=>{
  res.statusCode=404;res.end('{}');
 });
 await new Promise(resolve=>api.listen(3091,'127.0.0.1',resolve));
-const server=spawn(process.execPath,[path.join(root,'node_modules/next/dist/bin/next'),'start','-p','3090'],{cwd:root,env:{...process.env,API_BASE:'http://127.0.0.1:3091'},stdio:'pipe',windowsHide:true});let diagnostics='';server.stderr.on('data',c=>diagnostics+=c);server.stdout.on('data',()=>{});
+const server=spawn(process.execPath,[path.join(root,'node_modules/next/dist/bin/next'),'start','-p','3090'],{cwd:root,env:{...process.env,API_BASE:'http://127.0.0.1:3091',ACCOUNT_ORIGIN:'http://localhost:3090'},stdio:'pipe',windowsHide:true});let diagnostics='';server.stderr.on('data',c=>diagnostics+=c);server.stdout.on('data',()=>{});
 let browser;
 try{
  let ready=false;for(let i=0;i<100;i++){try{const r=await fetch('http://localhost:3090/robots.txt');if(r.ok){ready=true;break;}}catch{}await new Promise(r=>setTimeout(r,200));}assert.ok(ready,diagnostics);
- browser=await chromium.launch({headless:true});const context=await browser.newContext();await context.addCookies([{name:'argos_account',value:'synthetic-pdf-session',url:'http://localhost:3090'}]);const page=await context.newPage();const output='outputs/pdf/report-fixtures';fs.mkdirSync(output,{recursive:true});const rows=[];
+ browser=await chromium.launch({headless:true,...(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{})});const context=await browser.newContext();await context.addCookies([{name:'argos_account',value:'synthetic-pdf-session',url:'http://localhost:3090'}]);const page=await context.newPage();const output='outputs/pdf/report-fixtures';fs.mkdirSync(output,{recursive:true});const rows=[];
 
  if(webOnly){
   const directory='outputs/report-validation';fs.mkdirSync(directory,{recursive:true});const checks=[];

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { readFileSync } from "node:fs";
-import { LangProvider } from "@/lib/i18n/LangContext";
+import { LangProvider } from "@/lib/i18n/LangProvider";
 import { localizedPath } from "@/lib/i18n/routes";
 import EcommerceAuditArticle, { ecommerceAuditMetadata } from "./EcommerceAuditArticle";
 

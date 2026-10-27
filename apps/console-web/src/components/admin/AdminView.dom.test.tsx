@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach,it,expect,vi } from "vitest";
-import { render,screen,fireEvent,waitFor } from "@testing-library/react";
-import { LangProvider } from "@/lib/i18n/LangContext";
+import { render,screen,fireEvent,waitFor } from "@/test/render";
+import { LangProvider } from "@/lib/i18n/LangProvider";
 import { AccountClientError } from "@/lib/account-client";
 import AdminView from "./AdminView";
 const nav=vi.hoisted(()=>({api:vi.fn(),push:vi.fn(),query:"",session:{profile:{admin:true,verified:true},ready:true,denied:false,refreshUsage:vi.fn()}}));

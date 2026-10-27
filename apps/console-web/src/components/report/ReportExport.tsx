@@ -5,7 +5,7 @@ import {createRoot} from 'react-dom/client';
 import {flushSync} from 'react-dom';
 import {usePathname} from 'next/navigation';
 import {useLang} from '@/lib/i18n/LangContext';
-import PrintableReport,{type ExportFormat} from './PrintableReport';
+import type {ExportFormat} from './PrintableReport';
 import {loadExportReport,exportTitle} from './reportExportData';
 import {exportCopy} from './exportCopy';
 import s from './ReportExport.module.scss';
@@ -26,6 +26,8 @@ export default function ReportExport({report:current,runId,shared=false,compact=
    else report=await loadExportReport(token!);
    if(preview.closed)throw new Error('Closed');
    const allowedFormat=report.access==='summary'?'summary':format;
+   const {default:PrintableReport}=await import('./PrintableReport');
+   if(preview.closed)throw new Error('Closed');
    preview.document.documentElement.lang=lang;preview.document.documentElement.dataset.theme='light';preview.document.title=exportTitle(allowedFormat,report.generatedAt);
    const base=preview.document.createElement('base');base.href=window.location.origin+'/';preview.document.head.append(base);
    const robots=preview.document.createElement('meta');robots.name='robots';robots.content='noindex, nofollow';preview.document.head.append(robots);

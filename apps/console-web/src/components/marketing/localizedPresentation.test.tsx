@@ -2,7 +2,7 @@
 import type { ComponentType } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
-import { LangProvider } from "@/lib/i18n/LangContext";
+import { LangProvider } from "@/lib/i18n/LangProvider";
 import { frenchPath, localizedPath, type Lang } from "@/lib/i18n/routes";
 import HomeFr from "@/app/(fr)/page";
 import HomeEn from "@/app/en/page";

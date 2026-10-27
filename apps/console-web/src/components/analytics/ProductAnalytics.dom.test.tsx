@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import {afterEach,beforeEach,expect,it,vi} from 'vitest';
 import {StrictMode} from 'react';
-import {fireEvent,render,screen,waitFor} from '@testing-library/react';
+import {fireEvent,render,screen,waitFor} from "@/test/render";
 import ProductAnalytics from './ProductAnalytics';
 const route=vi.hoisted(()=>({path:'/'}));
 vi.mock('next/navigation',()=>({usePathname:()=>route.path}));

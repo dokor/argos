@@ -34,6 +34,9 @@ produit captures et matrice sous `outputs/report-validation/` ; le mode PDF
 produit PDF, captures et `pdf-contract.json` sous
 `outputs/pdf/report-fixtures/`. Les scripts vérifient navigation, accès, formats
 et compteurs ; ils ne réalisent pas la revue visuelle humaine.
+`CHROME_PATH` peut désigner un exécutable Chrome/Edge déjà installé ; sans cette
+variable, le script utilise le Chromium géré par Playwright. Garder le même moteur
+et sa version lorsqu’une comparaison de mesures est effectuée.
 
 Pour compléter la vérification PDF, rendre toutes les pages avec Poppler,
 inspecter les pages longues/finales, accents, césures et pagination ; extraire

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, expect, it, vi } from "vitest";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { LangProvider } from "@/lib/i18n/LangContext";
+import { act, fireEvent, render, screen, waitFor } from "@/test/render";
+import { LangProvider } from "@/lib/i18n/LangProvider";
 import { accountFetch, AccountClientError } from "@/lib/account-client";
 import SiteNav from "./SiteNav";
 
@@ -15,14 +15,14 @@ vi.mock("@/lib/account-client", async importOriginal => ({
 const session = { signedIn: true };
 beforeEach(() => { vi.mocked(accountFetch).mockReset(); });
 
-it("opens feedback directly without expanding the mobile navigation", () => {
+it("opens feedback directly without expanding the mobile navigation", async () => {
   vi.mocked(accountFetch).mockResolvedValue({ signedIn: false });
   HTMLDialogElement.prototype.showModal=function(){this.setAttribute("open","");};
   HTMLDialogElement.prototype.close=function(){this.removeAttribute("open");};
   render(<SiteNav />);
   const feedback=screen.getByRole("button", { name: "Faire un retour" });
   feedback.focus();fireEvent.click(feedback);
-  expect(screen.getByRole("dialog", { name: "Faire un retour" })).toBeInTheDocument();
+  expect(await screen.findByRole("dialog", { name: "Faire un retour" })).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Ouvrir le menu" })).toHaveAttribute("aria-expanded", "false");
   fireEvent(screen.getByRole("dialog"),new Event("cancel", { bubbles: true, cancelable: true }));
   expect(feedback).toHaveFocus();

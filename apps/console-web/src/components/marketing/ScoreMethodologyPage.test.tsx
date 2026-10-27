@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import {render, screen, within} from "@testing-library/react";
 import {expect, it, vi} from "vitest";
-import {LangProvider} from "@/lib/i18n/LangContext";
+import {LangProvider} from "@/lib/i18n/LangProvider";
 import ScoreMethodologyPage from "./ScoreMethodologyPage";
 import {scoreMethodologyCopy} from "./scoreMethodologyCopy";
 vi.mock("@/components/site/SiteNav",()=>({default:()=>null}));

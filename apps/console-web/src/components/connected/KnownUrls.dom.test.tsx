@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
-import { LangProvider } from "@/lib/i18n/LangContext";
+import { fireEvent, render, screen } from "@/test/render";
+import { LangProvider } from "@/lib/i18n/LangProvider";
 import KnownUrls from "./KnownUrls";
 import AnalysisNavigation from "./AnalysisNavigation";
 const state = vi.hoisted(() => ({ data: null as unknown, error: "", reload: vi.fn() }));

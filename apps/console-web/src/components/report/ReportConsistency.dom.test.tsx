@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import { useMemo, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, within } from "@/test/render";
 import userEvent from "@testing-library/user-event";
-import { LangProvider } from "@/lib/i18n/LangContext";
+import { LangProvider } from "@/lib/i18n/LangProvider";
 import historical from "./fixtures/historical-report.json";
 import type { Report } from "./types";
 import { buildReportModel, type FindingSelection } from "./reportModel";

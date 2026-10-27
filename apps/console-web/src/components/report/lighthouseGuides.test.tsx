@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { render } from '@testing-library/react';
 import { expect, it } from 'vitest';
-import { LangProvider } from '@/lib/i18n/LangContext';
+import { LangProvider } from '@/lib/i18n/LangProvider';
 import FindingDetails from './FindingDetails';
 import PrintableReport from './PrintableReport';
 import { findingContent } from './findingCatalogue';

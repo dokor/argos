@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, expect, it, vi } from "vitest";
 import { render, screen, fireEvent, within } from "@testing-library/react";
-import { LangProvider } from "@/lib/i18n/LangContext";
+import { LangProvider } from "@/lib/i18n/LangProvider";
 import PrivateDiagnostic from "./PrivateDiagnostic";
 import type { Report } from "@/components/report/types";
 vi.mock("@/components/report/ReportExport", () => ({ default: () => null }));

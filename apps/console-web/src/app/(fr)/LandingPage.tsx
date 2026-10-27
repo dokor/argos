@@ -1,9 +1,9 @@
-"use client";
-
 import React from "react";
 import AuditForm from "@/components/AuditForm";
 import Link from "@/components/LocalizedLink";
-import { useLang } from "@/lib/i18n/LangContext";
+import fr from "@/lib/i18n/fr.json";
+import en from "@/lib/i18n/en.json";
+import type { Lang } from "@/lib/i18n/routes";
 import SiteNav from "@/components/site/SiteNav";
 import SiteFooter from "@/components/site/SiteFooter";
 import PremiumWaitlist from "@/components/marketing/PremiumWaitlist";
@@ -39,8 +39,8 @@ function SocialProofBar({
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function LandingPage() {
-  const { t, lang } = useLang();
+export default function LandingPage({ lang = "fr" }: { lang?: Lang }) {
+  const t = lang === "en" ? en : fr;
   const tl = t.landing;
 
 
@@ -64,7 +64,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div className={s.heroRight}>
-            <HomeReportPreview />
+            <HomeReportPreview lang={lang} />
           </div>
         </div>
         <div className={s.heroFade} />

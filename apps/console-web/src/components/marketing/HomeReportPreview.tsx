@@ -1,12 +1,12 @@
-"use client";
-
 import Link from "@/components/LocalizedLink";
-import { useLang } from "@/lib/i18n/LangContext";
+import french from "@/lib/i18n/fr.json";
+import english from "@/lib/i18n/en.json";
+import type { Lang } from "@/lib/i18n/routes";
 import { demoReport } from "./reportDemoFixture";
 import s from "./HomeReportPreview.module.scss";
 
-export default function HomeReportPreview() {
-  const { lang, t } = useLang();
+export default function HomeReportPreview({ lang = "fr" }: { lang?: Lang }) {
+  const t = lang === "en" ? english : french;
   const fr = lang === "fr";
   const report = demoReport(lang);
   const issue = report.issues[0];

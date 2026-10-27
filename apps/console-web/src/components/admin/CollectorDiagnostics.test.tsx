@@ -1,6 +1,6 @@
 import {expect,it} from "vitest";
 import {renderToStaticMarkup} from "react-dom/server";
-import {LangProvider} from "@/lib/i18n/LangContext";
+import {LangProvider} from "@/lib/i18n/LangProvider";
 import type {Coverage} from "@/components/report/types";
 import CollectorDiagnostics from "./CollectorDiagnostics";
 for(const lang of ["fr","en"] as const) {
