@@ -1,3 +1,4 @@
+import { mockSessionRenewal } from './session-renewal-fixture.mjs';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { chromium } from '../../apps/playwright-service/node_modules/playwright/index.mjs';
@@ -20,6 +21,7 @@ try {
       assert.ok(!path.includes('billing'), 'Pricing must not read a private billing snapshot');
       await route.fulfill({ contentType: 'application/json', body: JSON.stringify(path === '/api/account/session' ? { signedIn: false } : { enabled: false, choice: 'unset' }) });
     });
+    await mockSessionRenewal(page, { signedIn: false });
     await page.route('https://**/*', route => { external.push(new URL(route.request().url()).origin); return route.abort(); });
     const path = lang === 'fr' ? '/tarifs' : '/en/pricing';
     assert.equal((await page.goto(base + path)).status(), 200);
@@ -60,7 +62,7 @@ try {
     await injectAxe(page);
     const violations = await page.evaluate(async () => (await window.axe.run(document.querySelector('main'), { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'] } })).violations.map(v => ({ id: v.id, impact: v.impact })));
     assert.deepEqual(violations, [], 'Accessibility checks: ' + state);
-    assert.deepEqual(writes, [], 'No financial, CI or other mutation from reading pricing');
+    assert.deepEqual(writes, [], 'No billing, CI or pricing mutation from reading pricing');
     assert.deepEqual(external, [], 'No provider call from reading pricing');
     assert.deepEqual(errors, [], 'Client errors: ' + state);
     if ((width === 1440 && lang === 'fr') || (width === 390 && lang === 'en') || (width === 768 && lang === 'fr' && theme === 'light')) {
@@ -68,7 +70,7 @@ try {
       await page.screenshot({ path: `${output}/${state}.png`, fullPage: true });
       if (width === 1440 && lang === 'fr' && theme === 'light') await page.screenshot({ path: `${output}/preview.png` });
     }
-    results.push({ width, lang, theme, noMutation: true, noOverflow: true, keyboard: true, axe: 'pass' });
+    results.push({ width, lang, theme, noBusinessMutation: true, noOverflow: true, keyboard: true, axe: 'pass' });
     await context.close();
   }
   await writeFile(output + '/results.json', JSON.stringify(results, null, 2));
