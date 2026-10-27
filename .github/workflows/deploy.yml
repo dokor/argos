@@ -71,16 +71,21 @@ jobs:
           node --input-type=module <<'NODE'
           import { execFileSync } from 'node:child_process';
           import { isAbsolute, join } from 'node:path';
+          import { existsSync } from 'node:fs';
           const docker = args => execFileSync('docker', args, { encoding: 'utf8', timeout: 120000, stdio: ['ignore', 'pipe', 'pipe'] });
           try {
             const [container] = JSON.parse(docker(['container', 'inspect', 'traefik']));
             const legacy = container.Config?.Labels?.['com.docker.compose.project.working_dir'];
-            if (!isAbsolute(legacy ?? '') || legacy.includes(',')) throw new Error();
+            const mounts = [];
+            if (!existsSync(process.env.PROXY_ENV_FILE)) {
+              if (!isAbsolute(legacy ?? '') || legacy.includes(',')) throw new Error();
+              mounts.push('--mount', `type=bind,source=${join(legacy, '.env')},target=/legacy.env,readonly`);
+            }
             // Only the reserved proxy state paths are writable inside this helper.
             // Existing environment values are copied privately, never reconstructed.
             docker(['run', '--rm', '--user', '0:0', '--network', 'none', '--read-only',
               '--mount', 'type=bind,source=/srv/infra/raspberry-infra,target=/state',
-              '--mount', `type=bind,source=${join(legacy, '.env')},target=/legacy.env,readonly`,
+              ...mounts,
               'alpine:3.22', 'sh', '-eu', '-c', `
                 test ! -L /state/env && test ! -L /state/proxy
                 mkdir -p /state/env /state/proxy
