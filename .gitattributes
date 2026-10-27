@@ -1,2 +1,4 @@
 apps/audit-egress/firewall.sh text eol=lf
 scripts/security/*.sh text eol=lf
+clients/ci/dist/* text eol=lf
+clients/ci/templates/*.yml text eol=lf

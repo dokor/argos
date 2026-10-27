@@ -1,5 +1,6 @@
 .idea/
 node_modules/
+.argos-ci/
 outputs/*
 !outputs/context/
 outputs/context/*

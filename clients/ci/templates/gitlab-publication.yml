@@ -1,0 +1,93 @@
+# GitLab.com optional issue publication. Use INSTEAD OF gitlab-ci.yml, not together.
+# Dedicated protected Linux shell runner, Node 24.21.0 + curl; no checkout/project hooks.
+# Protect default branch and environments. Keep Argos CI closed until #467.
+stages: [argos_control, argos_publish]
+default:
+  tags: [argos-ci]
+  before_script: []
+  after_script: []
+  cache: []
+variables:
+  GIT_STRATEGY: empty
+  NODE_OPTIONS: ''
+  NODE_TLS_REJECT_UNAUTHORIZED: '1'
+  ARGOS_ENVIRONMENT: production
+  ARGOS_LANG: fr
+  ARGOS_GITLAB_PUBLISH: 'false'
+  ARGOS_CI_OPERATION: audit
+  ARGOS_ORIGINAL_INTENT: ''
+  ARGOS_GITLAB_CREDENTIAL_KIND: project-token
+
+.argos_publication_rules:
+  rules:
+    - if: '$CI_SERVER_URL == "https://gitlab.com" && $CI_COMMIT_REF_PROTECTED == "true" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && ($CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "schedule")'
+    - when: never
+
+.argos_download:
+  script:
+    - test "$(node --version)" = 'v24.21.0'
+    - >-
+      curl --proto '=https' --tlsv1.2 --fail --silent --show-error --max-time 30 --max-redirs 0 --max-filesize 1048576
+      --output argos-ci.mjs https://raw.githubusercontent.com/dokor/argos/c13f4a74e2e8123d16fedebb7c2ea17fb3874962/clients/ci/dist/argos-ci.mjs
+    - echo '2a8e159b6c0e6b27fbb8a25490973502e9a684ca1560836b6e78bc5e084f4124  argos-ci.mjs' | sha256sum --check --strict
+
+argos_control:
+  extends: .argos_publication_rules
+  stage: argos_control
+  dependencies: []
+  timeout: 25 minutes
+  environment:
+    name: argos-ci
+  script:
+    - !reference [.argos_download, script]
+    - |
+      case "$ARGOS_CI_OPERATION" in
+        audit) test -z "$ARGOS_ORIGINAL_INTENT" || exit 2 ;;
+        resume) export ARGOS_IDEMPOTENCY_KEY="$ARGOS_ORIGINAL_INTENT" ;;
+        *) exit 2 ;;
+      esac
+      unset ARGOS_EXPORT_PRIVATE
+      if [ "$ARGOS_GITLAB_PUBLISH" = true ]; then export ARGOS_EXPORT_PRIVATE=1; fi
+      set +e
+      env -u ARGOS_GITLAB_READ_TOKEN node argos-ci.mjs "$ARGOS_CI_OPERATION" > control-result.json
+      status=$?
+      set -e
+      # Only the client's reconstructed JSON is logged; no audited text or response body.
+      cat control-result.json
+      if [ "$status" -gt 1 ] || [ "$ARGOS_GITLAB_PUBLISH" != true ]; then exit "$status"; fi
+      ARGOS_EVIDENCE_SHA256=$(node --input-type=module -e '
+        import fs from "node:fs";
+        const r=JSON.parse(fs.readFileSync("control-result.json","utf8"));
+        if(!/^[a-f0-9]{64}$/.test(r.evidenceSha256??""))process.exit(3);
+        process.stdout.write(r.evidenceSha256);')
+      export ARGOS_EVIDENCE_SHA256
+      set +e
+      env -u ARGOS_API_KEY node argos-ci.mjs publication-stage
+      sealed=$?
+      set -e
+      # Plain evidence is never in artifacts, including forced cancellation/error paths.
+      node --input-type=module -e 'import fs from "node:fs"; fs.unlinkSync(".argos-ci/evidence.json")'
+      if [ "$sealed" -gt 1 ]; then exit "$sealed"; fi
+      exit "$status"
+  artifacts:
+    when: always
+    access: maintainer
+    expire_in: 7 days
+    paths: [.argos-ci/evidence.enc.json]
+
+argos_publish:
+  rules:
+    - if: '$ARGOS_GITLAB_PUBLISH == "true" && $CI_SERVER_URL == "https://gitlab.com" && $CI_COMMIT_REF_PROTECTED == "true" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && ($CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "schedule")'
+      when: always
+    - when: never
+  stage: argos_publish
+  timeout: 5 minutes
+  environment:
+    name: argos-publisher
+  # Provider queue reduces collisions. The private blob lease + ETag is authoritative.
+  resource_group: argos-gitlab-issues-${CI_PROJECT_ID}
+  dependencies: [argos_control]
+  script:
+    - !reference [.argos_download, script]
+    # Read-only API/trace proof selects the current pipeline producer before any mutation.
+    - env -u ARGOS_API_KEY node argos-ci.mjs publish-gitlab
