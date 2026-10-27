@@ -46,8 +46,8 @@ export default function ReportPage({params,feedbackReference,embedded=false,shar
   useEffect(()=>{
     if(!token||params.report.access!=="summary"||demo)return;
     let alive=true;const controller=new AbortController();
-    async function load(){try{const response=await fetch("/api/account/session",{cache:"no-store",signal:controller.signal});
-      if(!response.ok||!(await response.json()).signedIn)return;
+    async function load(){try{const status=await accountFetch<{signedIn:boolean}>("session","GET",undefined,controller.signal);
+      if(!status.signedIn)return;
       const value=await accountFetch<Report>((shared?"shared-reports/":"reports/")+token,"GET",undefined,controller.signal);
       if(alive)setLoaded({initial:params.report,value});
     }catch{/* Summary remains available for anonymous, unverified or expired sessions. */}}
