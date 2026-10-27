@@ -451,7 +451,7 @@ class AccountLifecycleIT extends MariaDbReportFixture {
         dao.transaction(
                 c -> {
                     var s = dao.session(idle.context().session().getId(), c, true);
-                    s.setLastActivityAt(clock.instant().minusSeconds(1800));
+                    s.setLastActivityAt(clock.instant().minus(settings.idleTtl()));
                     dao.save(s, c);
                     return null;
                 });
@@ -1212,6 +1212,25 @@ class AccountLifecycleIT extends MariaDbReportFixture {
             assertEquals(401, http.create("Bearer forged").statusCode());
             assertEquals(403, http.create(bearer(pending)).statusCode());
             assertEquals(200, http.create(bearer(b)).statusCode());
+        }
+    }
+
+    @Test
+    void httpRenewalResumesExpiredAccessButRequiresCsrfAndLiveRegistry() throws Exception {
+        var account = user("http-renewal@example.com", true);
+        String renewal = sessions.renewal(account.context());
+        clock.now = clock.now.plus(settings.jwtTtl());
+        try (var http = new HttpFixture()) {
+            var headers = Map.of("X-Argos-Renewal", renewal);
+            assertEquals(401, http.call("GET", "/account/me", "Bearer " + renewal, null, false).statusCode());
+            assertEquals(403, http.call("POST", "/account/auth/renew", null, "{}", false, headers).statusCode());
+            var resumed = http.call("POST", "/account/auth/renew", null, "{}", true, headers);
+            assertEquals(200, resumed.statusCode(), resumed.body());
+            String access = "Bearer " + resumed.headers().firstValue("X-Argos-Session").orElseThrow();
+            assertNotNull(signer.parseRenewal(resumed.headers().firstValue("X-Argos-Renewal").orElseThrow()));
+            assertEquals(200, http.call("GET", "/account/me", access, null, false).statusCode());
+            assertEquals(200, http.call("POST", "/account/auth/logout", access, "{}", true).statusCode());
+            assertEquals(401, http.call("POST", "/account/auth/renew", null, "{}", true, headers).statusCode());
         }
     }
 

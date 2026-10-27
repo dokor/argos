@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
-import { accountProxy, CSRF_COOKIE, SESSION_COOKIE } from "./account-proxy";
+import { accountProxy, CSRF_COOKIE, SESSION_COOKIE, RENEWAL_COOKIE } from "./account-proxy";
 import { POST as createAudit } from "@/app/api/audits/route";
 
 const csrf = "c".repeat(43);
@@ -105,3 +105,49 @@ it.each(["session_invalid", "email_unverified"])(
     expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ url: "https://example.com" });
   },
 );
+
+it("resumes with only a renewal cookie and never trusts a browser renewal header", async () => {
+  const request = mutation();
+  request.cookies.delete(SESSION_COOKIE);
+  request.cookies.set(RENEWAL_COOKIE, "signed.renewal.credential");
+  request.headers.set("X-Argos-Renewal", "forged");
+  fetchMock.mockResolvedValue(Response.json({ accepted: true }, {
+    headers: { "X-Argos-Session": "fresh.access.jwt", "X-Argos-Renewal": "signed.renewal.credential" },
+  }));
+  const response = await accountProxy(request, ["auth", "renew"]);
+  const headers = fetchMock.mock.calls[0][1].headers;
+  expect(headers.has("Authorization")).toBe(false);
+  expect(headers.get("X-Argos-Renewal")).toBe("signed.renewal.credential");
+  expect(response.cookies.get(RENEWAL_COOKIE)).toMatchObject({
+    value: "signed.renewal.credential", httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 86400,
+  });
+  expect(response.cookies.get(CSRF_COOKIE)).toMatchObject({ value: csrf, httpOnly: true, maxAge: 86400 });
+  expect(response.headers.get("X-Argos-Renewal")).toBeNull();
+  expect(await response.json()).toEqual({ accepted: true });
+});
+
+it("does not send a renewal credential on ordinary account reads", async () => {
+  const request = mutation(); request.cookies.set(RENEWAL_COOKIE, "private.renewal.jwt");
+  request.headers.set("X-Argos-Renewal", "forged");
+  fetchMock.mockResolvedValue(Response.json({}));
+  await accountProxy(request, ["auth", "reauth"]);
+  expect(fetchMock.mock.calls[0][1].headers.has("X-Argos-Renewal")).toBe(false);
+});
+
+it.each(["auth/renew", "auth/logout", "auth/reset", "me/archive"])("clears renewal cookies when %s ends the session", async path => {
+  const request = mutation(); request.cookies.set(RENEWAL_COOKIE, "private.renewal.jwt");
+  fetchMock.mockResolvedValue(Response.json(path === "auth/renew" ? { error: "session_invalid" } : {}, {
+    status: path === "auth/renew" ? 401 : 200,
+  }));
+  const response = await accountProxy(request, path.split("/"));
+  expect(response.cookies.get(SESSION_COOKIE)?.maxAge).toBe(0);
+  expect(response.cookies.get(RENEWAL_COOKIE)?.maxAge).toBe(0);
+});
+
+it("keeps anonymous renewal quiet and checks CSRF before doing so", async () => {
+  const request = mutation(); request.cookies.delete(SESSION_COOKIE);
+  expect(await (await accountProxy(request, ["auth", "renew"])).json()).toEqual({ accepted: false });
+  expect(fetchMock).not.toHaveBeenCalled();
+  request.headers.delete("Origin");
+  expect((await accountProxy(request, ["auth", "renew"])).status).toBe(403);
+});
