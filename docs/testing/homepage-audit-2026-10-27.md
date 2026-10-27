@@ -184,6 +184,9 @@ prototype i18n explorés puis retirés ne font pas partie du code livré.
 
 - Lint, build de production et TypeScript : succès. Syntaxe du script de mesure
   et `git diff --check` contrôlés avant livraison.
+- Lockfile complété avec les entrées optionnelles `@emnapi/core` et
+  `@emnapi/runtime` requises par l’installation Linux. Validation `npm ci --dry-run`
+  avec npm 11.19.0 et cible Linux x64 réussie ; aucune version déjà mesurée changée.
 - **1 489 tests frontend distincts réussis** : suite complète de 1 487 tests,
   dont deux nouveaux contrôles de langue résolue au serveur, puis deux nouveaux
   cas PDF ciblés FR/EN. Les refus d’accès existants ont été rejoués avec ces cas.
