@@ -10,6 +10,24 @@ see [capacity and Raspberry measurements](progress.md). Expiry cancels the activ
 interruption, does not start subsequent collection, and records TIMEOUT fallback
 checks without scoring infrastructure failure. Already obtained results are kept.
 
+Production Compose overrides the legacy defaults with a 360-second whole-run
+budget and 180-second remote-call and SSL Labs budgets. Fresh sequential SSL
+assessments can exhaust the 120-second shared budget after browser work and leave
+later stages uncollected. [Deployment run 40502937161](https://github.com/dokor/argos/actions/runs/40502937161)
+reported Tech and SSL deadline failures across its two samples. The five-second
+publication reserve remains in place. The JVM properties take precedence over
+the mounted `prod.conf`, including `external.ssl-labs.timeout`; operators can set
+`ARGOS_AUDIT_TIMEOUT`, `ARGOS_REMOTE_MODULE_TIMEOUT` and `ARGOS_SSL_LABS_TIMEOUT`
+in the Compose environment to choose different positive durations. Keep those
+three limits consistent. This changes time bounds only; concurrency stays at its
+configured value and no historical measurement is reused.
+
+The post-deployment control allows eight minutes per sample, including queue
+waiting, and twenty minutes for readiness and two sequential samples. Operator
+budgets above six minutes need a corresponding review of these control limits.
+Incomplete measurements still produce `CONTROL_FAILED`; longer bounds do not
+guarantee that an external assessment will finish.
+
 The same deadline is scoped onto every worker and caps each Java HTTP request;
 redirects share a 30-second cumulative cap, and polls cannot reset the global
 budget. SSL Labs requests a fresh assessment and waits up to `ssl-labs.timeout` (90s
