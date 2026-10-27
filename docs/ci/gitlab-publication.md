@@ -1,6 +1,6 @@
 # Publication GitLab optionnelle — #740
 
-Client `0.4.0-preview.2`, moteur commun #738, après le publisher GitHub #739.
+Client `0.4.0-preview.3`, moteur commun #738, après le publisher GitHub #739.
 **premium-ci.enabled=false reste maintenu jusqu’à la recette complète #467.**
 Les analyses, leurs lectures et leurs quotas exigent toujours la clé API Argos.
 Le credential GitLab reste exclusivement dans la CI du client.
