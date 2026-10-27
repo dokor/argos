@@ -37,8 +37,13 @@ Le client demande une analyse fraîche avec `startNew=on` sur le premier appel
 uniquement. Les sondages suivants omettent ce paramètre pour ne pas relancer
 l'analyse en boucle ; aucun appel n'utilise `fromCache`. SSL Labs indique que les
 analyses prennent généralement au moins
-60s. Le client attend maintenant jusqu'à `ssl-labs.timeout=90s`, toujours limité par
-`audit.timeout` (120s par défaut). Les sondages sont espacés de 5s en DNS et de 10s
+60s. Les valeurs historiques hors Compose restent `ssl-labs.timeout=90s` et
+`audit.timeout=120s`. Le Compose de production fixe désormais 180s pour SSL Labs
+et chaque appel distant, dans un budget global de 360s, afin de laisser du temps
+aux autres modules séquentiels après une analyse fraîche. Les propriétés JVM
+priment sur le `prod.conf` monté ; les variables opérateur et les limites du
+contrôle sont décrites dans le [contrat de deadline](deadline.md).
+Les sondages sont espacés de 5s en DNS et de 10s
 en IN_PROGRESS. Cela peut allonger un audit sans cache ; aucune durée de 20–30s n'est
 garantie dans ce cas. Une analyse encore en cours produit un module indisponible,
 non scoré, sans pénaliser le site. Les logs indiquent le statut, le nombre de sondages

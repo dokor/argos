@@ -26,7 +26,10 @@ services:
       - ARGOS_EXTERNAL_SCANS_ENABLED=${ARGOS_EXTERNAL_SCANS_ENABLED:-true}
       - JAVA_OPTS=-Xms256m -Xmx512m
       - NODE_ENV=production
-      - JAVA_TOOL_OPTIONS=-Dconfig.file=/config/prod.conf
+      # Fresh SSL Labs scans run after the browser stages in sequential mode.
+      # Keep the whole-run, remote-call and provider budgets consistent, including
+      # installations whose mounted prod.conf still contains the former defaults.
+      - JAVA_TOOL_OPTIONS=-Dconfig.file=/config/prod.conf -Daudit.timeout=${ARGOS_AUDIT_TIMEOUT:-360s} -Daudit.remote-modules.timeout=${ARGOS_REMOTE_MODULE_TIMEOUT:-180s} -Dexternal.ssl-labs.timeout=${ARGOS_SSL_LABS_TIMEOUT:-180s}
       - PLAYWRIGHT_SERVICE_URL=http://playwright-service:3016
       - LIGHTHOUSE_SERVICE_URL=http://lighthouse-service:3017
       - ZAP_API_URL=http://zap:8080
