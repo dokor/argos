@@ -13,6 +13,7 @@ public class QAccountCiEntitlement extends RelationalPathBase<AccountCiEntitleme
     public final BooleanPath ciAccess = createBoolean("ciAccess");
     public final DateTimePath<Instant> validUntil = createDateTime("validUntil", Instant.class);
     public final DateTimePath<Instant> updatedAt = createDateTime("updatedAt", Instant.class);
+    public final StringPath grantSource = createString("grantSource");
     public final PrimaryKey<AccountCiEntitlement> primary = createPrimaryKey(id);
     public QAccountCiEntitlement(String variable) {
         super(AccountCiEntitlement.class, forVariable(variable), null, "ARG_ACCOUNT_CI_ENTITLEMENT");
@@ -20,5 +21,6 @@ public class QAccountCiEntitlement extends RelationalPathBase<AccountCiEntitleme
         addMetadata(ciAccess, ColumnMetadata.named("ci_access").ofType(Types.BOOLEAN));
         addMetadata(validUntil, ColumnMetadata.named("valid_until").ofType(Types.TIMESTAMP));
         addMetadata(updatedAt, ColumnMetadata.named("updated_at").ofType(Types.TIMESTAMP));
+        addMetadata(grantSource, ColumnMetadata.named("grant_source").ofType(Types.VARCHAR));
     }
 }

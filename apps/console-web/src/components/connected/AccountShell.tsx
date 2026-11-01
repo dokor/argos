@@ -29,7 +29,7 @@ export default function AccountShell({ children }: { children: ReactNode }) {
   // Next route changes do not emit popstate; refresh the language links after commit.
   useEffect(() => { window.dispatchEvent(new Event("argos-reading")); }, [currentPath]);
   const pathname = frenchPath(currentPath);
-  const { t } = useLang(), c = t.connected;
+  const { t, lang } = useLang(), c = t.connected;
   const session = useAccountSession();
   const [openPath, setOpenPath] = useState<string | null>(null);
   const menuButton = useRef<HTMLButtonElement>(null);
@@ -48,7 +48,7 @@ export default function AccountShell({ children }: { children: ReactNode }) {
   const feedbackRunId = valid ? /^\/account\/runs\/([1-9]\d{0,18})$/.exec(pathname)?.[1] : undefined;
   const admin = valid && session.profile?.verified && session.profile.admin;
   const context = pathname === "/account" ? c.overview : pathname.startsWith("/account/admin") ? c.admin : isSites ? groupCopy.analyses
-    : isDomains ? c.domains : pathname === "/account/usage" ? c.usage : pathname === "/account/integrations" ? c.integrations : c.account;
+    : isDomains ? c.domains : pathname === "/account/usage" ? c.usage : pathname === "/account/integrations" ? c.integrations : pathname === "/account/billing" ? (lang==="fr"?"Abonnement Premium":"Premium subscription") : c.account;
   const close = () => setOpenPath(null);
   const currentLocation = (href: string, inSection = false): "page" | "location" | undefined =>
     pathname === href ? "page" : inSection ? "location" : undefined;
@@ -94,6 +94,7 @@ export default function AccountShell({ children }: { children: ReactNode }) {
           ]}/>
         <Link href="/account/integrations" aria-current={pathname === "/account/integrations" ? "page" : undefined} onClick={close} aria-label={c.integrations}><NavigationIcon name="integrations"/><span className={s.navLabel}>{c.integrations}</span></Link>
         <div className={s.navBottom}>
+          <Link href="/account/billing" aria-current={pathname === "/account/billing" ? "page" : undefined} onClick={close} aria-label={lang==="fr"?"Abonnement Premium":"Premium subscription"}><NavigationIcon name="usage"/><span className={s.navLabel}>Premium</span></Link>
           <Link href="/account/settings" aria-current={isAccount ? "page" : undefined} onClick={close} aria-label={c.account}><NavigationIcon name="account"/><span className={s.navLabel}>{c.account}</span></Link>
           <Link href="/account/usage" aria-current={pathname === "/account/usage" ? "page" : undefined} onClick={close} aria-label={c.usage}><NavigationIcon name="usage"/><span className={s.navLabel}>{c.usage}</span></Link>
           {admin && <Link href="/account/admin" aria-current={pathname.startsWith("/account/admin") ? "page" : undefined} onClick={close} aria-label={c.admin}><NavigationIcon name="admin"/><span className={s.navLabel}>{c.admin}</span></Link>}

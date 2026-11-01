@@ -24,8 +24,11 @@ L'absence de ligne, un droit faux ou expiré refuse les nouvelles opérations.
 V40 ne crée aucun droit pour les comptes existants. Le lot facturation #733
 écrira cette projection après confirmation authentifiée de l'état fournisseur ;
 aucun paramètre navigateur, redirection de paiement ou corps API ne l'accorde.
-Le fournisseur, les prix, les taxes et les règles de renouvellement commercial
-restent à décider. L'échéance du droit n'est pas l'expiration de la clé.
+Stripe Checkout + Billing est retenu : EUR, mensuel et annuel, affichage principal
+HT avec mention TTC. Les montants, la remise exacte, la fiscalité et la politique
+commerciale restent à valider ; paiements et CI restent désactivés. Le
+[runbook facturation](billing.md) décrit la projection, les reprises et les limites
+du lot #733. L'échéance du droit n'est pas l'expiration de la clé.
 
 « Par clé » désigne un emplacement d'intégration stable, conservé lors d'une
 rotation, révocation ou remplacement. Un nouveau secret ne redonne pas 30

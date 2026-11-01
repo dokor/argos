@@ -13,5 +13,6 @@ public class AccountCiEntitlement extends CrudEntityQuerydsl {
     @Column("ci_access") private Boolean ciAccess;
     @Column("valid_until") private Instant validUntil;
     @Column("updated_at") private Instant updatedAt;
+    @Column("grant_source") private String grantSource;
     @Override public String toString() { return "AccountCiEntitlement#" + id; }
 }
