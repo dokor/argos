@@ -40,7 +40,7 @@ public class AccountHistoryService {
             } catch(SQLException e) { throw failure(e); }
             Timestamp anchor=null;
             if(before>0) {
-                try(var s=c.prepareStatement("SELECT created_at FROM ARG_AUDIT_RUN WHERE owner_user_id=? AND audit_id=? AND id=?")) {
+                try(var s=c.prepareStatement("SELECT created_at FROM ARG_AUDIT_RUN WHERE ci_navigation_origins IS NULL AND owner_user_id=? AND audit_id=? AND id=?")) {
                     s.setLong(1,owner);s.setLong(2,audit);s.setLong(3,before);
                     try(var r=s.executeQuery()) { if(!r.next()) throw new AccountError(400,"cursor_invalid"); anchor=r.getTimestamp(1); }
                 } catch(SQLException e) { throw failure(e); }
@@ -53,7 +53,7 @@ public class AccountHistoryService {
                   IF(JSON_VALID(p.report_json),JSON_OBJECT('url',JSON_EXTRACT(p.report_json,'$.url'),
                     'scores',JSON_EXTRACT(p.report_json,'$.scores')),NULL) report_json
                 FROM ARG_AUDIT_RUN r LEFT JOIN ARG_AUDIT_REPORT p ON p.run_id=r.id AND (p.expires_at IS NULL OR p.expires_at>?)
-                WHERE r.owner_user_id=? AND r.audit_id=?
+                WHERE r.ci_navigation_origins IS NULL AND r.owner_user_id=? AND r.audit_id=?
                 """+boundary+" ORDER BY r.created_at DESC,r.id DESC LIMIT ?")) {
                 int n=1;s.setTimestamp(n++,Timestamp.from(clock.instant()));s.setLong(n++,owner);s.setLong(n++,audit);
                 if(before>0){s.setTimestamp(n++,anchor);s.setTimestamp(n++,anchor);s.setLong(n++,before);}
@@ -85,7 +85,7 @@ public class AccountHistoryService {
                 JOIN ARG_AUDIT_RUN r ON r.id=p.run_id JOIN ARG_AUDIT a ON a.id=r.audit_id
                 JOIN ARG_ACCOUNT_SITE s ON s.owner_user_id=r.owner_user_id
                 JOIN ARG_ACCOUNT_SITE_URL u ON u.site_id=s.id AND u.audit_id=r.audit_id
-                WHERE r.owner_user_id=? AND p.token_hash=? AND (p.expires_at IS NULL OR p.expires_at>?)
+                WHERE r.ci_navigation_origins IS NULL AND r.owner_user_id=? AND p.token_hash=? AND (p.expires_at IS NULL OR p.expires_at>?)
                 """)) {
                 s.setLong(1,ctx.user().getId());s.setBytes(2,new com.dokor.argos.services.token.TokenService().sha256(token));s.setTimestamp(3,Timestamp.from(clock.instant()));
                 try(var r=s.executeQuery()) {if(!r.next()) throw AccountError.missing();return new Context(r.getString(1),r.getString(2),r.getString(3));}

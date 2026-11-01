@@ -101,6 +101,7 @@ public class UrlNormalizer {
         if (b.length == 4) {
             int d = b[2] & 255;
             return a == 0 || a == 10 || a == 127 || a >= 224
+                || a == 168 && c == 63 && d == 129 && (b[3] & 255) == 16 // Azure platform / WireServer
                 || a == 100 && c >= 64 && c <= 127 || a == 169 && c == 254
                 || a == 172 && c >= 16 && c <= 31
                 || a == 192 && (c == 168 || c == 0 && (d == 0 || d == 2) || c == 88 && d == 99)

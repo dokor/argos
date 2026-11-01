@@ -1,3 +1,4 @@
+import { mockSessionRenewal } from './session-renewal-fixture.mjs';
 import { injectAxe } from './inject-axe.mjs';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -40,6 +41,7 @@ try {
     await route.fulfill({status:result.status,contentType:'application/json',body:JSON.stringify(result.data)});
    }
   });
+  await mockSessionRenewal(page);
   const prefix=lang==='en'?'/en':'',refresh=lang==='fr'?'Actualiser':'Refresh';
   const capture=async name=>{
    await page.evaluate(()=>document.fonts.ready);

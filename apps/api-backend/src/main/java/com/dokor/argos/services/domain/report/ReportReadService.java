@@ -43,12 +43,14 @@ public class ReportReadService {
 
         byte[] hash = tokenService.sha256(token);
         return auditReportDao.findByTokenHash(hash)
+            .filter(entity -> entity.getRunId()==null || !auditReportDao.isCiPrivate(entity.getRunId()))
             .filter(entity -> entity.getTokenHash() != null && java.security.MessageDigest.isEqual(hash, entity.getTokenHash()))
             .filter(this::notExpired)
             .flatMap(this::deserialize);
     }
 
     public Optional<ReportDto> getByRunId(long runId) {
+        if(auditReportDao.isCiPrivate(runId))return Optional.empty();
         return auditReportDao.findByRunId(runId).filter(this::notExpired).flatMap(this::deserialize);
     }
 
@@ -85,7 +87,7 @@ public class ReportReadService {
             }
             return Optional.of(report.withIntroduction(note));
         } catch (Exception e) {
-            logger.warn("Invalid report_json reportId={}", entity.getId(), e);
+            logger.warn("Invalid report_json reportId={}", entity.getId());
             // sécurité : 404 plutôt que 500 (évite leak)
             return Optional.empty();
         }

@@ -1,3 +1,4 @@
+import { mockSessionRenewal } from './session-renewal-fixture.mjs';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { chromium } from '../../apps/playwright-service/node_modules/playwright/index.mjs';
@@ -16,6 +17,7 @@ try {
     const context = await browser.newContext({ viewport: { width, height: 900 }, colorScheme: theme });
     await context.addCookies([{ name: 'argos_account', value: 'synthetic-review-session', url: base, httpOnly: true }]);
     const page = await context.newPage(), requests = [], errors = [];
+    await mockSessionRenewal(page);
     page.on('request', request => requests.push(request.url()));
     page.on('pageerror', error => errors.push(error.message));
     const route = (lang === 'en' ? '/en' : '') + '/account/admin/analytics';
@@ -68,6 +70,7 @@ try {
     await context.addCookies([{ name: 'argos_admin', value: 'obsolete-synthetic-cookie', url: base, httpOnly: true }]);
     await context.route('**/api/account/me', request => request.fulfill({ status, contentType: 'application/json', body: JSON.stringify(profile ?? { error: 'session_invalid' }) }));
     const page = await context.newPage(), requests = [];
+    await mockSessionRenewal(page);
     page.on('request', request => requests.push(request.url()));
     await page.goto(base + '/account/admin/analytics');
     if (name === 'anonymous') await page.getByRole('heading', { name: 'Connectez-vous à votre espace', exact: true }).waitFor();

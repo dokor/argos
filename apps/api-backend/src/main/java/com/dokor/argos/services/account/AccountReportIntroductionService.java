@@ -34,7 +34,7 @@ public class AccountReportIntroductionService {
             try (var statement = c.prepareStatement("""
                 SELECT p.id,p.report_json,p.introduction_json,p.created_at,p.expires_at FROM ARG_AUDIT_REPORT p
                 JOIN ARG_AUDIT_RUN r ON r.id=p.run_id
-                WHERE r.owner_user_id=? AND p.token_hash=? AND (p.expires_at IS NULL OR p.expires_at>?)
+                WHERE r.ci_navigation_origins IS NULL AND r.owner_user_id=? AND p.token_hash=? AND (p.expires_at IS NULL OR p.expires_at>?)
                 """ + (write ? " FOR UPDATE" : ""))) {
                 statement.setLong(1, ctx.user().getId()); statement.setBytes(2, tokens.sha256(token));
                 statement.setTimestamp(3, Timestamp.from(clock.instant()));

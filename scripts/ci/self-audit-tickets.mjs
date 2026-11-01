@@ -1,7 +1,8 @@
-import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { SITE, requireControl, normalizeServices, parseServices, ticketInput, ticketMarker } from './self-audit-policy.mjs';
+import { trustedEndpoint, boundedJson } from './trusted-http.mjs';
+import { readTrustedEvidence } from './trusted-artifact.mjs';
 
 const END = '<!-- /argos-self-audit -->';
 export function ticketBody(finding, sha, service, runId) {
@@ -56,11 +57,13 @@ export async function synchronizeTickets({ evidence, sha, service, services = se
 export function githubApi(token, { fetcher = fetch, wait = sleep } = {}) {
   requireControl(Boolean(token), 'configuration-invalid');
   return async (method, path, body) => {
+    const endpoint=trustedEndpoint('https://api.github.com','/repos/dokor/argos'+path);
+    requireControl(['GET','POST','PATCH'].includes(method) && /^\/issues(?:\/[1-9][0-9]{0,18})?(?:\?state=all&per_page=100&page=[1-9][0-9]{0,2})?$/.test(path),'configuration-invalid');
     for (let attempt = 0; attempt < 3; attempt++) {
-      let response;
+      let response;const signal=AbortSignal.timeout(10000);
       try {
-        response = await fetcher('https://api.github.com/repos/dokor/argos' + path, {
-          method, redirect: 'error', signal: AbortSignal.timeout(10000),
+        response = await fetcher(endpoint, {
+          method, redirect: 'error', signal,
           headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json',
             'X-GitHub-Api-Version': '2022-11-28', 'Content-Type': 'application/json' },
           ...(body ? { body: JSON.stringify(body) } : {}),
@@ -74,16 +77,16 @@ export function githubApi(token, { fetcher = fetch, wait = sleep } = {}) {
         await response?.body?.cancel(); await wait(1000 * 2 ** attempt); continue;
       }
       requireControl(response?.ok, 'github-request-failed');
-      try { return await response.json(); } catch { throw new Error('github-response-invalid'); }
+      return boundedJson(response,1024*1024,signal);
     }
   };
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   try {
-    const raw = readFileSync('outputs/post-deploy-audit.json', 'utf8');
-    requireControl(raw.length <= 65536, 'evidence-invalid');
-    const result = await synchronizeTickets({ evidence: JSON.parse(raw), sha: process.env.EXPECTED_SHA,
+    const evidence=readTrustedEvidence('outputs/post-deploy-audit.json',{digest:process.env.EXPECTED_EVIDENCE_SHA256,sha:process.env.EXPECTED_SHA,
+      invocation:`${process.env.GITHUB_RUN_ID}:${process.env.GITHUB_RUN_ATTEMPT}`,repository:process.env.GITHUB_REPOSITORY});
+    const result = await synchronizeTickets({ evidence, sha: process.env.EXPECTED_SHA,
       services: parseServices(process.env.DEPLOYED_SERVICES), runId: process.env.GITHUB_RUN_ID, api: githubApi(process.env.GH_TOKEN) });
     console.log(JSON.stringify(result));
   } catch { console.error('Ticket synchronization failed; inspect the filtered control artifact and retry.'); process.exitCode = 2; }

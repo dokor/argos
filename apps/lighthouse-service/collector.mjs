@@ -31,8 +31,9 @@ export function createLighthouseCollector({ launch, lighthouse, chromeFlags, chr
       // Install before Lighthouse navigates. New pages inherit the context-wide rules.
       const browser = await chromium.connectOverCDP(`http://127.0.0.1:${chrome.port}`);
       const context = await browser.newContext({ serviceWorkers: 'block', acceptDownloads: false });
-      await protectContext(context, cancel, navigationOrigins);
+      const preparePage = await protectContext(context, cancel, navigationOrigins);
       const page = await context.newPage();
+      if (navigationOrigins) await preparePage(page);
       // Pass Lighthouse the already protected incognito page rather than allowing
       // it to create a page in Chrome's unprotected default context.
       await page.goto('about:blank#argos-lighthouse');

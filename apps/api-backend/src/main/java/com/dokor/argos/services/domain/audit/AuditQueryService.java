@@ -55,6 +55,7 @@ public class AuditQueryService {
 
     public AuditRun getRunStatus(long runId) {
         return runs.getRun(runId)
+            .filter(run -> run.getCiNavigationOrigins()==null)
             .orElseThrow(() -> new NotFoundException("AuditRun not found: " + runId));
     }
 

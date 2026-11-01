@@ -14,6 +14,7 @@ public class CiIdentityWs {
     @GET public Response get(@Context ContainerRequestContext request) {
         var value=request.getProperty(CiKeysService.Context.class.getName());
         if(!(value instanceof CiKeysService.Context identity)) throw CiAccountOperations.fail(CiErrorCode.AUTHENTICATION_FAILED);
+        if(!request.getUriInfo().getQueryParameters().isEmpty()) throw CiAccountOperations.fail(CiErrorCode.CONFIG_INVALID);
         return AccountAuthWs.ok(new Identity(1,identity.integrationPublicId(),identity.keyId(),identity.scopes().stream().sorted().toList(),
             identity.targets().stream().map(CiTargetsService.Grant::origin).toList()));
     }

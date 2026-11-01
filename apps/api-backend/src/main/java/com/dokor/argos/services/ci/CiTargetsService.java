@@ -136,6 +136,14 @@ public class CiTargetsService {
         try { CiOrigin.require(grants.stream().map(Grant::origin).toList(),url); }
         catch(Exception denied) { throw fail(CiErrorCode.TARGET_REJECTED); }
     }
+    public record GrantState(String origin,String state,boolean authorizedForKey) {}
+    /** Read-only doctor projection; no DNS, verification, lease or challenge mutation. */
+    public List<GrantState> inspect(long owner,List<Grant> grants,Connection c) {
+        return grants.stream().map(grant->{
+            var t=target(owner,grant.id(),c);var state=view(t).state();
+            return new GrantState(grant.origin(),state,"VERIFIED".equals(state) && t.getOrigin().equals(grant.origin()) && t.getAuthorizationEpoch()==grant.authorizationEpoch());
+        }).toList();
+    }
     /** Two proofs per tick, bounded network time, no work while the CI kill switch is closed. */
     public void tick() {
         if(policy.limits().isEmpty()) return;

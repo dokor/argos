@@ -429,12 +429,12 @@ public class AdminService {
     }
 
     private static final String RUNS =
-            "SELECT r.id,r.owner_user_id AS userId,d.hostname AS site,a.normalized_url AS rawTarget,"
+            "SELECT r.id,r.owner_user_id AS userId,d.hostname AS site,CASE WHEN r.ci_navigation_origins IS NULL THEN a.normalized_url ELSE NULL END AS rawTarget,"
                 + " u.id AS resolvedUserId,u.display_name AS userDisplayName,u.email AS userEmail,"
                 + " bp.batch_id AS batchId,b.selected_count AS pageCount,r.status,r.created_at AS"
                 + " createdAt,r.started_at AS startedAt,r.finished_at AS finishedAt,r.attempt_count"
-                + " AS attempts,EXISTS(SELECT 1 FROM ARG_AUDIT_REPORT p WHERE p.run_id=r.id AND"
-                + " (p.expires_at IS NULL OR p.expires_at>UTC_TIMESTAMP(3))) AS reportAvailable"
+                + " AS attempts,(r.ci_navigation_origins IS NULL AND EXISTS(SELECT 1 FROM ARG_AUDIT_REPORT p WHERE p.run_id=r.id AND"
+                + " (p.expires_at IS NULL OR p.expires_at>UTC_TIMESTAMP(3)))) AS reportAvailable"
                 + " FROM ARG_AUDIT_RUN r JOIN ARG_AUDIT a ON a.id=r.audit_id LEFT JOIN ARG_DOMAIN d"
                 + " ON d.id=a.domain_id LEFT JOIN ARG_ACCOUNT_USER u ON u.id=r.owner_user_id AND u.state<>'ARCHIVED'"
                 + " LEFT JOIN ARG_DOMAIN_BATCH_PAGE bp ON bp.run_id=r.id"

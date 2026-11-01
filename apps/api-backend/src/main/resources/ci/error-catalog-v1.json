@@ -443,6 +443,91 @@
         "message": "Recent authentication is required.",
         "action": "Confirm your identity in account security before this action."
       }
+    },
+    "COLLECTION_TIMEOUT": {
+      "httpStatus": 422,
+      "stage": "VERDICT",
+      "category": "MEASUREMENT",
+      "messageKey": "ci.errors.COLLECTION_TIMEOUT",
+      "actionCode": "REVIEW_MEASUREMENT",
+      "retryable": false,
+      "recovery": "NONE",
+      "fr": {
+        "message": "La collecte a dépassé son délai.",
+        "action": "Consulter les mesures de cette intention. Aucun nouvel audit ne sera lancé automatiquement."
+      },
+      "en": {
+        "message": "Collection exceeded its deadline.",
+        "action": "Review measurements for this intention. No new audit will be started automatically."
+      }
+    },
+    "ANTIBOT_DETECTED": {
+      "httpStatus": 422,
+      "stage": "VERDICT",
+      "category": "MEASUREMENT",
+      "messageKey": "ci.errors.ANTIBOT_DETECTED",
+      "actionCode": "REVIEW_MEASUREMENT",
+      "retryable": false,
+      "recovery": "NONE",
+      "fr": {
+        "message": "Une protection anti-bot empêche de conclure.",
+        "action": "Vérifier la cible et ses restrictions sans désactiver les protections réseau ou TLS."
+      },
+      "en": {
+        "message": "An anti-bot challenge prevents a verdict.",
+        "action": "Review the target and its restrictions while preserving network and TLS protections."
+      }
+    },
+    "VERDICT_POLICY_UNSUPPORTED": {
+      "httpStatus": 422,
+      "stage": "VERDICT",
+      "category": "MEASUREMENT",
+      "messageKey": "ci.errors.VERDICT_POLICY_UNSUPPORTED",
+      "actionCode": "REVIEW_MEASUREMENT",
+      "retryable": false,
+      "recovery": "NONE",
+      "fr": {
+        "message": "La politique ou la méthode de mesure est incompatible.",
+        "action": "Consulter le profil effectif. Une ancienne preuve manquante ne peut pas être reconstituée."
+      },
+      "en": {
+        "message": "The verdict policy or measurement method is unsupported.",
+        "action": "Review the effective profile. Missing historical evidence cannot be reconstructed."
+      }
+    },
+    "CONFIRMATION_REQUIRED": {
+      "httpStatus": 422,
+      "stage": "VERDICT",
+      "category": "MEASUREMENT",
+      "messageKey": "ci.errors.CONFIRMATION_REQUIRED",
+      "actionCode": "REVIEW_MEASUREMENT",
+      "retryable": false,
+      "recovery": "NONE",
+      "fr": {
+        "message": "Deux mesures comparables sont nécessaires.",
+        "action": "Une mesure seule reste exploratoire. Deux analyses doivent être annoncées et réservées ensemble."
+      },
+      "en": {
+        "message": "Two comparable measurements are required.",
+        "action": "One sample remains exploratory. Two analyses must be disclosed and reserved together."
+      }
+    },
+    "FINDINGS_UNCONFIRMED": {
+      "httpStatus": 422,
+      "stage": "VERDICT",
+      "category": "MEASUREMENT",
+      "messageKey": "ci.errors.FINDINGS_UNCONFIRMED",
+      "actionCode": "REVIEW_MEASUREMENT",
+      "retryable": false,
+      "recovery": "NONE",
+      "fr": {
+        "message": "Les constats diffèrent entre les deux mesures.",
+        "action": "Consulter les résultats privés. Ne pas publier de défaut confirmé ni relancer automatiquement un audit."
+      },
+      "en": {
+        "message": "The findings differ between the two measurements.",
+        "action": "Review the private results. Do not publish a confirmed defect or automatically start another audit."
+      }
     }
   }
 }

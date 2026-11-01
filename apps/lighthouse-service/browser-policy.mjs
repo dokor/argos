@@ -31,33 +31,63 @@ export function navigationScope(value, initialUrl) {
 
 export async function protectContext(context, cancel, navigationOrigins) {
   const authorized = navigationOrigins ? new Set(navigationOrigins) : null;
+  const pages = new WeakMap();
   let requests = 0, bytes = 0;
-  await context.route('**/*', async route => {
-    const request = route.request();
-    try {
-      if (++requests > 300) { cancel(); throw new Error('Request limit'); }
-      analysisUrl(request.url());
-      if (authorized && request.isNavigationRequest() && !request.frame().parentFrame()
-          && !authorized.has(new URL(request.url()).origin)) {
-        cancel();
-        throw new Error('Main navigation outside scope');
-      }
-      if (!['GET','HEAD'].includes(request.method())) throw new Error('Scope limit');
-      await route.continue();
-    } catch { await route.abort('blockedbyclient').catch(() => {}); }
-  });
-  await context.routeWebSocket('**/*', socket => socket.close());
-  context.on('page', async page => {
-    page.on('download', download => { void download.cancel(); });
-    try {
+  const preparePage = page => {
+    if (!pages.has(page)) pages.set(page, (async () => {
+      page.on('download', download => { void download.cancel().catch(() => {}); });
       const cdp = await context.newCDPSession(page);
       await cdp.send('Network.enable');
       cdp.on('Network.dataReceived', event => {
         bytes += event.dataLength;
         if (bytes > 20 * 1024 * 1024) cancel();
       });
-    } catch (error) { cancel(error); }
+      if (!authorized) return;
+      const { frameTree } = await cdp.send('Page.getFrameTree');
+      if (typeof frameTree?.frame?.id !== 'string') throw new Error('Navigation guard unavailable');
+      // Playwright routes only the first URL of a redirect chain. Pause the
+      // redirect response itself, before Chromium can send the next request.
+      cdp.on('Fetch.requestPaused', async event => {
+        try {
+          if (event.frameId === frameTree.frame.id && event.responseStatusCode >= 300 && event.responseStatusCode < 400) {
+            const locations = (event.responseHeaders ?? []).filter(header => header.name.toLowerCase() === 'location');
+            if (locations.length > 1) throw new Error('Ambiguous redirect');
+            if (locations.length) {
+              const destination = new URL(locations[0].value, event.request.url).href;
+              analysisUrl(destination);
+              if (!authorized.has(new URL(destination).origin)) throw new Error('Redirect outside scope');
+            }
+          }
+          await cdp.send('Fetch.continueResponse', { requestId: event.requestId });
+        } catch {
+          await cdp.send('Fetch.failRequest', { requestId: event.requestId, errorReason: 'BlockedByClient' }).catch(() => {});
+          cancel();
+        }
+      });
+      await cdp.send('Fetch.enable', { patterns: [{ urlPattern: '*', resourceType: 'Document', requestStage: 'Response' }] });
+    })());
+    return pages.get(page);
+  };
+  await context.route('**/*', async route => {
+    const request = route.request();
+    try {
+      if (++requests > 300) { cancel(); throw new Error('Request limit'); }
+      analysisUrl(request.url());
+      if (authorized && request.isNavigationRequest() && !request.frame().parentFrame()) {
+        if (!authorized.has(new URL(request.url()).origin)) {
+          cancel();
+          throw new Error('Main navigation outside scope');
+        }
+        // Also gates popups: asynchronous page events must not race navigation.
+        await preparePage(request.frame().page());
+      }
+      if (!['GET','HEAD'].includes(request.method())) throw new Error('Scope limit');
+      await route.continue();
+    } catch { await route.abort('blockedbyclient').catch(() => {}); }
   });
+  await context.routeWebSocket('**/*', socket => socket.close());
+  context.on('page', page => preparePage(page).catch(error => { cancel(error); }));
+  return preparePage;
 }
 export function safeOrigin(value) { try { return new URL(value).origin; } catch { return '[invalid URL]'; } }
 

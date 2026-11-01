@@ -47,7 +47,7 @@ try {
             method = route.request().method();
           let data = response(path, url.searchParams),
             status = 200;
-          if (method === "POST") {
+          if (method === "POST" && path !== "/api/account/auth/renew") {
             posts.push({
               path,
               body: route.request().postDataJSON(),

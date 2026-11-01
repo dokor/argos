@@ -1,0 +1,20 @@
+CREATE TABLE ARG_CI_REQUEST (
+ id BIGINT NOT NULL PRIMARY KEY,
+ public_id CHAR(36) COLLATE ascii_bin NOT NULL,
+ owner_user_id BIGINT NOT NULL,
+ integration_id BIGINT NOT NULL,
+ idempotency_hash BINARY(32) NOT NULL,
+ request_fingerprint BINARY(32) NOT NULL,
+ navigation_origins TEXT NOT NULL,
+ profile_id VARCHAR(32) NOT NULL,
+ samples INT NOT NULL,
+ created_at DATETIME(3) NOT NULL,
+ UNIQUE KEY uq_ci_request_public(public_id),
+ UNIQUE KEY uq_ci_request_intention(integration_id,idempotency_hash),
+ KEY idx_ci_request_owner(owner_user_id,integration_id,id),
+ CONSTRAINT fk_ci_request_owner FOREIGN KEY(owner_user_id) REFERENCES ARG_ACCOUNT_USER(id),
+ CONSTRAINT fk_ci_request_integration FOREIGN KEY(integration_id) REFERENCES ARG_CI_INTEGRATION(id),
+ CONSTRAINT ck_ci_request_samples CHECK(samples IN (1,2)),
+ CONSTRAINT ck_ci_request_profile CHECK(profile_id='standard-v1'),
+ CONSTRAINT ck_ci_request_origins CHECK(JSON_VALID(navigation_origins))
+) ENGINE=InnoDB;

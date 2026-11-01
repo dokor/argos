@@ -20,7 +20,15 @@ class ReportRetentionPolicyTest {
         report.setExpiresAt(Instant.parse("2028-01-01T00:00:00Z")); assertTrue(policy.expired(report, Instant.parse("2026-01-01T00:00:00Z")));
     }
     @Test void invalidDurationFailsConfiguration() {
+        assertThrows(IllegalArgumentException.class,()->new ReportRetentionPolicy(ConfigFactory.parseString("premium-ci.report-retention-days=0")));
+        assertThrows(IllegalArgumentException.class,()->new ReportRetentionPolicy(ConfigFactory.parseString("premium-ci.report-retention-days=31")));
         assertThrows(IllegalArgumentException.class,()->new ReportRetentionPolicy(ConfigFactory.parseString("report.retention-years=0")));
         assertThrows(IllegalArgumentException.class,()->new ReportRetentionPolicy(ConfigFactory.parseString("report.retention-years=11")));
+    }
+    @Test void ciUsesTheShorterDeadlineEvenForLegacyNullOrOverlongExpiry() {
+        var created=Instant.parse("2026-10-18T12:00:00Z");var deadline=created.plus(java.time.Duration.ofDays(30));
+        assertEquals(deadline,policy.ciExpiresAt(created));assertFalse(policy.ciExpired(created,null,deadline.minusMillis(1)));
+        assertTrue(policy.ciExpired(created,null,deadline));assertTrue(policy.ciExpired(created,deadline.plusSeconds(1),deadline));
+        assertTrue(policy.ciExpired(created,created.plusSeconds(1),created.plusSeconds(1)));
     }
 }

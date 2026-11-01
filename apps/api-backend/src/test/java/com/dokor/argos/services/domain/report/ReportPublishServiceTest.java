@@ -61,6 +61,19 @@ class ReportPublishServiceTest {
     }
 
     @Test
+    void ciPublicationPersistsOnlyTheSafeProjectionAndSkipsExternalEnrichmentAndStatistics() {
+        when(reports.isCiPrivate(42L)).thenReturn(true);run.setCiNavigationOrigins("[\"https://example.com\"]");
+        when(reports.save(any(AuditReport.class),eq(connection))).thenAnswer(call->{AuditReport entity=call.getArgument(0);entity.setId(88L);return entity;});
+        when(runs.markCompleted(eq(42L),eq("worker-claim"),any(),isNull(),eq(connection))).thenReturn(true);
+        assertEquals(88L,service.completeAndPublish(42L,audit,internal,"synthetic-private-marker","worker-claim"));
+        var saved=org.mockito.ArgumentCaptor.forClass(AuditReport.class);verify(reports).save(saved.capture(),eq(connection));
+        assertEquals("{}",saved.getValue().getReportJson());assertNotNull(saved.getValue().getCiExportJson());
+        assertNull(saved.getValue().getSiteTitle());assertNull(saved.getValue().getLogoUrl());
+        assertEquals(java.time.Duration.ofDays(30),java.time.Duration.between(saved.getValue().getCreatedAt(),saved.getValue().getExpiresAt()));
+        verifyNoInteractions(summaries,statistics);verify(runs).markCompleted(eq(42L),eq("worker-claim"),any(),isNull(),eq(connection));
+    }
+
+    @Test
     void publishesUsingPreGeneratedHashAndCompletesOnSameConnection() throws Exception {
         when(reports.save(any(AuditReport.class), eq(connection))).thenAnswer(invocation -> {
             AuditReport report = invocation.getArgument(0);
@@ -138,7 +151,8 @@ class ReportPublishServiceTest {
     void staleWorkerCannotPublish() throws Exception {
         assertEquals("Worker no longer owns this run", assertThrows(IllegalStateException.class,
             () -> service.completeAndPublish(42L, audit, internal, "result", "another-worker")).getMessage());
-        verifyNoInteractions(reports);
+        verify(reports).isCiPrivate(42L);
+        verify(reports,never()).save(any(AuditReport.class),any(Connection.class));
         verify(connection).rollback();
     }
 }

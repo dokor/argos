@@ -4,6 +4,8 @@ import { readdirSync, readFileSync } from 'node:fs';
 const runtime = process.env.TEST_SERVICE === 'runtime';
 const base = `http://127.0.0.1:${runtime ? 3016 : 3017}`;
 const endpoint = `${base}${runtime ? '/analyze/runtime' : '/analyze'}`;
+const origin=process.env.CI_FIXTURE_ORIGIN??'http://8.8.8.8';
+const scope=process.env.CI_FIXTURE_ORIGIN?{navigationOrigins:[origin]}:{};
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 const chromiumCount = () => readdirSync('/proc').filter(id => /^\d+$/.test(id)).filter(id => {
   try {
@@ -18,7 +20,7 @@ const idle = async () => {
 };
 const post = (path, timeoutMs) => fetch(endpoint, {
   method: 'POST', headers: { 'content-type': 'application/json' },
-  body: JSON.stringify({ url: `http://8.8.8.8${path}`, timeoutMs }),
+  body: JSON.stringify({ url: `${origin}${path}`, timeoutMs, ...scope }),
   signal: AbortSignal.timeout(70000),
 });
 // Read fixture counters using an HTTP absolute-form request to the local proxy.
@@ -46,7 +48,7 @@ console.log('PASS timeout, slow fixture reached, no live Chrome');
 const beforeDisconnect = await proxyHits();
 const abort = new AbortController();
 const pending = fetch(endpoint, { method: 'POST', headers: { 'content-type': 'application/json' },
-  body: JSON.stringify({ url: 'http://8.8.8.8/slow', timeoutMs: 45000 }), signal: abort.signal })
+  body: JSON.stringify({ url: origin+'/slow', timeoutMs: 45000, ...scope }), signal: abort.signal })
   .then(r => ({ response: r.status }), () => ({ disconnected: true }));
 let reached = false;
 try {

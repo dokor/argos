@@ -53,6 +53,8 @@ try {
         const context = await browser.newContext({ viewport: { width, height: 900 }, colorScheme: theme });
         let signedIn = false;
         await context.route('**/api/account/session', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ signedIn }) }));
+        await context.route('**/api/account/csrf', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ csrf: 'c'.repeat(43) }) }));
+        await context.route('**/api/account/auth/renew', route => route.fulfill({ status: signedIn ? 200 : 401, contentType: 'application/json', body: JSON.stringify(signedIn ? { accepted: true } : { error: 'session_invalid' }) }));
         // Header visibility follows the verified session response, not cookie presence.
         // Server-side validation of real HttpOnly cookies is covered by account/session tests.
         const page = await context.newPage();

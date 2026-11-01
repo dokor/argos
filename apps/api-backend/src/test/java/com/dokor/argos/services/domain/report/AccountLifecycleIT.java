@@ -1982,8 +1982,12 @@ class AccountLifecycleIT extends MariaDbReportFixture {
                 public org.flywaydb.core.api.configuration.Configuration getConfiguration(){return null;}
             });
         }
-        var a=dao.transaction(c->sessions.create(dao.user(aid,c,true),CSRF,c));
-        assertEquals(1,sites().list(bearer(a),20,null).items().size());
+        assertNotNull(dao.transaction(c->sessions.create(dao.user(aid,c,true),CSRF,c)));
+        // Verify the V26 backfill on its historical columns, without invoking the
+        // current reader (CI visibility and its columns only exist from V41).
+        try(var c=source.getConnection();var s=c.prepareStatement("SELECT COUNT(*) FROM ARG_ACCOUNT_SITE WHERE owner_user_id=?")) {
+            s.setLong(1,aid);try(var r=s.executeQuery()){assertTrue(r.next());assertEquals(1,r.getInt(1));}
+        }
         try(var c=source.getConnection();var s=c.createStatement();var r=s.executeQuery("SELECT COUNT(*) FROM ARG_ACCOUNT_SITE")){r.next();assertEquals(2,r.getInt(1));}
         error(401,()->dao.transaction(c->sessions.create(dao.user(bid,c,true),CSRF,c)));
     }

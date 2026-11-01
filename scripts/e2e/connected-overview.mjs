@@ -1,3 +1,4 @@
+import { mockSessionRenewal } from './session-renewal-fixture.mjs';
 import { injectAxe } from './inject-axe.mjs';
 import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
@@ -57,6 +58,7 @@ try {
             body: JSON.stringify(data ?? { error: "resource_unavailable" }),
           });
         });
+        await mockSessionRenewal(page);
         const visit = async (query = "") => {
           await page.goto(base + prefix + "/account" + query);
           await page

@@ -29,7 +29,7 @@ test('abort kills Chrome, releases the collector and cannot double-kill during c
 });
 
 test('each audit starts with a fresh protected context and activates its page before collection', async () => {
-  let launches = 0, contexts = 0, killed = 0, activated = 0;
+  let launches = 0, contexts = 0, killed = 0, activated = 0, guarded = 0;
   const handlers = {}, logs = [];
   const protectedPage = { url: () => 'about:blank#argos-lighthouse', on: (name, handler) => { handlers[name] = handler; }, bringToFront: async () => { activated++; } };
   const collect = createLighthouseCollector({
@@ -38,7 +38,11 @@ test('each audit starts with a fresh protected context and activates its page be
       contexts++;
       assert.deepEqual(options, { serviceWorkers: 'block', acceptDownloads: false });
       return { route: async () => {}, routeWebSocket: async () => {}, on: () => {},
-        newPage: async () => ({ goto: async () => {} }) };
+        newCDPSession:async()=>({on:()=>{},send:async method=>{
+          if(method==='Page.getFrameTree')return {frameTree:{frame:{id:'main'}}};
+          if(method==='Fetch.enable')guarded=contexts;
+        }}),
+        newPage: async () => ({on:()=>{},goto:async()=>assert.equal(guarded,contexts,'Guard must precede navigation')}) };
     } }) },
     connectPuppeteer: async () => ({ pages: async () => [protectedPage], disconnect: async () => {} }),
     lighthouse: async (url, flags, _config, page) => {
@@ -52,8 +56,8 @@ test('each audit starts with a fresh protected context and activates its page be
     log: (event, fields) => logs.push({ event, ...fields }),
     chromeFlags: [], proxy: 'http://127.0.0.1:3128'
   });
-  await collect('https://example.com');
-  await collect('https://example.com');
+  await collect('https://example.com',{navigationOrigins:['https://example.com']});
+  await collect('https://example.com',{navigationOrigins:['https://example.com']});
   assert.equal(launches, 2);
   assert.equal(contexts, 2);
   assert.equal(killed, 2);

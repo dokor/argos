@@ -31,7 +31,7 @@ public final class UsageHistoryService {
                 s.setLong(1,owner);s.setString(2,period);try(var rows=s.executeQuery()){rows.next();total=rows.getLong(1);}
             }
             var items=new ArrayList<UsageEvent>();
-            try(var s=c.prepareStatement("SELECT u.id,u.state,u.period,u.created_at,u.counted_at,u.released_at,p.batch_id,a.normalized_url "
+            try(var s=c.prepareStatement("SELECT u.id,u.state,u.period,u.created_at,u.counted_at,u.released_at,p.batch_id,CASE WHEN r.ci_navigation_origins IS NULL THEN a.normalized_url ELSE NULL END "
                     +"FROM ARG_USAGE_RUN u JOIN ARG_AUDIT_RUN r ON r.id=u.id AND r.owner_user_id=u.user_id "
                     +"JOIN ARG_AUDIT a ON a.id=r.audit_id LEFT JOIN ARG_DOMAIN_BATCH_PAGE p ON p.run_id=u.id AND p.owner_user_id=u.user_id "
                     +"WHERE "+scope+" ORDER BY COALESCE(u.counted_at,u.released_at,u.created_at) DESC,u.id DESC LIMIT ? OFFSET ?")) {

@@ -43,7 +43,7 @@ WITH latest AS (
  FROM ARG_ACCOUNT_SITE_URL u JOIN ARG_ACCOUNT_SITE s ON s.id=u.site_id
  JOIN ARG_DOMAIN d ON d.id=s.domain_id JOIN ARG_AUDIT a ON a.id=u.audit_id
  LEFT JOIN ARG_AUDIT_RUN r ON r.id=(SELECT x.id FROM ARG_AUDIT_RUN x
- WHERE x.owner_user_id=s.owner_user_id AND x.audit_id=u.audit_id ORDER BY x.created_at DESC,x.id DESC LIMIT 1)
+ WHERE x.ci_navigation_origins IS NULL AND x.owner_user_id=s.owner_user_id AND x.audit_id=u.audit_id ORDER BY x.created_at DESC,x.id DESC LIMIT 1)
  LEFT JOIN ARG_AUDIT_REPORT p ON p.run_id=r.id AND r.status='COMPLETED' AND (p.expires_at IS NULL OR p.expires_at>?)
  WHERE s.owner_user_id=?
 ), projection AS (

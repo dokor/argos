@@ -43,7 +43,7 @@ public class ReportsWs {
     public Response getReport(@PathParam("token") String token,@HeaderParam("Authorization") String authorization,@HeaderParam("X-Product-Consent") String consent) {
         var reportOpt = reportReadService.getByToken(token);
         if (reportOpt.isEmpty()) {
-            return Response.status(Response.Status.NOT_FOUND).build();
+            return Response.status(Response.Status.NOT_FOUND).header("Cache-Control","private, no-store").build();
         }
 
         if(analytics!=null) analytics.viewed(token,authorization,consent);
@@ -64,7 +64,7 @@ public class ReportsWs {
 
         var runOpt = auditRunService.findByReportToken(token);
         if (runOpt.isEmpty() || reportReadService.isExpired(runOpt.get().getId())) {
-            return Response.status(Response.Status.NOT_FOUND).build();
+            return Response.status(Response.Status.NOT_FOUND).header("Cache-Control","private, no-store").build();
         }
 
         var run = runOpt.get();

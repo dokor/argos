@@ -49,7 +49,7 @@ public final class AdminQueueService {
           FROM ARG_DOMAIN_BATCH_PAGE bp JOIN ARG_AUDIT_RUN r ON r.id=bp.run_id GROUP BY bp.batch_id
         ) p ON p.batch_id=b.id
         UNION ALL
-        SELECT 'RUN',r.id,r.owner_user_id,d.hostname,a.normalized_url,r.status,r.created_at,
+        SELECT 'RUN',r.id,r.owner_user_id,d.hostname,CASE WHEN r.ci_navigation_origins IS NULL THEN a.normalized_url ELSE NULL END,r.status,r.created_at,
           r.started_at,r.finished_at,NULL,NULL,FALSE,r.attempt_count,NULL,bp.batch_id,NULL,NULL,NULL,NULL
         FROM ARG_AUDIT_RUN r JOIN ARG_AUDIT a ON a.id=r.audit_id
         LEFT JOIN ARG_DOMAIN d ON d.id=a.domain_id LEFT JOIN ARG_DOMAIN_BATCH_PAGE bp ON bp.run_id=r.id

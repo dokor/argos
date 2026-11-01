@@ -32,8 +32,19 @@ cleanup() {
   fi
   docker rm -f argos-security-runtime argos-security-lighthouse argos-security-gateway argos-security-public argos-security-private >/dev/null 2>&1 || true
   docker network rm argos-security-public argos-security-private >/dev/null 2>&1 || true
+  if [[ "${fixture_tls:-}" == /tmp/tmp.* ]]; then rm -rf -- "$fixture_tls"; fi
 }
 trap cleanup EXIT
+fixture_tls=$(mktemp -d)
+# A new, fixture-only CA. Browser certificate checks remain enabled.
+openssl req -x509 -newkey rsa:2048 -nodes -keyout "$fixture_tls/root.key" -out "$fixture_tls/root.pem" -days 1 -subj '/CN=Argos CI fixture CA' -addext 'basicConstraints=critical,CA:TRUE' >/dev/null 2>&1
+openssl req -newkey rsa:2048 -nodes -keyout "$fixture_tls/server.key" -out "$fixture_tls/server.csr" -subj '/CN=ci.fixture.net' >/dev/null 2>&1
+printf '%s\n' 'subjectAltName=DNS:ci.fixture.net,DNS:second.fixture.net,DNS:outside.fixture.net' 'extendedKeyUsage=serverAuth' > "$fixture_tls/extensions"
+openssl x509 -req -in "$fixture_tls/server.csr" -CA "$fixture_tls/root.pem" -CAkey "$fixture_tls/root.key" -CAcreateserial -out "$fixture_tls/server.pem" -days 1 -extfile "$fixture_tls/extensions" >/dev/null 2>&1
+mkdir "$fixture_tls/nssdb"
+certutil -N -d "sql:$fixture_tls/nssdb" --empty-password
+certutil -A -d "sql:$fixture_tls/nssdb" -n argos-ci-fixture -t 'C,,' -i "$fixture_tls/root.pem"
+chmod -R a+rX "$fixture_tls/nssdb"
 docker build -t argos-security-egress apps/audit-egress
 docker build -t argos-security-runtime apps/playwright-service
 docker build -t argos-security-lighthouse apps/lighthouse-service
@@ -45,6 +56,8 @@ done
 docker network create --internal --subnet 8.8.8.0/24 argos-security-public
 docker network create --internal argos-security-private
 docker run -d --name argos-security-public --network argos-security-public --ip 8.8.8.8 \
+  --network-alias ci.fixture.net --network-alias second.fixture.net --network-alias outside.fixture.net --network-alias badcert.fixture.net \
+  -e CI_TLS_FIXTURE=true -v "$fixture_tls:/fixture-tls:ro" \
   -v "$root/scripts/security/fixture.mjs:/fixture.mjs:ro" --entrypoint node argos-security-egress /fixture.mjs
 docker run -d --name argos-security-private --network argos-security-private --network-alias private.fixture.net \
   -e PRIVATE_FIXTURE=true -v "$root/scripts/security/fixture.mjs:/fixture.mjs:ro" --entrypoint node argos-security-egress /fixture.mjs
@@ -58,7 +71,10 @@ docker run -d --name argos-security-runtime --network container:argos-security-g
   --security-opt "seccomp=$root/infra/compose/playwright-service/chromium-seccomp.json" \
   --tmpfs /tmp:size=256m --tmpfs /home/auditor:uid=1001,gid=1001,size=16m --shm-size 128m \
   --memory 1g --cpus 2 --pids-limit 256 -e AUDIT_EGRESS_PROXY=http://127.0.0.1:3128 \
-  -v "$root/scripts/security/lifecycle.mjs:/security-lifecycle.mjs:ro" argos-security-runtime
+  -v "$fixture_tls/nssdb:/fixture-nssdb:ro" \
+  -v "$root/scripts/security/ci-runtime-fixture.mjs:/security-ci-runtime.mjs:ro" \
+  -v "$root/scripts/security/ci-network.mjs:/security-ci-network.mjs:ro" \
+  -v "$root/scripts/security/lifecycle.mjs:/security-lifecycle.mjs:ro" --entrypoint node argos-security-runtime /security-ci-runtime.mjs
 ready argos-security-runtime "fetch('http://127.0.0.1:3016/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 docker exec argos-security-runtime node --input-type=module -e "
   import {chromium} from 'playwright';import {browserFlags,protectContext} from './browser-policy.mjs';
@@ -89,7 +105,10 @@ docker run -d --name argos-security-lighthouse --network container:argos-securit
   --security-opt "seccomp=$root/infra/compose/lighthouse-service/chromium-seccomp.json" \
   --tmpfs /tmp:size=256m --tmpfs /home/auditor:uid=1001,gid=1001,size=16m --shm-size 128m \
   --memory 1g --cpus 2 --pids-limit 256 -e AUDIT_EGRESS_PROXY=http://127.0.0.1:3128 \
-  -v "$root/scripts/security/lifecycle.mjs:/security-lifecycle.mjs:ro" argos-security-lighthouse
+  -v "$fixture_tls/nssdb:/fixture-nssdb:ro" \
+  -v "$root/scripts/security/ci-network.mjs:/security-ci-network.mjs:ro" \
+  -v "$root/scripts/security/ci-lighthouse-fixture.mjs:/security-ci-lighthouse.mjs:ro" \
+  -v "$root/scripts/security/lifecycle.mjs:/security-lifecycle.mjs:ro" --entrypoint node argos-security-lighthouse /security-ci-lighthouse.mjs
 ready argos-security-lighthouse "fetch('http://127.0.0.1:3017/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 docker exec argos-security-lighthouse node --input-type=module -e "
   import assert from 'node:assert/strict';
@@ -103,7 +122,9 @@ docker exec argos-security-lighthouse node --input-type=module -e "
 "
 docker exec argos-security-private node --input-type=module -e "import assert from 'node:assert/strict';const r=await fetch('http://127.0.0.1/stats');assert.equal((await r.json()).hits,0)"
 for service in runtime lighthouse; do
+  timeout 300s docker exec -e TEST_SERVICE="$service" "argos-security-$service" node /security-ci-network.mjs
   timeout 180s docker exec -e TEST_SERVICE="$service" "argos-security-$service" node /security-lifecycle.mjs
+  timeout 180s docker exec -e TEST_SERVICE="$service" -e CI_FIXTURE_ORIGIN=https://ci.fixture.net "argos-security-$service" node /security-lifecycle.mjs
   test "$(docker inspect "argos-security-$service" --format '{{.State.OOMKilled}} {{.RestartCount}}')" = 'false 0'
   log_file=$(mktemp)
   docker logs "argos-security-$service" > "$log_file" 2>&1
@@ -115,3 +136,4 @@ done
 # Check counters after the lifecycle recovery audits as well.
 docker exec argos-security-private node --input-type=module -e "import assert from 'node:assert/strict';const r=await fetch('http://127.0.0.1/stats');assert.equal((await r.json()).hits,0)"
 docker exec argos-security-public node --input-type=module -e "import assert from 'node:assert/strict';const r=await fetch('http://127.0.0.1/stats');assert.equal((await r.json()).mutations,0)"
+docker exec argos-security-public node --input-type=module -e "import assert from 'node:assert/strict';const data=await(await fetch('http://127.0.0.1/stats')).json();for(const key of ['outsideHits','badCertificateHits','stateLeaks','credentialHits'])assert.equal(data[key],0,key)"

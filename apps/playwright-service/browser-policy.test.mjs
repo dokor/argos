@@ -9,6 +9,14 @@ test('proxy is mandatory and browser flags remove implicit loopback bypass and d
   assert.ok(flags.includes('--disable-quic'));
   assert.equal(flags.some(flag=>flag.includes('no-sandbox')),false);
 });
+test('download cancellation during context shutdown cannot produce an unhandled rejection',async()=>{
+  let pageHandler,downloadHandler;
+  await protectContext({route:async()=>{},routeWebSocket:async()=>{},on:(_event,fn)=>{pageHandler=fn;},
+    newCDPSession:async()=>({send:async()=>{},on:()=>{}})},()=>{});
+  await pageHandler({on:(event,fn)=>{if(event==='download')downloadHandler=fn;}});
+  downloadHandler({cancel:()=>Promise.reject(new Error('synthetic closed context'))});
+  await new Promise(resolve=>setImmediate(resolve));
+});
 test('context-wide interceptors refuse secondary requests and unsafe methods before continuing',async()=>{
   let handler,wsHandler,cancelled=0,continued=0,aborted=0;
   await protectContext({ route:async(pattern,fn)=>{assert.equal(pattern,'**/*');handler=fn;},
