@@ -92,7 +92,7 @@ export default function AccountShell({ children }: { children: ReactNode }) {
             { href: "/account/domains", label: groupCopy.myDomains, icon: "list", current: currentLocation("/account/domains", isDomains && !newDomain) },
             { href: "/account/domains/new", label: groupCopy.newDomain, icon: "add", current: currentLocation("/account/domains/new") },
           ]}/>
-        <Link href="/account/integrations" aria-current={pathname === "/account/integrations" ? "page" : undefined} onClick={close} aria-label={`${c.integrations} — ${c.soon}`}><NavigationIcon name="integrations"/><span className={s.navLabel}>{c.integrations}<span className={s.soon}>{c.soon}</span></span></Link>
+        <Link href="/account/integrations" aria-current={pathname === "/account/integrations" ? "page" : undefined} onClick={close} aria-label={c.integrations}><NavigationIcon name="integrations"/><span className={s.navLabel}>{c.integrations}</span></Link>
         <div className={s.navBottom}>
           <Link href="/account/settings" aria-current={isAccount ? "page" : undefined} onClick={close} aria-label={c.account}><NavigationIcon name="account"/><span className={s.navLabel}>{c.account}</span></Link>
           <Link href="/account/usage" aria-current={pathname === "/account/usage" ? "page" : undefined} onClick={close} aria-label={c.usage}><NavigationIcon name="usage"/><span className={s.navLabel}>{c.usage}</span></Link>

@@ -39,4 +39,6 @@ Built by Antoine LE LOUËT. Contact: a.lelouet.freelance@gmail.com.
 
 ## Optional
 
+- [Developer documentation (FR)](https://argos.lelouet.fr/docs) and [English developer documentation](https://argos.lelouet.fr/en/docs): Premium CI preview guides, required machine API keys, verified domains, pinned GitHub/GitLab templates, optional issue publication, quotas, error recovery and downloadable OpenAPI. Server CI access remains disabled until full acceptance; documentation does not activate the service.
+
 - [Source code](https://github.com/dokor/argos): Project repository, licensed under the Business Source License 1.1.

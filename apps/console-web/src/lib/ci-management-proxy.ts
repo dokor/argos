@@ -78,6 +78,24 @@ function keySuccess(data:Record<string,unknown>,method:string): boolean {
 }
 function success(data: unknown,method: string,path: string): boolean {
   if(!object(data)) return false;
+  if(path==="status") {
+    const nonnegative=(v:unknown)=>typeof v==="number"&&Number.isSafeInteger(v)&&v>=0;
+    const positive=(v:unknown)=>nonnegative(v)&&(v as number)>0;
+    return exact(data,["enabled","eligible","offer","validUntil","limits","period","timezone","startsAt","resetsAt","integrations"])
+      && typeof data.enabled==="boolean"&&typeof data.eligible==="boolean"&&(!data.eligible||data.enabled)
+      && typeof data.offer==="string"&&/^[A-Z][A-Z0-9_]{0,15}$/.test(data.offer)&&time(data.validUntil)
+      && (!data.eligible||data.offer==="PREMIUM"&&data.validUntil!==null&&data.limits!==null)
+      && (data.limits===null ? !data.enabled : object(data.limits)&&exact(data.limits,["monthlyAnalysesPerKey","activeKeys","verifiedTargets","concurrentRuns","keyLifetimeYears"])
+        && [data.limits.monthlyAnalysesPerKey,data.limits.activeKeys,data.limits.concurrentRuns,data.limits.keyLifetimeYears].every(positive)
+        && (data.limits.verifiedTargets===null||positive(data.limits.verifiedTargets)))
+      && typeof data.period==="string"&&/^\d{4}-(?:0[1-9]|1[0-2])$/.test(data.period)
+      && typeof data.timezone==="string"&&/^[A-Za-z0-9_+:/-]{1,80}$/.test(data.timezone)
+      && time(data.startsAt)&&data.startsAt!==null&&time(data.resetsAt)&&data.resetsAt!==null
+      && Array.isArray(data.integrations)&&data.integrations.length<=100&&data.integrations.every(v=>object(v)&&exact(v,["id","slot","used","reserved"])
+        && typeof v.id==="string"&&uuid.test(v.id)&&positive(v.slot)&&nonnegative(v.used)&&nonnegative(v.reserved))
+      && new Set(data.integrations.map(v=>(v as Record<string,unknown>).id)).size===data.integrations.length
+      && new Set(data.integrations.map(v=>(v as Record<string,unknown>).slot)).size===data.integrations.length;
+  }
   if(path.startsWith("keys")) return keySuccess(data,method);
   if(method==="GET") return exact(data,["items","nextCursor"]) && Array.isArray(data.items) && data.items.length<=100
     && data.items.every(target) && (data.nextCursor===null || typeof data.nextCursor==="string" && /^[1-9][0-9]{0,18}$/.test(data.nextCursor));
@@ -88,7 +106,7 @@ function success(data: unknown,method: string,path: string): boolean {
 }
 export async function ciManagementProxy(request: NextRequest,parts: string[],getHeaders:()=>Headers|NextResponse): Promise<NextResponse> {
   const path=parts.join("/"), id="[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}";
-  const allowed=request.method==="GET" ? ["targets","keys"].includes(path) : request.method==="POST" ? new RegExp(`^(?:targets(?:/${id}/(?:renew|verify))?|keys(?:/[a-f0-9]{32}/rotate)?)$`).test(path)
+  const allowed=request.method==="GET" ? ["targets","keys","status"].includes(path) : request.method==="POST" ? new RegExp(`^(?:targets(?:/${id}/(?:renew|verify))?|keys(?:/[a-f0-9]{32}/rotate)?)$`).test(path)
     : request.method==="DELETE" && new RegExp(`^(?:targets/${id}|keys/[a-f0-9]{32})$`).test(path);
   if(!allowed) return ciFailure("RESOURCE_NOT_AVAILABLE");
   const forwarded=getHeaders();
@@ -96,6 +114,7 @@ export async function ciManagementProxy(request: NextRequest,parts: string[],get
   if(!forwarded.has("Authorization")) return ciFailure("AUTHENTICATION_FAILED");
   forwarded.delete("X-Argos-Measurement");forwarded.delete("X-Argos-Captcha");
   const params=request.nextUrl.searchParams;
+  if(path==="status"&&params.size) return ciFailure("CONFIG_INVALID");
   if([...params.keys()].some(k=>k!=="after" || request.method!=="GET" || params.getAll(k).length!==1)) return ciFailure("CONFIG_INVALID");
   const after=params.get("after");
   if(after!==null && (!/^(0|[1-9][0-9]{0,18})$/.test(after) || BigInt(after)>BigInt("9223372036854775807"))) return ciFailure("CONFIG_INVALID");

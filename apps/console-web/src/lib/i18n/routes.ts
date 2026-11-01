@@ -28,6 +28,8 @@ export const accountRoutes: Record<string, string> = {
 };
 export const languageRoutes: Record<string, string> = {
   "/guides/checklist-audit-ecommerce": "/en/guides/ecommerce-audit-checklist",
+  "/docs": "/en/docs",
+  ...Object.fromEntries(["auth","domains","github","gitlab","issues","api","errors","usage","changelog"].map(topic=>["/docs/"+topic,"/en/docs/"+topic])),
   "/guides/lcp-lent": "/en/guides/slow-lcp",
   "/guides/content-security-policy": "/en/guides/content-security-policy",
   "/guides/hsts": "/en/guides/hsts",
