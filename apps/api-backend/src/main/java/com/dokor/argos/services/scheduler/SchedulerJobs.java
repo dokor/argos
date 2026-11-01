@@ -38,6 +38,8 @@ public class SchedulerJobs {
     @Inject public void notifications(com.dokor.argos.services.notifications.NotificationService service){this.notifications=service;}
     @Inject public void batches(com.dokor.argos.services.connected.batch.BatchReconciler reconciler){this.batches=reconciler;}
     private com.dokor.argos.services.connected.discovery.DiscoveryWorker discoveries;
+    private com.dokor.argos.services.ci.CiTargetsService ciTargets;
+    @Inject public void ciTargets(com.dokor.argos.services.ci.CiTargetsService targets){this.ciTargets=targets;}
     @Inject public void discoveries(com.dokor.argos.services.connected.discovery.DiscoveryWorker worker){this.discoveries=worker;}
 
     @Inject
@@ -59,6 +61,7 @@ public class SchedulerJobs {
     }
 
     public void scheduleJobs() {
+        if(ciTargets!=null) scheduler.schedule("Recheck CI target proofs",ciTargets::tick,Schedules.fixedDelaySchedule(Duration.ofMinutes(1)));
         if(problemStatistics!=null) scheduler.schedule("Project problem statistics",problemStatistics::backfill,Schedules.fixedDelaySchedule(Duration.ofMinutes(1)));
         if(premiumWaitlist!=null) scheduler.schedule("Purge expired premium interest",premiumWaitlist::purge,Schedules.fixedDelaySchedule(Duration.ofHours(1)));
         if(notifications!=null) scheduler.schedule("Purge account notifications",notifications::purge,Schedules.fixedDelaySchedule(Duration.ofHours(1)));

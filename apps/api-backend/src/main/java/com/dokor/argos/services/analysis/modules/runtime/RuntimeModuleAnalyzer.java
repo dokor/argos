@@ -39,7 +39,7 @@ public class RuntimeModuleAnalyzer {
 
         PlaywrightRuntimeClient.RuntimeAnalyzeResponse r;
         try {
-            r = client.analyzeRuntime(url);
+            r = auditContext.navigationOrigins().isEmpty() ? client.analyzeRuntime(url) : client.analyzeRuntime(url,auditContext.navigationOrigins());
         } catch (Exception e) {
             throw new ModuleUnavailableException("Playwright service unavailable", e);
         }

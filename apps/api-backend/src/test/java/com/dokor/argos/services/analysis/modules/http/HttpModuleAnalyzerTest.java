@@ -40,6 +40,17 @@ import static org.mockito.Mockito.when;
  * du résultat HTTP vers l'{@link AuditContext}.
  */
 class HttpModuleAnalyzerTest {
+    @Test void ciScopeStopsRedirectBeforeContactingAnUnverifiedMainDestination() throws Exception {
+        var client=mock(HttpClient.class);
+        var redirect=resp(302,"",Map.of("location",List.of("https://www.example.com/private")),HttpClient.Version.HTTP_1_1);
+        when(client.<String>send(any(HttpRequest.class),any())).thenReturn(redirect);
+        var context=new AuditContext("https://example.com","https://example.com",1)
+            .withNavigationOrigins(List.of("https://example.com"));
+        var result=new HttpModuleAnalyzer(client).analyze(context,LoggerFactory.getLogger(getClass()));
+        assertEquals("TARGET_BLOCKED",result.data().get("fetchOutcome"));
+        verify(client,times(1)).send(any(HttpRequest.class),any());
+        assertEquals(List.of("https://example.com"),HttpModuleAnalyzer.enrichContext(context,result).navigationOrigins());
+    }
     @Test void targetedNavigationRepairsRemoveOnlyTheirOwnFindings() throws Exception {
         for (boolean fixed : new boolean[]{false,true}) {
             var client=mock(HttpClient.class);

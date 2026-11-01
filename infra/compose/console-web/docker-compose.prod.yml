@@ -31,6 +31,21 @@ services:
       - traefik.http.routers.console-web-api.tls.options=modern@file
 
       # Account authentication: edge budget per TCP client, Java retains persistent quotas.
+      # CI machines: native TCP peer only. No trust in caller-supplied forwarded identity.
+      - traefik.http.routers.argos-ci.rule=Host(`argos.lelouet.fr`) && (Path(`/api/ci`) || PathPrefix(`/api/ci/`))
+      - traefik.http.routers.argos-ci.entrypoints=websecure
+      - traefik.http.routers.argos-ci.tls=true
+      - traefik.http.routers.argos-ci.tls.certresolver=le
+      - traefik.http.routers.argos-ci.tls.options=modern@file
+      - traefik.http.routers.argos-ci.service=console-web
+      - traefik.http.routers.argos-ci.priority=220
+      - traefik.http.routers.argos-ci.middlewares=argos-ci-limit,argos-ci-body
+      - traefik.http.middlewares.argos-ci-limit.ratelimit.average=120
+      - traefik.http.middlewares.argos-ci-limit.ratelimit.period=1m
+      - traefik.http.middlewares.argos-ci-limit.ratelimit.burst=20
+      - traefik.http.middlewares.argos-ci-limit.ratelimit.sourcecriterion.ipstrategy.depth=0
+      - traefik.http.middlewares.argos-ci-body.buffering.maxRequestBodyBytes=8192
+
       - traefik.http.routers.argos-account-auth.rule=Host(`argos.lelouet.fr`) && PathPrefix(`/api/account/auth/`)
       - traefik.http.routers.argos-account-auth.entrypoints=websecure
       - traefik.http.routers.argos-account-auth.tls=true

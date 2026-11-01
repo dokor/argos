@@ -203,6 +203,13 @@ public class AuditProcessorService {
             Set<AuditModule> selectedModules = scopes.modules(executionScope);
             long domainId = audit.getDomainId();
             AuditContext context = new AuditContext(inputUrl, normalizedUrl, domainId);
+            if(run.getCiNavigationOrigins()!=null) {
+                try {
+                    var origins=objectMapper.readValue(run.getCiNavigationOrigins(),new com.fasterxml.jackson.core.type.TypeReference<java.util.List<String>>() {});
+                    com.dokor.argos.services.ci.CiOrigin.require(origins,normalizedUrl);
+                    context=context.withNavigationOrigins(origins);
+                } catch(Exception invalidScope) { auditRunService.fail(runId,"CI_TARGET_SCOPE_INVALID",run.getClaimToken());return; }
+            }
 
             // Statut par module : COMPLETED / UNAVAILABLE / TIMEOUT / FAILED.
             // Chaque module est exécuté de façon isolée : un timeout ou une erreur

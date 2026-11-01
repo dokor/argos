@@ -1,7 +1,7 @@
 import http from 'node:http';
 import { lighthouseEvidence } from './evidence.mjs';
 import { analysisUrl } from './policy.mjs';
-import { safeOrigin, redactDiagnostics } from './browser-policy.mjs';
+import { safeOrigin, redactDiagnostics, navigationScope } from './browser-policy.mjs';
 
 export function isValidAnalysisUrl(value) {
   try { analysisUrl(value); return true; } catch { return false; }
@@ -36,7 +36,7 @@ async function readJson(req) {
   let bytes = 0;
   for await (const chunk of req) {
     bytes += chunk.length;
-    if (bytes > 8192) return { error: 413 };
+    if (bytes > 32768) return { error: 413 };
     chunks.push(chunk);
   }
   try { return { body: JSON.parse(Buffer.concat(chunks).toString('utf8')) }; }
@@ -68,11 +68,15 @@ export function createLighthouseServer({ analyze, log = () => {}, maxConcurrency
       if (input.error) { res.writeHead(input.error).end('Invalid request'); return; }
       const url = input.body?.url;
       if (!isValidAnalysisUrl(url)) { res.writeHead(400).end('Invalid URL'); return; }
+      let navigationOrigins;
+      try { navigationOrigins = navigationScope(input.body?.navigationOrigins,url); }
+      catch { res.writeHead(400).end('Invalid navigation scope'); return; }
       safeUrl = safeOrigin(url);
       log('analyze.start', { url: safeUrl });
       const timeoutMs = Number.isFinite(input.body?.timeoutMs) && input.body.timeoutMs > 0 ? Math.min(60000, input.body.timeoutMs) : 60000;
       timer = setTimeout(() => controller.abort(), timeoutMs);
-      const result = await limited(() => analyze(url, { signal: controller.signal, timeoutMs }), { signal: controller.signal });
+      const result = await limited(() => analyze(url, { signal: controller.signal, timeoutMs,
+        ...(navigationOrigins ? { navigationOrigins } : {}) }), { signal: controller.signal });
       if (controller.signal.aborted) throw new Error('Analysis timeout');
       // Empty results remain a collector failure, never a fabricated score.
       if (!result?.lhr || typeof result.lhr !== 'object' || Array.isArray(result.lhr)) {

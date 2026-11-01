@@ -37,9 +37,16 @@ public class AccountRateLimiter {
                         action.equals("login")
                                 ? 100
                                 : action.equals("oauth") || action.equals("claim") ? 30 : 30);
-        boolean allowed = increment(action + ":ip:" + remote, ipLimit);
+        // Never retain an expiry-range gap lock while a CI counter is inserted concurrently.
+        boolean ci = action.startsWith("ci-");
+        if (ci) dao.transaction(c -> {
+            try(var s=c.prepareStatement("DELETE FROM ARG_ACCOUNT_RATE WHERE expires_at < ? LIMIT 1000")) {
+                s.setTimestamp(1,Timestamp.from(clock.instant()));s.executeUpdate();return null;
+            } catch(java.sql.SQLException failed) {throw new AccountError(503,"account_unavailable");}
+        });
+        boolean allowed = increment(action + ":ip:" + remote, ipLimit, !ci);
         if (account != null)
-            allowed = increment(action + ":account:" + account, accountLimit) && allowed;
+            allowed = increment(action + ":account:" + account, accountLimit, !ci) && allowed;
         if (!allowed)
             throw new WebApplicationException(
                     Response.status(429)
@@ -49,14 +56,14 @@ public class AccountRateLimiter {
                             .build());
     }
 
-    private boolean increment(String key, int maximum) {
+    private boolean increment(String key, int maximum, boolean cleanupExpired) {
         Instant now = clock.instant();
         long window = now.getEpochSecond() / 900;
         byte[] hash = tokens.sha256(window + ":" + key);
         return dao.transaction(
                 c -> {
                     try {
-                        try (var cleanup =
+                        if (cleanupExpired) try (var cleanup =
                                 c.prepareStatement(
                                         "DELETE FROM ARG_ACCOUNT_RATE WHERE expires_at < ? LIMIT"
                                             + " 1000")) {

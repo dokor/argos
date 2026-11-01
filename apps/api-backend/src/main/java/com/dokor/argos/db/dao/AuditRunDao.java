@@ -68,6 +68,7 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
             }
             transactionManager.update(RUN,c).set(RUN.status,"QUEUED").setNull(RUN.claimToken).setNull(RUN.startedAt)
                 .setNull(RUN.finishedAt).setNull(RUN.lastError).set(RUN.moduleStatuses,initialModules).where(RUN.id.eq(run.getId())).execute();
+            if(run.getCiNavigationOrigins()!=null){lockAdmission(c);usage.requeuedCi(run,c);}
             return Recovery.REQUEUED;
         });
     }
@@ -92,7 +93,9 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
                 .from(RUN)
                 .where(
                     RUN.status.eq(AuditRunStatus.QUEUED.name()),
-                    RUN.claimToken.isNull()
+                    RUN.claimToken.isNull(),
+                    RUN.ciNavigationOrigins.isNull().or(Expressions.booleanTemplate(
+                        "NOT EXISTS (SELECT 1 FROM ARG_USAGE_RUN ci_busy WHERE ci_busy.user_id={0} AND ci_busy.state='RESERVED' AND ci_busy.ci_started_at IS NOT NULL)",RUN.ownerUserId))
                 )
                 .orderBy(Expressions.dateTimeTemplate(Instant.class,
                     "COALESCE((SELECT MAX(h.started_at) FROM ARG_AUDIT_RUN h WHERE h.owner_user_id <=> {0}), {1})",
@@ -142,6 +145,15 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
      * @return true si le claim a réussi, false sinon
      */
     public boolean claimRun(long runId, String claimToken, Instant now) {
+        String ciScope=transactionManager.selectQuery().select(RUN.ciNavigationOrigins).from(RUN).where(RUN.id.eq(runId)).fetchOne();
+        if(ciScope!=null) return transactionManager.executeAndReturn(c->{
+            var run=lockForPublication(runId,c).orElse(null);
+            if(run==null || run.getOwnerUserId()==null || !"QUEUED".equals(run.getStatus()) || run.getClaimToken()!=null)return false;
+            lockAdmission(c);
+            if(!usage.startCi(run,now,c))return false;
+            return transactionManager.update(RUN,c).set(RUN.claimToken,claimToken).set(RUN.status,"RUNNING")
+                .set(RUN.startedAt,now).set(RUN.attemptCount,RUN.attemptCount.add(1)).where(RUN.id.eq(runId)).execute()==1;
+        });
         long updated = transactionManager.update(RUN)
             .set(RUN.claimToken, claimToken)
             .set(RUN.status, AuditRunStatus.RUNNING.name())
@@ -265,6 +277,7 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
             var run=lockForPublication(runId,c).orElse(null);
             if(run==null || !"RUNNING".equals(run.getStatus()))return false;
             if(Boolean.TRUE.equals(run.getCancelRequested())){finishCanceled(run,Instant.now(),c);return false;}
+            if(run.getCiNavigationOrigins()!=null){lockAdmission(c);usage.requeuedCi(run,c);}
             return transactionManager.update(RUN,c).set(RUN.status,"QUEUED").setNull(RUN.claimToken)
                 .setNull(RUN.startedAt).setNull(RUN.finishedAt).setNull(RUN.lastError)
                 .where(RUN.id.eq(runId),RUN.status.eq("RUNNING")).execute()==1;

@@ -11,6 +11,11 @@ public class QUsageRun extends RelationalPathBase<UsageRun> {
     public final StringPath period=createString("period"),state=createString("state");
     public final DateTimePath<Instant> createdAt=createDateTime("createdAt",Instant.class),countedAt=createDateTime("countedAt",Instant.class);
     public final DateTimePath<Instant> releasedAt=createDateTime("releasedAt",Instant.class);
+    public final NumberPath<Long> ciIntegrationId=createNumber("ciIntegrationId",Long.class);
+    public final SimplePath<byte[]> ciTargetHash=createSimple("ciTargetHash",byte[].class);
+    public final StringPath ciIntentId=createString("ciIntentId");
+    public final NumberPath<Integer> ciSample=createNumber("ciSample",Integer.class);
+    public final DateTimePath<Instant> ciStartedAt=createDateTime("ciStartedAt",Instant.class);
     public final PrimaryKey<UsageRun> primary=createPrimaryKey(id);
     public QUsageRun(String variable) {
         super(UsageRun.class,forVariable(variable),null,"ARG_USAGE_RUN");
@@ -21,5 +26,10 @@ public class QUsageRun extends RelationalPathBase<UsageRun> {
         addMetadata(createdAt,ColumnMetadata.named("created_at").ofType(Types.TIMESTAMP));
         addMetadata(releasedAt,ColumnMetadata.named("released_at").ofType(Types.TIMESTAMP));
         addMetadata(countedAt,ColumnMetadata.named("counted_at").ofType(Types.TIMESTAMP));
+        addMetadata(ciIntegrationId,ColumnMetadata.named("ci_integration_id").ofType(Types.BIGINT));
+        addMetadata(ciTargetHash,ColumnMetadata.named("ci_target_hash").ofType(Types.BINARY).withSize(32));
+        addMetadata(ciIntentId,ColumnMetadata.named("ci_intent_id").ofType(Types.CHAR).withSize(36));
+        addMetadata(ciSample,ColumnMetadata.named("ci_sample").ofType(Types.INTEGER));
+        addMetadata(ciStartedAt,ColumnMetadata.named("ci_started_at").ofType(Types.TIMESTAMP));
     }
 }
