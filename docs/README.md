@@ -31,7 +31,7 @@ workflows restent les références pour les valeurs configurées.
 | Performance du service | [Pools HTTP/DB](performance/resource-pools.md), [projections de listes](performance/listing-projections.md) |
 | Vérifier une modification | [MariaDB](testing/mariadb.md), [E2E contrôlé](testing/controlled-e2e.md), [comptes et retours](testing/accounts.md), [rapport web/PDF](testing/report.md), [header public](testing/public-header.md), [administration et mesure produit](testing/admin-analytics.md), [files de domaines et crawl](testing/domain-queues.md), [notifications et trafic](testing/notifications-traffic.md), [aide et anti-abus](testing/contextual-help-feedback-antibot.md) |
 | Exploiter la CI et les déploiements | [CI et diagnostic](testing/ci.md), [protection de main](testing/main-protection.md), [auto-audit après déploiement](testing/post-deploy-audit.md) |
-| Nettoyer le code et les dépendances | [Inventaire, éléments conservés et suivis](maintenance.md) |
+| Nettoyer le code et les dépendances | [Inventaire, éléments conservés et suivis](maintenance.md), [pilote CSS Cleaner](testing/css-cleaner-pilot.md) |
 | Préparer une release ou retrouver le snapshot V1 | [Révision des images](release/runtime-provenance.md), [dossier V1 daté](archive/v1-readiness-2026-10-05.md), [preuves du snapshot V1](release/v1-evidence-2026-10-05.json) |
 
 ## Références conservées pour les outils
