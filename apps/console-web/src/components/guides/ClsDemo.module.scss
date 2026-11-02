@@ -1,0 +1,14 @@
+@use '../../styles/tokens' as t;
+
+.page { width: min(100% - 32px, 680px); margin: 40px auto; color: t.$text; line-height: 1.7; }
+.eyebrow { color: t.$text-muted; font-size: 0.85rem; }
+.page h1 { margin: 16px 0; font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 700; line-height: 1.25; }
+.reserved { height: 128px; background: t.$surface-2; }
+.unreserved { background: t.$surface-2; }
+.banner { display: grid; place-items: center; height: 128px; padding: 16px; border: 2px solid t.$text; text-align: center; font-weight: 700; }
+.content { padding-block: 24px; }
+.content h2 { margin-bottom: 12px; font-size: 1.25rem; font-weight: 700; }
+.content p + p { margin-top: 12px; }
+.page nav { display: flex; flex-wrap: wrap; gap: 16px; padding-top: 16px; border-top: 1px solid t.$border; }
+.page a { text-decoration: underline; text-underline-offset: 4px; }
+.page a:focus-visible { outline: 3px solid t.$color-indigo; outline-offset: 4px; }

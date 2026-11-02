@@ -29,6 +29,15 @@ Built by Antoine LE LOUËT. Contact: a.lelouet.freelance@gmail.com.
 - [Scoring methodology](https://argos.lelouet.fr/methodologie-score): How the overall and category scores are calculated.
 - [Technical audit guide](https://argos.lelouet.fr/ressources/audit-technique-gratuit): How to use Argos alongside PageSpeed Insights and Lighthouse and prioritize corrections.
 
+## Practical guides (French)
+
+- [High CLS: diagnose layout shifts](https://argos.lelouet.fr/guides/cls-eleve): Find layout shifts in a browser trace, examine images, dynamic content and fonts, and verify a correction. Includes two intentionally simplified before/after demonstrations, not claimed customer results. Argos does not collect visitors' field CLS percentiles.
+- [Website redesign: checks before and after launch](https://argos.lelouet.fr/guides/refonte-site-web): Prepare URL mappings, public-page checks, manual user-journey acceptance tests and post-launch monitoring. Includes a downloadable CSV checklist and a complementary launch checklist on the author's website.
+- [Access for search engines and AI assistants](https://argos.lelouet.fr/guides/accessibilite-moteurs-ia): Distinguish public access, readable HTML, crawl permissions, indexing and citations. Explains separate OpenAI search and training controls using official documentation. Technical accessibility does not guarantee indexing, rankings or AI citations.
+
+The three guides were reviewed on 2 November 2026 and cite primary documentation.
+Their CLS demonstration pages request no indexing and are not public audit reports.
+
 ## Digital accessibility guide: RGAA and EAA
 
 - [Digital accessibility guide](https://argos.lelouet.fr/ressources/accessibilite-numerique): The French canonical article explains the four WCAG principles, which organisations and consumer services may be covered by French Article 47/RGAA or the European Accessibility Act, the practical duties, and conditional penalties. It cites DINUM, EUR-Lex, Légifrance, DGCCRF and W3C. The article was reviewed on 6 October 2026 and is also readable in English using Argos's language switch. Argos can identify some technical accessibility signals, but its automated report is not a complete RGAA/WCAG audit, a compliance certificate, or legal advice.
