@@ -47,7 +47,11 @@ try {
             method = route.request().method();
           let data = response(path, url.searchParams),
             status = 200;
-          if (method === "POST") {
+          // Session renewal is transport setup, not a domain admission or cancellation.
+          if (path === "/api/account/auth/renew") {
+            assert.equal(method, "POST");
+            assert.deepEqual(route.request().postDataJSON(), {});
+          } else if (method === "POST") {
             posts.push({
               path,
               body: route.request().postDataJSON(),

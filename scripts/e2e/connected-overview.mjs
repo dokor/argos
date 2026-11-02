@@ -38,6 +38,13 @@ try {
         await page.route("**/api/account/**", async (route) => {
           const req = route.request(),
             url = new URL(req.url());
+          // A private read may renew the session; overview business requests stay GET-only.
+          if (url.pathname === "/api/account/auth/renew") {
+            assert.equal(req.method(), "POST");
+            assert.deepEqual(req.postDataJSON(), {});
+            await route.fulfill({ contentType: "application/json", body: JSON.stringify(response(url.pathname)) });
+            return;
+          }
           calls.push({ method: req.method(), path: url.pathname });
           assert.equal(req.method(), "GET");
           let status = 200,
