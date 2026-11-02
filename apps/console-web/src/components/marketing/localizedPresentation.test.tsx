@@ -107,9 +107,9 @@ describe("French and English presentation parity", () => {
     }
   });
 
-  it("keeps all resource cards and their English destinations", () => {
+  it("keeps translated resource destinations and identifies French-only guides", () => {
     const root = renderPage(ResourcesEn, "en");
-    expect(root.querySelectorAll("article")).toHaveLength(18);
+    expect(root.querySelectorAll("article")).toHaveLength(21);
     for (const href of [
       "/guides/checklist-audit-ecommerce",
       "/guides/lcp-lent", "/guides/content-security-policy", "/guides/hsts",
@@ -122,6 +122,12 @@ describe("French and English presentation parity", () => {
       const link = root.querySelector(`article a[href="${localizedPath(href, "en")}"]`);
       expect(link).not.toBeNull();
       expect(link?.closest("article")?.textContent).not.toContain(" · French");
+    }
+    for (const slug of ["cls-eleve", "refonte-site-web", "accessibilite-moteurs-ia"]) {
+      const link = root.querySelector(`article a[href="/guides/${slug}"]`);
+      expect(link).not.toBeNull();
+      expect(link?.closest("article")?.textContent).toContain(" · French");
+      expect(root.querySelector(`article a[href="/en/guides/${slug}"]`)).toBeNull();
     }
   });
 

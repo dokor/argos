@@ -16,6 +16,9 @@ const copy = {
     guidesTitle: "Comprendre les mesures",
     audiencesTitle: "Choisir votre contexte",
     guides: [
+      { href: "/guides/cls-eleve", title: "CLS élevé : trouver ce qui fait bouger votre page", description: "Une procédure de diagnostic, les causes fréquentes et une démonstration avant/après pour stabiliser la mise en page." },
+      { href: "/guides/refonte-site-web", title: "Refonte de site : les vérifications avant et après publication", description: "URL, indexation, parcours et suivi : préparez la recette avec une grille de contrôle téléchargeable." },
+      { href: "/guides/accessibilite-moteurs-ia", title: "Votre page est-elle accessible aux moteurs et aux IA ?", description: "Vérifiez le HTML et les règles d’exploration ; distinguez indexation, recherche, entraînement et citation." },
       { href: "/guides/checklist-audit-ecommerce", title: "Checklist d’audit e-commerce", description: "Sept étapes, une simulation de variante incorrecte et une grille CSV pour vérifier catalogue, panier et paiement." },
       { href: "/ressources/pourquoi-mon-site-ne-convertit-pas", title: "Pourquoi mon site ne convertit pas ?", description: "Distinguer obstacles techniques, offre et mesure de conversion, puis choisir les vérifications utiles." },
       { href: "/test-accessibilite-site-web", title: "Test automatique d’accessibilité", description: "Repérer des problèmes détectables et préparer les essais humains." },
@@ -43,6 +46,9 @@ const copy = {
     guidesTitle: "Understand the measurements",
     audiencesTitle: "Choose your context",
     guides: [
+      { href: "/guides/cls-eleve", title: "High CLS: diagnose layout shifts (French)", description: "A practical diagnosis, common causes and a before/after demonstration to stabilize page layout." },
+      { href: "/guides/refonte-site-web", title: "Website redesign: checks before and after launch (French)", description: "Prepare URL, indexing, user journey and follow-up checks with a downloadable acceptance checklist." },
+      { href: "/guides/accessibilite-moteurs-ia", title: "Can search engines and AI assistants access your page? (French)", description: "Check HTML and crawl rules; distinguish indexing, search, training and citations." },
       { href: "/guides/checklist-audit-ecommerce", title: "Ecommerce audit checklist", description: "Seven steps, a wrong-variant simulation and a CSV worksheet to check catalogue, cart and checkout." },
       { href: "/ressources/pourquoi-mon-site-ne-convertit-pas", title: "Why is my website not converting?", description: "Separate technical obstacles, your offer and conversion measurement, then choose useful checks." },
       { href: "/test-accessibilite-site-web", title: "Automated accessibility test", description: "Identify detectable problems and prepare human checks." },
@@ -69,9 +75,9 @@ export default function ResourcesPage() {
   const { lang } = useLang();
   const c = copy[lang];
   const fr = lang === "fr";
-  const times: Record<string, number> = { "/guides/checklist-audit-ecommerce": 12, "/ressources/audit-wordpress": 8, "/exemple-rapport": 7, "/guides/checklist-audit-site-web": 9, "/methodologie-score": 6, "/ressources/audit-technique-gratuit": 8, "/ressources/accessibilite-numerique": 10 };
+  const times: Record<string, number> = { "/guides/cls-eleve": 7, "/guides/refonte-site-web": 8, "/guides/accessibilite-moteurs-ia": 8, "/guides/checklist-audit-ecommerce": 12, "/ressources/audit-wordpress": 8, "/exemple-rapport": 7, "/guides/checklist-audit-site-web": 9, "/methodologie-score": 6, "/ressources/audit-technique-gratuit": 8, "/ressources/accessibilite-numerique": 10 };
   const languageLabel = (href: string) => !fr && !languageRoutes[href] ? " · French" : "";
-  const cardMeta = (href: string) => (fr ? "Débutant · " : "Beginner · ") + (href.includes("accessibilite") ? fr ? "Accessibilité" : "Accessibility" : href.includes("score") ? fr ? "Mesures" : "Measurements" : fr ? "Diagnostic" : "Diagnosis") + (fr ? " · Lecture estimée : " : " · Estimated reading: ") + (times[href] ?? 4) + " min" + languageLabel(href);
+  const cardMeta = (href: string) => (fr ? "Débutant · " : "Beginner · ") + (href.includes("accessibilite") && href !== "/guides/accessibilite-moteurs-ia" ? fr ? "Accessibilité" : "Accessibility" : href.includes("score") ? fr ? "Mesures" : "Measurements" : fr ? "Diagnostic" : "Diagnosis") + (fr ? " · Lecture estimée : " : " · Estimated reading: ") + (times[href] ?? 4) + " min" + languageLabel(href);
 
   return (
     <div className={s.page}>

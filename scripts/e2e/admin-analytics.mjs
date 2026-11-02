@@ -11,9 +11,22 @@ const channel = process.env.PLAYWRIGHT_CHANNEL;
 assert.ok(!channel || ["chrome", "msedge"].includes(channel), "Supported local browser channel only");
 const browser = await chromium.launch(channel ? { channel } : {});
 const evidence = [];
+// The preview backend stays read-only; emulate only the synthetic session transport here.
+async function sessionTransport(context) {
+  await context.route('**/api/account/csrf', async route => {
+    assert.equal(route.request().method(), 'GET');
+    await route.fulfill({ contentType: 'application/json', body: JSON.stringify({ csrf: 'c'.repeat(43) }) });
+  });
+  await context.route('**/api/account/auth/renew', async route => {
+    assert.equal(route.request().method(), 'POST');
+    assert.deepEqual(route.request().postDataJSON(), {});
+    await route.fulfill({ contentType: 'application/json', body: JSON.stringify({ accepted: true }) });
+  });
+}
 try {
   for (const width of [320, 390, 768, 1280]) for (const lang of ['fr', 'en']) for (const theme of ['light', 'dark']) {
     const context = await browser.newContext({ viewport: { width, height: 900 }, colorScheme: theme });
+    await sessionTransport(context);
     await context.addCookies([{ name: 'argos_account', value: 'synthetic-review-session', url: base, httpOnly: true }]);
     const page = await context.newPage(), requests = [], errors = [];
     page.on('request', request => requests.push(request.url()));
@@ -65,6 +78,7 @@ try {
   }
   for (const [name, profile, status] of [['anonymous', null, 401], ['user', { displayName: 'Review user', email: 'review@example.test', verified: true, admin: false }, 200], ['pending', { displayName: 'Review pending', email: 'pending@example.test', verified: false, admin: true }, 200]]) {
     const context = await browser.newContext();
+    await sessionTransport(context);
     await context.addCookies([{ name: 'argos_admin', value: 'obsolete-synthetic-cookie', url: base, httpOnly: true }]);
     await context.route('**/api/account/me', request => request.fulfill({ status, contentType: 'application/json', body: JSON.stringify(profile ?? { error: 'session_invalid' }) }));
     const page = await context.newPage(), requests = [];

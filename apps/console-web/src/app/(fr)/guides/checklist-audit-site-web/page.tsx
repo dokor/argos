@@ -77,6 +77,9 @@ const copy = {
     exampleEnd: "L’ordre réel dépend de l’impact sur vos utilisateurs, de votre objectif et du coût de correction. Un score global ne remplace pas ce jugement.",
     nextTitle: "Approfondir un point",
     links: [
+      { href: "/guides/cls-eleve", label: "Trouver la cause d’un CLS élevé et vérifier la correction" },
+      { href: "/guides/refonte-site-web", label: "Préparer les vérifications avant et après une refonte" },
+      { href: "/guides/accessibilite-moteurs-ia", label: "Vérifier l’accès des moteurs de recherche et des assistants IA" },
       { href: "/guides/checklist-audit-ecommerce", label: "Vérifier une boutique du catalogue au paiement" },
       { href: "/exemple-rapport", label: "Lire un exemple de rapport commenté" },
       { href: "/methodologie-score#resume", label: "Comprendre le calcul du score" },
@@ -120,6 +123,9 @@ const copy = {
     exampleEnd: "The actual order depends on user impact, your goals, and the cost of each fix. An overall score cannot replace that judgment.",
     nextTitle: "Explore further",
     links: [
+      { href: "/guides/cls-eleve", label: "Find the cause of high CLS and verify a fix (French)" },
+      { href: "/guides/refonte-site-web", label: "Prepare checks before and after a redesign (French)" },
+      { href: "/guides/accessibilite-moteurs-ia", label: "Check access for search engines and AI assistants (French)" },
       { href: "/guides/checklist-audit-ecommerce", label: "Check a store from catalogue to checkout" },
       { href: "/exemple-rapport", label: "Read a commented example report" },
       { href: "/methodologie-score#resume", label: "Understand score calculation" },

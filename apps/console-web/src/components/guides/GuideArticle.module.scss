@@ -1,0 +1,54 @@
+@use '../../styles/tokens' as t;
+
+.page { min-height: 100vh; background: t.$bg; color: t.$text; }
+.container { width: min(100% - 48px, 900px); margin-inline: auto; }
+.hero { padding: t.$space-12 0 t.$space-16; background: t.$canvas; border-bottom: 1px solid t.$border; }
+.breadcrumb { display: flex; flex-wrap: wrap; gap: t.$space-3; margin-bottom: t.$space-10; font-size: 0.9rem; }
+.eyebrow { margin-bottom: t.$space-4; color: t.$text-muted; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.hero h1 { max-width: 850px; font-size: clamp(2.1rem, 4.7vw, 3.5rem); font-weight: 750; line-height: 1.15; letter-spacing: -0.035em; text-wrap: balance; }
+.lead { max-width: 780px; margin-top: t.$space-6; font-size: 1.15rem; line-height: 1.75; }
+.page article a { text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
+.page article a:hover { text-decoration-thickness: 2px; }
+.page a:focus-visible, .tableWrap:focus-visible { outline: 3px solid t.$color-indigo; outline-offset: 4px; }
+.skipLink { position: fixed; z-index: 100; top: 8px; left: 8px; padding: t.$space-3; background: t.$surface; transform: translateY(-160%); }
+.skipLink:focus { transform: translateY(0); }
+.contents { margin-block: t.$space-10; padding: t.$space-6; border: 1px solid t.$border; border-radius: t.$radius-lg; background: t.$canvas; }
+.contents h2 { margin-bottom: t.$space-4; font-weight: 700; font-size: 1.1rem; }
+.contents ol { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: t.$space-3 t.$space-8; padding-left: t.$space-5; list-style: decimal; }
+.body { font-size: 1.05rem; line-height: 1.8; overflow-wrap: anywhere; }
+.body section { padding-block: t.$space-10; border-bottom: 1px solid t.$border; scroll-margin-top: t.$space-6; }
+.body h2, .sources h2, .related h2, .cta h2 { margin-bottom: t.$space-5; font-size: clamp(1.45rem, 3vw, 2rem); font-weight: 700; line-height: 1.3; letter-spacing: -0.02em; }
+.body h3 { margin: t.$space-6 0 t.$space-3; font-size: 1.15rem; font-weight: 700; }
+.body p + p, .body ul, .body ol { margin-top: t.$space-4; }
+.body ul, .body ol, .sources ul, .related ul { padding-left: t.$space-6; list-style: disc; }
+.body ol { list-style: decimal; }
+.body li + li, .sources li + li, .related li + li { margin-top: t.$space-3; }
+.body strong { font-weight: 700; }
+.body code { font-family: var(--font-geist-mono), monospace; font-size: 0.85em; overflow-wrap: anywhere; }
+.body pre { margin-block: t.$space-5; padding: t.$space-5; overflow-x: auto; background: t.$surface-2; border: 1px solid t.$border; border-radius: t.$radius-md; line-height: 1.65; }
+.body pre code { white-space: pre; overflow-wrap: normal; }
+.note { margin-block: t.$space-6; padding: t.$space-5 t.$space-6; border-left: 3px solid t.$color-indigo; background: t.$canvas; }
+.tableWrap { max-width: 100%; margin-block: t.$space-6; overflow-x: auto; }
+.tableHint { display: none; }
+.body table { width: 100%; border-collapse: collapse; font-size: 0.95rem; text-align: left; }
+.body caption { margin-bottom: t.$space-4; text-align: left; font-weight: 650; }
+.body th, .body td { min-width: 150px; padding: t.$space-4; border: 1px solid t.$border; vertical-align: top; }
+.body th { background: t.$canvas; font-weight: 700; }
+.comparison { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: t.$space-5; margin-block: t.$space-6; }
+.comparison > div { padding: t.$space-5; background: t.$canvas; border: 1px solid t.$border; border-radius: t.$radius-lg; }
+.comparison h3 { margin-top: 0; }
+.sources, .related { margin-block: t.$space-10; line-height: 1.75; }
+.sources p { margin-bottom: t.$space-4; color: t.$text-muted; }
+.cta { margin-block: t.$space-12; padding: t.$space-8; border: 1px solid t.$border; border-radius: t.$radius-lg; background: t.$canvas; }
+.cta p { margin-bottom: t.$space-6; line-height: 1.75; }
+.page .button { display: inline-flex; gap: t.$space-4; align-items: center; padding: t.$space-3 t.$space-5; border: 1px solid t.$text; border-radius: t.$radius-sm; font-weight: 650; text-decoration: none; }
+.page .button:hover { background: t.$surface-2; }
+
+@media (max-width: 680px) {
+  .container { width: min(100% - 32px, 900px); }
+  .hero { padding-block: t.$space-8 t.$space-10; }
+  .contents ol, .comparison { grid-template-columns: 1fr; }
+  .contents, .cta { padding: t.$space-5; }
+  .body section { padding-block: t.$space-8; }
+  .tableHint { display: block; margin-top: t.$space-4; color: t.$text-muted; font-size: 0.9rem; }
+}

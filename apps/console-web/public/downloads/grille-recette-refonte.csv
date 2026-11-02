@@ -1,0 +1,19 @@
+﻿Phase;URL ou parcours;Contrôle;Résultat attendu;Résultat observé;Preuve ou lien;Responsable;Statut;Décision et date
+Avant;;Inventaire des pages et documents;Les URL importantes et leur destination sont documentées;;;;À vérifier;
+Avant;;Référence avant refonte;Statuts contenus directives et conditions de mesure sont conservés;;;;À vérifier;
+Avant;;Préproduction;Accès protégé et données de test;;;;À vérifier;
+Avant;;Correspondance des anciennes URL;Une destination équivalente ou une suppression justifiée par URL;;;;À vérifier;
+Avant;;Parcours essentiel;Résultat métier attendu documenté et reproduit;;;;À vérifier;
+Avant;;Retour arrière;Version configuration sauvegarde et compatibilité des données vérifiées;;;;À vérifier;
+Publication;;Domaine et HTTPS;Certificat valide et variantes vers le domaine final;;;;À vérifier;
+Publication;;Ancienne URL déplacée;Redirection permanente directe puis contenu équivalent en 200;;;;À vérifier;
+Publication;;URL supprimée sans équivalent;Réponse 404 ou 410 et page d’erreur utile;;;;À vérifier;
+Publication;;Indexation;Aucun noindex involontaire et règles de crawl adaptées;;;;À vérifier;
+Publication;;Liens canoniques et sitemap;URL finales cohérentes et découvrables;;;;À vérifier;
+Publication;;Formulaire de contact;Envoi de test reçu avec confirmation et erreurs compréhensibles;;;;À vérifier;
+Publication;;Parcours connecté ou paiement si applicable;Scénario métier validé avec le mode de test approprié;;;;À vérifier;
+Publication;;Clavier mobile et zoom;Parcours essentiel réalisable et contenu lisible;;;;À vérifier;
+Publication;;Performance et stabilité visuelle;Scénarios comparés avec les mêmes conditions avant et après;;;;À vérifier;
+Suivi;;Erreurs serveur et anciennes URL;Incidents relevés attribués et traités;;;;À vérifier;
+Suivi;;Indexation et acquisition;Pages et dates examinées dans les données disponibles;;;;À vérifier;
+Suivi;;Contacts et parcours essentiels;Résultats vérifiés après la bascule;;;;À vérifier;

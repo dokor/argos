@@ -5,6 +5,9 @@ export const context={siteId:'7',siteUrlId:'9',normalizedUrl:'https://atelier.ex
 export const site={siteId:'7',hostname:'atelier.example',urlCount:1,latestActivityAt:'2026-10-13T08:00:00Z',latestRunStatus:'FAILED'};
 export const profiles={defaultProfileId:'server-default-v1',items:[{id:'server-default-v1',labelKey:'analysisProfiles.serverDefault',snapshot:{profileId:'server-default-v1',contractVersion:1,settingsProvenance:'COLLECTOR_DEFAULTS',scoringVersion:12,scoringFingerprint:'fixture'}}]};
 export function response(path,params=new URLSearchParams()) {
+  if(path==='/api/account/csrf') return {csrf:'c'.repeat(43)};
+  if(path==='/api/account/auth/renew') return {accepted:true};
+  if(path==='/api/account/session') return {signedIn:true};
   if(path==='/api/account/me') return {displayName:'Camille · Démonstration',email:'fixture@example.com',verified:true};
   if(path==='/api/account/usage') return {offer:'FREE',period:'2026-10',timezone:'UTC',startsAt:'2026-10-01T00:00:00Z',resetsAt:'2027-01-01T00:00:00Z',used:2,reserved:1,available:17,limit:20,canLaunch:true};
   if(path==='/api/account/analysis-profiles') return profiles;
