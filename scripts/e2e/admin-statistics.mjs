@@ -14,7 +14,7 @@ const metrics={
  analyses:{total:2430,completed:2100,failed:130,running:20,queued:80,canceled:70,unknown:30},
  domains:{total:810,averageUrls:3},
 };
-const browser=await chromium.launch(),evidence=[];
+const browser=await chromium.launch(process.env.CLARTE_BROWSER_PATH?{executablePath:process.env.CLARTE_BROWSER_PATH}:{}),evidence=[];
 let lastPage;
 try {
  for(const width of [320,390,768,1440]) for(const lang of ['fr','en']) for(const theme of ['light','dark']) {
