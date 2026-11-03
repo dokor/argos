@@ -3,6 +3,7 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { analysisUrl } from './policy.mjs';
+import { navigationScope } from './browser-policy.mjs';
 
 export const MAX_RESULT_BYTES = 8 * 1024 * 1024;
 
@@ -24,8 +25,9 @@ export function createSupervisedCollector({ workerFile = new URL('./worker.mjs',
   temporaryRoot = tmpdir(), maxResultBytes = MAX_RESULT_BYTES, log = () => {} } = {}) {
   if (!Number.isSafeInteger(maxResultBytes) || maxResultBytes < 1 || maxResultBytes > MAX_RESULT_BYTES)
     throw new TypeError('Invalid result limit');
-  return async (url, { signal, timeoutMs = 60000 } = {}) => {
+  return async (url, { signal, timeoutMs = 60000, navigationOrigins } = {}) => {
     analysisUrl(url);
+    navigationOrigins = navigationScope(navigationOrigins,url);
     const budget = Number.isFinite(timeoutMs) && timeoutMs > 0 ? Math.min(60000, timeoutMs) : 60000;
     const deadline = AbortSignal.any([AbortSignal.timeout(Math.ceil(budget)), ...(signal ? [signal] : [])]);
     deadline.throwIfAborted();
@@ -73,7 +75,7 @@ export function createSupervisedCollector({ workerFile = new URL('./worker.mjs',
           else resolveResult(result);
         });
         if (deadline.aborted) stop();
-        else child.send({ url, timeoutMs: budget }, error => { if (error) fail(); });
+        else child.send({ url, timeoutMs: budget, ...(navigationOrigins ? { navigationOrigins } : {}) }, error => { if (error) fail(); });
       });
     } finally {
       if (child) killGroup(child);

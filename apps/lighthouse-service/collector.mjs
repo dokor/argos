@@ -1,4 +1,4 @@
-import { proxyEndpoint, browserFlags, protectContext } from './browser-policy.mjs';
+import { proxyEndpoint, browserFlags, protectContext, navigationScope } from './browser-policy.mjs';
 
 export function lighthouseChromeFlags(defaultFlags) {
   const prefix = '--disable-features=';
@@ -13,7 +13,8 @@ export function lighthouseChromeFlags(defaultFlags) {
 
 // The abort signal kills the actual Chrome process; expiry alone is not cancellation.
 export function createLighthouseCollector({ launch, lighthouse, chromeFlags, chromePath, chromium, connectPuppeteer, log = () => {}, proxy = process.env.AUDIT_EGRESS_PROXY }) {
-  return async (url, { signal, timeoutMs = 60000 } = {}) => {
+  return async (url, { signal, timeoutMs = 60000, navigationOrigins } = {}) => {
+    navigationOrigins = navigationScope(navigationOrigins,url);
     let chrome, cleanup, puppeteerBrowser;
     const close = () => {
       if (chrome && !cleanup) cleanup = Promise.resolve().then(() => chrome.kill());
@@ -30,7 +31,7 @@ export function createLighthouseCollector({ launch, lighthouse, chromeFlags, chr
       // Install before Lighthouse navigates. New pages inherit the context-wide rules.
       const browser = await chromium.connectOverCDP(`http://127.0.0.1:${chrome.port}`);
       const context = await browser.newContext({ serviceWorkers: 'block', acceptDownloads: false });
-      await protectContext(context, cancel);
+      await protectContext(context, cancel, navigationOrigins);
       const page = await context.newPage();
       // Pass Lighthouse the already protected incognito page rather than allowing
       // it to create a page in Chrome's unprotected default context.

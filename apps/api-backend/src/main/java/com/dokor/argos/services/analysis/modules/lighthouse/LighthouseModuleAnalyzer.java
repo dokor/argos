@@ -35,7 +35,7 @@ public class LighthouseModuleAnalyzer {
 
         JsonNode lhr;
         try {
-            lhr = client.analyze(url);
+            lhr = auditContext.navigationOrigins().isEmpty() ? client.analyze(url) : client.analyze(url,auditContext.navigationOrigins());
         } catch (Exception e) {
             throw new ModuleUnavailableException("Lighthouse service unavailable", e);
         }

@@ -46,11 +46,16 @@ public class PlaywrightRuntimeClient {
     }
 
     public RuntimeAnalyzeResponse analyzeRuntime(String url) throws Exception {
+        return analyzeRuntime(url,java.util.List.of());
+    }
+    public RuntimeAnalyzeResponse analyzeRuntime(String url,java.util.List<String> navigationOrigins) throws Exception {
         return ExternalServiceCall.timed(logger, "playwright", url, () -> {
             URI endpoint = URI.create(baseUrl + "/analyze/runtime");
 
-            String body = objectMapper.writeValueAsString(Map.of("url", url, "timeoutMs",
-                Math.max(1, AuditDeadline.requestTimeout(requestTimeout).toMillis())));
+            var input=new java.util.HashMap<String,Object>(); input.put("url",url);
+            input.put("timeoutMs",Math.max(1,AuditDeadline.requestTimeout(requestTimeout).toMillis()));
+            if(!navigationOrigins.isEmpty()) { com.dokor.argos.services.ci.CiOrigin.require(navigationOrigins,url);input.put("navigationOrigins",navigationOrigins); }
+            String body = objectMapper.writeValueAsString(input);
             return parseResponse(http.postJson(endpoint, body, "application/json", requestTimeout,
                 Duration.ofSeconds(5), BoundedBodyHandlers.MAX_PAGE_BYTES, Map.of()));
         });
