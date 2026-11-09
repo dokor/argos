@@ -163,7 +163,7 @@ public class AuditRunService {
     }
 
     public boolean fail(long runId, String errorMessage, String claimToken) {
-        logger.warn("Marking run as FAILED: runId={}, error={}", runId, errorMessage);
+        logger.warn("Marking run as FAILED: runId={}", runId);
         return auditRunDao.markFailed(runId, Instant.now(), errorMessage, claimToken);
     }
 
@@ -189,7 +189,7 @@ public class AuditRunService {
         try {
             return objectMapper.writeValueAsString(statuses);
         } catch (Exception e) {
-            logger.warn("Cannot serialize module statuses", e);
+            logger.warn("Cannot serialize module statuses error={}", e.getClass().getSimpleName());
             return "[]";
         }
     }

@@ -3,6 +3,7 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { analysisUrl } from './policy.mjs';
+import { auditLogContext } from './browser-policy.mjs';
 
 export const MAX_RESULT_BYTES = 8 * 1024 * 1024;
 
@@ -24,8 +25,9 @@ export function createSupervisedCollector({ workerFile = new URL('./worker.mjs',
   temporaryRoot = tmpdir(), maxResultBytes = MAX_RESULT_BYTES, log = () => {} } = {}) {
   if (!Number.isSafeInteger(maxResultBytes) || maxResultBytes < 1 || maxResultBytes > MAX_RESULT_BYTES)
     throw new TypeError('Invalid result limit');
-  return async (url, { signal, timeoutMs = 60000 } = {}) => {
+  return async (url, { signal, timeoutMs = 60000, runId } = {}) => {
     analysisUrl(url);
+    const logContext = auditLogContext(url, runId);
     const budget = Number.isFinite(timeoutMs) && timeoutMs > 0 ? Math.min(60000, timeoutMs) : 60000;
     const deadline = AbortSignal.any([AbortSignal.timeout(Math.ceil(budget)), ...(signal ? [signal] : [])]);
     deadline.throwIfAborted();
@@ -56,7 +58,7 @@ export function createSupervisedCollector({ workerFile = new URL('./worker.mjs',
         child.on('message', message => {
           if (message?.type === 'diagnostic') {
             if (++diagnostics <= 20 && message.event === 'analyze.navigation_failed')
-              log(message.event, { reason: typeof message.reason === 'string' && /^net::ERR_[A-Z_0-9]{1,60}$/.test(message.reason) ? message.reason : 'NETWORK_ERROR' });
+              log(message.event, { ...logContext, reason: typeof message.reason === 'string' && /^net::ERR_[A-Z_0-9]{1,60}$/.test(message.reason) ? message.reason : 'NETWORK_ERROR' });
             return;
           }
           if (message?.type !== 'result' || result || typeof message.json !== 'string'

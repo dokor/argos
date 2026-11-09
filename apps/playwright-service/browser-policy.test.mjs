@@ -1,7 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { protectContext, browserFlags, proxyEndpoint } from './browser-policy.mjs';
+import { protectContext, browserFlags, proxyEndpoint, auditLogContext } from './browser-policy.mjs';
 import { protectContext as protectLighthouseContext } from '../lighthouse-service/browser-policy.mjs';
+
+test('log context excludes URL secrets and accepts only bounded numeric run IDs', () => {
+  const url = 'https://user:private@example.com/reset/private?token=private#private';
+  assert.deepEqual(auditLogContext(url, '42'), { origin: 'https://example.com', runId: '42' });
+  for (const invalid of [undefined, null, [], 'private', '42\n', '42\r', '0', '-1', '1'.repeat(20)])
+    assert.deepEqual(auditLogContext(url, invalid), { origin: 'https://example.com' });
+});
 
 test('proxy is mandatory and browser flags remove implicit loopback bypass and direct UDP',()=>{
   assert.throws(()=>proxyEndpoint(''));assert.throws(()=>proxyEndpoint('http://u:p@proxy:3128'));

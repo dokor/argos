@@ -1,6 +1,8 @@
 package com.dokor.argos.logging;
 
 import org.slf4j.Logger;
+import org.slf4j.MDC;
+import java.util.Map;
 
 /**
  * Enveloppe de logging structuré pour les appels aux services externes
@@ -50,7 +52,14 @@ public final class ExternalServiceCall {
         }
     }
 
-    /** Retire les CRLF/tabulations (anti log-injection) et tronque les cibles trop longues. */
+    /** Only the numeric run identity crosses the collector boundary; never copy arbitrary MDC data. */
+    public static Map<String, String> correlationHeaders() {
+        String runId = MDC.get("runId");
+        return runId != null && runId.matches("[1-9][0-9]{0,18}")
+            ? Map.of("X-Argos-Run-Id", runId) : Map.of();
+    }
+
+    /** Retains only the origin; paths, credentials, parameters and fragments are private. */
     private static String sanitize(String target) {
         if (target == null) return "null";
         return com.dokor.argos.services.domain.audit.UrlNormalizer.sanitizeForLog(target);

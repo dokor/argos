@@ -1,7 +1,7 @@
 import http from 'node:http';
 import { lighthouseEvidence } from './evidence.mjs';
 import { analysisUrl } from './policy.mjs';
-import { safeOrigin, redactDiagnostics } from './browser-policy.mjs';
+import { auditLogContext, redactDiagnostics } from './browser-policy.mjs';
 
 export function isValidAnalysisUrl(value) {
   try { analysisUrl(value); return true; } catch { return false; }
@@ -57,7 +57,7 @@ export function createLighthouseServer({ analyze, log = () => {}, maxConcurrency
       res.writeHead(404).end('Not Found');
       return;
     }
-    let safeUrl = '';
+    let logContext = {};
     const startedAt = Date.now();
     const controller = new AbortController();
     let timer;
@@ -68,17 +68,17 @@ export function createLighthouseServer({ analyze, log = () => {}, maxConcurrency
       if (input.error) { res.writeHead(input.error).end('Invalid request'); return; }
       const url = input.body?.url;
       if (!isValidAnalysisUrl(url)) { res.writeHead(400).end('Invalid URL'); return; }
-      safeUrl = safeOrigin(url);
-      log('analyze.start', { url: safeUrl });
+      logContext = auditLogContext(url, req.headers['x-argos-run-id']);
+      log('analyze.start', logContext);
       const timeoutMs = Number.isFinite(input.body?.timeoutMs) && input.body.timeoutMs > 0 ? Math.min(60000, input.body.timeoutMs) : 60000;
       timer = setTimeout(() => controller.abort(), timeoutMs);
-      const result = await limited(() => analyze(url, { signal: controller.signal, timeoutMs }), { signal: controller.signal });
+      const result = await limited(() => analyze(url, { signal: controller.signal, timeoutMs, runId: logContext.runId }), { signal: controller.signal });
       if (controller.signal.aborted) throw new Error('Analysis timeout');
       // Empty results remain a collector failure, never a fabricated score.
       if (!result?.lhr || typeof result.lhr !== 'object' || Array.isArray(result.lhr)) {
         throw new Error('Missing LHR');
       }
-      log('analyze.done', { url: safeUrl, durationMs: Date.now() - startedAt });
+      log('analyze.done', { ...logContext, durationMs: Date.now() - startedAt });
       res.setHeader('Content-Type', 'application/json');
       const safe = redactDiagnostics(result.lhr);
       for (const [id, audit] of Object.entries(result.lhr.audits ?? {})) {
@@ -87,7 +87,7 @@ export function createLighthouseServer({ analyze, log = () => {}, maxConcurrency
       }
       res.end(JSON.stringify(safe));
     } catch (error) {
-      log('analyze.error', { url: safeUrl, durationMs: Date.now() - startedAt, error: 'Collector failure' });
+      log('analyze.error', { ...logContext, durationMs: Date.now() - startedAt, error: 'Collector failure' });
       if (!res.headersSent && !res.destroyed) res.writeHead(controller.signal.aborted ? 504 : error.message === 'Collector busy' ? 429 : 500).end(controller.signal.aborted ? 'Analysis timeout' : 'Collector unavailable');
     } finally {
       clearTimeout(timer); res.removeListener('close', disconnected);

@@ -10,6 +10,10 @@ process.once('message', ({ url }) => {
   if (mode === '/hang') { setInterval(() => {}, 1000); return; }
   let lhr = { categories: { accessibility: { score: 1 } }, hasSecret: Boolean(process.env.ARGOS_TEST_SECRET) };
   if (mode === '/large') lhr = { untrusted: 'x'.repeat(8192) };
+  if (mode === '/diagnostics') {
+    process.send({ type: 'diagnostic', event: 'analyze.navigation_failed', reason: 'net::ERR_CONNECTION_RESET', runId: 'private-child-secret' });
+    process.send({ type: 'diagnostic', event: 'analyze.navigation_failed', reason: 'https://u:private-child-secret@example.com/' });
+  }
   if (mode === '/descendant') {
     const child = spawn(process.execPath, ['-e', 'setInterval(()=>{},1000)'],
       { detached: false, windowsHide: true, stdio: 'ignore' });

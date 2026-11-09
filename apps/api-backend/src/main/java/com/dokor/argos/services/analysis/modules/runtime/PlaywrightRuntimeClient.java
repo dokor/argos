@@ -52,7 +52,7 @@ public class PlaywrightRuntimeClient {
             String body = objectMapper.writeValueAsString(Map.of("url", url, "timeoutMs",
                 Math.max(1, AuditDeadline.requestTimeout(requestTimeout).toMillis())));
             return parseResponse(http.postJson(endpoint, body, "application/json", requestTimeout,
-                Duration.ofSeconds(5), BoundedBodyHandlers.MAX_PAGE_BYTES, Map.of()));
+                Duration.ofSeconds(5), BoundedBodyHandlers.MAX_PAGE_BYTES, ExternalServiceCall.correlationHeaders()));
         });
     }
 

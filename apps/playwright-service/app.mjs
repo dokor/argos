@@ -2,20 +2,13 @@ import express from 'express';
 import { methodFingerprint, scopeFingerprint } from './measurement.mjs';
 import { resourceEvidence, scriptEvidence, exceptionEvidence, evidenceEnvelope, EVIDENCE_LIMIT } from './evidence.mjs';
 import { analysisUrl } from './policy.mjs';
-import { proxyEndpoint, browserFlags, protectContext, safeOrigin } from './browser-policy.mjs';
+import { proxyEndpoint, browserFlags, protectContext, safeOrigin, auditLogContext } from './browser-policy.mjs';
 import { partitionNetworkErrors, isFirstPartyUrl } from './domain.mjs';
 
 const MAX_OBSERVED_TRANSFERS = 300;
 
 export function isValidAnalysisUrl(value) {
   try { analysisUrl(value); return true; } catch { return false; }
-}
-
-// Sanitise une URL avant journalisation : supprime les CR/LF (anti log-forging)
-// et borne la longueur pour éviter des lignes de log démesurées.
-function sanitizeUrlForLog(url) {
-  if (typeof url !== 'string') return '';
-  return safeOrigin(url);
 }
 
 export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env.AUDIT_EGRESS_PROXY, maxConcurrency = 2, playwrightVersion = null }) {
@@ -33,6 +26,7 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
   app.post('/analyze/runtime', async (req, res) => {
     const { url } = req.body ?? {};
     if (!isValidAnalysisUrl(url)) return res.status(400).json({ error: 'Invalid URL' });
+    const logContext = auditLogContext(url, req.headers['x-argos-run-id']);
     let endpoint;
     try { endpoint = proxyEndpoint(proxy); } catch { return res.status(503).json({ error: 'Collector unavailable' }); }
     if (active >= maxConcurrency) return res.status(429).json({ error: 'Collector busy' });
@@ -48,9 +42,8 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
     const remaining = () => Math.max(1, Math.ceil(deadline - performance.now()));
     try {
 
-      const safeUrl = sanitizeUrlForLog(url);
       const startedAt = Date.now();
-      log('analyze.start', { url: safeUrl });
+      log('analyze.start', logContext);
 
       browser = await chromium.launch({ chromiumSandbox: true, args: browserFlags(endpoint), timeout: remaining() });
       if (cancelled) throw new Error('Analysis timeout');
@@ -201,7 +194,7 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
       } catch (e) {
         // si le site bloque, on renvoie ce qu’on a
         if (navigation.reason !== 'TARGET_BLOCKED') navigation = { status: 'FAILED', reason: 'NAVIGATION_ERROR' };
-        log('analyze.navigation_error', { url: safeUrl, error: 'Navigation failed' });
+        log('analyze.navigation_error', { ...logContext, error: 'Navigation failed' });
       } finally {
         // page.url() reflète aussi la dernière URL atteinte si la navigation échoue
         // après une redirection. La classification doit utiliser cette URL finale,
@@ -243,7 +236,7 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
             count + (!origin || isFirstPartyUrl(origin, finalUrl) ? occurrences : 0), 0) : null;
 
       log('analyze.done', {
-        url: safeUrl,
+        ...logContext,
         durationMs: Date.now() - startedAt,
         consoleErrors,
         jsErrors: jsErrorCount,
@@ -288,14 +281,14 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
         }
       });
     } catch {
-      log('analyze.error', { error: 'Collector failure' });
+      log('analyze.error', { ...logContext, error: 'Collector failure' });
       if (!res.destroyed) res.status(cancelled ? 504 : 500).json({ error: cancelled ? 'Analysis timeout' : 'Internal Error' });
     } finally {
       clearTimeout(timer);
       res.removeListener('close', disconnected);
       if (browser) {
         try { await browser.close(); }
-        catch { log('analyze.cleanup_error', { error: 'Browser cleanup failed' }); }
+        catch { log('analyze.cleanup_error', { ...logContext, error: 'Browser cleanup failed' }); }
       }
       active--;
     }

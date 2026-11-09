@@ -164,6 +164,7 @@ public class AuditProcessorService {
             logger.info("audit_end runId={} durationMs={}", runId, System.currentTimeMillis() - auditStart);
             MDC.remove("runId");
             MDC.remove("module");
+            MDC.remove("origin");
         }
     }
 
@@ -192,6 +193,7 @@ public class AuditProcessorService {
 
         String inputUrl = audit.getInputUrl();
         String normalizedUrl = audit.getNormalizedUrl();
+        MDC.put("origin", UrlNormalizer.sanitizeForLog(normalizedUrl == null ? inputUrl : normalizedUrl));
 
         if (normalizedUrl == null || normalizedUrl.isBlank()) {
             try {

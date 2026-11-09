@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { once } from 'node:events';
 import { createLighthouseServer, createConcurrencyLimiter } from './app.mjs';
 
-async function serverFor(t, analyze) {
-  const server = createLighthouseServer({ analyze });
+async function serverFor(t, analyze, log = () => {}) {
+  const server = createLighthouseServer({ analyze, log });
   server.listen(0, '127.0.0.1');
   await once(server, 'listening');
   t.after(() => new Promise(resolve => { server.close(resolve); server.closeAllConnections(); }));
@@ -112,3 +112,38 @@ test('cancelling queued work removes it without consuming a concurrency slot', a
  assert.match(evidence.items[0].resourceRef,/^[a-f0-9]{16}$/);
  assert.doesNotMatch(JSON.stringify(report),/private-secret|private.js/);
  });
+
+test('Lighthouse logs only origin and run identity on success and failure', async t => {
+  const secret = 'private-url-token-password';
+  const url = `https://example.com/reset/${secret}?token=${secret}#${secret}`;
+  for (const fail of [false, true]) {
+    const events = [];
+    const base = await serverFor(t, async (target, options) => {
+      assert.equal(target, url);
+      assert.equal(options.runId, '42');
+      if (fail) throw new Error(`https://user:${secret}@example.com/?token=${secret}\r\n${secret}`);
+      return { lhr: { categories: {} } };
+    }, (event, fields) => events.push({ event, ...fields }));
+    const response = await fetch(base + '/analyze', { method: 'POST',
+      headers: { 'x-argos-run-id': '42' }, body: JSON.stringify({ url }) });
+    assert.equal(response.status, fail ? 500 : 200);
+    assert.deepEqual(events.map(event => event.event), ['analyze.start', fail ? 'analyze.error' : 'analyze.done']);
+    for (const event of events) {
+      assert.equal(event.origin, 'https://example.com');
+      assert.equal(event.runId, '42');
+    }
+    assert.doesNotMatch(JSON.stringify(events), /private-url-token-password|\/reset\/|user:|\?token/);
+  }
+});
+
+test('Lighthouse ignores untrusted correlation text', async t => {
+  const events = [];
+  const base = await serverFor(t, async (_url, options) => {
+    assert.equal(options.runId, undefined); return { lhr: { categories: {} } };
+  }, (event, fields) => events.push({ event, ...fields }));
+  await fetch(base + '/analyze', { method: 'POST', headers: { 'x-argos-run-id': 'private-token' },
+    body: '{"url":"https://example.com"}' });
+  assert.equal(events.length, 2);
+  assert.ok(events.every(event => event.runId === undefined));
+  assert.doesNotMatch(JSON.stringify(events), /private-token/);
+});
