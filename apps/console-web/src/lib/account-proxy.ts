@@ -11,6 +11,7 @@ import { feedbackTreatment } from "./feedback-request";
 import { validIntroduction } from "./report-introduction";
 import { oauthCallbackError, type OAuthCallbackError } from "./oauth-callback-error";
 import { createHash, timingSafeEqual } from "node:crypto";
+import { accountClientHeaders } from "./account-client-identity";
 import { NextRequest, NextResponse } from "next/server";
 export const SESSION_COOKIE = "argos_account";
 export const RENEWAL_COOKIE = "argos_account_renewal";
@@ -55,6 +56,7 @@ export function accountHeaders(request: NextRequest, mutation: boolean): Headers
   const session = request.cookies.get(SESSION_COOKIE)?.value;
   if (mutation && !validCsrf(request)) return privateError("csrf_invalid", 403);
   const headers = new Headers({ Accept: "application/json", "Content-Type": "application/json" });
+  accountClientHeaders(request.headers, headers);
   headers.set("Accept-Language", request.headers.get("accept-language") === "en" ? "en" : "fr");
   if (session !== undefined) {
     if (!session || session.length > 4096) return privateError("session_invalid", 401);
