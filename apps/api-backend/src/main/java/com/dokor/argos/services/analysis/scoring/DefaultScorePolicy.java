@@ -22,7 +22,7 @@ import java.util.*;
  * et son empreinte déterministe ; la V10 versionne son calcul global par domaine.
  * La V11 ajoute la couverture ; la V12 rend les seuils réseau runtime monotones (#327).
  * <p>
- * {@link #version()} est fixé à <b>13</b> pour identifier les rapports utilisant
+ * {@link #version()} est fixé à <b>14</b> pour identifier les rapports utilisant
  * ce catalogue explicite avec pondération globale par domaine.
  *
  * <h3>Principes</h3>
@@ -63,8 +63,8 @@ public class DefaultScorePolicy implements ScorePolicy {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultScorePolicy.class);
 
-    /** V13 : résultats partiels, visibilité ZAP et progression monotone des balises sociales. */
-    private static final int VERSION = 13;
+    /** V14 : diagnostics informatifs exclus du catalogue pondéré de score et de couverture. */
+    private static final int VERSION = 14;
 
     private final Map<String, ScoreRule> catalogue;
     private final String fingerprint;
@@ -151,24 +151,25 @@ public class DefaultScorePolicy implements ScorePolicy {
 
         // Les anciennes règles de préfixe rendaient implicitement ces clés
         // scorables. Elles sont désormais toutes déclarées et revues ici.
-        map.put("http.antibot.challenge",   rule(true, 2, "performance", "http"));
-        map.put("http.protocol.version",    rule(true, 2, "performance", "http"));
+        map.put("http.antibot.challenge",   informational(TechnicalSource.HTTP));
+        map.put("http.protocol.version",    informational(TechnicalSource.HTTP));
         map.put("http.errors",              rule(true, 2, "performance", "http"));
-        map.put("http.response_time_ms",    rule(true, 2, "performance", "http"));
+        map.put("http.response_time_ms",    informational(TechnicalSource.HTTP));
         map.put("http.protocol.http2",      rule(true, 2, "performance", "http"));
-        map.put("http.headers.compression", rule(true, 2, "performance", "http"));
-        map.put("http.headers.caching",     rule(true, 2, "performance", "http"));
-        map.put("http.headers.server",      rule(true, 2, "performance", "http"));
+        map.put("http.headers.compression", informational(TechnicalSource.HTTP));
+        map.put("http.headers.caching",     informational(TechnicalSource.HTTP));
+        map.put("http.headers.server",      informational(TechnicalSource.HTTP));
 
-        map.put("html.meta.robots.present", rule(true, 2, "seo", "html"));
-        map.put("html.scripts.count",       rule(true, 1, "seo", "html"));
-        map.put("html.size.bytes",          rule(true, 1, "seo", "html"));
-        map.put("html.analysis.duration_ms", rule(true, 1, "seo", "html"));
+        // These observations have no quality verdict, whether present, absent or uncollected.
+        map.put("html.meta.robots.present", informational(TechnicalSource.HTML));
+        map.put("html.scripts.count",       informational(TechnicalSource.HTML));
+        map.put("html.size.bytes",          informational(TechnicalSource.HTML));
+        map.put("html.analysis.duration_ms", informational(TechnicalSource.HTML));
         map.put("html.meta.charset.present", rule(true, 2, "seo", "html"));
 
         map.put("runtime.network.request_count", rule(true, 4, "performance", "runtime"));
         map.put("runtime.network.bytes_estimated", rule(true, 4, "performance", "runtime"));
-        map.put("runtime.analysis.duration_ms", rule(true, 4, "performance", "runtime"));
+        map.put("runtime.analysis.duration_ms", informational(TechnicalSource.RUNTIME));
 
         map.put("observatory.grade", rule(false, 0, "observatory"));
         map.put("observatory.tests.passed", rule(false, 0, "observatory"));

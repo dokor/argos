@@ -17,6 +17,24 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class RuntimeModuleAnalyzerTest {
+    @Test void analysisDurationCannotMakeAnOtherwiseUnmeasuredRuntimeLookCovered() throws Exception {
+        var response = new com.fasterxml.jackson.databind.ObjectMapper().readValue("""
+            {"navigation":{"status":"FAILED","reason":"TIMEOUT"},"console":{"errors":0}}
+            """,
+            PlaywrightRuntimeClient.RuntimeAnalyzeResponse.class);
+        var module = analyze(response);
+        assertNotNull(module.checks().stream().filter(c -> c.key().equals("runtime.analysis.duration_ms"))
+            .findFirst().orElseThrow().value());
+        var policy = new com.dokor.argos.services.analysis.scoring.DefaultScorePolicy();
+        var enriched = new com.dokor.argos.services.analysis.scoring.ScoreEnricherService(policy).enrich(List.of(module));
+        var score = new com.dokor.argos.services.analysis.scoring.ScoreService(policy)
+            .compute(policy.version(), policy.fingerprint(), enriched);
+        assertEquals(0, score.global().maxScore());
+        assertEquals(0, score.coverage().global().measuredWeight());
+        assertTrue(score.coverage().checks().stream().noneMatch(c -> c.key().equals("runtime.analysis.duration_ms")));
+        assertTrue(score.coverage().provisional());
+    }
+
     @Test void requestCountIsAWholePageObservationAndPassesAfterReducingRequests() throws Exception {
         var mapper=new com.fasterxml.jackson.databind.ObjectMapper();
         for(int count:new int[]{150,80}) {

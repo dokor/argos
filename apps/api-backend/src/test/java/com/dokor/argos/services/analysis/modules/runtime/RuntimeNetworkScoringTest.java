@@ -109,7 +109,7 @@ class RuntimeNetworkScoringTest {
         String frozen = mapper.writeValueAsString(historicalJson);
         var historical = mapper.readValue(frozen, ReportDto.class);
 
-        assertEquals(13, current.scores().calculation().scoringVersion());
+        assertEquals(14, current.scores().calculation().scoringVersion());
         var comparison = AuditComparisonService.compare(historical, current);
         assertEquals(AuditComparisonService.Reason.METHODOLOGY_CHANGED, comparison.reason());
         assertNull(comparison.globalDelta());

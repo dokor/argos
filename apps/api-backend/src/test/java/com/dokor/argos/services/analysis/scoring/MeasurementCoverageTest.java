@@ -7,12 +7,53 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class MeasurementCoverageTest {
+    @Test void informationalCatalogueEntriesNeverChangeCoverageEvenWhenAbsent() {
+        var baseline = coverage(complete());
+        for (String key : List.of("runtime.analysis.duration_ms", "html.analysis.duration_ms",
+                "html.scripts.count", "html.size.bytes", "html.meta.robots.present",
+                "http.antibot.challenge", "http.protocol.version", "http.response_time_ms",
+                "http.headers.compression", "http.headers.caching", "http.headers.server")) {
+            var rule = policy.ruleFor(null, key);
+            assertEquals(ScoreApplicability.INFORMATIONAL, rule.applicability(), key);
+            assertEquals(0, rule.weight(), key);
+            for (Object value : Arrays.asList(null, "", false, Map.of(), 123)) {
+                var info = AuditCheckResult.of(key, key, AuditStatus.INFO, AuditSeverity.LOW,
+                    false, 0, List.of(), value, Map.of(), null, null);
+                var modules = complete().stream().map(m -> !m.id().equals(rule.technicalSource().tag()) ? m
+                    : new AuditModuleResult(m.id(), m.title(), m.summary(), m.data(),
+                        java.util.stream.Stream.concat(m.checks().stream(), java.util.stream.Stream.of(info)).toList())).toList();
+                assertEquals(baseline, coverage(modules), key);
+                var enriched = new ScoreEnricherService(policy).enrich(modules);
+                assertEquals(baseline, coverage(enriched), key);
+                assertTrue(enriched.stream().flatMap(m -> m.checks().stream()).filter(c -> c.key().equals(key))
+                    .noneMatch(AuditCheckResult::scorable), key);
+            }
+        }
+    }
+
+    @Test void unevaluatedInfoIsNotMeasuredEvenWhenItCarriesAValue() {
+        for (Object value : Arrays.asList(null, false, 0, Map.of("partial", true))) {
+            var info = AuditCheckResult.of("runtime.js.errors", "Errors", AuditStatus.INFO, AuditSeverity.LOW,
+                false, 0, List.of(), value, Map.of(), null, null);
+            var modules = List.of(new AuditModuleResult("runtime", "Runtime", null, Map.of(), List.of(info)));
+            var enriched = new ScoreEnricherService(policy).enrich(modules);
+            assertFalse(enriched.getFirst().checks().getFirst().scorable());
+            var result = coverage(enriched);
+            var check = result.checks().stream().filter(c -> c.key().equals(info.key())).findFirst().orElseThrow();
+            assertEquals(MeasurementCoverage.State.UNAVAILABLE, check.state());
+            assertEquals(6, check.weight());
+            assertEquals(0, result.global().measuredWeight());
+            assertTrue(result.provisional());
+            assertEquals(coverage(modules), result);
+        }
+    }
+
     @Test void rounded96HasAnExactExplainableMissingContribution() {
         // Controlled catalogue fixture, not evidence of the production incident.
         var modules = complete().stream().filter(m -> !"observatory".equals(m.id())).toList();
         var result = coverage(modules);
-        assertEquals(223, result.global().expectedWeight());
-        assertEquals(215, result.global().measuredWeight());
+        assertEquals(202, result.global().expectedWeight());
+        assertEquals(194, result.global().measuredWeight());
         assertEquals(96, Math.round(result.global().ratio() * 100));
         var missing = result.checks().stream().filter(c -> c.state() == MeasurementCoverage.State.UNAVAILABLE).toList();
         assertEquals(List.of("observatory.score"), missing.stream().map(MeasurementCoverage.Check::key).toList());
