@@ -217,7 +217,7 @@ public class AccountWs {
     public Response password(Password body) {
         if (body == null) throw new AccountError(400, "payload_invalid");
         String token = csrf.require(request());
-        rate.check("login", null, AccountAuthWs.remote(nativeRequests.get()));
+        rate.checkRequest("login", null, nativeRequests.get());
         auth.addPassword(auth(), token, body.password(), request().getHeaderString("Accept-Language"));
         return AccountAuthWs.ok(Map.of("accepted", true));
     }
@@ -257,7 +257,7 @@ public class AccountWs {
     @AccountAccess("verified")
     public Response claim(@PathParam("id") long id) {
         String token = csrf.require(request());
-        rate.check("claim", null, AccountAuthWs.remote(nativeRequests.get()));
+        rate.checkRequest("claim", null, nativeRequests.get());
         Long user = runs.claim(auth(), token, id, request().getHeaderString("X-Argos-Run-Proof"));
         if (user != null) {
             journey.record(AccountJourneyEvent.CLAIMED, id, user, "none", language(), measurement());
