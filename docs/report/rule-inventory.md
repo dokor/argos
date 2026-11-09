@@ -6,7 +6,7 @@ Les littéraux sont inventoriés de manière conservatrice, y compris contrôles
 
 | Clé | Propriétaire | Poids catalogue | Fiche | Source et ligne |
 | --- | --- | ---: | --- | --- |
-| html.analysis.duration_ms | html | 1 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:179 |
+| html.analysis.duration_ms | html | 0 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:179 |
 | html.anchors.href_coverage | html | 2 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:573 |
 | html.collect | html | 0 | explicit-fallback-fr-en | Availability stub from orchestrator |
 | html.doctype.html5 | html | 1 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:410 |
@@ -16,25 +16,25 @@ Les littéraux sont inventoriés de manière conservatrice, y compris contrôles
 | html.link.canonical.present | html | 2 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:318 |
 | html.meta.charset.present | html | 2 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:426 |
 | html.meta.description.present | html | 3 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:301 |
-| html.meta.robots.present | html | 2 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:125 |
+| html.meta.robots.present | html | 0 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:125 |
 | html.meta.viewport.present | html | 2 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:394 |
-| html.scripts.count | html | 1 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:149 |
-| html.size.bytes | html | 1 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:164 |
+| html.scripts.count | html | 0 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:149 |
+| html.size.bytes | html | 0 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:164 |
 | html.social.meta | html | 1 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:469 |
 | html.title | html | 4 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/html/HtmlModuleAnalyzer.java:281 |
-| http.antibot.challenge | http | 2 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:205 |
+| http.antibot.challenge | http | 0 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:205 |
 | http.collect | http | 0 | explicit-fallback-fr-en | Availability stub from orchestrator |
 | http.errors | http | 2 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:272 |
 | http.final_url.https | http | 2 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:513 |
-| http.headers.caching | http | 2 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:817 |
-| http.headers.compression | http | 2 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:791 |
+| http.headers.caching | http | 0 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:817 |
+| http.headers.compression | http | 0 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:791 |
 | http.headers.content_type | http | 2 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:596 |
-| http.headers.server | http | 2 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:834 |
+| http.headers.server | http | 0 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:834 |
 | http.protocol.http2 | http | 2 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:762 |
-| http.protocol.version | http | 2 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:256 |
+| http.protocol.version | http | 0 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:256 |
 | http.redirect.count | http | 2 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:492 |
 | http.redirect.to_https | http | 2 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:552 |
-| http.response_time_ms | http | 2 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:574 |
+| http.response_time_ms | http | 0 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:574 |
 | http.security.cookie_flags | http | 6 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:686 |
 | http.security.csp | http | 10 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:625 |
 | http.security.hsts | http | 8 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/http/HttpModuleAnalyzer.java:616 |
@@ -54,22 +54,22 @@ Les littéraux sont inventoriés de manière conservatrice, y compris contrôles
 | observatory.grade | observatory | 0 | explicit-fallback-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/observatory/ObservatoryModuleAnalyzer.java:140 |
 | observatory.score | observatory | 8 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/observatory/ObservatoryModuleAnalyzer.java:119 |
 | observatory.tests.passed | observatory | 0 | explicit-fallback-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/observatory/ObservatoryModuleAnalyzer.java:162 |
-| runtime.analysis.duration_ms | runtime | 4 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:194 |
+| runtime.analysis.duration_ms | runtime | 0 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:196 |
 | runtime.collect | runtime | 0 | explicit-fallback-fr-en | Availability stub from orchestrator |
 | runtime.console.errors | runtime | 5 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:20 |
-| runtime.js.errors | runtime | 6 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:112 |
-| runtime.network.5xx | runtime | 8 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:125 |
-| runtime.network.bytes_estimated | runtime | 4 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:181 |
-| runtime.network.failed_requests | runtime | 4 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:138 |
-| runtime.network.request_count | runtime | 4 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:168 |
-| runtime.network.third_party_errors | runtime | 0 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:153 |
-| ssl.certificate.expiry_days | ssl | 3 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:272 |
-| ssl.certificate.valid | ssl | 6 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:105 |
+| runtime.js.errors | runtime | 6 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:114 |
+| runtime.network.5xx | runtime | 8 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:127 |
+| runtime.network.bytes_estimated | runtime | 4 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:183 |
+| runtime.network.failed_requests | runtime | 4 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:140 |
+| runtime.network.request_count | runtime | 4 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:170 |
+| runtime.network.third_party_errors | runtime | 0 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/runtime/RuntimeModuleAnalyzer.java:155 |
+| ssl.certificate.expiry_days | ssl | 3 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:273 |
+| ssl.certificate.valid | ssl | 6 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:106 |
 | ssl.collect | ssl | 0 | explicit-fallback-fr-en | Availability stub from orchestrator |
-| ssl.grade | ssl | 10 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:100 |
-| ssl.protocols.legacy_disabled | ssl | 3 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:103 |
-| ssl.protocols.tls12 | ssl | 2 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:102 |
-| ssl.protocols.tls13 | ssl | 2 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:101 |
+| ssl.grade | ssl | 10 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:101 |
+| ssl.protocols.legacy_disabled | ssl | 3 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:104 |
+| ssl.protocols.tls12 | ssl | 2 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:103 |
+| ssl.protocols.tls13 | ssl | 2 | specific-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/ssl/SslLabsModuleAnalyzer.java:102 |
 | tech.analysis.duration_ms | tech | 0 | explicit-fallback-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:309 |
 | tech.backend.hints | tech | 0 | explicit-fallback-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:239 |
 | tech.cdn.cloudflare | tech | 0 | explicit-fallback-fr-en | apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/tech/TechModuleAnalyzer.java:254 |
