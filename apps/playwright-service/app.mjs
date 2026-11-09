@@ -177,13 +177,9 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
         }).catch(() => { /* Failed size collection remains unknown, never zero. */ }));
       });
 
-      const t0 = performance.now();
       let finalUrl = url;
-      let domContentLoadedMs = null;
-      let loadMs = null;
+      let timings = { domContentLoadedMs: null, loadMs: null };
       let navigation = { status: 'COMPLETED', reason: null };
-      page.on('domcontentloaded', () => { domContentLoadedMs = Math.round(performance.now() - t0); });
-      page.on('load', () => { loadMs = Math.round(performance.now() - t0); });
 
       try {
         const response = await page.goto(url, { waitUntil: 'load', timeout: remaining() });
@@ -207,6 +203,18 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
         // Freeze the observation window, then settle size reads before closing CDP.
         // The existing request deadline still cancels a stalled browser call.
         collecting = false;
+        try {
+          // Browser timestamps share the document's navigation time origin and
+          // exclude Node/CDP delivery delays. Zero means the event is unfinished.
+          timings = await page.evaluate(() => {
+            const entry = performance.getEntriesByType('navigation')[0];
+            const measuredMs = value => Number.isFinite(value) && value > 0 ? Math.round(value) : null;
+            return {
+              domContentLoadedMs: measuredMs(entry?.domContentLoadedEventEnd),
+              loadMs: measuredMs(entry?.loadEventEnd)
+            };
+          });
+        } catch { /* A closed or replaced execution context leaves timings unknown. */ }
         await Promise.all(byteMeasurements);
         const completedBrowser = browser;
         browser = null;
@@ -241,7 +249,7 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
         collectorScopeFingerprint: scopeFingerprint(url, finalUrl),
         url: safeOrigin(url),
         finalUrl: safeOrigin(finalUrl),
-        timings: { domContentLoadedMs, loadMs },
+        timings,
         navigation,
         console: {
           errors: consoleOriginsComplete ? consoleErrors : null,

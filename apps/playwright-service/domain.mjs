@@ -1,29 +1,13 @@
 import { isIP } from 'node:net';
-
-// Les suffixes composés les plus courants pour les sites ciblés par Argos. Cette
-// liste volontairement compacte ne remplace pas la Public Suffix List : un suffixe
-// inconnu est traité comme un TLD simple et peut donc mal classifier un domaine.
-// Le cas co.uk est couvert par test (issue #247). Une couverture PSL complète doit
-// être introduite si Argos élargit les pays/suffixes réellement analysés.
-const COMPOUND_PUBLIC_SUFFIXES = new Set([
-  'ac.uk', 'co.uk', 'gov.uk', 'ltd.uk', 'me.uk', 'net.uk', 'org.uk', 'plc.uk',
-  'com.au', 'net.au', 'org.au', 'edu.au', 'gov.au',
-  'co.nz', 'org.nz', 'govt.nz',
-  'com.br', 'com.mx', 'com.tr', 'co.jp', 'co.in'
-]);
+import { getDomain } from 'tldts';
 
 export function registrableDomain(host) {
   const normalizedHost = String(host ?? '').trim().toLowerCase().replace(/\.$/, '');
   if (!normalizedHost || isIP(normalizedHost) || normalizedHost === 'localhost') return normalizedHost;
 
-  const labels = normalizedHost.split('.').filter(Boolean);
-  if (labels.length <= 2) return normalizedHost;
-
-  const publicSuffix = labels.slice(-2).join('.');
-  const suffixLength = COMPOUND_PUBLIC_SUFFIXES.has(publicSuffix) ? 2 : 1;
-  return labels.length <= suffixLength
-    ? normalizedHost
-    : labels.slice(-(suffixLength + 1)).join('.');
+  // Include private PSL entries so separate hosted tenants (e.g. github.io)
+  // are not attributed to each other. URL parsing stays with the WHATWG parser.
+  return getDomain(normalizedHost, { allowPrivateDomains: true, extractHostname: false }) ?? normalizedHost;
 }
 
 export function registrableDomainForUrl(value) {
