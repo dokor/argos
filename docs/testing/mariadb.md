@@ -23,3 +23,22 @@ mvn -P mariadb-integration -Dit.test=AccountLifecycleIT,AccountSessionSecurityIT
 CI retains Failsafe reports as an artifact. Earlier compatibility runs on
 MariaDB 10.11 remain recorded in the dated release evidence; routine CI now
 matches the deployed 11.4 version.
+
+`AuditUrlIdentityIT` covers the V40 upgrade from V39 with existing audits and
+run references, including a reproduction of the old 255-character prefix collision.
+It verifies distinct 2048-character canonical URLs, exact path/query case and Unicode,
+database-generated hashes on inserts/updates, duplicate rejection, collision refusal,
+and concurrent creation. Run it with the same isolated credentials fixture:
+
+```sh
+mvn -P mariadb-integration -Dit.test=AuditUrlIdentityIT verify
+```
+
+V40 replaces the prefix index in one `ALTER TABLE`, backfilling a generated SHA-256
+column without rewriting URLs or IDs. The unique index remains enforced throughout
+the change; a failed index build leaves the previous table intact on MariaDB 11.4.
+See MariaDB's [atomic DDL guarantees](https://mariadb.com/docs/server/reference/sql-statements/data-definition/atomic-ddl).
+Allow for a table rebuild and its metadata lock when scheduling the migration.
+DAO lookups use the hash index plus exact byte equality; a hash collision fails the
+insert instead of returning another URL's audit. Rolling back to the prefix index
+requires checking for newly valid URLs sharing a prefix first.

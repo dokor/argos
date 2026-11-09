@@ -87,29 +87,27 @@ class AuditRunServiceTest {
     @Test
     void updateModuleStatus_updatesOnlyTargetModule() {
         AuditRunDao dao = mock(AuditRunDao.class);
-        newService(dao, mock(TokenService.class)).updateModuleStatus(1L, "http", ModuleStatus.RUNNING);
+        newService(dao, mock(TokenService.class)).updateModuleStatus(1L, "http", ModuleStatus.RUNNING, "worker");
         ArgumentCaptor<String> json = ArgumentCaptor.forClass(String.class);
-        verify(dao).updateModuleStatus(eq(1L), eq("http"), eq(ModuleStatus.RUNNING), json.capture(), eq(false));
+        verify(dao).updateModuleStatus(eq(1L), eq("http"), eq(ModuleStatus.RUNNING), json.capture(), eq(false), eq("worker"));
         assertEquals(AuditRunService.INITIAL_MODULE_STATUSES, parse(json.getValue()));
         verify(dao, never()).findById(anyLong());
-        verify(dao, never()).updateModuleStatuses(anyLong(), anyString());
     }
 
     @Test
     void updateModuleStatus_noopWhenRunMissing() {
         AuditRunDao dao = mock(AuditRunDao.class);
-        newService(dao, mock(TokenService.class)).updateModuleStatus(99L, "http", ModuleStatus.RUNNING);
-        verify(dao).updateModuleStatus(eq(99L), eq("http"), eq(ModuleStatus.RUNNING), anyString(), eq(false));
+        newService(dao, mock(TokenService.class)).updateModuleStatus(99L, "http", ModuleStatus.RUNNING, "worker");
+        verify(dao).updateModuleStatus(eq(99L), eq("http"), eq(ModuleStatus.RUNNING), anyString(), eq(false), eq("worker"));
         verify(dao, never()).findById(anyLong());
-        verify(dao, never()).updateModuleStatuses(anyLong(), anyString());
     }
 
     @Test
     void updateModuleStatus_rejectsUnknownModulesAndInvalidStatusesBeforeDbAccess() {
         AuditRunDao dao = mock(AuditRunDao.class);
         var service = newService(dao, mock(TokenService.class));
-        assertThrows(IllegalArgumentException.class, () -> service.updateModuleStatus(1, "unknown", "RUNNING"));
-        assertThrows(IllegalArgumentException.class, () -> service.updateModuleStatus(1, "ssl", "PENDING"));
+        assertThrows(IllegalArgumentException.class, () -> service.updateModuleStatus(1, "unknown", "RUNNING", "worker"));
+        assertThrows(IllegalArgumentException.class, () -> service.updateModuleStatus(1, "ssl", "PENDING", "worker"));
         verifyNoInteractions(dao);
     }
 
@@ -118,14 +116,24 @@ class AuditRunServiceTest {
     @Test
     void failRunningModules_marksOnlyRunningAsFailed() {
         AuditRunDao dao = mock(AuditRunDao.class);
-        newService(dao, mock(TokenService.class)).failRunningModules(1L);
+        newService(dao, mock(TokenService.class)).failRunningModules(1L, "worker");
         for (ModuleStatus module : AuditRunService.INITIAL_MODULE_STATUSES)
-            verify(dao).updateModuleStatus(eq(1L), eq(module.id()), eq(ModuleStatus.FAILED), anyString(), eq(true));
+            verify(dao).updateModuleStatus(eq(1L), eq(module.id()), eq(ModuleStatus.FAILED), anyString(), eq(true), eq("worker"));
         verify(dao, never()).findById(anyLong());
-        verify(dao, never()).updateModuleStatuses(anyLong(), anyString());
     }
 
     // ─── findByReportToken ────────────────────────────────────────────────────
+
+    @Test
+    void missingClaimDoesNotFallBackToUnfencedProgressOrCleanup() {
+        AuditRunDao dao = mock(AuditRunDao.class);
+        var service = newService(dao, mock(TokenService.class));
+        for (String claim : java.util.Arrays.asList(null, "", " ")) {
+            service.updateModuleStatus(1, "http", "RUNNING", claim);
+            service.failRunningModules(1, claim);
+        }
+        verifyNoInteractions(dao);
+    }
 
     @Test
     void findByReportToken_delegatesToDao() {

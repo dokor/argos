@@ -1402,6 +1402,65 @@ class AccountLifecycleIT extends MariaDbReportFixture {
         assertDoesNotThrow(() -> limiter.check("email", "same@example.com", "127.0.0.1"));
     }
 
+    @Test void signedClientsHaveSeparatePersistentBudgetsAndSpoofedHeadersCannotRotateThem() throws Exception {
+        var limits = new AccountSettings(ConfigFactory.parseMap(Map.of(
+                "account.proxy-secret", "a".repeat(64), "account.rate.login.ip", 1)));
+        var limiter = new AccountRateLimiter(dao, tokens, clock, limits);
+        var first = rateRequest("203.0.113.1", true);
+        var second = rateRequest("203.0.113.2", true);
+        limiter.checkRequest("login", null, first);
+        assertThrows(jakarta.ws.rs.WebApplicationException.class, () -> limiter.checkRequest("login", null, first));
+        assertDoesNotThrow(() -> limiter.checkRequest("login", null, second));
+        limiter.checkRequest("login", null, rateRequest("203.0.113.3", false));
+        var forged = rateRequest("203.0.113.4", false);
+        assertThrows(jakarta.ws.rs.WebApplicationException.class, () -> limiter.checkRequest("login", null, forged));
+        // The forged address never consumed the real client's quota.
+        assertDoesNotThrow(() -> limiter.checkRequest("login", null, rateRequest("203.0.113.4", true)));
+    }
+
+    private org.glassfish.grizzly.http.server.Request rateRequest(String ip, boolean signed) throws Exception {
+        var request = mock(org.glassfish.grizzly.http.server.Request.class);
+        when(request.getRemoteAddr()).thenReturn("172.18.0.5");
+        when(request.getHeader("X-Forwarded-For")).thenReturn(ip);
+        when(request.getHeader("X-Argos-Client-IP")).thenReturn(ip);
+        if (signed) {
+            String timestamp = Long.toString(clock.instant().getEpochSecond());
+            var mac = javax.crypto.Mac.getInstance("HmacSHA256");
+            mac.init(new javax.crypto.spec.SecretKeySpec("a".repeat(64).getBytes(java.nio.charset.StandardCharsets.UTF_8), "HmacSHA256"));
+            String proof = timestamp + "." + HexFormat.of().formatHex(mac.doFinal(
+                    ("argos-client-v1\n" + timestamp + "\n" + ip).getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+            when(request.getHeader("X-Argos-Client-Proof")).thenReturn(proof);
+            when(request.getHeaders("X-Argos-Client-IP")).thenReturn(List.of(ip));
+            when(request.getHeaders("X-Argos-Client-Proof")).thenReturn(List.of(proof));
+        }
+        return request;
+    }
+
+    @Test void persistentRateLimitsKeepClientAccountAndGlobalBudgetsIndependent() {
+        var limits = new AccountSettings(ConfigFactory.parseMap(Map.of(
+                "account.rate.login.ip", 2, "account.rate.login.account", 2,
+                "account.rate.login.global", 8)));
+        var limiter = new AccountRateLimiter(dao, tokens, clock, limits);
+        limiter.check("login", "first@example.com", "203.0.113.1");
+        limiter.check("login", "second@example.com", "203.0.113.1");
+        assertEquals(429, assertThrows(jakarta.ws.rs.WebApplicationException.class,
+                () -> limiter.check("login", "third@example.com", "203.0.113.1")).getResponse().getStatus());
+        // Another client is not blocked by the first client's exhausted IP quota.
+        limiter.check("login", "first@example.com", "203.0.113.2");
+        // Rotating clients cannot bypass the account quota, including across limiter instances.
+        var restarted = new AccountRateLimiter(dao, tokens, clock, limits);
+        assertEquals(429, assertThrows(jakarta.ws.rs.WebApplicationException.class,
+                () -> restarted.check("login", "first@example.com", "203.0.113.3")).getResponse().getStatus());
+        for (int i = 4; i <= 6; i++) restarted.check("login", "new" + i + "@example.com", "203.0.113." + i);
+        // All attempts, including rejected ones, consume the aggregate budget.
+        var rejected = assertThrows(jakarta.ws.rs.WebApplicationException.class,
+                () -> restarted.check("login", "new7@example.com", "203.0.113.7"));
+        assertEquals(429, rejected.getResponse().getStatus());
+        assertEquals("900", rejected.getResponse().getHeaderString("Retry-After"));
+        clock.now = clock.now.plusSeconds(901);
+        assertDoesNotThrow(() -> restarted.check("login", "first@example.com", "203.0.113.1"));
+    }
+
     @Test void statisticsHttpRequiresCurrentAdministratorAndOnlyExposesAggregates() throws Exception {
         var admin=administrator(); var ordinary=user("statistics-user@example.com",true);
         try(var http=new HttpFixture()) {
@@ -2255,7 +2314,7 @@ class AccountLifecycleIT extends MariaDbReportFixture {
         var coverage=new com.dokor.argos.services.analysis.scoring.MeasurementCoverage("v1",.8,
             new com.dokor.argos.services.analysis.scoring.MeasurementCoverage.Aggregate("global",10,10,1,true,true),List.of(),
             List.of(new com.dokor.argos.services.analysis.scoring.MeasurementCoverage.Check("ssl.grade","security","ssl",10,com.dokor.argos.services.analysis.scoring.MeasurementCoverage.State.MEASURED,"fixture","MEASURED")),false);
-        var calc=new ReportDto.ScoreCalculation(11,fingerprint,List.of(new ReportDto.DomainCalculation("security",score/10.0,10,score/100.0,1)),Map.of("security",1.0),List.of(new ReportDto.CheckCalculation("ssl.grade","ssl","security",10,score/10.0)));
+        var calc=new ReportDto.ScoreCalculation(11,fingerprint,List.of(new ReportDto.DomainCalculation("security",score/10.0,10,score/100.0,1)),Map.of("security",1.0),List.of(new ReportDto.CheckCalculation("ssl.grade","ssl","security",10,score/10.0)),"measurement-v2:"+"a".repeat(64),"b".repeat(64));
         var report=new ReportDto("2026-10-11","example.com","https://example.com",null,new ReportDto.Scores(score,100,List.of(),true,calc,coverage),null,List.of(),null,null);
         try(var c=source.getConnection();var s=c.prepareStatement("INSERT INTO ARG_AUDIT_REPORT(audit_id,run_id,token_hash,domain,target_url,report_json,created_at) SELECT audit_id,id,?,'example.com','https://example.com',?,'2026-10-11 07:00:00' FROM ARG_AUDIT_RUN WHERE id=?")) {
             s.setBytes(1,tokens.sha256(token));s.setString(2,mapper.writeValueAsString(report));s.setLong(3,run);s.executeUpdate();

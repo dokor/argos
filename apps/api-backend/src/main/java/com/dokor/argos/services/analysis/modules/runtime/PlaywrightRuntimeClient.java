@@ -86,8 +86,13 @@ public class PlaywrightRuntimeClient {
         Console console,
         JsErrors jsErrors,
         Network network,
-        Navigation navigation
+        Navigation navigation,
+        String collectorMethodFingerprint,
+        String collectorScopeFingerprint
     ) {
+        public RuntimeAnalyzeResponse(String url, String finalUrl, Timings timings, Console console, JsErrors jsErrors, Network network, Navigation navigation) {
+            this(url, finalUrl, timings, console, jsErrors, network, navigation, null, null);
+        }
         public RuntimeAnalyzeResponse(String url, String finalUrl, Timings timings, Console console, JsErrors jsErrors, Network network) {
             this(url, finalUrl, timings, console, jsErrors, network, null);
         }

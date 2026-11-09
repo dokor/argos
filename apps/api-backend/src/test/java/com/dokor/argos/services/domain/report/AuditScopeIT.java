@@ -17,7 +17,10 @@ class AuditScopeIT extends MariaDbReportFixture {
         assertEquals("PENDING",progress.get(1).get("status").asText());
         assertEquals("SKIPPED",progress.get(2).get("status").asText());
         assertTrue(runs.claim(stored.getId()).isPresent());
-        runs.resetModuleStatuses(stored.getId());
+        var dao = new com.dokor.argos.db.dao.AuditRunDao(new com.coreoz.plume.db.querydsl.transaction.TransactionManagerQuerydsl(
+            source, new com.querydsl.sql.Configuration(com.querydsl.sql.MySQLTemplates.DEFAULT)));
+        assertEquals(com.dokor.argos.db.dao.AuditRunDao.Recovery.REQUEUED,
+            dao.recoverStuck(runs.getRun(stored.getId()).orElseThrow(), 3, Instant.now(), runs.initialModuleStatusesJson(stored)));
         var recovered=runs.getRun(stored.getId()).orElseThrow();
         assertEquals(stored.getExecutionScope(),recovered.getExecutionScope());
         assertEquals(stored.getModuleStatuses(),recovered.getModuleStatuses());

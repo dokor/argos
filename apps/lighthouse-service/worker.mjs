@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { lighthouseMethod, scopeFingerprint } from './measurement.mjs';
 import { Launcher } from 'chrome-launcher';
 import lighthouse from 'lighthouse';
 import { chromium } from 'playwright';
@@ -21,6 +22,11 @@ process.once('message', async ({ url, timeoutMs }) => {
     lighthouse: async (...args) => {
       const result = await lighthouse(...args);
       attachLinkNodes(result);
+      if (result?.lhr) {
+        result.lhr.collectorMethodFingerprint = lighthouseMethod(result.lhr, args[1]);
+        result.lhr.collectorScopeFingerprint = scopeFingerprint(args[0],
+          result.lhr.finalDisplayedUrl ?? result.lhr.finalUrl);
+      }
       const json = JSON.stringify(result?.lhr);
       if (!json || Buffer.byteLength(json, 'utf8') > MAX_RESULT_BYTES) process.exit(1);
       // Exit after IPC delivery; the supervisor kills Chrome and removes scratch

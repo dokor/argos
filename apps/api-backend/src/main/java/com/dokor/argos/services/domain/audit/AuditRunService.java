@@ -122,43 +122,28 @@ public class AuditRunService {
      * @param moduleId id technique du module (ex : {@code "http"})
      * @param status   nouveau statut ({@code RUNNING | COMPLETED | FAILED | SKIPPED})
      */
-    public void updateModuleStatus(long runId, String moduleId, String status) {
+    public void updateModuleStatus(long runId, String moduleId, String status, String expectedClaim) {
+        if (expectedClaim == null || expectedClaim.isBlank()) return;
         if (!AuditModule.containsId(moduleId))
             throw new IllegalArgumentException("Unknown audit module");
         if (!List.of(ModuleStatus.RUNNING, ModuleStatus.COMPLETED, ModuleStatus.FAILED, ModuleStatus.SKIPPED).contains(status))
             throw new IllegalArgumentException("Invalid module transition");
         boolean updated = auditRunDao.updateModuleStatus(runId, moduleId, status,
-            serializeModuleStatuses(INITIAL_MODULE_STATUSES), false);
+            serializeModuleStatuses(INITIAL_MODULE_STATUSES), false, expectedClaim);
         logger.debug("Module status transition runId={} module={} status={} updated={}", runId, moduleId, status, updated);
     }
 
-    /** Progress written by a worker must retain the claim captured when it was dispatched. */
-    public void updateModuleStatus(long runId,String moduleId,String status,String expectedClaim) {
-        if(expectedClaim==null){updateModuleStatus(runId,moduleId,status);return;}
-        if(!AuditModule.containsId(moduleId)||!List.of(ModuleStatus.RUNNING,ModuleStatus.COMPLETED,ModuleStatus.FAILED,ModuleStatus.SKIPPED).contains(status))throw new IllegalArgumentException("Invalid module transition");
-        auditRunDao.updateModuleStatus(runId,moduleId,status,serializeModuleStatuses(INITIAL_MODULE_STATUSES),false,expectedClaim);
-    }
-
     /**
-     * Passe à FAILED tout module encore en RUNNING (ou PENDING) pour un run qui
+     * Passe à FAILED tout module encore en RUNNING pour la tentative qui
      * a échoué. Évite qu'un module reste bloqué en RUNNING (spinner infini) dans
      * la vue de progression après un échec du traitement.
      */
-    public void failRunningModules(long runId) {
+    public void failRunningModules(long runId, String expectedClaim) {
+        if (expectedClaim == null || expectedClaim.isBlank()) return;
         String initial = serializeModuleStatuses(INITIAL_MODULE_STATUSES);
         for (ModuleStatus module : INITIAL_MODULE_STATUSES)
-            auditRunDao.updateModuleStatus(runId, module.id(), ModuleStatus.FAILED, initial, true);
+            auditRunDao.updateModuleStatus(runId, module.id(), ModuleStatus.FAILED, initial, true, expectedClaim);
         logger.debug("Running modules marked FAILED runId={}", runId);
-    }
-
-    /**
-     * Réinitialise tous les statuts de modules à PENDING. Utilisé lors de la reprise
-     * (requeue) d'un run bloqué pour repartir d'un état propre avant un nouveau
-     * traitement complet.
-     */
-    public void resetModuleStatuses(long runId) {
-        auditRunDao.updateModuleStatuses(runId, initialModuleStatusesFromScopeJson(auditRunDao.executionScope(runId)));
-        logger.debug("Module statuses reset to PENDING runId={}", runId);
     }
 
     /**

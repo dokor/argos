@@ -21,7 +21,7 @@ public class FeedbackWs {
  @POST @com.dokor.argos.webservices.api.security.AntiBot("feedback")
     public Response submit(FeedbackService.Submission body) {
   var request=requests.get();String token=csrf.require(request);
-  rate.check("feedback",token,AccountAuthWs.remote(nativeRequests.get()));
+  rate.checkRequest("feedback",token,nativeRequests.get());
   return AccountAuthWs.ok(feedback.submit(request.getHeaderString("Authorization"),token,body));
  }
 }

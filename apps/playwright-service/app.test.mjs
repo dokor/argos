@@ -1,19 +1,39 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { once } from 'node:events';
+import { gzipSync, deflateSync } from 'node:zlib';
 import { createRuntimeApp } from './app.mjs';
 
 async function serverFor(t, chromium, log = () => {}) {
-  const server = createRuntimeApp({ chromium, log, proxy: 'http://127.0.0.1:3128' }).listen(0, '127.0.0.1');
+  const server = createRuntimeApp({ chromium, log, proxy: 'http://127.0.0.1:3128', playwrightVersion: 'fixture-1' }).listen(0, '127.0.0.1');
   await once(server, 'listening');
   t.after(() => new Promise(resolve => { server.close(resolve); server.closeAllConnections(); }));
   return 'http://127.0.0.1:' + server.address().port;
 }
+
+test('malformed compressed JSON cannot crash the collector before route validation', async t => {
+  let launches = 0;
+  const base = await serverFor(t, { launch: async () => { launches++; throw new Error('Must not launch'); } });
+  for (const [encoding, compress] of [['gzip', gzipSync], ['deflate', deflateSync]]) {
+    // Invalid analysis URL prevents a browser launch even if a decompressor accepts trailing data.
+    const compressed = compress(Buffer.from('{"url":"file:///private"}'));
+    for (const body of [Buffer.concat([compressed, Buffer.from('invalid trailing compressed data')]),
+      compressed.subarray(0, compressed.length - 4)]) {
+      const response = await fetch(base + '/analyze/runtime', { method: 'POST',
+        headers: { 'content-type': 'application/json', 'content-encoding': encoding }, body });
+      assert.equal(response.status, 400);
+      assert.match((await response.json()).error, /^Invalid (request|URL)$/);
+      assert.equal((await fetch(base + '/health')).status, 200);
+    }
+  }
+  assert.equal(launches, 0);
+});
 function collector({ navigationFailure = false, contextFailure = false, cdpFailure = null,
   jsCount = 1, contentLength = '321', failureCount = 1, finalUrl = 'https://www.example.co.uk/final',
   responseSizes = [321], sizeFailure = false, sizeDelay = 0, finished = true, sizeStall = false,
-  responseUrl = 'https://other.test/api', cleanupFailure = false, errorMessage = 'private collector secret' } = {}) {
-  let closed = 0, launched = 0;
+  responseUrl = 'https://other.test/api', responseStatus = 503,
+  cleanupFailure = false, errorMessage = 'private collector secret' } = {}) {
+  let closed = 0, launched = 0, sizeReads = 0;
   const handlers = {};
   const contextHandlers = {};
   let rejectInstrumentation;
@@ -34,6 +54,7 @@ function collector({ navigationFailure = false, contextFailure = false, cdpFailu
       for (const responseBodySize of responseSizes) {
         const request = { url: () => responseUrl, resourceType: () => 'fetch', method: () => 'GET',
           sizes: async () => {
+            sizeReads++;
             if (sizeStall) await new Promise((_resolve, reject) => rejectSizes.push(reject));
             if (sizeDelay) await new Promise(resolve => setTimeout(resolve, sizeDelay));
             assert.equal(closed, 0, 'Size reads must settle before closing the browser');
@@ -41,7 +62,7 @@ function collector({ navigationFailure = false, contextFailure = false, cdpFailu
             return { responseBodySize };
           } };
         handlers.request(request);
-        handlers.response({ url: request.url, request: () => request, status: () => 503,
+        handlers.response({ url: request.url, request: () => request, status: () => responseStatus,
           headers: () => ({ 'content-length': contentLength }) });
         if (finished) handlers.requestfinished(request);
       }
@@ -56,6 +77,7 @@ function collector({ navigationFailure = false, contextFailure = false, cdpFailu
   const chromium = { launch: async () => {
     launched++;
     return {
+      version: () => 'Chromium/123',
       newContext: async () => {
         if (contextFailure) throw new Error(errorMessage);
         return {
@@ -82,7 +104,7 @@ function collector({ navigationFailure = false, contextFailure = false, cdpFailu
       }
     };
   } };
-  return { chromium, closed: () => closed, launched: () => launched };
+  return { chromium, closed: () => closed, launched: () => launched, sizeReads: () => sizeReads };
 }
 async function analyze(base) {
   return fetch(base + '/analyze/runtime', { method: 'POST',
@@ -109,6 +131,8 @@ test('runtime contract retains metrics and partitions errors using the final dom
   const response = await analyze(base);
   assert.equal(response.status, 200);
   const report = await response.json();
+  assert.match(report.collectorMethodFingerprint, /^[a-f0-9]{64}$/);
+  assert.match(report.collectorScopeFingerprint, /^[a-f0-9]{64}$/);
   assert.equal(report.url, 'https://example.co.uk');
   assert.equal(report.finalUrl, 'https://www.example.co.uk');
   assert.deepEqual(report.navigation, { status: 'COMPLETED', reason: null });
@@ -176,6 +200,29 @@ test('repeated requests to the same URL each contribute their own transfer size'
   assert.equal(report.network.requests, 2);
   assert.equal(report.network.totalBytesEstimated, 300);
   assert.deepEqual(report.network.topLargest.map(item => item.bytes), [200, 100]);
+});
+
+test('300 observed responses remain measurable within the transfer budget', async t => {
+  const fake = collector({ responseSizes: Array(300).fill(1) });
+  const response = await analyze(await serverFor(t, fake.chromium));
+  assert.equal(response.status, 200);
+  const report = await response.json();
+  assert.equal(report.network.totalBytesEstimated, 300);
+  assert.equal(fake.sizeReads(), 300);
+});
+
+test('redirect response floods cancel collection and bound pending size reads', async t => {
+  // Redirect hops emit responses without another route callback.
+  const fake = collector({ responseSizes: Array(1000).fill(0), responseStatus: 302 });
+  const base = await serverFor(t, fake.chromium);
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const response = await analyze(base);
+    assert.equal(response.status, 504);
+    assert.deepEqual(await response.json(), { error: 'Analysis timeout' });
+    assert.equal(fake.sizeReads(), 300 * (attempt + 1));
+  }
+  assert.equal(fake.launched(), 3, 'Cancelled collections release both admission slots');
+  assert.ok(fake.closed() >= 3);
 });
 
 test('unfinished bodies and failed size reads remain unknown even with Content-Length', async t => {
@@ -332,4 +379,19 @@ test('runtime ignores untrusted correlation text', async t => {
   assert.ok(events.length >= 2);
   assert.ok(events.every(event => event.runId === undefined));
   assert.doesNotMatch(JSON.stringify(events), /private-token/);
+});
+
+test('method and exact destination proofs survive redaction and old browser adapters', async t => {
+  const first = await (await analyze(await serverFor(t, collector().chromium))).json();
+  const other = await (await analyze(await serverFor(t, collector({ finalUrl: 'https://www.example.co.uk/other?token=private-secret' }).chromium))).json();
+  assert.equal(first.collectorMethodFingerprint, other.collectorMethodFingerprint);
+  assert.notEqual(first.collectorScopeFingerprint, other.collectorScopeFingerprint);
+  assert.equal(first.finalUrl, other.finalUrl);
+  assert.doesNotMatch(JSON.stringify(other), /private-secret/);
+  const old = collector().chromium;
+  const launch = old.launch;
+  old.launch = async (...args) => { const browser = await launch(...args); delete browser.version; return browser; };
+  const legacy = await (await analyze(await serverFor(t, old))).json();
+  assert.equal(legacy.collectorMethodFingerprint, null);
+  assert.equal(legacy.network.requests, first.network.requests);
 });

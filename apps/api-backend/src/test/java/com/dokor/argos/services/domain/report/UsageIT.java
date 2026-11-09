@@ -73,10 +73,10 @@ class UsageIT extends MariaDbReportFixture {
         var a=reserve(10);var b=reserve(10);assertFalse(view(10).canLaunch());
         assertTrue(runDao.claimRun(a.getId(),"worker",clock.instant()));
         assertFalse(runDao.markFailed(a.getId(),clock.instant(),"stale","wrong"));assertEquals(2,view(10).reserved());
-        assertTrue(runDao.requeueStuckRun(a.getId()));assertEquals(2,view(10).reserved());
+        assertEquals(AuditRunDao.Recovery.REQUEUED,runDao.recoverStuck(runDao.findById(a.getId()),3,clock.instant(),runs.initialModuleStatusesJson()));assertEquals(2,view(10).reserved());
         assertTrue(runDao.claimRun(a.getId(),"new-worker",clock.instant()));
         assertTrue(runDao.markFailed(a.getId(),clock.instant(),"failed","new-worker"));assertTrue(view(10).canLaunch());
-        assertTrue(runDao.claimRun(b.getId(),"worker",clock.instant()));assertTrue(runDao.markStuckFailed(b.getId(),clock.instant(),"abandoned"));
+        assertTrue(runDao.claimRun(b.getId(),"worker",clock.instant()));assertEquals(AuditRunDao.Recovery.FAILED,runDao.recoverStuck(runDao.findById(b.getId()),1,clock.instant(),runs.initialModuleStatusesJson()));
         assertEquals(0,view(10).used());assertEquals(0,view(10).reserved());
     }
     @Test void concurrentEntrypointsNeverOverbookAndNoRejectedRunIsInserted() throws Exception {
@@ -178,10 +178,10 @@ class UsageIT extends MariaDbReportFixture {
         assertEquals("CANCELED",runs.getRun(run.getId()).orElseThrow().getStatus());assertEquals(0,view(10).reserved());assertEquals(0,view(10).used());assertTrue(reports.findByRunId(run.getId()).isEmpty());
     }
     @Test void crashAfterCancellationIsRecoveredWithoutRequeueOrStaleWorkerRelease() throws Exception {
-        var run=reserve(10);runDao.claimRun(run.getId(),"old",clock.instant());assertTrue(runDao.requeueStuckRun(run.getId()));
+        var run=reserve(10);runDao.claimRun(run.getId(),"old",clock.instant());assertEquals(AuditRunDao.Recovery.REQUEUED,runDao.recoverStuck(runDao.findById(run.getId()),3,clock.instant(),runs.initialModuleStatusesJson()));
         runDao.claimRun(run.getId(),"new",clock.instant());assertFalse(runDao.markFailed(run.getId(),clock.instant(),"late","old"));
         usage.transaction(c->runDao.requestCancellation(run.getId(),10,c,clock.instant()));assertEquals(1,view(10).reserved());
-        assertFalse(runDao.requeueStuckRun(run.getId()));assertEquals("CANCELED",runs.getRun(run.getId()).orElseThrow().getStatus());assertEquals(0,view(10).reserved());
+        assertEquals(AuditRunDao.Recovery.CANCELED,runDao.recoverStuck(runDao.findById(run.getId()),3,clock.instant(),runs.initialModuleStatusesJson()));assertEquals("CANCELED",runs.getRun(run.getId()).orElseThrow().getStatus());assertEquals(0,view(10).reserved());
     }
     @Test void concurrentPublicationAndCancellationHaveExactlyOneDurableOutcome() throws Exception {
         var run=reserve(10);runDao.claimRun(run.getId(),"worker",clock.instant());var publisher=publishService(runDao);var barrier=new CyclicBarrier(2);

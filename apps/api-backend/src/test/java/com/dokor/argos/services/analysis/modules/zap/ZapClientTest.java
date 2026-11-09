@@ -39,6 +39,8 @@ class ZapClientTest {
     private boolean neverFinish;
     private String key;
     private int targetMessageCount = 1;
+    private boolean methodAvailable;
+    private String scannerThreshold = "MEDIUM";
 
     @AfterEach void stop() { if (server != null) server.stop(0); }
 
@@ -74,6 +76,9 @@ class ZapClientTest {
                     response = "{\"numberOfMessages\":\"" + count + "\"}";
                 }
                 case "core/view/alerts/" -> { assertTrue(pending <= 0); response = "{\"alerts\":[]}"; }
+                case "core/view/version/" -> response = methodAvailable ? "{\"version\":\"2.17\"}" : "{}";
+                case "autoupdate/view/installedAddons/" -> response = "{\"installedAddons\":[{\"id\":\"pscan\",\"version\":\"1\"}]}";
+                case "pscan/view/scanners/" -> response = "{\"scanners\":[{\"id\":\"10038\",\"enabled\":true,\"alertThreshold\":\"" + scannerThreshold + "\"}]}";
                 default -> response = "{\"code\":\"unexpected_operation\"}";
             }
             byte[] bytes = response.getBytes(StandardCharsets.UTF_8);
@@ -98,7 +103,7 @@ class ZapClientTest {
         assertEquals("<html>é</html>", entry.path("response").path("content").path("text").asText());
         assertFalse(entry.path("response").path("headers").toString().contains("gzip"));
         assertEquals("synthetic-key", key);
-        assertEquals("core/view/alerts/", calls.getLast());
+        assertTrue(calls.indexOf("core/view/alerts/") < calls.indexOf("core/view/version/"));
         assertTrue(calls.indexOf("exim/action/importHar/") > calls.indexOf("core/action/newSession/"));
         assertTrue(calls.stream().noneMatch(p -> p.contains("spider") || p.contains("ascan") || p.contains("sendRequest")));
     }
@@ -108,7 +113,7 @@ class ZapClientTest {
         targetMessageCount = 2;
         assertTrue(client(Duration.ofSeconds(3)).analyze(snapshot("https://example.com")).path("alerts").isArray());
         assertEquals(1, imported.path("log").path("entries").size());
-        assertEquals("core/view/alerts/", calls.getLast());
+        assertTrue(calls.indexOf("core/view/alerts/") < calls.indexOf("core/view/version/"));
     }
 
     @Test void missingImportAddonHasAnActionableBoundedCode() throws Exception {
@@ -118,6 +123,19 @@ class ZapClientTest {
         assertEquals(CollectorFailure.Code.INTEGRATION_ENDPOINT, CollectorFailure.classify(failure));
         assertEquals("INTEGRATION_ENDPOINT", failure.getMessage());
         assertFalse(calls.contains("core/view/alerts/"));
+    }
+
+    @Test void versionsAndPassiveScannerThresholdsAreFrozenWithoutLosingAlerts() throws Exception {
+        methodAvailable = true;
+        var client = client(Duration.ofSeconds(3));
+        var first = client.analyze(snapshot("https://example.com"));
+        assertTrue(first.path("collectorMethodFingerprint").asText().matches("[a-f0-9]{64}"));
+        scannerThreshold = "HIGH";
+        assertNotEquals(first.path("collectorMethodFingerprint"), client.analyze(snapshot("https://example.com")).path("collectorMethodFingerprint"));
+        methodAvailable = false;
+        var legacy = client.analyze(snapshot("https://example.com"));
+        assertTrue(legacy.path("collectorMethodFingerprint").isNull());
+        assertTrue(legacy.path("alerts").isArray());
     }
 
     @Test void startsANewSessionForEachAudit() throws Exception {
