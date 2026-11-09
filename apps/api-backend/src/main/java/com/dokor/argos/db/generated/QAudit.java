@@ -34,6 +34,8 @@ public class QAudit extends com.querydsl.sql.RelationalPathBase<Audit> {
 
     public final StringPath normalizedUrl = createString("normalizedUrl");
 
+    public final ArrayPath<byte[], Byte> normalizedUrlHash = createArray("normalizedUrlHash", byte[].class);
+
     public final com.querydsl.sql.PrimaryKey<Audit> primary = createPrimaryKey(id);
 
     public final com.querydsl.sql.ForeignKey<Domain> auditDomainFk = createForeignKey(domainId, "id");
@@ -73,6 +75,7 @@ public class QAudit extends com.querydsl.sql.RelationalPathBase<Audit> {
         addMetadata(id,            ColumnMetadata.named("id").withIndex(1).ofType(Types.BIGINT).withSize(19).notNull());
         addMetadata(inputUrl,      ColumnMetadata.named("input_url").withIndex(2).ofType(Types.LONGVARCHAR).withSize(65535).notNull());
         addMetadata(normalizedUrl, ColumnMetadata.named("normalized_url").withIndex(3).ofType(Types.LONGVARCHAR).withSize(65535).notNull());
+        addMetadata(normalizedUrlHash, ColumnMetadata.named("normalized_url_hash").withIndex(6).ofType(Types.BINARY).withSize(32));
     }
 
 }
