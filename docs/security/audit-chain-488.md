@@ -80,6 +80,11 @@ apply to both processes together.
 - Browser context: 300 requests, 20 MiB observed decoded data. Proxy: 32 active
   upstreams, 64 accepted clients, 1000 upstream admissions per minute, 20 MiB per
   tunnel direction/HTTP response and a 45-second connection deadline.
+- Runtime also caps retained response records and pending size reads at 300 per
+  analysis: redirect hops produce responses without another Playwright route
+  callback. The 301st response stops observation and cancels the browser with the
+  existing 504 budget-failure response; it cannot return a truncated byte total as
+  a complete measurement. Admission remains held until browser cleanup completes.
 - Docker workers: 1 GiB RAM, 2 CPUs, 256 PIDs, bounded temporary/profile/shared
   memory. Proxy: 128 MiB RAM, 64 PIDs. No unbounded browser launch queue.
 - HTTP/HTML/technology analysis operates on bounded snapshots. XML external

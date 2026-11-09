@@ -31,8 +31,8 @@ test('malformed compressed JSON cannot crash the collector before route validati
 function collector({ navigationFailure = false, contextFailure = false, cdpFailure = null,
   jsCount = 1, contentLength = '321', failureCount = 1, finalUrl = 'https://www.example.co.uk/final',
   responseSizes = [321], sizeFailure = false, sizeDelay = 0, finished = true, sizeStall = false,
-  responseUrl = 'https://other.test/api' } = {}) {
-  let closed = 0, launched = 0;
+  responseUrl = 'https://other.test/api', responseStatus = 503 } = {}) {
+  let closed = 0, launched = 0, sizeReads = 0;
   const handlers = {};
   const contextHandlers = {};
   let rejectInstrumentation;
@@ -53,6 +53,7 @@ function collector({ navigationFailure = false, contextFailure = false, cdpFailu
       for (const responseBodySize of responseSizes) {
         const request = { url: () => responseUrl, resourceType: () => 'fetch', method: () => 'GET',
           sizes: async () => {
+            sizeReads++;
             if (sizeStall) await new Promise((_resolve, reject) => rejectSizes.push(reject));
             if (sizeDelay) await new Promise(resolve => setTimeout(resolve, sizeDelay));
             assert.equal(closed, 0, 'Size reads must settle before closing the browser');
@@ -60,7 +61,7 @@ function collector({ navigationFailure = false, contextFailure = false, cdpFailu
             return { responseBodySize };
           } };
         handlers.request(request);
-        handlers.response({ url: request.url, request: () => request, status: () => 503,
+        handlers.response({ url: request.url, request: () => request, status: () => responseStatus,
           headers: () => ({ 'content-length': contentLength }) });
         if (finished) handlers.requestfinished(request);
       }
@@ -100,7 +101,7 @@ function collector({ navigationFailure = false, contextFailure = false, cdpFailu
       }
     };
   } };
-  return { chromium, closed: () => closed, launched: () => launched };
+  return { chromium, closed: () => closed, launched: () => launched, sizeReads: () => sizeReads };
 }
 async function analyze(base) {
   return fetch(base + '/analyze/runtime', { method: 'POST',
@@ -194,6 +195,29 @@ test('repeated requests to the same URL each contribute their own transfer size'
   assert.equal(report.network.requests, 2);
   assert.equal(report.network.totalBytesEstimated, 300);
   assert.deepEqual(report.network.topLargest.map(item => item.bytes), [200, 100]);
+});
+
+test('300 observed responses remain measurable within the transfer budget', async t => {
+  const fake = collector({ responseSizes: Array(300).fill(1) });
+  const response = await analyze(await serverFor(t, fake.chromium));
+  assert.equal(response.status, 200);
+  const report = await response.json();
+  assert.equal(report.network.totalBytesEstimated, 300);
+  assert.equal(fake.sizeReads(), 300);
+});
+
+test('redirect response floods cancel collection and bound pending size reads', async t => {
+  // Redirect hops emit responses without another route callback.
+  const fake = collector({ responseSizes: Array(1000).fill(0), responseStatus: 302 });
+  const base = await serverFor(t, fake.chromium);
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const response = await analyze(base);
+    assert.equal(response.status, 504);
+    assert.deepEqual(await response.json(), { error: 'Analysis timeout' });
+    assert.equal(fake.sizeReads(), 300 * (attempt + 1));
+  }
+  assert.equal(fake.launched(), 3, 'Cancelled collections release both admission slots');
+  assert.ok(fake.closed() >= 3);
 });
 
 test('unfinished bodies and failed size reads remain unknown even with Content-Length', async t => {
