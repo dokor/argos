@@ -227,6 +227,12 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-failsafe-plugin</artifactId>
                         <version>3.5.4</version>
+                        <configuration>
+                            <includes><include>**/*IT.java</include></includes>
+                            <!-- The browser job explicitly selects this suite with -Dit.test. -->
+                            <excludes><exclude>**/ControlledAuditE2eIT.java</exclude></excludes>
+                            <failIfNoTests>true</failIfNoTests>
+                        </configuration>
                         <executions><execution><goals><goal>integration-test</goal><goal>verify</goal></goals></execution></executions>
                     </plugin>
                 </plugins>
