@@ -76,6 +76,20 @@ test('opportunities, unknown keys, low confidence, aggregate scores and unmeasur
   assert.deepEqual(evaluateReports(partial, partial).findings, []);
 });
 
+test('informational diagnostics cannot become tickets even in historical critical findings', () => {
+  for (const [id, categoryKey] of [
+    ['html.meta.robots.present', 'seo'],
+    ['http.protocol.version', 'performance'],
+    ['http.headers.compression', 'performance'],
+    ['http.headers.caching', 'performance'],
+  ]) {
+    const r = report([{ ...issue, id, categoryKey, severity: 'critical' }]);
+    assert.deepEqual(evaluateReports(r, r), { outcome: 'GO', findings: [] });
+    assert.throws(() => ticketInput(evidence([{ key: id, domain: categoryKey, severity: 'critical' }]),
+      sha, 'console-web'), ControlError);
+  }
+});
+
 test('insufficient/absent coverage, anti-bot, changed target or fingerprints are technical failures', () => {
   for (const mutate of [r => { r.scores.coverage = null; }, r => { r.antiBot = { detected: true }; },
     r => { r.scores.coverage.domains.pop(); }, r => { r.scores.coverage.global.ratio = 0.79; },

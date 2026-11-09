@@ -21,21 +21,26 @@ public final class MeasurementAvailability {
         AuditModuleResult module = modules.get(source);
         if (module == null) return new Decision(State.UNAVAILABLE, "MEASUREMENT_SOURCE_MISSING", source, sources);
         Decision explicit = explicit(check.details(), source, sources);
-        if (explicit != null) return explicit;
-        explicit = explicit(module.data(), source, sources);
-        if (explicit != null) return explicit;
+        if (explicit != null && explicit.state() != State.NOT_APPLICABLE) return explicit;
+        Decision moduleDecision = explicit(module.data(), source, sources);
+        if (moduleDecision != null && moduleDecision.state() != State.NOT_APPLICABLE) return moduleDecision;
+        if (explicit == null) explicit = moduleDecision;
         if (MeasurementCoverageService.transportUnavailable(module))
             return new Decision(State.UNAVAILABLE, "HTTP_TRANSPORT_UNAVAILABLE", source, sources);
+        if (MeasurementCoverageService.blocked(source, check.key(), antiBot))
+            return new Decision(State.BLOCKED_BY_ANTIBOT, "HTTP_CHALLENGE_OBSERVED", source, sources);
+        // An exclusion inferred from page content is only valid when that page was accessible.
+        if (explicit != null) return explicit;
         if ("http.redirect.to_https".equals(check.key()) && check.value() instanceof Map<?, ?> value
             && Boolean.FALSE.equals(value.get("inputIsHttp")))
             return new Decision(State.NOT_APPLICABLE, "INPUT_ALREADY_HTTPS", source, sources);
-        if (MeasurementCoverageService.blocked(source, check.key(), antiBot))
-            return new Decision(State.BLOCKED_BY_ANTIBOT, "HTTP_CHALLENGE_OBSERVED", source, sources);
-        if (check.status() != AuditStatus.INFO || check.value() != null)
+        // INFO is not a quality verdict. A value can be diagnostic or only partially collected;
+        // only a justified NOT_APPLICABLE state may remove an expected scoring check.
+        if (check.status() != AuditStatus.INFO)
             return new Decision(State.MEASURED,
                 "ssl".equals(source) && check.details() != null && Boolean.TRUE.equals(check.details().get("endpointCoveragePartial"))
                     ? "SSL_ENDPOINTS_PARTIALLY_MEASURED" : "CHECK_OBSERVED", source, sources);
-        return new Decision(State.UNAVAILABLE, "MEASUREMENT_MISSING", source, sources);
+        return new Decision(State.UNAVAILABLE, check.value() == null ? "MEASUREMENT_MISSING" : "QUALITY_NOT_EVALUATED", source, sources);
     }
 
     private static Decision explicit(Map<String, Object> data, String source, List<String> sources) {

@@ -6,7 +6,7 @@ import java.util.*;
 import static com.dokor.argos.services.analysis.scoring.MeasurementCoverage.*;
 
 public final class MeasurementCoverageService {
-    public static final String VERSION = "weighted-coverage-v3";
+    public static final String VERSION = "weighted-coverage-v4";
     public static final double THRESHOLD = 0.8;
     private MeasurementCoverageService() {}
     public static boolean antiBot(List<AuditModuleResult> modules) {
@@ -43,7 +43,7 @@ public final class MeasurementCoverageService {
                     false, 0, List.of(), null, Map.of(), null, null);
                 decision = MeasurementAvailability.resolve(byModule.get(owner), missing, byModule, antiBot);
                 if ("MEASUREMENT_MISSING".equals(decision.reason())) {
-                    boolean conditional = Set.of("http.errors", "http.antibot.challenge").contains(key)
+                    boolean conditional = "http.errors".equals(key)
                         && observed.containsKey("http.final_url.https");
                     decision = new MeasurementAvailability.Decision(conditional ? State.NOT_APPLICABLE : State.UNAVAILABLE,
                         conditional ? "CONDITIONAL_SIGNAL_ABSENT" : "CHECK_MISSING", null, List.of());

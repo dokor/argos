@@ -40,6 +40,18 @@ import static org.mockito.Mockito.when;
  * du résultat HTTP vers l'{@link AuditContext}.
  */
 class HttpModuleAnalyzerTest {
+    @Test void http2OnPlainHttpIsExplicitlyNonApplicable() throws Exception {
+        var module = new HttpModuleAnalyzer(stubClient(resp(200, "<html></html>"), resp(404, ""), resp(404, "")))
+            .analyze(new AuditContext("http://example.com", "http://example.com", 1), LoggerFactory.getLogger("test"));
+        var check = checkByKey(module, "http.protocol.http2");
+        assertEquals("NOT_APPLICABLE", check.details().get("measurementState"));
+        assertEquals("HTTPS_REQUIRED", check.details().get("measurementReason"));
+        var policy = new DefaultScorePolicy();
+        var coverage = MeasurementCoverageService.compute(policy, List.of(module));
+        assertEquals(MeasurementCoverage.State.NOT_APPLICABLE,
+            coverage.checks().stream().filter(c -> c.key().equals(check.key())).findFirst().orElseThrow().state());
+    }
+
     @Test void targetedNavigationRepairsRemoveOnlyTheirOwnFindings() throws Exception {
         for (boolean fixed : new boolean[]{false,true}) {
             var client=mock(HttpClient.class);
@@ -106,7 +118,7 @@ class HttpModuleAnalyzerTest {
         assertEquals("HEADER_ABSENT", ((com.dokor.argos.services.analysis.model.FindingDetection)reportOnly.details().get("detection")).result());
     }
 
-    @Test void inspectedAbsentHeadersAreMeasuredWithoutQualityPoints() throws Exception {
+    @Test void optionalHeadersRemainInformationalWithoutCoverageOrQualityPoints() throws Exception {
         var module = fixtureAnalysis(200, "<html><title>Example</title></html>", Map.of("content-type", List.of("text/html")));
         var policy = new DefaultScorePolicy();
         var coverage = MeasurementCoverageService.compute(policy, List.of(module));
@@ -116,13 +128,17 @@ class HttpModuleAnalyzerTest {
             assertEquals(false, check.details().get("present"));
             assertNotNull(check.value());
             assertEquals(AuditStatus.INFO, check.status());
-            assertEquals(MeasurementCoverage.State.MEASURED, coverage.checks().stream().filter(c -> c.key().equals(key)).findFirst().orElseThrow().state());
+            assertTrue(coverage.checks().stream().noneMatch(c -> c.key().equals(key)));
             assertFalse(checkByKey(enriched.getFirst(), key).scorable());
         }
+        var withHeaders = fixtureAnalysis(200, "<html><title>Example</title></html>", Map.of(
+            "content-type", List.of("text/html"), "content-encoding", List.of("gzip"),
+            "server", List.of("Example"), "cache-control", List.of("max-age=60"), "expires", List.of("0")));
+        assertEquals(coverage, MeasurementCoverageService.compute(policy, List.of(withHeaders)));
         var blocked = fixtureAnalysis(403, "Checking your browser before accessing the site", Map.of());
-        assertTrue(MeasurementCoverageService.compute(policy, List.of(blocked)).checks().stream()
-            .filter(c -> List.of("http.headers.compression", "http.headers.server").contains(c.key()))
-            .allMatch(c -> c.state() == MeasurementCoverage.State.BLOCKED_BY_ANTIBOT));
+        assertEquals(MeasurementCoverage.State.BLOCKED_BY_ANTIBOT,
+            MeasurementCoverageService.compute(policy, List.of(blocked)).checks().stream()
+                .filter(c -> c.key().equals("http.security.csp")).findFirst().orElseThrow().state());
     }
 
     private final HttpModuleAnalyzer analyzer = new HttpModuleAnalyzer();

@@ -519,7 +519,7 @@ public class HtmlModuleAnalyzer {
                 0.0,            // weight filled later
                 List.of(),      // tags filled later
                 Map.of("imgCount", 0, "missingAltCount", 0),
-                Map.of("imgCount", 0),
+                Map.of("imgCount", 0, "measurementState", "NOT_APPLICABLE", "measurementReason", "NO_IMAGES"),
                 "Aucune image détectée.",
                 null
             );
@@ -578,7 +578,7 @@ public class HtmlModuleAnalyzer {
                 0.0,            // weight filled later
                 List.of(),      // tags filled later
                 Map.of("anchorCount", 0, "noHrefCount", 0),
-                Map.of("anchorCount", 0),
+                Map.of("anchorCount", 0, "measurementState", "NOT_APPLICABLE", "measurementReason", "NO_ANCHORS"),
                 "Aucun lien détecté.",
                 null
             );

@@ -16,6 +16,26 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 class HtmlModuleAnalyzerTest {
+    @Test void pageWithoutImagesOrLinksExplicitlyExcludesThoseChecksFromCoverage() {
+        var module = html("<html><head><title>Example page</title></head><body><p>Text only</p></body></html>");
+        var policy = new DefaultScorePolicy();
+        var enriched = new ScoreEnricherService(policy).enrich(List.of(module));
+        var coverage = MeasurementCoverageService.compute(policy, enriched);
+        for (String key : List.of("html.images.alt_coverage", "html.anchors.href_coverage")) {
+            assertEquals("NOT_APPLICABLE", check(module, key).details().get("measurementState"));
+            assertNotNull(check(module, key).details().get("measurementReason"));
+            assertFalse(check(enriched.getFirst(), key).scorable());
+            assertEquals(MeasurementCoverage.State.NOT_APPLICABLE,
+                coverage.checks().stream().filter(c -> c.key().equals(key)).findFirst().orElseThrow().state());
+        }
+        var score = new ScoreService(policy).compute(policy.version(), policy.fingerprint(), enriched);
+        assertEquals(score.checks().stream().mapToDouble(ScoredCheck::weight).sum(), coverage.global().measuredWeight());
+        var blocked = MeasurementCoverageService.compute(policy, List.of(module,
+            new AuditModuleResult("http", "HTTP", null, Map.of("antiBotDetected", true), List.of())));
+        assertTrue(blocked.checks().stream().filter(c -> c.module().equals("html"))
+            .allMatch(c -> c.state() == MeasurementCoverage.State.BLOCKED_BY_ANTIBOT));
+    }
+
     @Test void observedSelectorsResolveOnlyTheFailingElementsWithoutTheirPrivateContent() throws Exception {
         String source="<html><body><main><img alt='ok'><img src='private?secret=x'><a href='/ok'>ok</a><a>private label</a></main></body></html>";
         var document=org.jsoup.Jsoup.parse(source);

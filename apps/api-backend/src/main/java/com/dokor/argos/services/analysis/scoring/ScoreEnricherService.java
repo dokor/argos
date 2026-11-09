@@ -2,7 +2,6 @@ package com.dokor.argos.services.analysis.scoring;
 
 import com.dokor.argos.services.analysis.model.AuditCheckResult;
 import com.dokor.argos.services.analysis.model.AuditModuleResult;
-import com.dokor.argos.services.analysis.model.enums.AuditStatus;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.slf4j.Logger;
@@ -61,11 +60,6 @@ public class ScoreEnricherService {
     }
 
     private AuditCheckResult enrichCheck(String moduleId, AuditCheckResult check) {
-        // INFO => non scoré
-        if (check.status() == AuditStatus.INFO) {
-            return withScore(check, false, 0.0, mergeTags(check.tags(), List.of(moduleId)));
-        }
-
         ScorePolicy.ScoreRule rule = scorePolicy.ruleFor(moduleId, check.key());
         List<String> category = scorePolicy.businessCategoryFor(moduleId, check.key(), check.tags())
             .map(List::of)
