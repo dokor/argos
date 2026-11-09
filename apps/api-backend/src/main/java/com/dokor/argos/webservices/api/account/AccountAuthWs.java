@@ -75,12 +75,8 @@ public class AccountAuthWs {
 
     private String mutation(String action, String email) {
         String token = csrf.require(request());
-        rate.check(action, email, remote(nativeRequests.get()));
+        rate.checkRequest(action, email, nativeRequests.get());
         return token;
-    }
-
-    public static String remote(org.glassfish.grizzly.http.server.Request request) {
-        return request == null ? "direct" : request.getRemoteAddr();
     }
 
     public static Response ok(Object entity) {
@@ -238,7 +234,7 @@ public class AccountAuthWs {
             @PathParam("provider") String provider,
             @QueryParam("state") String state,
             @QueryParam("code") String code) {
-        rate.check("oauth", null, remote(nativeRequests.get()));
+        rate.checkRequest("oauth", null, nativeRequests.get());
         var cookie = request().getCookies().get(AccountCsrf.COOKIE);
         var result =
                 oauth.finish(

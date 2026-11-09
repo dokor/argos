@@ -15,6 +15,8 @@ services:
     environment:
       - NODE_ENV=production
       - ACCOUNT_ORIGIN=https://argos.lelouet.fr
+      # Supply via Compose --env-file as well as Java's mounted configuration.
+      - ARGOS_ACCOUNT_PROXY_SECRET=${ARGOS_ACCOUNT_PROXY_SECRET:-}
     labels:
       - traefik.enable=true
       - traefik.docker.network=proxy
@@ -29,6 +31,9 @@ services:
       - traefik.http.routers.console-web-api.service=console-web
       - traefik.http.routers.console-web-api.priority=200
       - traefik.http.routers.console-web-api.tls.options=modern@file
+      - traefik.http.routers.console-web-api.middlewares=argos-account-proxy
+      # Overwrite any browser value. Empty secret disables client attribution safely.
+      - traefik.http.middlewares.argos-account-proxy.headers.customrequestheaders.X-Argos-Edge-Key=${ARGOS_ACCOUNT_PROXY_SECRET:-}
 
       # Account authentication: edge budget per TCP client, Java retains persistent quotas.
       - traefik.http.routers.argos-account-auth.rule=Host(`argos.lelouet.fr`) && PathPrefix(`/api/account/auth/`)
@@ -38,7 +43,7 @@ services:
       - traefik.http.routers.argos-account-auth.tls.options=modern@file
       - traefik.http.routers.argos-account-auth.service=console-web
       - traefik.http.routers.argos-account-auth.priority=210
-      - traefik.http.routers.argos-account-auth.middlewares=argos-account-auth-limit
+      - traefik.http.routers.argos-account-auth.middlewares=argos-account-auth-limit,argos-account-proxy
       - traefik.http.middlewares.argos-account-auth-limit.ratelimit.average=60
       - traefik.http.middlewares.argos-account-auth-limit.ratelimit.period=15m
       - traefik.http.middlewares.argos-account-auth-limit.ratelimit.burst=10
@@ -88,7 +93,7 @@ services:
       - traefik.http.routers.argos-feedback-write.tls.options=modern@file
       - traefik.http.routers.argos-feedback-write.service=console-web
       - traefik.http.routers.argos-feedback-write.priority=210
-      - traefik.http.routers.argos-feedback-write.middlewares=argos-feedback-limit
+      - traefik.http.routers.argos-feedback-write.middlewares=argos-feedback-limit,argos-account-proxy
       - traefik.http.middlewares.argos-feedback-limit.ratelimit.average=5
       - traefik.http.middlewares.argos-feedback-limit.ratelimit.period=15m
       - traefik.http.middlewares.argos-feedback-limit.ratelimit.burst=3
