@@ -10,7 +10,8 @@
   },
   "dependencies": {
     "express": "^4.19.2",
-    "playwright": "1.63.0"
+    "playwright": "1.63.0",
+    "tldts": "7.4.19"
   },
   "engines": {
     "node": ">=22.19.0"
