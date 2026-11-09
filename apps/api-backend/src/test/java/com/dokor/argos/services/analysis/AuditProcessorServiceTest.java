@@ -606,7 +606,7 @@ class AuditProcessorServiceTest {
                 when(runs.fail(1L,"AUDIT_PROCESSING_FAILED","synthetic-worker")).thenReturn(true);
                 processor.process(1);
                 verify(runs).fail(1L,"AUDIT_PROCESSING_FAILED","synthetic-worker");
-                verify(runs).failRunningModules(1L);
+                verify(runs).failRunningModules(1L, "synthetic-worker");
             }
         }
         @Test void globalDeadlinePublishesObtainedResultsSkipsRemainingWorkAndLeavesNoRunningModule() throws Exception {

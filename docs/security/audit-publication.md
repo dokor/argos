@@ -16,6 +16,16 @@ errors; the processor records FAILED (only for its own RUNNING claim), instead o
 leaving COMPLETED without a report. A retry must own a RUNNING claim; it uses the
 original persisted credential hash and never creates another public token.
 
+Recovery uses only `AuditRunDao.recoverStuck`: it locks the row and compares the
+observed claim and start time before requeueing or failing it. Requeue and progress
+reset commit together, preserving the execution scope and credential. A second
+reaper holding an older observation cannot change a newly claimed attempt.
+Every worker progress transition, including failure cleanup, requires the claim
+captured at dispatch; a missing claim never authorizes a write. There is no separate
+unfenced progress reset or recovery API. `AuditClaimIT` covers overlapping reapers,
+a worker waiting for the recovery commit, and stale progress/failure writes racing
+with the new worker on real MariaDB.
+
 Domain/audit creation uses the existing unique indexes to arbitrate concurrent
 inserts. Only MariaDB/MySQL duplicate-key errors (SQLSTATE 23000, error 1062) are
 recovered: after rollback, a fresh connection reads the winning row. Other errors
