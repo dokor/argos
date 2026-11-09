@@ -34,7 +34,8 @@ class UrlNormalizerTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"/a%2Fb?value=x%26y", "/a%3Fb?x=%3D%23%25", "/caf%C3%A9?x=1&x=2"})
+    @ValueSource(strings = {"/a%2Fb?value=x%26y", "/a%3Fb?x=%3D%23%25", "/caf%C3%A9?x=1&x=2",
+        "/a%2Fb?x=a%26b%3Dc", "/a%252Fb?x=%2526%253D", "/a%2fb?x=%2b+%20&x="})
     void encodedComponentsPreserveTheRequestedResource(String suffix) {
         String expected = "https://example.com" + suffix;
         assertEquals(expected, normalizer.normalize(expected));
@@ -54,6 +55,21 @@ class UrlNormalizerTest {
         assertThrows(IllegalArgumentException.class, () -> mixed.normalize("https://example.com"));
         assertThrows(IllegalArgumentException.class, () -> new UrlNormalizer(host -> { throw new java.net.UnknownHostException(); }).normalize("https://example.com"));
         assertThrows(IllegalArgumentException.class, () -> new UrlNormalizer(host -> new InetAddress[0]).normalize("https://example.com"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"fc00::1", "fd00::1234", "fdff:ffff:ffff:ffff:ffff:ffff:ffff:ffff",
+        "::ffff:10.0.0.1", "fe80::1"})
+    void privateIpv6DnsAnswersAreRejectedEvenAlongsidePublicAnswers(String privateIp) throws Exception {
+        var privateAddress = InetAddress.getByName(privateIp);
+        var publicAddress = InetAddress.getByName("2606:4700:4700::1111");
+        assertTrue(UrlNormalizer.isBlockedAddress(privateAddress));
+        for (var answers : new InetAddress[][]{{privateAddress}, {publicAddress, privateAddress}, {privateAddress, publicAddress}}) {
+            var normalizer = new UrlNormalizer(host -> answers);
+            assertThrows(IllegalArgumentException.class, () -> normalizer.normalize("https://example.com"));
+        }
+        assertEquals("https://example.com", new UrlNormalizer(host -> new InetAddress[]{publicAddress})
+            .normalize("https://example.com"));
     }
 
     @ParameterizedTest @ValueSource(strings = {"https://u:p@example.com", "https://@example.com", "https://example.com:",

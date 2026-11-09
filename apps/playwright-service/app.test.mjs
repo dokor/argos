@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { once } from 'node:events';
+import { gzipSync, deflateSync } from 'node:zlib';
 import { createRuntimeApp } from './app.mjs';
 
 async function serverFor(t, chromium) {
@@ -9,6 +10,24 @@ async function serverFor(t, chromium) {
   t.after(() => new Promise(resolve => { server.close(resolve); server.closeAllConnections(); }));
   return 'http://127.0.0.1:' + server.address().port;
 }
+
+test('malformed compressed JSON cannot crash the collector before route validation', async t => {
+  let launches = 0;
+  const base = await serverFor(t, { launch: async () => { launches++; throw new Error('Must not launch'); } });
+  for (const [encoding, compress] of [['gzip', gzipSync], ['deflate', deflateSync]]) {
+    // Invalid analysis URL prevents a browser launch even if a decompressor accepts trailing data.
+    const compressed = compress(Buffer.from('{"url":"file:///private"}'));
+    for (const body of [Buffer.concat([compressed, Buffer.from('invalid trailing compressed data')]),
+      compressed.subarray(0, compressed.length - 4)]) {
+      const response = await fetch(base + '/analyze/runtime', { method: 'POST',
+        headers: { 'content-type': 'application/json', 'content-encoding': encoding }, body });
+      assert.equal(response.status, 400);
+      assert.match((await response.json()).error, /^Invalid (request|URL)$/);
+      assert.equal((await fetch(base + '/health')).status, 200);
+    }
+  }
+  assert.equal(launches, 0);
+});
 function collector({ navigationFailure = false, contextFailure = false, cdpFailure = null,
   jsCount = 1, contentLength = '321', failureCount = 1, finalUrl = 'https://www.example.co.uk/final',
   responseSizes = [321], sizeFailure = false, sizeDelay = 0, finished = true, sizeStall = false,

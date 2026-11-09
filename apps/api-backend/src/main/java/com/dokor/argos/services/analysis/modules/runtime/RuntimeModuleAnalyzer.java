@@ -218,9 +218,14 @@ public class RuntimeModuleAnalyzer {
         data.put("available", true);
         boolean timingsPartial = r.timings() == null || r.timings().domContentLoadedMs() == null || r.timings().loadMs() == null;
         String navigationStatus = r.navigation() != null && r.navigation().status() != null ? r.navigation().status() : "UNKNOWN";
+        // Older collectors have no navigation status. Both completed timing events are
+        // required before their zero counters can establish the absence of defects.
+        boolean legacyCompleted = r.navigation() == null && !timingsPartial
+            && r.timings().domContentLoadedMs() >= 0 && r.timings().loadMs() >= r.timings().domContentLoadedMs();
+        boolean navigationCompleted = "COMPLETED".equals(navigationStatus) || legacyCompleted;
         // An interrupted navigation can establish a defect, never the absence of defects.
         // Retain the observation but exclude its unsupported positive conclusion from scoring.
-        if (r.navigation() != null && !"COMPLETED".equals(navigationStatus)) {
+        if (!navigationCompleted) {
             checks.replaceAll(c -> {
                 if (c.status() != AuditStatus.PASS) return c;
                 var details = new LinkedHashMap<String, Object>(c.details());
@@ -233,7 +238,7 @@ public class RuntimeModuleAnalyzer {
         }
         data.put("navigation", nullableMap("status", navigationStatus,
             "reason", r.navigation() != null ? r.navigation().reason() : "LEGACY_RESPONSE"));
-        data.put("partial", timingsPartial || (r.navigation() != null && !"COMPLETED".equals(navigationStatus))
+        data.put("partial", timingsPartial || !navigationCompleted
             || r.console() == null || consoleTotal == null || r.console().warnings() == null
             || r.jsErrors() == null || r.jsErrors().count() == null
             || r.network() == null || failedTotal == null || serverTotal == null
