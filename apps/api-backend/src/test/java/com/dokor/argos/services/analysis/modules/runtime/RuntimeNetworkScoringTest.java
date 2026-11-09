@@ -99,7 +99,7 @@ class RuntimeNetworkScoringTest {
     }
 
     @ParameterizedTest
-    @ValueSource(ints = {11, 13})
+    @ValueSource(ints = {11, 13, 14})
     void frozenPreviousReportIsNotRecalculatedOrComparedWithCurrentPolicy(int previousVersion) throws Exception {
         var current = new PublicReportComposer().compose(audit(true, 120, 3_000_000, true));
         var mapper = new ObjectMapper();
@@ -111,7 +111,7 @@ class RuntimeNetworkScoringTest {
         String frozen = mapper.writeValueAsString(historicalJson);
         var historical = mapper.readValue(frozen, ReportDto.class);
 
-        assertEquals(14, current.scores().calculation().scoringVersion());
+        assertEquals(15, current.scores().calculation().scoringVersion());
         var comparison = AuditComparisonService.compare(historical, current);
         assertEquals(AuditComparisonService.Reason.METHODOLOGY_CHANGED, comparison.reason());
         assertNull(comparison.globalDelta());

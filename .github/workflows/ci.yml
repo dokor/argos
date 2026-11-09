@@ -233,11 +233,12 @@ jobs:
             GRANT ALL PRIVILEGES ON argos_domain_cache_test.* TO 'argos_fixture'@'%';
             GRANT ALL PRIVILEGES ON argos_querydsl_test.* TO 'argos_fixture'@'%';
           "
+      - name: Test integration execution guard
+        run: python3 ../../scripts/ci/check-integration-reports-test.py
       - name: Run MariaDB integration tests
-        run: >-
-          mvn --batch-mode -P mariadb-integration
-          -Dit.test=AdminStatisticsIT,ProblemStatisticsIT,PremiumWaitlistIT,AuditScopeIT,NotificationsIT,ReportSharingMigrationIT,ClarteFreshStartMigrationIT,ConnectedModelIT,AccountLifecycleIT,AccountSessionSecurityIT,AccountSecurityMigrationIT,ReportCredentialMigrationIT,AuditPublicationIT,AuditUrlIdentityIT,AccountJourneyIT,ProductAnalyticsIT,ReportRetentionIT,AuditClaimIT,NewsletterPrivacyIT,AuditRunProgressIT,DomainAnalysisConcurrencyIT,AuditAdmissionIT,UsageIT,UsageTimelineIT,DiscoveryIT,BatchIT,DiagnosticMigrationIT,CanonicalCountsMigrationIT,OverviewIT
-          verify
+        run: mvn --batch-mode -P mariadb-integration verify
+      - name: Verify every MariaDB suite executed
+        run: python3 ../../scripts/ci/check-integration-reports.py mariadb
       - name: Verify packaged startup and explicit QueryDSL preview
         env:
           QUERYDSL_SMOKE_JDBC_URL: jdbc:mariadb://127.0.0.1:3306/argos_querydsl_test
@@ -333,6 +334,8 @@ jobs:
           JS
       - name: Run real database and browser lifecycle
         run: mvn --batch-mode -f apps/api-backend/pom.xml -P mariadb-integration -Dit.test=ControlledAuditE2eIT verify
+      - name: Verify only the controlled E2E suite executed
+        run: python3 scripts/ci/check-integration-reports.py controlled-e2e
       - name: Rehearse consistent backup and isolated restore
         env:
           DB_FIXTURE_CONTAINER: ${{ job.services.mariadb.id }}
