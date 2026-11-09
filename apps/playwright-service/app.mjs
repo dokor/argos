@@ -4,6 +4,8 @@ import { analysisUrl } from './policy.mjs';
 import { proxyEndpoint, browserFlags, protectContext, safeOrigin } from './browser-policy.mjs';
 import { partitionNetworkErrors, isFirstPartyUrl } from './domain.mjs';
 
+const MAX_OBSERVED_TRANSFERS = 300;
+
 export function isValidAnalysisUrl(value) {
   try { analysisUrl(value); return true; } catch { return false; }
 }
@@ -143,6 +145,13 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
 
       page.on('response', (response) => {
         if (!collecting) return;
+        // Redirect hops need not pass through route() again.
+        // Bound retained Request objects and their pending size reads independently.
+        if (transfers.size >= MAX_OBSERVED_TRANSFERS) {
+          collecting = false;
+          cancel();
+          return;
+        }
         const url = response.url();
         const status = response.status();
         if (status >= 400 && status < 500) status4xx++;
