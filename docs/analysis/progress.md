@@ -40,7 +40,7 @@ flowchart LR
 
 Un snapshot HTTP indisponible empêche l'analyse des modules qui le consomment ;
 SSL peut encore diagnostiquer le certificat du hostname initial. Seuls les modules
-sélectionnés par le périmètre du run sont exécutés. Tech conserve son cache.
+sélectionnés par le périmètre du run sont exécutés. Tech conserve ses règles de fraîcheur.
 
 `audit.execution.max-concurrent-modules` borne les modules actifs dans cette
 instance backend. La valeur est explicitement choisie après mesure de la capacité
@@ -48,8 +48,8 @@ du serveur ; le nombre de CPU ne déclenche aucune augmentation automatique.
 
 | Valeur | Exécution après HTTP | Usage |
 | --- | --- | --- |
-| **1 (défaut)** | Tous les modules séquentiels dans l'ordre du catalogue ; aucun pool distant créé | Baseline et repli Raspberry |
-| 2 | Un worker local et un worker distant ; SSL attend derrière Observatory | Premier palier à mesurer |
+| **1 (défaut HOCON)** | Tous les modules séquentiels dans l'ordre du catalogue ; aucun pool distant créé | Baseline et repli Raspberry |
+| **2 (Compose production)** | SSL démarre sur le worker distant dès la fin de HTTP ; HTML, Runtime, Lighthouse, Observatory, ZAP et Tech avancent sur le worker local | Chevauchement des attentes réseau SSL |
 | 3 | Un worker local et deux workers distants | Ancien pilote #236, à activer seulement après mesure |
 
 Une valeur hors de 1..3 est refusée à la construction. Le pool distant partagé
@@ -59,15 +59,23 @@ sur le worker local. Aucun palier ne parallélise les navigateurs, ni les runs d
 scheduler. Un appel tiers ignorant l'interruption peut continuer à occuper son
 worker ; aucun thread de remplacement ne contourne cette borne.
 
+Au palier 2, Observatory ne consomme pas son budget dans une queue derrière SSL :
+il reste local quand SSL est sélectionné. Si le périmètre exclut SSL, Observatory
+utilise le worker distant disponible. Au palier 3, les deux fournisseurs démarrent
+après HTTP. Dans les deux cas, tous les modules locaux sélectionnés terminent
+avant l'attente des résultats distants : SSL ne bloque plus ZAP ni Tech.
+
 Le rapport assemble les résultats et statuts dans l'ordre historique, quel que
 soit l'ordre de fin, et effectue une seule tentative de publication par traitement.
 L’atomicité globale est décrite dans [la publication](../security/audit-publication.md).
 
 `audit.remote-modules.timeout` règle le délai par appel distant, queue comprise
-(défaut : 2 minutes, durée strictement positive). En parallèle, les deadlines
-démarrent à la soumission, y compris pour la tâche en queue au palier 2 ; attendre
-le premier résultat ne donne pas un nouveau budget au second. En séquentiel, le
-budget distant démarre au tour du module sur le worker local. Dans tous les modes,
+(défaut : 2 minutes, durée strictement positive). Pour les tâches soumises au pool
+distant, les deadlines démarrent à la soumission, queue comprise ; attendre un
+résultat ne réinitialise aucun budget. Chaque worker reçoit sa deadline enfant,
+bornée par le délai distant et la collecte, avant tout appel HTTP ou poll.
+Pour un fournisseur exécuté localement (dont Observatory au palier 2 avec SSL),
+le budget distant démarre au tour du module. Dans tous les modes,
 `audit.timeout` (120 s par défaut) borne la collecte et réserve le temps de
 publication selon le [contrat de deadline](deadline.md).
 Une expiration annule la tâche et produit un résultat indisponible,
@@ -79,6 +87,8 @@ Java sont interruptibles ; un code tiers ignorant l'interruption ne crée pas de
 thread supplémentaire et reste limité par le pool. Une annulation du run ferme
 les tâches distantes sans publication. Les logs `audit_execution` et le champ
 `meta.maxConcurrentModules` permettent d'identifier le palier d'une mesure.
+La méthode figée contient aussi `remoteScheduling=ssl-priority-independent-local-v1`
+aux paliers 2 et 3, pour distinguer cet ordonnancement des mesures historiques.
 
 Pour un fichier externe HOCON, ces clés peuvent être surchargées séparément :
 
@@ -88,14 +98,19 @@ audit.timeout = 120s
 audit.remote-modules.timeout = 2m
 ```
 
-Revenir à 1 et redémarrer le backend constitue le repli séquentiel. Ne pas changer
+En production, Compose fixe le palier via la propriété JVM
+`ARGOS_AUDIT_MAX_CONCURRENT_MODULES` (défaut 2), prioritaire sur HOCON.
+Définir cette variable à 1 et recréer le backend constitue le repli séquentiel.
+Hors Compose, régler la clé HOCON à 1 et redémarrer le backend. Ne pas changer
 les budgets, pools HTTP/DB et concurrence simultanément pendant une comparaison.
 
 ## Mesures avant activation sur Raspberry
 
 Le dimensionnement matériel reste **à mesurer**. Les tests locaux et la CI ne
-prouvent pas la capacité du Pi. La livraison garde donc le palier 1 ; une future
-concurrence browser exige un lot séparé et de nouvelles mesures.
+prouvent pas la capacité du Pi. Compose prépare le palier 2 ; sa présence dans le
+dépôt ne prouve ni son déploiement ni un gain sur le Pi. Voir le
+[diagnostic de latence et la comparaison contrôlée](../performance/audit-latency.md).
+Une future concurrence browser exige un lot séparé et de nouvelles mesures.
 
 Sur un Pi de staging autorisé, conserver SHA, modèle/CPU/RAM, limites Docker,
 options JVM, versions des collecteurs et réglages effectifs. Reprendre le protocole
@@ -140,7 +155,9 @@ de #212 reste ouverte ; cette procédure ne constitue pas un déploiement.
 
 `mvn test` couvre le pool, saturation, deadline, annulation, contexte MDC,
 ordonnancement et publication unique via fixtures. La synchronisation par latch
-prouve le chevauchement SSL/Observatory avec le travail local ; aucun navigateur
+prouve le chevauchement SSL avec le travail local, et l'absence d'attente de ZAP/Tech
+derrière SSL. La fixture de parité compare mesures, score et couverture entre les
+paliers 1, 2 et 3, y compris les données inconnues et les pannes fournisseur ; aucun navigateur
 ou site tiers n'est exécuté. Le gain structurel est le passage de la somme des
 durées à leur chevauchement, sans promesse de latence Raspberry.
 

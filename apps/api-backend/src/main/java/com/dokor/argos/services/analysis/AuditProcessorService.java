@@ -246,22 +246,31 @@ public class AuditProcessorService {
 
             // HTTP is the dependency barrier. Only remote I/O may overlap the single local worker.
             logger.info("audit_execution maxConcurrentModules={}", remote.maxConcurrentModules());
-            AuditDeadline collectionDeadline = AuditDeadline.current();
-            try (var observatory = remote.parallelEnabled() && selectedModules.contains(AuditModule.OBSERVATORY)
-                    ? remote.submit(AuditModule.OBSERVATORY.id(), () -> collectionDeadline.call(
-                        () -> withHttpSnapshot(snapshotUnavailable, () -> observatoryModuleAnalyzer.analyze(ctx, logger))))
+            // Start the longest remote assessment first when sharing one remote worker.
+            // TLS remains independent of the HTML snapshot, including handshake failures.
+            try (var ssl = remote.parallelEnabled() && selectedModules.contains(AuditModule.SSL)
+                    ? remote.submit(AuditModule.SSL.id(), () -> sslLabsModuleAnalyzer.analyze(ctx, logger))
                     : null;
-                 // TLS assessment does not require an HTML response. In particular, a failed
-                 // certificate handshake must not suppress the independent TLS diagnosis.
-                 var ssl = remote.parallelEnabled() && selectedModules.contains(AuditModule.SSL)
-                    ? remote.submit(AuditModule.SSL.id(), () -> collectionDeadline.call(() -> sslLabsModuleAnalyzer.analyze(ctx, logger)))
+                 // With one remote worker, keep Observatory on the local lane instead of
+                 // spending its entire call budget queued behind a slow SSL assessment.
+                 var observatory = remote.parallelEnabled() && selectedModules.contains(AuditModule.OBSERVATORY)
+                        && (remote.maxConcurrentModules() > 2 || ssl == null)
+                    ? remote.submit(AuditModule.OBSERVATORY.id(),
+                        () -> withHttpSnapshot(snapshotUnavailable, () -> observatoryModuleAnalyzer.analyze(ctx, logger)))
                     : null) {
-                if (observatory != null) remoteStarted(runId, run.getClaimToken(), AuditModule.OBSERVATORY);
                 if (ssl != null) remoteStarted(runId, run.getClaimToken(), AuditModule.SSL);
+                if (observatory != null) remoteStarted(runId, run.getClaimToken(), AuditModule.OBSERVATORY);
 
-                List<AuditModuleResult> allModules = new ArrayList<>(AuditModule.ordered().size());
-                allModules.add(httpModule);
-                for (AuditModule module : AuditModule.ordered().subList(1, AuditModule.ordered().size())) {
+                Map<AuditModule, AuditModuleResult> results = new EnumMap<>(AuditModule.class);
+                results.put(AuditModule.HTTP, httpModule);
+                // Local stages only depend on HTTP. Finish them before joining remote tasks;
+                // a slow provider must not leave the local worker idle or consume their budget.
+                List<AuditModule> executionOrder = new ArrayList<>(AuditModule.ordered().subList(1, AuditModule.ordered().size()));
+                if (ssl != null) executionOrder.remove(AuditModule.SSL);
+                if (observatory != null) executionOrder.remove(AuditModule.OBSERVATORY);
+                if (ssl != null) executionOrder.add(AuditModule.SSL);
+                if (observatory != null) executionOrder.add(AuditModule.OBSERVATORY);
+                for (AuditModule module : executionOrder) {
                     if (!selectedModules.contains(module)) continue;
                     AuditModuleResult result = switch (module) {
                         case HTTP -> throw new IllegalStateException("HTTP already executed");
@@ -280,8 +289,16 @@ public class AuditProcessorService {
                         case TECH -> runModule(runId, run.getClaimToken(), module, moduleStatuses,
                             () -> withHttpSnapshot(snapshotUnavailable, () -> domainAnalysisService.runFreshTechAnalysis(ctx, logger)));
                     };
-                    allModules.add(result);
+                    results.put(module, result);
                 }
+
+                // Publication, merging and scoring keep the canonical order, independent of scheduling.
+                List<AuditModuleResult> allModules = AuditModule.ordered().stream()
+                    .filter(results::containsKey).map(results::get).toList();
+                Map<String, String> orderedStatuses = new LinkedHashMap<>();
+                for (AuditModule module : AuditModule.ordered())
+                    if (moduleStatuses.containsKey(module.id())) orderedStatuses.put(module.id(), moduleStatuses.get(module.id()));
+                moduleStatuses = orderedStatuses;
 
                 boolean degraded = moduleStatuses.values().stream()
                     .anyMatch(st -> !"COMPLETED".equals(st));
@@ -313,6 +330,7 @@ public class AuditProcessorService {
                 meta.put("generator", "argos-api-backend");
                 var methodConfiguration = new TreeMap<String, Object>(measurementConfiguration);
                 methodConfiguration.put("maxConcurrentModules", remote.maxConcurrentModules());
+                if (remote.parallelEnabled()) methodConfiguration.put("remoteScheduling", "ssl-priority-independent-local-v1");
                 methodConfiguration.put("remoteTimeoutMs", remote.timeoutBudget().toMillis());
                 if (auditModuleExecutor != null) methodConfiguration.put("collectionBudgetMs", auditModuleExecutor.collectionBudget().toMillis());
                 var method = MeasurementContract.freeze(run.getProfileSnapshot(), context.normalizedUrl(), context.finalUrl(),

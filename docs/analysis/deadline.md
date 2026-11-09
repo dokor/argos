@@ -3,7 +3,7 @@
 `audit.timeout` defaults to 120 seconds, measured monotonically from processing
 start (queue waiting is separate). Collection gets this budget minus a reserve of
 5 seconds (10% for budgets below 50 seconds) for scoring/publication. Local stages
-run in their original order on one bounded, interruptible worker. By default,
+run on one bounded, interruptible worker. With the HOCON default of 1,
 SSL/Observatory use that same sequential worker with their own per-call budget.
 An explicit capacity of 2 or 3 enables one or two remote workers, respectively;
 see [capacity and Raspberry measurements](progress.md). Expiry cancels the active Future with
@@ -19,8 +19,14 @@ publication reserve remains in place. The JVM properties take precedence over
 the mounted `prod.conf`, including `external.ssl-labs.timeout`; operators can set
 `ARGOS_AUDIT_TIMEOUT`, `ARGOS_REMOTE_MODULE_TIMEOUT` and `ARGOS_SSL_LABS_TIMEOUT`
 in the Compose environment to choose different positive durations. Keep those
-three limits consistent. This changes time bounds only; concurrency stays at its
-configured value and no historical measurement is reused.
+three limits consistent. Compose also selects capacity 2 through
+`ARGOS_AUDIT_MAX_CONCURRENT_MODULES` (set 1 and recreate the backend to roll back).
+SSL starts immediately after HTTP on the remote worker, while the local worker
+collects HTML, Runtime, Lighthouse, Observatory, ZAP and Tech before joining SSL.
+Observatory retains its own full per-call budget when its local stage starts.
+Browsers and scheduled runs remain sequential. No historical measurement is reused;
+the [latency investigation](../performance/audit-latency.md) distinguishes the
+controlled gain from production evidence.
 
 The post-deployment control allows eight minutes per sample, including queue
 waiting, and twenty minutes for readiness and two sequential samples. Operator
@@ -28,7 +34,10 @@ budgets above six minutes need a corresponding review of these control limits.
 Incomplete measurements still produce `CONTROL_FAILED`; longer bounds do not
 guarantee that an external assessment will finish.
 
-The same deadline is scoped onto every worker and caps each Java HTTP request;
+The shared collection deadline is scoped onto each local worker. Each remote
+worker receives a child bounded by both the collection deadline and its per-call
+budget at submission, including queue time. These bounds apply to HTTP requests
+and polls even before the orchestrator waits for the task result;
 redirects share a 30-second cumulative cap, and polls cannot reset the global
 budget. SSL Labs requests a fresh assessment and waits up to `ssl-labs.timeout` (90s
 by default), capped by the shared collection deadline. Polling follows the upstream
