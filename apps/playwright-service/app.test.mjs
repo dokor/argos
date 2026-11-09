@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { once } from 'node:events';
+import { runInNewContext } from 'node:vm';
 import { gzipSync, deflateSync } from 'node:zlib';
 import { createRuntimeApp } from './app.mjs';
 
@@ -31,6 +32,10 @@ test('malformed compressed JSON cannot crash the collector before route validati
 function collector({ navigationFailure = false, contextFailure = false, cdpFailure = null,
   jsCount = 1, contentLength = '321', failureCount = 1, finalUrl = 'https://www.example.co.uk/final',
   responseSizes = [321], sizeFailure = false, sizeDelay = 0, finished = true, sizeStall = false,
+  navigationEntry = navigationFailure ? null : { domContentLoadedEventEnd: 125.4, loadEventEnd: 875.8 },
+  timingFailure = false,
+  consoleUrls = ['https://assets.example.co.uk/script.js', 'https://other.test/script.js'],
+  failedUrl = 'https://assets.example.co.uk/script.js?token=private-secret',
   responseUrl = 'https://other.test/api', responseStatus = 503 } = {}) {
   let closed = 0, launched = 0, sizeReads = 0;
   const handlers = {};
@@ -41,15 +46,13 @@ function collector({ navigationFailure = false, contextFailure = false, cdpFailu
     on: (name, handler) => { handlers[name] = handler; },
     url: () => finalUrl,
     goto: async () => {
-      handlers.console({ type: () => 'error', text: () => 'fixture',
-        location: () => ({ url: 'https://assets.example.co.uk/script.js' }) });
-      handlers.console({ type: () => 'error', text: () => 'third party',
-        location: () => ({ url: 'https://other.test/script.js' }) });
+      for (const url of consoleUrls) handlers.console({ type: () => 'error', text: () => 'fixture',
+        location: () => ({ url }) });
       if (finalUrl.startsWith('https://other.test/')) handlers.console({ type: () => 'error',
         location: () => ({ url: 'https://other.test/second.js' }) });
       for (let i = 0; i < jsCount; i++) handlers.pageerror(new Error('fixture page error'));
 
-      for (let i = 0; i < failureCount; i++) handlers.requestfailed({ url: () => 'https://assets.example.co.uk/script.js?token=private-secret', resourceType: () => 'script', failure: () => ({errorText:'net::ERR_CONNECTION_RESET'}) });
+      for (let i = 0; i < failureCount; i++) handlers.requestfailed({ url: () => failedUrl, resourceType: () => 'script', failure: () => ({errorText:'net::ERR_CONNECTION_RESET'}) });
       for (const responseBodySize of responseSizes) {
         const request = { url: () => responseUrl, resourceType: () => 'fetch', method: () => 'GET',
           sizes: async () => {
@@ -66,9 +69,20 @@ function collector({ navigationFailure = false, contextFailure = false, cdpFailu
         if (finished) handlers.requestfinished(request);
       }
       if (navigationFailure) throw new Error('Timeout fixture');
-      handlers.domcontentloaded();
+      handlers.domcontentloaded?.();
       await new Promise(resolve => setTimeout(resolve, 15));
-      handlers.load();
+      handlers.load?.();
+    },
+    evaluate: async callback => {
+      assert.equal(closed, 0, 'Navigation Timing must be read before browser cleanup');
+      if (timingFailure) throw new Error('Execution context unavailable');
+      // Run the actual browser callback in an isolated realm, as Playwright does.
+      return runInNewContext(`(${callback.toString()})()`, { performance: {
+        getEntriesByType: type => {
+          assert.equal(type, 'navigation');
+          return navigationEntry ? [navigationEntry] : [];
+        }
+      } });
     },
     waitForLoadState: async () => {},
     waitForTimeout: async () => {}
@@ -104,9 +118,9 @@ function collector({ navigationFailure = false, contextFailure = false, cdpFailu
   } };
   return { chromium, closed: () => closed, launched: () => launched, sizeReads: () => sizeReads };
 }
-async function analyze(base) {
+async function analyze(base, url = 'https://example.co.uk') {
   return fetch(base + '/analyze/runtime', { method: 'POST',
-    headers: { 'content-type': 'application/json' }, body: '{"url":"https://example.co.uk"}' });
+    headers: { 'content-type': 'application/json' }, body: JSON.stringify({ url }) });
 }
 
 test('health and invalid inputs never launch Chromium', async t => {
@@ -259,6 +273,55 @@ test('console ownership follows a redirect to another registrable domain', async
   assert.equal(report.console.errorsFirstParty, 2);
   assert.equal(report.network.failedRequestsFirstParty, 0);
   assert.equal(report.network.status5xxFirstParty, 1);
+});
+
+test('redirects between private PSL tenants keep console and network ownership separate', async t => {
+  const fake = collector({ finalUrl: 'https://bob.github.io/final', jsCount: 25,
+    consoleUrls: ['https://alice.github.io/app.js', 'https://bob.github.io/app.js',
+      'https://cdn.bob.github.io/app.js'],
+    failedUrl: 'https://alice.github.io/missing.js', responseUrl: 'https://api.bob.github.io/data' });
+  const report = await (await analyze(await serverFor(t, fake.chromium), 'https://alice.github.io')).json();
+  assert.equal(report.finalUrl, 'https://bob.github.io');
+  assert.equal(report.console.errors, 3);
+  assert.equal(report.console.errorsFirstParty, 2);
+  assert.deepEqual(report.console.observedEvidence.items.map(item => item.ownership),
+    ['THIRD_PARTY', 'FIRST_PARTY', 'FIRST_PARTY']);
+  assert.equal(report.jsErrors.count, 25);
+  assert.equal(report.jsErrors.samples.length, 10);
+  assert.equal(report.network.failedRequestsFirstParty, 0);
+  assert.equal(report.network.failedRequestsThirdParty, 1);
+  assert.equal(report.network.status5xxFirstParty, 1);
+  assert.equal(report.network.status5xxThirdParty, 0);
+  assert.deepEqual(report.network.observedEvidence.items.map(item => item.ownership),
+    ['THIRD_PARTY', 'FIRST_PARTY']);
+});
+
+test('timings use browser Navigation Timing, independently of Node event delivery', async t => {
+  const fake = collector();
+  const report = await (await analyze(await serverFor(t, fake.chromium))).json();
+  assert.deepEqual(report.timings, { domContentLoadedMs: 125, loadMs: 876 });
+});
+
+test('missing or unreadable Navigation Timing stays unknown without losing other observations', async t => {
+  for (const options of [{ navigationEntry: null }, { timingFailure: true },
+    { navigationEntry: { domContentLoadedEventEnd: 0, loadEventEnd: 0 } },
+    { navigationEntry: { domContentLoadedEventEnd: NaN, loadEventEnd: -1 } }]) {
+    const fake = collector(options);
+    const response = await analyze(await serverFor(t, fake.chromium));
+    assert.equal(response.status, 200);
+    const report = await response.json();
+    assert.deepEqual(report.timings, { domContentLoadedMs: null, loadMs: null });
+    assert.equal(report.jsErrors.count, 1);
+    assert.equal(fake.closed(), 1);
+  }
+});
+
+test('an incomplete navigation retains measured DOMContentLoaded without inventing load', async t => {
+  const fake = collector({ navigationFailure: true,
+    navigationEntry: { domContentLoadedEventEnd: 150.7, loadEventEnd: 0 } });
+  const report = await (await analyze(await serverFor(t, fake.chromium))).json();
+  assert.deepEqual(report.timings, { domContentLoadedMs: 151, loadMs: null });
+  assert.deepEqual(report.navigation, { status: 'FAILED', reason: 'NAVIGATION_ERROR' });
 });
 
 test('navigation timeout returns partial observations and closes the browser', async t => {
