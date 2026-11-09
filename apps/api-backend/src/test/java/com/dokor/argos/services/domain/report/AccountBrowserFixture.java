@@ -42,6 +42,7 @@ public class AccountBrowserFixture extends MariaDbReportFixture {
     @PublicApi
     @Produces(MediaType.APPLICATION_JSON)
     public static class MailCapture implements AccountMail {
+        AccountMailOutboxService outbox;
         final Map<String, String> messages = new ConcurrentHashMap<>();
 
         @Override
@@ -52,6 +53,7 @@ public class AccountBrowserFixture extends MariaDbReportFixture {
         @GET
         @Path("/{email}")
         public Map<String, String> last(@PathParam("email") String email) {
+            outbox.tick();
             String text = messages.get(email);
             if (text == null || !text.contains("#token=")) throw new NotFoundException();
             int start = text.indexOf("http://localhost:3000/");
@@ -91,6 +93,7 @@ public class AccountBrowserFixture extends MariaDbReportFixture {
                         fixture.tokens,
                         settings,
                         clock);
+        mail.outbox = new AccountMailOutboxService(new AccountMailOutboxDao(dao), new AccountMailPayload(settings, fixture.mapper), mail, settings, clock);
         var auth =
                 new AccountAuthService(
                         dao,
@@ -98,7 +101,7 @@ public class AccountBrowserFixture extends MariaDbReportFixture {
                         sessions,
                         fixture.tokens,
                         settings,
-                        mail,
+                        mail.outbox,
                         clock);
         var auditDao = new AuditDao(transactions);
         String limit=System.getProperty("argos.usage.fixture-limit");

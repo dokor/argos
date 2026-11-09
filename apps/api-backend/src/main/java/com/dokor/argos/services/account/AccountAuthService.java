@@ -18,7 +18,7 @@ public class AccountAuthService {
     private final AccountSessionService sessions;
     private final TokenService tokens;
     private final AccountSettings settings;
-    private final AccountMail mail;
+    private final AccountMailOutboxService mail;
     private final Clock clock;
 
     @Inject
@@ -28,7 +28,7 @@ public class AccountAuthService {
             AccountSessionService sessions,
             TokenService tokens,
             AccountSettings settings,
-            AccountMail mail,
+            AccountMailOutboxService mail,
             Clock clock) {
         this.dao = dao;
         this.passwords = passwords;
@@ -161,7 +161,7 @@ public class AccountAuthService {
                     invalidateTokens(u.getId(), c);
                     sessions.revokeAll(u.getId(), null, c);
                     sessions.event("password_reset", "accepted", u.getId(), null, c);
-                    notice(u, AccountEmail.Kind.PASSWORD_CHANGED, language);
+                    notice(u, AccountEmail.Kind.PASSWORD_CHANGED, language, c);
                     return null;
                 });
     }
@@ -232,8 +232,8 @@ public class AccountAuthService {
         var ttl = settings.tokenTtl(purpose);
         t.setExpiresAt(clock.instant().plus(ttl));
         dao.save(t, c);
-        mail.send(user.getEmail(), AccountEmail.render(
-                AccountEmail.Kind.valueOf(purpose), language, settings.origin(), raw, ttl));
+        mail.enqueue(user.getEmail(), AccountEmail.render(
+                AccountEmail.Kind.valueOf(purpose), language, settings.origin(), raw, ttl), t.getId(), t.getExpiresAt(), c);
     }
 
     public void reauth(String auth, String csrf, String password, String code) {
@@ -361,7 +361,7 @@ public class AccountAuthService {
                             context.user().getId(),
                             context.session().getId(),
                             c);
-                    notice(context.user(), AccountEmail.Kind.PASSWORD_CHANGED, language);
+                    notice(context.user(), AccountEmail.Kind.PASSWORD_CHANGED, language, c);
                     return null;
                 });
     }
@@ -411,7 +411,7 @@ public class AccountAuthService {
                             context.user().getId(),
                             context.session().getId(),
                             c);
-                    notice(context.user(), AccountEmail.Kind.METHOD_REMOVED, language);
+                    notice(context.user(), AccountEmail.Kind.METHOD_REMOVED, language, c);
                     return null;
                 });
     }
@@ -479,9 +479,9 @@ public class AccountAuthService {
                 .execute();
     }
 
-    public void notice(AccountUser user, AccountEmail.Kind kind, String language) {
+    public void notice(AccountUser user, AccountEmail.Kind kind, String language, Connection c) {
         if (user.getEmail() != null && "ACTIVE".equals(user.getState()))
-            mail.send(user.getEmail(), AccountEmail.render(kind, language, settings.origin(), null, null));
+            mail.enqueue(user.getEmail(), AccountEmail.render(kind, language, settings.origin(), null, null), null, clock.instant().plus(java.time.Duration.ofDays(1)), c);
     }
 
     public static boolean duplicate(Throwable failure) {

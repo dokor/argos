@@ -20,6 +20,11 @@ public class SmtpAccountMail implements AccountMail {
 
     @Override
     public void send(String recipient, AccountEmail.Message message) {
+        send(recipient, message, null);
+    }
+
+    @Override
+    public void send(String recipient, AccountEmail.Message message, String deliveryId) {
         String host = settings.value("smtp.host", "");
         if (host.isBlank()) throw new AccountError(503, "mail_unavailable");
         try {
@@ -48,7 +53,13 @@ public class SmtpAccountMail implements AccountMail {
                                         }
                                     });
             session.setDebug(false);
-            MimeMessage m = new MimeMessage(session);
+            MimeMessage m = new MimeMessage(session) {
+                @Override
+                protected void updateMessageID() throws MessagingException {
+                    if (deliveryId == null) super.updateMessageID();
+                    else setHeader("Message-ID", "<" + deliveryId + "@argos.local>");
+                }
+            };
             m.setFrom(new InternetAddress(settings.value("smtp.from", "")));
             m.setRecipient(Message.RecipientType.TO, new InternetAddress(recipient));
             applyContent(m, message);

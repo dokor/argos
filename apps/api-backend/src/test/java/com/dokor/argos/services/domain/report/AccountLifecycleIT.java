@@ -48,6 +48,9 @@ class AccountLifecycleIT extends MariaDbReportFixture {
     static class Capture implements AccountMail {
         final List<Message> messages = new CopyOnWriteArrayList<>();
         boolean fail;
+        Runnable drain = () -> {};
+
+        List<Message> delivered() { drain.run(); return messages; }
 
         public void send(String recipient, AccountEmail.Message message) {
             if (fail) throw new AccountError(503, "mail_unavailable");
@@ -56,7 +59,7 @@ class AccountLifecycleIT extends MariaDbReportFixture {
 
         String token(String email) {
             String text =
-                    messages.stream()
+                    delivered().stream()
                             .filter(m -> m.recipient().equals(email))
                             .reduce((a, b) -> b)
                             .orElseThrow()
@@ -75,6 +78,7 @@ class AccountLifecycleIT extends MariaDbReportFixture {
     private AccountSessionService sessions;
     private AccountSessionSigner signer;
     private AccountAuthService auth;
+    private AccountMailOutboxService outbox;
     private AccountRunsService personal;
     private AccountOAuthClient oauthClient;
     private AccountOAuthService oauth;
@@ -107,7 +111,9 @@ class AccountLifecycleIT extends MariaDbReportFixture {
         signer = new AccountSessionSigner(settings, mapper, clock);
         passwords = new AccountPasswords(settings);
         sessions = new AccountSessionService(dao, signer, tokens, settings, clock);
-        auth = new AccountAuthService(dao, passwords, sessions, tokens, settings, mail, clock);
+        outbox = new AccountMailOutboxService(new AccountMailOutboxDao(dao), new AccountMailPayload(settings, mapper), mail, settings, clock);
+        mail.drain = outbox::tick;
+        auth = new AccountAuthService(dao, passwords, sessions, tokens, settings, outbox, clock);
         auditService =
                 new AuditService(
                         new AuditDao(dao.transactions),
@@ -191,7 +197,7 @@ class AccountLifecycleIT extends MariaDbReportFixture {
         assertTrue(passwords.verify(identity.getPasswordHash(), password));
         assertFalse(passwords.verify(identity.getPasswordHash(), password.strip()));
         assertEquals(0, count("ARG_ACCOUNT_SESSION"));
-        assertEquals(1, mail.messages.size());
+        assertEquals(1, mail.delivered().size());
         String token = mail.token(user.getEmail());
         var stored = dao.transaction(c -> dao.transactions.selectQuery(c)
                 .select(QAccountToken.table).from(QAccountToken.table).fetchOne());
@@ -203,7 +209,7 @@ class AccountLifecycleIT extends MariaDbReportFixture {
         assertNull(stored.getSessionId());
 
         assertNull(auth.register("NEW.USER@example.com", PASSWORD, "Replacement", "fr"));
-        assertEquals(1, mail.messages.size());
+        assertEquals(1, mail.delivered().size());
         assertEquals(1, count("ARG_ACCOUNT_USER"));
         assertEquals(1, count("ARG_ACCOUNT_IDENTITY"));
         assertEquals(1, count("ARG_ACCOUNT_TOKEN"));
@@ -223,7 +229,7 @@ class AccountLifecycleIT extends MariaDbReportFixture {
             error(400, () -> auth.register("invalid@example.com", PASSWORD, name));
         for (String table : List.of("ARG_ACCOUNT_USER", "ARG_ACCOUNT_IDENTITY", "ARG_ACCOUNT_TOKEN", "ARG_ACCOUNT_SESSION"))
             assertEquals(0, count(table), table);
-        assertTrue(mail.messages.isEmpty());
+        assertTrue(mail.delivered().isEmpty());
     }
 
     @Test
@@ -233,26 +239,46 @@ class AccountLifecycleIT extends MariaDbReportFixture {
         assertEquals(1, count("ARG_ACCOUNT_IDENTITY"));
         assertEquals(1, count("ARG_ACCOUNT_TOKEN"));
         assertEquals(0, count("ARG_ACCOUNT_SESSION"));
-        assertEquals(1, mail.messages.size());
+        assertEquals(1, mail.delivered().size());
         auth.verify(mail.token("race-register@example.com"));
         assertEquals("ACTIVE", auth.login("race-register@example.com", PASSWORD, CSRF).context().user().getState());
     }
 
     @Test
-    void failedRegistrationDeliveryRollsBackAllRowsAndAllowsRetry() throws Exception {
+    void failedRegistrationDeliveryKeepsCommittedAccountAndRetriesSameToken() throws Exception {
         mail.fail = true;
-        error(503, () -> auth.register("retry-register@example.com", PASSWORD, "Fixture"));
-        for (String table : List.of("ARG_ACCOUNT_USER", "ARG_ACCOUNT_IDENTITY", "ARG_ACCOUNT_TOKEN", "ARG_ACCOUNT_SESSION"))
-            assertEquals(0, count(table), table);
-        assertTrue(mail.messages.isEmpty());
-        mail.fail = false;
         assertNotNull(auth.register("retry-register@example.com", PASSWORD, "Fixture", "en"));
-        assertEquals(1, count("ARG_ACCOUNT_USER"));
-        assertEquals(1, count("ARG_ACCOUNT_IDENTITY"));
-        assertEquals(1, count("ARG_ACCOUNT_TOKEN"));
-        assertEquals(1, mail.messages.size());
+        outbox.tick();
+        for (String table : List.of("ARG_ACCOUNT_USER", "ARG_ACCOUNT_IDENTITY", "ARG_ACCOUNT_TOKEN", "ARG_ACCOUNT_MAIL_OUTBOX"))
+            assertEquals(1, count(table), table);
+        assertTrue(mail.delivered().isEmpty());
+        mail.fail = false;
+        assertNull(auth.register("retry-register@example.com", PASSWORD, "Fixture", "en"));
+        clock.now = clock.now.plusSeconds(30);
+        assertEquals(1, mail.delivered().size());
+        assertEquals(0, count("ARG_ACCOUNT_MAIL_OUTBOX"));
         auth.verify(mail.token("retry-register@example.com"));
         assertEquals("ACTIVE", auth.login("retry-register@example.com", PASSWORD, CSRF).context().user().getState());
+    }
+
+    @Test
+    void resetAndSessionRevocationCommitEvenWhenNoticeDeliveryFails() throws Exception {
+        var session = user("notice-reset@example.com", true);
+        auth.send("notice-reset@example.com", "RESET");
+        String token = mail.token("notice-reset@example.com");
+        mail.fail = true;
+        auth.reset(token, PASSWORD + " changed");
+        outbox.tick();
+        error(401, () -> sessions.with(bearer(session), null, true, false, (value, c) -> value));
+        error(401, () -> auth.login("notice-reset@example.com", PASSWORD, CSRF));
+        assertNotNull(auth.login("notice-reset@example.com", PASSWORD + " changed", CSRF));
+        error(400, () -> auth.reset(token, PASSWORD));
+        assertEquals(1, count("ARG_ACCOUNT_MAIL_OUTBOX"));
+        mail.fail = false;
+        clock.now = clock.now.plusSeconds(30);
+        outbox.tick();
+        assertEquals(0, count("ARG_ACCOUNT_MAIL_OUTBOX"));
+        assertEquals(3, mail.delivered().size());
     }
 
     @Test
@@ -275,7 +301,7 @@ class AccountLifecycleIT extends MariaDbReportFixture {
                 assertEquals(400, http.call("POST", "/account/auth/register", null, forged.toString(), true).statusCode());
             }
             assertEquals(0, count("ARG_ACCOUNT_USER"));
-            assertTrue(mail.messages.isEmpty());
+            assertTrue(mail.delivered().isEmpty());
             var created = http.call("POST", "/account/auth/register", null, body, true);
             assertEquals(200, created.statusCode(), created.body());
             var duplicate = http.call("POST", "/account/auth/register", null,
@@ -292,7 +318,7 @@ class AccountLifecycleIT extends MariaDbReportFixture {
             assertEquals(1, count("ARG_ACCOUNT_IDENTITY"));
             assertEquals(1, count("ARG_ACCOUNT_TOKEN"));
             assertEquals(0, count("ARG_ACCOUNT_SESSION"));
-            assertEquals(1, mail.messages.size());
+            assertEquals(1, mail.delivered().size());
         }
     }
 
@@ -300,17 +326,17 @@ class AccountLifecycleIT extends MariaDbReportFixture {
     void localizedEmailsCompleteVerificationAndResetWithoutReusingTokens() {
         String email = "localized@example.com";
         auth.register(email, PASSWORD, "Fixture", "en");
-        assertTrue(mail.messages.getLast().text().contains("/en/account/verify#token="));
+        assertTrue(mail.delivered().getLast().text().contains("/en/account/verify#token="));
         String verification = mail.token(email);
         auth.verify(verification);
         assertEquals("ACTIVE", auth.login(email, PASSWORD, CSRF).context().user().getState());
         error(400, () -> auth.verify(verification));
-        int count = mail.messages.size();
+        int count = mail.delivered().size();
         auth.register(email, PASSWORD, "Fixture", "en");
         auth.send("absent@example.com", "RESET", "en");
-        assertEquals(count, mail.messages.size());
+        assertEquals(count, mail.delivered().size());
         auth.send(email, "RESET", "en");
-        assertTrue(mail.messages.getLast().text().contains("/en/account/reset#token="));
+        assertTrue(mail.delivered().getLast().text().contains("/en/account/reset#token="));
         String reset = mail.token(email);
         auth.reset(reset, PASSWORD + " changed");
         assertEquals("ACTIVE", auth.login(email, PASSWORD + " changed", CSRF).context().user().getState());
@@ -388,7 +414,7 @@ class AccountLifecycleIT extends MariaDbReportFixture {
     }
 
     @Test
-    void resendInvalidatesOldTokenAndFailedDeliveryRollsBackWithoutDuplicates() {
+    void resendInvalidatesOldTokenAndFailedDeliveryKeepsAccount() {
         auth.register("mail@example.com", PASSWORD, "Mail");
         String old = mail.token("mail@example.com");
         auth.send("mail@example.com", "VERIFY");
@@ -396,8 +422,9 @@ class AccountLifecycleIT extends MariaDbReportFixture {
         error(400, () -> auth.verify(old));
         auth.verify(newer);
         mail.fail = true;
-        error(503, () -> auth.register("failure@example.com", PASSWORD, "Failure"));
-        assertNull(dao.transaction(c -> dao.email("failure@example.com", c)));
+        auth.register("failure@example.com", PASSWORD, "Failure");
+        outbox.tick();
+        assertNotNull(dao.transaction(c -> dao.email("failure@example.com", c)));
         auth.register("mail@example.com", PASSWORD, "Collision");
         assertNotNull(dao.transaction(c -> dao.email("mail@example.com", c)));
     }
@@ -784,7 +811,7 @@ class AccountLifecycleIT extends MariaDbReportFixture {
             error(401, () -> oauth.finish(provider, removed.state(), removed.browser(), "code", null, CSRF));
             assertNotNull(auth.login(email, PASSWORD, CSRF));
             assertEquals(1, auth.methods(bearer(owner)).size());
-            assertFalse(mail.messages.getLast().text().contains("synthetic-" + provider));
+            assertFalse(mail.delivered().getLast().text().contains("synthetic-" + provider));
         }
     }
 
@@ -845,11 +872,11 @@ class AccountLifecycleIT extends MariaDbReportFixture {
         var context = sessions.with(pending, null, false, false, (value, c) -> value);
         assertNotEquals(owner.context().user().getId(), context.user().getId());
         assertEquals(1, auth.methods(bearer(owner)).size());
-        int sent = mail.messages.size();
+        int sent = mail.delivered().size();
         error(403, () -> auth.reauth(pending, CSRF, null, null));
         error(403, () -> auth.reauth(pending, CSRF, null, "x".repeat(43)));
         error(403, () -> auth.addPassword(pending, CSRF, PASSWORD));
-        assertEquals(sent, mail.messages.size());
+        assertEquals(sent, mail.delivered().size());
     }
 
     @Test
@@ -887,19 +914,20 @@ class AccountLifecycleIT extends MariaDbReportFixture {
     }
 
     @Test
-    void missingPasswordCredentialsAreNotUsableAndMailFailureRollsBackLinking() throws Exception {
+    void missingPasswordCredentialsAreNotUsableAndMailFailureDoesNotRollbackLinking() throws Exception {
         var owner = user("usable-password@example.com", true);
         var otherSession = auth.login("usable-password@example.com", PASSWORD, CSRF);
         when(oauthClient.exchange(eq("github"), anyString(), anyString(), anyString()))
                 .thenReturn(new AccountOAuthClient.Identity("usable-password", null, false, "External"));
         var failed = oauth.start("github", "link", "/account", bearer(owner), CSRF);
         mail.fail = true;
-        error(503, () -> oauth.finish("github", failed.state(), failed.browser(), "code", bearer(owner), CSRF));
-        assertEquals(1, auth.methods(bearer(owner)).size());
-        assertNotNull(sessions.with(bearer(otherSession), null, true, false, (value, c) -> value));
+        oauth.finish("github", failed.state(), failed.browser(), "code", bearer(owner), CSRF);
+        outbox.tick();
+        assertEquals(2, auth.methods(bearer(owner)).size());
+        error(401, () -> sessions.with(bearer(otherSession), null, true, false, (value, c) -> value));
         mail.fail = false;
-        var retry = oauth.start("github", "link", "/account", bearer(owner), CSRF);
-        oauth.finish("github", retry.state(), retry.browser(), "code", bearer(owner), CSRF);
+        clock.now = clock.now.plusSeconds(30);
+        outbox.tick();
         sql("UPDATE ARG_ACCOUNT_IDENTITY SET password_hash=NULL WHERE user_id=" + owner.context().user().getId() + " AND provider='password'");
         var methods = auth.methods(bearer(owner));
         assertFalse(methods.stream().filter(method -> method.provider().equals("password")).findFirst().orElseThrow().usable());
@@ -962,7 +990,7 @@ class AccountLifecycleIT extends MariaDbReportFixture {
                 .email(eq("unlink@example.com"), any(java.sql.Connection.class));
         var paused =
                 new AccountAuthService(
-                        observed, passwords, sessions, tokens, settings, mail, clock);
+                        observed, passwords, sessions, tokens, settings, outbox, clock);
         try (var pool = Executors.newSingleThreadExecutor()) {
             var result =
                     pool.submit(
