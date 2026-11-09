@@ -149,8 +149,8 @@ class RuntimeNetworkScoringTest {
         var enriched = enricher.enrich(modules);
         var score = new ScoreService(policy).compute(enricher.scoringVersion(), enricher.scoringFingerprint(), enriched);
         return new AuditReportJson(2, "https://example.com", "https://example.com",
-            Instant.EPOCH, Map.of("measurementFingerprint", "runtime-test-profile",
-                "scopeFingerprint", "same-exact-page"), enriched, score);
+            Instant.EPOCH, Map.of("measurementFingerprint", "measurement-v2:" + "a".repeat(64),
+                "scopeFingerprint", "b".repeat(64)), enriched, score);
     }
 
     private static ScoreAggregate performance(AuditReportJson report) {

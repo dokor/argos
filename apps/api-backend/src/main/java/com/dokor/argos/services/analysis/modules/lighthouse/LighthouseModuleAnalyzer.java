@@ -79,6 +79,11 @@ public class LighthouseModuleAnalyzer {
 
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("available", true);
+        String producer = JsonNodes.nonBlankText(lhr.path("collectorMethodFingerprint"));
+        if (com.dokor.argos.services.analysis.MeasurementContract.validDigest(producer))
+            data.put("collectorMethodFingerprint", com.dokor.argos.services.analysis.MeasurementContract.hash(Map.of(
+                "producer", producer, "auditScoreThreshold", AUDIT_SCORE_THRESHOLD, "maxAudits", MAX_AUDITS)));
+        data.put("collectorScopeFingerprint", JsonNodes.nonBlankText(lhr.path("collectorScopeFingerprint")));
         Map<String,Object> observedMetrics = new LinkedHashMap<>();
         for (var metric : Map.of("lcpMs","largest-contentful-paint","fcpMs","first-contentful-paint").entrySet()) {
             var audit = lhr.path("audits").path(metric.getValue());

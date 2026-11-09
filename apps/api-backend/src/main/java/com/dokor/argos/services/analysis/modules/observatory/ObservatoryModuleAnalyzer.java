@@ -173,6 +173,7 @@ public class ObservatoryModuleAnalyzer {
         ));
 
         Map<String, Object> data = new LinkedHashMap<>();
+        data.put("collectorMethodFingerprint", com.dokor.argos.services.analysis.MeasurementContract.upstream(result, "algorithm_version"));
         data.put("hostname", hostname);
         data.put("score", score >= 0 ? score : null);
         data.put("grade", grade);
