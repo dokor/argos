@@ -1,4 +1,5 @@
 import express from 'express';
+import { methodFingerprint, scopeFingerprint } from './measurement.mjs';
 import { resourceEvidence, scriptEvidence, exceptionEvidence, evidenceEnvelope, EVIDENCE_LIMIT } from './evidence.mjs';
 import { analysisUrl } from './policy.mjs';
 import { proxyEndpoint, browserFlags, protectContext, safeOrigin } from './browser-policy.mjs';
@@ -15,7 +16,7 @@ function sanitizeUrlForLog(url) {
   return safeOrigin(url);
 }
 
-export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env.AUDIT_EGRESS_PROXY, maxConcurrency = 2 }) {
+export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env.AUDIT_EGRESS_PROXY, maxConcurrency = 2, playwrightVersion = null }) {
   if (!Number.isInteger(maxConcurrency) || maxConcurrency < 1 || maxConcurrency > 4) throw new Error('Invalid concurrency');
   let active = 0;
   const app = express();
@@ -51,6 +52,13 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
 
       browser = await chromium.launch({ chromiumSandbox: true, args: browserFlags(endpoint), timeout: remaining() });
       if (cancelled) throw new Error('Analysis timeout');
+      const browserVersion = browser.version?.();
+      const collectorMethodFingerprint = browserVersion && playwrightVersion ? methodFingerprint({
+        playwrightVersion, browserVersion, timeoutMs, waitUntil: 'load', idleMs: 1500,
+        serviceWorkers: 'block', acceptDownloads: false, freshContext: true,
+        // The address is internal infrastructure; only its digest enters the proof.
+        browserFlags: browserFlags(endpoint)
+      }) : null;
       const context = await browser.newContext({ serviceWorkers: 'block', acceptDownloads: false });
       await protectContext(context, () => {
         // Pending CDP setup can reject during intentional browser cleanup.
@@ -227,6 +235,8 @@ export function createRuntimeApp({ chromium, log = () => {}, proxy = process.env
       });
 
       res.json({
+        collectorMethodFingerprint,
+        collectorScopeFingerprint: scopeFingerprint(url, finalUrl),
         url: safeOrigin(url),
         finalUrl: safeOrigin(finalUrl),
         timings: { domContentLoadedMs, loadMs },

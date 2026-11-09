@@ -4,7 +4,7 @@ import { once } from 'node:events';
 import { createRuntimeApp } from './app.mjs';
 
 async function serverFor(t, chromium) {
-  const server = createRuntimeApp({ chromium, proxy: 'http://127.0.0.1:3128' }).listen(0, '127.0.0.1');
+  const server = createRuntimeApp({ chromium, proxy: 'http://127.0.0.1:3128', playwrightVersion: 'fixture-1' }).listen(0, '127.0.0.1');
   await once(server, 'listening');
   t.after(() => new Promise(resolve => { server.close(resolve); server.closeAllConnections(); }));
   return 'http://127.0.0.1:' + server.address().port;
@@ -56,6 +56,7 @@ function collector({ navigationFailure = false, contextFailure = false, cdpFailu
   const chromium = { launch: async () => {
     launched++;
     return {
+      version: () => 'Chromium/123',
       newContext: async () => {
         if (contextFailure) throw new Error('private context failure');
         return {
@@ -108,6 +109,8 @@ test('runtime contract retains metrics and partitions errors using the final dom
   const response = await analyze(base);
   assert.equal(response.status, 200);
   const report = await response.json();
+  assert.match(report.collectorMethodFingerprint, /^[a-f0-9]{64}$/);
+  assert.match(report.collectorScopeFingerprint, /^[a-f0-9]{64}$/);
   assert.equal(report.url, 'https://example.co.uk');
   assert.equal(report.finalUrl, 'https://www.example.co.uk');
   assert.deepEqual(report.navigation, { status: 'COMPLETED', reason: null });
@@ -298,4 +301,20 @@ test('CDP setup failures during collection still cancel the analysis', async t =
   assert.equal(response.status, 504);
   assert.deepEqual(await response.json(), { error: 'Analysis timeout' });
   assert.ok(fake.closed() >= 1);
+});
+
+
+test('method and exact destination proofs survive redaction and old browser adapters', async t => {
+  const first = await (await analyze(await serverFor(t, collector().chromium))).json();
+  const other = await (await analyze(await serverFor(t, collector({ finalUrl: 'https://www.example.co.uk/other?token=private-secret' }).chromium))).json();
+  assert.equal(first.collectorMethodFingerprint, other.collectorMethodFingerprint);
+  assert.notEqual(first.collectorScopeFingerprint, other.collectorScopeFingerprint);
+  assert.equal(first.finalUrl, other.finalUrl);
+  assert.doesNotMatch(JSON.stringify(other), /private-secret/);
+  const old = collector().chromium;
+  const launch = old.launch;
+  old.launch = async (...args) => { const browser = await launch(...args); delete browser.version; return browser; };
+  const legacy = await (await analyze(await serverFor(t, old))).json();
+  assert.equal(legacy.collectorMethodFingerprint, null);
+  assert.equal(legacy.network.requests, first.network.requests);
 });

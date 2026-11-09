@@ -20,6 +20,8 @@ public class RuntimeModuleAnalyzer {
     // produisait des faux positifs FAIL. Cf. issue #100 - point "runtime.console.errors".
     // 0 => PASS ; 1..WARN_MAX => WARN ; > WARN_MAX => FAIL.
     static final int CONSOLE_ERRORS_WARN_MAX = 10;
+    static final int REQUESTS_PASS_MAX = 120;
+    static final int BYTES_PASS_MAX = 3_000_000;
 
     private final PlaywrightRuntimeClient client;
 
@@ -167,26 +169,26 @@ public class RuntimeModuleAnalyzer {
         checks.add(AuditCheckResult.of(
             "runtime.network.request_count",
             "Network request count",
-            reqCount <= 120 ? AuditStatus.PASS : AuditStatus.WARN,
+            reqCount <= REQUESTS_PASS_MAX ? AuditStatus.PASS : AuditStatus.WARN,
             AuditSeverity.LOW,
             false, 0.0, List.of("runtime"),
             reqCount,
             nullableMap("byType", r.network() != null ? r.network().byType() : null),
             "Nombre de requêtes observées : " + reqCount,
-            reqCount <= 120 ? null : "Réduire scripts tiers, images, bundling, lazy-loading, cache."
+            reqCount <= REQUESTS_PASS_MAX ? null : "Réduire scripts tiers, images, bundling, lazy-loading, cache."
         ));
 
         // 6) Total bytes
         checks.add(AuditCheckResult.of(
             "runtime.network.bytes_estimated",
             "Transferred bytes (estimated)",
-            bytes <= 3_000_000 ? AuditStatus.PASS : AuditStatus.WARN,
+            bytes <= BYTES_PASS_MAX ? AuditStatus.PASS : AuditStatus.WARN,
             AuditSeverity.LOW,
             false, 0.0, List.of("runtime"),
             bytes,
             transferEvidence(r),
             "Transfert estimé : ~" + humanBytes(bytes),
-            bytes <= 3_000_000 ? null : "Optimiser poids page (images, fonts, scripts), compression, cache."
+            bytes <= BYTES_PASS_MAX ? null : "Optimiser poids page (images, fonts, scripts), compression, cache."
         ));
 
         // 7) Duration
@@ -216,6 +218,11 @@ public class RuntimeModuleAnalyzer {
         // -------- data payload (stocké dans report_json) --------
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("available", true);
+        if (com.dokor.argos.services.analysis.MeasurementContract.validDigest(r.collectorMethodFingerprint()))
+            data.put("collectorMethodFingerprint", com.dokor.argos.services.analysis.MeasurementContract.hash(Map.of(
+                "producer", r.collectorMethodFingerprint(), "consoleWarnMax", CONSOLE_ERRORS_WARN_MAX,
+                "requestsPassMax", REQUESTS_PASS_MAX, "bytesPassMax", BYTES_PASS_MAX)));
+        data.put("collectorScopeFingerprint", r.collectorScopeFingerprint());
         boolean timingsPartial = r.timings() == null || r.timings().domContentLoadedMs() == null || r.timings().loadMs() == null;
         String navigationStatus = r.navigation() != null && r.navigation().status() != null ? r.navigation().status() : "UNKNOWN";
         // An interrupted navigation can establish a defect, never the absence of defects.

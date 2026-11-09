@@ -2255,7 +2255,7 @@ class AccountLifecycleIT extends MariaDbReportFixture {
         var coverage=new com.dokor.argos.services.analysis.scoring.MeasurementCoverage("v1",.8,
             new com.dokor.argos.services.analysis.scoring.MeasurementCoverage.Aggregate("global",10,10,1,true,true),List.of(),
             List.of(new com.dokor.argos.services.analysis.scoring.MeasurementCoverage.Check("ssl.grade","security","ssl",10,com.dokor.argos.services.analysis.scoring.MeasurementCoverage.State.MEASURED,"fixture","MEASURED")),false);
-        var calc=new ReportDto.ScoreCalculation(11,fingerprint,List.of(new ReportDto.DomainCalculation("security",score/10.0,10,score/100.0,1)),Map.of("security",1.0),List.of(new ReportDto.CheckCalculation("ssl.grade","ssl","security",10,score/10.0)));
+        var calc=new ReportDto.ScoreCalculation(11,fingerprint,List.of(new ReportDto.DomainCalculation("security",score/10.0,10,score/100.0,1)),Map.of("security",1.0),List.of(new ReportDto.CheckCalculation("ssl.grade","ssl","security",10,score/10.0)),"measurement-v2:"+"a".repeat(64),"b".repeat(64));
         var report=new ReportDto("2026-10-11","example.com","https://example.com",null,new ReportDto.Scores(score,100,List.of(),true,calc,coverage),null,List.of(),null,null);
         try(var c=source.getConnection();var s=c.prepareStatement("INSERT INTO ARG_AUDIT_REPORT(audit_id,run_id,token_hash,domain,target_url,report_json,created_at) SELECT audit_id,id,?,'example.com','https://example.com',?,'2026-10-11 07:00:00' FROM ARG_AUDIT_RUN WHERE id=?")) {
             s.setBytes(1,tokens.sha256(token));s.setString(2,mapper.writeValueAsString(report));s.setLong(3,run);s.executeUpdate();
