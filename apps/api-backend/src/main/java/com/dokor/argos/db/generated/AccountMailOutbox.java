@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 import java.time.Instant;
 
-/** Private encrypted mail queue, maintained with V40. Never expose through the API. */
+/** Private encrypted mail queue, maintained with V41. Never expose through the API. */
 @Getter
 @Setter
 public class AccountMailOutbox extends CrudEntityQuerydsl {

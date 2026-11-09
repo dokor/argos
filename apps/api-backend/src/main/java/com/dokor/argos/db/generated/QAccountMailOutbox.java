@@ -6,7 +6,7 @@ import com.querydsl.sql.*;
 import java.sql.Types;
 import java.time.Instant;
 
-/** QueryDSL mapping maintained with V40. */
+/** QueryDSL mapping maintained with V41. */
 public class QAccountMailOutbox extends RelationalPathBase<AccountMailOutbox> {
     public static final QAccountMailOutbox table = new QAccountMailOutbox("ARG_ACCOUNT_MAIL_OUTBOX");
     public final NumberPath<Long> id = createNumber("id", Long.class);

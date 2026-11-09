@@ -6,29 +6,40 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class AuditComparisonServiceTest {
+    private static final String METHOD = "measurement-v2:" + "a".repeat(64);
+    private static final String SCOPE = "b".repeat(64);
     @Test void frozenCollectorProfileAndExactScopeAreRequiredForNewComparisons() throws Exception {
         var mapper = new com.fasterxml.jackson.databind.ObjectMapper();
         var raw = mapper.valueToTree(fixture(13, "policy", .5, MeasurementCoverage.State.MEASURED, false));
         var calc = (com.fasterxml.jackson.databind.node.ObjectNode) raw.path("scores").path("calculation");
-        calc.put("measurementFingerprint", "collector-a"); calc.put("scopeFingerprint", "scope-a");
+        calc.put("measurementFingerprint", METHOD); calc.put("scopeFingerprint", SCOPE);
         var previous = mapper.treeToValue(raw, ReportDto.class);
         assertEquals(AuditComparisonService.Reason.COMPARABLE, AuditComparisonService.compare(previous, previous).reason());
-        calc.put("measurementFingerprint", "collector-b");
+        calc.put("measurementFingerprint", "measurement-v2:" + "c".repeat(64));
         assertEquals(AuditComparisonService.Reason.METHODOLOGY_CHANGED, AuditComparisonService.compare(previous, mapper.treeToValue(raw, ReportDto.class)).reason());
-        calc.put("measurementFingerprint", "collector-a"); calc.put("scopeFingerprint", "scope-b");
+        calc.put("measurementFingerprint", METHOD); calc.put("scopeFingerprint", "d".repeat(64));
         assertEquals(AuditComparisonService.Reason.SCOPE_CHANGED, AuditComparisonService.compare(previous, mapper.treeToValue(raw, ReportDto.class)).reason());
         calc.remove("scopeFingerprint");
         assertEquals(AuditComparisonService.Reason.EVIDENCE_MISSING, AuditComparisonService.compare(previous, mapper.treeToValue(raw, ReportDto.class)).reason());
     }
-    @Test void changedOrRedactedDestinationCannotProduceAnImprovementClaim() {
-        var base = fixture(13, "frozen", .5, MeasurementCoverage.State.MEASURED, false);
-        var previous = base.withPageIdentity(ReportPageIdentity.from("https://example.com", "https://example.com/a"));
-        var changed = base.withPageIdentity(ReportPageIdentity.from("https://example.com", "https://example.com/b"));
-        assertEquals(AuditComparisonService.Reason.SCOPE_CHANGED, AuditComparisonService.compare(previous, changed).reason());
-        var redacted = base.withPageIdentity(ReportPageIdentity.from("https://example.com", "https://example.com/a?token=secret"));
-        assertEquals(AuditComparisonService.Reason.EVIDENCE_MISSING, AuditComparisonService.compare(previous, redacted).reason());
-        assertEquals(AuditComparisonService.Reason.EVIDENCE_MISSING, AuditComparisonService.compare(base, previous).reason());
-        assertEquals(AuditComparisonService.Reason.COMPARABLE, AuditComparisonService.compare(previous, previous).reason());
+    @Test void legacyBlankAndOneSidedMethodEvidenceNeverProducesDeltas() throws Exception {
+        var mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        var current = fixture(13, "frozen", .9, MeasurementCoverage.State.MEASURED, false);
+        for (String field : List.of("measurementFingerprint", "scopeFingerprint")) {
+            for (String value : Arrays.asList(null, "", " ", "old-profile", "a".repeat(64))) {
+                if (field.equals("scopeFingerprint") && "a".repeat(64).equals(value)) continue;
+                var raw = mapper.valueToTree(current);
+                ((com.fasterxml.jackson.databind.node.ObjectNode) raw.path("scores").path("calculation")).put(field, value);
+                var incomplete = mapper.treeToValue(raw, ReportDto.class);
+                for (var comparison : List.of(AuditComparisonService.compare(incomplete, current),
+                        AuditComparisonService.compare(current, incomplete), AuditComparisonService.compare(incomplete, incomplete))) {
+                    assertEquals(AuditComparisonService.Reason.EVIDENCE_MISSING, comparison.reason());
+                    assertNull(comparison.globalDelta());
+                    assertTrue(comparison.contributions().isEmpty());
+                }
+                assertEquals(90, incomplete.scores().global());
+            }
+        }
     }
     @Test void changedMeasurementProvenanceOrCoverageVersionPreventsComparison() throws Exception {
         var mapper = new com.fasterxml.jackson.databind.ObjectMapper();
@@ -51,7 +62,7 @@ class AuditComparisonServiceTest {
         var check=new MeasurementCoverage.Check("ssl.grade","security","ssl",10,state,"FIXTURE_OBSERVATION","MEASURED");
         var aggregate=new MeasurementCoverage.Aggregate("global",state==MeasurementCoverage.State.MEASURED?10:0,10,state==MeasurementCoverage.State.MEASURED?1:0,state==MeasurementCoverage.State.MEASURED,!provisional);
         var coverage=new MeasurementCoverage("weighted-coverage-v1",.8,aggregate,List.of(aggregate),List.of(check),provisional);
-        var calculation=new ReportDto.ScoreCalculation(version,fingerprint,List.of(new ReportDto.DomainCalculation("security",quality*10,10,quality,1)),Map.of("security",.25,"a11y",.25,"seo",.25,"performance",.25),List.of(new ReportDto.CheckCalculation("ssl.grade","ssl","security",10,quality*10)));
+        var calculation=new ReportDto.ScoreCalculation(version,fingerprint,List.of(new ReportDto.DomainCalculation("security",quality*10,10,quality,1)),Map.of("security",.25,"a11y",.25,"seo",.25,"performance",.25),List.of(new ReportDto.CheckCalculation("ssl.grade","ssl","security",10,quality*10)), METHOD, SCOPE);
         return new ReportDto("2026-10-05","example.com","https://example.com",null,new ReportDto.Scores((int)Math.round(quality*100),100,List.of(),true,calculation,coverage),null,List.of(),null,null);
     }
     @Test void sameFrozenMethodReportsDeltasAndCheckContributors() {

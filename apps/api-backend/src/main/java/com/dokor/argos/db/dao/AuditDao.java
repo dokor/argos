@@ -9,6 +9,11 @@ import com.dokor.argos.db.generated.QAuditReport;
 import com.dokor.argos.db.generated.QAuditRun;
 import com.dokor.argos.db.generated.QDomain;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.sql.dml.DefaultMapper;
+import com.querydsl.sql.dml.Mapper;
+import com.google.common.hash.Hashing;
 import com.querydsl.sql.SQLQuery;
 import com.querydsl.sql.SQLExpressions;
 import jakarta.inject.Inject;
@@ -19,6 +24,8 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Optional;
 import java.time.Instant;
+import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
 
 
 /**
@@ -47,6 +54,35 @@ public class AuditDao extends CrudDaoQuerydsl<Audit> {
         super(transactionManager, AUDIT);
     }
 
+    /** Preserve the CRUD mapper's null handling, excluding the database-generated hash. */
+    @Override
+    public Audit save(Audit entity, Connection connection) {
+        boolean insert = entity.getId() == null;
+        Mapper<Audit> writableColumns = (table, value) -> {
+            var values = (insert ? DefaultMapper.DEFAULT : DefaultMapper.WITH_NULL_BINDINGS)
+                .createMap(table, value);
+            values.remove(AUDIT.normalizedUrlHash);
+            return values;
+        };
+        if (insert) {
+            entity.setId(generateIdentifier());
+            transactionManager.insert(AUDIT, connection).populate(entity, writableColumns).execute();
+        } else {
+            transactionManager.update(AUDIT, connection).populate(entity, writableColumns)
+                .where(AUDIT.id.eq(entity.getId())).execute();
+        }
+        return entity;
+    }
+
+    private static BooleanExpression normalizedUrlIdentity(String normalizedUrl) {
+        byte[] hash = Hashing.sha256().hashString(normalizedUrl, StandardCharsets.UTF_8).asBytes();
+        // The hash provides the indexed lookup; exact bytes guard against collation aliases
+        // and ensure that even a hash collision cannot return another URL's audit.
+        return AUDIT.normalizedUrlHash.eq(hash).and(Expressions.booleanTemplate(
+            "BINARY CONVERT({0} USING utf8mb4) = BINARY CONVERT({1} USING utf8mb4)",
+            AUDIT.normalizedUrl, normalizedUrl));
+    }
+
     /**
      * Recherche d’un audit à partir de son URL normalisée.
      * <p>
@@ -65,7 +101,7 @@ public class AuditDao extends CrudDaoQuerydsl<Audit> {
         return Optional.ofNullable(transactionManager.selectQuery()
             .select(AUDIT)
             .from(AUDIT)
-            .where(AUDIT.normalizedUrl.eq(normalizedUrl))
+            .where(normalizedUrlIdentity(normalizedUrl))
             .fetchOne()
         );
     }
@@ -95,7 +131,7 @@ public class AuditDao extends CrudDaoQuerydsl<Audit> {
         return transactionManager.selectQuery()
             .select(AUDIT)
             .from(AUDIT)
-            .where(AUDIT.normalizedUrl.eq(normalizedUrl))
+            .where(normalizedUrlIdentity(normalizedUrl))
             .fetchFirst() != null;
     }
 
