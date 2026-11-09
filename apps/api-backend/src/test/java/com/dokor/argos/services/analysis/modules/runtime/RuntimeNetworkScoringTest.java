@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
@@ -97,19 +98,20 @@ class RuntimeNetworkScoringTest {
         assertTrue(correction.contributions().stream().allMatch(c -> c.globalPoints() > 0));
     }
 
-    @Test
-    void frozenV11ReportIsNotRecalculatedOrComparedWithCurrentPolicy() throws Exception {
+    @ParameterizedTest
+    @ValueSource(ints = {11, 13, 14})
+    void frozenPreviousReportIsNotRecalculatedOrComparedWithCurrentPolicy(int previousVersion) throws Exception {
         var current = new PublicReportComposer().compose(audit(true, 120, 3_000_000, true));
         var mapper = new ObjectMapper();
         var historicalJson = mapper.valueToTree(current);
         ((ObjectNode) historicalJson.path("scores")).put("global", 73);
         var calculation = (ObjectNode) historicalJson.path("scores").path("calculation");
-        calculation.put("scoringVersion", 11);
-        calculation.put("scoringFingerprint", "frozen-v11");
+        calculation.put("scoringVersion", previousVersion);
+        calculation.put("scoringFingerprint", "frozen-v" + previousVersion);
         String frozen = mapper.writeValueAsString(historicalJson);
         var historical = mapper.readValue(frozen, ReportDto.class);
 
-        assertEquals(14, current.scores().calculation().scoringVersion());
+        assertEquals(15, current.scores().calculation().scoringVersion());
         var comparison = AuditComparisonService.compare(historical, current);
         assertEquals(AuditComparisonService.Reason.METHODOLOGY_CHANGED, comparison.reason());
         assertNull(comparison.globalDelta());
@@ -147,8 +149,8 @@ class RuntimeNetworkScoringTest {
         var enriched = enricher.enrich(modules);
         var score = new ScoreService(policy).compute(enricher.scoringVersion(), enricher.scoringFingerprint(), enriched);
         return new AuditReportJson(2, "https://example.com", "https://example.com",
-            Instant.EPOCH, Map.of("measurementFingerprint", "runtime-test-profile",
-                "scopeFingerprint", "same-exact-page"), enriched, score);
+            Instant.EPOCH, Map.of("measurementFingerprint", "measurement-v2:" + "a".repeat(64),
+                "scopeFingerprint", "b".repeat(64)), enriched, score);
     }
 
     private static ScoreAggregate performance(AuditReportJson report) {

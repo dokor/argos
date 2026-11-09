@@ -86,12 +86,35 @@ public class ZapClient {
                     JsonNode result = call("core/view/alerts/", Map.of(
                         "baseurl", context.finalUrl(), "start", "0", "count", "100"));
                     if (!result.path("alerts").isArray()) throw unavailable("core/view/alerts/", CollectorFailure.Code.INVALID_RESPONSE);
-                    return result;
+                    var frozen = (com.fasterxml.jackson.databind.node.ObjectNode) result.deepCopy();
+                    frozen.put("collectorMethodFingerprint", measurementMethod(deadline));
+                    return frozen;
                 });
             } finally {
                 session.unlock();
             }
         }
+    }
+
+    /** Optional method evidence never discards successfully collected alerts. */
+    private String measurementMethod(AuditDeadline parent) {
+        try (var ignored = parent.child(Duration.ofSeconds(2)).enter()) {
+            var version = call("core/view/version/", Map.of()).path("version");
+            var addons = call("autoupdate/view/installedAddons/", Map.of()).path("installedAddons");
+            var scanners = call("pscan/view/scanners/", Map.of()).path("scanners");
+            if (!version.isTextual() || version.asText().isBlank() || !addons.isArray() || addons.isEmpty()
+                || !scanners.isArray() || scanners.isEmpty()) return null;
+            // Sort inventories: API enumeration order is not a method change.
+            var addonList = new java.util.ArrayList<JsonNode>(); addons.forEach(addonList::add);
+            var scannerList = new java.util.ArrayList<JsonNode>(); scanners.forEach(scannerList::add);
+            addonList.sort(java.util.Comparator.comparing(item -> item.path("id").asText()));
+            scannerList.sort(java.util.Comparator.comparing(item -> item.path("id").asText()));
+            return com.dokor.argos.services.analysis.MeasurementContract.hash(Map.of(
+                "version", version, "addons", addonList, "scanners", scannerList, "scope", "HTTP_SNAPSHOT"));
+        } catch (InterruptedException interrupted) {
+            Thread.currentThread().interrupt();
+            return null;
+        } catch (Exception unavailable) { return null; }
     }
 
     private void awaitPassiveScan(AuditDeadline deadline) throws Exception {

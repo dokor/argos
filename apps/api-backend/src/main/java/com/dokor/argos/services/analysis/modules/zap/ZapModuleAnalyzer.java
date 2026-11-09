@@ -126,6 +126,7 @@ public class ZapModuleAnalyzer {
         }
 
         Map<String, Object> data = new LinkedHashMap<>();
+        data.put("collectorMethodFingerprint", response.path("collectorMethodFingerprint").asText(null));
         data.put("url", url);
         data.put("scope", "HTTP_SNAPSHOT");
         data.put("alertCount", rawCount);

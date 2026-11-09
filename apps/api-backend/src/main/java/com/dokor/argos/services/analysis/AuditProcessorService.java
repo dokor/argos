@@ -70,6 +70,12 @@ public class AuditProcessorService {
     private AuditModuleExecutor auditModuleExecutor;
     private AuditScopeCatalogue scopes = new AuditScopeCatalogue(new com.dokor.argos.services.analysis.scoring.DefaultScorePolicy());
     @Inject void configureScopes(AuditScopeCatalogue scopes) { this.scopes = scopes; }
+    private Map<String, Object> measurementConfiguration = Map.of();
+    @Inject void configureMeasurementContract(com.dokor.argos.services.configuration.ConfigurationService config) {
+        measurementConfiguration = Map.of("playwrightTimeoutMs", config.playwrightTimeout().toMillis(),
+            "lighthouseTimeoutMs", config.lighthouseTimeout().toMillis(),
+            "sslTimeoutMs", config.sslLabsTimeout().toMillis(), "externalScansEnabled", config.externalScansEnabled());
+    }
     private CollectorDiagnostics collectorDiagnostics;
     @Inject void configureCollectorDiagnostics(CollectorDiagnostics diagnostics) { collectorDiagnostics = diagnostics; }
 
@@ -303,9 +309,15 @@ public class AuditProcessorService {
                 meta.put("reusedCheckKeys","[]");
                 meta.put("partialScope",String.valueOf(executionScope.partial()));
                 meta.put("generator", "argos-api-backend");
-                meta.put("measurementFingerprint", MeasurementContract.fingerprint(run.getProfileSnapshot()));
-                String scopeFingerprint = MeasurementContract.scope(context.normalizedUrl(), context.finalUrl(), executionScope);
-                if (scopeFingerprint != null) meta.put("scopeFingerprint", scopeFingerprint);
+                var methodConfiguration = new TreeMap<String, Object>(measurementConfiguration);
+                methodConfiguration.put("maxConcurrentModules", remote.maxConcurrentModules());
+                methodConfiguration.put("remoteTimeoutMs", remote.timeoutBudget().toMillis());
+                if (auditModuleExecutor != null) methodConfiguration.put("collectionBudgetMs", auditModuleExecutor.collectionBudget().toMillis());
+                var method = MeasurementContract.freeze(run.getProfileSnapshot(), context.normalizedUrl(), context.finalUrl(),
+                    executionScope, allModules, score.coverage(), methodConfiguration);
+                meta.put("measurementEvidence", objectMapper.writeValueAsString(method.evidence()));
+                if (method.fingerprint() != null) meta.put("measurementFingerprint", method.fingerprint());
+                if (method.scopeFingerprint() != null) meta.put("scopeFingerprint", method.scopeFingerprint());
                 meta.put("schemaVersion", String.valueOf(REPORT_SCHEMA_VERSION));
                 meta.put("scoringVersion", String.valueOf(scoringVersion));
                 meta.put("scoringFingerprint", scoringFingerprint);
@@ -360,7 +372,7 @@ public class AuditProcessorService {
             // Marque le(s) module(s) resté(s) en RUNNING comme FAILED pour que la
             // vue de progression n'affiche pas un spinner infini sur ce module.
             if (auditRunService.fail(runId, "AUDIT_PROCESSING_FAILED", run.getClaimToken())) {
-                auditRunService.failRunningModules(runId);
+                auditRunService.failRunningModules(runId, run.getClaimToken());
             }
             logger.warn("Run failed runId={} error={}", runId, e.getClass().getSimpleName());
         }

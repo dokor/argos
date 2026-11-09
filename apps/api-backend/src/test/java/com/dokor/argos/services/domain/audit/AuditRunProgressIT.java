@@ -32,7 +32,7 @@ class AuditRunProgressIT {
         source.setUser(System.getenv("ARGOS_TEST_MARIADB_USER"));
         source.setPassword(System.getenv("ARGOS_TEST_MARIADB_PASSWORD"));
         try (var connection = source.getConnection(); var statement = connection.createStatement()) {
-            statement.execute("CREATE TABLE IF NOT EXISTS ARG_AUDIT_RUN (id BIGINT PRIMARY KEY, status VARCHAR(32), module_statuses LONGTEXT, result_json LONGTEXT, execution_scope LONGTEXT) ENGINE=InnoDB");
+            statement.execute("CREATE TABLE IF NOT EXISTS ARG_AUDIT_RUN (id BIGINT PRIMARY KEY, status VARCHAR(32), claim_token VARCHAR(64), module_statuses LONGTEXT, result_json LONGTEXT, execution_scope LONGTEXT) ENGINE=InnoDB");
         }
     }
     @BeforeEach void initialRun() throws Exception {
@@ -42,7 +42,7 @@ class AuditRunProgressIT {
             statement.execute("DELETE FROM ARG_AUDIT_RUN");
         }
         try (var connection = source.getConnection(); var statement = connection.prepareStatement(
-            "INSERT INTO ARG_AUDIT_RUN (id,status,module_statuses,result_json) VALUES (1,'RUNNING',?,'synthetic-private-result')")) {
+            "INSERT INTO ARG_AUDIT_RUN (id,status,claim_token,module_statuses,result_json) VALUES (1,'RUNNING','worker',?,'synthetic-private-result')")) {
             statement.setString(1, MAPPER.writeValueAsString(AuditRunService.INITIAL_MODULE_STATUSES)); statement.executeUpdate();
         }
     }
@@ -60,6 +60,13 @@ class AuditRunProgressIT {
     private void execute(String sql) throws Exception {
         try (var connection = source.getConnection(); var statement = connection.createStatement()) { statement.execute(sql); }
     }
+    private void resetFixtureProgress() throws Exception {
+        try (var connection = source.getConnection(); var statement = connection.prepareStatement(
+            "UPDATE ARG_AUDIT_RUN SET module_statuses=? WHERE id=1")) {
+            statement.setString(1, service.initialModuleStatusesJson());
+            statement.executeUpdate();
+        }
+    }
     private void concurrent(Runnable first, Runnable second) throws Exception {
         try (var threads = Executors.newFixedThreadPool(2)) {
             var start = new CountDownLatch(1);
@@ -74,30 +81,30 @@ class AuditRunProgressIT {
     }
     @Test void concurrentDifferentModulesPreserveBothTransitionsAndAllLabels() throws Exception {
         for (int i = 0; i < 20; i++) {
-            service.resetModuleStatuses(1);
-            concurrent(() -> service.updateModuleStatus(1, "ssl", "RUNNING"),
-                () -> service.updateModuleStatus(1, "observatory", "COMPLETED"));
+            resetFixtureProgress();
+            concurrent(() -> service.updateModuleStatus(1, "ssl", "RUNNING", "worker"),
+                () -> service.updateModuleStatus(1, "observatory", "COMPLETED", "worker"));
             assertEquals("RUNNING", status("ssl")); assertEquals("COMPLETED", status("observatory"));
             assertEquals("PENDING", status("http")); assertEquals(8, statuses().size());
             assertEquals("HTTP & Sécurité", statuses().get(0).path("label").asText());
         }
     }
     @Test void duplicateAndLateTransitionsCannotRegressATerminalModule() throws Exception {
-        service.updateModuleStatus(1, "ssl", "RUNNING");
-        concurrent(() -> service.updateModuleStatus(1, "ssl", "COMPLETED"),
-            () -> service.updateModuleStatus(1, "ssl", "RUNNING"));
-        service.updateModuleStatus(1, "ssl", "FAILED");
-        service.updateModuleStatus(1, "ssl", "COMPLETED");
+        service.updateModuleStatus(1, "ssl", "RUNNING", "worker");
+        concurrent(() -> service.updateModuleStatus(1, "ssl", "COMPLETED", "worker"),
+            () -> service.updateModuleStatus(1, "ssl", "RUNNING", "worker"));
+        service.updateModuleStatus(1, "ssl", "FAILED", "worker");
+        service.updateModuleStatus(1, "ssl", "COMPLETED", "worker");
         assertEquals("COMPLETED", status("ssl"));
     }
     @Test void retryResetsProgressAndInactiveRunsRejectLateWorkerUpdates() throws Exception {
-        service.updateModuleStatus(1, "ssl", "COMPLETED");
+        service.updateModuleStatus(1, "ssl", "COMPLETED", "worker");
         execute("UPDATE ARG_AUDIT_RUN SET status='QUEUED' WHERE id=1");
-        service.resetModuleStatuses(1);
-        service.updateModuleStatus(1, "ssl", "COMPLETED");
+        resetFixtureProgress();
+        service.updateModuleStatus(1, "ssl", "COMPLETED", "worker");
         assertEquals("PENDING", status("ssl"));
         execute("UPDATE ARG_AUDIT_RUN SET status='RUNNING' WHERE id=1");
-        service.updateModuleStatus(1, "ssl", "RUNNING");
+        service.updateModuleStatus(1, "ssl", "RUNNING", "worker");
         assertEquals("RUNNING", status("ssl"));
     }
     @Test void corruptMissingAndEmptyJsonUseInitialStatusesWithoutChangingTheResultBlob() throws Exception {
@@ -106,7 +113,7 @@ class AuditRunProgressIT {
                 "UPDATE ARG_AUDIT_RUN SET module_statuses=? WHERE id=1")) {
                 statement.setString(1, json); statement.executeUpdate();
             }
-            service.updateModuleStatus(1, "ssl", "COMPLETED");
+            service.updateModuleStatus(1, "ssl", "COMPLETED", "worker");
             assertEquals("COMPLETED", status("ssl")); assertEquals("PENDING", status("html"));
         }
     }
@@ -116,31 +123,31 @@ class AuditRunProgressIT {
             "UPDATE ARG_AUDIT_RUN SET module_statuses=? WHERE id=1")) {
             statement.setString(1, MAPPER.writeValueAsString(reordered)); statement.executeUpdate();
         }
-        service.updateModuleStatus(1, "ssl", "RUNNING");
+        service.updateModuleStatus(1, "ssl", "RUNNING", "worker");
         assertEquals("RUNNING", status("ssl")); assertEquals("PENDING", status("tech"));
         assertEquals("tech", statuses().get(0).path("id").asText());
     }
     @Test void failureCleanupOnlyChangesRunningModulesEvenAfterReaperMarksRunFailed() throws Exception {
-        service.updateModuleStatus(1, "http", "COMPLETED"); service.updateModuleStatus(1, "ssl", "RUNNING");
-        execute("UPDATE ARG_AUDIT_RUN SET status='FAILED' WHERE id=1"); service.failRunningModules(1);
+        service.updateModuleStatus(1, "http", "COMPLETED", "worker"); service.updateModuleStatus(1, "ssl", "RUNNING", "worker");
+        execute("UPDATE ARG_AUDIT_RUN SET status='FAILED' WHERE id=1"); service.failRunningModules(1, "worker");
         assertEquals("COMPLETED", status("http")); assertEquals("FAILED", status("ssl"));
         assertEquals("PENDING", status("html"));
     }
     @Test void missingRunOrMissingTargetIdDoesNotEraseProgress() throws Exception {
-        service.updateModuleStatus(999, "ssl", "RUNNING");
+        service.updateModuleStatus(999, "ssl", "RUNNING", "worker");
         execute("UPDATE ARG_AUDIT_RUN SET module_statuses='[{\"id\":\"http\",\"label\":\"HTTP\",\"status\":\"COMPLETED\"}]' WHERE id=1");
-        service.updateModuleStatus(1, "ssl", "RUNNING");
+        service.updateModuleStatus(1, "ssl", "RUNNING", "worker");
         assertEquals(1, statuses().size()); assertEquals("COMPLETED", status("http"));
     }
     @Test void normalProgressUsesSixteenUpdatesAndNoSelectInsteadOfThirtyTwoStatements() throws Exception {
         long start = System.nanoTime();
         for (var module : AuditRunService.INITIAL_MODULE_STATUSES) {
-            service.updateModuleStatus(1, module.id(), "RUNNING"); service.updateModuleStatus(1, module.id(), "COMPLETED");
+            service.updateModuleStatus(1, module.id(), "RUNNING", "worker"); service.updateModuleStatus(1, module.id(), "COMPLETED", "worker");
         }
         long atomicMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
         verify(transactions, times(16)).update(QAuditRun.auditRun);
         verify(transactions, never()).selectQuery();
-        service.resetModuleStatuses(1);
+        resetFixtureProgress();
         start = System.nanoTime();
         for (var module : AuditRunService.INITIAL_MODULE_STATUSES) for (String state : List.of("RUNNING", "COMPLETED")) {
             var json = statuses(); // legacy SELECT, including the blob

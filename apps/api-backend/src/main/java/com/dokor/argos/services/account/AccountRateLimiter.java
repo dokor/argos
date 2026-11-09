@@ -28,7 +28,14 @@ public class AccountRateLimiter {
         this.settings = settings;
     }
 
+    public void checkRequest(String action, String account, org.glassfish.grizzly.http.server.Request request) {
+        check(action, account, AccountClientIdentity.remote(request, settings, clock));
+    }
+
     public void check(String action, String account, String remote) {
+        // Bound aggregate traffic and bucket creation even when clients/accounts rotate.
+        if (!increment(action + ":global", settings.integer("rate." + action + ".global", 1000)))
+            throw limited();
         int accountLimit =
                 settings.integer("rate." + action + ".account", action.equals("login") ? 20 : 5);
         int ipLimit =
@@ -40,8 +47,11 @@ public class AccountRateLimiter {
         boolean allowed = increment(action + ":ip:" + remote, ipLimit);
         if (account != null)
             allowed = increment(action + ":account:" + account, accountLimit) && allowed;
-        if (!allowed)
-            throw new WebApplicationException(
+        if (!allowed) throw limited();
+    }
+
+    private WebApplicationException limited() {
+        return new WebApplicationException(
                     Response.status(429)
                             .header("Retry-After", "900")
                             .header("Cache-Control", "no-store")

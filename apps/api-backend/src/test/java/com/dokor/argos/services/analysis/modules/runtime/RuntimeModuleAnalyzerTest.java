@@ -7,6 +7,11 @@ import com.dokor.argos.services.analysis.model.AuditModuleResult;
 import com.dokor.argos.services.analysis.model.enums.AuditStatus;
 import com.dokor.argos.services.analysis.modules.runtime.PlaywrightRuntimeClient;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.CsvSource;
+import com.dokor.argos.services.analysis.scoring.*;
 import org.slf4j.LoggerFactory;
 
 import java.net.http.HttpTimeoutException;
@@ -72,6 +77,66 @@ class RuntimeModuleAnalyzerTest {
         assertTrue(enriched.getFirst().checks().stream().noneMatch(AuditCheckResult::scorable));
         assertTrue(result.checks().stream().filter(c -> !c.key().equals("runtime.analysis.duration_ms"))
             .allMatch(c -> "NAVIGATION_INCOMPLETE".equals(c.details().get("measurementReason"))));
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = {"FAILED", "UNKNOWN", "CANCELLED", ""})
+    void incompleteNavigationCannotImproveScoreOrCoverageIncludingLegacyResponses(String status) throws Exception {
+        var full = response(0);
+        var navigation = status == null ? null : new PlaywrightRuntimeClient.Navigation(status, "INCOMPLETE");
+        var result = analyze(new PlaywrightRuntimeClient.RuntimeAnalyzeResponse(full.url(), full.finalUrl(),
+            new PlaywrightRuntimeClient.Timings(100L, null), full.console(), full.jsErrors(), full.network(), navigation));
+        var policy = new DefaultScorePolicy();
+        var enriched = new ScoreEnricherService(policy).enrich(List.of(result));
+        var score = new ScoreService(policy).compute(policy.version(), policy.fingerprint(), enriched);
+        assertEquals(0, score.global().maxScore(), "No successful scored observation is established");
+        assertEquals(true, result.data().get("partial"));
+        for (String key : List.of("runtime.console.errors", "runtime.js.errors", "runtime.network.5xx",
+                "runtime.network.failed_requests", "runtime.network.request_count", "runtime.network.bytes_estimated")) {
+            var check = score.coverage().checks().stream().filter(c -> key.equals(c.key())).findFirst().orElseThrow();
+            assertEquals(MeasurementCoverage.State.UNAVAILABLE, check.state(), key);
+            assertEquals("NAVIGATION_INCOMPLETE", check.reason(), key);
+        }
+    }
+
+    @Test void legacyIncompleteNavigationKeepsDefectsButCannotDiluteThemWithZeroCounters() throws Exception {
+        var full = response(0, 0, 2, 1, 2, 1, 0, 0);
+        var result = analyze(new PlaywrightRuntimeClient.RuntimeAnalyzeResponse(full.url(), full.finalUrl(),
+            null, full.console(), full.jsErrors(), full.network()));
+        var policy = new DefaultScorePolicy();
+        var enriched = new ScoreEnricherService(policy).enrich(List.of(result));
+        var scoredKeys = enriched.getFirst().checks().stream().filter(AuditCheckResult::scorable)
+            .map(AuditCheckResult::key).collect(java.util.stream.Collectors.toSet());
+        assertEquals(java.util.Set.of("runtime.network.failed_requests", "runtime.network.5xx"), scoredKeys);
+        assertEquals(AuditStatus.FAIL, checkStatus(result, "runtime.network.5xx"));
+        assertEquals(AuditStatus.WARN, checkStatus(result, "runtime.network.failed_requests"));
+        var score = new ScoreService(policy).compute(policy.version(), policy.fingerprint(), enriched);
+        assertTrue(score.coverage().checks().stream().filter(c -> scoredKeys.contains(c.key()))
+            .allMatch(c -> c.state() == MeasurementCoverage.State.MEASURED));
+    }
+
+    @Test void legacyCompletedTimingsStillEstablishSuccessfulObservations() throws Exception {
+        var result = analyze(response(0));
+        var policy = new DefaultScorePolicy();
+        var score = new ScoreService(policy).compute(policy.version(), policy.fingerprint(),
+            new ScoreEnricherService(policy).enrich(List.of(result)));
+        assertTrue(score.global().maxScore() > 0);
+        assertEquals(1, score.global().ratio());
+        assertEquals(false, result.data().get("partial"));
+    }
+
+    @ParameterizedTest
+    @CsvSource({"-1,200", "100,99"})
+    void invalidLegacyTimingsCannotEstablishSuccessfulNavigation(long domContentLoaded, long load) throws Exception {
+        var full = response(0);
+        var result = analyze(new PlaywrightRuntimeClient.RuntimeAnalyzeResponse(full.url(), full.finalUrl(),
+            new PlaywrightRuntimeClient.Timings(domContentLoaded, load), full.console(), full.jsErrors(), full.network()));
+        var policy = new DefaultScorePolicy();
+        var score = new ScoreService(policy).compute(policy.version(), policy.fingerprint(),
+            new ScoreEnricherService(policy).enrich(List.of(result)));
+        assertEquals(0, score.global().maxScore());
+        assertEquals(true, result.data().get("partial"));
     }
 
     @Test void evidenceIsScopedToTheActualNetworkFinding() throws Exception {
@@ -181,7 +246,7 @@ class RuntimeModuleAnalyzerTest {
         assertNull(console.get("errorsFirstParty"));
         assertNull(console.get("warnings"));
         assertEquals(0, ((Map<?, ?>) result.data().get("jsErrors")).get("count"));
-        assertEquals(AuditStatus.PASS, checkStatus(result, "runtime.js.errors"));
+        assertEquals(AuditStatus.INFO, checkStatus(result, "runtime.js.errors"));
         assertFalse(result.checks().stream().anyMatch(c -> c.key().equals("runtime.console.errors") || c.key().startsWith("runtime.network.")));
     }
 

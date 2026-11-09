@@ -22,8 +22,9 @@ import java.util.*;
  * et son empreinte déterministe ; la V10 versionne son calcul global par domaine.
  * La V11 ajoute la couverture ; la V12 rend les seuils réseau runtime monotones (#327).
  * <p>
- * {@link #version()} est fixé à <b>14</b> pour identifier les rapports utilisant
- * ce catalogue explicite avec pondération globale par domaine.
+ * {@link #version()} est fixé à <b>15</b> : les diagnostics informatifs sont exclus
+ * de la couverture pondérée, en conservant l'exclusion V14 des réussites runtime
+ * sans preuve de navigation complète, y compris les réponses legacy.
  *
  * <h3>Principes</h3>
  * <ul>
@@ -63,8 +64,8 @@ public class DefaultScorePolicy implements ScorePolicy {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultScorePolicy.class);
 
-    /** V14 : diagnostics informatifs exclus du catalogue pondéré de score et de couverture. */
-    private static final int VERSION = 14;
+    /** V15 : diagnostics informatifs exclus du catalogue pondéré de score et de couverture. */
+    private static final int VERSION = 15;
 
     private final Map<String, ScoreRule> catalogue;
     private final String fingerprint;
