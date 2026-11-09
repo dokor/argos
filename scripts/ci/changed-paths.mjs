@@ -40,10 +40,16 @@ export function classify(paths) {
   const visualScript = path => /^scripts\/e2e\/(connected-|account-history\.|public-header\.|acceptance-evidence|visual-suites)/.test(path);
   const auditScripts = matches(path => path.startsWith('scripts/e2e/') && !visualScript(path)
     && !path.endsWith('.test.mjs') && path !== 'scripts/e2e/auth-experience.mjs');
+  // The frontend rule inventory is generated from Java producers and scoring metadata.
+  const reportInventory = matches(path =>
+    (path.startsWith('apps/api-backend/src/main/java/com/dokor/argos/services/analysis/modules/') && path.endsWith('Analyzer.java'))
+    || ['apps/api-backend/src/main/java/com/dokor/argos/services/analysis/scoring/DefaultScorePolicy.java',
+      'apps/api-backend/src/main/java/com/dokor/argos/services/analysis/MeasurementContract.java',
+      'scripts/report-rule-inventory.mjs', 'docs/report/rule-inventory.json', 'docs/report/rule-inventory.md'].includes(path));
 
   return {
     api: common || contracts || component('api-backend'),
-    frontend: common || contracts || npmConfig || component('console-web')
+    frontend: common || contracts || npmConfig || reportInventory || component('console-web')
       || matches(path => path.startsWith('scripts/release/') || path.startsWith('scripts/check-release-evidence')
         || path.startsWith('scripts/explain-coverage') || /^docs\/report\/fixtures\/coverage-.*\.json$/.test(path)
         || path.startsWith('scripts/e2e/acceptance-evidence') || path.startsWith('scripts/e2e/visual-suites')
