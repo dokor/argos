@@ -360,7 +360,7 @@ public class AuditProcessorService {
             // Marque le(s) module(s) resté(s) en RUNNING comme FAILED pour que la
             // vue de progression n'affiche pas un spinner infini sur ce module.
             if (auditRunService.fail(runId, "AUDIT_PROCESSING_FAILED", run.getClaimToken())) {
-                auditRunService.failRunningModules(runId);
+                auditRunService.failRunningModules(runId, run.getClaimToken());
             }
             logger.warn("Run failed runId={} error={}", runId, e.getClass().getSimpleName());
         }
