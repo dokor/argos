@@ -89,6 +89,7 @@ public class SslLabsModuleAnalyzer {
         for (var unknown : template.checks()) checks.add(aggregate(unknown, observations));
 
         Map<String, Object> data = new LinkedHashMap<>();
+        data.put("collectorMethodFingerprint", com.dokor.argos.services.analysis.MeasurementContract.upstream(result, "engineVersion", "criteriaVersion"));
         data.put("host", host);
         data.put("status", hostStatus);
         data.put("aggregation", "worst-measured-endpoint-v1");

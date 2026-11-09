@@ -67,6 +67,44 @@ test('CONNECT pins the checked IP and refuses the next rebinding answer before c
     const result=await tunnel(proxy,authority);assert.match(result.head,/403/);result.socket.destroy();}
   assert.equal(connections,1);
 });
+
+test('HTTP and CONNECT reject private IPv6 DNS answers and DNS failures before any upstream connection', async t => {
+  let resolveAnswers, connections = 0;
+  const forbiddenTransport = () => { connections++; throw new Error('Upstream must never be contacted'); };
+  const proxy = await listen(t, createEgressProxy({ resolve: () => resolveAnswers(),
+    request: forbiddenTransport, connect: forbiddenTransport }));
+  const publicIp = { address: '2606:4700:4700::1111' };
+  const cases = [
+    async () => [],
+    async () => { throw new Error('DNS unavailable'); },
+    ...['fc00::1', 'fd00::1234', 'fdff:ffff:ffff:ffff:ffff:ffff:ffff:ffff', '::ffff:127.0.0.1']
+      .flatMap(address => [async () => [{ address }], async () => [publicIp, { address }],
+        async () => [{ address }, publicIp]])
+  ];
+  for (const resolve of cases) {
+    resolveAnswers = resolve;
+    assert.equal((await fetchProxy(proxy, 'http://example.com/')).status, 403);
+    const result = await tunnel(proxy, 'example.com:443');
+    assert.match(result.head, /403 Forbidden/);
+    result.socket.destroy();
+  }
+  assert.equal(connections, 0);
+});
+
+test('HTTP proxy preserves encoded path and query separators when forwarding to the pinned address', async t => {
+  const fixture = http.createServer((req, res) => res.end(req.url));
+  const fixturePort = await listen(t, fixture);
+  const proxy = await listen(t, createEgressProxy({ resolve: async () => [{ address: '8.8.8.8' }],
+    request: (options, callback) => {
+      assert.equal(options.host, '8.8.8.8');
+      return http.request({ ...options, host: '127.0.0.1', port: fixturePort }, callback);
+    } }));
+  for (const suffix of ['/a%2Fb?x=a%26b%3Dc', '/a%252Fb?x=%2526%253D', '/a%2fb?x=%2b+%20&x=']) {
+    const response = await fetchProxy(proxy, 'http://example.com' + suffix);
+    assert.equal(response.status, 200);
+    assert.equal(response.body, suffix);
+  }
+});
 test('active tunnel limit, deadline and disconnect release capacity',async t=>{
   const fixture=net.createServer(()=>{});const port=await listen(t,fixture);let connections=0;
   const proxy=await listen(t,createEgressProxy({maxConnections:1,timeoutMs:150,resolve:async()=>[{address:'8.8.8.8'}],

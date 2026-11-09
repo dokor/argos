@@ -35,11 +35,6 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
     }
     public com.dokor.argos.services.account.UsageService usage() { return usage; }
 
-    /** Reset needs the scope alone, without loading a potentially large private result. */
-    public String executionScope(long runId) {
-        return transactionManager.selectQuery().select(RUN.executionScope).from(RUN).where(RUN.id.eq(runId)).fetchOne();
-    }
-
     /** Admission and terminal publication both acquire queue before usage. */
     public void lockAdmission(Connection c) {
         try(var s=c.prepareStatement("SELECT id FROM ARG_AUDIT_ADMISSION WHERE id=1 FOR UPDATE");var r=s.executeQuery()) {
@@ -204,13 +199,13 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
      * @param lastError  message d'erreur à conserver en base
      */
     public boolean markFailed(long runId, Instant finishedAt, String lastError, String claimToken) {
-        if (claimToken == null) return false;
+        if (claimToken == null || claimToken.isBlank()) return false;
         return failAndRelease(runId,finishedAt,lastError,claimToken);
     }
     private boolean failAndRelease(long runId,Instant finishedAt,String lastError,String claimToken) {
         return transactionManager.executeAndReturn(c -> {
             var run=lockForPublication(runId,c).orElse(null);
-            if(run==null || !"RUNNING".equals(run.getStatus()) || claimToken!=null && !claimToken.equals(run.getClaimToken())) return false;
+            if(run==null || !"RUNNING".equals(run.getStatus()) || !claimToken.equals(run.getClaimToken())) return false;
             if(Boolean.TRUE.equals(run.getCancelRequested())) {finishCanceled(run,finishedAt,c);return true;}
             long updated=transactionManager.update(RUN,c)
             .set(RUN.status, AuditRunStatus.FAILED.name())
@@ -246,47 +241,6 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
     }
 
     /**
-     * Remet atomiquement un run bloqué en file d'attente pour un nouveau traitement.
-     * <p>
-     * L'update est gardé par {@code status = RUNNING} : si le run a entre-temps été
-     * terminé (COMPLETED/FAILED) ou re-claimé, aucune ligne n'est modifiée — on évite
-     * ainsi d'écraser un run redevenu actif ou une double reprise concurrente.
-     * <p>
-     * Le {@code claim_token} et {@code started_at} sont remis à NULL pour que le run
-     * redevienne éligible à {@link #findNextQueuedRun()}. {@code attempt_count} est
-     * conservé (déjà incrémenté au claim initial) : il sera ré-incrémenté au prochain
-     * claim, ce qui borne le nombre de reprises.
-     *
-     * @param runId identifiant du run à relancer
-     * @return true si le run a bien été remis en QUEUED, false sinon
-     */
-    public boolean requeueStuckRun(long runId) {
-        return transactionManager.executeAndReturn(c->{
-            var run=lockForPublication(runId,c).orElse(null);
-            if(run==null || !"RUNNING".equals(run.getStatus()))return false;
-            if(Boolean.TRUE.equals(run.getCancelRequested())){finishCanceled(run,Instant.now(),c);return false;}
-            return transactionManager.update(RUN,c).set(RUN.status,"QUEUED").setNull(RUN.claimToken)
-                .setNull(RUN.startedAt).setNull(RUN.finishedAt).setNull(RUN.lastError)
-                .where(RUN.id.eq(runId),RUN.status.eq("RUNNING")).execute()==1;
-        });
-    }
-
-    /**
-     * Marque atomiquement un run bloqué comme {@code FAILED} (abandon volontaire).
-     * <p>
-     * Gardé par {@code status = RUNNING} pour ne jamais écraser un run terminé
-     * normalement ou re-claimé entre-temps.
-     *
-     * @param runId      identifiant du run à abandonner
-     * @param finishedAt date de fin (abandon)
-     * @param lastError  message d'erreur exploitable
-     * @return true si le run a bien été marqué FAILED, false sinon
-     */
-    public boolean markStuckFailed(long runId, Instant finishedAt, String lastError) {
-        return failAndRelease(runId,finishedAt,lastError,null);
-    }
-
-    /**
      * Recherche un AuditRun par son reportToken pré-généré.
      * Utilisé pour résoudre le statut d'un run depuis la page rapport,
      * avant même que le rapport public soit publié.
@@ -301,26 +255,9 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
         );
     }
 
-    /**
-     * Met à jour le JSON des statuts de modules pour un run donné.
-     *
-     * @param runId        identifiant du run
-     * @param statusesJson JSON array des {@code ModuleStatus}
-     */
-    public void updateModuleStatuses(long runId, String statusesJson) {
-        transactionManager.update(RUN)
-            .set(RUN.moduleStatuses, statusesJson)
-            .where(RUN.id.eq(runId))
-            .execute();
-    }
-
-    /** One atomic UPDATE, without loading the run/result_json or overwriting another module. */
-    public boolean updateModuleStatus(long runId, String moduleId, String status,
-                                      String initialStatusesJson, boolean onlyRunning) {
-        return updateModuleStatus(runId,moduleId,status,initialStatusesJson,onlyRunning,null);
-    }
-    /** An old worker cannot overwrite progress belonging to a new claim. */
+    /** One atomic UPDATE fenced by the dispatched claim, including failure cleanup. */
     public boolean updateModuleStatus(long runId,String moduleId,String status,String initialStatusesJson,boolean onlyRunning,String expectedClaim) {
+        if (expectedClaim == null || expectedClaim.isBlank()) return false;
         StringExpression document = Expressions.stringTemplate(
             "CASE WHEN JSON_VALID({0}) THEN CASE WHEN JSON_TYPE({0}) = 'ARRAY' AND JSON_LENGTH({0}) > 0 "
                 + "THEN {0} ELSE {1} END ELSE {1} END", RUN.moduleStatuses, initialStatusesJson);
@@ -333,7 +270,7 @@ public class AuditRunDao extends CrudDaoQuerydsl<AuditRun> {
         var runState = onlyRunning ? RUN.status.in("RUNNING", "FAILED", "CANCELED") : RUN.status.eq("RUNNING");
         return transactionManager.update(RUN)
             .set(RUN.moduleStatuses, Expressions.stringTemplate("JSON_SET({0}, {1}, {2})", document, path, status))
-            .where(RUN.id.eq(runId), runState, path.isNotNull(), allowed, expectedClaim==null?null:RUN.claimToken.eq(expectedClaim))
+            .where(RUN.id.eq(runId), runState, path.isNotNull(), allowed, RUN.claimToken.eq(expectedClaim))
             .execute() == 1;
     }
 }

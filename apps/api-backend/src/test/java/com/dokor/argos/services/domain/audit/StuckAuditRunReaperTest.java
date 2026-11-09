@@ -54,6 +54,6 @@ class StuckAuditRunReaperTest {
         assertEquals(result == AuditRunDao.Recovery.STALE ? 0 : 1, reaper.reapStuckRuns());
         verify(dao).recoverStuck(same(run), eq(3), any(), eq("initial"));
         verify(service, times(result == AuditRunDao.Recovery.FAILED ? 1 : 0))
-                .failRunningModules(42L);
+                .failRunningModules(42L, "observed-worker");
     }
 }
