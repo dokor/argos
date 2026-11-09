@@ -85,7 +85,10 @@ public class ReportReadService {
             }
             return Optional.of(report.withIntroduction(note));
         } catch (Exception e) {
-            logger.warn("Invalid report_json reportId={}", entity.getId(), e);
+            // Jackson messages and causes can contain private values from the stored JSON.
+            logger.warn("Invalid report_json reportId={} runId={} origin={} error={}", entity.getId(),
+                entity.getRunId(), com.dokor.argos.services.domain.audit.UrlNormalizer.sanitizeForLog(entity.getTargetUrl()),
+                e.getClass().getSimpleName());
             // sécurité : 404 plutôt que 500 (évite leak)
             return Optional.empty();
         }

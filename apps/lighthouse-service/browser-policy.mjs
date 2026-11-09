@@ -41,6 +41,14 @@ export async function protectContext(context, cancel) {
 }
 export function safeOrigin(value) { try { return new URL(value).origin; } catch { return '[invalid URL]'; } }
 
+/** Log context contains only the target origin and an optional numeric backend run ID. */
+export function auditLogContext(url, runId) {
+  return {
+    origin: safeOrigin(url),
+    ...(typeof runId === 'string' && runId === runId.trim() && /^[1-9][0-9]{0,18}$/.test(runId) ? { runId } : {})
+  };
+}
+
 /** Bound and redact site-supplied diagnostic strings before returning a collector result. */
 export function redactDiagnostics(value, depth = 0) {
   if (depth > 30) return '[truncated]';

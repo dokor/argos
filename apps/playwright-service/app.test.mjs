@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { once } from 'node:events';
 import { createRuntimeApp } from './app.mjs';
 
-async function serverFor(t, chromium) {
-  const server = createRuntimeApp({ chromium, proxy: 'http://127.0.0.1:3128' }).listen(0, '127.0.0.1');
+async function serverFor(t, chromium, log = () => {}) {
+  const server = createRuntimeApp({ chromium, log, proxy: 'http://127.0.0.1:3128' }).listen(0, '127.0.0.1');
   await once(server, 'listening');
   t.after(() => new Promise(resolve => { server.close(resolve); server.closeAllConnections(); }));
   return 'http://127.0.0.1:' + server.address().port;
@@ -12,7 +12,7 @@ async function serverFor(t, chromium) {
 function collector({ navigationFailure = false, contextFailure = false, cdpFailure = null,
   jsCount = 1, contentLength = '321', failureCount = 1, finalUrl = 'https://www.example.co.uk/final',
   responseSizes = [321], sizeFailure = false, sizeDelay = 0, finished = true, sizeStall = false,
-  responseUrl = 'https://other.test/api' } = {}) {
+  responseUrl = 'https://other.test/api', cleanupFailure = false, errorMessage = 'private collector secret' } = {}) {
   let closed = 0, launched = 0;
   const handlers = {};
   const contextHandlers = {};
@@ -45,7 +45,7 @@ function collector({ navigationFailure = false, contextFailure = false, cdpFailu
           headers: () => ({ 'content-length': contentLength }) });
         if (finished) handlers.requestfinished(request);
       }
-      if (navigationFailure) throw new Error('Timeout fixture');
+      if (navigationFailure) throw new Error(errorMessage);
       handlers.domcontentloaded();
       await new Promise(resolve => setTimeout(resolve, 15));
       handlers.load();
@@ -57,7 +57,7 @@ function collector({ navigationFailure = false, contextFailure = false, cdpFailu
     launched++;
     return {
       newContext: async () => {
-        if (contextFailure) throw new Error('private context failure');
+        if (contextFailure) throw new Error(errorMessage);
         return {
           route: async () => {}, routeWebSocket: async () => {},
           on: (name, handler) => { contextHandlers[name] = handler; },
@@ -73,6 +73,7 @@ function collector({ navigationFailure = false, contextFailure = false, cdpFailu
       },
       close: async () => {
         closed++;
+        if (cleanupFailure) throw new Error(errorMessage);
         for (const reject of rejectSizes) reject(new Error('Browser closed'));
         if (rejectInstrumentation) {
           rejectInstrumentation(new Error('Target closed'));
@@ -298,4 +299,37 @@ test('CDP setup failures during collection still cancel the analysis', async t =
   assert.equal(response.status, 504);
   assert.deepEqual(await response.json(), { error: 'Analysis timeout' });
   assert.ok(fake.closed() >= 1);
+});
+
+test('all runtime log paths retain only origin and run identity, including cleanup failures', async t => {
+  const secret = 'private-url-token-password';
+  const url = `https://example.com/reset/${secret}?token=${secret}#${secret}`;
+  for (const options of [{}, { navigationFailure: true }, { contextFailure: true, cleanupFailure: true }]) {
+    const events = [];
+    const fake = collector({ ...options, errorMessage: `https://user:${secret}@example.com/?token=${secret}\r\n${secret}` });
+    const base = await serverFor(t, fake.chromium, (event, fields) => events.push({ event, ...fields }));
+    await fetch(base + '/analyze/runtime', { method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-argos-run-id': '42' }, body: JSON.stringify({ url }) });
+    assert.ok(events.length >= 2);
+    for (const event of events) {
+      assert.equal(event.origin, 'https://example.com');
+      assert.equal(event.runId, '42');
+    }
+    assert.doesNotMatch(JSON.stringify(events), /private-url-token-password|\/reset\/|user:|\?token/);
+    if (options.navigationFailure) assert.ok(events.some(event => event.event === 'analyze.navigation_error'));
+    if (options.cleanupFailure) {
+      assert.ok(events.some(event => event.event === 'analyze.error'));
+      assert.ok(events.some(event => event.event === 'analyze.cleanup_error'));
+    }
+  }
+});
+
+test('runtime ignores untrusted correlation text', async t => {
+  const events = [];
+  const base = await serverFor(t, collector().chromium, (event, fields) => events.push({ event, ...fields }));
+  await fetch(base + '/analyze/runtime', { method: 'POST', headers: {
+    'content-type': 'application/json', 'x-argos-run-id': 'private-token' }, body: '{"url":"https://example.com"}' });
+  assert.ok(events.length >= 2);
+  assert.ok(events.every(event => event.runId === undefined));
+  assert.doesNotMatch(JSON.stringify(events), /private-token/);
 });

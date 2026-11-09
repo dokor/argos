@@ -94,7 +94,7 @@ public class SchedulerJobs {
                 logger.debug("No queued audit run found");
             }
         } catch (Exception e) {
-            logger.error("Error while processing audit queue", e);
+            logger.error("Error while processing audit queue error={}", e.getClass().getSimpleName());
         }
     }
 
@@ -105,7 +105,7 @@ public class SchedulerJobs {
                 logger.info("Stuck audit run reaper handled {} run(s)", handled);
             }
         } catch (Exception e) {
-            logger.error("Error while reaping stuck audit runs", e);
+            logger.error("Error while reaping stuck audit runs error={}", e.getClass().getSimpleName());
         }
     }
 }

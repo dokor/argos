@@ -68,3 +68,16 @@ test('completion kills a descendant left alive by the worker', async t => {
   for (let i = 0; i < 100 && await alive(); i++) await new Promise(resolve => setTimeout(resolve, 50));
   assert.equal(await alive(), false);
 });
+
+test('worker diagnostics use parent origin and run identity without trusting child context', async t => {
+  const events = [];
+  const { collect } = await fixture(t, { log: (event, fields) => events.push({ event, ...fields }) });
+  await collect('https://example.com/diagnostics?token=private-parent-secret', { runId: '42' });
+  assert.equal(events.length, 2);
+  for (const event of events) {
+    assert.equal(event.origin, 'https://example.com');
+    assert.equal(event.runId, '42');
+  }
+  assert.deepEqual(events.map(event => event.reason), ['net::ERR_CONNECTION_RESET', 'NETWORK_ERROR']);
+  assert.doesNotMatch(JSON.stringify(events), /private-child-secret|private-parent-secret|diagnostics|\?token/);
+});

@@ -120,7 +120,7 @@ public class AuditsWs {
             if(personal!=null&&personal.proof()!=null)response.header("X-Argos-Run-Proof",personal.proof());
             return response.build();
         } catch (IllegalArgumentException e) {
-            logger.warn("Invalid URL submitted url={} error={}", sanitizeForLog(request.url()), e.getMessage());
+            logger.warn("Invalid URL submitted url={} error={}", sanitizeForLog(request.url()), e.getClass().getSimpleName());
             return Response.status(Response.Status.BAD_REQUEST)
                 .entity(Map.of("error", e.getMessage()))
                 .build();

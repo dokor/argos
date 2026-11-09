@@ -45,7 +45,7 @@ public class LighthouseClient {
             String payload = objectMapper.writeValueAsString(Map.of("url", url, "timeoutMs",
                 Math.max(1, AuditDeadline.requestTimeout(requestTimeout).toMillis())));
             return http.postJson(endpoint, payload, "application/json", requestTimeout,
-                Duration.ofSeconds(5), BoundedBodyHandlers.MAX_JSON_BYTES, Map.of());
+                Duration.ofSeconds(5), BoundedBodyHandlers.MAX_JSON_BYTES, ExternalServiceCall.correlationHeaders());
         });
     }
 }
