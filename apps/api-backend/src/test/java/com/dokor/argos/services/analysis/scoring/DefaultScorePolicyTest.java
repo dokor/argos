@@ -20,7 +20,7 @@ class DefaultScorePolicyTest {
 
     @Test
     void versionAndFingerprintExposeTheActiveRubric() {
-        assertEquals(14, policy.version());
+        assertEquals(15, policy.version());
         assertTrue(policy.fingerprint().matches("[0-9a-f]{64}"));
         assertEquals(policy.fingerprint(), new DefaultScorePolicy().fingerprint());
     }

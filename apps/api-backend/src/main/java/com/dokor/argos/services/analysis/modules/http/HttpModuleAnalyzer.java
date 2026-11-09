@@ -765,7 +765,7 @@ public class HttpModuleAnalyzer {
                 AuditSeverity.LOW,
                 false, 0.0, List.of(),
                 httpVersion,
-                Map.of("httpVersion", shown),
+                Map.of("httpVersion", shown, "measurementState", "NOT_APPLICABLE", "measurementReason", "HTTPS_REQUIRED"),
                 "HTTP/2 non évalué (site non servi en HTTPS).",
                 null
             );
