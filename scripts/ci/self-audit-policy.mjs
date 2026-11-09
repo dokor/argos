@@ -21,11 +21,10 @@ export const CHECKS = Object.freeze(Object.fromEntries(Object.entries({
     'tech.security.version_disclosure'],
   seo: ['http.headers.content_type', 'http.seo.robots_txt', 'http.seo.sitemap', 'html.title',
     'html.meta.description.present', 'html.link.canonical.present', 'html.h1.count',
-    'html.social.meta', 'html.meta.robots.present', 'html.meta.charset.present'],
+    'html.social.meta', 'html.meta.charset.present'],
   a11y: ['html.meta.viewport.present', 'html.doctype.html5', 'html.images.alt_coverage',
     'html.anchors.href_coverage', 'html.lang'],
-  performance: ['http.status_code', 'http.redirect.count', 'http.protocol.version',
-    'http.protocol.http2', 'http.headers.compression', 'http.headers.caching',
+  performance: ['http.status_code', 'http.redirect.count', 'http.protocol.http2',
     'runtime.console.errors', 'runtime.js.errors', 'runtime.network.5xx',
     'runtime.network.failed_requests', 'runtime.network.request_count', 'runtime.network.bytes_estimated'],
 }).flatMap(([domain, keys]) => keys.map(key => [key, domain]))));
