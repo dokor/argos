@@ -64,4 +64,3 @@ public class AccountMailOutboxService {
         return true;
     }
 }
-

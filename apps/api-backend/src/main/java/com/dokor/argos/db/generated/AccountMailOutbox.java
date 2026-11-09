@@ -34,4 +34,3 @@ public class AccountMailOutbox extends CrudEntityQuerydsl {
     @Override
     public String toString() { return "AccountMailOutbox#" + id; }
 }
-

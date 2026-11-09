@@ -64,4 +64,3 @@ public class AccountMailPayload {
         return cipher;
     }
 }
-

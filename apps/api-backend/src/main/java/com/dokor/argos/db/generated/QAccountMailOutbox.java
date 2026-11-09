@@ -29,4 +29,3 @@ public class QAccountMailOutbox extends RelationalPathBase<AccountMailOutbox> {
         addMetadata(expiresAt, ColumnMetadata.named("expires_at").withIndex(7).ofType(Types.TIMESTAMP));
     }
 }
-

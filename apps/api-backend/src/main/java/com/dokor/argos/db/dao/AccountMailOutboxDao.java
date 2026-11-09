@@ -65,4 +65,3 @@ public class AccountMailOutboxDao {
                 .where(q.id.eq(row.getId()), q.claimToken.eq(row.getClaimToken())).execute());
     }
 }
-

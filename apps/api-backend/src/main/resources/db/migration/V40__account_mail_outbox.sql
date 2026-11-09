@@ -11,4 +11,3 @@ CREATE TABLE ARG_ACCOUNT_MAIL_OUTBOX (
     KEY idx_account_mail_due (next_attempt_at, id),
     KEY idx_account_mail_expiry (expires_at)
 );
-
