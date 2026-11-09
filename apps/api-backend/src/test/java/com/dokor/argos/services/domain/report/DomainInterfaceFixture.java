@@ -124,7 +124,7 @@ final class DomainInterfaceFixture {
                         sessions,
                         fixture.tokens,
                         settings,
-                        mock(AccountMail.class),
+                        mock(AccountMailOutboxService.class),
                         clock);
         config.register(
                 new AccountAuthWs(

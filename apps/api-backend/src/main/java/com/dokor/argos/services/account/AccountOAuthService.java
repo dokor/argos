@@ -176,7 +176,7 @@ public class AccountOAuthService {
                                     context.user().getId(),
                                     context.session().getId(),
                                     c);
-                            auth.notice(context.user(), AccountEmail.Kind.METHOD_ADDED, language);
+                            auth.notice(context.user(), AccountEmail.Kind.METHOD_ADDED, language, c);
                             return new Finish(null, tx.getReturnPath(), null, null, false);
                         }
                         var existing = dao.identity(provider, identity.subject(), c);

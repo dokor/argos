@@ -185,7 +185,7 @@ class AccountSessionSecurityIT extends MariaDbReportFixture {
         };
         var renewing = new AccountSessionService(dao, pausingSigner, tokens, settings, clock);
         var auth = new AccountAuthService(dao, new AccountPasswords(settings), sessions, tokens,
-                settings, (recipient, message) -> {}, clock);
+                settings, org.mockito.Mockito.mock(AccountMailOutboxService.class), clock);
         if (action == Invalidation.RESET) dao.transaction(c -> {
             var identity = new com.dokor.argos.db.generated.AccountIdentity();
             identity.setUserId(user.getId());

@@ -58,7 +58,11 @@ public class SchedulerJobs {
         this.stuckAuditRunReaper = stuckAuditRunReaper;
     }
 
+    private com.dokor.argos.services.account.AccountMailOutboxService accountMail;
+    @Inject public void accountMail(com.dokor.argos.services.account.AccountMailOutboxService service) { this.accountMail = service; }
+
     public void scheduleJobs() {
+        if (accountMail != null) scheduler.schedule("Deliver account mail", accountMail::tick, Schedules.fixedDelaySchedule(Duration.ofSeconds(2)));
         if(problemStatistics!=null) scheduler.schedule("Project problem statistics",problemStatistics::backfill,Schedules.fixedDelaySchedule(Duration.ofMinutes(1)));
         if(premiumWaitlist!=null) scheduler.schedule("Purge expired premium interest",premiumWaitlist::purge,Schedules.fixedDelaySchedule(Duration.ofHours(1)));
         if(notifications!=null) scheduler.schedule("Purge account notifications",notifications::purge,Schedules.fixedDelaySchedule(Duration.ofHours(1)));

@@ -48,6 +48,18 @@ class SmtpAccountMailTest {
     }
 
     @Test
+    void retryUsesTheSameMessageIdOnTheWire() throws Exception {
+        for (int attempt = 0; attempt < 2; attempt++) {
+            try (var server = new SmtpPeer(false)) {
+                new SmtpAccountMail(server.settings(false)).send("reader@example.invalid", sample(), "argos-account-123");
+                var mime = new MimeMessage(Session.getInstance(new Properties()),
+                        new ByteArrayInputStream(server.delivery().data().getBytes(StandardCharsets.US_ASCII)));
+                assertEquals("<argos-account-123@argos.local>", mime.getMessageID());
+            }
+        }
+    }
+
+    @Test
     void requiredStartTlsRefusesToSendContentToAPeerWithoutTls() throws Exception {
         try (var server = new SmtpPeer(false)) {
             assertThrows(AccountError.class, () -> new SmtpAccountMail(server.settings(true))
