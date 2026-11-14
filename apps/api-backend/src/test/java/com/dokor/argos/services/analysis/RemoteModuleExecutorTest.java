@@ -9,6 +9,22 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.*;
 
 class RemoteModuleExecutorTest {
+    @Test void requestBudgetsAreScopedOnTheWorkerBeforeTheOrchestratorAwaitsIt() throws Exception {
+        var parent = new AuditDeadline(Duration.ofSeconds(30));
+        try (var scope = parent.enter();
+             var executor = new RemoteModuleExecutor(Duration.ofSeconds(2), 2);
+             var task = executor.submit("ssl", () -> {
+                 assertNotNull(AuditDeadline.current());
+                 assertNotSame(parent, AuditDeadline.current());
+                 assertTrue(AuditDeadline.requestTimeout(Duration.ofSeconds(20)).compareTo(Duration.ofSeconds(2)) <= 0);
+                 return "bounded";
+             })) {
+            assertEquals("bounded", task.await());
+            assertSame(parent, AuditDeadline.current());
+        }
+        assertNull(AuditDeadline.current());
+    }
+
     @Test void configurationDefaultsToSequentialAndOnlyAcceptsTheSupportedCapacity() {
         try (var executor = new RemoteModuleExecutor(com.typesafe.config.ConfigFactory.empty())) {
             assertEquals(1, executor.maxConcurrentModules());

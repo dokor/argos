@@ -16,6 +16,9 @@ import com.dokor.argos.services.domain.audit.*;
 import com.dokor.argos.services.domain.report.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -25,6 +28,8 @@ class AuditScopeTest {
     private final DefaultScorePolicy policy = new DefaultScorePolicy();
     private final AuditScopeCatalogue catalogue = new AuditScopeCatalogue(policy);
     private final ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
+    private final List<RemoteModuleExecutor> remoteExecutors = new ArrayList<>();
+    @AfterEach void closeExecutors() { remoteExecutors.forEach(RemoteModuleExecutor::close); }
     private static AuditModuleResult module(String id, String key) {
         return new AuditModuleResult(id,id,"",Map.of(),List.of(AuditCheckResult.of(key,key,AuditStatus.FAIL,AuditSeverity.MEDIUM,false,0,List.of(),null,Map.of(),"observation",null)));
     }
@@ -53,8 +58,9 @@ class AuditScopeTest {
         assertNotEquals(MeasurementContract.scope(url,url),MeasurementContract.scope(url,url,new AuditScope("category","seo")));
         assertNotEquals(MeasurementContract.scope(url,url,new AuditScope("category","seo")),MeasurementContract.scope(url,url,new AuditScope("check","html.title")));
     }
-    @Test void processorRunsOnlyHtmlAndFreshHttpAndScoresOnlyTitle() throws Exception {
-        Fixture f=new Fixture(new AuditScope("check","html.title"));
+    @ParameterizedTest @ValueSource(ints = {1, 2, 3})
+    void processorRunsOnlyHtmlAndFreshHttpAndScoresOnlyTitle(int capacity) throws Exception {
+        Fixture f=new Fixture(new AuditScope("check","html.title"), capacity);
         when(f.html.analyze(any(),any())).thenAnswer(invocation->{
             AuditContext context=invocation.getArgument(0);
             assertEquals("<title>Fresh</title>",context.body());
@@ -71,6 +77,16 @@ class AuditScopeTest {
         assertEquals("check",dto.scores().scope().kind());
         assertEquals(dto.scores().scope(),dto.publicSummary().scores().scope());
         verifyNoInteractions(f.runtime,f.lighthouse,f.ssl,f.observatory,f.zap,f.tech);
+    }
+    @Test void observatoryOnlyUsesTheFreeRemoteWorkerWithoutStartingSsl() throws Exception {
+        Fixture f = new Fixture(new AuditScope("check", "observatory.score"), 2);
+        when(f.observatory.analyze(any(), any())).thenAnswer(call -> {
+            assertTrue(Thread.currentThread().getName().startsWith("audit-remote-"));
+            return module("observatory", "observatory.score");
+        });
+        f.processor.process(1);
+        assertEquals(List.of("http", "observatory"), f.published().modules().stream().map(AuditModuleResult::id).toList());
+        verifyNoInteractions(f.html, f.runtime, f.lighthouse, f.ssl, f.zap, f.tech);
     }
     @Test void categoryFailurePublishesPartialWithoutInventingTitleOrScore() throws Exception {
         Fixture f=new Fixture(new AuditScope("category","seo"));
@@ -121,11 +137,17 @@ class AuditScopeTest {
         final ReportPublishService publication=mock(ReportPublishService.class);
         final AuditProcessorService processor;
         Fixture(AuditScope scope) throws Exception {
+            this(scope, 1);
+        }
+        Fixture(AuditScope scope, int capacity) throws Exception {
             var run=new AuditRun();run.setId(1L);run.setAuditId(2L);run.setExecutionScope(mapper.writeValueAsString(scope));
             var audit=new Audit();audit.setId(2L);audit.setDomainId(3L);audit.setInputUrl("https://example.com/");audit.setNormalizedUrl("https://example.com/");
             when(runs.getRun(1)).thenReturn(Optional.of(run));when(audits.findById(2L)).thenReturn(audit);
             when(http.analyze(any(),any())).thenReturn(new AuditModuleResult("http","HTTP","",Map.of("body","<title>Fresh</title>","finalUrl","https://example.com/final","statusCode",200),List.of()));
             processor=new AuditProcessorService(runs,audits,mock(UrlNormalizer.class),http,html,runtime,lighthouse,observatory,ssl,zap,tech,new CheckMergerService(),new ScoreEnricherService(policy),new ScoreService(policy),mapper,publication);
+            var remote = new RemoteModuleExecutor(java.time.Duration.ofSeconds(5), capacity);
+            remoteExecutors.add(remote);
+            processor.configureRemoteModuleExecutor(remote);
         }
         AuditReportJson published() {
             var captured=ArgumentCaptor.forClass(AuditReportJson.class);

@@ -58,7 +58,9 @@ public class RemoteModuleExecutor implements AutoCloseable {
             throw new IllegalArgumentException("Not a remote module");
         if (!parallelEnabled()) throw new IllegalStateException("Remote parallelism is disabled");
         long submitted = System.nanoTime();
-        long effectiveBudget = AuditDeadline.current()==null ? budgetNanos : Math.min(budgetNanos,AuditDeadline.current().remainingNanos());
+        var parent = AuditDeadline.current();
+        var deadline = parent == null ? new AuditDeadline(timeoutBudget()) : parent.child(timeoutBudget());
+        long effectiveBudget = deadline.remainingNanos();
         long startedAtMillis = System.currentTimeMillis();
         Map<String, String> context = MDC.getCopyOfContextMap();
         Callable<T> contextual = () -> {
@@ -67,7 +69,9 @@ public class RemoteModuleExecutor implements AutoCloseable {
                 if (context == null) MDC.clear(); else MDC.setContextMap(context);
                 MDC.put("module", module);
                 if (System.nanoTime() - submitted >= effectiveBudget) throw timeout();
-                T result = call.call();
+                // Bound the actual HTTP requests and provider polls, even while the caller
+                // is still running local stages and has not reached Task.await() yet.
+                T result = deadline.call(call);
                 if (System.nanoTime() - submitted >= effectiveBudget) throw timeout();
                 return result;
             } finally {

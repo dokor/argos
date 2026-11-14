@@ -384,10 +384,10 @@ class AuditProcessorServiceTest {
             var localFinished = new CountDownLatch(1);
             try (var remote = new RemoteModuleExecutor(Duration.ofSeconds(5), 2)) {
                 var processor = processor(remote);
-                when(observatory.analyze(any(), any())).thenAnswer(call -> {
+                when(ssl.analyze(any(), any())).thenAnswer(call -> {
                     remoteStarted.countDown();
                     assertTrue(localFinished.await(2, TimeUnit.SECONDS));
-                    return result("observatory");
+                    return result("ssl");
                 });
                 when(html.analyze(any(), any())).thenAnswer(call -> {
                     assertTrue(remoteStarted.await(2, TimeUnit.SECONDS));
@@ -416,6 +416,76 @@ class AuditProcessorServiceTest {
                 assertEquals("TIMEOUT", statuses.path("ssl").asText());
                 assertEquals("COMPLETED", statuses.path("tech").asText());
                 assertFalse(report.getValue().modules().get(5).checks().getFirst().scorable());
+            }
+        }
+
+        @Test void capacityTwoOverlapsSslWithoutMakingObservatoryZapOrTechWaitForIt() throws Exception {
+            var sslStarted = new CountDownLatch(1);
+            var localFinished = new CountDownLatch(1);
+            var sslFinished = new java.util.concurrent.atomic.AtomicBoolean();
+            var localThread = new java.util.concurrent.atomic.AtomicReference<Thread>();
+            try (var remote = new RemoteModuleExecutor(Duration.ofSeconds(5), 2)) {
+                var processor = processor(remote);
+                when(ssl.analyze(any(), any())).thenAnswer(call -> {
+                    assertEquals("https://example.com/final", ((AuditContext) call.getArgument(0)).finalUrl());
+                    sslStarted.countDown();
+                    assertTrue(localFinished.await(2, TimeUnit.SECONDS), "ZAP and Tech must not wait for SSL");
+                    sslFinished.set(true);
+                    return result("ssl");
+                });
+                when(observatory.analyze(any(), any())).thenAnswer(call -> {
+                    assertEquals(0, sslStarted.getCount());
+                    assertFalse(sslFinished.get(), "Observatory must not queue behind SSL");
+                    assertSame(localThread.get(), Thread.currentThread());
+                    return result("observatory");
+                });
+                when(html.analyze(any(), any())).thenAnswer(call -> {
+                    localThread.set(Thread.currentThread());
+                    assertTrue(sslStarted.await(2, TimeUnit.SECONDS));
+                    return result("html");
+                });
+                when(domains.runFreshTechAnalysis(any(), any())).thenAnswer(call -> {
+                    localFinished.countDown();
+                    return result("tech");
+                });
+                processor.process(1L);
+                var order = inOrder(html, runtime, lighthouse, zap, domains);
+                order.verify(html).analyze(any(), any());
+                order.verify(runtime).analyze(any(), any());
+                order.verify(lighthouse).analyze(any(), any());
+                order.verify(zap).analyze(any(), any());
+                order.verify(domains).runFreshTechAnalysis(any(), any());
+                var report = ArgumentCaptor.forClass(AuditReportJson.class);
+                verify(publisher).completeAndPublish(eq(1L), any(), report.capture(), anyString(), eq("synthetic-worker"));
+                assertEquals(AuditModule.ordered().stream().map(AuditModule::id).toList(),
+                    report.getValue().modules().stream().map(AuditModuleResult::id).toList());
+                mapper.readTree(report.getValue().meta().get("moduleStatuses"))
+                    .forEach(status -> assertEquals("COMPLETED", status.asText()));
+            } finally { localFinished.countDown(); }
+        }
+
+        @Test void slowRemoteDoesNotPreventIndependentLocalMeasurementsBeforeTheSharedDeadline() throws Exception {
+            var stopped = new CountDownLatch(1);
+            try (var remote = new RemoteModuleExecutor(Duration.ofSeconds(5), 2);
+                 var local = new AuditModuleExecutor(Duration.ofSeconds(2))) {
+                var processor = processor(remote);
+                processor.configureAuditModuleExecutor(local);
+                when(ssl.analyze(any(), any())).thenAnswer(call -> {
+                    try { new CountDownLatch(1).await(); return result("ssl"); }
+                    finally { stopped.countDown(); }
+                });
+                processor.process(1L);
+                assertTrue(stopped.await(2, TimeUnit.SECONDS));
+                verify(zap).analyze(any(), any());
+                verify(domains).runFreshTechAnalysis(any(), any());
+                var report = ArgumentCaptor.forClass(AuditReportJson.class);
+                verify(publisher).completeAndPublish(eq(1L), any(), report.capture(), anyString(), eq("synthetic-worker"));
+                var statuses = mapper.readTree(report.getValue().meta().get("moduleStatuses"));
+                assertEquals("TIMEOUT", statuses.path("ssl").asText());
+                assertEquals("COMPLETED", statuses.path("observatory").asText());
+                assertEquals("COMPLETED", statuses.path("zap").asText());
+                assertEquals("COMPLETED", statuses.path("tech").asText());
+                statuses.forEach(value -> assertNotEquals("RUNNING", value.asText()));
             }
         }
 
