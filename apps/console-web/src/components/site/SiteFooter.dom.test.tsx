@@ -37,4 +37,18 @@ describe("shared footer (#317)", () => {
     expect(screen.getByRole("link", { name: "Service information" })).toHaveAttribute("href", "/en/legal-information");
     expect(screen.getByRole("link", { name: "About Argos" })).toHaveAttribute("href", "/en/about");
   });
+  it.each(["fr", "en"] as const)("links the author in the %s copyright without nofollow", (lang) => {
+    render(<LangProvider initialLang={lang}><SiteFooter /></LangProvider>);
+    const footer = screen.getByRole("contentinfo");
+    const portfolioLink = within(footer).getAllByRole("link", { name: "Antoine LE LOUËT" })
+      .find((link) => link.getAttribute("href") === "https://antoine.lelouet.fr");
+
+    expect(portfolioLink).toBeDefined();
+    expect(portfolioLink).toHaveAttribute("rel", "noopener noreferrer");
+    expect(portfolioLink?.parentElement).toHaveTextContent(
+      lang === "fr"
+        ? "© 2026 Antoine LE LOUËT · Licence BSL 1.1"
+        : "© 2026 Antoine LE LOUËT · BSL 1.1 License",
+    );
+  });
 });
