@@ -14,6 +14,7 @@ export default function SiteFooter({ fixedFrench = false }: { fixedFrench?: bool
   const { t: localized, lang } = useLang();
   const t = fixedFrench ? fr : localized;
   const f = t.siteFooter;
+  const [copyrightPrefix, copyrightSuffix] = t.landing.footer.copy.split(t.landing.footer.maltProfile);
   return (
     <footer className={s.footer}>
       <div className={s.footerInner}>
@@ -49,7 +50,18 @@ export default function SiteFooter({ fixedFrench = false }: { fixedFrench?: bool
       </div>
       <div className={s.footerBottom}>
         <AuthorCredit className={s.footerCreditLink} />
-        <span>{t.landing.footer.copy}</span>
+        <span>
+          {copyrightPrefix}
+          <a
+            className={s.footerCreditLink}
+            href="https://antoine.lelouet.fr"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {t.landing.footer.maltProfile}
+          </a>
+          {copyrightSuffix}
+        </span>
       </div>
     </footer>
   );
