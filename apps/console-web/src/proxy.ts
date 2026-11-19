@@ -9,12 +9,13 @@ export function proxy(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   // Overwrite untrusted client headers. Next.js reads this policy to nonce its bootstrap.
   requestHeaders.set("x-nonce", nonce);
-  requestHeaders.set("x-argos-language", languageFromPath(request.nextUrl.pathname));
+  const target = new URL(request.url);
+  const pathname = target.pathname;
+  const language = languageFromPath(pathname);
+  requestHeaders.set("x-argos-language", language);
   requestHeaders.set("Content-Security-Policy", policy);
-  const language = languageFromPath(request.nextUrl.pathname);
-  const target = request.nextUrl.clone();
   if (language !== "fr" && language !== "en") target.pathname = "/en" + target.pathname.slice(language.length + 1);
-  const response = target.pathname !== request.nextUrl.pathname
+  const response = target.pathname !== pathname
     ? NextResponse.rewrite(target, { request: { headers: requestHeaders } })
     : NextResponse.next({ request: { headers: requestHeaders } });
   response.headers.set("Content-Security-Policy", policy);

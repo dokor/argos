@@ -18,6 +18,8 @@ on:
       - '.agents/skills/argos-visual-review/scripts/preview-backend.mjs'
       - 'scripts/e2e/admin-statistics.mjs'
       - 'scripts/e2e/public-header.mjs'
+      - 'scripts/e2e/language-menu.mjs'
+      - 'scripts/e2e/language-routing.mjs'
       - 'scripts/e2e/navigation-submenus.mjs'
       - 'scripts/e2e/acceptance-evidence*'
       - 'docs/connected-space/reference/**'

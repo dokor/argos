@@ -197,6 +197,15 @@
 }
 .accountIcon { flex-shrink: 0; }
 .accountLink span { min-width: 0; overflow-wrap: anywhere; }
+.accountLabel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+
+  > span { grid-area: 1 / 1; }
+}
+// Reserve both session labels, including wrapped translations, before login.
+.accountLabelReserve { visibility: hidden; }
 
 @media (max-width: 760px) {
   .navInner {

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { languageHref } from './language-menu.mjs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { chromium } from '../../apps/playwright-service/node_modules/playwright/index.mjs';
 
@@ -42,8 +43,7 @@ try {
     assert.equal(await page.locator('nav a[href$="/dashboard"]').count(), 0);
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth), false, 'Page overflow');
     assert.ok((await page.locator('main').getByRole('link').first().getAttribute('href')).endsWith('/account/admin'));
-    const languageLink = page.getByRole('group', { name: 'Language', exact: true }).getByRole('link', { name: lang === 'fr' ? 'English' : 'Français', exact: true });
-    assert.equal(await languageLink.getAttribute('href'), (lang === 'fr' ? '/en' : '') + '/account/admin/analytics');
+    assert.equal(await languageHref(page, lang === 'fr' ? 'English' : 'Français'), (lang === 'fr' ? '/en' : '') + '/account/admin/analytics');
     const settings = page.locator('summary').filter({ hasText: lang === 'fr' ? 'Réglages de collecte' : 'Collection settings' });
     await settings.press('Enter');
     await page.getByRole('button', { name: lang === 'fr' ? 'Actualiser l’état de collecte' : 'Refresh collection state', exact: true }).waitFor();

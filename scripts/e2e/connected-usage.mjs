@@ -1,4 +1,5 @@
 import { injectAxe } from './inject-axe.mjs';
+import { languageHref } from './language-menu.mjs';
 import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
 import {chromium} from '../../apps/playwright-service/node_modules/playwright/index.mjs';
@@ -56,7 +57,7 @@ try{
   if(width<768){await page.keyboard.press('ArrowRight');await page.waitForFunction(element=>element.scrollLeft>0,await ledgerRegion.elementHandle());}
 
   await page.getByRole('button',{name:labels.next,exact:true}).click();await page.waitForURL(/offset=20/);await runLink('2020').waitFor();assert.equal(await page.getByRole('table').locator('tbody tr').count(),4);await check('page-two');
-  const languageLink=page.getByRole('link',{name:lang==='fr'?'English':'Français',exact:true});assert.ok((await languageLink.getAttribute('href')).includes('offset=20'));
+  assert.ok((await languageHref(page, lang==='fr'?'English':'Français')).includes('offset=20'));
   await page.getByLabel(labels.month).fill('2026-09');await page.getByRole('button',{name:labels.show,exact:true}).click();await page.waitForURL(/period=2026-09$/);assert.ok(!new URL(page.url()).searchParams.has('offset'));await runLink('2010').waitFor();await check('prior-month');
   assert.equal(await page.getByRole('link',{name:`${usage.available} ${(lang==='fr'?fr:en).connected.credits}`,exact:true}).count(),1,'Historic filter never changes current quota');
   await page.getByLabel(labels.month).fill('2026-08');await page.getByRole('button',{name:labels.show,exact:true}).click();await page.getByRole('heading',{name:labels.empty}).waitFor();await check('empty');

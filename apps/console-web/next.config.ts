@@ -24,6 +24,8 @@ const nextConfig: NextConfig = {
   // console-web has its own dependencies and lockfile, separate from root ADE tooling.
   // The config directory also resolves to /app in the console-web Docker context.
   turbopack: { root: __dirname },
+  // Keep rewrites on the server's original origin (including numeric loopback hosts).
+  skipProxyUrlNormalize: true,
   experimental: { globalNotFound: true },
   reactCompiler: true,
   async redirects() {
