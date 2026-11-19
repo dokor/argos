@@ -1,4 +1,6 @@
 "use client";
+import { intlLocale } from "@/lib/i18n/locales";
+import { localizedCopy } from "@/lib/i18n/messages";
 import { inputHints } from "@/lib/input-hints";
 import CollectionGaps from "./CollectionGaps";
 import { quotaResetDate } from "@/lib/quota-date";
@@ -22,7 +24,7 @@ const pending = (data: Overview) => data.activeRuns > 0;
 export default function OverviewView() {
   const { t, lang } = useLang(),
     c = t.overviewPage,
-    compact = compactCopy[lang],
+    compact = localizedCopy(compactCopy, lang),
     params = useSearchParams(),
     pathname = usePathname(),
     router = useRouter();
@@ -46,9 +48,9 @@ export default function OverviewView() {
     }
     router.push(pathname + (next.size ? "?" + next : ""), { scroll: false });
   };
-  const number = (n: number) => new Intl.NumberFormat(lang).format(n),
+  const number = (n: number) => new Intl.NumberFormat(intlLocale(lang)).format(n),
     date = (v: string) =>
-      new Intl.DateTimeFormat(lang, {
+      new Intl.DateTimeFormat(intlLocale(lang), {
         dateStyle: "medium",
         timeStyle: "short",
       }).format(new Date(v));
@@ -114,7 +116,7 @@ export default function OverviewView() {
               {r.score.provisional ? ` · ${c.provisional}` : ""} · {c.coverage}:{" "}
               {r.coverage.ratio === null
                 ? c.unknown
-                : new Intl.NumberFormat(lang, {
+                : new Intl.NumberFormat(intlLocale(lang), {
                     style: "percent",
                     maximumFractionDigits: 0,
                   }).format(r.coverage.ratio)}
@@ -294,7 +296,7 @@ export default function OverviewView() {
                       <label htmlFor="overview-query">{c.search}</label>
                       <input
                         id="overview-query"
-                        placeholder={inputHints[lang].searchUrl}
+                        placeholder={localizedCopy(inputHints, lang).searchUrl}
                         name="query"
                         type="search"
                         maxLength={2048}

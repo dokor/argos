@@ -1,3 +1,4 @@
+import { localizeValue } from "@/lib/i18n/messages";
 /* eslint-disable @next/next/no-head-element -- Shared root document for the French and English root layouts. */
 import type { Metadata, Viewport } from "next";
 import { siteUrl as SITE_URL } from "@/lib/site-url";
@@ -14,6 +15,8 @@ import fr from "@/lib/i18n/fr.json";
 import en from "@/lib/i18n/en.json";
 import "@/app/globals.css";
 import type { Lang } from "@/lib/i18n/routes";
+import { localizedPath } from "@/lib/i18n/routes";
+import { loadMessages } from "@/lib/i18n/server";
 
 // Applique le thème avant le premier paint pour éviter un flash (FOUC) :
 // choix persistant sinon préférence système. Exécuté inline dans <head>.
@@ -122,6 +125,8 @@ export default async function SiteDocument({
   children: React.ReactNode;
   lang?: Lang;
 }>) {
+  const messages = await loadMessages(lang);
+  const description = lang === "fr" ? DESCRIPTION : localizeValue(en.layout.description, lang);
   // Reading request headers opts both root layouts into dynamic rendering.
   const nonce = (await headers()).get("x-nonce") ?? undefined;
   const credentials = await cookies();
@@ -134,14 +139,14 @@ export default async function SiteDocument({
         <script
           nonce={nonce}
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify({ ...jsonLd, url: lang === "en" ? SITE_URL + "/en" : SITE_URL, inLanguage: lang, description: lang === "en" ? en.layout.description : DESCRIPTION }).replace(/</g, "\\u003c") }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify({ ...jsonLd, url: SITE_URL + localizedPath("/", lang), inLanguage: lang, description }).replace(/</g, "\\u003c") }}
         />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <ClientErrorLogger />
         <SessionRenewal enabled={canRenew} />
         <ThemeProvider>
-          <LangProvider initialLang={lang}><ProductAnalytics />{children}<EasterEggs /></LangProvider>
+          <LangProvider initialLang={lang} messages={messages}><ProductAnalytics />{children}<EasterEggs /></LangProvider>
         </ThemeProvider>
       </body>
     </html>

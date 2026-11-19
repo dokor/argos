@@ -10,7 +10,7 @@ export default function PublicReportHistory() {
   const path=usePathname();
   const [result,setResult]=useState<{path:string;context:HistoryContext}|null>(null);
   useEffect(()=>{
-    const token=/^\/(?:en\/)?report\/([A-Za-z0-9_-]{20,512})$/.exec(path)?.[1];
+    const token=/^\/(?:(?:en|de|es|it|nl|pt|pl|sv|da|fi|cs|sk|hu|ro|bg|el|hr|sl|lt|lv|et)\/)?report\/([A-Za-z0-9_-]{20,512})$/.exec(path)?.[1];
     if(!token) return;
     let alive=true;const controller=new AbortController();
     const clear=()=>{alive=false;controller.abort();setResult(null);};

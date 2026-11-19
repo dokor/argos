@@ -1,4 +1,6 @@
 "use client";
+import { intlLocale } from "@/lib/i18n/locales";
+import { localizedCopy } from "@/lib/i18n/messages";
 import WebTip from "@/components/editorial/WebTip";
 import AdminNavigation from "@/components/admin/AdminNavigation";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
@@ -33,7 +35,7 @@ function usePrivateResource<T>(path: string | null, denied: () => void) {
   return { data: result?.path === path ? result.value : undefined, error: result?.path === path ? result.error : undefined, loading: !!path && result?.path !== path, refresh: () => setVersion(v => v + 1) };
 }
 export default function FeedbackAdmin() {
-  const { lang } = useLang(), c = feedbackCopy[lang], session = useAccountSession();
+  const { lang } = useLang(), c = localizedCopy(feedbackCopy, lang), session = useAccountSession();
   const [denied, setDenied] = useState(false), [query, setQuery] = useState(""), [cursor, setCursor] = useState<string | null>(null), [selected, setSelected] = useState<string | null>(null);
   const onDenied = useCallback(() => setDenied(true), []);
   const allowed = session.ready && !!session.profile?.admin && !session.denied && !denied;
@@ -55,7 +57,7 @@ export default function FeedbackAdmin() {
       {selected && <FeedbackDetail key={selected} id={selected} c={c} denied={onDenied} saved={list.refresh} close={() => { document.getElementById("feedback-" + selected)?.focus(); setSelected(null); }} />}
       {list.loading ? <p role="status">{c.loading}</p> : list.error ? <p role="alert">{errorMessage(list.error, c)}</p> : !list.data?.items.length ? <p role="status">{c.empty}</p> : <div className={s.table} role="region" aria-label={c.admin} tabIndex={0}><table>
         <caption>{c.admin}</caption><thead><tr>{[c.type, c.status, c.date, c.detail].map(label => <th key={label} scope="col">{label}</th>)}</tr></thead>
-        <tbody>{list.data.items.map(row => <tr key={row.id}><td>{c.types[row.type]}</td><td>{c.statuses[row.status]}</td><td>{new Date(row.createdAt).toLocaleString(lang, {timeZone:"UTC"})} UTC</td><td><button id={"feedback-" + row.id} onClick={() => setSelected(row.id)} aria-label={c.detail + " " + row.id}>{c.detail}</button></td></tr>)}</tbody>
+        <tbody>{list.data.items.map(row => <tr key={row.id}><td>{c.types[row.type]}</td><td>{c.statuses[row.status]}</td><td>{new Date(row.createdAt).toLocaleString(intlLocale(lang), {timeZone:"UTC"})} UTC</td><td><button id={"feedback-" + row.id} onClick={() => setSelected(row.id)} aria-label={c.detail + " " + row.id}>{c.detail}</button></td></tr>)}</tbody>
       </table></div>}
       <div className={s.actions}><button disabled={!cursor || list.loading} onClick={() => { setCursor(null); setSelected(null); }}>{c.first}</button><button disabled={!list.data?.nextCursor || list.loading} onClick={() => { setCursor(list.data!.nextCursor); setSelected(null); }}>{c.next}</button></div>
     </>}

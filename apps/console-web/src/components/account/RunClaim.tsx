@@ -10,7 +10,7 @@ export default function RunClaim() {
   const [run, setRun] = useState<string | null>(null), [profile, setProfile] = useState<AccountProfile | null>(null), [message, setMessage] = useState(""), [busy, setBusy] = useState(false);
   const [checked, setChecked] = useState(false);
   useEffect(() => {
-    const token = /^\/(?:en\/)?report\/([A-Za-z0-9_-]+)$/.exec(path)?.[1];
+    const token = /^\/(?:(?:en|de|es|it|nl|pt|pl|sv|da|fi|cs|sk|hu|ro|bg|el|hr|sl|lt|lv|et)\/)?report\/([A-Za-z0-9_-]+)$/.exec(path)?.[1];
     if (!token) return;
     let alive = true;
     void accountFetch<{ runId: string | null }>("claim-context", "POST", { reportToken: token }).then(context => { if (alive) { setRun(context.runId); setChecked(true); } }).catch(() => {});

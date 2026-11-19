@@ -1,4 +1,5 @@
 "use client";
+import { localizedCopy } from "@/lib/i18n/messages";
 
 import ModuleExecutionFacts from "./ModuleExecutionFacts";
 import CoverageDetails from "./CoverageDetails";
@@ -17,8 +18,8 @@ export default function ReportMethod({ report, model, open, onToggle }: {
   report: Report; model: ReportModel; open: boolean; onToggle: (open: boolean) => void;
 }) {
   const { t, lang } = useLang();
-  const copy = decisionCopy[lang];
-  const reading = reportReadingCopy[lang];
+  const copy = localizedCopy(decisionCopy, lang);
+  const reading = localizedCopy(reportReadingCopy, lang);
   const coverage = report.scores.coverage;
   const evidence = report.accessibilityEvidence;
   const sources = [...new Set([

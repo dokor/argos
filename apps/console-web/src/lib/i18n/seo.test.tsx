@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { LangProvider } from "./LangContext";
 import { languageRoutes, localizedPath } from "./routes";
-import { localizedMetadata, siteUrl } from "./metadata";
+import { localizedMetadata, siteUrl, languageAlternates } from "./metadata";
 import sitemap from "@/app/sitemap";
 import FaqPage from "@/app/(fr)/faq/page";
 import LangToggle from "@/components/LangToggle";
@@ -51,7 +51,7 @@ describe("server-rendered language routes", () => {
       expect(french.alternates?.canonical).toBe(frUrl);
       expect(english.alternates?.canonical).toBe(enUrl);
       expect(french.alternates?.languages).toEqual(english.alternates?.languages);
-      expect(entries.find(entry => entry.url === enUrl)?.alternates?.languages).toEqual({ fr: frUrl, en: enUrl, "x-default": frUrl });
+      expect(entries.find(entry => entry.url === enUrl)?.alternates?.languages).toEqual(languageAlternates(fr));
     }
     expect(entries.some(entry => entry.url.includes("/report/"))).toBe(false);
   });

@@ -1,3 +1,4 @@
+import type { Lang } from "@/lib/i18n/locales";
 import { Report } from "@/components/report/types";
 import { createLogger, safeError } from "@/lib/logger";
 import { accountAuditHeaders } from "@/lib/account-client";
@@ -25,7 +26,7 @@ export type CreateAuditRequest = {
   scope?: AuditScope;
   /** Route fixe, attribuée uniquement avec consentement validé côté BFF. */
   sourceRoute?: string;
-  lang?: "fr" | "en";
+  lang?: Lang;
 };
 export type AuditScope = { kind: "full"; target?: never } | { kind: "category" | "check"; target: string };
 

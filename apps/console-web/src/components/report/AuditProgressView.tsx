@@ -1,4 +1,5 @@
 "use client";
+import { localizedCopy } from "@/lib/i18n/messages";
 import Tooltip from "@/components/ui/Tooltip";
 import {helpCopy} from "@/components/ui/ContextHelp";
 import ContextHelp from "@/components/ui/ContextHelp";
@@ -253,7 +254,7 @@ export default function AuditProgressView({ token, initialStatus = null }: Props
             {modules.map((m) => (
               <li key={m.id} className={`${s.moduleRow} ${s[`status_${m.status.toLowerCase()}`]}`}>
                 <StatusIcon status={m.status} labels={tp.icon} />
-                <Tooltip className={s.moduleLabel} label={m.label} content={helpCopy[lang].modules[m.id as keyof typeof helpCopy.fr.modules] ?? m.label}><span className={s.moduleLabel}>{m.label}</span></Tooltip>
+                <Tooltip className={s.moduleLabel} label={m.label} content={localizedCopy(helpCopy, lang).modules[m.id as keyof typeof helpCopy.fr.modules] ?? m.label}><span className={s.moduleLabel}>{m.label}</span></Tooltip>
                 <ExecutionStatusBadge state={m.status}/>
               </li>
             ))}

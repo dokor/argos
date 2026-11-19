@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import type { Lang } from "@/lib/i18n/routes";
 import Link from "@/components/LocalizedLink";
 import ContactLinks from "@/components/site/ContactLinks";
 
@@ -10,7 +9,7 @@ export type LegalContent = {
 };
 
 // Both languages describe the same published terms and data practices.
-export const termsContent: Record<Lang, LegalContent> = {
+export const termsContent: Record<"fr" | "en", LegalContent> = {
   fr: {
     title: "Conditions d’utilisation d’Argos",
     intro: <><p>Version du <time dateTime="2026-10-12">12 octobre 2026</time>.</p>
@@ -56,7 +55,7 @@ export const termsContent: Record<Lang, LegalContent> = {
   },
 };
 
-export const privacyContent: Record<Lang, LegalContent> = {
+export const privacyContent: Record<"fr" | "en", LegalContent> = {
   fr: {
     title: "Confidentialité et accès aux rapports Argos",
     intro: <><p>Informations mises à jour le 16 octobre 2026. Antoine Le Louët EI, entrepreneur individuel en France sous le régime de la microentreprise, exploite Argos pour accompagner son activité professionnelle.</p></>,
@@ -109,7 +108,7 @@ export const privacyContent: Record<Lang, LegalContent> = {
   },
 };
 
-export const serviceContent: Record<Lang, LegalContent> = {
+export const serviceContent: Record<"fr" | "en", LegalContent> = {
   fr: {
     title: "Informations sur le service Argos",
     intro: <><p>Informations confirmées par l’opérateur le 16 octobre 2026.</p></>,

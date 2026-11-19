@@ -1,4 +1,5 @@
 "use client";
+import { intlLocale } from "@/lib/i18n/locales";
 
 import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
 import { useAccountSession } from "@/components/account/AccountSession";
@@ -48,9 +49,9 @@ export default function UsageTimeline({ timezone, refreshVersion = 0 }: { timezo
   useEffect(() => {
     if (data && chartRef.current) chartRef.current.scrollLeft = chartRef.current.scrollWidth;
   }, [data]);
-  const number = (value: number) => new Intl.NumberFormat(lang).format(value);
+  const number = (value: number) => new Intl.NumberFormat(intlLocale(lang)).format(value);
   const label = (series: Timeline["series"][number]) => series.key === "total" ? copy.GLOBAL : series.key === "other" ? copy.other : series.label ?? copy.unknown;
-  const dateLabel = (value: string) => new Intl.DateTimeFormat(lang, { timeZone: "UTC", ...(granularity === "DAY" ? { day: "numeric", month: "short", year: "numeric" } : granularity === "MONTH" ? { month: "long", year: "numeric" } : { year: "numeric" }) }).format(new Date(value + "T00:00:00Z"));
+  const dateLabel = (value: string) => new Intl.DateTimeFormat(intlLocale(lang), { timeZone: "UTC", ...(granularity === "DAY" ? { day: "numeric", month: "short", year: "numeric" } : granularity === "MONTH" ? { month: "long", year: "numeric" } : { year: "numeric" }) }).format(new Date(value + "T00:00:00Z"));
   const coverageDate = data?.coverageFrom ? new Intl.DateTimeFormat("en-CA", { timeZone: data.timezone, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(data.coverageFrom)) : null;
   const incomplete = (bucket: Timeline["buckets"][number]) => !coverageDate || bucket.from <= coverageDate;
   const countLabel = (value: number, partial: boolean) => !value && partial ? "—" : number(value);
@@ -101,7 +102,7 @@ export default function UsageTimeline({ timezone, refreshVersion = 0 }: { timezo
     {!valid ? <p className={s.message} role="alert">{copy.invalid}</p> : failure === key ? <div className={s.message}><p role="alert">{copy.error}</p><button className={c.secondary} onClick={retry}>{copy.retry}</button></div> : !data ? <p className={s.message} role="status">{copy.loading}</p> : <>
       <div className={s.summary}><p><strong>{number(data.total)}</strong> {copy.total}<span> · {Object.keys(filters).length ? copy.selection : copy.all}</span></p><p className={s.hint}>{copy.timezone} · {data.timezone}</p></div>
       <div className={s.coverage}>
-        <p>{data.coverageFrom ? <>{copy.coverage} <time dateTime={data.coverageFrom}>{new Date(data.coverageFrom).toLocaleDateString(lang, { timeZone: data.timezone, dateStyle: "medium" })}</time>. {copy.coverageHint}</> : copy.coverageUnknown}</p>
+        <p>{data.coverageFrom ? <>{copy.coverage} <time dateTime={data.coverageFrom}>{new Date(data.coverageFrom).toLocaleDateString(intlLocale(lang), { timeZone: data.timezone, dateStyle: "medium" })}</time>. {copy.coverageHint}</> : copy.coverageUnknown}</p>
         {data.undatedCredits > 0 && <p>{number(data.undatedCredits)} {copy.undated}</p>}
       </div>
       {data.total === 0 && <div className={s.empty}><h3>{copy.empty}</h3><p>{copy.emptyHint}</p></div>}
@@ -112,7 +113,7 @@ export default function UsageTimeline({ timezone, refreshVersion = 0 }: { timezo
           <div className={s.chart} style={{ "--bucket-count": data.buckets.length } as CSSProperties}>
             {data.buckets.map((bucket, index) => <button type="button" key={bucket.from} className={s.column} aria-label={`${copy.selectPeriod} · ${dateLabel(bucket.from)} · ${countLabel(bucket.total, incomplete(bucket))} ${copy.credits}${incomplete(bucket) ? " · " + copy.partial : ""}`} aria-pressed={selected?.from === bucket.from} onFocus={() => setActive(bucket.from)} onMouseEnter={() => setActive(bucket.from)} onClick={() => setActive(bucket.from)}>
               <span className={s.stack} aria-hidden="true">{data.series.map((series, seriesIndex) => <span key={series.key} className={s.segment} style={{ height: `${(bucket.values[series.key] ?? 0) / maximum * 100}%`, "--series-index": seriesIndex } as CSSProperties}/>)}</span>
-              <span className={s.tick} aria-hidden="true">{index === 0 || index === data.buckets.length - 1 || index % (granularity === "DAY" ? 5 : granularity === "MONTH" && data.buckets.length > 24 ? 3 : 1) === 0 ? new Intl.DateTimeFormat(lang, { timeZone: "UTC", ...(granularity === "DAY" ? { day: "numeric", month: "short" } : granularity === "MONTH" ? { month: "short", year: "2-digit" } : { year: "numeric" }) }).format(new Date(bucket.from)) : ""}</span>
+              <span className={s.tick} aria-hidden="true">{index === 0 || index === data.buckets.length - 1 || index % (granularity === "DAY" ? 5 : granularity === "MONTH" && data.buckets.length > 24 ? 3 : 1) === 0 ? new Intl.DateTimeFormat(intlLocale(lang), { timeZone: "UTC", ...(granularity === "DAY" ? { day: "numeric", month: "short" } : granularity === "MONTH" ? { month: "short", year: "2-digit" } : { year: "numeric" }) }).format(new Date(bucket.from)) : ""}</span>
             </button>)}
           </div>
         </div>

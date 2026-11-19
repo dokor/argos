@@ -11,6 +11,6 @@ export default function LocalizedLink({ href, ...props }: ComponentProps<typeof 
   const pathname = typeof target === "string" ? target.split(/[?#]/)[0] : target.pathname ?? "";
   // Session-dependent destinations can change after hydration. Loading them only
   // on navigation avoids canceled speculative requests and unnecessary private reads.
-  const accountRoute = /^\/(?:en\/)?account(?:\/|$)/.test(pathname);
+  const accountRoute = /^\/(?:(?:en|de|es|it|nl|pt|pl|sv|da|fi|cs|sk|hu|ro|bg|el|hr|sl|lt|lv|et)\/)?account(?:\/|$)/.test(pathname);
   return <Link {...props} prefetch={accountRoute ? false : props.prefetch} href={target} />;
 }

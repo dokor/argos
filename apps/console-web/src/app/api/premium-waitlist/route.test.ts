@@ -6,7 +6,7 @@ const request = (data: unknown = input) => new NextRequest("https://argos.exampl
 afterEach(() => vi.unstubAllGlobals());
 it("validates input and explicit consent before forwarding", async () => {
   const fetcher = vi.fn(); vi.stubGlobal("fetch", fetcher);
-  for (const data of [null, {}, { ...input, consent: false }, { ...input, consent: "true" }, { ...input, locale: "de" }, { ...input, email: "a@-example.com" }, { ...input, email: "a..b@example.com" }, { ...input, email: "x".repeat(256) }]) expect((await POST(request(data))).status).toBe(400);
+  for (const data of [null, {}, { ...input, consent: false }, { ...input, consent: "true" }, { ...input, locale: "zz" }, { ...input, email: "a@-example.com" }, { ...input, email: "a..b@example.com" }, { ...input, email: "x".repeat(256) }]) expect((await POST(request(data))).status).toBe(400);
   expect(fetcher).not.toHaveBeenCalled();
 });
 it("uses only the dedicated API and a fixed accepted response", async () => {

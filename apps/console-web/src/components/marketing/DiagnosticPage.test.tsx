@@ -9,9 +9,9 @@ import ResourcesPage from "@/app/(fr)/ressources/page";
 import WordPressFr, { metadata as wordpressFr } from "@/app/(fr)/ressources/audit-wordpress/page";
 import ShopifyFr, { metadata as shopifyFr } from "@/app/(fr)/ressources/audit-shopify/page";
 import ConversionFr, { metadata as conversionFr } from "@/app/(fr)/ressources/pourquoi-mon-site-ne-convertit-pas/page";
-import WordPressEn, { metadata as wordpressEn } from "@/app/en/resources/wordpress-audit/page";
-import ShopifyEn, { metadata as shopifyEn } from "@/app/en/resources/shopify-audit/page";
-import ConversionEn, { metadata as conversionEn } from "@/app/en/resources/why-is-my-website-not-converting/page";
+import WordPressEn, { generateMetadata as wordpressEn } from "@/app/en/resources/wordpress-audit/page";
+import ShopifyEn, { generateMetadata as shopifyEn } from "@/app/en/resources/shopify-audit/page";
+import ConversionEn, { generateMetadata as conversionEn } from "@/app/en/resources/why-is-my-website-not-converting/page";
 import { diagnosticPages, diagnosticRoutes } from "./diagnosticPages";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({}), usePathname: () => "/ressources" }));
@@ -29,8 +29,9 @@ const pages = [
 ] as const;
 
 describe("public diagnostic pages", () => {
-  it.each(pages)("renders $topic in $lang before hydration with its own metadata and links", ({ topic, lang, Page, metadata }) => {
-    const html = renderToStaticMarkup(<LangProvider initialLang={lang}><Page /></LangProvider>);
+  it.each(pages)("renders $topic in $lang before hydration with its own metadata and links", async ({ topic, lang, Page, metadata }) => {
+    const resolvedMetadata = typeof metadata === "function" ? await metadata() : metadata;
+    const html = renderToStaticMarkup(<LangProvider initialLang={lang}>{await Page()}</LangProvider>);
     const content = diagnosticPages[topic][lang];
     const route = diagnosticRoutes[topic];
     const url = siteUrl + localizedPath(route, lang);
@@ -51,17 +52,19 @@ describe("public diagnostic pages", () => {
     }
     expect(html).toContain(`href="${localizedPath("/exemple-rapport", lang)}"`);
     expect(html).not.toMatch(/href="\/(?:en\/)?report\//);
-    expect(metadata.title).toBe(content.metaTitle);
-    expect(metadata.description).toBe(content.description);
-    expect(metadata.openGraph?.url).toBe(url);
-    expect(metadata.openGraph?.title).toBe(content.metaTitle);
-    expect(metadata.alternates?.canonical).toBe(url);
+    expect(resolvedMetadata.title).toBe(content.metaTitle);
+    expect(resolvedMetadata.description).toBe(content.description);
+    expect(resolvedMetadata.openGraph?.url).toBe(url);
+    expect(resolvedMetadata.openGraph?.title).toBe(content.metaTitle);
+    expect(resolvedMetadata.alternates?.canonical).toBe(url);
     const entries = sitemap().filter(entry => entry.url === url);
     expect(entries).toHaveLength(1);
-    expect(entries[0].alternates?.languages).toEqual(metadata.alternates?.languages);
+    expect(entries[0].alternates?.languages).toEqual(resolvedMetadata.alternates?.languages);
     expect(publicRoute(localizedPath(route, lang))).toBe(route);
     expect(dimensions({ route, lang, placement: "form" })).toEqual({ route, lang, placement: "form" });
     const resources = renderToStaticMarkup(<LangProvider initialLang={lang}><ResourcesPage /></LangProvider>);
     expect(resources).toContain(`href="${localizedPath(route, lang)}"`);
   });
 });
+
+vi.mock("next/headers", () => ({ headers: async () => new Headers({ "x-argos-language": "en" }) }));

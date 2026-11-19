@@ -1,4 +1,6 @@
 "use client";
+import { intlLocale } from "@/lib/i18n/locales";
+import { localizeValue, localizedCopy } from "@/lib/i18n/messages";
 
 import { PriorityItem } from "./types";
 import { useLang } from "@/lib/i18n/LangContext";
@@ -20,7 +22,7 @@ export default function PriorityCards({ priorities, model, onSelectFinding, limi
     <section className={s.section}>
       <div className={s.sectionHead}>
         <h2 className={s.sectionTitle}>{tp.title}</h2>
-        <p className={s.sectionDesc}>{interpretationCopy[lang].actions}</p>
+        <p className={s.sectionDesc}>{localizedCopy(interpretationCopy, lang).actions}</p>
       </div>
 
       {list.length === 0 ? (
@@ -59,10 +61,10 @@ export default function PriorityCards({ priorities, model, onSelectFinding, limi
                 <h3 className={s.cardTitle}>{content?.title ?? findingEditorial(p.findingKey, lang).title}</h3>
                 <p className={s.cardImpact}>{content?.impact ?? findingEditorial(p.findingKey, lang).impact}</p>
                 {content && <><p>{content.qualification}</p><p>{content.recommendation}</p></>}
-                {isAggregateFinding(p.findingKey) && <p>{lang === "fr" ? "Cette note d’outil n’est pas une correction à chiffrer. Examiner les constats détaillés du même outil ci-dessous ; sans eux, demander le diagnostic source." : "This tool score is not an estimable correction. Inspect the detailed findings from the same tool below; without them, request the source diagnosis."}</p>}
-                <details className={s.explanation}><summary>{lang === "fr" ? "Sources et confiance de mesure" : "Sources and measurement confidence"}</summary><div className={s.metadata}>
+                {isAggregateFinding(p.findingKey) && <p>{(lang === "fr" ? "Cette note d’outil n’est pas une correction à chiffrer. Examiner les constats détaillés du même outil ci-dessous ; sans eux, demander le diagnostic source." : localizeValue("This tool score is not an estimable correction. Inspect the detailed findings from the same tool below; without them, request the source diagnosis.", lang))}</p>}
+                <details className={s.explanation}><summary>{(lang === "fr" ? "Sources et confiance de mesure" : localizeValue("Sources and measurement confidence", lang))}</summary><div className={s.metadata}>
                   <p>{domain ? (tp.domains as Record<string, string>)[domain] ?? tp.unknownDomain : tp.unknownDomain}</p>
-                  <p>{lang === "fr" ? "Titre source (langue d’origine)" : "Source title (original language)"}: {cleanEvidence(p.title)}</p>
+                  <p>{(lang === "fr" ? "Titre source (langue d’origine)" : localizeValue("Source title (original language)", lang))}: {cleanEvidence(p.title)}</p>
                   <p>{tp.sourcesLabel} : {sources.map(cleanEvidence).join(", ") || "—"}</p>
                   <p>{tp.confidenceLabel} {p.confidence && Object.hasOwn(tp.confidence, p.confidence) ? tp.confidence[p.confidence] : tp.confidence.UNKNOWN}</p>
                 </div></details>
@@ -71,7 +73,7 @@ export default function PriorityCards({ priorities, model, onSelectFinding, limi
                     <summary>{tp.rankingDetails}</summary>
                     <p>{tp.rankReasons[p.rankReason]}</p>
                     {p.rankReason === "MODELLED_SCORE_GAIN" && typeof p.globalScoreGain === "number" && Number.isFinite(p.globalScoreGain) && (
-                      <p>{tp.gainLabel} {p.globalScoreGain.toLocaleString(lang === "en" ? "en-US" : "fr-FR", { maximumFractionDigits: 2 })} {tp.gainUnit}</p>
+                      <p>{tp.gainLabel} {p.globalScoreGain.toLocaleString(intlLocale(lang), { maximumFractionDigits: 2 })} {tp.gainUnit}</p>
                     )}
                     <p className={s.modelLimit}>{tp.modelLimit}</p>
                   </details>

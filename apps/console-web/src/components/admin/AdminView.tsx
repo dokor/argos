@@ -1,4 +1,6 @@
 "use client";
+import { intlLocale, type Lang } from "@/lib/i18n/locales";
+import { localizeValue, localizedCopy } from "@/lib/i18n/messages";
 import WebTip from "@/components/editorial/WebTip";
 import CollectorDiagnostics from "./CollectorDiagnostics";
 import RunFilterSelect from "./RunFilterSelect";
@@ -88,8 +90,8 @@ function useResource<T>(path: string | null, onDenied: () => void) {
     refresh,
   };
 }
-const date = (raw: string, lang: string) =>
-  new Date(raw).toLocaleString(lang === "fr" ? "fr-FR" : "en-GB", {
+const date = (raw: string, lang: Lang) =>
+  new Date(raw).toLocaleString(intlLocale(lang), {
     timeZone: "UTC",
   }) + " UTC";
 function stateLabel(value: string | undefined, c: AdminCopy) {
@@ -97,7 +99,7 @@ function stateLabel(value: string | undefined, c: AdminCopy) {
 }
 export default function AdminView({ runId }: { runId?: string }) {
   const { lang } = useLang(),
-    c = copy[lang],
+    c = localizedCopy(copy, lang),
     session = useAccountSession(), params = useSearchParams(), router = useRouter();
   const [denied, setDenied] = useState(false),
     [reportOpen, setReportOpen] = useState(false);
@@ -183,7 +185,7 @@ export default function AdminView({ runId }: { runId?: string }) {
                 ))}
               </dl>
               <CollectorDiagnostics modules={run.data.modules} coverage={report.data?.scores.coverage} loading={report.loading} unavailable={report.error != null} />
-              {report.data?.scores.coverage && <details><summary>{lang === 'fr' ? 'Détail de la couverture' : 'Coverage breakdown'}</summary><CoverageDetails coverage={report.data.scores.coverage} lang={lang}/></details>}
+              {report.data?.scores.coverage && <details><summary>{(lang === "fr" ? 'Détail de la couverture' : localizeValue('Coverage breakdown', lang))}</summary><CoverageDetails coverage={report.data.scores.coverage} lang={lang}/></details>}
               {!!run.data.reportAvailable && (
                 <button
                   onClick={() => {

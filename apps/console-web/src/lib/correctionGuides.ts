@@ -1,5 +1,7 @@
 import type { Lang } from "./i18n/routes";
-type Guide = { published: boolean; hrefs: Partial<Record<Lang,string>>; labels: Partial<Record<Lang,string>> };
+import { localizedPath } from "./i18n/routes";
+import { localizeValue } from "./i18n/messages";
+type Guide = { published: boolean; hrefs: Partial<Record<"fr" | "en",string>>; labels: Partial<Record<"fr" | "en",string>> };
 // Publication is explicit. A planned route must not become a link accidentally.
 export const correctionGuides: Record<string, Guide> = {
   html: { published: true, hrefs: { fr: "/guides/checklist-audit-site-web#html-seo", en: "/en/guides/website-audit-checklist#html-seo" }, labels: { fr: "Vérifier et corriger le HTML de la page", en: "Check and fix the page HTML" } },
@@ -18,7 +20,10 @@ export function correctionGuide(checkKey: string | null | undefined, lang: Lang)
   if (!checkKey || !Object.hasOwn(checkGuides,checkKey)) return undefined;
   const guide = correctionGuides[checkGuides[checkKey]];
   if (!guide?.published) return undefined;
-  const href = guide.hrefs[lang]; const label = guide.labels[lang];
+  const source = lang === "fr" ? "fr" : "en";
+  const originalHref = guide.hrefs[source];
+  const href = originalHref ? localizedPath(originalHref, lang) : undefined;
+  const label = localizeValue(guide.labels[source], lang);
   if (!href || !label || !href.startsWith("/") || href.startsWith("//") || href.includes("?")) return undefined;
   return { href, label };
 }

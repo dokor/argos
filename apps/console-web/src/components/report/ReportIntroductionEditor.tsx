@@ -1,4 +1,5 @@
 "use client";
+import { localizedCopy } from "@/lib/i18n/messages";
 import { useEffect, useState } from "react";
 import { accountFetch } from "@/lib/account-client";
 import { validIntroduction } from "@/lib/report-introduction";
@@ -13,7 +14,7 @@ import s from "./ReportIntroduction.module.scss";
 type Draft = Omit<ReportIntroduction, "publishedAt">;
 const empty: Draft = { author: "", context: "", nextStep: "", findingKeys: [] };
 export default function ReportIntroductionEditor({ token, model, onPublished }: { token?: string; model: ReportModel; onPublished: (note: ReportIntroduction | null) => void }) {
-  const { lang } = useLang(); const copy = introductionCopy[lang];
+  const { lang } = useLang(); const copy = localizedCopy(introductionCopy, lang);
   const [owner, setOwner] = useState<string>(); const [draft, setDraft] = useState<Draft>(empty);
   const [published, setPublished] = useState(false); const [preview, setPreview] = useState(false);
   const [busy, setBusy] = useState(false); const [status, setStatus] = useState<"saved" | "removed" | "failed" | null>(null);

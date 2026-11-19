@@ -32,6 +32,7 @@ const cases = [
   ['egress fixture', ['scripts/security/fixture.mjs'], ['security']],
   ['egress policy', ['apps/audit-egress/proxy.mjs'], ['security','e2e']],
   ['authentication browser harness', ['scripts/e2e/auth-experience.mjs'], ['auth']],
+  ['shared language navigation helper', ['scripts/e2e/language-menu.mjs'], ['auth','e2e']],
   ['audit browser harness', ['scripts/e2e/browser.mjs'], ['e2e']],
   ['visual harness only', ['scripts/e2e/connected-analysis.mjs'], []],
   ['visual manifest helper', ['scripts/e2e/acceptance-evidence.mjs'], ['frontend']],

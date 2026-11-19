@@ -1,4 +1,6 @@
 "use client";
+import { intlLocale } from "@/lib/i18n/locales";
+import { localizeValue, localizedCopy } from "@/lib/i18n/messages";
 import WebTip from "@/components/editorial/WebTip";
 
 import { useEffect, useState } from "react";
@@ -20,7 +22,7 @@ export type Statistics = {
 };
 
 export default function StatisticsOverview() {
-  const { lang } = useLang(), c = statisticsCopy[lang], session = useAccountSession();
+  const { lang } = useLang(), c = localizedCopy(statisticsCopy, lang), session = useAccountSession();
   const [period, setPeriod] = useState("all"), [revision, setRevision] = useState(0), [denied, setDenied] = useState(false);
   const [result, setResult] = useState<{ key: string; data: Statistics | null; error: boolean } | null>(null);
   const allowed = session.ready && !session.denied && session.profile?.verified && session.profile.admin && !denied;
@@ -40,8 +42,8 @@ export default function StatisticsOverview() {
   }, [allowed, key, period]);
 
   const number = (value: Count | undefined, fraction = false) => value == null || !Number.isFinite(value)
-    ? "—" : new Intl.NumberFormat(lang, { maximumFractionDigits: fraction ? 2 : 0 }).format(value);
-  const date = (value: string) => new Intl.DateTimeFormat(lang, { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" }).format(new Date(value));
+    ? "—" : new Intl.NumberFormat(intlLocale(lang), { maximumFractionDigits: fraction ? 2 : 0 }).format(value);
+  const date = (value: string) => new Intl.DateTimeFormat(intlLocale(lang), { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" }).format(new Date(value));
   const metric = (label: string, value: Count | undefined, fraction = false) => <div key={label}>
     <dt>{label}</dt><dd aria-label={value == null ? c.unavailable : undefined}>{number(value, fraction)}</dd>
   </div>;
@@ -81,7 +83,7 @@ export default function StatisticsOverview() {
           <dl className={s.statuses}>{statuses.map(status => <div key={status} data-status={status}>
             <dt><span className={s.dot} aria-hidden="true" />{c[status]}</dt><dd>{number(data.analyses[status])}</dd>
           </div>)}</dl>
-          <p>{c.statusHelp}</p><details><summary>{lang === "fr" ? "Comment les URL sont comptées" : "How URLs are counted"}</summary><p>{c.urlsHelp}</p></details>
+          <p>{c.statusHelp}</p><details><summary>{(lang === "fr" ? "Comment les URL sont comptées" : localizeValue("How URLs are counted", lang))}</summary><p>{c.urlsHelp}</p></details>
         </section>
         <section className={s.section} aria-labelledby="statistics-domains">
           <h2 id="statistics-domains">{c.domains}</h2><dl className={s.metrics}>

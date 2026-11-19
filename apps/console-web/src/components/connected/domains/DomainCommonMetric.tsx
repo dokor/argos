@@ -1,4 +1,6 @@
 "use client";
+import { intlLocale } from "@/lib/i18n/locales";
+import { localizedCopy } from "@/lib/i18n/messages";
 import { useEffect, useRef, useState } from "react";
 import { useLang } from "@/lib/i18n/LangContext";
 import type { BatchSummary } from "@/lib/connected/contracts";
@@ -12,7 +14,7 @@ const copy = {
 
 /** Read canonical rules only when the card enters the viewport; never infer them from page counts. */
 export default function DomainCommonMetric({ domainId, batchId }: { domainId: string; batchId: string | null }) {
-  const { lang } = useLang(), c = copy[lang];
+  const { lang } = useLang(), c = localizedCopy(copy, lang);
   const ref = useRef<HTMLDivElement>(null), [visible, setVisible] = useState(false);
   useEffect(() => {
     if (!ref.current) return;
@@ -36,7 +38,7 @@ export default function DomainCommonMetric({ domainId, batchId }: { domainId: st
     : data.counts.completePages !== data.counts.selectedPages ? c.partial : "";
   return <div ref={ref} className={s.commonMetric}>
     <dt>{c.common}</dt>
-    <dd>{measured ? new Intl.NumberFormat(lang).format(data.commonFindings.length) : "—"}</dd>
+    <dd>{measured ? new Intl.NumberFormat(intlLocale(lang)).format(data.commonFindings.length) : "—"}</dd>
     {(hint || data || resource.error) && <dd className={s.metricHint}>
       {hint && <span>{hint}</span>}
       {data && <span>{c.profile} : {data.profileSnapshot.profileId} · {c.contract} v{data.profileSnapshot.contractVersion} · {c.score} v{data.profileSnapshot.scoringVersion}</span>}

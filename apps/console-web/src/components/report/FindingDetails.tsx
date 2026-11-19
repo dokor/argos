@@ -1,4 +1,6 @@
 "use client";
+import { intlLocale } from "@/lib/i18n/locales";
+import { localizeValue, localizedCopy } from "@/lib/i18n/messages";
 import Link from "@/components/PageLink";
 import ObservedEvidence from "./ObservedEvidence";
 import FindingGuide from "./FindingGuide";
@@ -13,8 +15,8 @@ import {documentTargets,headerTargets,pageTargets,isPageTiming} from './findingT
 import s from "./FindingDetails.module.scss";
 
 export default function FindingDetails({ finding, pageUrl }: { finding: Finding; pageUrl?: string }) {
-  const { t, lang } = useLang(), fr=lang==="fr";
-  const copy=reportReadingCopy[lang], questions=copy.findingQuestions;
+  const { t, lang } = useLang();
+  const copy=localizedCopy(reportReadingCopy, lang), questions=copy.findingQuestions;
   const issue=finding.issue, guide=correctionGuide(issue.id,lang);
   const content=findingContent(issue,lang), explanation=findingExplanation(issue,lang);
   const evidence=issue.structuredEvidence, measure=evidence?.measurement;
@@ -29,7 +31,7 @@ export default function FindingDetails({ finding, pageUrl }: { finding: Finding;
       <section className={s.question} aria-label={questions.observation}>
         <h3>{questions.observation}</h3>
         <p>{content.observation}</p>
-        {validMeasure&&<p className={s.measurement}>{evidence?.details?.some(d=>d.key==='measurementKind'&&d.text==='estimatedSavings')&&(fr?'Économie estimée : ':'Estimated savings: ')}{measure.value.toLocaleString(lang,{maximumSignificantDigits:6})} {copy.units[measure.unit]}</p>}
+        {validMeasure&&<p className={s.measurement}>{evidence?.details?.some(d=>d.key==='measurementKind'&&d.text==='estimatedSavings')&&((lang === "fr" ? 'Économie estimée : ' : localizeValue('Estimated savings: ', lang)))}{measure.value.toLocaleString(intlLocale(lang),{maximumSignificantDigits:6})} {copy.units[measure.unit]}</p>}
         {!validMeasure&&expectsScalarMeasurement(issue)&&<p className={s.context}>{copy.missingMeasure}</p>}
         <FindingLocation issue={issue} pageUrl={pageUrl} lang={lang}/>
         {issue.evidence&&!evidence&&<p className={s.sourceObservation}>{cleanEvidence(issue.evidence)}</p>}
@@ -40,12 +42,12 @@ export default function FindingDetails({ finding, pageUrl }: { finding: Finding;
         <h3>{questions.impact}</h3><p>{content.impact}</p>
       </section>
       <section className={s.question} aria-label={questions.action}>
-        <h3>{fr?"Que modifier ?":"What should I change?"}</h3>
+        <h3>{(lang === "fr" ? "Que modifier ?" : localizeValue("What should I change?", lang))}</h3>
         {explanation.specific ? <FindingGuide issue={issue} lang={lang} parts={["correction"]} showHeadings={false}/>
-          : <><p>{fr?"Aucune procédure spécifique n’est disponible pour ce contrôle.":"No specific procedure is available for this check."}</p>
-            {issue.recommendation&&!issue.id?.startsWith('zap.alert.')&&<p>{fr?"Indication de l’outil source":"Source tool guidance"} : {cleanEvidence(issue.recommendation)}</p>}
+          : <><p>{(lang === "fr" ? "Aucune procédure spécifique n’est disponible pour ce contrôle." : localizeValue("No specific procedure is available for this check.", lang))}</p>
+            {issue.recommendation&&!issue.id?.startsWith('zap.alert.')&&<p>{(lang === "fr" ? "Indication de l’outil source" : localizeValue("Source tool guidance", lang))} : {cleanEvidence(issue.recommendation)}</p>}
             <FindingGuide issue={issue} lang={lang} parts={["correction"]} showHeadings={false}/></>}
-        {guide&&<p><Link href={guide.href}>{fr?"Guide de correction":"Correction guide"} : {guide.label}</Link></p>}
+        {guide&&<p><Link href={guide.href}>{(lang === "fr" ? "Guide de correction" : localizeValue("Correction guide", lang))} : {guide.label}</Link></p>}
       </section>
       <section className={s.question} aria-label={questions.verification}>
         <h3>{questions.verification}</h3>

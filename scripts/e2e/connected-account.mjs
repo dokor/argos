@@ -1,4 +1,5 @@
 import { injectAxe } from './inject-axe.mjs';
+import { languageHref } from './language-menu.mjs';
 import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
 import {chromium} from '../../apps/playwright-service/node_modules/playwright/index.mjs';
@@ -50,7 +51,7 @@ try {
   assert.equal(localProfile.displayName,'Camille · Modifié');
   const settingsNav=page.getByRole('navigation',{name:lang==='fr'?'Réglages du compte':'Account settings'});
   await settingsNav.getByRole('link',{name:labels.security,exact:true}).click();await page.getByLabel(labels.newPassword).waitFor();await check('security');
-  assert.ok((await page.getByRole('link',{name:lang==='fr'?'English':'Français',exact:true}).getAttribute('href')).endsWith('settings?section=security'));
+  assert.ok((await languageHref(page, lang==='fr'?'English':'Français')).endsWith('settings?section=security'));
   await page.getByLabel(labels.newPassword).fill('synthetic next password');await page.getByRole('button',{name:labels.savePassword,exact:true}).click();
   let dialog=page.getByRole('dialog');await dialog.waitFor();assert.equal(writes.filter(w=>w.path.endsWith('methods/password')).length,0);
   await dialog.getByLabel(labels.password).fill('synthetic current password');await dialog.getByRole('button',{name:labels.confirm}).click();

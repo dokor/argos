@@ -1,4 +1,5 @@
 import { injectAxe } from './inject-axe.mjs';
+import { languageHref } from './language-menu.mjs';
 import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
 import { chromium } from "../../apps/playwright-service/node_modules/playwright/index.mjs";
@@ -149,11 +150,7 @@ try {
         await check("incomplete");
         const other = lang === "fr" ? "English" : "Français";
         assert.ok(
-          (
-            await page
-              .getByRole("link", { name: other, exact: true })
-              .getAttribute("href")
-          ).includes("attention=incomplete"),
+          (await languageHref(page, other)).includes("attention=incomplete"),
         );
         if (width === 1056 && lang === "fr" && theme === "light") {
           const search = page.getByLabel(c.search, { exact: true });

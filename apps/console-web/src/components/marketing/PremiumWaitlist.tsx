@@ -1,4 +1,5 @@
 "use client";
+import { localizedCopy } from "@/lib/i18n/messages";
 import { useState, type FormEvent } from "react";
 import Link from "@/components/LocalizedLink";
 import { useLang } from "@/lib/i18n/LangContext";
@@ -29,7 +30,7 @@ export const premiumCopy = {
 } as const;
 
 export default function PremiumWaitlist() {
-  const { lang } = useLang(); const c = premiumCopy[lang];
+  const { lang } = useLang(); const c = localizedCopy(premiumCopy, lang);
   const [email, setEmail] = useState(""); const [consent, setConsent] = useState(false);
   const [state, setState] = useState<"idle" | "loading" | "success" | "invalid" | "limited" | "error">("idle");
   async function submit(event: FormEvent<HTMLFormElement>) {

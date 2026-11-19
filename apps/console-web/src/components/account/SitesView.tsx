@@ -1,4 +1,6 @@
 "use client";
+import { intlLocale } from "@/lib/i18n/locales";
+import { localizedCopy } from "@/lib/i18n/messages";
 import { inputHints } from "@/lib/input-hints";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -17,7 +19,7 @@ type Site={siteId:string;hostname:string;urlCount:number;latestActivityAt:string
 type SiteUrl={siteUrlId:string;auditId:string;normalizedUrl:string;latestAttempt:{runId:string;status:string;createdAt:string;finishedAt:string|null}|null;latestAvailableReport:{runId:string;publishedAt:string;expiresAt:string|null;globalScore:number|null;provisional:boolean|null}|null};
 type Page<T>={items:T[];nextCursor:string|null};
 export default function SitesView({siteId}:{siteId?:string}) {
-  const {t,lang}=useLang(),copy=t.account.sites,c=analysisCopy[lang],session=useAccountSession(),router=useRouter(),params=useSearchParams();
+  const {t,lang}=useLang(),copy=t.account.sites,c=localizedCopy(analysisCopy, lang),session=useAccountSession(),router=useRouter(),params=useSearchParams();
   const query=params.get("q")??"",cursor=params.get("cursor"),base="/account/sites"+(siteId ? "/"+siteId : "");
   const [search,setSearch]=useState(query),[site,setSite]=useState<Site|null>(null),[sites,setSites]=useState<Site[]>([]),[urls,setUrls]=useState<SiteUrl[]>([]);
   const [next,setNext]=useState<string|null>(null),[revision,setRevision]=useState(0),[loadedFor,setLoadedFor]=useState("");
@@ -54,7 +56,7 @@ export default function SitesView({siteId}:{siteId?:string}) {
     } catch(reason){invalidate(reason);setFormError(reason instanceof AccountClientError ? reason.code : "account_unavailable");input.current?.focus();}
     finally{submitting.current=false;setBusy(false);}
   }
-  const date=(raw:string|null)=>raw ? new Date(raw).toLocaleString(lang) : copy.none;
+  const date=(raw:string|null)=>raw ? new Date(raw).toLocaleString(intlLocale(lang)) : copy.none;
   const status=(raw:string|null)=>raw ? t.account.statuses[raw as keyof typeof t.account.statuses] ?? t.account.working : copy.none;
   const failure=t.account.errors[error as keyof typeof t.account.errors] ?? t.account.errors.account_unavailable;
   const formFailure=formError==="hostname_mismatch" ? copy.mismatch : t.account.errors[formError as keyof typeof t.account.errors] ?? t.account.errors.account_unavailable;
@@ -67,7 +69,7 @@ export default function SitesView({siteId}:{siteId?:string}) {
     {session.ready && !session.profile && !session.denied && <p role="alert">{t.account.errors.account_unavailable}</p>}
     {session.profile && !session.profile.verified && <><p>{t.account.pending}</p><Link href="/account">{t.account.verify}</Link></>}
     {allowed && <>
-      <form className={s.search} onSubmit={event=>{event.preventDefault();navigate(search);}}><label htmlFor="site-search">{siteId ? c.searchUrls : c.searchSites}<input id="site-search" placeholder={siteId ? inputHints[lang].searchUrl : inputHints[lang].searchSite} value={search} maxLength={200} onChange={event=>setSearch(event.target.value)}/></label><button className={ui.secondary}>{c.search}</button>{query && <button className={ui.secondary} type="button" onClick={()=>navigate("")}>{c.reset}</button>}<button className={ui.secondary} type="button" disabled={reading} onClick={()=>setRevision(v=>v+1)}>{copy.refresh}</button></form>
+      <form className={s.search} onSubmit={event=>{event.preventDefault();navigate(search);}}><label htmlFor="site-search">{siteId ? c.searchUrls : c.searchSites}<input id="site-search" placeholder={siteId ? localizedCopy(inputHints, lang).searchUrl : localizedCopy(inputHints, lang).searchSite} value={search} maxLength={200} onChange={event=>setSearch(event.target.value)}/></label><button className={ui.secondary}>{c.search}</button>{query && <button className={ui.secondary} type="button" onClick={()=>navigate("")}>{c.reset}</button>}<button className={ui.secondary} type="button" disabled={reading} onClick={()=>setRevision(v=>v+1)}>{copy.refresh}</button></form>
       {error && <EmptyState kind="error" title={failure}><button className={ui.secondary} onClick={()=>setRevision(v=>v+1)}>{copy.retry}</button></EmptyState>}
       {reading ? <p role="status">{t.account.working}</p> : !error && !siteId ? <>
         {sites.length===0 ? <EmptyState title={query ? c.noResults : copy.empty} description={copy.intro}/> : <DataTable caption={c.sites} columns={[c.sites,copy.urls,copy.latest]}>{sites.map(item=><tr key={item.siteId}><td><Link href={"/account/sites/"+item.siteId}>{item.hostname}</Link></td><td>{item.urlCount}</td><td><StatusBadge tone={item.latestRunStatus==="FAILED" ? "danger" : "neutral"}>{status(item.latestRunStatus)}</StatusBadge><p>{date(item.latestActivityAt)}</p></td></tr>)}</DataTable>}
@@ -77,12 +79,12 @@ export default function SitesView({siteId}:{siteId?:string}) {
           <h2>{item.normalizedUrl}</h2><div className={s.attempts}><section><h3>{copy.latest}</h3>
           {item.latestAttempt ? <><StatusBadge tone={item.latestAttempt.status==="FAILED" ? "danger" : "neutral"}>{status(item.latestAttempt.status)}</StatusBadge><p>{date(item.latestAttempt.createdAt)}</p><Link href={"/account/runs/"+item.latestAttempt.runId}>{copy.progress}</Link></> : <p>{copy.none}</p>}</section>
           <section><h3>{copy.report}</h3>{item.latestAvailableReport ? <><strong>{item.latestAvailableReport.globalScore===null ? copy.scoreUnavailable : item.latestAvailableReport.globalScore+"/100"}</strong><p>{date(item.latestAvailableReport.publishedAt)}</p>{item.latestAvailableReport.provisional && <StatusBadge tone="warning">{copy.partial}</StatusBadge>}{item.latestAvailableReport.provisional===null && <p>{copy.unknown}</p>}<p><Link href={"/account/runs/"+item.latestAvailableReport.runId}>{t.account.openReport}</Link></p></> : <p>{copy.unavailable}</p>}</section></div>
-          <div className={ui.actions}><Link className={ui.secondary} href={"/account/urls/"+item.siteUrlId+"/history"}>{historyCopy[lang].title}</Link><Link className={ui.primary} href={"/account/analyses/new?url="+encodeURIComponent(item.normalizedUrl)}>{copy.again}</Link></div>
+          <div className={ui.actions}><Link className={ui.secondary} href={"/account/urls/"+item.siteUrlId+"/history"}>{localizedCopy(historyCopy, lang).title}</Link><Link className={ui.primary} href={"/account/analyses/new?url="+encodeURIComponent(item.normalizedUrl)}>{copy.again}</Link></div>
         </li>)}</ul>
       </>}
       <div className={ui.actions}>{cursor && <button className={ui.secondary} onClick={()=>navigate(query)}>{c.sites}</button>}{next && !reading && <button className={ui.secondary} onClick={()=>navigate(query,next)}>{copy.next}</button>}</div>
       <details className={s.follow}><summary>{siteId ? copy.addUrl : copy.add}</summary><p id="follow-hint">{copy.hint} {copy.noAudit}</p>
-        <form className={s.form} onSubmit={add}><label htmlFor="follow-url">{copy.url}<input ref={input} id="follow-url" placeholder={inputHints[lang].url} inputMode="url" value={url} onChange={e=>setUrl(e.target.value)} maxLength={2048} required disabled={busy} aria-describedby="follow-hint follow-feedback" aria-invalid={Boolean(formError)}/></label><button className={ui.secondary} disabled={busy}>{busy ? t.account.working : siteId ? copy.addUrl : copy.add}</button></form>
+        <form className={s.form} onSubmit={add}><label htmlFor="follow-url">{copy.url}<input ref={input} id="follow-url" placeholder={localizedCopy(inputHints, lang).url} inputMode="url" value={url} onChange={e=>setUrl(e.target.value)} maxLength={2048} required disabled={busy} aria-describedby="follow-hint follow-feedback" aria-invalid={Boolean(formError)}/></label><button className={ui.secondary} disabled={busy}>{busy ? t.account.working : siteId ? copy.addUrl : copy.add}</button></form>
         <p id="follow-feedback" role={formError ? "alert" : "status"}>{formError ? formFailure : message}</p>
         {formError==="hostname_mismatch" && <Link href="/account/sites">{copy.add}</Link>}
       </details>

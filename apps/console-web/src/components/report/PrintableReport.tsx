@@ -1,3 +1,5 @@
+import { intlLocale } from "@/lib/i18n/locales";
+import { localizeValue, localizedCopy } from "@/lib/i18n/messages";
 import ModuleExecutionFacts from "./ModuleExecutionFacts";
 import { siteUrl } from "@/lib/site-url";
 import CoverageDetails from "./CoverageDetails";
@@ -22,7 +24,7 @@ import fr from '@/lib/i18n/fr.json';
 import en from '@/lib/i18n/en.json';
 export type ExportFormat = 'summary'|'full';
 export default function PrintableReport({report,lang,format:requestedFormat}:{report:Report;lang:Lang;format:ExportFormat}) {
- const model=buildReportModel(report); const d=decisionCopy[lang];const r=reportReadingCopy[lang]; const e=exportCopy[lang];const t=(lang==='fr'?fr:en).report;
+ const model=buildReportModel(report); const d=localizedCopy(decisionCopy, lang);const r=localizedCopy(reportReadingCopy, lang); const e=localizedCopy(exportCopy, lang);const t=((lang === "fr" ? fr : localizeValue(en, lang))).report;
  const format=report.access==='summary'?'summary':requestedFormat;
  const score=globalScore(report); const verdict=model.counts.critical?'critical':score===undefined?'unavailable':model.counts.important?'important':model.counts.opportunity?'opportunity':'empty';
  const facts=Object.entries(model.counts).reduce((text,[key,value])=>text.replace('{'+key+'}',String(value)),r.summaryFacts as string);
@@ -30,16 +32,16 @@ export default function PrintableReport({report,lang,format:requestedFormat}:{re
  const pct=(value:number|undefined)=>typeof value==='number'&&Number.isFinite(value)?Math.round(value*100)+' %':e.unknown;
  const title=(key:string)=>Object.hasOwn(t.priorityCards.domains,key)?(t.priorityCards.domains as Record<string,string>)[key]:t.issuesByCategory.unknownDomain;
  const priorities=model.priorities.slice(0,format==='full'?6:3);
- const method=siteUrl+(lang==='fr'?'/methodologie-score':'/en/scoring-method');
+ const method=siteUrl+(lang === "fr" ? '/methodologie-score' : localizeValue('/en/scoring-method', lang));
  return <main lang={lang} className={s.document}><header><p>ARGOS · {format==='full'?e.full:e.summary}</p><h1>{cleanEvidence(report.domain)}</h1>
- <ReportPageScope report={report} lang={lang} /><p>{t.hero.analyzedAt}: {Number.isFinite(date.getTime())?date.toLocaleString(lang,{timeZone:'UTC',timeZoneName:'short'}):d.dateUnknown}</p>
+ <ReportPageScope report={report} lang={lang} /><p>{t.hero.analyzedAt}: {Number.isFinite(date.getTime())?date.toLocaleString(intlLocale(lang),{timeZone:'UTC',timeZoneName:'short'}):d.dateUnknown}</p>
  <p>{e.private}</p></header>
- {report.introduction&&<section><h2>{introductionCopy[lang].title}</h2><p>{report.introduction.author} · {new Date(report.introduction.publishedAt).toLocaleDateString(lang,{timeZone:'UTC'})}</p><p>{report.introduction.context}</p>
+ {report.introduction&&<section><h2>{localizedCopy(introductionCopy, lang).title}</h2><p>{report.introduction.author} · {new Date(report.introduction.publishedAt).toLocaleDateString(intlLocale(lang),{timeZone:'UTC'})}</p><p>{report.introduction.context}</p>
  <ul>{report.introduction.findingKeys.map(key=>{const f=model.findings.find(f=>f.key===key);return f&&<li key={key}>{format==='full'?<a href={'#'+f.anchor}>{findingContent(f.issue,lang).title}</a>:findingContent(f.issue,lang).title} ({cleanEvidence(key)})</li>;})}</ul>
- <h3>{introductionCopy[lang].next}</h3><p>{report.introduction.nextStep}</p><p>{introductionCopy[lang].human}</p></section>}
+ <h3>{localizedCopy(introductionCopy, lang).next}</h3><p>{report.introduction.nextStep}</p><p>{localizedCopy(introductionCopy, lang).human}</p></section>}
  <section><h2>{d.verdict[verdict]}</h2><p>{facts}</p>
  <p><strong>{r.score}: {score===undefined?d.notEvaluated:score+'/100'}</strong> · {partialReport(report)?d.provisional:d.measured}</p>
- <p>{scoreLimit(report,lang)}</p>{model.counts.total>0&&<p>{interpretationCopy[lang].severity}</p>}
+ <p>{scoreLimit(report,lang)}</p>{model.counts.total>0&&<p>{localizedCopy(interpretationCopy, lang).severity}</p>}
  {score!==undefined&&score>=70&&model.counts.critical>0&&<p>{d.favourable}</p>}
  {!model.counts.total&&<p>{d.empty}</p>}{partialReport(report)&&<p>{report.antiBot?.detected?d.antiBot:r.partial}</p>}
  <p>{r.coverage}: {coverage?pct(coverage.global.ratio):d.coverageUnknown}</p><p>{d.coverageExplain}</p>
@@ -47,14 +49,14 @@ export default function PrintableReport({report,lang,format:requestedFormat}:{re
  <table><caption>{r.score} / {e.coverage}</caption><thead><tr><th>{r.domain}</th><th>{r.score}</th><th>{e.coverage}</th></tr></thead><tbody>{model.groups.filter(g=>g.key!=='unknown').map(g=>{const value=domainScore(g.score?.score,g.key,coverage);return <tr key={g.key}><th scope="row">{title(g.key)}</th><td>{value===undefined?d.notEvaluated:value+'/100'}</td><td>{pct(coverage?.domains.find(row=>row.key===g.key)?.ratio)}</td></tr>;})}</tbody></table>
  <p>{d.automaticLimit}</p><p>{r.limits}</p></section>
  <ObservedMeasurements report={report} lang={lang}/>
- <section><h2>{r.actions}</h2><p>{interpretationCopy[lang].actions}</p>{!priorities.length&&<p>{t.priorityCards.empty}</p>}{priorities.map((resolved,index)=>{const p=resolved.priority;const grouped=new Set([p.findingKey,...(p.relatedFindingKeys??[])].filter(Boolean)).size>1;const content=!grouped&&resolved.findings.length===1?findingContent(resolved.findings[0].issue,lang):undefined;return <article key={index}>
+ <section><h2>{r.actions}</h2><p>{localizedCopy(interpretationCopy, lang).actions}</p>{!priorities.length&&<p>{t.priorityCards.empty}</p>}{priorities.map((resolved,index)=>{const p=resolved.priority;const grouped=new Set([p.findingKey,...(p.relatedFindingKeys??[])].filter(Boolean)).size>1;const content=!grouped&&resolved.findings.length===1?findingContent(resolved.findings[0].issue,lang):undefined;return <article key={index}>
  <h3>{t.priorityCards.rankLabel} {p.rank??index+1} · {content?.title??findingEditorial(p.findingKey,lang).title}</h3><p>{content?.impact??findingEditorial(p.findingKey,lang).impact}</p>
  {format==='full'&&content&&<><p>{content.qualification}</p><p>{content.recommendation}</p></>}
- {isAggregateFinding(p.findingKey)&&<p>{lang==='fr'?'Cette note d’outil n’est pas une correction à chiffrer. Examiner les constats détaillés ; sans eux, demander le diagnostic source.':'This tool score is not an estimable correction. Inspect detailed findings; without them, request the source diagnosis.'}</p>}
+ {isAggregateFinding(p.findingKey)&&<p>{(lang === "fr" ? 'Cette note d’outil n’est pas une correction à chiffrer. Examiner les constats détaillés ; sans eux, demander le diagnostic source.' : localizeValue('This tool score is not an estimable correction. Inspect detailed findings; without them, request the source diagnosis.', lang))}</p>}
  <p>{title(p.categoryKey??resolved.findings[0]?.domain??'unknown')} · {t.priorityCards.effortLabel} {p.effort??t.priorityCards.effortUnknown}</p>
  <p>{t.priorityCards.confidenceLabel} {p.confidence&&Object.hasOwn(t.priorityCards.confidence,p.confidence)?t.priorityCards.confidence[p.confidence]:t.priorityCards.confidence.UNKNOWN}</p>
  <p>{r.technicalTitle}: {cleanEvidence(p.title)}</p><p>{e.source}: {[...new Set([...(p.sources??[]),...resolved.findings.flatMap(f=>f.sources)])].map(cleanEvidence).join(', ')||e.unknown}</p>
- {p.rankReason&&<p>{t.priorityCards.rankReasons[p.rankReason]}</p>}{p.rankReason==='MODELLED_SCORE_GAIN'&&typeof p.globalScoreGain==='number'&&Number.isFinite(p.globalScoreGain)&&<p>{t.priorityCards.gainLabel} {p.globalScoreGain.toLocaleString(lang,{maximumFractionDigits:2})} {t.priorityCards.gainUnit}. {t.priorityCards.modelLimit}</p>}
+ {p.rankReason&&<p>{t.priorityCards.rankReasons[p.rankReason]}</p>}{p.rankReason==='MODELLED_SCORE_GAIN'&&typeof p.globalScoreGain==='number'&&Number.isFinite(p.globalScoreGain)&&<p>{t.priorityCards.gainLabel} {p.globalScoreGain.toLocaleString(intlLocale(lang),{maximumFractionDigits:2})} {t.priorityCards.gainUnit}. {t.priorityCards.modelLimit}</p>}
  {grouped&&<p>{t.priorityCards.groupedLabel} {resolved.findings.length}</p>}
  {[...resolved.findings,...(isAggregateFinding(p.findingKey)?model.findings.filter(f=>!isAggregateFinding(f.key)&&f.domain===(p.categoryKey??resolved.findings[0]?.domain)&&f.key.startsWith(p.findingKey!.split('.')[0]+'.')&&!resolved.findings.some(r=>r.key===f.key)):[])].map(f=><p key={f.key}>{t.priorityCards.seeFinding}: {findingContent(f.issue,lang).title} ({cleanEvidence(f.key)})</p>)}
  {resolved.status!=='resolved'&&<p>{resolved.status==='partial'?t.priorityCards.partialFindings:t.priorityCards.missingFinding}</p>}<p>{t.priorityCards.confirmNext}</p></article>;})}</section>
@@ -63,7 +65,7 @@ export default function PrintableReport({report,lang,format:requestedFormat}:{re
  <p>{c.qualification}</p>{c.missingInformation&&<p>{c.missingInformation}</p>}
  <p>{r.technicalTitle}: {cleanEvidence(i.title)}</p><p>{r.originalObservation}: {cleanEvidence(i.impact)}</p><p>{r.technicalId}: {cleanEvidence(i.id??f.key)}</p>
  <p>{r.source}: {cleanEvidence(i.structuredEvidence?.source||f.sources.join(', '))||d.sourcesUnknown}</p><p>{t.priorityCards.confidenceLabel} {i.confidence&&Object.hasOwn(t.priorityCards.confidence,i.confidence)?t.priorityCards.confidence[i.confidence]:r.unknownConfidence}</p>
- <h5>{r.evidence}</h5>{valid?<p>{i.id==='runtime.network.bytes_estimated'?r.estimated+': ':''}{m.value.toLocaleString(lang,{maximumSignificantDigits:6})} {r.units[m.unit]}</p>:expectsScalarMeasurement(i)&&<p>{r.missingMeasure}</p>}
+ <h5>{r.evidence}</h5>{valid?<p>{i.id==='runtime.network.bytes_estimated'?r.estimated+': ':''}{m.value.toLocaleString(intlLocale(lang),{maximumSignificantDigits:6})} {r.units[m.unit]}</p>:expectsScalarMeasurement(i)&&<p>{r.missingMeasure}</p>}
  <ObservedEvidence evidence={i.structuredEvidence?.observed} lang={lang} />
  {i.structuredEvidence?.details?.length?<dl>{i.structuredEvidence.details.slice(0,20).map((detail,n)=><div key={n}><dt>{detail.key==='score'&&i.id?.startsWith('lighthouse.audit.')?r.lighthouseRatio:cleanEvidence(detail.key)}</dt><dd>{cleanEvidence(detail.text)}</dd></div>)}</dl>:i.evidence&&<p className="evidence">{cleanEvidence(i.evidence)}</p>}
  <FindingGuide issue={i} lang={lang} heading={5}/></article>;})}</section>)}</section>}

@@ -1,6 +1,7 @@
 package com.dokor.argos.services.account;
 
 import java.time.Duration;
+import static com.dokor.argos.services.account.AccountMessages.copy;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,90 +14,74 @@ public final class AccountEmail {
     public record Message(String subject, String preview, String text, String html) {}
 
     public static Message render(Kind kind, String language, String origin, String token, Duration ttl) {
-        boolean en = "en".equals(language);
-        String lang = en ? "en" : "fr";
+        String lang = AccountLanguage.normalize(language);
         String title;
         String intro;
         String action;
         String safety;
-        String path = origin + (en ? "/en" : "") + "/account";
+        String path = origin + AccountLanguage.prefix(lang) + "/account";
         boolean challenge = kind == Kind.VERIFY || kind == Kind.RESET || kind == Kind.REAUTH;
         switch (kind) {
             case VERIFY -> {
-                title = en ? "Confirm your email address" : "Confirmez votre adresse e-mail";
-                intro = en ? "Welcome to Argos. Confirm this address to access your analyses and follow your sites."
-                        : "Bienvenue sur Argos. Confirmez cette adresse pour accéder à vos analyses et suivre vos sites.";
-                action = en ? "Confirm my email address" : "Confirmer mon adresse e-mail";
-                safety = en ? "If you did not request this, ignore this email. The address will not be verified through this link without your confirmation."
-                        : "Si vous n’êtes pas à l’origine de cette demande, ignorez cet e-mail. L’adresse ne sera pas vérifiée par ce lien sans votre confirmation.";
+                title = copy(lang, "Confirm your email address", "Confirmez votre adresse e-mail");
+                intro = copy(lang, "Welcome to Argos. Confirm this address to access your analyses and follow your sites.", "Bienvenue sur Argos. Confirmez cette adresse pour accéder à vos analyses et suivre vos sites.");
+                action = copy(lang, "Confirm my email address", "Confirmer mon adresse e-mail");
+                safety = copy(lang, "If you did not request this, ignore this email. The address will not be verified through this link without your confirmation.", "Si vous n’êtes pas à l’origine de cette demande, ignorez cet e-mail. L’adresse ne sera pas vérifiée par ce lien sans votre confirmation.");
                 path += "/verify#token=" + token;
             }
             case RESET -> {
-                title = en ? "Reset your password" : "Réinitialisez votre mot de passe";
-                intro = en ? "A password reset was requested for your Argos account. Open the secure page to choose a new password."
-                        : "Une réinitialisation a été demandée pour votre compte Argos. Ouvrez la page sécurisée pour choisir un nouveau mot de passe.";
-                action = en ? "Choose a new password" : "Choisir un nouveau mot de passe";
-                safety = en ? "If you did not request this, ignore this email. Your current password stays unchanged. Never share this link."
-                        : "Si vous n’êtes pas à l’origine de cette demande, ignorez cet e-mail. Votre mot de passe actuel reste inchangé. Ne partagez jamais ce lien.";
+                title = copy(lang, "Reset your password", "Réinitialisez votre mot de passe");
+                intro = copy(lang, "A password reset was requested for your Argos account. Open the secure page to choose a new password.", "Une réinitialisation a été demandée pour votre compte Argos. Ouvrez la page sécurisée pour choisir un nouveau mot de passe.");
+                action = copy(lang, "Choose a new password", "Choisir un nouveau mot de passe");
+                safety = copy(lang, "If you did not request this, ignore this email. Your current password stays unchanged. Never share this link.", "Si vous n’êtes pas à l’origine de cette demande, ignorez cet e-mail. Votre mot de passe actuel reste inchangé. Ne partagez jamais ce lien.");
                 path += "/reset#token=" + token;
             }
             case REAUTH -> {
-                title = en ? "Confirm your identity" : "Confirmez votre identité";
-                intro = en ? "Enter this code in the Argos account window where you requested it to confirm a sensitive action."
-                        : "Saisissez ce code dans la fenêtre de votre compte Argos où vous l’avez demandé pour confirmer une action sensible.";
+                title = copy(lang, "Confirm your identity", "Confirmez votre identité");
+                intro = copy(lang, "Enter this code in the Argos account window where you requested it to confirm a sensitive action.", "Saisissez ce code dans la fenêtre de votre compte Argos où vous l’avez demandé pour confirmer une action sensible.");
                 action = null;
-                safety = en ? "If you did not request this code, do not use or share it. Check your sessions from your account and contact the operator if needed."
-                        : "Si vous n’avez pas demandé ce code, ne l’utilisez pas et ne le partagez pas. Vérifiez vos sessions depuis votre compte et contactez l’opérateur si nécessaire.";
+                safety = copy(lang, "If you did not request this code, do not use or share it. Check your sessions from your account and contact the operator if needed.", "Si vous n’avez pas demandé ce code, ne l’utilisez pas et ne le partagez pas. Vérifiez vos sessions depuis votre compte et contactez l’opérateur si nécessaire.");
             }
             case PASSWORD_CHANGED -> {
-                title = en ? "Your password has changed" : "Votre mot de passe a été modifié";
-                intro = en ? "The password for your Argos account has been set or changed."
-                        : "Le mot de passe de votre compte Argos a été défini ou modifié.";
-                action = en ? "Review my account security" : "Vérifier la sécurité de mon compte";
-                safety = en ? "If you do not recognise this change, reset your password from the sign-in page and contact the operator."
-                        : "Si vous ne reconnaissez pas ce changement, réinitialisez votre mot de passe depuis la page de connexion et contactez l’opérateur.";
+                title = copy(lang, "Your password has changed", "Votre mot de passe a été modifié");
+                intro = copy(lang, "The password for your Argos account has been set or changed.", "Le mot de passe de votre compte Argos a été défini ou modifié.");
+                action = copy(lang, "Review my account security", "Vérifier la sécurité de mon compte");
+                safety = copy(lang, "If you do not recognise this change, reset your password from the sign-in page and contact the operator.", "Si vous ne reconnaissez pas ce changement, réinitialisez votre mot de passe depuis la page de connexion et contactez l’opérateur.");
                 path += "/settings";
             }
             case METHOD_ADDED, METHOD_REMOVED -> {
                 boolean added = kind == Kind.METHOD_ADDED;
-                title = en ? (added ? "A sign-in method was added" : "A sign-in method was removed")
-                        : (added ? "Un moyen de connexion a été ajouté" : "Un moyen de connexion a été retiré");
-                intro = en ? (added ? "A new sign-in method is now linked to your Argos account." : "A sign-in method has been disabled on your Argos account.")
-                        : (added ? "Un nouveau moyen de connexion est désormais associé à votre compte Argos." : "Un moyen de connexion a été désactivé sur votre compte Argos.");
-                action = en ? "Review my sign-in methods" : "Vérifier mes moyens de connexion";
-                safety = en ? "If you do not recognise this change, sign in using a method you trust, revoke other sessions and contact the operator."
-                        : "Si vous ne reconnaissez pas ce changement, connectez-vous avec un moyen de confiance, révoquez les autres sessions et contactez l’opérateur.";
+                title = added ? copy(lang, "A sign-in method was added", "Un moyen de connexion a été ajouté") : copy(lang, "A sign-in method was removed", "Un moyen de connexion a été retiré");
+                intro = added ? copy(lang, "A new sign-in method is now linked to your Argos account.", "Un nouveau moyen de connexion est désormais associé à votre compte Argos.") : copy(lang, "A sign-in method has been disabled on your Argos account.", "Un moyen de connexion a été désactivé sur votre compte Argos.");
+                action = copy(lang, "Review my sign-in methods", "Vérifier mes moyens de connexion");
+                safety = copy(lang, "If you do not recognise this change, sign in using a method you trust, revoke other sessions and contact the operator.", "Si vous ne reconnaissez pas ce changement, connectez-vous avec un moyen de confiance, révoquez les autres sessions et contactez l’opérateur.");
                 path += "/settings";
             }
             default -> throw new IllegalArgumentException("Unknown account email");
         }
         String validity = challenge
-                ? (en ? "Valid for " : "Valable pendant ") + duration(ttl, en) + ". "
-                    + (en ? "Single use. A new request invalidates the previous link or code."
-                          : "À usage unique. Une nouvelle demande invalide le lien ou code précédent.")
-                : (en ? "This is a security notification. No confirmation is required."
-                      : "Ceci est une notification de sécurité. Aucune confirmation n’est nécessaire.");
+                ? (copy(lang, "Valid for ", "Valable pendant ")) + duration(ttl, lang) + ". "
+                    + (copy(lang, "Single use. A new request invalidates the previous link or code.", "À usage unique. Une nouvelle demande invalide le lien ou code précédent."))
+                : (copy(lang, "This is a security notification. No confirmation is required.", "Ceci est une notification de sécurité. Aucune confirmation n’est nécessaire."));
         String explicit = kind == Kind.VERIFY || kind == Kind.RESET
-                ? (en ? "Opening the link does not confirm anything: complete the action on the Argos page."
-                      : "Ouvrir le lien ne confirme rien : terminez l’action sur la page Argos.") : "";
+                ? (copy(lang, "Opening the link does not confirm anything: complete the action on the Argos page.", "Ouvrir le lien ne confirme rien : terminez l’action sur la page Argos.")) : "";
         String preview = intro;
-        String privacy = origin + (en ? "/en/privacy" : "/confidentialite");
-        String contact = origin + (en ? "/en/legal-information" : "/informations-legales");
-        String footer = en ? "Account email sent by Argos. Never share a password, link or confirmation code."
-                : "E-mail de compte envoyé par Argos. Ne partagez jamais de mot de passe, lien ou code de confirmation.";
+        String privacy = origin + (lang.equals("fr") ? "/confidentialite" : AccountLanguage.prefix(lang) + "/privacy");
+        String contact = origin + (lang.equals("fr") ? "/informations-legales" : AccountLanguage.prefix(lang) + "/legal-information");
+        String footer = copy(lang, "Account email sent by Argos. Never share a password, link or confirmation code.", "E-mail de compte envoyé par Argos. Ne partagez jamais de mot de passe, lien ou code de confirmation.");
         String text = title + "\n\n" + intro + "\n\n"
-                + (kind == Kind.REAUTH ? (en ? "Confirmation code: " : "Code de confirmation : ") + token + "\n\n" : "")
+                + (kind == Kind.REAUTH ? (copy(lang, "Confirmation code: ", "Code de confirmation : ")) + token + "\n\n" : "")
                 + validity + "\n" + explicit + "\n\n" + safety + "\n\n"
                 + (action == null ? "" : action + "\n" + path + "\n\n")
-                + footer + "\n" + (en ? "Privacy: " : "Confidentialité : ") + privacy + "\n"
-                + (en ? "Contact the operator: " : "Contacter l’opérateur : ") + contact + "\n";
+                + footer + "\n" + (copy(lang, "Privacy: ", "Confidentialité : ")) + privacy + "\n"
+                + (copy(lang, "Contact the operator: ", "Contacter l’opérateur : ")) + contact + "\n";
         String content = "<h1 style=\"margin:0 0 20px;font-size:28px;line-height:1.25;font-weight:700\">" + escape(title) + "</h1>"
                 + paragraph(intro)
                 + (kind == Kind.REAUTH ? "<p class=\"code\" style=\"margin:24px 0;padding:16px;background:#f6f7fb;border:1px solid #dfe5ee;border-radius:9px;font-family:Consolas,monospace;font-size:18px;line-height:1.6;word-break:break-all;overflow-wrap:anywhere\">" + escape(token) + "</p>" : "")
                 + paragraph(validity) + (explicit.isEmpty() ? "" : paragraph(explicit))
                 + (action == null ? "" : "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin:24px 0\"><tr><td bgcolor=\"#5045dd\" style=\"border-radius:9px;mso-padding-alt:14px 20px\"><a href=\"" + escape(path) + "\" style=\"display:inline-block;padding:14px 20px;color:#ffffff;background:#5045dd;border-radius:9px;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:600;line-height:1.5;text-decoration:none\">" + escape(action) + "</a></td></tr></table>")
                 + "<div style=\"margin-top:24px;padding-top:24px;border-top:1px solid #dfe5ee\">" + paragraph(safety) + "</div>"
-                + (action == null ? "" : "<p style=\"margin:20px 0 8px;font-size:14px\">" + (en ? "If the button does not work, copy this address:" : "Si le bouton ne fonctionne pas, copiez cette adresse :")
+                + (action == null ? "" : "<p style=\"margin:20px 0 8px;font-size:14px\">" + escape(copy(lang, "If the button does not work, copy this address:", "Si le bouton ne fonctionne pas, copiez cette adresse :"))
                     + "</p><p style=\"margin:0;word-break:break-all;overflow-wrap:anywhere;font-size:14px\"><a class=\"link\" style=\"color:#5045dd;text-decoration:underline\" href=\"" + escape(path) + "\">" + escape(path) + "</a></p>");
         String html = """
                 <!doctype html>
@@ -118,8 +103,8 @@ public final class AccountEmail {
                 <a class="link" href="%s" style="display:inline-block;padding:10px 0;color:#5045dd;text-decoration:underline">%s</a> · <a class="link" href="%s" style="display:inline-block;padding:10px 0;color:#5045dd;text-decoration:underline">%s</a></td></tr>
                 </table><!--[if mso]></td></tr></table><![endif]-->
                 </td></tr></table></body></html>
-                """.formatted(lang, escape(title), escape(preview), en ? "Your account" : "Votre compte", content,
-                    escape(footer), privacy, en ? "Privacy" : "Confidentialité", contact, en ? "Contact" : "Contact");
+                """.formatted(lang, escape(title), escape(preview), escape(copy(lang, "Your account", "Votre compte")), content,
+                    escape(footer), escape(privacy), escape(copy(lang, "Privacy", "Confidentialité")), escape(contact), escape(copy(lang, "Contact", "Contact")));
         return new Message("Argos — " + title, preview, text, html);
     }
 
@@ -130,6 +115,40 @@ public final class AccountEmail {
     private static String escape(String value) {
         return value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
                 .replace("\"", "&quot;").replace("'", "&#39;");
+    }
+
+
+    static String duration(Duration duration, String lang) {
+        if (lang.equals("fr") || lang.equals("en")) return duration(duration, lang.equals("en"));
+        if (duration == null || duration.isNegative() || duration.isZero())
+            throw new IllegalArgumentException("Positive token lifetime required");
+        // Abbreviations avoid applying English plural rules to other languages.
+        String[] units = switch (lang) {
+            case "de" -> new String[]{"T", "Std", "Min", "Sek"};
+            case "it" -> new String[]{"g", "h", "min", "s"};
+            case "nl" -> new String[]{"d", "u", "min", "s"};
+            case "pl" -> new String[]{"d", "godz", "min", "s"};
+            case "da" -> new String[]{"d", "t", "min", "s"};
+            case "fi" -> new String[]{"vrk", "h", "min", "s"};
+            case "hu" -> new String[]{"nap", "ó", "perc", "mp"};
+            case "ro" -> new String[]{"z", "h", "min", "s"};
+            case "bg" -> new String[]{"д", "ч", "мин", "сек"};
+            case "el" -> new String[]{"ημ", "ώρ", "λεπ", "δευτ"};
+            case "lt" -> new String[]{"d", "val", "min", "sek"};
+            case "lv" -> new String[]{"d", "st", "min", "s"};
+            case "et" -> new String[]{"p", "h", "min", "s"};
+            default -> new String[]{"d", "h", "min", "s"};
+        };
+        long seconds = duration.getSeconds();
+        long[] sizes = {86400, 3600, 60, 1};
+        List<String> parts = new ArrayList<>();
+        var format = java.text.NumberFormat.getIntegerInstance(java.util.Locale.forLanguageTag(lang));
+        for (int i = 0; i < sizes.length; i++) {
+            long count = seconds / sizes[i]; seconds %= sizes[i];
+            if (count > 0) parts.add(format.format(count) + " " + units[i]);
+        }
+        if (duration.getNano() > 0) parts.add(java.text.NumberFormat.getNumberInstance(java.util.Locale.forLanguageTag(lang)).format(duration.getNano() / 1_000_000.0) + " ms");
+        return String.join(" ", parts);
     }
 
     static String duration(Duration duration, boolean en) {

@@ -1,4 +1,6 @@
 "use client";
+import { intlLocale } from "@/lib/i18n/locales";
+import { localizedCopy } from "@/lib/i18n/messages";
 import ContextHelp from "@/components/ui/ContextHelp";
 import { clarteCopy } from "./clarteCopy";
 import { compactUrl } from "./compactCopy";
@@ -18,8 +20,8 @@ import c from "./Connected.module.scss";
 
 export default function UsageView() {
   const {t,lang}=useLang(),copy=t.usagePage,session=useAccountSession(),router=useRouter(),params=useSearchParams();
-  const clarity=clarteCopy[lang];
-  const month=(value:string)=>new Intl.DateTimeFormat(lang,{month:"long",year:"numeric",timeZone:"UTC"}).format(new Date(value+"-01T00:00:00Z"));
+  const clarity=localizedCopy(clarteCopy, lang);
+  const month=(value:string)=>new Intl.DateTimeFormat(intlLocale(lang),{month:"long",year:"numeric",timeZone:"UTC"}).format(new Date(value+"-01T00:00:00Z"));
   const {usage,usageError,refreshUsage,invalidate}=session;
   const allowed=!!session.profile?.verified&&!session.denied;
   const period=params.get("period")??usage?.period,rawOffset=params.get("offset")??"0";
@@ -42,8 +44,8 @@ export default function UsageView() {
   const data=result?.key===key ? result.data:null,error=failure?.key===key ? failure.code:"",loading=loadingKey===key;
   const navigate=(selected?:string,page=0)=>{const query=new URLSearchParams();if(selected)query.set("period",selected);if(page)query.set("offset",String(page));router.push(localizedPath("/account/usage"+(query.size ? "?"+query:""),lang));};
   const refresh=()=>{refreshUsage();setRevision(v=>v+1);};
-  const number=(value:number)=>new Intl.NumberFormat(lang).format(value);
-  const date=(value:string)=>new Date(value).toLocaleString(lang,{timeZone:usage?.timezone??"UTC",dateStyle:"medium",timeStyle:"short"});
+  const number=(value:number)=>new Intl.NumberFormat(intlLocale(lang)).format(value);
+  const date=(value:string)=>new Date(value).toLocaleString(intlLocale(lang),{timeZone:usage?.timezone??"UTC",dateStyle:"medium",timeStyle:"short"});
   const stateLabels={COUNTED:copy.counted,RESERVED:copy.reserved,RELEASED:copy.released};
   const eventDate=(entry:UsageEvent)=>entry.countedAt??entry.releasedAt??entry.createdAt;
   const historyPeriod=data?.period??period??"";

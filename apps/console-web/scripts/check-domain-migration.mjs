@@ -54,7 +54,7 @@ try {
   let checked = 0;
   for (const host of ['argos.lelouet.fr', 'www.argos-audit.com']) {
     for (const method of ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']) {
-      for (const path of ['/', '/en/faq', '/report/synthetic-token?view=summary',
+      for (const path of ['/', '/en/faq', '/de/faq', '/es/resources/digital-accessibility', '/report/synthetic-token?view=summary',
         '/faq?utm_source=legacy&tag=one&tag=two', '/guides/caf%C3%A9?next=%2Ffaq%3Fx%3D1',
         '/api/audits?scope=page', '/api/account/auth/oauth/google/callback?code=synthetic&state=synthetic',
         '/sitemap.xml', '/robots.txt', '/og.png']) {
@@ -79,6 +79,8 @@ try {
     assert.ok(!html.includes('https://argos.lelouet.fr'), 'Legacy URL leaked into rendered metadata');
   }
   for (const [path, canonical] of [['/', 'https://argos-audit.com'], ['/en', 'https://argos-audit.com/en'],
+    ['/de', 'https://argos-audit.com/de'], ['/de/faq', 'https://argos-audit.com/de/faq'],
+    ['/es/faq', 'https://argos-audit.com/es/faq'],
     ['/guides/refonte-site-web', 'https://argos-audit.com/guides/refonte-site-web']]) {
     const response = await request(path, 'argos-audit.com');
     assert.equal(response.status, 200);
@@ -92,7 +94,7 @@ try {
   assert.ok(!sitemap.includes('argos.lelouet.fr') && !sitemap.includes('/account/') && !sitemap.includes('/report/'));
   const robots = await (await request('/robots.txt', 'argos-audit.com')).text();
   assert.match(robots, /Sitemap: https:\/\/argos-audit\.com\/sitemap.xml/);
-  for (const path of ['/report/synthetic-token', '/en/report/synthetic-token', '/account/sign-in']) {
+  for (const path of ['/report/synthetic-token', '/en/report/synthetic-token', '/account/sign-in', '/de/account/sign-in', '/es/report/synthetic-token']) {
     const response = await request(path, 'argos-audit.com');
     assert.equal(response.headers.get('x-robots-tag'), 'noindex, nofollow');
     await response.arrayBuffer();

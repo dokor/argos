@@ -1,10 +1,11 @@
 "use client";
+import { localizeValue, localizedCopy } from "@/lib/i18n/messages";
 
 import Link from "@/components/LocalizedLink";
 import SiteNav from "@/components/site/SiteNav";
 import SiteFooter from "@/components/site/SiteFooter";
 import { useLang } from "@/lib/i18n/LangContext";
-import { languageRoutes } from "@/lib/i18n/routes";
+import { frenchPath } from "@/lib/i18n/routes";
 import { technicalGuides } from "@/lib/technicalGuides";
 import s from "./page.module.scss";
 
@@ -46,9 +47,9 @@ const copy = {
     guidesTitle: "Understand the measurements",
     audiencesTitle: "Choose your context",
     guides: [
-      { href: "/guides/cls-eleve", title: "High CLS: diagnose layout shifts (French)", description: "A practical diagnosis, common causes and a before/after demonstration to stabilize page layout." },
-      { href: "/guides/refonte-site-web", title: "Website redesign: checks before and after launch (French)", description: "Prepare URL, indexing, user journey and follow-up checks with a downloadable acceptance checklist." },
-      { href: "/guides/accessibilite-moteurs-ia", title: "Can search engines and AI assistants access your page? (French)", description: "Check HTML and crawl rules; distinguish indexing, search, training and citations." },
+      { href: "/guides/cls-eleve", title: "High CLS: diagnose layout shifts", description: "A practical diagnosis, common causes and a before/after demonstration to stabilize page layout." },
+      { href: "/guides/refonte-site-web", title: "Website redesign: checks before and after launch", description: "Prepare URL, indexing, user journey and follow-up checks with a downloadable acceptance checklist." },
+      { href: "/guides/accessibilite-moteurs-ia", title: "Can search engines and AI assistants access your page?", description: "Check HTML and crawl rules; distinguish indexing, search, training and citations." },
       { href: "/guides/checklist-audit-ecommerce", title: "Ecommerce audit checklist", description: "Seven steps, a wrong-variant simulation and a CSV worksheet to check catalogue, cart and checkout." },
       { href: "/ressources/pourquoi-mon-site-ne-convertit-pas", title: "Why is my website not converting?", description: "Separate technical obstacles, your offer and conversion measurement, then choose useful checks." },
       { href: "/test-accessibilite-site-web", title: "Automated accessibility test", description: "Identify detectable problems and prepare human checks." },
@@ -73,11 +74,9 @@ const copy = {
 
 export default function ResourcesPage() {
   const { lang } = useLang();
-  const c = copy[lang];
-  const fr = lang === "fr";
+  const c = localizedCopy(copy, lang);
   const times: Record<string, number> = { "/guides/cls-eleve": 7, "/guides/refonte-site-web": 8, "/guides/accessibilite-moteurs-ia": 8, "/guides/checklist-audit-ecommerce": 12, "/ressources/audit-wordpress": 8, "/exemple-rapport": 7, "/guides/checklist-audit-site-web": 9, "/methodologie-score": 6, "/ressources/audit-technique-gratuit": 8, "/ressources/accessibilite-numerique": 10 };
-  const languageLabel = (href: string) => !fr && !languageRoutes[href] ? " · French" : "";
-  const cardMeta = (href: string) => (fr ? "Débutant · " : "Beginner · ") + (href.includes("accessibilite") && href !== "/guides/accessibilite-moteurs-ia" ? fr ? "Accessibilité" : "Accessibility" : href.includes("score") ? fr ? "Mesures" : "Measurements" : fr ? "Diagnostic" : "Diagnosis") + (fr ? " · Lecture estimée : " : " · Estimated reading: ") + (times[href] ?? 4) + " min" + languageLabel(href);
+  const cardMeta = (destination: string) => { const href = frenchPath(destination); return ((lang === "fr" ? "Débutant · " : localizeValue("Beginner · ", lang))) + (href.includes("accessibilite") && href !== "/guides/accessibilite-moteurs-ia" ? (lang === "fr" ? "Accessibilité" : localizeValue("Accessibility", lang)) : href.includes("score") ? (lang === "fr" ? "Mesures" : localizeValue("Measurements", lang)) : (lang === "fr" ? "Diagnostic" : localizeValue("Diagnosis", lang))) + ((lang === "fr" ? " · Lecture estimée : " : localizeValue(" · Estimated reading: ", lang))) + (times[href] ?? 4) + " min"; };
 
   return (
     <div className={s.page}>
@@ -92,15 +91,15 @@ export default function ResourcesPage() {
         </header>
         <div className={s.container}>
           <section className={s.starter} aria-labelledby="start-title">
-            <h2 id="start-title">{fr ? "Commencer ici" : "Start here"}</h2>
-            <ol><li><Link href="/exemple-rapport">{fr ? "Lire un exemple de rapport" : "Read an example report"}</Link></li>
-              <li><Link href="/guides/checklist-audit-site-web">{fr ? "Choisir les vérifications de la checklist" : "Choose checks from the checklist"}</Link></li>
-              <li><Link href="/#audit">{fr ? "Analyser votre page gratuitement" : "Analyse your page for free"}</Link></li></ol>
+            <h2 id="start-title">{(lang === "fr" ? "Commencer ici" : localizeValue("Start here", lang))}</h2>
+            <ol><li><Link href="/exemple-rapport">{(lang === "fr" ? "Lire un exemple de rapport" : localizeValue("Read an example report", lang))}</Link></li>
+              <li><Link href="/guides/checklist-audit-site-web">{(lang === "fr" ? "Choisir les vérifications de la checklist" : localizeValue("Choose checks from the checklist", lang))}</Link></li>
+              <li><Link href="/#audit">{(lang === "fr" ? "Analyser votre page gratuitement" : localizeValue("Analyse your page for free", lang))}</Link></li></ol>
           </section>
           <section className={s.section} aria-labelledby="guides-title">
             <h2 id="guides-title">{c.guidesTitle}</h2>
             <div className={s.grid}>
-              {[...Object.values(technicalGuides).map(g => ({ href: g.route, title: g[lang].title, description: g[lang].description })), ...c.guides].map((item) => (
+              {[...Object.values(technicalGuides).map(g => ({ href: g.route, title: localizedCopy(g, lang).title, description: localizedCopy(g, lang).description })), ...c.guides].map((item) => (
                 <article key={item.href} className={s.card}>
                   <h3>{item.title}</h3>
                   <p className={s.cardMeta}>{cardMeta(item.href)}</p>

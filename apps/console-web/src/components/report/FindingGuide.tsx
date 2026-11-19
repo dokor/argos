@@ -1,3 +1,4 @@
+import { localizedCopy } from "@/lib/i18n/messages";
 import type { Issue } from './types';
 import type { Lang } from '@/lib/i18n/routes';
 import { findingExplanation } from './findingExplanation';
@@ -15,7 +16,7 @@ const allParts: GuidePart[] = ['detection', 'correction', 'verification', 'limit
 export default function FindingGuide({ issue, lang, heading = 3, parts = allParts, showHeadings = true }: {
   issue: Issue; lang: Lang; heading?: 3 | 4 | 5; parts?: GuidePart[]; showHeadings?: boolean;
 }) {
-  const p = findingExplanation(issue, lang), c = copy[lang], content = findingContent(issue, lang);
+  const p = findingExplanation(issue, lang), c = localizedCopy(copy, lang), content = findingContent(issue, lang);
   const Heading = heading === 5 ? 'h5' : heading === 4 ? 'h4' : 'h3';
   return <div className={s.guide} data-finding-guide>
     {parts.map(part => {

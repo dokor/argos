@@ -1,3 +1,5 @@
+import type { Lang } from "@/lib/i18n/locales";
+import { localizedCopy } from "@/lib/i18n/messages";
 import type { Coverage } from './types';
 
 export const coverageCopy = {
@@ -58,8 +60,8 @@ export function coverageBreakdown(coverage: Coverage) {
   return { missing, excluded, partial, points, reconciled };
 }
 
-export function coverageAction(state: string, reason: string, lang: 'fr' | 'en') {
-  const c = coverageCopy[lang];
+export function coverageAction(state: string, reason: string, lang: Lang) {
+  const c = localizedCopy(coverageCopy, lang);
   if (reason === 'SSL_ENDPOINTS_PARTIALLY_MEASURED') return c.partialAction;
   if (state === 'BLOCKED_BY_ANTIBOT') return c.blocked;
   return /TIMEOUT|UNAVAILABLE|NAVIGATION_INCOMPLETE|MODULE_MISSING|DEADLINE_EXCEEDED|PROVIDER_RATE_LIMITED|NETWORK_CONNECT/.test(reason) ? c.retry : c.inspect;

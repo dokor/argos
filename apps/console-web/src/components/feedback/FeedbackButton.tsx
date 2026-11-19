@@ -1,4 +1,5 @@
 "use client";
+import { localizedCopy } from "@/lib/i18n/messages";
 import { useEffect, useRef, useState } from "react";
 import { useLang } from "@/lib/i18n/LangContext";
 import type { FeedbackReference } from "@/lib/feedback-request";
@@ -8,7 +9,7 @@ import { feedbackCopy } from "./copy";
 import s from "./FeedbackForm.module.scss";
 import buttonStyles from "./FeedbackButton.module.scss";
 export default function FeedbackButton({type="SUGGESTION",reference,findingKey,children,className,variant="text"}:{type?:string;reference?:FeedbackReference;findingKey?:string;children?:React.ReactNode;className?:string;variant?:"text"|"icon"}) {
-  const {lang}=useLang(),c=feedbackCopy[lang];
+  const {lang}=useLang(),c=localizedCopy(feedbackCopy, lang);
   const [open,setOpen]=useState(false),[dirty,setDirty]=useState(false),[confirm,setConfirm]=useState(false),[busy,setBusy]=useState(false);
   const keepButton=useRef<HTMLButtonElement>(null), formArea=useRef<HTMLDivElement>(null), wasConfirm=useRef(false);
   useEffect(()=>{

@@ -1,4 +1,6 @@
 "use client";
+import { intlLocale } from "@/lib/i18n/locales";
+import { localizedCopy } from "@/lib/i18n/messages";
 import WebTip from "@/components/editorial/WebTip";
 
 import { useEffect, useState } from "react";
@@ -22,7 +24,7 @@ export type ProblemStatistics = {
 };
 
 export default function ProblemStatisticsView() {
-  const { lang } = useLang(), c = problemStatisticsCopy[lang], session = useAccountSession();
+  const { lang } = useLang(), c = localizedCopy(problemStatisticsCopy, lang), session = useAccountSession();
   const [days, setDays] = useState(90), [category, setCategory] = useState(""), [revision, setRevision] = useState(0);
   const [denied, setDenied] = useState(false);
   const [result, setResult] = useState<{ request: string; data: ProblemStatistics | null; error: boolean } | null>(null);
@@ -42,9 +44,9 @@ export default function ProblemStatisticsView() {
     return () => controller.abort();
   }, [allowed, days, category, request]);
   const data = current?.data;
-  const number = (value: number) => new Intl.NumberFormat(lang).format(value);
-  const date = (value: string) => new Intl.DateTimeFormat(lang, { dateStyle: "medium", timeZone: "UTC" }).format(new Date(value));
-  const percent = (value: number) => new Intl.NumberFormat(lang, { style: "percent", maximumFractionDigits: 1 }).format(value);
+  const number = (value: number) => new Intl.NumberFormat(intlLocale(lang)).format(value);
+  const date = (value: string) => new Intl.DateTimeFormat(intlLocale(lang), { dateStyle: "medium", timeZone: "UTC" }).format(new Date(value));
+  const percent = (value: number) => new Intl.NumberFormat(intlLocale(lang), { style: "percent", maximumFractionDigits: 1 }).format(value);
 
   return <main className={s.main}>
     <Link className={s.back} href="/account/admin">{c.back}</Link>

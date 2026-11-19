@@ -1,4 +1,5 @@
 "use client";
+import { localizedCopy, localizeValue } from "@/lib/i18n/messages";
 
 import Link from "@/components/LocalizedLink";
 import { useLang } from "@/lib/i18n/LangContext";
@@ -37,13 +38,13 @@ export default function SiteFooter({ fixedFrench = false }: { fixedFrench?: bool
         </nav>
         <nav className={s.footerGroup} aria-label={f.information}>
           <h2>{f.information}</h2>
-          <Link href="/a-propos">{fixedFrench || lang === "fr" ? "À propos" : "About Argos"}</Link>
-          <Link href="/methodologie-score#resume">{fixedFrench || lang === "fr" ? "Méthode du score" : "Scoring method"}</Link>
+          <Link href="/a-propos">{fixedFrench || lang === "fr" ? "À propos" : localizeValue("About Argos", lang)}</Link>
+          <Link href="/methodologie-score#resume">{fixedFrench || lang === "fr" ? "Méthode du score" : localizeValue("Scoring method", lang)}</Link>
           <ContactLinks fixedFrench={fixedFrench} />
-          <FeedbackButton type="BUG">{feedbackCopy[fixedFrench ? "fr" : lang].bugAction}</FeedbackButton><FeedbackButton type="SUGGESTION">{feedbackCopy[fixedFrench ? "fr" : lang].suggestionAction}</FeedbackButton>
-          <Link href="/conditions-utilisation">{fixedFrench || lang === "fr" ? "Conditions d’utilisation" : "Terms of use"}</Link>
-          <Link href="/confidentialite">{fixedFrench || lang === "fr" ? f.privacy : "Privacy"}</Link>
-          <Link href="/informations-legales">{fixedFrench || lang === "fr" ? "Informations sur le service" : "Service information"}</Link>
+          <FeedbackButton type="BUG">{localizedCopy(feedbackCopy, fixedFrench ? "fr" : lang).bugAction}</FeedbackButton><FeedbackButton type="SUGGESTION">{localizedCopy(feedbackCopy, fixedFrench ? "fr" : lang).suggestionAction}</FeedbackButton>
+          <Link href="/conditions-utilisation">{fixedFrench || lang === "fr" ? "Conditions d’utilisation" : localizeValue("Terms of use", lang)}</Link>
+          <Link href="/confidentialite">{fixedFrench || lang === "fr" ? f.privacy : localizeValue("Privacy", lang)}</Link>
+          <Link href="/informations-legales">{fixedFrench || lang === "fr" ? "Informations sur le service" : localizeValue("Service information", lang)}</Link>
           <Link href="/faq#limits">{f.limits}</Link>
           <a href="https://github.com/dokor/argos" target="_blank" rel="noopener noreferrer">{f.source}</a>
         </nav>

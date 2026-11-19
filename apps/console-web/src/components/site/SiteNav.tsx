@@ -52,7 +52,11 @@ export default function SiteNav() {
               <circle cx="12" cy="8" r="4" />
               <path d="M4 21v-2a8 8 0 0 1 16 0v2" />
             </svg>
-            <span>{accountLabel}</span>
+            <span className={s.accountLabel}>
+              <span aria-hidden="true" className={s.accountLabelReserve}>{t.nav.signUp}</span>
+              <span aria-hidden="true" className={s.accountLabelReserve}>{t.account.title}</span>
+              <span>{accountLabel}</span>
+            </span>
           </Link>
           <FeedbackButton variant="icon" className={s.feedbackAccess} />
           <div id="site-nav-preferences" className={s.navPreferences}>

@@ -1,4 +1,5 @@
 "use client";
+import { localizedCopy } from "@/lib/i18n/messages";
 import { useState } from "react";
 import Link from "@/components/LocalizedLink";
 import AnalysisForm from "@/components/connected/AnalysisForm";
@@ -7,7 +8,7 @@ import { historyCopy } from "./historyCopy";
 import type { HistoryContext } from "./history";
 import s from "./AccountView.module.scss";
 export default function HistoryActions({ context, launchBlocked = false }: { context: HistoryContext; launchBlocked?: boolean }) {
-  const { lang } = useLang(), copy = historyCopy[lang];
+  const { lang } = useLang(), copy = localizedCopy(historyCopy, lang);
   const [launch, setLaunch] = useState(false);
   return <aside className={s.card} aria-label={copy.title}>
     <div className={s.actions}><Link href="/account/sites">{copy.sites}</Link><Link href={"/account/urls/" + context.siteUrlId + "/history"}>{copy.title}</Link>

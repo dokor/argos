@@ -24,7 +24,8 @@ que les prérequis ci-dessous soient prêts avant de fusionner.
   habituelles de normalisation des slashs restent applicables. Les ressources
   internes `/_next/` restent gérées par Next.
 - Le sitemap, robots.txt, les canoniques, hreflang, Open Graph, JSON-LD, les liens
-  des exports et `llms.txt` utilisent le nouveau domaine. Comptes et rapports
+  des exports et `llms.txt` utilisent le nouveau domaine, y compris pour les
+  22 langues du produit. Comptes et rapports
   conservent leur `noindex` et restent exclus du sitemap.
 - Le Dockerfile reçoit `NEXT_PUBLIC_SITE_URL` **au build** ; Compose fixe la même
   valeur au build et au runtime. Les fichiers `.env*` privés sont exclus de
@@ -101,7 +102,7 @@ manuelle ou de suppression héritée sur le domaine acheté.
    d'adresse**, choisir le nouveau site et suivre les contrôles de Google.
    Ne pas déclarer le déménagement de tout `lelouet.fr`.
 2. Soumettre `https://argos-audit.com/sitemap.xml` dans la propriété du nouveau site.
-3. Inspecter la page d'accueil et quelques pages FR/EN importantes. Vérifier que
+3. Inspecter la page d'accueil et des pages importantes dans plusieurs langues. Vérifier que
    la canonique choisie correspond à la nouvelle URL et que les pages publiques
    ne portent pas de `noindex`.
 4. Suivre l'indexation, les erreurs et les performances **des deux propriétés**

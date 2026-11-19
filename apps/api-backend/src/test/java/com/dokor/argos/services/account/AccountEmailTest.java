@@ -84,11 +84,29 @@ class AccountEmailTest {
 
     @Test
     void unsupportedLanguagesCannotChangeRoutesAndDynamicHtmlIsEscaped() {
-        for (String lang : new String[]{null, "fr", "de", "//external.example", "en/../"}) {
+        for (String lang : new String[]{null, "fr", "zz", "//external.example", "en/../"}) {
             var message = AccountEmail.render(AccountEmail.Kind.RESET, lang, ORIGIN, "<script>\"&", Duration.ofMinutes(30));
             assertTrue(message.html().contains("lang=\"fr\""));
             assertTrue(message.html().contains(ORIGIN + "/account/reset#token=&lt;script&gt;&quot;&amp;"));
             assertFalse(message.html().contains("<script>"));
+        }
+    }
+
+    @Test
+    void allProductLanguagesRenderEveryMailAndPreserveSecureDestinations() {
+        for (String lang : AccountLanguage.SUPPORTED) {
+            for (var kind : AccountEmail.Kind.values()) {
+                var message = AccountEmail.render(kind, lang, ORIGIN, TOKEN, Duration.ofMinutes(30));
+                assertTrue(message.html().contains("lang=\"" + lang + "\""), lang);
+                assertFalse(message.subject().isBlank(), lang);
+                assertTrue(message.html().contains("Argos"), lang);
+                if (kind == AccountEmail.Kind.RESET || kind == AccountEmail.Kind.VERIFY) {
+                    assertTrue(message.text().contains(ORIGIN + AccountLanguage.prefix(lang) + "/account/"), lang);
+                    assertTrue(message.text().contains("#token=" + TOKEN), lang);
+                }
+                if (!lang.equals("fr") && !lang.equals("en"))
+                    assertNotEquals(AccountEmail.render(kind, "en", ORIGIN, TOKEN, Duration.ofMinutes(30)).subject(), message.subject(), lang);
+            }
         }
     }
 

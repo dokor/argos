@@ -1,3 +1,5 @@
+import { languageFromPath, languageFromHeader } from "./i18n/locales";
+import { localizedPath } from "./i18n/routes";
 import { overviewQuery } from "./overview-request";
 import { PRODUCTION_SITE_URL } from "./site-url";
 import { usageTimelineQuery } from "./usage-timeline";
@@ -33,8 +35,8 @@ function oauthFailure(request: NextRequest, state: string | null, error: OAuthCa
   console.warn("account_oauth_callback_rejected", { provider, stage, error });
   const returnCookie = state ? request.cookies.get("argos_return_" + state)?.value : undefined;
   const destination = safeAccountReturn(returnCookie);
-  const prefix = destination.startsWith("/en/") ? "/en" : "";
-  const settings = request.cookies.get("argos_intent_" + state)?.value === "link" && /^\/(?:en\/)?account\/settings(?:\?section=(?:profile|security|connections))?$/.test(destination);
+  const prefix = languageFromPath(destination) === "fr" ? "" : "/" + languageFromPath(destination);
+  const settings = request.cookies.get("argos_intent_" + state)?.value === "link" && /^\/(?:(?:en|de|es|it|nl|pt|pl|sv|da|fi|cs|sk|hu|ro|bg|el|hr|sl|lt|lv|et)\/)?account\/settings(?:\?section=(?:profile|security|connections))?$/.test(destination);
   const response = NextResponse.redirect(new URL(settings ? prefix + "/account/settings?section=connections&error=" + error : prefix + "/account/sign-in?error=" + error, origin()), 303);
   response.headers.set("Cache-Control", "private, no-store");
   if (returnCookie) response.cookies.set("argos_account_return", destination, accountCookieOptions(86400));
@@ -58,7 +60,7 @@ export function accountHeaders(request: NextRequest, mutation: boolean): Headers
   if (mutation && !validCsrf(request)) return privateError("csrf_invalid", 403);
   const headers = new Headers({ Accept: "application/json", "Content-Type": "application/json" });
   accountClientHeaders(request.headers, headers);
-  headers.set("Accept-Language", request.headers.get("accept-language") === "en" ? "en" : "fr");
+  headers.set("Accept-Language", languageFromHeader(request.headers.get("accept-language")));
   if (session !== undefined) {
     if (!session || session.length > 4096) return privateError("session_invalid", 401);
     headers.set("Authorization", "Bearer " + session);
@@ -132,10 +134,10 @@ export async function accountProxy(request: NextRequest, parts: string[]): Promi
         returnTo = safeAccountReturn(parsed.returnTo);
         linkIntent = parsed.intent === "link";
         preserveReturn = !path.endsWith("/start");
-        headers.set("Accept-Language", returnTo.startsWith("/en/") ? "en" : "fr");
+        headers.set("Accept-Language", languageFromPath(returnTo));
         // Report tokens stay in the browser's HttpOnly return cookie, never in the OAuth DB row.
         if (preserveReturn) delete parsed.returnTo;
-        else parsed.returnTo = returnTo.startsWith("/en/") ? "/en/account" : "/account";
+        else parsed.returnTo = localizedPath("/account", languageFromPath(returnTo));
       }
       if (/^sites(?:\/\d{1,19}\/urls)?$/.test(path)) {
         if (Object.keys(parsed).some(key => key !== "url") || typeof parsed.url !== "string" || parsed.url.length > 2048 || ssrfError(parsed.url)) return privateError("url_invalid",400);
@@ -179,7 +181,7 @@ export async function accountProxy(request: NextRequest, parts: string[]): Promi
     // Lax consent cookie survives a provider top-level callback; state/browser checks precede it.
     if (measurementDeploymentAllowed() && request.cookies.get(CONSENT_COOKIE)?.value === "granted")
       headers.set("X-Argos-Measurement", "Bearer " + process.env.ADMIN_API_TOKEN);
-    headers.set("Accept-Language", safeAccountReturn(request.cookies.get("argos_return_" + state)?.value).startsWith("/en/") ? "en" : "fr");
+    headers.set("Accept-Language", languageFromPath(safeAccountReturn(request.cookies.get("argos_return_" + state)?.value)));
   }
   const claim = /^runs\/(\d{1,19})\/claim$/.exec(path);
   if (claim) {
@@ -242,7 +244,7 @@ export async function accountProxy(request: NextRequest, parts: string[]): Promi
       method: request.method, headers, ...(body !== undefined ? { body } : {}), cache: "no-store", redirect: "error", signal: AbortSignal.timeout(15000),
     });
     if (!upstream.ok && headers.has("X-Argos-Measurement") && (path === "auth/register" || path === "auth/login" || (callback && request.cookies.get("argos_intent_" + state)?.value !== "link"))) {
-      await count({ event: "account_auth_rejected", dimensions: { route: path === "auth/register" ? "/account/register" : "/account/sign-in", lang: headers.get("Accept-Language") === "en" ? "en" : "fr", placement: "form" }, errorCategory: upstream.status === 429 ? "rate_limit" : upstream.status >= 500 ? "service" : "validation" });
+      await count({ event: "account_auth_rejected", dimensions: { route: path === "auth/register" ? "/account/register" : "/account/sign-in", lang: languageFromHeader(headers.get("Accept-Language")), placement: "form" }, errorCategory: upstream.status === 429 ? "rate_limit" : upstream.status >= 500 ? "service" : "validation" });
     }
     let data = await upstream.text();
     if (upstream.ok && path === "admin/analytics/settings") data = JSON.stringify({ ...JSON.parse(data), bffAllowed: measurementDeploymentAllowed() });

@@ -1,3 +1,4 @@
+import { languageFromPath } from "./i18n/locales";
 import { clearPendingAnalysis } from "./connected/analysis-recovery";
 export type AccountProfile = { displayName: string; email: string | null; verified: boolean; admin?: boolean };
 export type SignInMethod = { id: string; provider: string; usable: boolean };
@@ -21,7 +22,7 @@ export async function accountFetch<T>(path: string, method = "GET", body?: unkno
   if (authenticated && typeof window !== "undefined") await renewAccountSession();
   signal?.throwIfAborted();
   const headers: Record<string, string> = { "Content-Type": "application/json" };
-  headers["Accept-Language"] = typeof window !== "undefined" && window.location.pathname.startsWith("/en/") ? "en" : "fr";
+  headers["Accept-Language"] = typeof window !== "undefined" ? languageFromPath(window.location.pathname) : "fr";
   if (captcha) headers["X-Argos-Captcha"] = captcha;
   if (idempotencyKey) headers["Idempotency-Key"] = idempotencyKey;
   if (method !== "GET") headers["X-Argos-CSRF"] = await csrfToken();

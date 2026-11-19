@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { unstable_getResponseFromNextConfig } from "next/experimental/testing/server";
 import nextConfig from "../../next.config";
+import { locales } from "./i18n/locales";
 
 afterEach(() => { vi.unstubAllEnvs(); vi.resetModules(); });
 
@@ -11,6 +12,8 @@ describe("permanent domain migration", () => {
         "/",
         "/faq?utm_source=legacy&tag=one",
         "/en/resources/digital-accessibility",
+        "/de/faq",
+        "/es/resources/digital-accessibility",
         "/report/synthetic-token?view=summary",
         "/api/audits?scope=page",
         "/api/account/auth/oauth/google/callback?code=synthetic&state=synthetic",
@@ -48,7 +51,7 @@ describe("permanent domain migration", () => {
   );
 
   it("keeps report and account responses out of the index", async () => {
-    for (const path of ["/report/synthetic-token", "/en/report/synthetic-token", "/account/sign-in", "/en/account/sign-in"]) {
+    for (const path of ["/report/synthetic-token", "/en/report/synthetic-token", "/account/sign-in", "/en/account/sign-in", "/de/report/synthetic-token", "/es/account/sign-in", "/de/share/synthetic-token"]) {
       const response = await unstable_getResponseFromNextConfig({ url: `https://argos-audit.com${path}`, nextConfig });
       expect(response.headers.get("X-Robots-Tag")).toBe("noindex, nofollow");
     }
@@ -67,7 +70,8 @@ describe("public SEO origin", () => {
     const { default: robots } = await import("@/app/robots");
     const metadata = localizedMetadata("/faq", "en", "FAQ", "FAQ");
     expect(metadata.alternates?.canonical).toBe(expected + "/en/faq");
-    expect(metadata.alternates?.languages).toEqual({ fr: expected + "/faq", en: expected + "/en/faq", "x-default": expected + "/faq" });
+    expect(metadata.alternates?.languages).toMatchObject({ fr: expected + "/faq", en: expected + "/en/faq", de: expected + "/de/faq", "x-default": expected + "/faq" });
+    expect(Object.keys(metadata.alternates?.languages ?? {})).toHaveLength(locales.length + 1);
     expect(metadata.openGraph?.url).toBe(expected + "/en/faq");
     for (const entry of sitemap()) {
       expect(new URL(entry.url).origin).toBe(expected);

@@ -1,4 +1,5 @@
 "use client";
+import { localizeValue, localizedCopy } from "@/lib/i18n/messages";
 
 import Link from "@/components/LocalizedLink";
 import AuditForm from "@/components/AuditForm";
@@ -96,7 +97,7 @@ const copy = {
 
 export default function AuditTechniquePage() {
   const { lang } = useLang();
-  const c = copy[lang];
+  const c = localizedCopy(copy, lang);
 
   return (
     <div className={s.page}>
@@ -176,7 +177,7 @@ export default function AuditTechniquePage() {
             <h2 id="more-title">{c.moreTitle}</h2>
             <p>{c.moreText}</p>
             <div className={s.links}>
-              <Link href="/exemple-rapport">{lang === "fr" ? "Lire un exemple de rapport" : "Read an example report"}</Link>
+              <Link href="/exemple-rapport">{(lang === "fr" ? "Lire un exemple de rapport" : localizeValue("Read an example report", lang))}</Link>
               <Link href="/">{c.homeLink}</Link>
               <Link href="/faq">{c.faqLink}</Link>
               <Link href="/ressources/accessibilite-numerique">{c.accessibilityLink}</Link>
@@ -185,7 +186,7 @@ export default function AuditTechniquePage() {
             </div>
           </div>
         </section>
-        <section className={s.section} id="references"><div className={s.container}><h2>{lang === "fr" ? "Références officielles" : "Official references"}</h2><ul><li><a href="https://developer.chrome.com/docs/lighthouse/overview/">Chrome : Lighthouse</a></li><li><a href="https://owasp.org/projects/secure-headers-project">OWASP : Secure Headers Project</a></li><li><a href="https://www.w3.org/WAI/test-evaluate/tools/">W3C WAI : {lang === "fr" ? "outils et limites de l’évaluation" : "evaluation tools and limitations"}</a></li></ul></div></section>
+        <section className={s.section} id="references"><div className={s.container}><h2>{(lang === "fr" ? "Références officielles" : localizeValue("Official references", lang))}</h2><ul><li><a href="https://developer.chrome.com/docs/lighthouse/overview/">Chrome : Lighthouse</a></li><li><a href="https://owasp.org/projects/secure-headers-project">OWASP : Secure Headers Project</a></li><li><a href="https://www.w3.org/WAI/test-evaluate/tools/">W3C WAI : {(lang === "fr" ? "outils et limites de l’évaluation" : localizeValue("evaluation tools and limitations", lang))}</a></li></ul></div></section>
       </main>
       <SiteFooter />
     </div>

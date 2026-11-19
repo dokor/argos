@@ -1,4 +1,6 @@
+import { localizeValue } from "@/lib/i18n/messages";
 import type { Lang } from "@/lib/i18n/routes";
+import { locales } from "@/lib/i18n/locales";
 import fr from "@/lib/i18n/fr.json";
 import en from "@/lib/i18n/en.json";
 import { cleanEvidence, findingContent } from "./findingCatalogue";
@@ -21,7 +23,7 @@ function sanitize(value: unknown): unknown {
 export function buildReportAiPrompt(report: Report, lang: Lang, model: ReportModel = buildReportModel(report)): string {
   // A summary is intentionally insufficient for an actionable technical export.
   if (report.access === "summary") return "";
-  const copy = (lang === "fr" ? fr : en).report.aiPrompt;
+  const copy = ((lang === "fr" ? fr : localizeValue(en, lang))).report.aiPrompt;
   const coverage = report.scores.coverage;
   const data = {
     domain: report.domain,
@@ -65,7 +67,7 @@ export function buildReportAiPrompt(report: Report, lang: Lang, model: ReportMod
       };
     }),
   };
-  return [copy.promptIntro, copy.promptInstructions, copy.promptLimits,
+  return [copy.promptIntro.replace("{language}", locales.find(locale => locale.code === lang)!.name), copy.promptInstructions, copy.promptLimits,
     model.findings.length === 0 ? copy.promptEmpty : "",
     copy.promptData, JSON.stringify(sanitize(data), null, 2), copy.promptEnd,
   ].filter(Boolean).join("\n\n");

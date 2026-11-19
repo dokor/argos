@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
-import { languageRoutes } from "@/lib/i18n/routes";
+import { languageRoutes, localizedPath } from "@/lib/i18n/routes";
+import { locales } from "@/lib/i18n/locales";
 import { languageAlternates } from "@/lib/i18n/metadata";
 
 import { siteUrl as SITE_URL } from "@/lib/site-url";
@@ -57,6 +58,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     const en = languageRoutes[path];
     if (!en) return [entry];
     const alternates = { languages: languageAlternates(path) };
-    return [{ ...entry, alternates }, { url: SITE_URL + en, alternates }];
+    return locales.map(({ code }) => ({ ...entry, url: code === "fr" ? entry.url : SITE_URL + localizedPath(path, code), alternates }));
   });
 }

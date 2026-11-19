@@ -1,4 +1,5 @@
 "use client";
+import { localizedCopy } from "@/lib/i18n/messages";
 import { inputHints } from "@/lib/input-hints";
 import AuditUrlEasterEgg from "@/components/easter-eggs/AuditUrlEasterEgg";
 import { useEffect, useRef, useState, type FormEvent } from "react";
@@ -13,7 +14,7 @@ import s from "./Analysis.module.scss";
 import ui from "./Connected.module.scss";
 import type { AnalysisProfiles as Profiles, SiteAnalysisAccepted } from "@/lib/connected/contracts";
 export default function AnalysisForm({ initialUrl="", launchBlocked=false }: {initialUrl?:string;launchBlocked?:boolean}) {
-  const {t,lang}=useLang(),c=analysisCopy[lang],session=useAccountSession(),router=useRouter();
+  const {t,lang}=useLang(),c=localizedCopy(analysisCopy, lang),session=useAccountSession(),router=useRouter();
   const [url,setUrl]=useState(initialUrl),[profiles,setProfiles]=useState<Profiles|null>(null),[error,setError]=useState(""),[busy,setBusy]=useState(false),[revision,setRevision]=useState(0),[uncertain,setUncertain]=useState(false);
   const mounted=useRef(false);
   useEffect(()=>{mounted.current=true;return ()=>{mounted.current=false;};},[]);
@@ -74,7 +75,7 @@ export default function AnalysisForm({ initialUrl="", launchBlocked=false }: {in
   }
   const failure=error==="unsupported_profile" ? c.unsupported : error==="idempotency_conflict" ? c.conflict : t.account.errors[error as keyof typeof t.account.errors]??t.account.errors.account_unavailable;
   return <form className={s.form} onSubmit={submit} aria-busy={busy}>
-    <label htmlFor="analysis-url">{c.url}<input id="analysis-url" placeholder={inputHints[lang].url} ref={input} inputMode="url" autoComplete="url" value={url} maxLength={2048} required readOnly={busy||uncertain} onChange={event=>setUrl(event.target.value)} aria-describedby="analysis-scope analysis-feedback" aria-invalid={error==="url_invalid"}/></label>
+    <label htmlFor="analysis-url">{c.url}<input id="analysis-url" placeholder={localizedCopy(inputHints, lang).url} ref={input} inputMode="url" autoComplete="url" value={url} maxLength={2048} required readOnly={busy||uncertain} onChange={event=>setUrl(event.target.value)} aria-describedby="analysis-scope analysis-feedback" aria-invalid={error==="url_invalid"}/></label>
     <AuditUrlEasterEgg url={url}/>
     <p id="analysis-scope">{c.scope}</p>
     <div><h3>{c.conditions}</h3>{profiles ? <><p>{c.defaults} · <code>{profiles.defaultProfileId}</code></p><p>{c.profileHint}</p></> : <p role="status">{t.account.working}</p>}</div>

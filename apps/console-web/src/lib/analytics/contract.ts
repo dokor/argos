@@ -1,8 +1,10 @@
+import { isLang } from "@/lib/i18n/locales";
+import type { Lang } from "@/lib/i18n/locales";
 import { frenchPath } from '@/lib/i18n/routes';
 export const routes = ['/', '/faq', '/ressources', '/exemple-rapport', '/a-propos', '/methodologie-score', '/guides/checklist-audit-site-web', '/ressources/audit-technique-gratuit', '/ressources/accessibilite-numerique', '/ressources/audit-site-pme', '/ressources/audit-site-ecommerce', '/ressources/audit-wordpress', '/ressources/audit-shopify', '/ressources/pourquoi-mon-site-ne-convertit-pas', '/test-vitesse-site-web', '/analyse-seo-page', '/verifier-entetes-securite', '/test-accessibilite-site-web'] as const;
 export type Dimensions = {
     route: string;
-    lang: 'fr' | 'en';
+    lang: Lang;
     placement: 'page' | 'nav' | 'hero' | 'footer' | 'form';
 };
 export type ProductEvent = {
@@ -16,7 +18,7 @@ export function dimensions(value: unknown): Dimensions | undefined {
     if (!value || typeof value !== 'object')
         return;
     const d = value as Record<string, unknown>;
-    if (Object.keys(d).some(k => !['route', 'lang', 'placement'].includes(k)) || typeof d.route !== 'string' || !eventRoutes.includes(d.route) || !['fr', 'en'].includes(String(d.lang)) || !['page', 'nav', 'hero', 'footer', 'form'].includes(String(d.placement)))
+    if (Object.keys(d).some(k => !['route', 'lang', 'placement'].includes(k)) || typeof d.route !== 'string' || !eventRoutes.includes(d.route) || !isLang(d.lang) || !['page', 'nav', 'hero', 'footer', 'form'].includes(String(d.placement)))
         return;
     return { route: d.route, lang: d.lang as Dimensions['lang'], placement: d.placement as Dimensions['placement'] };
 }

@@ -38,7 +38,7 @@ export function safeDomainReturn(raw: unknown): string | null {
   const [path, query] = raw.split("?");
   if (raw.split("?").length > 2) return null;
   const match =
-    /^\/(?:en\/)?account\/domains\/([1-9][0-9]{0,18})\/batches\/([1-9][0-9]{0,18})$/.exec(
+    /^\/(?:(?:en|de|es|it|nl|pt|pl|sv|da|fi|cs|sk|hu|ro|bg|el|hr|sl|lt|lv|et)\/)?account\/domains\/([1-9][0-9]{0,18})\/batches\/([1-9][0-9]{0,18})$/.exec(
       path,
     );
   return match &&

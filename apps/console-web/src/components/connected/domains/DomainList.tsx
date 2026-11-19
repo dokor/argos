@@ -1,4 +1,5 @@
 "use client";
+import { localizeValue, localizedCopy } from "@/lib/i18n/messages";
 import { inputHints } from "@/lib/input-hints";
 import DomainTasks from "./DomainTasks";
 import DomainCommonMetric from "./DomainCommonMetric";
@@ -49,13 +50,13 @@ export default function DomainList() {
       <DomainTasks />
       <form
         className={d.filters}
-        action={lang === "en" ? "/en/account/domains" : "/account/domains"}
+        action={(lang === "fr" ? "/account/domains" : localizeValue("/en/account/domains", lang))}
       >
         <label>
           {c.search}
           <input
             type="search"
-            placeholder={inputHints[lang].searchDomain}
+            placeholder={localizedCopy(inputHints, lang).searchDomain}
             name="query"
             defaultValue={query?.get("query") ?? ""}
             maxLength={253}
