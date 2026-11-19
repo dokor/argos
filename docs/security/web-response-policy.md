@@ -49,7 +49,7 @@ Le renouvellement de l’instance Argos est géré dans `dokor/raspberry-infra`.
 La [PR infrastructure #6](https://github.com/dokor/raspberry-infra/pull/6) protège
 le magasin ACME et les fichiers montés hors du checkout et ajoute une sonde
 TLS/SNI après déploiement. Sa variable `PROXY_TLS_VERIFY_HOST` cible
-`argos.lelouet.fr` ; le contrôle exige plus de 30 jours restants avant de confirmer
+`argos-audit.com` ; le contrôle exige plus de 30 jours restants avant de confirmer
 le renouvellement. Le dépôt infrastructure n’ayant pas de runner enregistré,
 le workflow Argos `Deploy (Raspberry)` propose aussi le service manuel
 `infra-proxy` sur le runner Raspberry existant. Il exige `infra_revision`, le SHA

@@ -1,4 +1,5 @@
 import ModuleExecutionFacts from "./ModuleExecutionFacts";
+import { siteUrl } from "@/lib/site-url";
 import CoverageDetails from "./CoverageDetails";
 import FindingGuide from "./FindingGuide";
 import ObservedMeasurements from "./ObservedMeasurements";
@@ -29,7 +30,7 @@ export default function PrintableReport({report,lang,format:requestedFormat}:{re
  const pct=(value:number|undefined)=>typeof value==='number'&&Number.isFinite(value)?Math.round(value*100)+' %':e.unknown;
  const title=(key:string)=>Object.hasOwn(t.priorityCards.domains,key)?(t.priorityCards.domains as Record<string,string>)[key]:t.issuesByCategory.unknownDomain;
  const priorities=model.priorities.slice(0,format==='full'?6:3);
- const method=(process.env.NEXT_PUBLIC_SITE_URL||'https://argos.lelouet.fr')+(lang==='fr'?'/methodologie-score':'/en/scoring-method');
+ const method=siteUrl+(lang==='fr'?'/methodologie-score':'/en/scoring-method');
  return <main lang={lang} className={s.document}><header><p>ARGOS · {format==='full'?e.full:e.summary}</p><h1>{cleanEvidence(report.domain)}</h1>
  <ReportPageScope report={report} lang={lang} /><p>{t.hero.analyzedAt}: {Number.isFinite(date.getTime())?date.toLocaleString(lang,{timeZone:'UTC',timeZoneName:'short'}):d.dateUnknown}</p>
  <p>{e.private}</p></header>

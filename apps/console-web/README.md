@@ -20,6 +20,10 @@ les audits ; les pages publiques restent consultables sans lui.
 
 ## Configuration
 
+Production : `https://argos-audit.com`. Voir la [procédure de migration](../../docs/seo/domain-migration.md)
+avant de fusionner ou de déployer les changements de domaine. Le Dockerfile reçoit
+`NEXT_PUBLIC_SITE_URL` au build et Compose fournit également sa valeur au runtime.
+
 L'exemple `.env.example` ne contient aucun secret. `.env.local` reste ignoré.
 
 | Variable | Usage |

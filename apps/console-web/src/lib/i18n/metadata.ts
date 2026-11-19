@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { localizedPath, languageRoutes, type Lang } from "./routes";
 
-export const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://argos.lelouet.fr").replace(/\/+$/, "");
+import { siteUrl } from "../site-url";
+export { siteUrl } from "../site-url";
 export function languageAlternates(path: string): Record<string,string> {
   const fr = siteUrl + (path === "/" ? "" : path);
   return languageRoutes[path] ? { fr, en: siteUrl + localizedPath(path, "en"), "x-default": fr } : { fr, "x-default": fr };

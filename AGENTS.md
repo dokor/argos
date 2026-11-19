@@ -110,7 +110,7 @@ Fichiers clés : `UrlNormalizerTest`, `ScoreServiceTest`, `DefaultScorePolicyTes
 | Variable | Côté | Description |
 |---|---|---|
 | `API_BASE` | Serveur | URL interne du backend Java (ex: `http://api-backend:8081`) |
-| `NEXT_PUBLIC_SITE_URL` | Client | URL publique du site (ex: `https://argos.lelouet.fr`) - défaut dans le code |
+| `NEXT_PUBLIC_SITE_URL` | Client | URL publique du site (ex: `https://argos-audit.com`) - défaut dans le code |
 | `NEXT_PUBLIC_CALENDLY_URL` | Client | URL Calendly pour le CTA |
 | `NEXT_PUBLIC_APP_LOGS_ENABLED` | Client | Active les logs structurés côté client |
 | `APP_LOGS_ENABLED` | Serveur | Active les logs structurés côté serveur |
@@ -174,10 +174,10 @@ Le verdict visible du rapport est déterministe : `ReportHero` utilise les const
 ## Infrastructure (prod)
 
 - **Reverse proxy** : Traefik avec TLS Let's Encrypt
-- **Domaine** : `argos.lelouet.fr`
+- **Domaine** : `argos-audit.com`
 - **Routage Traefik** :
-  - `Host(argos.lelouet.fr) && PathPrefix(/api)` priorité 100 → `api-backend:8081`
-  - `Host(argos.lelouet.fr)` priorité 10 → `console-web:3000`
+  - `Host(argos-audit.com) && PathPrefix(/api)` priorité 100 → `api-backend:8081`
+  - `Host(argos-audit.com)` priorité 10 → `console-web:3000`
   - `/api` depuis le frontend (BFF) priorité 200 → `console-web:3000` (le BFF re-proxie vers Java)
 - **Réseau interne Docker** : `argos_internal` (console-web → playwright/lighthouse)
 - **Base de données** : MariaDB sur réseau `mariadb-public`

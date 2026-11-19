@@ -1,4 +1,5 @@
 import { overviewQuery } from "./overview-request";
+import { PRODUCTION_SITE_URL } from "./site-url";
 import { usageTimelineQuery } from "./usage-timeline";
 import { domainSummaryPath, domainSummaryQuery } from "./domain-summary-request";
 import { safeAccountReturn } from "./account-return";
@@ -21,7 +22,7 @@ const CLAIM_INDEX = "argos_account_claims";
 const origin = () => (
   process.env.ACCOUNT_ORIGIN
   ?? process.env.NEXT_PUBLIC_SITE_URL
-  ?? (process.env.NODE_ENV === "production" ? "https://argos.lelouet.fr" : "http://localhost:3000")
+  ?? (process.env.NODE_ENV === "production" ? PRODUCTION_SITE_URL : "http://localhost:3000")
 ).replace(/\/+$/, "");
 export function accountCookieOptions(maxAge: number) { return { httpOnly: true, secure: origin().startsWith("https:"), sameSite: "lax" as const, path: "/", maxAge }; }
 export function privateError(error: string, status: number) { return NextResponse.json({ error }, { status, headers: { "Cache-Control": "private, no-store" } }); }

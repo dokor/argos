@@ -55,7 +55,7 @@ antibot {
   mode = turnstile # ARGOS_ANTIBOT_MODE
   site-key = "clé publique du widget" # ARGOS_TURNSTILE_SITE_KEY
   secret = "secret Siteverify" # ARGOS_TURNSTILE_SECRET
-  hostnames = ["argos.lelouet.fr"]
+  hostnames = ["argos-audit.com"]
 }
 ```
 

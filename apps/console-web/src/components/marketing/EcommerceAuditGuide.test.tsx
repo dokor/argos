@@ -26,7 +26,7 @@ describe("ecommerce guide discovery before hydration", () => {
     expect(csv).toHaveLength(7);
     for (const line of csv) expect(line.split('","')).toHaveLength(10);
     const metadata = ecommerceAuditMetadata(lang);
-    expect(metadata.alternates?.canonical).toBe("https://argos.lelouet.fr" + localizedPath("/guides/checklist-audit-ecommerce", lang));
+    expect(metadata.alternates?.canonical).toBe("https://argos-audit.com" + localizedPath("/guides/checklist-audit-ecommerce", lang));
     expect(metadata.openGraph).toMatchObject({ type: "article", modifiedTime: "2026-10-25" });
   });
 });

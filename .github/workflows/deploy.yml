@@ -48,7 +48,7 @@ jobs:
       PROXY_DEPLOY_DIR: /srv/infra/raspberry-infra/proxy
       PROXY_ENV_FILE: /srv/infra/raspberry-infra/env/proxy.env
       TRAEFIK_ACME_FILE: /srv/infra/raspberry-infra/proxy/acme.json
-      VERIFY_HOST: argos.lelouet.fr
+      VERIFY_HOST: argos-audit.com
     steps:
       - name: Require an immutable infrastructure revision
         run: '[[ "$INFRA_REVISION" =~ ^[a-f0-9]{40}$ ]]'

@@ -41,7 +41,7 @@ public class LiveAudit {
     boolean argos = args.length == 1 && args[0].equals("--run-public-argos");
     String demo = args.length == 2 && args[0].equals("--run-public-demo") ? args[1] : null;
     if (!argos && !demos.containsKey(demo == null ? "" : demo)) throw new IllegalArgumentException("Explicit --run-public-argos or --run-public-demo <known demo> required");
-    String url = argos ? "https://argos.lelouet.fr/" : demos.get(demo);
+    String url = argos ? "https://argos-audit.com/" : demos.get(demo);
     Path dir = argos ? Path.of("outputs/live-audit") : Path.of("outputs/live-audit", demo);
     Files.createDirectories(dir);
     UrlNormalizer.validatePublicUrl(url);

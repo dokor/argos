@@ -1,4 +1,12 @@
 import type { NextConfig } from "next";
+import { PRODUCTION_SITE_URL } from "./src/lib/site-url";
+
+const movedPages = [
+  { source: "/accessibilite-numerique", destination: "/ressources/accessibilite-numerique" },
+  { source: "/audit-technique-gratuit", destination: "/ressources/audit-technique-gratuit" },
+  { source: "/audit-site-pme", destination: "/ressources/audit-site-pme" },
+  { source: "/audit-site-ecommerce", destination: "/ressources/audit-site-ecommerce" },
+];
 
 // En-têtes de sécurité HTTP appliqués à toutes les routes.
 // Objectif : remonter le score Mozilla Observatory et réduire la surface
@@ -27,10 +35,24 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   async redirects() {
     return [
-      { source: "/accessibilite-numerique", destination: "/ressources/accessibilite-numerique", permanent: true },
-      { source: "/audit-technique-gratuit", destination: "/ressources/audit-technique-gratuit", permanent: true },
-      { source: "/audit-site-pme", destination: "/ressources/audit-site-pme", permanent: true },
-      { source: "/audit-site-ecommerce", destination: "/ressources/audit-site-ecommerce", permanent: true },
+      // Run before Proxy, BFF handlers and rewrites, including /api and static files.
+      // A fixed destination prevents Host-based open redirects. 308 preserves POST bodies.
+      ...["argos\\.lelouet\\.fr", "www\\.argos-audit\\.com"].flatMap(host => [
+        // Resolve previously moved pages in the same hop as the domain migration.
+        ...movedPages.map(page => ({
+          source: page.source,
+          has: [{ type: "host" as const, value: host }],
+          destination: PRODUCTION_SITE_URL + page.destination,
+          permanent: true,
+        })),
+        {
+          source: "/:path*",
+          has: [{ type: "host" as const, value: host }],
+          destination: `${PRODUCTION_SITE_URL}/:path*`,
+          permanent: true,
+        },
+      ]),
+      ...movedPages.map(page => ({ ...page, permanent: true })),
     ];
   },
   async headers() {

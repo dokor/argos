@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "check:domain-migration": "node scripts/check-domain-migration.mjs",
     "test": "npm run test:editorial && npm run check:editorial && vitest run",
     "test:watch": "vitest",
     "check:editorial": "node scripts/check-editorial.mjs",

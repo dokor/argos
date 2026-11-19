@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-head-element -- Shared root document for the French and English root layouts. */
 import type { Metadata, Viewport } from "next";
+import { siteUrl as SITE_URL } from "@/lib/site-url";
 import { cookies, headers } from "next/headers";
 import { Geist, Geist_Mono } from "next/font/google";
 import { LangProvider } from "@/lib/i18n/LangContext";
@@ -29,7 +30,6 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://argos.lelouet.fr").replace(/\/+$/, "");
 const TITLE = fr.layout.title;
 const DESCRIPTION = fr.layout.description;
 

@@ -84,7 +84,7 @@ public class DiscoveryTransport {
                                         Math.min(
                                                 budget.remainingMillis(),
                                                 policy.responseSeconds * 1000L)))
-                        .header("User-Agent", "ArgosDiscovery/1.0 (+https://argos.lelouet.fr)")
+                        .header("User-Agent", "ArgosDiscovery/1.0 (+https://argos-audit.com)")
                         .header("Accept", "text/html,application/xml,text/plain;q=0.9")
                         .header("Accept-Encoding", "gzip")
                         .GET()
