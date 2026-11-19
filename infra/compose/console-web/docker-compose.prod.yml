@@ -5,6 +5,7 @@ services:
       dockerfile: Dockerfile
       args:
         ARGOS_REVISION: ${ARGOS_REVISION:-unknown}
+        NEXT_PUBLIC_SITE_URL: https://argos-audit.com
     image: console-web:local
     container_name: console-web
     restart: unless-stopped
@@ -14,18 +15,19 @@ services:
       - /srv/configs/console-web/.env.prod
     environment:
       - NODE_ENV=production
-      - ACCOUNT_ORIGIN=https://argos.lelouet.fr
+      - NEXT_PUBLIC_SITE_URL=https://argos-audit.com
+      - ACCOUNT_ORIGIN=https://argos-audit.com
       # Supply via Compose --env-file as well as Java's mounted configuration.
       - ARGOS_ACCOUNT_PROXY_SECRET=${ARGOS_ACCOUNT_PROXY_SECRET:-}
     labels:
       - traefik.enable=true
       - traefik.docker.network=proxy
-      - traefik.http.routers.console-web.rule=Host(`argos.lelouet.fr`)
+      - traefik.http.routers.console-web.rule=Host(`argos-audit.com`)
       - traefik.http.routers.console-web.entrypoints=websecure
       - traefik.http.routers.console-web.tls=true
       - traefik.http.services.console-web.loadbalancer.server.port=3000
       - traefik.http.routers.console-web.priority=10
-      - traefik.http.routers.console-web-api.rule=Host(`argos.lelouet.fr`) && PathPrefix(`/api`)
+      - traefik.http.routers.console-web-api.rule=Host(`argos-audit.com`) && PathPrefix(`/api`)
       - traefik.http.routers.console-web-api.entrypoints=websecure
       - traefik.http.routers.console-web-api.tls=true
       - traefik.http.routers.console-web-api.service=console-web
@@ -36,7 +38,7 @@ services:
       - traefik.http.middlewares.argos-account-proxy.headers.customrequestheaders.X-Argos-Edge-Key=${ARGOS_ACCOUNT_PROXY_SECRET:-}
 
       # Account authentication: edge budget per TCP client, Java retains persistent quotas.
-      - traefik.http.routers.argos-account-auth.rule=Host(`argos.lelouet.fr`) && PathPrefix(`/api/account/auth/`)
+      - traefik.http.routers.argos-account-auth.rule=Host(`argos-audit.com`) && PathPrefix(`/api/account/auth/`)
       - traefik.http.routers.argos-account-auth.entrypoints=websecure
       - traefik.http.routers.argos-account-auth.tls=true
       - traefik.http.routers.argos-account-auth.tls.certresolver=le
@@ -50,7 +52,7 @@ services:
       - traefik.http.middlewares.argos-account-auth-limit.ratelimit.sourcecriterion.ipstrategy.depth=0
 
       # Public writes: TCP peer only; never accept a browser-supplied forwarded IP.
-      - traefik.http.routers.argos-audit-write.rule=Host(`argos.lelouet.fr`) && Method(`POST`) && (Path(`/api/audits`) || Path(`/api/audits/`))
+      - traefik.http.routers.argos-audit-write.rule=Host(`argos-audit.com`) && Method(`POST`) && (Path(`/api/audits`) || Path(`/api/audits/`))
       - traefik.http.routers.argos-audit-write.entrypoints=websecure
       - traefik.http.routers.argos-audit-write.tls=true
       - traefik.http.routers.argos-audit-write.tls.certresolver=le
@@ -62,7 +64,7 @@ services:
       - traefik.http.middlewares.argos-audit-limit.ratelimit.period=15m
       - traefik.http.middlewares.argos-audit-limit.ratelimit.burst=2
       - traefik.http.middlewares.argos-audit-limit.ratelimit.sourcecriterion.ipstrategy.depth=0
-      - traefik.http.routers.argos-newsletter-write.rule=Host(`argos.lelouet.fr`) && Method(`POST`) && (Path(`/api/newsletter`) || Path(`/api/newsletter/`) || Path(`/api/newsletter/subscribe`) || Path(`/api/newsletter/subscribe/`))
+      - traefik.http.routers.argos-newsletter-write.rule=Host(`argos-audit.com`) && Method(`POST`) && (Path(`/api/newsletter`) || Path(`/api/newsletter/`) || Path(`/api/newsletter/subscribe`) || Path(`/api/newsletter/subscribe/`))
       - traefik.http.routers.argos-newsletter-write.entrypoints=websecure
       - traefik.http.routers.argos-newsletter-write.tls=true
       - traefik.http.routers.argos-newsletter-write.tls.certresolver=le
@@ -74,7 +76,7 @@ services:
       - traefik.http.middlewares.argos-newsletter-limit.ratelimit.period=15m
       - traefik.http.middlewares.argos-newsletter-limit.ratelimit.burst=5
       - traefik.http.middlewares.argos-newsletter-limit.ratelimit.sourcecriterion.ipstrategy.depth=0
-      - traefik.http.routers.argos-premium-write.rule=Host(`argos.lelouet.fr`) && Method(`POST`) && (Path(`/api/premium-waitlist`) || Path(`/api/premium-waitlist/`))
+      - traefik.http.routers.argos-premium-write.rule=Host(`argos-audit.com`) && Method(`POST`) && (Path(`/api/premium-waitlist`) || Path(`/api/premium-waitlist/`))
       - traefik.http.routers.argos-premium-write.entrypoints=websecure
       - traefik.http.routers.argos-premium-write.tls=true
       - traefik.http.routers.argos-premium-write.tls.certresolver=le
@@ -86,7 +88,7 @@ services:
       - traefik.http.middlewares.argos-premium-limit.ratelimit.period=15m
       - traefik.http.middlewares.argos-premium-limit.ratelimit.burst=5
       - traefik.http.middlewares.argos-premium-limit.ratelimit.sourcecriterion.ipstrategy.depth=0
-      - traefik.http.routers.argos-feedback-write.rule=Host(`argos.lelouet.fr`) && Method(`POST`) && (Path(`/api/feedback`) || Path(`/api/feedback/`))
+      - traefik.http.routers.argos-feedback-write.rule=Host(`argos-audit.com`) && Method(`POST`) && (Path(`/api/feedback`) || Path(`/api/feedback/`))
       - traefik.http.routers.argos-feedback-write.entrypoints=websecure
       - traefik.http.routers.argos-feedback-write.tls=true
       - traefik.http.routers.argos-feedback-write.tls.certresolver=le
@@ -104,12 +106,31 @@ services:
 
       # Redirect at the edge, independently of the application backend.
       # Middleware names are shared by all containers in the Docker provider.
-      - traefik.http.routers.console-web-http.rule=Host(`argos.lelouet.fr`)
+      - traefik.http.routers.console-web-http.rule=Host(`argos-audit.com`)
       - traefik.http.routers.console-web-http.entrypoints=web
       - traefik.http.routers.console-web-http.service=noop@internal
       - traefik.http.routers.console-web-http.middlewares=argos-console-https-redirect
       - traefik.http.middlewares.argos-console-https-redirect.redirectscheme.scheme=https
       - traefik.http.middlewares.argos-console-https-redirect.redirectscheme.permanent=true
+
+      # Keep both aliases reachable (and their certificates renewed) for old links.
+      # Next redirects to the canonical HTTPS origin with 308 before any API handler.
+      # Higher than the legacy backend /api router (100), even during a rolling deploy.
+      - traefik.http.routers.argos-domain-alias.rule=Host(`argos.lelouet.fr`) || Host(`www.argos-audit.com`)
+      - traefik.http.routers.argos-domain-alias.entrypoints=websecure
+      - traefik.http.routers.argos-domain-alias.tls=true
+      - traefik.http.routers.argos-domain-alias.tls.certresolver=le
+      - traefik.http.routers.argos-domain-alias.tls.options=modern@file
+      - traefik.http.routers.argos-domain-alias.service=console-web
+      - traefik.http.routers.argos-domain-alias.priority=300
+      # Separate certificates: failed www DNS must not prevent legacy TLS renewal.
+      - traefik.http.routers.argos-domain-alias.tls.domains[0].main=argos.lelouet.fr
+      - traefik.http.routers.argos-domain-alias.tls.domains[1].main=www.argos-audit.com
+      # Do not attach RedirectScheme here: HTTP aliases go straight to canonical HTTPS.
+      - traefik.http.routers.argos-domain-alias-http.rule=Host(`argos.lelouet.fr`) || Host(`www.argos-audit.com`)
+      - traefik.http.routers.argos-domain-alias-http.entrypoints=web
+      - traefik.http.routers.argos-domain-alias-http.service=console-web
+      - traefik.http.routers.argos-domain-alias-http.priority=300
 
 networks:
   proxy:

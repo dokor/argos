@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { chromium } from '/app/node_modules/playwright/index.mjs';
 
-const site = 'https://argos.lelouet.fr';
+const site = 'https://argos-audit.com';
 const authCookie = 'argos_account', renewalCookie = 'argos_account_renewal';
 const seconds = () => Date.now() / 1000;
 const expiry = cookie => JSON.parse(Buffer.from(cookie.value.split('.')[1], 'base64url')).exp;

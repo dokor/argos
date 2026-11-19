@@ -5,6 +5,7 @@ afterEach(() => vi.unstubAllEnvs());
 
 describe("URL surprises", () => {
   it.each([
+    [" argos-audit.com/en ", "argos"],
     [" argos.lelouet.fr/en ", "argos"],
     ["HTTPS://WWW.GOOGLE.FR/search?q=audit", "google"],
     ["https://google.com./", "google"],

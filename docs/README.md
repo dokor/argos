@@ -9,6 +9,7 @@ workflows restent les références pour les valeurs configurées.
 
 | Besoin | Documents |
 | --- | --- |
+| Migrer le domaine public | [Migration vers argos-audit.com : DNS, redirections et Search Console](seo/domain-migration.md) |
 | Intégrer la refonte Clarté | [Dossier connecté](connected-space/README.md), [décisions](connected-space/decisions.md), [référence visuelle](connected-space/reference/README.md), [plan et issues](connected-space/delivery-plan.md) |
 | Suivre les domaines et URL | [Périmètre domaine et quota](connected-space/domain-scope-guide.md), [règles communes](connected-space/domain-common-metric.md), [URL déjà analysées](connected-space/known-analysis-urls.md), [navigation Analyses et Domaines](connected-space/navigation-submenus.md) |
 | Audit technique et refactoring | [Diagnostic backend et responsabilités](audits/backend-responsibilities.md), [archive de juillet](archive/backend-audit-2026-07.md) |

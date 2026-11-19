@@ -99,7 +99,7 @@ async function main() {
     phase = 'public-readiness';
     for (let attempt = 0; ; attempt++) {
       try {
-        const response = await fetch('https://argos.lelouet.fr/api/account/auth/providers', { redirect: 'error', signal: AbortSignal.timeout(10000) });
+        const response = await fetch('https://argos-audit.com/api/account/auth/providers', { redirect: 'error', signal: AbortSignal.timeout(10000) });
         if (!response.ok) throw new Error('unavailable');
         await response.body?.cancel(); break;
       } catch {

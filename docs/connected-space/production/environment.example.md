@@ -4,7 +4,7 @@ Conserver la fiche remplie hors Git, sans valeur de secret.
 
 | Élément | Valeur / preuve |
 |---|---|
-| Origine | https://argos.lelouet.fr |
+| Origine | https://argos-audit.com |
 | Base cible / utilisateur | argos_db_prod / argos_user, à confirmer sur l’instance réelle |
 | Responsable / fenêtre | À renseigner |
 | MariaDB interne / version / droits | À relever |

@@ -6,7 +6,7 @@ La décision utilisateur autorise l’abandon de toutes les anciennes données.
 Aucun déploiement ni accès à la base de production n’est effectué par cette PR.
 
 Cible proposée d’après le contexte opérateur : **argos_db_prod**, utilisateur
-**argos_user**, origine **https://argos.lelouet.fr**. Confirmer ces identifiants
+**argos_user**, origine **https://argos-audit.com**. Confirmer ces identifiants
 sur l’instance réelle dans la [fiche privée](environment.example.md). Les
 anciennes propositions `argosclarteprod`/`argosclarte` de #577 et le nettoyage
 sélectif de #578 sont remplacés par cette procédure. Ne pas reprendre les

@@ -1,6 +1,6 @@
 # Configuration et recette des comptes
 
-Le jalon reste désactivé par défaut (`account.enabled=false`). V11 ajoute les tables et la propriété nullable des runs, sans attribuer les données historiques. Appliquer la migration avec la procédure de sauvegarde existante, puis activer les comptes dans la configuration montée de Java. Next et Java doivent recevoir la même origine exacte, sans chemin : `ACCOUNT_ORIGIN=http://localhost:3000` en local et `https://argos.lelouet.fr` en production. `API_BASE` reste exclusivement serveur. Les cookies sont Secure en HTTPS et HttpOnly dans les deux environnements.
+Le jalon reste désactivé par défaut (`account.enabled=false`). V11 ajoute les tables et la propriété nullable des runs, sans attribuer les données historiques. Appliquer la migration avec la procédure de sauvegarde existante, puis activer les comptes dans la configuration montée de Java. Next et Java doivent recevoir la même origine exacte, sans chemin : `ACCOUNT_ORIGIN=http://localhost:3000` en local et `https://argos-audit.com` en production. `API_BASE` reste exclusivement serveur. Les cookies sont Secure en HTTPS et HttpOnly dans les deux environnements.
 
 Le fichier [application.example.conf](application.example.conf) contient les paramètres, sans secrets. Générer un secret JWT aléatoire d'au moins 64 octets UTF-8, distinct de `ADMIN_API_TOKEN`, conservé dans le gestionnaire de secrets ou la configuration montée. Sa rotation invalide les JWT existants ; aucune période avec deux clés n'est implémentée. Conserver JWT 15 min et cookie BFF 900 s synchronisés ; changer la durée JWT exige aussi d'adapter le cookie et l'intervalle frontend. Idem pour les preuves 24 h et transactions OAuth 10 min. Le renouvellement ne prolonge pas la limite absolue ni l'inactivité métier. La preuve de renouvellement signée (`usage=account-renewal`) expire à l'échéance initiale de la session et reste dans un cookie HttpOnly distinct ; elle ne donne aucun accès métier direct.
 
@@ -15,13 +15,17 @@ la récupération. Suivre le [runbook du premier ADMIN](../connected-space/first
 
 ## Origine du frontend en production
 
-Le Compose de `console-web` fixe `ACCOUNT_ORIGIN=https://argos.lelouet.fr`, en accord avec son routage Traefik. Le BFF prend cette variable serveur au runtime ; modifier uniquement `account.origin` dans le fichier Java `prod.conf` ne configure pas Next. Hors de ce Compose, définir `ACCOUNT_ORIGIN` dans l'environnement de Next. Sans origine explicite ni `NEXT_PUBLIC_SITE_URL`, le BFF utilise le domaine HTTPS Argos en production et `http://localhost:3000` en développement. Il ne déduit jamais une origine de confiance des headers du navigateur ou du proxy.
+Le Compose de `console-web` fixe `ACCOUNT_ORIGIN=https://argos-audit.com`, en accord avec son routage Traefik. Le BFF prend cette variable serveur au runtime ; modifier uniquement `account.origin` dans le fichier Java `prod.conf` ne configure pas Next. Hors de ce Compose, définir `ACCOUNT_ORIGIN` dans l'environnement de Next. Sans origine explicite ni `NEXT_PUBLIC_SITE_URL`, le BFF utilise le domaine HTTPS Argos en production et `http://localhost:3000` en développement. Il ne déduit jamais une origine de confiance des headers du navigateur ou du proxy.
 
 Après un changement des variables du frontend, recréer le conteneur (`docker compose -f /srv/apps/console-web/docker-compose.prod.yml up -d --force-recreate console-web`) : un simple `docker restart` ne recharge pas son environnement. Une modification du code nécessite également l'image mise à jour.
 
 Pour diagnostiquer un refus `csrf_invalid` à l'inscription : vérifier l'origine exacte dans Next et Java, puis le cookie de `/api/account/csrf` (HttpOnly, Secure en HTTPS). Un cookie et un jeton concordants ne suffisent pas si l'origine diffère. Le message de confirmation expirée peut donc correspondre à une configuration d'origine incorrecte ; la demande est rejetée avant l'inscription et l'envoi SMTP.
 
 ## Email local et SMTP
+
+La [migration du domaine](../seo/domain-migration.md) coordonne les origines,
+callbacks OAuth, listes Turnstile et liens email. Le Compose Java fixe aussi
+`-Daccount.origin=https://argos-audit.com`, prioritaire sur le fichier monté.
 
 Les six e-mails de compte FR/EN partagent désormais le modèle Clarté,
 en HTML et texte (`multipart/alternative`). Voir l’[inventaire, les aperçus et
@@ -43,9 +47,9 @@ La livraison est au moins une fois : une panne après acceptation SMTP et avant 
 
 Dans **Branding → App domain**, renseigner après fusion et déploiement :
 
-- Page d’accueil : `https://argos.lelouet.fr/`
-- Conditions d’utilisation : `https://argos.lelouet.fr/conditions-utilisation`
-- Règles de confidentialité : `https://argos.lelouet.fr/confidentialite`
+- Page d’accueil : `https://argos-audit.com/`
+- Conditions d’utilisation : `https://argos-audit.com/conditions-utilisation`
+- Règles de confidentialité : `https://argos-audit.com/confidentialite`
 
 Ces pages doivent répondre sans session ni restriction d’accès. Elles sont liées depuis le footer public et les écrans de connexion/inscription, avec leurs versions anglaises `/en/terms-of-use`, `/en/privacy` et `/en/legal-information`. La page `/informations-legales` présente les faits confirmés sur Antoine Le Louët EI, distincts des CGU ; les compléments juridiques restants sont consignés dans l’[inventaire factuel](../product/privacy-inventory.md). La confidentialité explicite les données d’identité utilisées par Google (`openid email profile`), leur usage, leur conservation et le retrait du moyen de connexion.
 

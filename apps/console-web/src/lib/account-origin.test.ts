@@ -3,7 +3,7 @@ import { NextRequest } from "next/server";
 import { GET as csrfRoute } from "@/app/api/account/csrf/route";
 import { accountHeaders, accountProxy, CSRF_COOKIE } from "./account-proxy";
 
-const productionOrigin = "https://argos.lelouet.fr";
+const productionOrigin = "https://argos-audit.com";
 const fetchMock = vi.fn();
 
 beforeEach(() => {
@@ -54,10 +54,10 @@ it.each(["auth/register", "auth/login", "auth/forgot"])("forwards %s from the pr
   expect(response.cookies.get("argos_account")?.httpOnly).toBe(true);
 });
 
-it.each(["https://attacker.example", "http://localhost:3000"])("rejects %s in production even with a matching token and forged proxy headers", async origin => {
+it.each(["https://attacker.example", "http://localhost:3000", "https://argos.lelouet.fr"])("rejects %s in production even with a matching token and forged proxy headers", async origin => {
   const { request } = await mutation(origin);
-  request.headers.set("Host", "argos.lelouet.fr");
-  request.headers.set("X-Forwarded-Host", "argos.lelouet.fr");
+  request.headers.set("Host", "argos-audit.com");
+  request.headers.set("X-Forwarded-Host", "argos-audit.com");
   request.headers.set("X-Forwarded-Proto", "https");
   const response = await accountProxy(request, ["auth", "register"]);
   expect(response.status).toBe(403);

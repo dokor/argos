@@ -30,7 +30,7 @@ services:
       # Browser stages and audit runs remain sequential; set capacity to 1 for rollback.
       # Keep the whole-run, remote-call and provider budgets consistent, including
       # installations whose mounted prod.conf still contains the former defaults.
-      - JAVA_TOOL_OPTIONS=-Dconfig.file=/config/prod.conf -Daudit.timeout=${ARGOS_AUDIT_TIMEOUT:-360s} -Daudit.remote-modules.timeout=${ARGOS_REMOTE_MODULE_TIMEOUT:-180s} -Dexternal.ssl-labs.timeout=${ARGOS_SSL_LABS_TIMEOUT:-180s} -Daudit.execution.max-concurrent-modules=${ARGOS_AUDIT_MAX_CONCURRENT_MODULES:-2}
+      - JAVA_TOOL_OPTIONS=-Dconfig.file=/config/prod.conf -Daccount.origin=https://argos-audit.com -Daudit.timeout=${ARGOS_AUDIT_TIMEOUT:-360s} -Daudit.remote-modules.timeout=${ARGOS_REMOTE_MODULE_TIMEOUT:-180s} -Dexternal.ssl-labs.timeout=${ARGOS_SSL_LABS_TIMEOUT:-180s} -Daudit.execution.max-concurrent-modules=${ARGOS_AUDIT_MAX_CONCURRENT_MODULES:-2}
       - PLAYWRIGHT_SERVICE_URL=http://playwright-service:3016
       - LIGHTHOUSE_SERVICE_URL=http://lighthouse-service:3017
       - ZAP_API_URL=http://zap:8080
@@ -46,7 +46,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.docker.network=proxy
-      - traefik.http.routers.api-backend.rule=Host(`argos.lelouet.fr`) && PathPrefix(`/api`)
+      - traefik.http.routers.api-backend.rule=Host(`argos-audit.com`) && PathPrefix(`/api`)
       - traefik.http.routers.api-backend.entrypoints=websecure
       - traefik.http.routers.api-backend.tls=true
       - traefik.http.routers.api-backend.priority=100

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { siteUrl } from "@/lib/site-url";
 import Link from "@/components/PageLink";
 import EditorialMeta from "@/components/marketing/EditorialMeta";
 import JsonLd from "@/components/site/JsonLd";
@@ -26,7 +27,6 @@ export default function GuideArticle({ guide, contents, related, children, lang 
   related: readonly GuideLink[];
   children: ReactNode;
 }) {
-  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://argos.lelouet.fr").replace(/\/+$/, "");
   const route = `/guides/${guide.slug}`;
   const url = siteUrl + localizedPath(route, lang);
   const record = editorialPages[route];

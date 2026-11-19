@@ -131,8 +131,20 @@ jobs:
       - name: Build the standalone console-web Docker context
         run: |
           set -o pipefail
-          docker build --progress=plain --target build . 2>&1 | tee "$RUNNER_TEMP/console-web-docker-build.log"
+          docker build --progress=plain --target build --tag argos-console-build-check . 2>&1 | tee "$RUNNER_TEMP/console-web-docker-build.log"
           ! grep -Ei 'inferred your workspace root|middleware.*deprecated' "$RUNNER_TEMP/console-web-docker-build.log"
+      - name: Verify domain redirects and rendered SEO without external network access
+        run: docker run --rm --network none argos-console-build-check node scripts/check-domain-migration.mjs
+      - name: Validate production routing configuration without mounted secrets
+        run: |
+          # Even with --no-env-resolution, Compose checks required env_file paths.
+          # Clear only that reference for validation; production still requires it.
+          docker compose -f ../../infra/compose/console-web/docker-compose.prod.yml -f - config --no-env-resolution --quiet <<'YAML'
+          services:
+            console-web:
+              env_file: !reset []
+          YAML
+          docker compose -f ../../infra/compose/api-backend/docker-compose.prod.yml config --no-env-resolution --quiet
 
   lighthouse:
     name: Lighthouse checks

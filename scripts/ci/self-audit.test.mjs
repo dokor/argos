@@ -47,7 +47,7 @@ test('canonical root URLs with and without a slash identify the same audited hom
 test('homepage equivalence rejects other paths, origins, ports, credentials, queries and fragments', () => {
   for (const value of [undefined, null, SITE + '/login', SITE + '/?query=x', SITE + '?query=x',
     SITE + '/#fragment', SITE + '#fragment', SITE + ':443/', SITE + '.example/',
-    'http://argos.lelouet.fr/', 'https://user:pass@argos.lelouet.fr/']) {
+    'http://argos-audit.com/', 'https://user:pass@argos-audit.com/']) {
     for (const key of ['requested', 'destination']) {
       const r = report(); r.pageIdentity[key] = value;
       assert.throws(() => evaluateReports(report(), r), error => error instanceof ControlError && error.code === 'target-unverified');

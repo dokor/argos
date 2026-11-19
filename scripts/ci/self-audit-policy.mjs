@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 
-export const SITE = 'https://argos.lelouet.fr';
+export const SITE = 'https://argos-audit.com';
 export const POLICY = 'self-audit-v2';
 // Ticket identity survives verdict policy changes, including existing v1 tickets.
 const TICKET_NAMESPACE = 'self-audit-v1';

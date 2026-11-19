@@ -3,7 +3,7 @@ import { languageRoutes, localizedPath } from "@/lib/i18n/routes";
 import { locales } from "@/lib/i18n/locales";
 import { languageAlternates } from "@/lib/i18n/metadata";
 
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://argos.lelouet.fr").replace(/\/+$/, "");
+import { siteUrl as SITE_URL } from "@/lib/site-url";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
