@@ -1,4 +1,5 @@
 "use client";
+import { localizeValue } from "@/lib/i18n/messages";
 
 import { useLang } from "@/lib/i18n/LangContext";
 import SiteNav from "@/components/site/SiteNav";
@@ -13,8 +14,8 @@ export default function LegalDocument({ content }: { content: LegalContent }) {
     <main className={s.main}>
       <div className={s.content}>
         <header className={s.intro}><h1>{content.title}</h1>{content.intro}</header>
-        <nav className={s.contents} aria-label={lang === "fr" ? "Sommaire de la page" : "On this page"}>
-          <p>{lang === "fr" ? "Dans cette page" : "On this page"}</p>
+        <nav className={s.contents} aria-label={(lang === "fr" ? "Sommaire de la page" : localizeValue("On this page", lang))}>
+          <p>{(lang === "fr" ? "Dans cette page" : localizeValue("On this page", lang))}</p>
           <ol>{content.sections.map((section, index) => <li key={section.title}>
             <a href={`#legal-section-${index + 1}`}>{section.title}</a>
           </li>)}</ol>

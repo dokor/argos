@@ -1,3 +1,4 @@
+import { localizeValue } from "@/lib/i18n/messages";
 import type { Lang } from '@/lib/i18n/routes';
 import { detailedRuleGuidance } from './findingRuleGuidance';
 export type PlaybookCopy = { title?: string; impact?: string; detection: string; summary?: string; steps: string[]; expected: string; example: string; limits: string };
@@ -1588,20 +1589,22 @@ export const rulePlaybooks = Object.fromEntries([...playbookGroups, ...detailedR
 
 export function findingPlaybook(key: string | null | undefined, lang: Lang): Playbook {
   const entry = key && Object.hasOwn(rulePlaybooks, key) ? rulePlaybooks[key] : undefined;
-  if (entry) return { ...entry[lang], reference: entry.reference, verifiedAt: entry.verifiedAt, specific: true };
+  if (entry) {
+    const { example, ...copy } = lang === "fr" ? entry.fr : entry.en;
+    return { ...localizeValue(copy, lang), example, reference: entry.reference, verifiedAt: entry.verifiedAt, specific: true };
+  }
   const lighthouse = key?.startsWith('lighthouse.audit.');
   const zap = key?.startsWith('zap.alert.');
-  const fr = lang === 'fr';
   return {
     specific: false,
     reference: lighthouse ? 'https://developer.chrome.com/docs/lighthouse/overview' : zap ? 'https://www.zaproxy.org/docs/alerts/' : undefined,
     detection: lighthouse
-      ? (fr ? 'Le collecteur actuel remonte un audit Lighthouse noté sous 0,9, parmi au plus 12 diagnostics priorisés. Sa valeur normalisée n’est pas une durée.' : 'The current collector surfaces a Lighthouse audit scored below 0.9, among at most 12 prioritised diagnostics. Its normalised value is not a duration.')
-      : zap ? (fr ? 'Ce signal provient d’une règle ZAP identifiée par sa clé. Son alerte demande confirmation sur la réponse concernée.' : 'This signal comes from the ZAP rule identified by its key. Its alert needs confirmation on the affected response.')
-      : (fr ? 'La clé et la source conservées identifient le contrôle. Le seuil et la méthode propres à cette version ne sont pas documentés dans cette fiche.' : 'The retained key and source identify the check. This entry does not document the threshold and method for this version.'),
-    steps: fr ? ['Retrouver le diagnostic source par sa clé et comparer le périmètre avec la page auditée.', 'Reproduire le signal sur l’élément ou la réponse concernés avant de modifier la configuration ; demander le détail à l’opérateur si la preuve manque.'] : ['Locate the source diagnosis by its key and compare its scope with the audited page.', 'Reproduce the signal on the affected element or response before changing configuration; request details from the operator if evidence is missing.'],
-    expected: fr ? 'Définir le résultat attendu à partir de la règle source, vérifier le parcours manuellement, puis relancer le même contrôle.' : 'Define the expected result from the source rule, check the journey manually, then repeat the same check.',
+      ? ((lang === "fr" ? 'Le collecteur actuel remonte un audit Lighthouse noté sous 0,9, parmi au plus 12 diagnostics priorisés. Sa valeur normalisée n’est pas une durée.' : localizeValue('The current collector surfaces a Lighthouse audit scored below 0.9, among at most 12 prioritised diagnostics. Its normalised value is not a duration.', lang)))
+      : zap ? ((lang === "fr" ? 'Ce signal provient d’une règle ZAP identifiée par sa clé. Son alerte demande confirmation sur la réponse concernée.' : localizeValue('This signal comes from the ZAP rule identified by its key. Its alert needs confirmation on the affected response.', lang)))
+      : ((lang === "fr" ? 'La clé et la source conservées identifient le contrôle. Le seuil et la méthode propres à cette version ne sont pas documentés dans cette fiche.' : localizeValue('The retained key and source identify the check. This entry does not document the threshold and method for this version.', lang))),
+    steps: (lang === "fr" ? ['Retrouver le diagnostic source par sa clé et comparer le périmètre avec la page auditée.', 'Reproduire le signal sur l’élément ou la réponse concernés avant de modifier la configuration ; demander le détail à l’opérateur si la preuve manque.'] : localizeValue(['Locate the source diagnosis by its key and compare its scope with the audited page.', 'Reproduce the signal on the affected element or response before changing configuration; request details from the operator if evidence is missing.'], lang)),
+    expected: (lang === "fr" ? 'Définir le résultat attendu à partir de la règle source, vérifier le parcours manuellement, puis relancer le même contrôle.' : localizeValue('Define the expected result from the source rule, check the journey manually, then repeat the same check.', lang)),
     example: '',
-    limits: fr ? 'Détail indisponible pour cette analyse : règle détaillée, seuil versionné ou élément concerné non documenté dans cette fiche. Aucune cause ou correction propre au site ne peut être déduite de ce seul signal.' : 'Detail unavailable for this analysis: detailed rule, versioned threshold or affected element is not documented in this entry. This signal alone cannot establish a site-specific cause or fix.',
+    limits: (lang === "fr" ? 'Détail indisponible pour cette analyse : règle détaillée, seuil versionné ou élément concerné non documenté dans cette fiche. Aucune cause ou correction propre au site ne peut être déduite de ce seul signal.' : localizeValue('Detail unavailable for this analysis: detailed rule, versioned threshold or affected element is not documented in this entry. This signal alone cannot establish a site-specific cause or fix.', lang)),
   };
 }

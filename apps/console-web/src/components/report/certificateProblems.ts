@@ -1,3 +1,4 @@
+import { localizedCopy } from "@/lib/i18n/messages";
 import type {Lang} from '@/lib/i18n/routes';
 
 // SSL Labs v3 Cert.issues is a bit mask, not a number of certificate problems.
@@ -17,6 +18,6 @@ const problems: Record<string,{fr:[string,string,string];en:[string,string,strin
 };
 export function certificateProblems(value:string|undefined,lang:Lang) {
   return [...new Set((value??'').split(','))].filter(code=>Object.hasOwn(problems,code)).map(code=>{
-    const [problem,change,verify]=problems[code][lang];return {code,problem,change,verify};
+    const [problem,change,verify]=localizedCopy(problems[code], lang);return {code,problem,change,verify};
   });
 }

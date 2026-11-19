@@ -6,6 +6,8 @@ import { editorialPages } from "@/lib/editorial";
 import SiteNav from "@/components/site/SiteNav";
 import SiteFooter from "@/components/site/SiteFooter";
 import s from "./GuideArticle.module.scss";
+import { localizeValue } from "@/lib/i18n/messages";
+import { localizedPath, type Lang } from "@/lib/i18n/routes";
 
 export type GuideLink = { href: string; label: string };
 export type GuideDetails = {
@@ -17,7 +19,8 @@ export type GuideDetails = {
   sources: readonly GuideLink[];
 };
 
-export default function GuideArticle({ guide, contents, related, children }: {
+export default function GuideArticle({ guide, contents, related, children, lang = "fr" }: {
+  lang?: Lang;
   guide: GuideDetails;
   contents: readonly { id: string; label: string }[];
   related: readonly GuideLink[];
@@ -25,7 +28,7 @@ export default function GuideArticle({ guide, contents, related, children }: {
 }) {
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://argos.lelouet.fr").replace(/\/+$/, "");
   const route = `/guides/${guide.slug}`;
-  const url = siteUrl + route;
+  const url = siteUrl + localizedPath(route, lang);
   const record = editorialPages[route];
   const structuredData = [
     {
@@ -33,28 +36,28 @@ export default function GuideArticle({ guide, contents, related, children }: {
       "@type": "Article",
       headline: guide.title,
       description: guide.description,
-      inLanguage: "fr-FR",
+      inLanguage: lang,
       datePublished: record.firstVersion,
       dateModified: record.revised,
       mainEntityOfPage: url,
       image: `${siteUrl}/og.png`,
-      author: { "@type": "Person", name: "Antoine LE LOUËT", url: `${siteUrl}/a-propos` },
-      publisher: { "@type": "Organization", name: "Argos", url: siteUrl },
+      author: { "@type": "Person", name: "Antoine LE LOUËT", url: siteUrl + localizedPath("/a-propos", lang) },
+      publisher: { "@type": "Organization", name: "Argos", url: siteUrl + localizedPath("/", lang) },
       citation: guide.sources.map((source) => source.href),
     },
     {
       "@context": "https://schema.org",
       "@type": "BreadcrumbList",
       itemListElement: [
-        { "@type": "ListItem", position: 1, name: "Argos", item: siteUrl },
-        { "@type": "ListItem", position: 2, name: "Ressources", item: `${siteUrl}/ressources` },
+        { "@type": "ListItem", position: 1, name: "Argos", item: siteUrl + localizedPath("/", lang) },
+        { "@type": "ListItem", position: 2, name: "Ressources", item: siteUrl + localizedPath("/ressources", lang) },
         { "@type": "ListItem", position: 3, name: guide.title, item: url },
       ],
     },
   ];
 
-  return (
-    <div className={s.page} lang="fr">
+  return localizeValue(
+    <div className={s.page} lang={lang}>
       <a className={s.skipLink} href="#guide-contenu">Aller au guide</a>
       <SiteNav />
       <main id="guide-contenu">
@@ -95,7 +98,7 @@ export default function GuideArticle({ guide, contents, related, children }: {
         </article>
       </main>
       <SiteFooter />
-      <JsonLd data={structuredData} />
+      <JsonLd data={localizeValue(structuredData, lang)} />
     </div>
-  );
+  , lang);
 }

@@ -1,4 +1,5 @@
 "use client";
+import { localizedCopy } from "@/lib/i18n/messages";
 
 import { useLang } from "@/lib/i18n/LangContext";
 import type { Report } from "./types";
@@ -56,7 +57,7 @@ export default function AccessibilitySection({ report }: { report: Report }) {
           <p>{copy.testsDescription}</p>
         </div>
         <dl className={s.facts}>
-          <div><dt>{copy.technicalScore}</dt><dd>{score == null ? decisionCopy[lang].notEvaluated : `${score}/100`}</dd></div>
+          <div><dt>{copy.technicalScore}</dt><dd>{score == null ? localizedCopy(decisionCopy, lang).notEvaluated : `${score}/100`}</dd></div>
           <div><dt>{copy.lighthouseScore}</dt><dd>{lighthouseScore == null ? unknown : `${lighthouseScore}/100`}</dd></div>
           <div><dt>{copy.coverageTitle}</dt><dd>{translated(copy.coverage, coverage, unknown)}</dd></div>
         </dl>

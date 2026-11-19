@@ -16,7 +16,7 @@ class PremiumWaitlistServiceTest {
     @Test void requiresExplicitConsentValidEmailAndSupportedLocale() {
         assertFalse(service.subscribe("test@example.com", false, "fr"));
         assertFalse(service.subscribe("test@example.com", null, "fr"));
-        assertFalse(service.subscribe("test@example.com", true, "de"));
+        assertFalse(service.subscribe("test@example.com", true, "zz"));
         for (String email : new String[]{"", "wrong", "a..b@example.com", "a@-example.com", "x".repeat(65)+"@example.com", "a\r\n@example.com"}) assertFalse(service.subscribe(email, true, "fr"));
         assertFalse(service.subscribe(null, true, "fr")); verifyNoInteractions(dao);
     }

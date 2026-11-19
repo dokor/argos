@@ -1,4 +1,6 @@
 "use client";
+import { intlLocale } from "@/lib/i18n/locales";
+import { localizeValue, localizedCopy } from "@/lib/i18n/messages";
 import { inputHints } from "@/lib/input-hints";
 import AdminNavigation from "./AdminNavigation";
 import { quotaResetDate } from "@/lib/quota-date";
@@ -44,7 +46,7 @@ export default function AdminAccounts({
   journal?: boolean;
 }) {
   const { lang } = useLang(),
-    c = accountsCopy[lang],
+    c = localizedCopy(accountsCopy, lang),
     session = useAccountSession(),
     params = useSearchParams(),
     pathname = usePathname(),
@@ -79,9 +81,9 @@ export default function AdminAccounts({
   const returnTo =
     safeAdminReturn(params.get("returnTo")) ?? "/account/admin/users";
   const number = (v: number | null) =>
-    v === null ? c.unlimited : new Intl.NumberFormat(lang).format(v);
+    v === null ? c.unlimited : new Intl.NumberFormat(intlLocale(lang)).format(v);
   const date = (v: string) =>
-    new Intl.DateTimeFormat(lang, {
+    new Intl.DateTimeFormat(intlLocale(lang), {
       dateStyle: "medium",
       timeStyle: "short",
     }).format(new Date(v));
@@ -251,7 +253,7 @@ export default function AdminAccounts({
                   {c.search}
                   <input
                     name="q"
-                    placeholder={inputHints[lang].searchAccount}
+                    placeholder={localizedCopy(inputHints, lang).searchAccount}
                     maxLength={100}
                     defaultValue={params.get("q") ?? ""}
                   />
@@ -406,7 +408,7 @@ function State({ value }: { value: AdminUser["state"] }) {
             : "warning"
       }
     >
-      {accountsCopy[lang].states[value]}
+      {localizedCopy(accountsCopy, lang).states[value]}
     </StatusBadge>
   );
 }
@@ -420,7 +422,7 @@ function ErrorNotice({
   retry?: () => void;
 }) {
   const { lang } = useLang(),
-    c = accountsCopy[lang];
+    c = localizedCopy(accountsCopy, lang);
   return (
     <div role="alert" className={a.notice}>
       <p>{stale ? c.stale : failure(code, c)}</p>
@@ -444,7 +446,7 @@ function EntitlementForm({
   onReview: (a: Action) => void;
 }) {
   const { lang } = useLang(),
-    c = accountsCopy[lang];
+    c = localizedCopy(accountsCopy, lang);
   const [offer, setOffer] = useState(user.offer),
     [raw, setRaw] = useState(
       user.monthlyLimit === null ? "" : String(user.monthlyLimit),
@@ -511,7 +513,7 @@ function EntitlementForm({
 }
 function AdminJournal({ id }: { id?: string }) {
   const { lang } = useLang(),
-    c = accountsCopy[lang];
+    c = localizedCopy(accountsCopy, lang);
   const [cursor, setCursor] = useState<string | null>(null);
   const data = useDomainResource<AdminEvents>(
     (id ? "admin/users/" + id + "/events" : "admin/events") +
@@ -539,20 +541,20 @@ function AdminJournal({ id }: { id?: string }) {
                 {data.data.items.map((e) => (
                   <li className={a.event} key={e.id}>
                     <strong>
-                      {e.eventType === "PRODUCT_MEASUREMENT" ? (lang === "fr" ? "Mesure produit" : "Product measurement") : e.reasonCode ? c.reasons[e.reasonCode] : c.legacy}
+                      {e.eventType === "PRODUCT_MEASUREMENT" ? ((lang === "fr" ? "Mesure produit" : localizeValue("Product measurement", lang))) : e.reasonCode ? c.reasons[e.reasonCode] : c.legacy}
                     </strong>
                     <p className={a.meta}>
-                      {new Date(e.createdAt).toLocaleString(lang)} · {c.actor} : {" "}
+                      {new Date(e.createdAt).toLocaleString(intlLocale(lang))} · {c.actor} : {" "}
                       <span title={"#" + e.actorId}>{e.actorDisplayName?.trim() || e.actorEmail?.trim() || `${c.unavailableAccount} · #${e.actorId}`}</span>
                       {" · "}{c.target} : {" "}
-                      <span title={e.targetId ? "#" + e.targetId : undefined}>{e.eventType === "PRODUCT_MEASUREMENT" ? (lang === "fr" ? "Réglage global" : "Global setting") : e.targetDisplayName?.trim() || e.targetEmail?.trim() || `${c.unavailableAccount} · #${e.targetId}`}</span>
+                      <span title={e.targetId ? "#" + e.targetId : undefined}>{e.eventType === "PRODUCT_MEASUREMENT" ? ((lang === "fr" ? "Réglage global" : localizeValue("Global setting", lang))) : e.targetDisplayName?.trim() || e.targetEmail?.trim() || `${c.unavailableAccount} · #${e.targetId}`}</span>
                     </p>
                     <p>
-                      {c.before}: {e.eventType === "PRODUCT_MEASUREMENT" ? (e.oldEnabled ? (lang === "fr" ? "Activée" : "Enabled") : (lang === "fr" ? "Désactivée" : "Disabled")) : <>{e.oldState ? c.states[e.oldState] : "—"} ·{" "}
+                      {c.before}: {e.eventType === "PRODUCT_MEASUREMENT" ? (e.oldEnabled ? ((lang === "fr" ? "Activée" : localizeValue("Enabled", lang))) : ((lang === "fr" ? "Désactivée" : localizeValue("Disabled", lang)))) : <>{e.oldState ? c.states[e.oldState] : "—"} ·{" "}
                       {e.oldOffer} · {e.oldLimit ?? c.inherited}</>}
                     </p>
                     <p>
-                      {c.after}: {e.eventType === "PRODUCT_MEASUREMENT" ? (e.newEnabled ? (lang === "fr" ? "Activée" : "Enabled") : (lang === "fr" ? "Désactivée" : "Disabled")) : <>{e.newState ? c.states[e.newState] : "—"} ·{" "}
+                      {c.after}: {e.eventType === "PRODUCT_MEASUREMENT" ? (e.newEnabled ? ((lang === "fr" ? "Activée" : localizeValue("Enabled", lang))) : ((lang === "fr" ? "Désactivée" : localizeValue("Disabled", lang)))) : <>{e.newState ? c.states[e.newState] : "—"} ·{" "}
                       {e.newOffer} · {e.newLimit ?? c.inherited}</>}
                     </p>
                   </li>
@@ -600,7 +602,7 @@ function AdminConfirmation({
   onDenied: () => void;
 }) {
   const { lang, t } = useLang(),
-    c = accountsCopy[lang],
+    c = localizedCopy(accountsCopy, lang),
     dialog = useRef<HTMLDialogElement>(null),
     alive = useRef(false),
     lock = useRef(false);
@@ -767,7 +769,7 @@ function AdminConfirmation({
           <>
             <p>{c.reauth}</p>
             <label>
-              {viaCode ? c.code : c.password}
+              {viaCode ? c.codeLabel : c.password}
               <input
                 type={viaCode ? "text" : "password"}
                 autoComplete={viaCode ? "one-time-code" : "current-password"}

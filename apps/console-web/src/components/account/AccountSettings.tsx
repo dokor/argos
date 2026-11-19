@@ -1,4 +1,5 @@
 "use client";
+import { intlLocale } from "@/lib/i18n/locales";
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "@/components/LocalizedLink";
@@ -93,7 +94,7 @@ export default function AccountSettings() {
             </form>
             {data.methods.filter(m=>m.provider==="password").map(m=><div className={s.row} key={m.id}><span className={s.hint}>{canRemove(m) ? copy.removeHint:copy.lastMethod}</span><button className={c.secondary} disabled={!canRemove(m)} onClick={()=>remove(m)}>{copy.removePassword}</button></div>)}
           </section>
-          <section className={s.panel}><h2>{copy.activeSessions}</h2><p className={s.hint}>{copy.sessionsHint}</p><ul className={s.list}>{data.sessions.map(session=><li className={s.row} key={session.id}><div><strong>{session.current ? a.current:copy.otherSession}</strong><p className={s.hint}>{copy.created} <time dateTime={session.createdAt}>{new Date(session.createdAt).toLocaleString(lang)}</time></p></div>{session.current ? <StatusBadge tone="success">{copy.thisDevice}</StatusBadge> : <button className={c.secondary} aria-label={a.revoke+" · "+new Date(session.createdAt).toLocaleString(lang)} onClick={()=>request({title:a.revoke,description:copy.revokeHint,run:async()=>{await accountFetch("sessions/"+session.id,"DELETE",{});complete();}})}>{a.revoke}</button>}</li>)}</ul>
+          <section className={s.panel}><h2>{copy.activeSessions}</h2><p className={s.hint}>{copy.sessionsHint}</p><ul className={s.list}>{data.sessions.map(session=><li className={s.row} key={session.id}><div><strong>{session.current ? a.current:copy.otherSession}</strong><p className={s.hint}>{copy.created} <time dateTime={session.createdAt}>{new Date(session.createdAt).toLocaleString(intlLocale(lang))}</time></p></div>{session.current ? <StatusBadge tone="success">{copy.thisDevice}</StatusBadge> : <button className={c.secondary} aria-label={a.revoke+" · "+new Date(session.createdAt).toLocaleString(intlLocale(lang))} onClick={()=>request({title:a.revoke,description:copy.revokeHint,run:async()=>{await accountFetch("sessions/"+session.id,"DELETE",{});complete();}})}>{a.revoke}</button>}</li>)}</ul>
             <button className={c.secondary} disabled={!data.sessions.some(ss=>!ss.current)} onClick={()=>request({title:a.others,description:copy.revokeHint,run:async()=>{await accountFetch("sessions/revoke-others","POST",{});complete();}})}>{a.others}</button>
           </section></> : <section className={s.panel}><h2>{copy.pending}</h2><p>{a.pending}</p><Link className={s.link} href="/account/settings?section=profile">{copy.profile}</Link></section>}
           <section className={`${s.panel} ${s.danger}`}><h2>{a.archive}</h2><p>{a.archiveHint}</p><button className={c.secondary} onClick={archive}>{a.archive}</button></section>

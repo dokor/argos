@@ -1,3 +1,4 @@
+import { isLang } from "@/lib/i18n/locales";
 import { NextRequest, NextResponse } from "next/server";
 
 const API_BASE = process.env.API_BASE ?? "http://api-backend:8081";
@@ -8,7 +9,7 @@ export async function POST(req: NextRequest) {
   // Never log the request, address, backend body or exception (which may echo input).
   let body;
   try { body = await req.json(); } catch { return NextResponse.json({ status: "error" }, { status: 400, headers }); }
-  if (!body || typeof body.email !== "string" || body.email.length > 255 || body.consent !== true || !["fr", "en"].includes(body.locale)) {
+  if (!body || typeof body.email !== "string" || body.email.length > 255 || body.consent !== true || !isLang(body.locale)) {
     return NextResponse.json({ status: "error" }, { status: 400, headers });
   }
   const email = body.email.trim().toLowerCase();

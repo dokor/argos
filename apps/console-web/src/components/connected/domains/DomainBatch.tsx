@@ -1,4 +1,5 @@
 "use client";
+import { localizeValue, localizedCopy } from "@/lib/i18n/messages";
 import { RepeatedCollectionGaps } from "../CollectionGaps";
 import DomainTasks from "./DomainTasks";
 import DomainPageFilters from "./DomainPageFilters";
@@ -52,7 +53,7 @@ export default function DomainBatch({
   batchId: string;
 }) {
   const { c, lang } = useDomainText(),
-    compact = compactCopy[lang],
+    compact = localizedCopy(compactCopy, lang),
     params = useSearchParams(),
     router = useRouter(),
     session = useAccountSession();
@@ -79,7 +80,7 @@ export default function DomainBatch({
   );
   const rule = filters?.query.get("ruleKey");
   const filtered = !!filters && ["ruleKey", "scope", "query", "severity", "status", "completeness"].some(key => key === "scope" ? filters.query.has(key) && filters.query.get(key) !== "all" : filters.query.has(key));
-  const filteredLabel = lang === "fr" ? "Pages filtrées" : "Filtered pages";
+  const filteredLabel = (lang === "fr" ? "Pages filtrées" : localizeValue("Filtered pages", lang));
   const pageTitle = filtered ? filteredLabel : c.allPages;
   const [confirm, setConfirm] = useState(false),
     [busy, setBusy] = useState(false),
@@ -399,8 +400,8 @@ export default function DomainBatch({
           ) : (
             <Surface title={pageTitle}>
               {filtered && <div className={d.filterContext} role="status">
-                {rule && <><p><strong>{findingTitle(rule,lang)}</strong></p><details><summary>{lang === "fr" ? "Identifiant du contrôle" : "Check identifier"}</summary><code>{rule}</code></details></>}
-                <p>{lang === "fr" ? "Pages correspondant aux filtres" : "Pages matching the filters"}: {pages.data?.total ?? "—"} / {batch.counts.selectedPages} {lang === "fr" ? "pages du lot" : "batch pages"}</p>
+                {rule && <><p><strong>{findingTitle(rule,lang)}</strong></p><details><summary>{(lang === "fr" ? "Identifiant du contrôle" : localizeValue("Check identifier", lang))}</summary><code>{rule}</code></details></>}
+                <p>{(lang === "fr" ? "Pages correspondant aux filtres" : localizeValue("Pages matching the filters", lang))}: {pages.data?.total ?? "—"} / {batch.counts.selectedPages} {(lang === "fr" ? "pages du lot" : localizeValue("batch pages", lang))}</p>
               </div>}
               <DomainPageFilters key={params.toString()} query={filters!.query} base={base} onSubmit={(event) => {
                 event.preventDefault();

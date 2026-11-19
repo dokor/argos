@@ -1,4 +1,5 @@
 "use client";
+import { localizedCopy } from "@/lib/i18n/messages";
 import { useSearchParams } from "next/navigation";
 import { useLang } from "@/lib/i18n/LangContext";
 import Link from "@/components/LocalizedLink";
@@ -12,7 +13,7 @@ import { analysisCopy } from "./analysisCopy";
 import s from "./Analysis.module.scss";
 import ui from "./Connected.module.scss";
 export default function NewAnalysis() {
-  const {t,lang}=useLang(),c=analysisCopy[lang],session=useAccountSession(),params=useSearchParams();
+  const {t,lang}=useLang(),c=localizedCopy(analysisCopy, lang),session=useAccountSession(),params=useSearchParams();
   const initialUrl=(params.get("url")??"").slice(0,2048);
   const formAvailable=session.ready && !!session.profile?.verified && !session.denied;
   return <main className={ui.page}><PageHeading title={c.title} description={c.intro} showTip={!formAvailable}/><AnalysisNavigation active="new"/>

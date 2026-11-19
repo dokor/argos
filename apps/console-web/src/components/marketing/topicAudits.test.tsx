@@ -2,17 +2,17 @@ import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { LangProvider } from "@/lib/i18n/LangContext";
 import { frenchPath, localizedPath } from "@/lib/i18n/routes";
-import { siteUrl } from "@/lib/i18n/metadata";
+import { languageAlternates } from "@/lib/i18n/metadata";
 import LangToggle from "@/components/LangToggle";
 import ResourcesPage from "@/app/(fr)/ressources/page";
 import speedFr, { metadata as speedMetadataFr } from "@/app/(fr)/test-vitesse-site-web/page";
-import speedEn, { metadata as speedMetadataEn } from "@/app/en/website-speed-test/page";
+import speedEn, { generateMetadata as speedMetadataEn } from "@/app/en/website-speed-test/page";
 import seoFr, { metadata as seoMetadataFr } from "@/app/(fr)/analyse-seo-page/page";
-import seoEn, { metadata as seoMetadataEn } from "@/app/en/page-seo-analysis/page";
+import seoEn, { generateMetadata as seoMetadataEn } from "@/app/en/page-seo-analysis/page";
 import securityFr, { metadata as securityMetadataFr } from "@/app/(fr)/verifier-entetes-securite/page";
-import securityEn, { metadata as securityMetadataEn } from "@/app/en/security-header-check/page";
+import securityEn, { generateMetadata as securityMetadataEn } from "@/app/en/security-header-check/page";
 import accessibilityFr, { metadata as accessibilityMetadataFr } from "@/app/(fr)/test-accessibilite-site-web/page";
-import accessibilityEn, { metadata as accessibilityMetadataEn } from "@/app/en/website-accessibility-test/page";
+import accessibilityEn, { generateMetadata as accessibilityMetadataEn } from "@/app/en/website-accessibility-test/page";
 
 const navigation = vi.hoisted(() => ({ pathname: "/" }));
 vi.mock("next/navigation", () => ({ usePathname: () => navigation.pathname, useRouter: () => ({ push: vi.fn() }) }));
@@ -27,10 +27,10 @@ const pages = [
 
 describe("translated public diagnostics", () => {
   for (const page of pages) {
-    it.each(["fr", "en"] as const)(`renders every section of ${page.path} in %s before hydration`, lang => {
+    it.each(["fr", "en"] as const)(`renders every section of ${page.path} in %s before hydration`, async lang => {
       navigation.pathname = lang === "fr" ? page.path : page.enPath;
       const Component = page[lang];
-      const html = renderToStaticMarkup(<LangProvider initialLang={lang}><Component /><LangToggle /></LangProvider>);
+      const html = renderToStaticMarkup(<LangProvider initialLang={lang}>{await Component()}<LangToggle /></LangProvider>);
       expect(html).toContain(`lang="${lang}"`);
       expect(html.match(/<h1>/g)).toHaveLength(1);
       expect(html.match(/<article/g)).toHaveLength(3);
@@ -52,11 +52,11 @@ describe("translated public diagnostics", () => {
       }
     });
 
-    it(`publishes reciprocal metadata and preserves suffixes for ${page.path}`, () => {
-      const languages = { fr: siteUrl + page.path, en: siteUrl + page.enPath, "x-default": siteUrl + page.path };
+    it(`publishes reciprocal metadata and preserves suffixes for ${page.path}`, async () => {
+      const languages = languageAlternates(page.path);
       expect(page.metadataFr.alternates).toEqual({ canonical: languages.fr, languages });
-      expect(page.metadataEn.alternates).toEqual({ canonical: languages.en, languages });
-      expect(page.metadataEn.openGraph?.url).toBe(languages.en);
+      expect((await page.metadataEn()).alternates).toEqual({ canonical: languages.en, languages });
+      expect((await page.metadataEn()).openGraph?.url).toBe(languages.en);
       expect(localizedPath(page.path + "?source=nav#references", "en")).toBe(page.enPath + "?source=nav#references");
       expect(localizedPath(page.enPath + "#audit", "fr")).toBe(page.path + "#audit");
     });
@@ -78,3 +78,5 @@ describe("translated public diagnostics", () => {
     expect(html).not.toContain("English guides");
   });
 });
+
+vi.mock("next/headers", () => ({ headers: async () => new Headers({ "x-argos-language": "en" }) }));

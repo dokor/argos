@@ -1,4 +1,5 @@
 "use client";
+import { localizeValue, localizedCopy } from "@/lib/i18n/messages";
 import { inputHints } from "@/lib/input-hints";
 import type { FormEventHandler } from "react";
 import Link from "@/components/LocalizedLink";
@@ -13,12 +14,12 @@ export default function DomainPageFilters({ query, base, onSubmit }: { query: UR
   const advanced = ["severity","status","completeness"].filter(key => query.has(key));
   return <form className={d.pageFilters} onSubmit={onSubmit}>
     <div className={d.filters}>
-      <label>{c.query}<input name="query" type="search" placeholder={inputHints[lang].searchUrl} maxLength={2048} defaultValue={query.get("query") ?? ""}/></label>
+      <label>{c.query}<input name="query" type="search" placeholder={localizedCopy(inputHints, lang).searchUrl} maxLength={2048} defaultValue={query.get("query") ?? ""}/></label>
       {select("scope",c.scopeFilter,{ all:c.all,problematic:c.priority,incomplete:c.incomplete },"all",false)}
       {select("sort",c.sort,{priority:c.prioritySort,url:c.urlSort},"priority",false)}
     </div>
     <details className={d.advancedFilters} open={advanced.length > 0}>
-      <summary>{lang === "fr" ? "Filtres avancés" : "Advanced filters"}{advanced.length > 0 ? ` (${advanced.length})` : ""}</summary>
+      <summary>{(lang === "fr" ? "Filtres avancés" : localizeValue("Advanced filters", lang))}{advanced.length > 0 ? ` (${advanced.length})` : ""}</summary>
       <div className={d.filters}>
         {select("severity",c.severity,c.severities)}
         {select("status",c.status,{QUEUED:c.states.QUEUED,RUNNING:c.states.RUNNING,COMPLETED:c.states.COMPLETED,FAILED:c.states.FAILED,CANCELED:c.states.CANCELED})}

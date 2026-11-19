@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { locales } from "./src/lib/i18n/locales";
 
 // En-têtes de sécurité HTTP appliqués à toutes les routes.
 // Objectif : remonter le score Mozilla Observatory et réduire la surface
@@ -35,14 +36,15 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
-      { source: "/report/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] },
-      { source: "/en/report/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] },
-      {
-        source: "/:path*",
-        headers: securityHeaders,
-      },
-      { source: "/account/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }, { key: "Referrer-Policy", value: "no-referrer" }] },
-      { source: "/en/account/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }, { key: "Referrer-Policy", value: "no-referrer" }] },
+      { source: "/:path*", headers: securityHeaders },
+      ...["account", "report", "share"].map(section => ({
+        source: `/:locale(${locales.filter(locale => locale.code !== "fr").map(locale => locale.code).join("|")})/${section}/:path*`,
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }, { key: "Referrer-Policy", value: "no-referrer" }],
+      })),
+      ...["account", "report", "share"].map(section => ({
+        source: `/${section}/:path*`,
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }, { key: "Referrer-Policy", value: "no-referrer" }],
+      })),
     ];
   },
   async rewrites() {

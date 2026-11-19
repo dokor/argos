@@ -1,4 +1,5 @@
 "use client";
+import { localizedCopy } from "@/lib/i18n/messages";
 import { useId, useState, useRef, useEffect, type FormEvent } from "react";
 import { useLang } from "@/lib/i18n/LangContext";
 import { accountAuditHeaders } from "@/lib/account-client";
@@ -9,7 +10,7 @@ import { feedbackCopy } from "./copy";
 import s from "./FeedbackForm.module.scss";
 
 export default function FeedbackForm({ reference, findingKey, initialType, onDirty, onSent, onBusy }: { reference?: FeedbackReference; findingKey?: string; initialType?:string; onDirty?:()=>void; onSent?:()=>void; onBusy?:(busy:boolean)=>void }) {
-  const { lang, t } = useLang(), c = feedbackCopy[lang], id = useId();
+  const { lang, t } = useLang(), c = localizedCopy(feedbackCopy, lang), id = useId();
   const [type, setType] = useState(initialType ?? (findingKey ? "FALSE_POSITIVE" : "SUGGESTION")), [busy, setBusy] = useState(false), [sent, setSent] = useState(false), [error, setError] = useState("");
   const receipt=useRef<HTMLParagraphElement>(null);
   useEffect(()=>{if(sent)receipt.current?.focus();},[sent]);

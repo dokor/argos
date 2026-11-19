@@ -128,7 +128,7 @@ export function safeAdminReturn(raw: unknown): string | null {
   )
     return null;
   const [path, query] = raw.split("?");
-  return /^\/(?:en\/)?account\/admin\/users$/.test(path) &&
+  return /^\/(?:(?:en|de|es|it|nl|pt|pl|sv|da|fi|cs|sk|hu|ro|bg|el|hr|sl|lt|lv|et)\/)?account\/admin\/users$/.test(path) &&
     adminQuery("admin/users", new URLSearchParams(query))
     ? raw
     : null;
@@ -140,14 +140,14 @@ export function safeAdminRunReturn(raw: unknown): string | null {
   if (queue) return queue;
   if (typeof raw !== "string" || raw.length > 2048 || /[\\#\x00-\x20]/.test(raw) || raw.split("?").length > 2) return null;
   const [path, query] = raw.split("?");
-  return /^\/(?:en\/)?account\/admin\/runs$/.test(path) && adminQuery("admin/runs", new URLSearchParams(query)) ? raw : null;
+  return /^\/(?:(?:en|de|es|it|nl|pt|pl|sv|da|fi|cs|sk|hu|ro|bg|el|hr|sl|lt|lv|et)\/)?account\/admin\/runs$/.test(path) && adminQuery("admin/runs", new URLSearchParams(query)) ? raw : null;
 }
 
 /** A queue return is navigation only; backend authorization is always rechecked. */
 export function safeAdminQueueReturn(raw: unknown): string | null {
   if (typeof raw !== "string" || raw.length > 2048 || /[\\#\x00-\x20]/.test(raw) || raw.split("?").length > 2) return null;
   const [path, query] = raw.split("?");
-  return /^\/(?:en\/)?account\/admin\/queue$/.test(path) && adminQuery("admin/queue/tasks", new URLSearchParams(query)) ? raw : null;
+  return /^\/(?:(?:en|de|es|it|nl|pt|pl|sv|da|fi|cs|sk|hu|ro|bg|el|hr|sl|lt|lv|et)\/)?account\/admin\/queue$/.test(path) && adminQuery("admin/queue/tasks", new URLSearchParams(query)) ? raw : null;
 }
 
 export function adminMeasurement(body: Record<string, unknown>): boolean {

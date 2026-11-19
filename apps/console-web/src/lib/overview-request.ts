@@ -49,7 +49,7 @@ export function safeOverviewReturn(raw: unknown): string | null {
   )
     return null;
   const [path, query] = raw.split("?");
-  return /^\/(?:en\/)?account$/.test(path) &&
+  return /^\/(?:(?:en|de|es|it|nl|pt|pl|sv|da|fi|cs|sk|hu|ro|bg|el|hr|sl|lt|lv|et)\/)?account$/.test(path) &&
     overviewQuery(new URLSearchParams(query))
     ? raw
     : null;

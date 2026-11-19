@@ -1,4 +1,5 @@
 "use client";
+import { localizeValue, localizedCopy } from "@/lib/i18n/messages";
 
 import Link from "@/components/LocalizedLink";
 import AuditForm from "@/components/AuditForm";
@@ -148,8 +149,8 @@ const copy = {
 
 export default function ChecklistAuditPage() {
   const { lang } = useLang();
-  const c = copy[lang];
-  const auditLabel = lang === "fr" ? "Lancer un audit pour les contrôles automatisables" : "Run an audit for automated checks";
+  const c = localizedCopy(copy, lang);
+  const auditLabel = (lang === "fr" ? "Lancer un audit pour les contrôles automatisables" : localizeValue("Run an audit for automated checks", lang));
 
   return (
     <div className={s.page}>
@@ -187,7 +188,7 @@ export default function ChecklistAuditPage() {
                     <div><dt>{c.labels.fix}</dt><dd>{step.fix}</dd></div>
                     <div><dt>{c.labels.argos}</dt><dd>{step.argos}</dd></div>
                   </dl>
-                  {step.id === "indexabilite" && <p><Link href="/ressources/audit-wordpress">{lang === "fr" ? "Sur WordPress : remonter du HTML aux réglages d’indexation et de cache" : "On WordPress: trace HTML back to indexing and cache settings"}</Link></p>}
+                  {step.id === "indexabilite" && <p><Link href="/ressources/audit-wordpress">{(lang === "fr" ? "Sur WordPress : remonter du HTML aux réglages d’indexation et de cache" : localizeValue("On WordPress: trace HTML back to indexing and cache settings", lang))}</Link></p>}
                 </li>
               ))}
             </ol>

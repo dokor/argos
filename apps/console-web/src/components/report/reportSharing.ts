@@ -6,7 +6,7 @@ export function validContact(value: string): string | undefined {
   } catch {} return;
 }
 export function reportShareUrl(current: string): string {
-  const url = new URL(current); if (!/^\/(en\/)?report\/[A-Za-z0-9_-]+$/.test(url.pathname)) throw new Error('Not a report');
+  const url = new URL(current); if (!/^\/((?:en|de|es|it|nl|pt|pl|sv|da|fi|cs|sk|hu|ro|bg|el|hr|sl|lt|lv|et)\/)?report\/[A-Za-z0-9_-]+$/.test(url.pathname)) throw new Error('Not a report');
   const reading = parseReading(url.search + url.hash);
   const anchor = /^finding-(?:[a-f0-9]+-)*[a-f0-9]+$/.test(reading.anchor) ? reading.anchor : '';
   return url.origin + readingUrl(url.pathname, {...reading, anchor});

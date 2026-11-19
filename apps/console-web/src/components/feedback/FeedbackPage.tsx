@@ -1,4 +1,5 @@
 "use client";
+import { localizedCopy } from "@/lib/i18n/messages";
 import { useLang } from "@/lib/i18n/LangContext";
 import SiteNav from "@/components/site/SiteNav";
 import SiteFooter from "@/components/site/SiteFooter";
@@ -6,6 +7,6 @@ import FeedbackButton from "./FeedbackButton";
 import { feedbackCopy } from "./copy";
 import s from "./FeedbackForm.module.scss";
 export default function FeedbackPage() {
-  const {lang}=useLang(),c=feedbackCopy[lang];
+  const {lang}=useLang(),c=localizedCopy(feedbackCopy, lang);
   return <><SiteNav/><main className={s.page}><h1>{c.title}</h1><p>{c.intro}</p><div className={s.actions}><FeedbackButton type="BUG">{c.bugAction}</FeedbackButton><FeedbackButton type="SUGGESTION">{c.suggestionAction}</FeedbackButton></div></main><SiteFooter/></>;
 }

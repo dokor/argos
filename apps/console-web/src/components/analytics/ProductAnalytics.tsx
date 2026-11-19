@@ -1,4 +1,5 @@
 'use client';
+import { localizeValue } from "@/lib/i18n/messages";
 import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from '@/components/LocalizedLink';
@@ -19,7 +20,6 @@ export default function ProductAnalytics() {
     const [busy, setBusy] = useState(false), [error, setError] = useState(false);
     const seen = useRef('');
     const reportSeen = useRef('');
-    const fr = lang === 'fr';
     useEffect(() => {
         let active=true;
         const load=()=>{for(const [url,setter] of [['/api/product-analytics/consent',setState],['/api/traffic/consent',setTraffic]] as const)void fetch(url,{cache:'no-store',referrerPolicy:'no-referrer'}).then(r=>r.json()).then(v=>{if(active)setter(v);}).catch(()=>{});};
@@ -54,7 +54,7 @@ export default function ProductAnalytics() {
         if (!state.enabled || state.choice !== 'granted')
             return;
         const route = publicRoute(path);
-        const registration = /^\/(?:en\/)?account\/register$/.test(path);
+        const registration = /^\/(?:(?:en|de|es|it|nl|pt|pl|sv|da|fi|cs|sk|hu|ro|bg|el|hr|sl|lt|lv|et)\/)?account\/register$/.test(path);
         const send = (event: ProductEvent) => { void fetch('/api/product-analytics', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(event), keepalive: true, referrerPolicy: 'no-referrer' }).catch(() => { }); };
         if (registration && seen.current !== path) {
             seen.current = path;
@@ -72,7 +72,7 @@ export default function ProductAnalytics() {
             return; const href = new URL(a.href, location.origin); if (href.origin !== location.origin)
             return; if (href.hash !== '#audit')
             return; const placement = a.closest('nav') ? 'nav' : a.closest('footer') ? 'footer' : 'hero'; send({ event: 'audit_cta_click', dimensions: { route, lang, placement } }); };
-        const report = () => { if (!/^\/(?:en\/)?report\/[A-Za-z0-9_-]+$/.test(path) || reportSeen.current === path)
+        const report = () => { if (!/^\/(?:(?:en|de|es|it|nl|pt|pl|sv|da|fi|cs|sk|hu|ro|bg|el|hr|sl|lt|lv|et)\/)?report\/[A-Za-z0-9_-]+$/.test(path) || reportSeen.current === path)
             return; reportSeen.current = path; const token = path.split('/').at(-1); void fetch('/api/reports/' + token, { headers: { 'X-Argos-Report-View': '1' }, cache: 'no-store', referrerPolicy: 'no-referrer' }).catch(() => { }); };
         document.addEventListener('click', click);
         window.addEventListener('argos-report-displayed', report);
@@ -84,13 +84,13 @@ export default function ProductAnalytics() {
         return null;
     const needsChoice=state.enabled&&state.choice==='unset'||traffic.enabled&&traffic.choice==='unset';
     return <><TrafficAnalytics granted={traffic.enabled&&traffic.choice==='granted'}/>
-      {!needsChoice&&!settings ? <button className={s.settings} onClick={()=>{setProductChoice(state.choice==='granted');setTrafficChoice(traffic.choice==='granted');setSettings(true);}}>{fr?'Gérer mes cookies':'Manage cookies'}</button> :
-      <aside className={s.banner} aria-label={fr?'Préférences de mesure':'Measurement preferences'}>
-        <p>{fr?'Argos propose deux mesures facultatives : la fréquentation des pages publiques et l’utilisation du produit (clics et étapes d’audit). Compteurs internes conservés 90 jours, cookies de session, aucun fournisseur tiers, nom, email, URL auditée ni contenu de rapport. Après accord, des références de compte restent internes pour dédupliquer inscriptions, rattachements et retours. Refuser reste sans effet sur les analyses.':'Argos offers two optional measurements: public page traffic and product usage (clicks and audit steps). Internal counters retained for 90 days, session cookies, no third-party provider, name, email, audited URL or report content. With consent, account references remain internal to deduplicate registrations, report claims and returns. Refusal does not affect analyses.'}</p>
-        <Link href="/confidentialite">{fr?'Confidentialité':'Privacy information'}</Link>
-        {custom&&<fieldset><legend>{fr?'Finalités facultatives':'Optional purposes'}</legend>{traffic.enabled&&<label><input type="checkbox" checked={trafficChoice} onChange={e=>setTrafficChoice(e.target.checked)}/>{fr?'Mesure de fréquentation':'Traffic measurement'}</label>}{state.enabled&&<label><input type="checkbox" checked={productChoice} onChange={e=>setProductChoice(e.target.checked)}/>{fr?'Mesure produit':'Product measurement'}</label>}</fieldset>}
-        {error&&<p role="alert">{fr?'Choix non enregistré. Réessayez.':'Choice could not be saved. Try again.'}</p>}
-        <div><button disabled={busy} onClick={()=>void choose(false,false)}>{fr?'Tout refuser / retirer':'Reject all / withdraw'}</button><button disabled={busy} onClick={()=>void choose(true,true)}>{fr?'Tout accepter':'Accept all'}</button><button disabled={busy} onClick={()=>setCustom(true)}>{fr?'Personnaliser':'Customise'}</button>{custom&&<button disabled={busy} onClick={()=>void choose(productChoice,trafficChoice)}>{fr?'Enregistrer mes choix':'Save choices'}</button>}</div>
+      {!needsChoice&&!settings ? <button className={s.settings} onClick={()=>{setProductChoice(state.choice==='granted');setTrafficChoice(traffic.choice==='granted');setSettings(true);}}>{(lang === "fr" ? 'Gérer mes cookies' : localizeValue('Manage cookies', lang))}</button> :
+      <aside className={s.banner} aria-label={(lang === "fr" ? 'Préférences de mesure' : localizeValue('Measurement preferences', lang))}>
+        <p>{(lang === "fr" ? 'Argos propose deux mesures facultatives : la fréquentation des pages publiques et l’utilisation du produit (clics et étapes d’audit). Compteurs internes conservés 90 jours, cookies de session, aucun fournisseur tiers, nom, email, URL auditée ni contenu de rapport. Après accord, des références de compte restent internes pour dédupliquer inscriptions, rattachements et retours. Refuser reste sans effet sur les analyses.' : localizeValue('Argos offers two optional measurements: public page traffic and product usage (clicks and audit steps). Internal counters retained for 90 days, session cookies, no third-party provider, name, email, audited URL or report content. With consent, account references remain internal to deduplicate registrations, report claims and returns. Refusal does not affect analyses.', lang))}</p>
+        <Link href="/confidentialite">{(lang === "fr" ? 'Confidentialité' : localizeValue('Privacy information', lang))}</Link>
+        {custom&&<fieldset><legend>{(lang === "fr" ? 'Finalités facultatives' : localizeValue('Optional purposes', lang))}</legend>{traffic.enabled&&<label><input type="checkbox" checked={trafficChoice} onChange={e=>setTrafficChoice(e.target.checked)}/>{(lang === "fr" ? 'Mesure de fréquentation' : localizeValue('Traffic measurement', lang))}</label>}{state.enabled&&<label><input type="checkbox" checked={productChoice} onChange={e=>setProductChoice(e.target.checked)}/>{(lang === "fr" ? 'Mesure produit' : localizeValue('Product measurement', lang))}</label>}</fieldset>}
+        {error&&<p role="alert">{(lang === "fr" ? 'Choix non enregistré. Réessayez.' : localizeValue('Choice could not be saved. Try again.', lang))}</p>}
+        <div><button disabled={busy} onClick={()=>void choose(false,false)}>{(lang === "fr" ? 'Tout refuser / retirer' : localizeValue('Reject all / withdraw', lang))}</button><button disabled={busy} onClick={()=>void choose(true,true)}>{(lang === "fr" ? 'Tout accepter' : localizeValue('Accept all', lang))}</button><button disabled={busy} onClick={()=>setCustom(true)}>{(lang === "fr" ? 'Personnaliser' : localizeValue('Customise', lang))}</button>{custom&&<button disabled={busy} onClick={()=>void choose(productChoice,trafficChoice)}>{(lang === "fr" ? 'Enregistrer mes choix' : localizeValue('Save choices', lang))}</button>}</div>
       </aside>}
     </>;
 }

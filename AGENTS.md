@@ -89,7 +89,7 @@ Fichiers clés : `UrlNormalizerTest`, `ScoreServiceTest`, `DefaultScorePolicyTes
 ### Stack technique
 - Next.js 16, React 19, TypeScript, **SCSS Modules** (versions exactes dans `package.json`)
 - `"use client"` pour les pages interactives ; layouts = toujours Server Components
-- Internationalisation maison (`LangContext` + `fr.json` / `en.json`)
+- Internationalisation maison, 22 langues (`LangContext`, sources FR/EN et catalogues embarqués ; voir [Langues du produit](docs/product-languages.md))
 - Styles : **SCSS Modules uniquement** - Tailwind et shadcn/ui ont été retirés (issue #124).
   Couleurs via les tokens sémantiques `--argos-*` (théma-aware) de `globals.css` + `_tokens.scss`.
   Ne pas réintroduire de classes utilitaires Tailwind ni de dépendance shadcn/Radix.
@@ -142,6 +142,8 @@ Les Route Handlers BFF, y compris les routes dynamiques des comptes/admin, sont 
 - Ces populations sont distinctes ; respecter le [modèle de lecture](docs/report/read-model.md) et les [compteurs canoniques](docs/report/canonical-finding-counts.md), y compris pour les exports.
 
 ### i18n
+La liste des 22 langues est centralisée dans `src/lib/i18n/locales.ts`. Le proxy résout la langue depuis l’URL ; le serveur charge uniquement son catalogue. Utiliser `localizedCopy` pour les objets de copie FR/EN et `localizeValue` pour les textes éditoriaux, jamais pour les données utilisateur ou les preuves collectées. Après une modification de texte : `npm run i18n:extract`, compléter les catalogues, puis `npm run i18n:sync-emails` et `npm run i18n:check`. Voir [le contrat de maintenance](docs/product-languages.md).
+
 Clés de traduction dans `src/lib/i18n/fr.json` et `en.json` :
 `layout`, `nav`, `landing`, `report`, `auditForm`, `account`, `langToggle`
 
@@ -149,7 +151,7 @@ Le verdict visible du rapport est déterministe : `ReportHero` utilise les const
 
 ### SEO / Indexabilité
 - `src/app/robots.ts` - crawl autorisé sur `/`, API bloquée ; comptes et rapports portent noindex
-- `src/app/sitemap.ts` - pages publiques déclarées (accueil, acquisition, ressources, guides, exemple et informations), avec variantes FR/EN et alternates ; comptes et rapports privés exclus
+- `src/app/sitemap.ts` - pages publiques déclarées (accueil, acquisition, ressources, guides, exemple et informations), avec les 22 variantes et alternates ; comptes et rapports privés exclus
 - `src/app/layout.tsx` - métadonnées OG complètes, JSON-LD `WebApplication`, `manifest.json`
 - Les segments `/account` et `/en/account` ont des `layout.tsx` avec `robots: { index: false }` (les pages `"use client"` ne peuvent pas exporter `metadata`)
 - `public/og.png` - image OG 1200×630 générée avec Pillow (script `outputs/gen_og.py`)

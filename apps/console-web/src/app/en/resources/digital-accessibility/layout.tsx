@@ -1,8 +1,9 @@
+import { requestMetadata } from "@/lib/i18n/server";
 import JsonLd from "@/components/site/JsonLd";
 import { localizedMetadata, siteUrl } from "@/lib/i18n/metadata";
 import { editorialPages } from "@/lib/editorial";
 import type { ReactNode } from "react";
 const meta = localizedMetadata("/ressources/accessibilite-numerique", "en", "Digital accessibility: French RGAA and European EAA", "Understand French RGAA and European EAA scope, duties and enforcement from official sources, and the limits of automated checks.");
-export const metadata = { ...meta, openGraph: { ...meta.openGraph, type: "article" as const, publishedTime: editorialPages["/ressources/accessibilite-numerique"].translatedAt, modifiedTime: editorialPages["/ressources/accessibilite-numerique"].translatedAt } };
+export async function generateMetadata() { return requestMetadata({ ...meta, openGraph: { ...meta.openGraph, type: "article" as const, publishedTime: editorialPages["/ressources/accessibilite-numerique"].translatedAt, modifiedTime: editorialPages["/ressources/accessibilite-numerique"].translatedAt } }); }
 const article = { "@context": "https://schema.org", "@type": "Article", headline: "Digital accessibility: French RGAA and European EAA", description: "Understand French RGAA and European EAA scope, duties and enforcement from official sources, and the limits of automated checks.", inLanguage: "en", datePublished: editorialPages["/ressources/accessibilite-numerique"].translatedAt, dateModified: editorialPages["/ressources/accessibilite-numerique"].translatedAt, mainEntityOfPage: siteUrl + "/en/resources/digital-accessibility", image: siteUrl + "/og.png", author: { "@type": "Person", name: "Antoine Le Louët", url: siteUrl + "/en/about" }, citation: editorialPages["/ressources/accessibilite-numerique"].sourceUrls };
 export default function Layout({ children }: { children: ReactNode }) { return <><JsonLd data={article} />{children}</>; }

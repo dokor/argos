@@ -1,7 +1,6 @@
-import type { Lang } from "./i18n/routes";
 export type GuideSection = { id: string; title: string; paragraphs: string[]; steps?: string[]; code?: string };
 export type GuideCopy = { title: string; description: string; lead: string; sections: GuideSection[] };
-export type TechnicalGuide = { route: string; englishRoute: string; sources: { href: string; label: string }[] } & Record<Lang, GuideCopy>;
+export type TechnicalGuide = { route: string; englishRoute: string; sources: { href: string; label: string }[] } & Record<"fr" | "en", GuideCopy>;
 export const technicalGuides: Record<"lcp" | "csp" | "hsts", TechnicalGuide> = {
   "lcp": {
     "route": "/guides/lcp-lent",

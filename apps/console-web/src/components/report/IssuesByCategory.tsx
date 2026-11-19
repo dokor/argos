@@ -1,4 +1,5 @@
 "use client";
+import { localizeValue, localizedCopy } from "@/lib/i18n/messages";
 
 import React from "react";
 import { Report, Issue } from "./types";
@@ -31,7 +32,7 @@ export default function IssuesByCategory({ report, model = buildReportModel(repo
   onFilterChange?: (domain: string, severity: string) => void;
 }) {
   const { t, lang } = useLang();
-  const copy = reportReadingCopy[lang];
+  const copy = localizedCopy(reportReadingCopy, lang);
   const ti = t.report.issuesByCategory;
   const catInfo = t.report.categoryInfo as Record<string, string>;
   const [filter, setFilter] = React.useState<Filter>("all");
@@ -81,7 +82,7 @@ export default function IssuesByCategory({ report, model = buildReportModel(repo
 
       {/* Sticky filter bar */}
       <div className={s.filterBar}>
-        <div className={s.search}><label htmlFor="report-finding-search">{lang==="fr"?"Rechercher un problème ou une ressource":"Find a problem or resource"}</label>
+        <div className={s.search}><label htmlFor="report-finding-search">{(lang === "fr" ? "Rechercher un problème ou une ressource" : localizeValue("Find a problem or resource", lang))}</label>
           <input type="search" id="report-finding-search" value={search} onChange={event=>setSearch(event.target.value)}/></div>
         {onFilterChange && <div className={s.domainFilter}><label htmlFor="report-domain-filter">{copy.domain}</label>
           <select id="report-domain-filter" value={domain} onChange={event => onFilterChange(event.target.value, effectiveFilter)}>
@@ -132,7 +133,7 @@ export default function IssuesByCategory({ report, model = buildReportModel(repo
                   className={s.catScoreChip}
                   style={{ color: chip.fg, background: chip.bg }}
                 >
-                  {sc === undefined ? decisionCopy[lang].notEvaluated : `${sc}${ti.scoreSuffix}`}
+                  {sc === undefined ? localizedCopy(decisionCopy, lang).notEvaluated : `${sc}${ti.scoreSuffix}`}
                 </span>
                 <a href="#top" className={s.backTop}>{ti.backToTop}</a>
               </div>
@@ -141,8 +142,8 @@ export default function IssuesByCategory({ report, model = buildReportModel(repo
             <div className={s.issueList}>
               {issues.length === 0 ? (
                 <p className={s.noIssues}>{search || effectiveFilter !== "all"
-                  ? (lang==="fr"?"Aucun résultat avec ces filtres.":"No results match these filters.")
-                  : sc === undefined ? (lang==="fr"?"Domaine non évalué : aucun résultat ne permet de conclure.":"Domain not evaluated: there is no result to draw a conclusion from.") : ti.noIssues}</p>
+                  ? ((lang === "fr" ? "Aucun résultat avec ces filtres." : localizeValue("No results match these filters.", lang)))
+                  : sc === undefined ? ((lang === "fr" ? "Domaine non évalué : aucun résultat ne permet de conclure." : localizeValue("Domain not evaluated: there is no result to draw a conclusion from.", lang))) : ti.noIssues}</p>
               ) : (
                 issues.map((finding) => {
                   const { issue } = finding;

@@ -1,5 +1,4 @@
 import type { DiagnosticContent } from "./diagnosticPages";
-import type { Lang } from "@/lib/i18n/routes";
 
 const sources = [
   { href: "https://wordpress.org/documentation/article/settings-reading-screen/", label: "WordPress — Settings → Reading / Search Engine Visibility" },
@@ -7,7 +6,7 @@ const sources = [
   { href: "https://developer.wordpress.org/advanced-administration/performance/optimization/", label: "WordPress — Performance / Optimization" },
 ];
 
-export const wordpressAuditContent: Record<Lang, DiagnosticContent> = {
+export const wordpressAuditContent: Record<"fr" | "en", DiagnosticContent> = {
   fr: {
     metaTitle: "Audit WordPress : vérifier et corriger une page publique",
     description: "Reliez les constats d’un audit WordPress aux réglages d’indexation, au cache, au thème et aux extensions. Procédures et exemple HTML avant/après.",

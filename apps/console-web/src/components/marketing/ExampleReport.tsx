@@ -1,4 +1,5 @@
 "use client";
+import { localizedCopy } from "@/lib/i18n/messages";
 import DemoReport from "./DemoReport";
 
 import Link from "@/components/LocalizedLink";
@@ -65,7 +66,7 @@ const copy = {
 
 export default function ExampleReport() {
   const { lang } = useLang();
-  const c = copy[lang];
+  const c = localizedCopy(copy, lang);
   return (
     <div className={s.page}>
       <SiteNav />

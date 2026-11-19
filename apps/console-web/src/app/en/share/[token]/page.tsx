@@ -1,3 +1,4 @@
+import { requestMetadata } from "@/lib/i18n/server";
 export {default} from "@/app/(fr)/share/[token]/page";
 export const dynamic="force-dynamic";
-export const metadata={title:"Shared report | Argos",robots:{index:false,follow:false},alternates:{canonical:null,languages:{}}};
+export async function generateMetadata() { return requestMetadata({title:"Shared report | Argos",robots:{index:false,follow:false},alternates:{canonical:null,languages:{}}}); }

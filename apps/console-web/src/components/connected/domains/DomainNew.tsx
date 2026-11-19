@@ -1,4 +1,5 @@
 "use client";
+import { localizedCopy } from "@/lib/i18n/messages";
 import { inputHints } from "@/lib/input-hints";
 import ContextHelp from "@/components/ui/ContextHelp";
 import Stepper from "@/components/ui/Stepper";
@@ -383,7 +384,7 @@ export default function DomainNew() {
                     {c.hostname}
                     <input
                       name="hostname"
-                      placeholder={inputHints[lang].hostname}
+                      placeholder={localizedCopy(inputHints, lang).hostname}
                       required
                       maxLength={262}
                       autoCapitalize="none"

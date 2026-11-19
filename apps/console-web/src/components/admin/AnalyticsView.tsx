@@ -1,4 +1,6 @@
 "use client";
+import { intlLocale } from "@/lib/i18n/locales";
+import { localizeValue, localizedCopy } from "@/lib/i18n/messages";
 import WebTip from "@/components/editorial/WebTip";
 
 import AdminNavigation from "./AdminNavigation";
@@ -25,7 +27,7 @@ export type ProductMetrics = {
 };
 
 export default function AnalyticsView() {
-  const { lang } = useLang(), c = analyticsCopy[lang], session = useAccountSession();
+  const { lang } = useLang(), c = localizedCopy(analyticsCopy, lang), session = useAccountSession();
   const [days, setDays] = useState(30), [revision, setRevision] = useState(0);
   const [denied, setDenied] = useState(false);
   const onDenied = useCallback(() => setDenied(true), []);
@@ -46,10 +48,10 @@ export default function AnalyticsView() {
       });
     return () => controller.abort();
   }, [allowed, days, request]);
-  const seconds = (value: number | null) => value === null ? c.unavailable : new Intl.NumberFormat(lang, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value / 1000) + " s";
+  const seconds = (value: number | null) => value === null ? c.unavailable : new Intl.NumberFormat(intlLocale(lang), { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value / 1000) + " s";
   const periodDate = (value: string) => {
     const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? c.unavailable : new Intl.DateTimeFormat(lang === "fr" ? "fr-FR" : "en-GB", {
+    return Number.isNaN(date.getTime()) ? c.unavailable : new Intl.DateTimeFormat(intlLocale(lang), {
       dateStyle: "medium", timeStyle: "short", timeZone: "UTC", hourCycle: "h23",
     }).format(date);
   };
@@ -75,7 +77,7 @@ export default function AnalyticsView() {
         {data.accounts ? <AccountJourneyPanel data={data.accounts} /> : <p role="status">{c.accountUnavailable}</p>}
         <h2>{c.cohort}</h2><dl>{Object.entries(c.counts).map(([key, label]) => <div key={key}><dt>{label}</dt><dd>{data.cohort[key as keyof Counts]}</dd></div>)}</dl>
         <p>{c.dedup}</p>
-        <div className={s.scroll} tabIndex={0} role="region" aria-label={lang === "fr" ? "Audience à la création" : "Audience at creation"}><table><thead><tr><th scope="col">{lang === "fr" ? "Audience à la création" : "Audience at creation"}</th><th scope="col">{c.counts.accepted}</th><th scope="col">{c.counts.completed}</th></tr></thead><tbody>{data.byAudience?.map(row => <tr key={row.audience}><th scope="row">{row.audience === "visitor" ? (lang === "fr" ? "Sans compte" : "Without account") : row.audience === "account" ? (lang === "fr" ? "Avec compte" : "With account") : (lang === "fr" ? "Historique non qualifié" : "Unclassified history")}</th><td>{row.counts.accepted}</td><td>{row.counts.completed}</td></tr>)}</tbody></table></div><h2>{c.delays}</h2>
+        <div className={s.scroll} tabIndex={0} role="region" aria-label={(lang === "fr" ? "Audience à la création" : localizeValue("Audience at creation", lang))}><table><thead><tr><th scope="col">{(lang === "fr" ? "Audience à la création" : localizeValue("Audience at creation", lang))}</th><th scope="col">{c.counts.accepted}</th><th scope="col">{c.counts.completed}</th></tr></thead><tbody>{data.byAudience?.map(row => <tr key={row.audience}><th scope="row">{row.audience === "visitor" ? ((lang === "fr" ? "Sans compte" : localizeValue("Without account", lang))) : row.audience === "account" ? ((lang === "fr" ? "Avec compte" : localizeValue("With account", lang))) : ((lang === "fr" ? "Historique non qualifié" : localizeValue("Unclassified history", lang)))}</th><td>{row.counts.accepted}</td><td>{row.counts.completed}</td></tr>)}</tbody></table></div><h2>{c.delays}</h2>
         <div className={s.scroll} tabIndex={0} role="region" aria-label={c.table}><table><thead><tr>
           {[c.measure, c.sample, c.excluded, c.median, "p90", "p95"].map(label => <th key={label} scope="col">{label}</th>)}
         </tr></thead><tbody>{([[c.queue, data.queue], [c.processing, data.processing], [c.total, data.endToEnd]] as const).map(([label, delay]) => <tr key={label}>

@@ -31,7 +31,7 @@ describe("Premium prompt endpoint", () => {
   it.each([["run", "42", "runs/42/report"], ["report", "a".repeat(43), "reports/" + "a".repeat(43)], ["shared", "b".repeat(43), "shared-reports/" + "b".repeat(43)]])("checks entitlement and %s report access before returning the localized prompt", async (kind, id, path) => {
     fetchMock.mockResolvedValueOnce(Response.json({ offer: "PREMIUM" })).mockResolvedValueOnce(Response.json(historical));
     const response = await run(kind, id);
-    expect(response.status).toBe(200); expect((await response.json()).prompt).toContain(en.report.aiPrompt.promptIntro);
+    expect(response.status).toBe(200); expect((await response.json()).prompt).toContain(en.report.aiPrompt.promptIntro.replace("{language}", "English"));
     expect(response.headers.get("cache-control")).toBe("private, no-store");
     expect(fetchMock.mock.calls.map(call => call[0])).toEqual(["http://fixture-backend/api/account/usage", "http://fixture-backend/api/account/" + path]);
     for (const [, options] of fetchMock.mock.calls) {

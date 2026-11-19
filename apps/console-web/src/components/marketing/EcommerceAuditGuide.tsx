@@ -1,4 +1,5 @@
 "use client";
+import { localizeValue, localizedCopy } from "@/lib/i18n/messages";
 
 import Link from "@/components/LocalizedLink";
 import AuditForm from "@/components/AuditForm";
@@ -13,8 +14,7 @@ import s from "./EcommerceAuditGuide.module.scss";
 
 export default function EcommerceAuditGuide() {
   const { lang } = useLang();
-  const c = ecommerceAuditCopy[lang];
-  const fr = lang === "fr";
+  const c = localizedCopy(ecommerceAuditCopy, lang);
   return (
     <div className={s.page}>
       <SiteNav />
@@ -33,7 +33,7 @@ export default function EcommerceAuditGuide() {
             <nav className={s.contents} aria-label={c.contents}>
               <h2>{c.contents}</h2>
               <ol>{c.steps.map(step => <li key={step.id}><a href={`#${step.id}`}>{step.title}</a></li>)}</ol>
-              <p><a href="#example-title">{fr ? "Essayer le scénario de variante" : "Try the variant scenario"}</a> · <a href="#grille-controle">{fr ? "Utiliser la grille de contrôle" : "Use the audit worksheet"}</a></p>
+              <p><a href="#example-title">{(lang === "fr" ? "Essayer le scénario de variante" : localizeValue("Try the variant scenario", lang))}</a> · <a href="#grille-controle">{(lang === "fr" ? "Utiliser la grille de contrôle" : localizeValue("Use the audit worksheet", lang))}</a></p>
             </nav>
             {c.steps.map((step, index) => (
               <section className={s.step} id={step.id} aria-labelledby={`${step.id}-title`} key={step.id}>
@@ -42,10 +42,10 @@ export default function EcommerceAuditGuide() {
                 <dl>{(["check", "evidence", "action"] as const).map(field => (
                   <div key={field}><dt>{c.labels[field]}</dt><dd>{step[field]}</dd></div>
                 ))}</dl>
-                {step.id === "catalogue-seo" && <p className={s.contextLink}><Link href="/guides/checklist-audit-site-web#indexabilite">{fr ? "Reprendre les contrôles généraux d’indexabilité" : "Review general indexability checks"}</Link></p>}
-                {step.id === "vitesse-mobile" && <p className={s.contextLink}><Link href="/guides/lcp-lent#diagnostic">{fr ? "Trouver ce qui retarde l’image principale avec le guide LCP" : "Find what delays the main image with the LCP guide"}</Link></p>}
-                {step.id === "panier" && <p className={s.contextLink}><a href="#example-title">{fr ? "Essayer l’erreur de variante dans la simulation" : "Try the variant error in the simulation"}</a></p>}
-                {step.id === "plan-action" && <p className={s.contextLink}><Link href="/ressources/pourquoi-mon-site-ne-convertit-pas">{fr ? "Distinguer défaut technique, mesure et autres causes de faible conversion" : "Separate technical failures, measurement and other causes of low conversion"}</Link></p>}
+                {step.id === "catalogue-seo" && <p className={s.contextLink}><Link href="/guides/checklist-audit-site-web#indexabilite">{(lang === "fr" ? "Reprendre les contrôles généraux d’indexabilité" : localizeValue("Review general indexability checks", lang))}</Link></p>}
+                {step.id === "vitesse-mobile" && <p className={s.contextLink}><Link href="/guides/lcp-lent#diagnostic">{(lang === "fr" ? "Trouver ce qui retarde l’image principale avec le guide LCP" : localizeValue("Find what delays the main image with the LCP guide", lang))}</Link></p>}
+                {step.id === "panier" && <p className={s.contextLink}><a href="#example-title">{(lang === "fr" ? "Essayer l’erreur de variante dans la simulation" : localizeValue("Try the variant error in the simulation", lang))}</a></p>}
+                {step.id === "plan-action" && <p className={s.contextLink}><Link href="/ressources/pourquoi-mon-site-ne-convertit-pas">{(lang === "fr" ? "Distinguer défaut technique, mesure et autres causes de faible conversion" : localizeValue("Separate technical failures, measurement and other causes of low conversion", lang))}</Link></p>}
               </section>
             ))}
             <section className={s.section} aria-labelledby="example-title">
@@ -70,7 +70,7 @@ export default function EcommerceAuditGuide() {
             </section>
             <section className={s.section} id="references" aria-labelledby="references-title">
               <h2 id="references-title">{c.sourcesTitle}</h2>
-              <ul>{ecommerceAuditSources.map(source => <li key={source.href}><a href={source.href}>{source[lang]}</a></li>)}</ul>
+              <ul>{ecommerceAuditSources.map(source => <li key={source.href}><a href={source.href}>{localizedCopy(source, lang)}</a></li>)}</ul>
             </section>
             <section className={s.cta} id="audit" aria-labelledby="audit-title">
               <h2 id="audit-title">{c.ctaTitle}</h2>

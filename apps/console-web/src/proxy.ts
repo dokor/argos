@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { contentSecurityPolicy } from "@/lib/content-security-policy";
+import { languageFromPath } from "@/lib/i18n/locales";
 
 export function proxy(request: NextRequest) {
   const nonce = randomBytes(32).toString("base64");
@@ -8,8 +9,14 @@ export function proxy(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   // Overwrite untrusted client headers. Next.js reads this policy to nonce its bootstrap.
   requestHeaders.set("x-nonce", nonce);
+  requestHeaders.set("x-argos-language", languageFromPath(request.nextUrl.pathname));
   requestHeaders.set("Content-Security-Policy", policy);
-  const response = NextResponse.next({ request: { headers: requestHeaders } });
+  const language = languageFromPath(request.nextUrl.pathname);
+  const target = request.nextUrl.clone();
+  if (language !== "fr" && language !== "en") target.pathname = "/en" + target.pathname.slice(language.length + 1);
+  const response = target.pathname !== request.nextUrl.pathname
+    ? NextResponse.rewrite(target, { request: { headers: requestHeaders } })
+    : NextResponse.next({ request: { headers: requestHeaders } });
   response.headers.set("Content-Security-Policy", policy);
   // HTML and its nonce must never be reused for a different response.
   response.headers.set("Cache-Control", "private, no-store");

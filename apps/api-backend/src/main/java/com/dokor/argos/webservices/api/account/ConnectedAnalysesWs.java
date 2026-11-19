@@ -22,7 +22,7 @@ public final class ConnectedAnalysesWs {
         var result = analyses.createObserved(auth,csrf.require(requests.get()),key,input);
         if (result.created()) analytics.attribute(Long.parseLong(result.accepted().runId()),
             new com.dokor.argos.services.analytics.AnalyticsDimensions("/account/analyses/new",
-                "en".equals(requests.get().getHeaderString("Accept-Language")) ? "en" : "fr", "form"),
+                com.dokor.argos.services.account.AccountLanguage.normalize(requests.get().getHeaderString("Accept-Language")), "form"),
             requests.get().getHeaderString("X-Argos-Measurement"));
         return AccountAuthWs.ok(result.accepted());
     }

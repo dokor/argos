@@ -1,3 +1,4 @@
+import type { Lang } from "@/lib/i18n/routes";
 import Link from "@/components/PageLink";
 import { diagnosticGuides } from "@/lib/diagnosticGuides";
 import GuideArticle from "@/components/guides/GuideArticle";
@@ -8,9 +9,9 @@ const guide = diagnosticGuides.redesign;
 
 export const metadata = guideMetadata(guide);
 
-export default function RedesignGuidePage() {
+export default function RedesignGuidePage({ lang = "fr" }: { lang?: Lang } = {}) {
   return (
-    <GuideArticle guide={guide} contents={[
+    <GuideArticle lang={lang} guide={guide} contents={[
       { id: "perimetre", label: "Définir la recette" },
       { id: "avant", label: "Préparer avant publication" },
       { id: "url", label: "Vérifier les anciennes URL" },
