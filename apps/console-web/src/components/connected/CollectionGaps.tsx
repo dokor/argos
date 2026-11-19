@@ -1,4 +1,9 @@
 "use client";
+import { localizeValue } from "@/lib/i18n/messages";
+
+import type { Lang } from "@/lib/i18n/locales";
+
+import { localizedCopy } from "@/lib/i18n/messages";
 import { useLang } from "@/lib/i18n/LangContext";
 import type { PageResult } from "@/lib/connected/contracts";
 import { collectorReason } from "@/lib/collector-reason";
@@ -10,7 +15,7 @@ const copy = {
 function missingModules(page: PageResult) {
   return [...new Set([...Object.entries(page.moduleStatuses).filter(([, status]) => status === "FAILED" || status === "SKIPPED").map(([id]) => id), ...(page.collectionGaps ?? []).map(g => g.module).filter(id => id !== "unknown")])].filter(id => /^[a-z0-9_-]{1,32}$/.test(id)).sort();
 }
-function reason(code: string, lang: "fr" | "en") {
+function reason(code: string, lang: Lang) {
   const labels: Record<string, [string, string]> = {
     TIMEOUT: ["Délai de collecte dépassé", "Collection timed out"],
     MODULE_TIMEOUT: ["Délai du module dépassé", "Module timed out"],
@@ -20,10 +25,10 @@ function reason(code: string, lang: "fr" | "en") {
     MODULE_UNAVAILABLE: ["Module indisponible", "Module unavailable"],
     UNAVAILABLE: ["Mesure indisponible", "Measurement unavailable"],
   };
-  return collectorReason(code, lang) ?? labels[code]?.[lang === "fr" ? 0 : 1] ?? copy[lang].unknownReason;
+  return collectorReason(code, lang) ?? localizeValue(labels[code]?.[lang === "fr" ? 0 : 1], lang) ?? localizedCopy(copy, lang).unknownReason;
 }
 export default function CollectionGaps({ page }: { page: PageResult }) {
-  const { lang } = useLang(), c = copy[lang];
+  const { lang } = useLang(), c = localizedCopy(copy, lang);
   const gaps = page.collectionGaps ?? [], modules = missingModules(page);
   const state = page.executionStatus === "FAILED" ? c.failed : page.executionStatus === "CANCELED" ? c.canceled
     : page.executionStatus !== "COMPLETED" ? null : !page.reportAvailable ? c.unavailable
@@ -38,7 +43,7 @@ export default function CollectionGaps({ page }: { page: PageResult }) {
   </div>;
 }
 export function RepeatedCollectionGaps({ pages }: { pages: readonly PageResult[] }) {
-  const { lang } = useLang(), c = copy[lang];
+  const { lang } = useLang(), c = localizedCopy(copy, lang);
   const counts = new Map<string,number>();
   for (const page of pages) for (const collectorId of missingModules(page)) counts.set(collectorId,(counts.get(collectorId) ?? 0)+1);
   const repeated = [...counts].filter(([,count]) => count > 1).sort(([a],[b]) => a.localeCompare(b));

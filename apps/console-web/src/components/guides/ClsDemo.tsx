@@ -3,16 +3,19 @@
 import { useEffect, useState } from "react";
 import Link from "@/components/PageLink";
 import s from "./ClsDemo.module.scss";
+import { useLang } from "@/lib/i18n/LangContext";
+import { localizeValue } from "@/lib/i18n/messages";
 
 export default function ClsDemo({ reserved }: { reserved: boolean }) {
+  const { lang } = useLang();
   const [loaded, setLoaded] = useState(false);
   useEffect(() => {
     const timer = window.setTimeout(() => setLoaded(true), 1200);
     return () => window.clearTimeout(timer);
   }, []);
 
-  return (
-    <main className={s.page} lang="fr">
+  return localizeValue(
+    <main className={s.page} lang={lang}>
       <p className={s.eyebrow}>Démonstration pédagogique · {reserved ? "Après" : "Avant"}</p>
       <h1>{reserved ? "La place est réservée" : "Le contenu repousse le texte"}</h1>
       <p>Un encart arrive après un délai artificiel de 1,2 seconde. Observez le paragraphe ci-dessous.</p>
@@ -30,5 +33,5 @@ export default function ClsDemo({ reserved }: { reserved: boolean }) {
       </nav>
       <noscript>JavaScript est désactivé : l’insertion différée ne sera pas exécutée.</noscript>
     </main>
-  );
+  , lang);
 }

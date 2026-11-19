@@ -63,7 +63,7 @@ export function classify(paths) {
       || production('playwright-service') || production('lighthouse-service') || production('audit-egress')
       || auditScripts || matches(path => path.endsWith('/ControlledAuditE2eIT.java')),
     auth: common || backendProduction || backendFixtures || frontendProduction
-      || dependency('playwright-service') || matches(path => path === 'scripts/e2e/auth-experience.mjs'),
+      || dependency('playwright-service') || matches(path => ['scripts/e2e/auth-experience.mjs', 'scripts/e2e/language-menu.mjs'].includes(path)),
     security: common || npmConfig || component('audit-egress')
       || production('playwright-service') || production('lighthouse-service')
       || matches(path => path.startsWith('scripts/security/') || /^infra\/compose\/(audit-egress|playwright-service|lighthouse-service)\//.test(path)),

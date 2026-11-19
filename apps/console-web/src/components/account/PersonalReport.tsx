@@ -1,4 +1,5 @@
 "use client";
+import { localizedCopy } from "@/lib/i18n/messages";
 import {safeOverviewReturn} from "@/lib/overview-request";
 import {useSearchParams} from "next/navigation";
 import {safeDomainReturn} from "@/lib/connected/domain-navigation";
@@ -18,7 +19,7 @@ export default function PersonalReport({ runId }: { runId: string }) {
   const overviewReturn=safeOverviewReturn(useSearchParams().get("returnTo"));
   const domainReturn=safeDomainReturn(useSearchParams().get("returnTo"));
   const [result,setResult]=useState<{id:string;run:PersonalRun;report?:Report}|null>(null),[failure,setFailure]=useState<{id:string;code:string}|null>(null),[revision,setRevision]=useState(0);
-  const {t,lang}=useLang(),c=analysisCopy[lang],session=useAccountSession();
+  const {t,lang}=useLang(),c=localizedCopy(analysisCopy, lang),session=useAccountSession();
   const allowed=session.profile?.verified && !session.denied,invalidate=session.invalidate;
   useEffect(()=>{
     let alive=true,terminal=false,inflight=false,retries=0;

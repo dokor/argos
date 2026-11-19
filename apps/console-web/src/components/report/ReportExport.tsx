@@ -1,4 +1,5 @@
 "use client";
+import { localizedCopy } from "@/lib/i18n/messages";
 import ReportActionIcon from "./ReportActionIcon";
 import {useState} from 'react';
 import {createRoot} from 'react-dom/client';
@@ -13,7 +14,7 @@ import printStyle from './PrintableReport.module.scss';
 import type {Report} from './types';
 import {accountFetch} from '@/lib/account-client';
 export default function ReportExport({report:current,runId,shared=false,compact=false}:{report?:Report;runId?:string;shared?:boolean;compact?:boolean}={}) {
- const {lang}=useLang();const e=exportCopy[lang];const path=usePathname();const token=path?.match(/^\/(?:en\/)?(?:report|share)\/([A-Za-z0-9_-]+)$/)?.[1];
+ const {lang}=useLang();const e=localizedCopy(exportCopy, lang);const path=usePathname();const token=path?.match(/^\/(?:(?:en|de|es|it|nl|pt|pl|sv|da|fi|cs|sk|hu|ro|bg|el|hr|sl|lt|lv|et)\/)?(?:report|share)\/([A-Za-z0-9_-]+)$/)?.[1];
  const [format,setFormat]=useState<ExportFormat>('summary');const [state,setState]=useState<'idle'|'busy'|'ready'|'failed'>('idle');
  async function prepare() {
   setState('busy');const preview=window.open('about:blank','_blank');

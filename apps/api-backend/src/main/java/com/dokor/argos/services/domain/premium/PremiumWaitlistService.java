@@ -15,7 +15,7 @@ public class PremiumWaitlistService {
     private final Clock clock;
     @Inject public PremiumWaitlistService(PremiumWaitlistDao dao, Clock clock) { this.dao = dao; this.clock = clock; }
     public boolean subscribe(String email, Boolean consent, String locale) {
-        if (!Boolean.TRUE.equals(consent) || email == null || email.length() > 255 || !("fr".equals(locale) || "en".equals(locale))) return false;
+        if (!Boolean.TRUE.equals(consent) || email == null || email.length() > 255 || (locale == null || !com.dokor.argos.services.account.AccountLanguage.SUPPORTED.contains(locale))) return false;
         String normalized = email.trim().toLowerCase(Locale.ROOT);
         if (normalized.length() > 254 || !EMAIL.matcher(normalized).matches() || normalized.indexOf('@') > 64) return false;
         var now = clock.instant();

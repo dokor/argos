@@ -20,6 +20,7 @@
   display: flex;
   align-items: center;
   gap: t.$space-6;
+  flex-wrap: wrap;
 }
 
 .logo {
@@ -43,9 +44,9 @@
 }
 
 .navLinks {
-  // Reserve the same columns for both translations and active states.
+  // Let translated labels determine their width instead of overlapping columns.
   display: grid;
-  grid-template-columns: 144px 144px 48px;
+  grid-template-columns: repeat(3, max-content);
   flex-shrink: 0;
 }
 
@@ -171,30 +172,40 @@
   align-items: center;
   justify-content: center;
   gap: t.$space-2;
-  height: 44px;
+  min-height: 44px;
   padding: t.$space-2 t.$space-3;
   border-radius: t.$radius-sm;
   font-size: t.$text-md;
   font-weight: 700;
   text-decoration: none;
-  white-space: nowrap;
+  white-space: normal;
+  text-align: center;
   flex-shrink: 0;
 }
 .auditCta {
-  width: 128px;
+  min-width: 128px;
   background: var(--argos-action-bg);
   color: var(--argos-action-text);
   &:hover { background: var(--argos-action-hover); }
 }
 .accountLink {
-  // Stable across languages and while the HttpOnly session is resolved.
-  width: 132px;
+  min-width: 132px;
   color: t.$text;
   background: t.$surface;
   border: 1px solid t.$text-muted;
   &:hover, &[aria-current] { background: t.$surface-2; border-color: t.$text; }
 }
 .accountIcon { flex-shrink: 0; }
+.accountLink span { min-width: 0; overflow-wrap: anywhere; }
+.accountLabel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+
+  > span { grid-area: 1 / 1; }
+}
+// Reserve both session labels, including wrapped translations, before login.
+.accountLabelReserve { visibility: hidden; }
 
 @media (max-width: 760px) {
   .navInner {
@@ -205,7 +216,7 @@
   }
   .logo { grid-column: 1; grid-row: 1; }
   .navActions { display: contents; }
-  .accountLink { grid-column: 2; grid-row: 1; }
+  .accountLink { grid-column: 2; grid-row: 1; width: 132px; min-width: 0; }
   .menuToggle {
     display: flex;
     align-items: center;

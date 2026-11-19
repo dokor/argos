@@ -1,4 +1,5 @@
 "use client";
+import { localizedCopy } from "@/lib/i18n/messages";
 import Tooltip from "@/components/ui/Tooltip";
 import { helpCopy } from "@/components/ui/ContextHelp";
 import { useLang } from "@/lib/i18n/LangContext";
@@ -18,9 +19,9 @@ export function executionTone(state: unknown) {
   }
 }
 export default function ExecutionStatusBadge({ state }: { state: unknown }) {
-  const { lang } = useLang(), copy = labels[lang];
+  const { lang } = useLang(), copy = localizedCopy(labels, lang);
   const label = typeof state === "string" && Object.hasOwn(copy, state) ? copy[state as keyof typeof copy] : copy.UNKNOWN;
   const key=typeof state === "string" ? ({SUCCESS:"COMPLETED",ERROR:"FAILED",CANCELLED:"CANCELED",NOT_APPLICABLE:"SKIPPED",WARNING:"PARTIAL"} as Record<string,string>)[state] ?? state : "UNKNOWN";
-  const descriptions=helpCopy[lang].statuses;
+  const descriptions=localizedCopy(helpCopy, lang).statuses;
   return <Tooltip label={label} content={descriptions[key as keyof typeof descriptions] ?? descriptions.UNKNOWN}><span className={s.badge} data-tone={executionTone(state)}>{label}</span></Tooltip>;
 }

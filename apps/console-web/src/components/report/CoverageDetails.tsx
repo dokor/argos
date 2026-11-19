@@ -1,3 +1,5 @@
+import { intlLocale } from "@/lib/i18n/locales";
+import { localizedCopy } from "@/lib/i18n/messages";
 import type { Coverage } from './types';
 import type { Lang } from '@/lib/i18n/routes';
 import { coverageAction, coverageBreakdown, coverageCopy } from './coverageExplanation';
@@ -8,11 +10,11 @@ import s from './CoverageDetails.module.scss';
 // Do not print arbitrary server diagnostics or private URLs as codes.
 const safeCode = (value?: string | null) => value && /^[a-zA-Z0-9_.-]{1,100}$/.test(value) ? value : '—';
 export default function CoverageDetails({ coverage, lang }: { coverage?: Coverage | null; lang: Lang }) {
-  const c = coverageCopy[lang];
+  const c = localizedCopy(coverageCopy, lang);
   const reasonText = (reason: string) => Object.hasOwn(c.reasons, reason) ? c.reasons[reason] : collectorReason(reason, lang);
   if (!coverage?.global || !Array.isArray(coverage.checks)) return <p>{c.unavailable}</p>;
   const { missing, excluded, partial, points, reconciled } = coverageBreakdown(coverage);
-  const format = (value: number) => value.toLocaleString(lang, { maximumFractionDigits: 2 });
+  const format = (value: number) => value.toLocaleString(intlLocale(lang), { maximumFractionDigits: 2 });
   const ratio = coverage.global.ratio;
   const measuredPercent = Math.round(ratio * 100);
   return <section className={s.details} aria-label={c.title}>

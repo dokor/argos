@@ -1,4 +1,6 @@
 "use client";
+import { intlLocale } from "@/lib/i18n/locales";
+import { localizedCopy } from "@/lib/i18n/messages";
 import { useEffect, useState } from "react";
 import { useLang } from "@/lib/i18n/LangContext";
 import { localizedPath } from "@/lib/i18n/routes";
@@ -13,22 +15,22 @@ import s from "./AccountView.module.scss";
 import h from "./HistoryView.module.scss";
 
 export function HistoryChart({ items }: { items: HistoryItem[] }) {
-  const { lang } = useLang(), copy = historyCopy[lang];
+  const { lang } = useLang(), copy = localizedCopy(historyCopy, lang);
   const points = [...items].reverse().map((item, i) => ({ item, x: 40 + i * 520 / Math.max(1, items.length - 1), y: 190 - (item.globalScore ?? 0) * 1.6 }));
   return <figure><figcaption>{copy.chart}</figcaption><p>{copy.chartHint}</p>
     <svg className={h.chart} viewBox="0 0 600 225" role="img" aria-label={copy.chart + ". " + copy.chartHint}>
       {[0,50,100].map(n => <g key={n}><text x="2" y={195-n*1.6}>{n}</text><line x1="32" y1={190-n*1.6} x2="570" y2={190-n*1.6} opacity=".2"/></g>)}
       {points.map((p,i) => { const previous=points[i-1]; return <g key={p.item.runId}>
         {previous && previous.item.globalScore !== null && p.item.globalScore !== null && comparableDelta(p.item) !== null && <line data-segment="comparable" x1={previous.x} y1={previous.y} x2={p.x} y2={p.y} strokeWidth="2"/>}
-        {p.item.globalScore !== null && <circle cx={p.x} cy={p.y} r="5"><title>{new Date(p.item.createdAt).toLocaleString(lang)}: {p.item.globalScore}/100</title></circle>}
+        {p.item.globalScore !== null && <circle cx={p.x} cy={p.y} r="5"><title>{new Date(p.item.createdAt).toLocaleString(intlLocale(lang))}: {p.item.globalScore}/100</title></circle>}
       </g>; })}
     </svg>
-    {points.length>0 && <div className={h.chartDates}><time dateTime={points[0].item.createdAt}>{new Date(points[0].item.createdAt).toLocaleDateString(lang)}</time><time dateTime={points[points.length-1].item.createdAt}>{new Date(points[points.length-1].item.createdAt).toLocaleDateString(lang)}</time></div>}
+    {points.length>0 && <div className={h.chartDates}><time dateTime={points[0].item.createdAt}>{new Date(points[0].item.createdAt).toLocaleDateString(intlLocale(lang))}</time><time dateTime={points[points.length-1].item.createdAt}>{new Date(points[points.length-1].item.createdAt).toLocaleDateString(intlLocale(lang))}</time></div>}
   </figure>;
 }
 
 export default function HistoryView({ urlId }: { urlId: string }) {
-  const { t, lang } = useLang(), copy=historyCopy[lang], session=useAccountSession();
+  const { t, lang } = useLang(), copy=localizedCopy(historyCopy, lang), session=useAccountSession();
   const allowed=session.ready && session.profile?.verified && !session.denied, invalidate=session.invalidate;
   const [page,setPage]=useState<{key:string;data:HistoryPage}|null>(null),[cursor,setCursor]=useState<string|null>(null),[revision,setRevision]=useState(0),[error,setError]=useState("");
   const key=urlId+":"+(cursor??"")+":"+revision;
@@ -40,7 +42,7 @@ export default function HistoryView({ urlId }: { urlId: string }) {
     return ()=>{alive=false;controller.abort();};
   },[allowed,urlId,cursor,key,invalidate]);
   const data=allowed && page?.key===key ? page.data : null;
-  const date=(raw:string)=>new Date(raw).toLocaleString(lang);
+  const date=(raw:string)=>new Date(raw).toLocaleString(intlLocale(lang));
   return <><main className={s.page}>
     <Link href={data ? "/account/sites/"+data.context.siteId : "/account/sites"}>{data ? copy.back : copy.sites}</Link>
     <h1>{copy.title}</h1>

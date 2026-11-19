@@ -1,4 +1,5 @@
 "use client";
+import { intlLocale, type Lang } from "@/lib/i18n/locales";
 import { useEffect, useRef, type ReactNode, type RefObject } from "react";
 import ExecutionStatusBadge from "../ExecutionStatusBadge";
 import CollectionGaps from "../CollectionGaps";
@@ -39,8 +40,8 @@ export function Reason({ value }: { value: string | null }) {
     <>{c.reasons[value as keyof typeof c.reasons] ?? value}</>
   ) : null;
 }
-export function dateLabel(value: string, lang: string) {
-  return new Intl.DateTimeFormat(lang, {
+export function dateLabel(value: string, lang: Lang) {
+  return new Intl.DateTimeFormat(intlLocale(lang), {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(value));

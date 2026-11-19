@@ -7,7 +7,7 @@ import { PUBLIC_CONTACT } from "@/lib/publicContact";
 import s from "./ReportAiPrompt.module.scss";
 
 export default function ReportAiPrompt({ kind, id }: { kind: "run" | "report" | "shared"; id: string }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const copy = t.report.aiPrompt;
   const [result, setResult] = useState<{ prompt?: string; error?: string }>({});
   const [revision, setRevision] = useState(0);
@@ -26,7 +26,7 @@ export default function ReportAiPrompt({ kind, id }: { kind: "run" | "report" | 
     const invalidate = () => { alive = false; controller.abort(); setResult({ error: "session_invalid" }); };
     window.addEventListener("argos-account-invalid", invalidate);
     return () => { alive = false; controller.abort(); window.removeEventListener("argos-account-invalid", invalidate); };
-  }, [kind, id, revision]);
+  }, [kind, id, revision, lang]);
 
   async function copyPrompt() {
     if (!prompt) return;

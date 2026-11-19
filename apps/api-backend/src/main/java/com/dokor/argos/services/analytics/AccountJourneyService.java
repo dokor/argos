@@ -6,6 +6,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import java.time.Clock;
 import java.util.Set;
+import com.dokor.argos.services.account.AccountLanguage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +32,7 @@ public class AccountJourneyService {
             access.require(credential);
             boolean authentication = event == AccountJourneyEvent.REGISTERED || event == AccountJourneyEvent.AUTHENTICATED;
             if (authentication ? !METHODS.contains(method) : !"none".equals(method)) return;
-            dao.record(event, subject, user, method, "en".equals(language) ? "en" : "fr", clock.instant());
+            dao.record(event, subject, user, method, AccountLanguage.normalize(language), clock.instant());
         } catch (RuntimeException unavailable) {
             // No request, identifier, provider response or exception text is logged.
             LOG.debug("Account measurement omitted");

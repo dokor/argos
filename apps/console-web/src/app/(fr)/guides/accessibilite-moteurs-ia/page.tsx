@@ -1,3 +1,4 @@
+import type { Lang } from "@/lib/i18n/routes";
 import Link from "@/components/PageLink";
 import { diagnosticGuides } from "@/lib/diagnosticGuides";
 import GuideArticle from "@/components/guides/GuideArticle";
@@ -8,9 +9,9 @@ const guide = diagnosticGuides.crawlers;
 
 export const metadata = guideMetadata(guide);
 
-export default function CrawlGuidePage() {
+export default function CrawlGuidePage({ lang = "fr" }: { lang?: Lang } = {}) {
   return (
-    <GuideArticle guide={guide} contents={[
+    <GuideArticle lang={lang} guide={guide} contents={[
       { id: "etapes", label: "Distinguer accès et visibilité" },
       { id: "reponse", label: "Lire la réponse publique" },
       { id: "html", label: "Vérifier le contenu HTML" },

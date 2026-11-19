@@ -1,3 +1,4 @@
+import { localizeValue, localizedCopy } from "@/lib/i18n/messages";
 import type { Issue } from "./types";
 import type { Lang } from "@/lib/i18n/routes";
 import { describeObservation, findingQualification, missingLocation } from "./findingPresentation";
@@ -10,7 +11,7 @@ export { cleanEvidence } from './findingText';
 export const CATALOGUE_VERSION = "report-content-v11";
 export type FindingContent = { title: string; observation: string; impact: string; recommendation: string; verification: string; qualification: string; missingInformation: string };
 type Copy = [title: string, impact: string];
-const catalogue: Record<string, Record<Lang, Copy>> = {};
+const catalogue: Record<string, Record<"fr" | "en", Copy>> = {};
 function add(keys: string[], fr: Copy, en: Copy) { for (const key of keys) catalogue[key] = { fr: [...fr], en: [...en] }; }
 
 add(["lighthouse.audit.font-display-insight"],
@@ -240,10 +241,8 @@ for (const entry of detailedRuleGuidance) {
 }
 export const supportedFindingKeys = Object.keys(catalogue);
 export function findingEditorial(key: string | null | undefined, lang: Lang) {
-  const copy = key ? catalogue[key]?.[lang] : undefined;
-  const fallback: Copy = lang === "fr"
-    ? ["Contrôle technique à examiner", "L’effet sur les utilisateurs n’est pas documenté pour ce contrôle ; le vérifier sur le parcours concerné."]
-    : ["Technical check to review", "The effect on users is not documented for this check; verify it in the affected journey."];
+  const copy = key ? (catalogue[key] ? localizedCopy(catalogue[key], lang) : undefined) : undefined;
+  const fallback: Copy = (lang === "fr" ? ["Contrôle technique à examiner", "L’effet sur les utilisateurs n’est pas documenté pour ce contrôle ; le vérifier sur le parcours concerné."] : localizeValue(["Technical check to review", "The effect on users is not documented for this check; verify it in the affected journey."], lang));
   const resolved = copy ?? fallback;
   const playbook = findingPlaybook(key, lang);
   return { title: resolved[0], impact: resolved[1], recommendation: playbook.summary ?? playbook.steps.join(" "), verification: playbook.expected };
@@ -252,7 +251,7 @@ export function findingContent(issue: Issue, lang: Lang): FindingContent {
   const copy = findingEditorial(issue.id, lang);
   const explanation = findingExplanation(issue, lang);
   const uncertain = issue.confidence !== "HIGH" && issue.confidence !== "MEDIUM";
-  const confirm = lang === "fr" ? "Confirmer le signal et son périmètre avant toute correction. " : "Confirm the signal and its scope before making changes. ";
+  const confirm = (lang === "fr" ? "Confirmer le signal et son périmètre avant toute correction. " : localizeValue("Confirm the signal and its scope before making changes. ", lang));
   const recommendation = explanation.summary ?? explanation.steps.join(" ");
   const title = explanation.title ?? (issue.id && catalogue[issue.id] ? copy.title : cleanEvidence(issue.title) || copy.title);
   return {
@@ -267,5 +266,5 @@ export function findingContent(issue: Issue, lang: Lang): FindingContent {
 
 /** Localized rule label for navigation; source text remains in the diagnosis. */
 export function findingTitle(key: string, lang: Lang): string {
-  return catalogue[key]?.[lang][0] ?? (lang === "fr" ? "Contrôle technique à examiner" : "Technical check to review");
+  return (catalogue[key] ? localizedCopy(catalogue[key], lang) : undefined)?.[0] ?? ((lang === "fr" ? "Contrôle technique à examiner" : localizeValue("Technical check to review", lang)));
 }

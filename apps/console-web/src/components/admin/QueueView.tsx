@@ -1,4 +1,6 @@
 "use client";
+import { intlLocale } from "@/lib/i18n/locales";
+import { localizedCopy } from "@/lib/i18n/messages";
 import WebTip from "@/components/editorial/WebTip";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -28,7 +30,7 @@ type Snapshot = { items: Task[]; hasMore: boolean; page: number; counts: {type: 
 const duration = (seconds: number | null) => seconds == null ? "—" : seconds < 60 ? `${seconds} s` : seconds < 3600 ? `${Math.floor(seconds / 60)} min` : `${Math.floor(seconds / 3600)} h ${Math.floor(seconds % 3600 / 60)} min`;
 
 export default function QueueView({ type, id }: { type?: QueueType; id?: string }) {
-  const { lang } = useLang(), c = copy[lang], text = queueCopy[lang], session = useAccountSession();
+  const { lang } = useLang(), c = localizedCopy(copy, lang), text = localizedCopy(queueCopy, lang), session = useAccountSession();
   const params = useSearchParams(), router = useRouter();
   const [denied, setDenied] = useState(false), [revision, setRevision] = useState(0);
   const onDenied = useCallback(() => setDenied(true), []);
@@ -56,7 +58,7 @@ export default function QueueView({ type, id }: { type?: QueueType; id?: string 
   const returnTo = id ? safeAdminQueueReturn(params.get("returnTo")) ?? "/account/admin/queue" : "/account/admin/queue" + (params.size ? "?" + params : "");
   const page = Number(query?.get("page") ?? 1);
   const navigate = (next: URLSearchParams) => router.push(localizedPath("/account/admin/queue" + (next.size ? "?" + next : ""), lang));
-  const date = (raw: string | null) => raw ? new Date(raw).toLocaleString(lang === "fr" ? "fr-FR" : "en-GB", {timeZone: "UTC"}) + " UTC" : "—";
+  const date = (raw: string | null) => raw ? new Date(raw).toLocaleString(intlLocale(lang), {timeZone: "UTC"}) + " UTC" : "—";
   const detailHref = (row: Task) => `/account/admin/queue/${row.type}/${row.id}?` + new URLSearchParams({returnTo});
   const userHref = (row: Task) => `/account/admin/users/${row.resolvedUserId}?` + new URLSearchParams({returnTo});
   function filters(event: FormEvent<HTMLFormElement>) {

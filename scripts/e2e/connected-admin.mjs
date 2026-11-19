@@ -1,4 +1,5 @@
 import { injectAxe } from './inject-axe.mjs';
+import { languageHref } from './language-menu.mjs';
 import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
 import {chromium} from '../../apps/playwright-service/node_modules/playwright/index.mjs';
@@ -17,7 +18,7 @@ try{
   if(process.env.ADMIN_BEFORE){await page.goto(base+'/account/admin');await page.getByRole('button',{name:'Consulter Morgan Petit'}).waitFor();await check('before');await context.close();continue;}
   await page.goto(base+prefix+'/account/admin/users');await page.getByRole('link',{name:c.open,exact:true}).waitFor();await check('list');
   await page.getByLabel(c.search,{exact:true}).fill('Morgan');await page.getByRole('button',{name:c.searchButton,exact:true}).click();await page.waitForURL(/q=Morgan/);await page.reload();await page.getByRole('link',{name:c.open,exact:true}).click();
-  await page.getByLabel(c.limit).waitFor();const languageHref=await page.getByRole('link',{name:lang==='fr'?'English':'Français',exact:true}).getAttribute('href');assert.ok(languageHref.includes('/account/admin/users/'+target+'?returnTo='));assert.equal(languageHref.startsWith('/en/'),lang==='fr');await check('detail');
+  await page.getByLabel(c.limit).waitFor();const href=await languageHref(page, lang==='fr'?'English':'Français');assert.ok(href.includes('/account/admin/users/'+target+'?returnTo='));assert.equal(href.startsWith('/en/'),lang==='fr');await check('detail');
   if([320,1056].includes(width)){await page.evaluate(()=>{document.documentElement.style.fontSize='200%';});await check('text-200');await page.evaluate(()=>{document.documentElement.style.fontSize='';});}
   await page.getByRole('button',{name:c.review,exact:true}).click();const d=page.getByRole('dialog');await d.waitFor();assert.equal(await d.getByRole('button',{name:c.confirm,exact:true}).isDisabled(),true);await check('confirmation');if(width===1056&&lang==='fr'&&theme==='light'){for(let i=0;i<8;i++){await page.keyboard.press('Tab');assert.ok(await d.evaluate(el=>el.contains(document.activeElement)),'Native dialog keeps keyboard focus');}}
   await page.keyboard.press('Escape');await d.waitFor({state:'hidden'});assert.equal(await page.getByRole('button',{name:c.review,exact:true}).evaluate(el=>el===document.activeElement),true);

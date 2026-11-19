@@ -1,4 +1,5 @@
 "use client";
+import { localizedCopy } from "@/lib/i18n/messages";
 
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode, type CSSProperties } from "react";
 import {readingSnapshot,subscribeReading} from "@/components/report/reportReading";
@@ -118,8 +119,8 @@ export default function AccountShell({ children }: { children: ReactNode }) {
 }
 
 export function AccountFooter() {
-  const { t, lang } = useLang(), c = t.connected, copy = clarteCopy[lang];
+  const { t, lang } = useLang(), c = t.connected, copy = localizedCopy(clarteCopy, lang);
   return <footer className={s.footer}><nav aria-label={c.footer}>
     <Link href="/faq">{c.help}</Link><Link href="/">{copy.returnSite} <span aria-hidden="true">↗</span></Link><Link href="/informations-legales">{c.legal}</Link><Link href="/confidentialite">{c.privacy}</Link>
-  </nav><div className={s.actions}><FeedbackButton type="BUG">{feedbackCopy[lang].bugAction}</FeedbackButton><FeedbackButton type="SUGGESTION">{feedbackCopy[lang].suggestionAction}</FeedbackButton></div></footer>;
+  </nav><div className={s.actions}><FeedbackButton type="BUG">{localizedCopy(feedbackCopy, lang).bugAction}</FeedbackButton><FeedbackButton type="SUGGESTION">{localizedCopy(feedbackCopy, lang).suggestionAction}</FeedbackButton></div></footer>;
 }

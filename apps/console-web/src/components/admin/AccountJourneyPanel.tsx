@@ -1,4 +1,6 @@
 "use client";
+import { intlLocale } from "@/lib/i18n/locales";
+import { localizedCopy } from "@/lib/i18n/messages";
 
 import { useLang } from "@/lib/i18n/LangContext";
 import s from "./AnalyticsView.module.scss";
@@ -35,10 +37,10 @@ const copy = {
 };
 
 export default function AccountJourneyPanel({ data }: { data: AccountJourney }) {
-  const { lang } = useLang(), c = copy[lang];
-  const number = (value: number) => new Intl.NumberFormat(lang).format(value);
+  const { lang } = useLang(), c = localizedCopy(copy, lang);
+  const number = (value: number) => new Intl.NumberFormat(intlLocale(lang)).format(value);
   const rate = (numerator: number, denominator: number) => denominator === 0 ? c.unavailable
-    : new Intl.NumberFormat(lang, { style: "percent", maximumFractionDigits: 1 }).format(numerator / denominator);
+    : new Intl.NumberFormat(intlLocale(lang), { style: "percent", maximumFractionDigits: 1 }).format(numerator / denominator);
   const registered = data.cohorts.reduce((total, row) => total + row.registered, 0);
   const activated = data.cohorts.reduce((total, row) => total + row.activated, 0);
   const claimed = data.cohorts.reduce((total, row) => total + row.claimed, 0);

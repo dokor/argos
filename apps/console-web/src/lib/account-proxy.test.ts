@@ -1,4 +1,6 @@
 import { beforeEach, afterEach, it, expect, vi } from "vitest";
+import { locales, languageFromPath } from "./i18n/locales";
+import { localizedPath } from "./i18n/routes";
 it("forwards bounded usage aggregates privately with the session owner and exact filters",async()=>{
  fetchMock.mockResolvedValue(Response.json({total:5}));
  const query="granularity=MONTH&dimension=URL&from=2026-01-01&until=2026-11-01&filter=9007199254740993&filter=42";
@@ -256,7 +258,7 @@ it("keeps email verification return paths in the browser without adding fields t
   expect(response.cookies.get("argos_account_return")?.value).toBe(returnTo);
   expect(response.cookies.get("argos_account_return")?.httpOnly).toBe(true);
 });
-it.each(["fr","en"] as const)("keeps the selected language and nested context through an OAuth callback in %s", async lang => {
+it.each(locales.map(locale => locale.code))("keeps the selected language and nested context through an OAuth callback in %s", async lang => {
   const target = localizedAccountReturn("/en/account/runs/42?returnTo="+encodeURIComponent("/en/account?attention=priority&domainId=7"),lang);
   const state="s".repeat(43), browser="b".repeat(43);
   fetchMock.mockResolvedValue(new Response(JSON.stringify({state,url:"https://provider.example/authorize"}),{headers:{"X-Argos-OAuth-Browser":browser}}));
@@ -273,23 +275,23 @@ it.each(["fr","en"] as const)("keeps the selected language and nested context th
 });
 
 it.each(["auth/resend", "auth/reset", "auth/reauth", "methods/password", "methods/42/remove"])("forwards the supported email language for %s", async path => {
-  for (const language of ["en", "fr", "de", "en,fr;q=0.9"]) {
+  for (const [language, expected] of [...locales.map(locale => [locale.code, locale.code]), ["en,fr;q=0.9", "en"], ["bg-BG,fr;q=0.5", "bg"], ["zz", "fr"]]) {
     fetchMock.mockReset().mockResolvedValue(Response.json({ accepted: true }));
     const input = request(path, "POST", {});
     input.headers.set("Accept-Language", language);
     expect((await accountProxy(input, path.split("/"))).status).toBe(200);
-    expect(fetchMock.mock.calls[0][1].headers.get("Accept-Language")).toBe(language === "en" ? "en" : "fr");
+    expect(fetchMock.mock.calls[0][1].headers.get("Accept-Language")).toBe(expected);
   }
 });
 
 it.each(["auth/register", "auth/forgot"])("preserves the private return context and sends only its language for %s", async path => {
-  for (const target of ["/en/account/settings?section=profile", "/account/settings?section=profile", "https://evil.example"]) {
+  for (const target of [...locales.map(locale => localizedPath("/account/settings?section=profile", locale.code)), "https://evil.example"]) {
     fetchMock.mockReset().mockResolvedValue(new Response('{"accepted":true}'));
     const response = await accountProxy(request(path, "POST", { email:"fixture@example.invalid", returnTo:target }),path.split("/"));
     const safe = safeAccountReturn(target);
     expect(response.cookies.get("argos_account_return")?.value).toBe(safe);
     expect(response.cookies.get("argos_account_return")?.httpOnly).toBe(true);
-    expect(fetchMock.mock.calls[0][1].headers.get("Accept-Language")).toBe(safe.startsWith("/en/") ? "en" : "fr");
+    expect(fetchMock.mock.calls[0][1].headers.get("Accept-Language")).toBe(languageFromPath(safe));
     expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({email:"fixture@example.invalid"});
   }
 });

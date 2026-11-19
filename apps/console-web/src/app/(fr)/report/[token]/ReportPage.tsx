@@ -1,4 +1,5 @@
 "use client";
+import { localizeValue, localizedCopy } from "@/lib/i18n/messages";
 import {useEffect,useMemo,useState,type ReactNode} from "react";
 import {usePathname} from "next/navigation";
 import {FeedbackReportContext} from "@/components/feedback/ReportFeedback";
@@ -32,12 +33,12 @@ import s from "./report.module.scss";
 
 type Params={params:{report:Report};feedbackReference?:FeedbackReference;embedded?:boolean;shared?:boolean;runId?:string;demo?:boolean;workspaceActions?:ReactNode};
 export default function ReportPage({params,feedbackReference,embedded=false,shared=false,runId,demo=false,workspaceActions}:Readonly<Params>){
-  const pathname=usePathname(),{lang}=useLang(),fr=lang==="fr";
-  const token=/^\/(?:en\/)?(?:report|share)\/([A-Za-z0-9_-]{20,512})$/.exec(pathname??"")?.[1];
+  const pathname=usePathname(),{lang}=useLang();
+  const token=/^\/(?:(?:en|de|es|it|nl|pt|pl|sv|da|fi|cs|sk|hu|ro|bg|el|hr|sl|lt|lv|et)\/)?(?:report|share)\/([A-Za-z0-9_-]{20,512})$/.exec(pathname??"")?.[1];
   const [loaded,setLoaded]=useState<{initial:Report;value:Report}|null>(null);
   const report=loaded?.initial===params.report?loaded.value:params.report;
   const locked=report.access==="summary"&&!demo;
-  const model=useMemo(()=>buildReportModel(report),[report]),reading=useReportReading(model),copy=reportReadingCopy[lang];
+  const model=useMemo(()=>buildReportModel(report),[report]),reading=useReportReading(model),copy=localizedCopy(reportReadingCopy, lang);
   const [noteState,setNoteState]=useState({report,note:report.introduction});
   const [methodOpen,setMethodOpen]=useState(false);
   const note=noteState.report===report?noteState.note:report.introduction;
@@ -61,19 +62,19 @@ export default function ReportPage({params,feedbackReference,embedded=false,shar
     {!embedded&&!demo&&<ReportHeader signedIn={!locked} feedbackReference={reference}/>}
     <Content className={s.main}>
       <ReportHero demo={demo} report={report} model={model} introduction={locked?null:note} onSelectFinding={selectFinding} onActions={()=>reading.navigate({view:"actions",anchor:""})} onMethod={locked?undefined:()=>setMethodOpen(true)}
-        context={runId&&!shared&&!locked&&!demo?<nav className={s.breadcrumb} aria-label={fr?"Fil d’Ariane":"Breadcrumb"}><ol><li><Link href="/account/sites">{fr?"Mes sites":"My sites"}</Link></li><li><span aria-hidden="true">/</span><span aria-current="page">{fr?"Rapport enregistré":"Saved report"}</span></li></ol></nav>:<span>{shared?(fr?"Rapport partagé · Lecture seule · Historique du propriétaire non partagé":"Shared report · Read only · Owner history not shared"):demo?(fr?"Exemple · Données fictives":"Example · Fictional data"):(fr?"Votre analyse est prête":"Your analysis is ready")}</span>}
+        context={runId&&!shared&&!locked&&!demo?<nav className={s.breadcrumb} aria-label={(lang === "fr" ? "Fil d’Ariane" : localizeValue("Breadcrumb", lang))}><ol><li><Link href="/account/sites">{(lang === "fr" ? "Mes sites" : localizeValue("My sites", lang))}</Link></li><li><span aria-hidden="true">/</span><span aria-current="page">{(lang === "fr" ? "Rapport enregistré" : localizeValue("Saved report", lang))}</span></li></ol></nav>:<span>{shared?((lang === "fr" ? "Rapport partagé · Lecture seule · Historique du propriétaire non partagé" : localizeValue("Shared report · Read only · Owner history not shared", lang))):demo?((lang === "fr" ? "Exemple · Données fictives" : localizeValue("Example · Fictional data", lang))):((lang === "fr" ? "Votre analyse est prête" : localizeValue("Your analysis is ready", lang)))}</span>}
         actions={!demo&&<>{runId&&<OwnerReportShare runId={runId}/>}<ReportExport compact report={report} runId={runId} shared={shared}/></>}/>
       {locked&&reading.view==="overview"&&<ReportAccountPrompt shared={shared}/>}
       {!embedded&&!shared&&!demo&&!locked&&<><RunClaim/><PublicReportHistory/></>}
-      {runId&&<div className={s.workspace}><span>{fr?"Rapport enregistré · Espace personnel":"Saved report · Personal workspace"}</span>{workspaceActions}</div>}
+      {runId&&<div className={s.workspace}><span>{(lang === "fr" ? "Rapport enregistré · Espace personnel" : localizeValue("Saved report · Personal workspace", lang))}</span>{workspaceActions}</div>}
       <ReportNavigation view={reading.view} onChange={view=>reading.navigate({view,anchor:""})} locked={locked}/>
       {reading.missing&&<p role="status">{copy.missing}</p>}
       {reading.view==="overview"?<section className={s.view} id="report-overview" aria-label={copy.overview}>
         <ReportPriorityList priorities={report.summary.priorities} model={model} onSelectFinding={selectFinding} locked={locked} onDetails={()=>reading.navigate({view:"technical",anchor:""})}/>
         <ScoreGrid compact categories={report.scores.byCategory} model={model} coverage={report.scores.coverage} onSelectDomain={domain=>reading.navigate({view:"technical",domain,severity:"all",anchor:""})}/>
-        <details className={s.supporting}><summary>{fr?"Mesures de chargement, ressources et erreurs":"Loading, resource and error measurements"}</summary><ObservedMeasurements report={report} lang={lang}/></details>
+        <details className={s.supporting}><summary>{(lang === "fr" ? "Mesures de chargement, ressources et erreurs" : localizeValue("Loading, resource and error measurements", lang))}</summary><ObservedMeasurements report={report} lang={lang}/></details>
       </section>:locked?<ReportAccountPrompt shared={shared}/>:reading.view==="actions"?<section className={s.view} id="report-actions" aria-label={copy.actions}><ReportPriorityList priorities={report.summary.priorities} model={model} onSelectFinding={selectFinding} limit={6} onDetails={()=>reading.navigate({view:"technical",anchor:""})}/></section>:<section className={s.view} id="report-technical" aria-label={copy.technical}><IssuesByCategory report={report} model={model} selection={selection} domain={reading.domain} severity={reading.severity} onFilterChange={(domain,severity)=>reading.navigate({domain,severity,anchor:""})}/><ReportChecks report={report}/></section>}
-      {!locked&&<details className={s.supporting}><summary>{fr?"Contexte technique et hébergement":"Technical context and hosting"}</summary><HostingSummary report={report}/></details>}
+      {!locked&&<details className={s.supporting}><summary>{(lang === "fr" ? "Contexte technique et hébergement" : localizeValue("Technical context and hosting", lang))}</summary><HostingSummary report={report}/></details>}
       {!shared&&!demo&&<ScopedRelaunch report={report}/>}
       {!locked&&!shared&&!demo&&<ReportIntroductionEditor key={token} token={token} model={model} onPublished={note=>setNoteState({report,note})}/>}
       {!locked&&<ReportMethod report={report} model={model} open={methodOpen} onToggle={setMethodOpen}/>}

@@ -1,4 +1,6 @@
 "use client";
+import { intlLocale } from "@/lib/i18n/locales";
+import { localizedCopy } from "@/lib/i18n/messages";
 import Link from "@/components/LocalizedLink";
 import { useLang } from "@/lib/i18n/LangContext";
 import { useAccountSession } from "@/components/account/AccountSession";
@@ -22,7 +24,7 @@ const copy = {
 };
 
 export default function DomainScopeGuide() {
-  const { t, lang } = useLang(), c = copy[lang];
+  const { t, lang } = useLang(), c = localizedCopy(copy, lang);
   const session = useAccountSession();
   return <aside aria-label={c.title}><Surface title={c.title}>
     <div className={s.scopeGuide}>
@@ -32,7 +34,7 @@ export default function DomainScopeGuide() {
     <div className={s.scopeQuota}>
       {session.usageError ? <div><p role="status">{t.connected.quotaUnavailable}</p>
         <button type="button" className={ui.secondary} onClick={session.refreshUsage}>{t.connected.retry}</button></div>
-        : session.usage ? <p><strong>{session.usage.available === null ? t.connected.unlimitedCredits : new Intl.NumberFormat(lang).format(session.usage.available)}</strong>
+        : session.usage ? <p><strong>{session.usage.available === null ? t.connected.unlimitedCredits : new Intl.NumberFormat(intlLocale(lang)).format(session.usage.available)}</strong>
           {session.usage.available !== null && <span>{t.connected.credits}</span>}</p>
         : <p role="status">{t.connected.loadingQuota}</p>}
       <Link className={s.link} href="/account/usage">{c.quotas}</Link>

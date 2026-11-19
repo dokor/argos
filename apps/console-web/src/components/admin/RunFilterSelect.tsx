@@ -1,4 +1,5 @@
 "use client";
+import { localizedCopy } from "@/lib/i18n/messages";
 import { useEffect, useState } from "react";
 import { accountFetch, AccountClientError } from "@/lib/account-client";
 import { useLang } from "@/lib/i18n/LangContext";
@@ -12,7 +13,7 @@ type Options = { items: Option[]; nextCursor: string | null };
 export default function RunFilterSelect({ kind, initial, onDenied }: {
   kind: "site" | "user"; initial: string; onDenied: () => void;
 }) {
-  const { lang } = useLang(), c = copy[lang];
+  const { lang } = useLang(), c = localizedCopy(copy, lang);
   const [search, setSearch] = useState(""), [cursor, setCursor] = useState("");
   const [value, setValue] = useState(initial), [result, setResult] = useState<Options | null>(null);
   const [error, setError] = useState(false), [loading, setLoading] = useState(true);

@@ -1,5 +1,4 @@
 import { wordpressAuditContent } from "./wordpressAuditContent";
-import type { Lang } from "@/lib/i18n/routes";
 
 export const diagnosticRoutes = {
   wordpress: "/ressources/audit-wordpress",
@@ -27,7 +26,7 @@ export type DiagnosticContent = {
   sources: { href: string; label: string }[];
 };
 
-export const diagnosticPages: Record<DiagnosticTopic, Record<Lang, DiagnosticContent>> = {
+export const diagnosticPages: Record<DiagnosticTopic, Record<"fr" | "en", DiagnosticContent>> = {
   wordpress: wordpressAuditContent,
   shopify: {
     fr: {

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import type { ComponentType } from "react";
+import type { ComponentType, ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import { LangProvider } from "@/lib/i18n/LangContext";
@@ -45,6 +45,8 @@ import HeadersEn from "@/app/en/security-header-check/page";
 import AccessibilityTestFr from "@/app/(fr)/test-accessibilite-site-web/page";
 import AccessibilityTestEn from "@/app/en/website-accessibility-test/page";
 
+vi.mock("next/headers", () => ({ headers: async () => new Headers({ "x-argos-language": "en" }) }));
+
 // Chrome has its own localized interaction tests; compare page content here.
 vi.mock("@/components/site/SiteNav", () => ({ default: () => null }));
 vi.mock("@/components/site/SiteFooter", () => ({ default: () => null }));
@@ -62,9 +64,10 @@ const pages: [string, ComponentType, ComponentType][] = [
   ["/verifier-entetes-securite", HeadersFr, HeadersEn], ["/test-accessibilite-site-web", AccessibilityTestFr, AccessibilityTestEn],
 ];
 
-function renderPage(Page: ComponentType, lang: Lang) {
+async function renderPage(Page: ComponentType, lang: Lang) {
   const root = document.createElement("div");
-  root.innerHTML = renderToStaticMarkup(<LangProvider initialLang={lang}><Page /></LangProvider>);
+  const content = Page.constructor.name === "AsyncFunction" ? await (Page as () => Promise<ReactNode>)() : <Page />;
+  root.innerHTML = renderToStaticMarkup(<LangProvider initialLang={lang}>{content}</LangProvider>);
   return root;
 }
 
@@ -84,8 +87,8 @@ function presentation(root: Element) {
 
 describe("French and English presentation parity", () => {
   for (const [route, Fr, En] of pages) {
-    it(`shares markup and style classes for ${route}`, () => {
-      const fr = renderPage(Fr, "fr"), en = renderPage(En, "en");
+    it(`shares markup and style classes for ${route}`, async () => {
+      const fr = await renderPage(Fr, "fr"), en = await renderPage(En, "en");
       expect(presentation(en)).toEqual(presentation(fr));
       expect(fr.querySelectorAll("h1")).toHaveLength(1);
       expect(en.querySelectorAll("h1")).toHaveLength(1);
@@ -93,9 +96,9 @@ describe("French and English presentation parity", () => {
     });
   }
 
-  it("localizes methodology content and destinations while keeping rich text shared", () => {
+  it("localizes methodology content and destinations while keeping rich text shared", async () => {
     for (const [lang, Page] of [["fr", MethodFr], ["en", MethodEn]] as const) {
-      const root = renderPage(Page, lang);
+      const root = await renderPage(Page, lang);
       expect(root.querySelector("main")?.getAttribute("lang")).toBe(lang);
       expect(root.querySelectorAll('#domaines article')).toHaveLength(4);
       expect(root.querySelectorAll('#exemple article')).toHaveLength(4);
@@ -107,8 +110,8 @@ describe("French and English presentation parity", () => {
     }
   });
 
-  it("keeps translated resource destinations and identifies French-only guides", () => {
-    const root = renderPage(ResourcesEn, "en");
+  it("keeps all resource destinations in the selected language", async () => {
+    const root = await renderPage(ResourcesEn, "en");
     expect(root.querySelectorAll("article")).toHaveLength(21);
     for (const href of [
       "/guides/checklist-audit-ecommerce",
@@ -124,10 +127,9 @@ describe("French and English presentation parity", () => {
       expect(link?.closest("article")?.textContent).not.toContain(" · French");
     }
     for (const slug of ["cls-eleve", "refonte-site-web", "accessibilite-moteurs-ia"]) {
-      const link = root.querySelector(`article a[href="/guides/${slug}"]`);
+      const link = root.querySelector(`article a[href="${localizedPath(`/guides/${slug}`, "en")}"]`);
       expect(link).not.toBeNull();
-      expect(link?.closest("article")?.textContent).toContain(" · French");
-      expect(root.querySelector(`article a[href="/en/guides/${slug}"]`)).toBeNull();
+      expect(link?.closest("article")?.textContent).not.toContain("French");
     }
   });
 

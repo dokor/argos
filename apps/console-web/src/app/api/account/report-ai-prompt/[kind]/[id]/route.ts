@@ -1,3 +1,5 @@
+import { languageFromHeader } from "@/lib/i18n/locales";
+import { loadMessages } from "@/lib/i18n/server";
 import { NextRequest, NextResponse } from "next/server";
 import { accountProxy, privateError, SESSION_COOKIE } from "@/lib/account-proxy";
 import { buildReportAiPrompt } from "@/components/report/buildAiCorrectionPrompt";
@@ -25,7 +27,8 @@ export async function GET(request: NextRequest, context: Context) {
     if (!report.scores || !report.summary || !Array.isArray(report.issues) || typeof report.domain !== "string") {
       return privateError("account_unavailable", 503);
     }
-    const lang = request.headers.get("accept-language") === "en" ? "en" : "fr";
+    const lang = languageFromHeader(request.headers.get("accept-language"));
+    await loadMessages(lang);
     return NextResponse.json({ prompt: buildReportAiPrompt(report, lang) }, {
       headers: { "Cache-Control": "private, no-store" },
     });

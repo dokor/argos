@@ -1,4 +1,5 @@
 "use client";
+import { localizeValue } from "@/lib/i18n/messages";
 import { useEffect, useRef, useState } from 'react';
 import { useLang } from '@/lib/i18n/LangContext';
 import { selectWebTip, webTips, type WebTip as Tip } from './webTips';
@@ -19,12 +20,12 @@ export default function WebTip({ placement = 'banner' }: { placement?: 'banner' 
     // The server and first client render share an empty reserved slot.
     setTip(pageTip);
   }, [lang]);
-  const text = tip?.translations[lang];
-  return <div className={`${s.slot}${placement === 'aside' ? ` ${s.aside}` : ''}`} data-web-tip>{text && tip && <aside className={s.tip} aria-label={lang === 'fr' ? 'Le saviez-vous ?' : 'Did you know?'}>
+  const text = localizeValue(tip?.translations[lang === "fr" ? "fr" : "en"], lang);
+  return <div className={`${s.slot}${placement === 'aside' ? ` ${s.aside}` : ''}`} data-web-tip>{text && tip && <aside className={s.tip} aria-label={(lang === "fr" ? 'Le saviez-vous ?' : localizeValue('Did you know?', lang))}>
     <div className={s.copy}>
-    <p className={s.heading}>{lang === 'fr' ? 'Le saviez-vous ?' : 'Did you know?'}</p>
+    <p className={s.heading}>{(lang === "fr" ? 'Le saviez-vous ?' : localizeValue('Did you know?', lang))}</p>
     <p>{text}</p>
     </div>
-    <a href={tip.sourceUrl} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer">{lang === 'fr' ? 'En savoir plus' : 'Learn more'}<span className={s.sr}> — {text}</span></a>
+    <a href={tip.sourceUrl} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer">{(lang === "fr" ? 'En savoir plus' : localizeValue('Learn more', lang))}<span className={s.sr}> — {text}</span></a>
   </aside>}</div>;
 }

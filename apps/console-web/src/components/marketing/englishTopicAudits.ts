@@ -1,4 +1,12 @@
 import type { TopicAuditContent } from "./TopicAuditPage";
+import { localizeValue } from "@/lib/i18n/messages";
+import type { Lang } from "@/lib/i18n/locales";
+
+export function localizedTopicAudit(content: TopicAuditContent, lang: Lang): TopicAuditContent {
+  const { example, ...copy } = content;
+  const { before, after, ...explanation } = example;
+  return { ...localizeValue(copy, lang), example: { ...localizeValue(explanation, lang), before, after } };
+}
 
 export const englishTopicAudits = {
   speed: {

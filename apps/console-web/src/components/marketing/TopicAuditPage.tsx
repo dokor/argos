@@ -1,3 +1,4 @@
+import { localizeValue, localizedCopy } from "@/lib/i18n/messages";
 import EditorialMeta from "./EditorialMeta";
 import SiteNav from "@/components/site/SiteNav";
 import SiteFooter from "@/components/site/SiteFooter";
@@ -35,11 +36,11 @@ const copy = {
 };
 
 export default function TopicAuditPage({ content: c, lang = "fr" }: { content: TopicAuditContent; lang?: Lang }) {
-  const t = copy[lang];
+  const t = localizedCopy(copy, lang);
   return <div className={s.page} lang={lang}><SiteNav /><main>
     <header><p>{t.eyebrow}</p><h1>{c.title}</h1><EditorialMeta route={c.route} /><p className={s.lead}>{c.lead}</p><p>{c.scope}</p></header>
     <section id="audit" aria-labelledby="audit-title"><h2 id="audit-title">{t.auditTitle}</h2><p>{t.auditIntro}</p><AuditForm mode="public" sourceRoute={c.route} submitLabel={t.submit} /></section>
-    <section aria-labelledby="measures-title"><h2 id="measures-title">{t.measures}</h2><div className={s.measures}>{c.measures.map(m => <article key={m.title}><h3>{m.title}</h3><p>{m.text}</p></article>)}</div>{(c.route === "/analyse-seo-page" || c.route === "/test-vitesse-site-web") && <p><a href={localizedPath("/ressources/audit-wordpress", lang)}>{lang === "fr" ? "Site WordPress : relier ces constats aux réglages d’indexation, au cache et au thème" : "WordPress site: connect these findings to indexing settings, caching and the theme"}</a></p>}</section>
+    <section aria-labelledby="measures-title"><h2 id="measures-title">{t.measures}</h2><div className={s.measures}>{c.measures.map(m => <article key={m.title}><h3>{m.title}</h3><p>{m.text}</p></article>)}</div>{(c.route === "/analyse-seo-page" || c.route === "/test-vitesse-site-web") && <p><a href={localizedPath("/ressources/audit-wordpress", lang)}>{(lang === "fr" ? "Site WordPress : relier ces constats aux réglages d’indexation, au cache et au thème" : localizeValue("WordPress site: connect these findings to indexing settings, caching and the theme", lang))}</a></p>}</section>
     <section aria-labelledby="example-title"><h2 id="example-title">{c.example.title}</h2><p>{c.example.conditions}</p><h3>{t.evidence}</h3><pre>{c.example.before.replaceAll("\\n", "\n")}</pre>{c.example.after && <><h3>{t.after}</h3><pre>{c.example.after}</pre></>}<p><strong>{t.interpretation}</strong>{c.example.interpretation}</p><p><strong>{t.correction}</strong>{c.example.correction}</p><p><strong>{t.verify}</strong>{c.example.verify}</p></section>
     <section><h2>{t.limits}</h2><p>{c.limits}</p><ul>{c.links.map(link => <li key={link.href}><a href={localizedPath(link.href, lang)}>{link.label}</a></li>)}</ul><p><a href="#audit">{t.auditLink}</a></p></section>
     <section id="references"><h2>{t.sources}</h2><ul>{c.sources.map(source => <li key={source.href}><a href={source.href}>{source.label}</a></li>)}</ul></section>

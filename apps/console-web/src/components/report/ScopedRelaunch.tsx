@@ -1,4 +1,5 @@
 "use client";
+import { localizeValue } from "@/lib/i18n/messages";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { Report } from "./types";
 import type { AuditScope } from "@/lib/ArgosApi";
@@ -9,7 +10,7 @@ import { useAntiBot } from "@/components/security/useAntiBot";
 import s from "./ScopedRelaunch.module.scss";
 
 export default function ScopedRelaunch({ report }: { report: Report }) {
-  const { lang, t } = useLang(), fr = lang === "fr", id = useId();
+  const { lang, t } = useLang(), id = useId();
   const [value, setValue] = useState("full");
   const antiBot = useAntiBot("audit");
   const [verifying, setVerifying] = useState(false);
@@ -44,14 +45,14 @@ export default function ScopedRelaunch({ report }: { report: Report }) {
     catch { /* The shared verification component explains the failure and retry. */ }
     finally { verifyLock.current = false; setVerifying(false); }
   }
-  return <details className={s.panel}><summary>{fr ? "Relancer une mesure" : "Run a new measurement"}</summary>
-    <p id={`${id}-hint`}>{fr ? "Un nouveau rapport est créé. Une relance ciblée produit un score partiel, sans réutiliser les mesures précédentes. Elle compte comme une analyse dans votre quota." : "A new report is created. A targeted rerun produces a partial score with no previous measurements reused. It counts as one analysis against your quota."}</p>
+  return <details className={s.panel}><summary>{(lang === "fr" ? "Relancer une mesure" : localizeValue("Run a new measurement", lang))}</summary>
+    <p id={`${id}-hint`}>{(lang === "fr" ? "Un nouveau rapport est créé. Une relance ciblée produit un score partiel, sans réutiliser les mesures précédentes. Elle compte comme une analyse dans votre quota." : localizeValue("A new report is created. A targeted rerun produces a partial score with no previous measurements reused. It counts as one analysis against your quota.", lang))}</p>
     <form onSubmit={event => { event.preventDefault(); void rerun(); }}>
-      <div className={s.field}><label htmlFor={id}>{fr ? "Périmètre de la relance" : "Rerun scope"}</label>
+      <div className={s.field}><label htmlFor={id}>{(lang === "fr" ? "Périmètre de la relance" : localizeValue("Rerun scope", lang))}</label>
         <select id={id} value={value} onChange={event => setValue(event.target.value)} disabled={busy} aria-describedby={`${id}-hint`}>
-          <option value="full">{fr ? "Analyse complète" : "Full analysis"}</option>
-          <optgroup label={fr ? "Catégorie" : "Category"}>{["performance", "security", "seo", "a11y"].map(key => <option key={key} value={`category:${key}`}>{t.report.priorityCards.domains[key as keyof typeof t.report.priorityCards.domains]}</option>)}</optgroup>
-          {checks.length > 0 && <optgroup label={fr ? "Contrôle précis" : "Specific check"}>{checks.map(key => <option key={key} value={`check:${key}`}>{key}</option>)}</optgroup>}
+          <option value="full">{(lang === "fr" ? "Analyse complète" : localizeValue("Full analysis", lang))}</option>
+          <optgroup label={(lang === "fr" ? "Catégorie" : localizeValue("Category", lang))}>{["performance", "security", "seo", "a11y"].map(key => <option key={key} value={`category:${key}`}>{t.report.priorityCards.domains[key as keyof typeof t.report.priorityCards.domains]}</option>)}</optgroup>
+          {checks.length > 0 && <optgroup label={(lang === "fr" ? "Contrôle précis" : localizeValue("Specific check", lang))}>{checks.map(key => <option key={key} value={`check:${key}`}>{key}</option>)}</optgroup>}
         </select>
       </div><button type="submit" disabled={busy} aria-busy={busy}>{busy ? t.report.hero.relaunching : t.report.hero.relaunch}</button>
     </form>

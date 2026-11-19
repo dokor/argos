@@ -1,4 +1,5 @@
 "use client";
+import { localizedCopy } from "@/lib/i18n/messages";
 import Link from "@/components/LocalizedLink";
 import { useLang } from "@/lib/i18n/LangContext";
 import type { Overview } from "@/lib/connected/contracts";
@@ -9,7 +10,7 @@ import s from "./Analysis.module.scss";
 import ui from "./Connected.module.scss";
 
 export default function KnownUrls() {
-  const { t, lang } = useLang(), c = analysisCopy[lang];
+  const { t, lang } = useLang(), c = localizedCopy(analysisCopy, lang);
   const resource = useDomainResource<Overview>("overview?limit=3&offset=0");
   if (resource.error) return <div className={ui.actions}>
     <p role="status">{c.recentError}</p>

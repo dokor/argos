@@ -1,4 +1,5 @@
 "use client";
+import { localizeValue, localizedCopy } from "@/lib/i18n/messages";
 
 import Link from "@/components/LocalizedLink";
 import EditorialMeta from "@/components/marketing/EditorialMeta";
@@ -225,7 +226,7 @@ const copy = {
 
 export default function AccessibilityArticlePage() {
   const { lang } = useLang();
-  const c = copy[lang];
+  const c = localizedCopy(copy, lang);
 
   return (
     <div className={s.page}>
@@ -334,7 +335,7 @@ export default function AccessibilityArticlePage() {
               <p>{c.ctaText}</p>
               <Link href="/#audit" className={s.primaryCta}>{c.ctaButton} <span aria-hidden="true">→</span></Link>
               <small>{c.ctaLimit}</small>
-              <p><Link href="/exemple-rapport">{lang === "fr" ? "Lire un exemple de constat" : "Read an example finding"}</Link> · <Link href="/methodologie-score#resume">{lang === "fr" ? "Comprendre le score" : "Understand the score"}</Link></p>
+              <p><Link href="/exemple-rapport">{(lang === "fr" ? "Lire un exemple de constat" : localizeValue("Read an example finding", lang))}</Link> · <Link href="/methodologie-score#resume">{(lang === "fr" ? "Comprendre le score" : localizeValue("Understand the score", lang))}</Link></p>
             </section>
 
             <section id="questions" className={s.section}>
@@ -355,7 +356,7 @@ export default function AccessibilityArticlePage() {
               <ul>
                 {sources.map((source) => (
                   <li key={source.href}>
-                    <a href={source.href}>{source[lang]} <span aria-hidden="true">↗</span></a>
+                    <a href={source.href}>{localizedCopy(source, lang)} <span aria-hidden="true">↗</span></a>
                   </li>
                 ))}
               </ul>

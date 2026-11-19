@@ -1,4 +1,5 @@
 "use client";
+import { localizeValue } from "@/lib/i18n/messages";
 
 import React from "react";
 import AuditForm from "@/components/AuditForm";
@@ -155,9 +156,9 @@ export default function LandingPage() {
       </section>
 
       <section className={s.section} aria-labelledby="creator-title"><div className={s.container}>
-        <h2 id="creator-title" className={s.sectionTitle}>{lang === "fr" ? "Un outil créé par Antoine Le Louët" : "A tool created by Antoine Le Louët"}</h2>
-        <p>{lang === "fr" ? "Consultez le code du projet ou contactez son créateur pour une question sur Argos." : "Explore the project’s code or contact its creator with a question about Argos."}</p>
-        <p><Link href="/a-propos">{lang === "fr" ? "À propos et contact" : "About and contact"}</Link> · <Link href="/methodologie-score#resume">{lang === "fr" ? "Méthode du score" : "Scoring method"}</Link> · <Link href="/exemple-rapport">{lang === "fr" ? "Exemple de rapport" : "Example report"}</Link></p>
+        <h2 id="creator-title" className={s.sectionTitle}>{(lang === "fr" ? "Un outil créé par Antoine Le Louët" : localizeValue("A tool created by Antoine Le Louët", lang))}</h2>
+        <p>{(lang === "fr" ? "Consultez le code du projet ou contactez son créateur pour une question sur Argos." : localizeValue("Explore the project’s code or contact its creator with a question about Argos.", lang))}</p>
+        <p><Link href="/a-propos">{(lang === "fr" ? "À propos et contact" : localizeValue("About and contact", lang))}</Link> · <Link href="/methodologie-score#resume">{(lang === "fr" ? "Méthode du score" : localizeValue("Scoring method", lang))}</Link> · <Link href="/exemple-rapport">{(lang === "fr" ? "Exemple de rapport" : localizeValue("Example report", lang))}</Link></p>
       </div></section>
       <PremiumWaitlist />
       {/* BOTTOM CTA */}

@@ -1,4 +1,5 @@
 "use client";
+import { localizedCopy } from "@/lib/i18n/messages";
 import { useLang } from "@/lib/i18n/LangContext";
 import { reportReadingCopy } from "./reportReadingCopy";
 import { decisionCopy } from "./decisionCopy";
@@ -10,8 +11,8 @@ import s from "./ReportHero.module.scss";
 /** The deterministic verdict uses canonical findings, never unvalidated AI prose. */
 export default function ReportSummary({ report, model }: { report: Report; model: ReportModel }) {
   const { lang } = useLang();
-  const copy = reportReadingCopy[lang];
-  const decision = decisionCopy[lang];
+  const copy = localizedCopy(reportReadingCopy, lang);
+  const decision = localizedCopy(decisionCopy, lang);
   const counts = model.counts;
   const score = globalScore(report);
   const verdict = counts.critical ? "critical" : score === undefined ? "unavailable"

@@ -1,4 +1,5 @@
 "use client";
+import { localizeValue, localizedCopy } from "@/lib/i18n/messages";
 import ContextHelp from "@/components/ui/ContextHelp";
 
 import { CategoryScore, Coverage } from "./types";
@@ -15,7 +16,7 @@ export default function ScoreGrid({ categories, model, coverage, onSelectDomain,
 }) {
   const { t, lang } = useLang();
   const ts = t.report.scoreGrid;
-  const copy = decisionCopy[lang];
+  const copy = localizedCopy(decisionCopy, lang);
   const domains = t.report.priorityCards.domains as Record<string, string>;
   const unknown = model?.groups.find(group => group.key === "unknown");
   const href = (key: string) => onSelectDomain ? `?view=technical&domain=${key}` : `#cat-${key}`;
@@ -36,7 +37,7 @@ export default function ScoreGrid({ categories, model, coverage, onSelectDomain,
         if(compact) return <a key={key} href={href(key)} onClick={event=>select(event,key)} className={s.card}>
           <div className={s.cardTop}><h3 className={s.catLabel}>{domains[key]}</h3><span className={score===undefined?s.missingScore:s.scoreValue}>{score??copy.notEvaluated}</span></div>
           <div className={s.track} aria-hidden="true"><span style={{width:score===undefined?"0":`${score}%`,background:score===undefined?undefined:score>=80?"var(--argos-measure-good)":score>=50?"var(--argos-measure-warning)":"var(--argos-error)"}}/></div>
-          <p className={s.availability}>{issues} {issues===1?ts.issueCountOne:ts.issueCount} · {lang==="fr"?"Couverture":"Coverage"} {measurement?`${Math.round(measurement.ratio*100)} %`:"—"}</p>
+          <p className={s.availability}>{issues} {issues===1?ts.issueCountOne:ts.issueCount} · {(lang === "fr" ? "Couverture" : localizeValue("Coverage", lang))} {measurement?`${Math.round(measurement.ratio*100)} %`:"—"}</p>
           {measurement&&!measurement.sufficient&&<p className={s.availability}>{copy.insufficient}</p>}
         </a>;
         return <a key={key} href={href(key)} onClick={event => select(event, key)} className={s.card}>
@@ -47,7 +48,7 @@ export default function ScoreGrid({ categories, model, coverage, onSelectDomain,
           {!compact&&<p className={s.catDesc}>{copy.domainDescriptions[key]}</p>}
           {!compact&&score !== undefined && <p className={s.availability}>{copy.domainScore}</p>}
           {measurement && <p className={s.availability}>{copy.domainCoverage}: {Math.round(measurement.ratio * 100)} %{!measurement.sufficient && ` — ${copy.insufficient}`}</p>}
-          {measurement && !measurement.sufficient && <p className={s.catDesc}>{lang === "fr" ? "Cette note ne permet pas de conclure sur les contrôles non mesurés." : "This score does not support conclusions about unmeasured checks."}</p>}
+          {measurement && !measurement.sufficient && <p className={s.catDesc}>{(lang === "fr" ? "Cette note ne permet pas de conclure sur les contrôles non mesurés." : localizeValue("This score does not support conclusions about unmeasured checks.", lang))}</p>}
           <span className={s.detailLink}>{ts.seeDetail}</span>
         </a>;
       })}

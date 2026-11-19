@@ -1,4 +1,5 @@
 "use client";
+import { intlLocale } from "@/lib/i18n/locales";
 import Link from "@/components/LocalizedLink";
 import { useLang } from "@/lib/i18n/LangContext";
 import { DataTable, EmptyState, KpiCard, PageHeading, StatusBadge } from "./Primitives";
@@ -11,7 +12,7 @@ export type PreviewFixture = {
 /** Only mounted by the opt-in development route. Never a production dashboard. */
 export default function FoundationPreview({ fixture }: { fixture: PreviewFixture }) {
   const { t, lang } = useLang(), c = t.connected;
-  const number = (n: number) => new Intl.NumberFormat(lang).format(n);
+  const number = (n: number) => new Intl.NumberFormat(intlLocale(lang)).format(n);
   return <><p className={s.previewNotice}>{c.preview}</p><main className={s.page}>
     <PageHeading title={c.overview} description={c.previewIntro} action={<Link href="/account/sites" className={s.primary}>{c.explore}</Link>}/>
     <div className={s.kpis}>

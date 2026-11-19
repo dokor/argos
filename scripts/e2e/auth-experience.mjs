@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { switchLanguage } from './language-menu.mjs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { chromium } from '../../apps/playwright-service/node_modules/playwright/index.mjs';
 
@@ -52,7 +53,7 @@ try {
     await title(page,lang,'verify');
     // A language round trip must preserve both the memory-held token and the return context.
     for (const next of [lang === 'fr' ? 'en' : 'fr',lang]) {
-      await page.getByRole('link',{name:next === 'fr' ? 'Français' : 'English',exact:true}).click();
+      await switchLanguage(page, next === 'fr' ? 'Français' : 'English');
       await title(page,next,'verify');
       await page.getByRole('button',{name:copy[next].verify,exact:true}).waitFor();
     }

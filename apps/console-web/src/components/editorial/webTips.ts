@@ -1,5 +1,5 @@
 import type { Lang } from '@/lib/i18n/routes';
-export type WebTip = { id: string; category: string; active: boolean; sourceUrl: string; verifiedAt: string; validUntil?: string; translations: Partial<Record<Lang, string>> };
+export type WebTip = { id: string; category: string; active: boolean; sourceUrl: string; verifiedAt: string; validUntil?: string; translations: Partial<Record<"fr" | "en", string>> };
 export const webTips: WebTip[] = [
   {
     "id": "search-snippet",
@@ -774,7 +774,7 @@ export const webTips: WebTip[] = [
 ];
 
 export function selectWebTip(entries: readonly WebTip[], lang: Lang, previous?: string | null, random = Math.random, today = new Date().toISOString().slice(0,10)): WebTip | undefined {
-  const valid = entries.filter(tip => tip.active && tip.translations[lang]?.trim() && (!tip.validUntil || tip.validUntil >= today) && /^https:\/\//.test(tip.sourceUrl));
+  const valid = entries.filter(tip => tip.active && tip.translations[lang === "fr" ? "fr" : "en"]?.trim() && (!tip.validUntil || tip.validUntil >= today) && /^https:\/\//.test(tip.sourceUrl));
   const alternatives = valid.filter(tip => tip.id !== previous);
   const pool = alternatives.length ? alternatives : valid;
   return pool.length ? pool[Math.min(pool.length - 1, Math.max(0, Math.floor(random() * pool.length)))] : undefined;

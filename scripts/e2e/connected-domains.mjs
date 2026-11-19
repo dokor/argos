@@ -1,4 +1,5 @@
 import { injectAxe } from './inject-axe.mjs';
+import { languageHref } from './language-menu.mjs';
 import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
 import { chromium } from "../../apps/playwright-service/node_modules/playwright/index.mjs";
@@ -192,12 +193,9 @@ try {
           );
         }
         const filtered = page.url();
-        const language = page.getByRole("link", {
-          name: lang === "fr" ? "English" : "Français",
-          exact: true,
-        });
+        const href = await languageHref(page, lang === "fr" ? "English" : "Français");
         assert.ok(
-          (await language.getAttribute("href")).includes("rule=http.hsts"),
+          href.includes("rule=http.hsts"),
           "Language switch keeps filters",
         );
         await page

@@ -1,3 +1,4 @@
+import type { Lang } from "@/lib/i18n/routes";
 import Link from "@/components/PageLink";
 import { diagnosticGuides } from "@/lib/diagnosticGuides";
 import GuideArticle from "@/components/guides/GuideArticle";
@@ -8,9 +9,9 @@ const guide = diagnosticGuides.cls;
 
 export const metadata = guideMetadata(guide);
 
-export default function ClsGuidePage() {
+export default function ClsGuidePage({ lang = "fr" }: { lang?: Lang } = {}) {
   return (
-    <GuideArticle guide={guide} contents={[
+    <GuideArticle lang={lang} guide={guide} contents={[
       { id: "comprendre", label: "Comprendre le CLS" },
       { id: "reproduire", label: "Reproduire le décalage" },
       { id: "causes", label: "Trouver la cause" },

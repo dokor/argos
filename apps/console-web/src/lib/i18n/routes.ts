@@ -1,4 +1,5 @@
-export type Lang = "fr" | "en";
+import { isLang, type Lang } from "./locales";
+export type { Lang } from "./locales";
 
 // Only pages with a complete English version belong in this map.
 export const accountRoutes: Record<string, string> = {
@@ -27,6 +28,9 @@ export const accountRoutes: Record<string, string> = {
   "/account/reset": "/en/account/reset",
 };
 export const languageRoutes: Record<string, string> = {
+  "/guides/cls-eleve": "/en/guides/high-cls",
+  "/guides/refonte-site-web": "/en/guides/website-redesign",
+  "/guides/accessibilite-moteurs-ia": "/en/guides/ai-search-accessibility",
   "/guides/checklist-audit-ecommerce": "/en/guides/ecommerce-audit-checklist",
   "/guides/lcp-lent": "/en/guides/slow-lcp",
   "/guides/content-security-policy": "/en/guides/content-security-policy",
@@ -54,12 +58,20 @@ export const languageRoutes: Record<string, string> = {
   "/ressources/pourquoi-mon-site-ne-convertit-pas": "/en/resources/why-is-my-website-not-converting",
 };
 
+const nonIndexedRoutes: Record<string, string> = {
+  ...accountRoutes,
+  "/demonstrations/cls/avant": "/en/demonstrations/cls/avant",
+  "/demonstrations/cls/apres": "/en/demonstrations/cls/apres",
+};
+
 export function frenchPath(path: string): string {
   const pathname = path.replace(/\/+$/, "") || "/";
-  if (pathname.startsWith("/en/report/") || pathname.startsWith("/en/share/")) return pathname.slice(3);
-  if (pathname.startsWith("/en/account/admin/")) return pathname.slice(3);
-  if ((pathname.startsWith("/en/account/domains/") || pathname.startsWith("/en/account/runs/") || pathname.startsWith("/en/account/sites/") || pathname.startsWith("/en/account/urls/"))) return pathname.slice(3);
-  return Object.entries({ ...languageRoutes, ...accountRoutes }).find(([, en]) => en === pathname)?.[0] ?? pathname;
+  const prefix = pathname.split("/")[1];
+  if (!isLang(prefix)) return pathname;
+  const bare = pathname.slice(prefix.length + 1) || "/";
+  if (prefix === "fr") return bare;
+  if (/^\/(?:account|report|share)(?:\/|$)/.test(bare)) return bare;
+  return Object.entries({ ...languageRoutes, ...nonIndexedRoutes }).find(([, en]) => en === "/en" + (bare === "/" ? "" : bare))?.[0] ?? pathname;
 }
 
 export function localizedPath(path: string, lang: Lang): string {
@@ -67,8 +79,9 @@ export function localizedPath(path: string, lang: Lang): string {
   const pathname = index < 0 ? path : path.slice(0, index);
   const suffix = index < 0 ? "" : path.slice(index);
   const fr = frenchPath(pathname);
-  if (fr.startsWith("/report/") || fr.startsWith("/share/")) return (lang === "en" ? "/en" : "") + fr + suffix;
-  if (fr.startsWith("/account/admin/")) return (lang === "en" ? "/en" : "") + fr + suffix;
-  if ((fr.startsWith("/account/domains/") || fr.startsWith("/account/runs/") || fr.startsWith("/account/sites/") || fr.startsWith("/account/urls/"))) return (lang === "en" ? "/en" : "") + fr + suffix;
-  return (lang === "en" ? accountRoutes[fr] ?? languageRoutes[fr] ?? fr : fr) + suffix;
+  if (pathname === "/downloads/grille-recette-refonte.csv" && lang !== "fr") return `/downloads/${lang}/grille-recette-refonte.csv` + suffix;
+  if (lang === "fr") return fr + suffix;
+  if (/^\/(?:account|report|share)(?:\/|$)/.test(fr)) return "/" + lang + fr + suffix;
+  const english = nonIndexedRoutes[fr] ?? languageRoutes[fr];
+  return (english ? "/" + lang + english.slice(3) : fr) + suffix;
 }

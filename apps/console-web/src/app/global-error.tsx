@@ -1,15 +1,18 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { createLogger, safeError } from "@/lib/logger";
+import { languageFromPath } from "@/lib/i18n/locales";
+import { localizedPath } from "@/lib/i18n/routes";
+import emergency from "@/lib/i18n/emergency.json";
 
 /**
  * Root-level error boundary (App Router).
  *
  * Only triggers when the root layout itself throws. It *replaces* the root
  * layout, so it must render its own <html>/<body> and cannot use the i18n
- * provider, the layout fonts, or globals.css. Text is therefore static
- * (site default: FR) and styles are fully self-contained (an inline <style>
+ * provider, the layout fonts, or globals.css. Its small standalone catalogue
+ * covers all product languages and styles are self-contained (an inline <style>
  * element) so the page never depends on anything that may have failed to load.
  *
  * Le thème sombre suit `prefers-color-scheme` (le ThemeProvider / le toggle ne
@@ -88,6 +91,10 @@ const css = `
 }
 `;
 
+const subscribe = () => () => {};
+const currentPath = () => window.location.pathname;
+const serverPath = () => "/";
+
 export default function GlobalError({
   error,
   reset,
@@ -95,6 +102,8 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const lang = languageFromPath(useSyncExternalStore(subscribe, currentPath, serverPath));
+  const [title, description, retry, home] = emergency[lang];
   useEffect(() => {
     createLogger("app", { route: "global-error-boundary" }).error(
       "app_global_render_failed",
@@ -109,24 +118,22 @@ export default function GlobalError({
   }, [error]);
 
   return (
-    <html lang="fr">
+    <html lang={lang}>
       <body className="ge-body">
         <style dangerouslySetInnerHTML={{ __html: css }} />
         <main role="alert" className="ge-card">
-          <h1 className="ge-title">Oups, une erreur est survenue</h1>
+          <h1 className="ge-title">{title}</h1>
           <p className="ge-desc">
-            Une erreur inattendue s&apos;est produite. Vous pouvez réessayer ou
-            revenir à l&apos;accueil.
+            {description}
           </p>
           <div className="ge-actions">
             <button type="button" onClick={reset} className="ge-retry">
-              Réessayer
+              {retry}
             </button>
             {/* Full-document navigation on purpose: the app shell has crashed,
                 so a hard reload is more reliable than client-side routing. */}
-            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-            <a href="/" className="ge-home">
-              Retour à l&apos;accueil
+            <a href={localizedPath("/", lang)} className="ge-home">
+              {home}
             </a>
           </div>
         </main>

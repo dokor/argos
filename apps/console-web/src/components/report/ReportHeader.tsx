@@ -1,4 +1,5 @@
 "use client";
+import { localizeValue } from "@/lib/i18n/messages";
 
 import Link from "@/components/LocalizedLink";
 import LangToggle from "@/components/LangToggle";
@@ -23,7 +24,7 @@ export default function ReportHeader({signedIn=false,feedbackReference}:{signedI
         </Link>
 
         <div className={s.right}>
-          <div className={s.account}>{signedIn?<Link href="/account">{lang==="fr"?"Mon compte":"My account"}</Link>:<><Link href={"/account/sign-in?returnTo="+destination}>{lang==="fr"?"Se connecter":"Sign in"}</Link><Link className={s.register} href={"/account/register?returnTo="+destination}>{lang==="fr"?"Créer un compte":"Create an account"}</Link></>}</div>
+          <div className={s.account}>{signedIn?<Link href="/account">{(lang === "fr" ? "Mon compte" : localizeValue("My account", lang))}</Link>:<><Link href={"/account/sign-in?returnTo="+destination}>{(lang === "fr" ? "Se connecter" : localizeValue("Sign in", lang))}</Link><Link className={s.register} href={"/account/register?returnTo="+destination}>{(lang === "fr" ? "Créer un compte" : localizeValue("Create an account", lang))}</Link></>}</div>
           <FeedbackButton variant="icon" reference={feedbackReference}/>
           <ThemeToggle />
           <LangToggle />

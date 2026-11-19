@@ -1,13 +1,12 @@
+import { localizeValue } from "@/lib/i18n/messages";
 import type { Report } from "./types";
 import type { Lang } from "@/lib/i18n/routes";
 export function scoreLimit(report: Report, lang: Lang) {
   const coverage = report.scores.coverage;
-  const names = lang === "fr" ? { performance: "performance", security: "sécurité", seo: "référencement", a11y: "accessibilité" } : { performance: "performance", security: "security", seo: "SEO", a11y: "accessibility" };
+  const names = (lang === "fr" ? { performance: "performance", security: "sécurité", seo: "référencement", a11y: "accessibilité" } : localizeValue({ performance: "performance", security: "security", seo: "SEO", a11y: "accessibility" }, lang));
   const limited = coverage?.domains.filter(d => !d.sufficient).map(d => names[d.key as keyof typeof names] ?? d.key) ?? [];
-  if (limited.length) return lang === "fr"
-    ? `Le score porte sur les contrôles mesurés. Diagnostic limité en ${limited.join(", ")} : ces domaines peuvent rester provisoires même si la couverture globale est suffisante.`
-    : `The score covers measured checks. Limited diagnosis in ${limited.join(", ")}: these domains can remain provisional even when overall coverage is sufficient.`;
-  return lang === "fr" ? "Le score est une moyenne des contrôles mesurés ; il ne mesure ni l’urgence métier ni les contrôles absents." : "The score averages measured checks; it measures neither business urgency nor missing checks.";
+  if (limited.length) return (lang === "fr" ? `Le score porte sur les contrôles mesurés. Diagnostic limité en ${limited.join(", ")} : ces domaines peuvent rester provisoires même si la couverture globale est suffisante.` : localizeValue("The score covers measured checks. Limited diagnosis in {p0}: these domains can remain provisional even when overall coverage is sufficient.", lang).replaceAll("{p0}", () => String(limited.join(", "))));
+  return (lang === "fr" ? "Le score est une moyenne des contrôles mesurés ; il ne mesure ni l’urgence métier ni les contrôles absents." : localizeValue("The score averages measured checks; it measures neither business urgency nor missing checks.", lang));
 }
 export const interpretationCopy = {
   fr: {

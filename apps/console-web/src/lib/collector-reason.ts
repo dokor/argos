@@ -1,3 +1,5 @@
+import { localizeValue } from "@/lib/i18n/messages";
+import type { Lang } from "@/lib/i18n/locales";
 /** Only bounded collector codes are rendered; never provider messages or raw payloads. */
 const labels: Record<string, readonly [string, string]> = {
   "POLICY_DISABLED": [
@@ -53,6 +55,6 @@ const labels: Record<string, readonly [string, string]> = {
     "Collection failure requires diagnosis"
   ]
 };
-export function collectorReason(code: string, lang: "fr" | "en"): string | null {
-  return Object.hasOwn(labels, code) ? labels[code][lang === "fr" ? 0 : 1] : null;
+export function collectorReason(code: string, lang: Lang): string | null {
+  return Object.hasOwn(labels, code) ? localizeValue(labels[code][lang === "fr" ? 0 : 1], lang) : null;
 }

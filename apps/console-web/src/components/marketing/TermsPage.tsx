@@ -1,4 +1,5 @@
 "use client";
+import { localizedCopy } from "@/lib/i18n/messages";
 
 import { useLang } from "@/lib/i18n/LangContext";
 import SiteNav from "@/components/site/SiteNav";
@@ -8,7 +9,7 @@ import s from "./TermsPage.module.scss";
 
 export default function TermsPage() {
   const { lang } = useLang();
-  const copy = termsContent[lang];
+  const copy = localizedCopy(termsContent, lang);
   return <div className={s.page} lang={lang}>
     <SiteNav />
     <main className={s.main}>

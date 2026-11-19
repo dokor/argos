@@ -1,4 +1,5 @@
 "use client";
+import { localizeValue, localizedCopy } from "@/lib/i18n/messages";
 import { useEffect, useRef, useState } from "react";
 import { useLang } from "@/lib/i18n/LangContext";
 import { AccountClientError } from "@/lib/account-client";
@@ -27,7 +28,7 @@ export const antiBotCopy = {
 };
 /** Fresh execution for every attempt; no token is retained after the mutation. */
 export function useAntiBot(action: "register" | "forgot" | "resend" | "audit" | "feedback") {
-  const {lang} = useLang(), c=antiBotCopy[lang];
+  const {lang} = useLang(), c=localizedCopy(antiBotCopy, lang);
   const container=useRef<HTMLDivElement>(null), widget=useRef<string | null>(null);
   const pending=useRef<{reject:()=>void; timer:ReturnType<typeof setTimeout>} | null>(null), running=useRef(false);
   const [working,setWorking]=useState(false), [failed,setFailed]=useState(false);
@@ -62,7 +63,7 @@ export function useAntiBot(action: "register" | "forgot" | "resend" | "audit" | 
   }
   return {verify,working,element:<div className={s.verification}>
     <div ref={container}/>{working && <p role="status">{c.working}</p>}
-    {failed && <p role="alert">{c.error} <a href={lang==="fr"?"/informations-legales":"/en/legal-information"}>{c.help}</a></p>}
+    {failed && <p role="alert">{c.error} <a href={(lang === "fr" ? "/informations-legales" : localizeValue("/en/legal-information", lang))}>{c.help}</a></p>}
     <noscript>{c.error}</noscript>
   </div>};
 }

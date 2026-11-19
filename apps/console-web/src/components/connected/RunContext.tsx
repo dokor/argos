@@ -1,4 +1,6 @@
 "use client";
+import { intlLocale } from "@/lib/i18n/locales";
+import { localizeValue, localizedCopy } from "@/lib/i18n/messages";
 import type { HistoryContext } from "@/components/account/history";
 import { useLang } from "@/lib/i18n/LangContext";
 import ExecutionStatusBadge from "./ExecutionStatusBadge";
@@ -9,14 +11,14 @@ function object(value:unknown):Record<string,unknown> {
   try {const data=typeof value==="string" ? JSON.parse(value) : value;return data&&typeof data==="object"&&!Array.isArray(data) ? data : {};} catch{return {};}
 }
 export default function RunContext({run,runId,complete=false}:{run:PersonalRun;runId:string;complete?:boolean}) {
-  const {lang}=useLang(),c=analysisCopy[lang];
+  const {lang}=useLang(),c=localizedCopy(analysisCopy, lang);
   const profile=object(run.profileSnapshot);
   let modules:Record<string,unknown>={};
   try { const raw=typeof run.moduleStatuses==="string" ? JSON.parse(run.moduleStatuses) : run.moduleStatuses;
     if(Array.isArray(raw)) modules=Object.fromEntries(raw.filter(item=>item && typeof item.id==="string").map(item=>[item.id,item.status]));
   } catch { /* Missing execution data is not a successful measurement. */ }
-  const names:Record<string,string>={http:"HTTP",html:"HTML",runtime:"Runtime",lighthouse:"Lighthouse",observatory:"Observatory",ssl:"TLS",zap:"ZAP",tech:lang==="fr" ? "Technologies" : "Technology"};
-  const date=(raw?:string|null)=>raw&&Number.isFinite(new Date(raw).getTime()) ? new Date(raw).toLocaleString(lang) : c.unknown;
+  const names:Record<string,string>={http:"HTTP",html:"HTML",runtime:"Runtime",lighthouse:"Lighthouse",observatory:"Observatory",ssl:"TLS",zap:"ZAP",tech:(lang === "fr" ? "Technologies" : localizeValue("Technology", lang))};
+  const date=(raw?:string|null)=>raw&&Number.isFinite(new Date(raw).getTime()) ? new Date(raw).toLocaleString(intlLocale(lang)) : c.unknown;
   return <section className={s.context} aria-labelledby="run-context"><h2 id="run-context">{c.context}</h2><p>{c.run} #{runId}</p>{run.historyContext && <p>{run.historyContext.normalizedUrl}</p>}
     <dl className={s.facts}>{[[c.created,date(run.createdAt)],[c.started,date(run.startedAt)],[c.finished,date(run.finishedAt)],[c.requested,typeof profile.profileId==="string" ? profile.profileId : c.unknown]].map(([label,value])=><div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
     {complete ? <><p>{c.versionsHint}</p><h3>{c.evidence}</h3><p>{c.evidenceHint}</p></> : <><h3>{c.execution}</h3>{Object.keys(modules).length ? <ul className={s.modules}>{Object.entries(modules).filter(([name])=>name in names).map(([name,state])=><li key={name}><span>{names[name]}</span><ExecutionStatusBadge state={run.status==="CANCELED"&&["PENDING","RUNNING"].includes(String(state)) ? "CANCELED" : state}/></li>)}</ul> : <p>{c.unknown}</p>}<p>{c.executionHint}</p></>}

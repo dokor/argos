@@ -1,3 +1,4 @@
+import { localizedCopy } from "@/lib/i18n/messages";
 import type { Metadata } from "next";
 import JsonLd from "@/components/site/JsonLd";
 import { editorialPages } from "@/lib/editorial";
@@ -7,14 +8,14 @@ import { localizedPath, type Lang } from "@/lib/i18n/routes";
 import EcommerceAuditGuide from "./EcommerceAuditGuide";
 
 export function ecommerceAuditMetadata(lang: Lang): Metadata {
-  const copy = ecommerceAuditCopy[lang];
+  const copy = localizedCopy(ecommerceAuditCopy, lang);
   const base = localizedMetadata(ecommerceAuditRoute, lang, copy.metaTitle, copy.description);
   const record = editorialPages[ecommerceAuditRoute];
   return { ...base, openGraph: { ...base.openGraph, type: "article", publishedTime: record.firstVersion, modifiedTime: record.revised } };
 }
 
 export default function EcommerceAuditArticle({ lang }: { lang: Lang }) {
-  const copy = ecommerceAuditCopy[lang];
+  const copy = localizedCopy(ecommerceAuditCopy, lang);
   const record = editorialPages[ecommerceAuditRoute];
   const schema = {
     "@context": "https://schema.org", "@type": "Article",

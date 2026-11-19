@@ -1,3 +1,4 @@
+import { localizedCopy } from "@/lib/i18n/messages";
 import Link from "@/components/PageLink";
 import EditorialMeta from "./EditorialMeta";
 import SiteNav from "@/components/site/SiteNav";
@@ -10,7 +11,7 @@ const contentsIds = ["domaines", "calcul", "exemple", "limites"];
 const nextRoutes = ["/exemple-rapport", "/ressources/audit-technique-gratuit", "/ressources/accessibilite-numerique", "/ressources"];
 
 export default function ScoreMethodologyPage({ lang }: { lang: Lang }) {
-  const c = scoreMethodologyCopy[lang];
+  const c = localizedCopy(scoreMethodologyCopy, lang);
   return (
     <div className={s.page} lang={lang}>
       <SiteNav />

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { languageHref } from './language-menu.mjs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { chromium } from '../../apps/playwright-service/node_modules/playwright/index.mjs';
 
@@ -33,17 +34,26 @@ async function checkLayout(page, copy, signedIn, mobile) {
         const bounds = link.getBoundingClientRect();
         const range = document.createRange(); range.selectNodeContents(link.querySelector('span') ?? link);
         const text = [...range.getClientRects()].filter(rect => rect.width > 0 && rect.height > 0);
-        return { x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height, rows: new Set(text.map(rect => Math.round(rect.top))).size };
+        return {
+          x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height,
+          rows: new Set(text.map(rect => Math.round(rect.top))).size,
+          textFits: text.every(rect => rect.left >= bounds.left - 1 && rect.right <= bounds.right + 1 && rect.top >= bounds.top - 1 && rect.bottom <= bounds.bottom + 1),
+          contentFits: link.scrollWidth <= link.clientWidth + 1 && link.scrollHeight <= link.clientHeight + 1,
+        };
       }),
     };
   });
   assert.equal(layout.overflow, false, 'Header must not overflow');
   for (const action of layout.actions) {
     assert.ok(action.height >= 44, 'Action must have a 44px target');
-    assert.equal(action.rows, 1, 'Action label must stay on one line');
+    assert.ok(action.rows >= 1, 'Action label must remain present');
+    assert.ok(action.textFits && action.contentFits, 'Wrapped action text must fit inside its button');
   }
+  const [auditBounds, accountBounds] = layout.actions;
+  assert.ok(auditBounds.x + auditBounds.width <= accountBounds.x + 1 || accountBounds.x + accountBounds.width <= auditBounds.x + 1 ||
+    auditBounds.y + auditBounds.height <= accountBounds.y + 1 || accountBounds.y + accountBounds.height <= auditBounds.y + 1, 'Actions must not overlap');
   assert.equal(await nav.getByRole('button', { name: copy.nav.openMenu }).isVisible(), mobile);
-  return layout.actions.map(({ rows, ...geometry }) => geometry);
+  return layout.actions.map(({ rows, textFits, contentFits, ...geometry }) => geometry);
 }
 try {
   for (const width of [280, 320, 390, 760, 761, 1100, 1101, 1182, 1280]) {
@@ -83,7 +93,7 @@ try {
           await toggle.click();
           assert.equal(await toggle.getAttribute('aria-expanded'), 'true');
           await nav.getByRole('link', { name: copy.nav.guides, exact: true }).waitFor();
-          assert.ok(await nav.getByRole('group', { name: 'Language' }).isVisible());
+          assert.ok(await nav.locator('summary[aria-label]').isVisible());
           assert.ok(await nav.evaluate(el => el.scrollWidth <= el.clientWidth));
           await nav.screenshot({ path: output + '/' + state + '-menu.png' });
           await page.keyboard.press('Escape');
@@ -91,6 +101,9 @@ try {
           assert.ok(await toggle.evaluate(el => el === document.activeElement));
           await toggle.click();
         }
+        const other = lang === 'fr' ? 'English' : 'Français';
+        const href = await languageHref(page, other);
+        assert.equal(href.startsWith('/en'), lang === 'fr', 'Language menu offers the corresponding localized route');
         await nav.getByRole('link', { name: copy.nav.guides, exact: true }).click();
         await page.waitForURL(base + (lang === 'fr' ? '/ressources' : '/en/resources'));
         await checkLayout(page, copy, false, mobile);

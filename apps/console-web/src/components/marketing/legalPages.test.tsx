@@ -3,14 +3,14 @@ import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { LangProvider } from "@/lib/i18n/LangContext";
 import { localizedPath } from "@/lib/i18n/routes";
-import { siteUrl } from "@/lib/i18n/metadata";
+import { languageAlternates } from "@/lib/i18n/metadata";
 import LangToggle from "@/components/LangToggle";
 import TermsPage, { metadata as termsFr } from "@/app/(fr)/conditions-utilisation/page";
-import { metadata as termsEn } from "@/app/en/terms-of-use/page";
+import { generateMetadata as termsEn } from "@/app/en/terms-of-use/page";
 import PrivacyPage, { metadata as privacyFr } from "@/app/(fr)/confidentialite/page";
-import { metadata as privacyEn } from "@/app/en/privacy/page";
+import { generateMetadata as privacyEn } from "@/app/en/privacy/page";
 import LegalPage, { metadata as legalFr } from "@/app/(fr)/informations-legales/page";
-import { metadata as legalEn } from "@/app/en/legal-information/page";
+import { generateMetadata as legalEn } from "@/app/en/legal-information/page";
 
 const route = vi.hoisted(() => ({ path: "/conditions-utilisation" }));
 vi.mock("next/navigation", () => ({ usePathname: () => route.path }));
@@ -46,11 +46,11 @@ describe("public legal pages in both languages", () => {
       expect(html).not.toContain("English guides — this page is available in French only");
     });
 
-    it(`publishes reciprocal metadata for ${page.path} and preserves link suffixes`, () => {
-      const languages = { fr: siteUrl + page.path, en: siteUrl + page.enPath, "x-default": siteUrl + page.path };
+    it(`publishes reciprocal metadata for ${page.path} and preserves link suffixes`, async () => {
+      const languages = languageAlternates(page.path);
       expect(page.fr.alternates).toEqual({ canonical: languages.fr, languages });
-      expect(page.en.alternates).toEqual({ canonical: languages.en, languages });
-      expect(page.en.openGraph?.url).toBe(languages.en);
+      expect((await page.en()).alternates).toEqual({ canonical: languages.en, languages });
+      expect((await page.en()).openGraph?.url).toBe(languages.en);
       expect(localizedPath(page.path + "?source=login#details", "en")).toBe(page.enPath + "?source=login#details");
       expect(localizedPath(page.enPath + "#details", "fr")).toBe(page.path + "#details");
     });
@@ -81,3 +81,5 @@ describe("public legal pages in both languages", () => {
   });
 });
 
+
+vi.mock("next/headers", () => ({ headers: async () => new Headers({ "x-argos-language": "en" }) }));
