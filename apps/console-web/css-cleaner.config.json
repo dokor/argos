@@ -1,0 +1,7 @@
+{
+  "include": ["src/**/*.{js,jsx,ts,tsx,css,scss,sass}"],
+  "exclude": ["**/*.test.*", "**/*.spec.*", "**/__tests__/**", "**/__mocks__/**"],
+  "aliases": {
+    "@/*": ["src/*"]
+  }
+}
